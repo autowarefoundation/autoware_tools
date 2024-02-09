@@ -15,4 +15,9 @@
          <lastmod>2024-02-09</lastmod>
          <changefreq>daily</changefreq>
     </url>
+    <url>
+         <loc>https://autowarefoundation.github.io/autoware_tools/pr-4/lanelet2_map_preprocessor/</loc>
+         <lastmod>2024-02-09</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
 </urlset>
