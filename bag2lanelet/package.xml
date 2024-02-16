@@ -8,5 +8,4 @@
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
-
 </package>

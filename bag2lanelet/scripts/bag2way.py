@@ -1,11 +1,12 @@
 from datetime import datetime
-from typing import Text
 
 import numpy as np
-import tf_transformations
 from rclpy.serialization import deserialize_message
-from rosbag2_py import ConverterOptions, SequentialReader, StorageOptions
+from rosbag2_py import ConverterOptions
+from rosbag2_py import SequentialReader
+from rosbag2_py import StorageOptions
 from rosidl_runtime_py.utilities import get_message
+import tf_transformations
 
 
 def create_reader(bag_dir: str) -> SequentialReader:
@@ -21,6 +22,7 @@ def create_reader(bag_dir: str) -> SequentialReader:
     reader = SequentialReader()
     reader.open(storage_options, converter_options)
     return reader
+
 
 # too close & outlier pose filter
 def is_close_pose(p0, p1, eps, thresh):
@@ -82,7 +84,6 @@ def bag2point_stamped(input_path, too_close, too_far):
                 if transform.child_frame_id != "base_link":
                     continue
                 trans = transform.transform.translation
-                rot = transform.transform.rotation
                 date_time = datetime.fromtimestamp(stamp * 1e-9)
                 if is_initial_pose:
                     is_initial_pose = False

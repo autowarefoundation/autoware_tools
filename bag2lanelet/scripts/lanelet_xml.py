@@ -1,5 +1,6 @@
-import xml.etree.ElementTree as ET
 from xml.dom.minidom import parseString
+import xml.etree.ElementTree as ET
+
 from mgrspy import mgrs
 
 
@@ -26,7 +27,11 @@ class LaneletMap:
         mgrs_code = self.mgrs + "%05d%05d" % (x, y)
         latlon = mgrs.toWgs(mgrs_code)
         mgrs_code = self.mgrs + ("%05d" % x)[:3] + ("%05d" % y)[:3]
-        node = ET.SubElement(self.root, 'node', {'id': str(self.element_num), 'lat': str(latlon[0]), 'lon': str(latlon[1])})
+        node = ET.SubElement(
+            self.root,
+            "node",
+            {"id": str(self.element_num), "lat": str(latlon[0]), "lon": str(latlon[1])},
+        )
         tag = [
             {"k": "type", "v": ""},
             {"k": "subtype", "v": ""},
@@ -82,7 +87,7 @@ class LaneletMap:
         return self.element_num
 
     def save(self, filename):
-        tree = ET.ElementTree(self.root)
+        # tree = ET.ElementTree(self.root)
         parsed = parseString(ET.tostring(self.root, "utf-8")).toprettyxml(indent="  ")
         with open(filename, "w") as f:
             f.write(parsed)

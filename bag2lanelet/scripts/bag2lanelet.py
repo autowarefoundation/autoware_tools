@@ -1,10 +1,11 @@
 #!/bin/env python3
 import argparse
+from datetime import datetime
 import os
 import pathlib
-from datetime import datetime
 
-from bag2way import bag2pose, pose2line
+from bag2way import bag2pose
+from bag2way import pose2line
 from lanelet_xml import LaneletMap
 
 
@@ -36,7 +37,12 @@ def main():
     parser.add_argument("-l", "--width", type=float, default=2.0, help="lane width[m]")
     parser.add_argument("-m", "--mgrs", default="54SUE", help="MGRS code")
     parser.add_argument(
-        "--interval", type=float, nargs=2, default=[0.1, 2.0], help="min and max interval between tf position")
+        "--interval",
+        type=float,
+        nargs=2,
+        default=[0.1, 2.0],
+        help="min and max interval between tf position",
+    )
     parser.add_argument(
         "--offset", type=float, nargs=3, default=[0.0, 0.0, 0.0], help="offset[m] from base_link"
     )
@@ -49,7 +55,9 @@ def main():
     output_path = pathlib.Path(args.output_lanelet)
 
     print(args)
-    genarate(input_path, output_path, args.width, args.mgrs, args.interval, args.offset, args.center)
+    genarate(
+        input_path, output_path, args.width, args.mgrs, args.interval, args.offset, args.center
+    )
 
 
 if __name__ == "__main__":

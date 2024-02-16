@@ -2,9 +2,9 @@
 import argparse
 import pathlib
 
+from bag2way import bag2pose
 import numpy as np
 import tf_transformations
-from bag2way import bag2pose
 
 
 def genarate(input_path, output_path):
