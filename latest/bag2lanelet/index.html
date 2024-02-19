@@ -8,20 +8,18 @@
       
       
       
-        <link rel="canonical" href="https://autowarefoundation.github.io/autoware_tools/latest/CONTRIBUTING/">
+        <link rel="canonical" href="https://autowarefoundation.github.io/autoware_tools/latest/bag2lanelet/">
       
       
-        <link rel="prev" href="..">
       
-      
-        <link rel="next" href="../DISCLAIMER/">
+        <link rel="next" href="../common/tier4_debug_tools/">
       
       <link rel="icon" href="../docs/assets/images/autoware-foundation.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.20">
     
     
       
-        <title>Contributing - Autoware Universe Documentation</title>
+        <title>bag2lanelet - Autoware Universe Documentation</title>
       
     
     
@@ -77,7 +75,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#contributing" class="md-skip">
+        <a href="#bag2lanelet" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributing
+              bag2lanelet
             
           </span>
         </div>
@@ -208,13 +206,15 @@
         
   
   
+    
+  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="../bag2lanelet/" class="md-tabs__link">
+      <a href="./" class="md-tabs__link md-tabs__link--active">
         Bag2lanelet
       </a>
     </li>
@@ -369,16 +369,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
       
       
         
@@ -390,12 +390,12 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../bag2lanelet/">Bag2lanelet</a>
+        <div class="md-nav__link md-nav__link--index md-nav__link--active">
+          <a href="./">Bag2lanelet</a>
           
         </div>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Bag2lanelet
@@ -806,6 +806,62 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    Requirements
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    Usage
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#generate-lanelet2-file" class="md-nav__link">
+    generate lanelet2 file
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generate-trajectory-file-for-vector-map-builder" class="md-nav__link">
+    generate trajectory file for Vector Map Builder
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limitations" class="md-nav__link">
+    Limitations
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -822,8 +878,61 @@
   
 
 
-<div><h1 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">#</a></h1>
-<p>See <a href="https://autowarefoundation.github.io/autoware-documentation/main/contributing/">https://autowarefoundation.github.io/autoware-documentation/main/contributing/</a>.</p></div>
+<div><h1 id="bag2lanelet">bag2lanelet<a class="headerlink" href="#bag2lanelet" title="Permanent link">#</a></h1>
+<p>This package generates a lanelet map necessary for Autoware's autonomous driving from rosbag data containing information about Localization (<code>/tf</code>). This enables autonomous driving based on manual driving information.</p>
+<p>The provided functionalities are as follows:</p>
+<ul>
+<li>bag2lanelet.py: Generates lanelet (.osm) from a rosbag based on the position of <code>base_link</code>.</li>
+<li>bag2trajectory.py: Generates trajectory information (.csv) for vector_map_builder from a rosbag.</li>
+</ul>
+<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">#</a></h2>
+<p>As an example, the process of lanelet generation based on driving trajectories from the planning simulator is performed as follows. Typically, the expectation is to use rosbag data from manual driving, rather than from the planning simulator.</p>
+<p>Firstly, you need to run the planning_simulator following the <a href="https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/">planning_simulator tutorial in Autoware Documentation</a>. The process would be, install Autoware, download the maps, run the planning_simulator, and start autonomous driving. Make sure to save the rosbag during this driving session using the following command:</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>bag<span class="w"> </span>record<span class="w"> </span>/tf<span class="w"> </span>-o<span class="w"> </span>/tmp/bag2lanelet_sample.bag
+</code></pre></div>
+<p align="center">
+  <img src="./image/psim-kashiwanoha-sample-map.png" alt="kashiwa" width="800">
+</p>
+
+<p>After completing the drive, you can run the <code>bag2lanelet.py</code> script. This requires specifying the output directory, lane width and MGRS coordinates:</p>
+<div class="highlight"><pre><span></span><code>./bag2lanelet.py<span class="w"> </span>/tmp/bag2lanelet_sample.bag<span class="w"> </span>/tmp/bag2lanelet_sample<span class="w"> </span>-l<span class="w"> </span><span class="m">3</span>.0<span class="w"> </span>-m<span class="w"> </span>54SUE
+</code></pre></div>
+<p>The map will be saved in the specified directory, following the naming convention <code>&lt;date&gt;-lanelet2_map.osm</code>. The map generated will appear like this. You can see the example result in <a href="./example/lanelet2_map.osm">./example/lanelet2_map.osm</a>.</p>
+<p>When you relaunch the planning_simulator with the new lanelet2 map, you will see the following.</p>
+<p align="center">
+  <img src="./image/psim-kashiwanoha-bag2lanelet-original-map.png" alt="kashiwa" width="800">
+</p>
+
+<p>Please note that at this stage, although this map works with Autoware, the shape of the lanes will appear jagged. (Refer to the 'Limitations' section for more details.) While this is an issue that should be addressed in the future, it can currently be resolved by loading it in <a href="https://autowarefoundation.github.io/autoware-documentation/main/how-to-guides/integrating-autoware/creating-maps/creating-vector-map/#vector-map-builder">Vector Map Builder</a> as follows.</p>
+<p>Following the documentation of the <a href="https://autowarefoundation.github.io/autoware-documentation/main/how-to-guides/integrating-autoware/creating-maps/creating-vector-map/#vector-map-builder">Vector Map Builder</a>, import the generated Lanelet2 map. You can see the refined lane on the application.</p>
+<p align="center">
+  <img src="./image/vmb-kashiwanoha-bag2lanelet-map.png" alt="kashiwa" width="800">
+</p>
+
+<p>Then, Export the map. You can run the planning_simulator with the refined lanelet2 map and see how it goes on the Rviz.</p>
+<p align="center">
+  <img src="./image/psim-kashiwanoha-bag2lanelet-vmb-map.png" alt="kashiwa" width="800">
+</p>
+
+<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">#</a></h2>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-humble-tf-transformations<span class="w"> </span>ros-humble-tf-transformations
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</code></pre></div>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
+<p>Check <code>./bag2lanelet.py --help</code></p>
+<h3 id="generate-lanelet2-file">generate lanelet2 file<a class="headerlink" href="#generate-lanelet2-file" title="Permanent link">#</a></h3>
+<p>For given lane width and MGRS coordinate.</p>
+<div class="highlight"><pre><span></span><code>./bag2lanelet.py<span class="w"> </span>/home/autoware/rosbag/sample<span class="w"> </span>.<span class="w">  </span>-l<span class="w"> </span><span class="m">3</span>.0<span class="w"> </span>-m<span class="w"> </span>54SUE
+</code></pre></div>
+<h3 id="generate-trajectory-file-for-vector-map-builder">generate trajectory file for Vector Map Builder<a class="headerlink" href="#generate-trajectory-file-for-vector-map-builder" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code>./bag2trajectory.py<span class="w"> </span>/home/autoware/rosbag/sample<span class="w"> </span>sample.csv
+</code></pre></div>
+<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">#</a></h2>
+<p>Here is the limitations of this package. Contributions to further improvements are more than welcome.</p>
+<ul>
+<li>Due to the low conversion accuracy from MGRS to latitude and longitude in this script, the lanes in the output lanelet.osm appear jagged. Importing and then exporting through vector_map_builder corrects these values with high accuracy.</li>
+</ul></div>
 
 
 
@@ -849,30 +958,15 @@
       
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
-          
-          <a href=".." class="md-footer__link md-footer__link--prev" aria-label="Previous: autoware_tools" rel="prev">
-            <div class="md-footer__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
-            </div>
-            <div class="md-footer__title">
-              <span class="md-footer__direction">
-                Previous
-              </span>
-              <div class="md-ellipsis">
-                autoware_tools
-              </div>
-            </div>
-          </a>
-        
         
           
-          <a href="../DISCLAIMER/" class="md-footer__link md-footer__link--next" aria-label="Next: DISCLAIMER" rel="next">
+          <a href="../common/tier4_debug_tools/" class="md-footer__link md-footer__link--next" aria-label="Next: tier4_debug_tools" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                DISCLAIMER
+                tier4_debug_tools
               </div>
             </div>
             <div class="md-footer__button md-icon">
