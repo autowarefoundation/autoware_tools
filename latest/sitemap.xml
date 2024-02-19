@@ -2,17 +2,42 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://autowarefoundation.github.io/autoware_tools/latest/</loc>
-         <lastmod>2024-02-16</lastmod>
+         <lastmod>2024-02-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://autowarefoundation.github.io/autoware_tools/latest/CONTRIBUTING/</loc>
-         <lastmod>2024-02-16</lastmod>
+         <lastmod>2024-02-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://autowarefoundation.github.io/autoware_tools/latest/DISCLAIMER/</loc>
-         <lastmod>2024-02-16</lastmod>
+         <lastmod>2024-02-19</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://autowarefoundation.github.io/autoware_tools/latest/common/tier4_debug_tools/</loc>
+         <lastmod>2024-02-19</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://autowarefoundation.github.io/autoware_tools/latest/planning/planning_debug_tools/</loc>
+         <lastmod>2024-02-19</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://autowarefoundation.github.io/autoware_tools/latest/planning/planning_debug_tools/doc-stop-reason-visualizer/</loc>
+         <lastmod>2024-02-19</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://autowarefoundation.github.io/autoware_tools/latest/simulator/simulator_compatibility_test/</loc>
+         <lastmod>2024-02-19</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://autowarefoundation.github.io/autoware_tools/latest/vehicle/accel_brake_map_calibrator/</loc>
+         <lastmod>2024-02-19</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
