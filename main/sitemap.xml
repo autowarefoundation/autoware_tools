@@ -16,6 +16,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://autowarefoundation.github.io/autoware_tools/main/bag2lanelet/</loc>
+         <lastmod>2024-02-19</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://autowarefoundation.github.io/autoware_tools/main/common/tier4_debug_tools/</loc>
          <lastmod>2024-02-19</lastmod>
          <changefreq>daily</changefreq>
