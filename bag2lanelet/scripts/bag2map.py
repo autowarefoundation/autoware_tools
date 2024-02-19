@@ -10,7 +10,7 @@ import folium
 from tools.bag2lanelet.scripts.lanelet_xml import LaneletMap
 
 
-def genarate(input_path, output, mgrs):
+def generate(input_path, output, mgrs):
     point_array = bag2point_stamped(input_path, 40.0, 500.0)
     m = LaneletMap(mgrs=mgrs)
     latlon = [
@@ -44,7 +44,7 @@ def main():
         raise FileNotFoundError("Input bag folder '{}' is not found.".format(input_path))
 
     print(input_path)
-    genarate(input_path, args.output_dir, args.mgrs)
+    generate(input_path, args.output_dir, args.mgrs)
 
 
 if __name__ == "__main__":

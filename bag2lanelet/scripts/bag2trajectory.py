@@ -7,7 +7,7 @@ import numpy as np
 import tf_transformations
 
 
-def genarate(input_path, output_path):
+def generate(input_path, output_path):
     pose_array = bag2pose(input_path)
     pose_array = pose_array[::50]
 
@@ -32,7 +32,7 @@ def main():
     output_path = pathlib.Path(args.output_csv)
 
     print(input_path, output_path)
-    genarate(input_path, output_path)
+    generate(input_path, output_path)
 
 
 if __name__ == "__main__":

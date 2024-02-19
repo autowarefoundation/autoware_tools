@@ -9,7 +9,7 @@ from bag2way import pose2line
 from lanelet_xml import LaneletMap
 
 
-def genarate(input_path, output, width, mgrs, interval, offset, use_centerline=False):
+def generate(input_path, output, width, mgrs, interval, offset, use_centerline=False):
     pose_array = bag2pose(input_path, interval)
     pose_array = pose_array[::10]
     left, right, center = pose2line(pose_array, width=width, offset=offset)
@@ -55,7 +55,7 @@ def main():
     output_path = pathlib.Path(args.output_lanelet)
 
     print(args)
-    genarate(
+    generate(
         input_path, output_path, args.width, args.mgrs, args.interval, args.offset, args.center
     )
 

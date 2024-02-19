@@ -11,7 +11,7 @@ The provided functionalities are as follows:
 
 As an example, the process of lanelet generation based on driving trajectories from the planning simulator is performed as follows. Typically, the expectation is to use rosbag data from manual driving, rather than from the planning simulator.
 
-Firstly, you need to run the planning_simulator following the [planning_simulator tutorial in Autoware Documentation](https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/). The process would be, install Autoawre, download the maps, run the planning_simulator, and start autonomous driving. Make sure to save the rosbag during this driving session using the following command:
+Firstly, you need to run the planning_simulator following the [planning_simulator tutorial in Autoware Documentation](https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/). The process would be, install Autoware, download the maps, run the planning_simulator, and start autonomous driving. Make sure to save the rosbag during this driving session using the following command:
 
 ```sh
 ros2 bag record /tf -o /tmp/bag2lanelet_sample.bag
@@ -63,14 +63,10 @@ Check `./bag2lanelet.py --help`
 
 ### generate lanelet2 file
 
-```sh
-./bag2lanelet.py /home/autoware/rosbag/sample . --width=3.0
-```
-
-or with MGRS code at Monza Track
+For given lane width and MGRS coordinate.
 
 ```sh
-./bag2lanelet.py /home/autoware/rosbag/sample . --width=3.0 --mgrs 32TNR219517
+./bag2lanelet.py /home/autoware/rosbag/sample .  -l 3.0 -m 54SUE
 ```
 
 ### generate trajectory file for Vector Map Builder
