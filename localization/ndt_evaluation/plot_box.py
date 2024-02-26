@@ -116,8 +116,8 @@ if __name__ == "__main__":
     storage_filter = rosbag2_py.StorageFilter(topics=target_topics)
     reader.set_filter(storage_filter)
 
-    pose1_data = list()
-    pose2_data = list()
+    pose1_data = []
+    pose2_data = []
 
     while reader.has_next():
         (topic_name, data, timestamp_rosbag) = reader.read_next()
