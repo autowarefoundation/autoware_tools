@@ -16,9 +16,9 @@ $ ros2 bag record $(cat topic_list.txt)
 
 ## Step2: Apply `convert_rosbag_for_ndt_evaluation.py`
 
-* Check whether the necessary topics are available
-* Extract only the necessary topics
-* Change the topic name of the reference trajectory
+- Check whether the necessary topics are available
+- Extract only the necessary topics
+- Change the topic name of the reference trajectory
 
 ```bash
 python3 convert_rosbag_for_ndt_evaluation.py /path/to/recorded_rosbag
