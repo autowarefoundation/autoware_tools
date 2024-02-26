@@ -1,4 +1,5 @@
-""" Convert rosbag for NDT evaluation.
+"""Convert rosbag for NDT evaluation.
+
 (1) Check if the rosbag is suitable for ndt evaluation
 (2) Filter topics
 (3) Rename the topic name of the reference kinematic state to /localization/reference_kinematic_state
@@ -39,7 +40,7 @@ def parse_args():
 
 
 def check_rosbag(duration: float, topic_name_to_msg_list: dict) -> None:
-    """Check if the rosbag is suitable for ndt evaluation"""
+    """Check if the rosbag is suitable for ndt evaluation."""
     print(f"{duration=:.1f} sec")
 
     df = pd.DataFrame(
