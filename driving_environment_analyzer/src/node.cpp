@@ -281,12 +281,12 @@ DrivingEnvironmentAnalyzer::DrivingEnvironmentAnalyzer(const rclcpp::NodeOptions
 
   reader_.open(bag_filename);
 
-  if (!isEnoughData(use_map_in_bag)) {
+  if (!isDataReady(use_map_in_bag)) {
     rclcpp::shutdown();
   }
 }
 
-bool DrivingEnvironmentAnalyzer::isEnoughData(const bool use_map_in_bag)
+bool DrivingEnvironmentAnalyzer::isDataReady(const bool use_map_in_bag)
 {
   const std::string topic_route = "/planning/mission_planning/route";
   const std::string topic_map = "/map/vector_map";

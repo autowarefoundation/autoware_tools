@@ -49,7 +49,7 @@ public:
   explicit DrivingEnvironmentAnalyzer(const rclcpp::NodeOptions & node_options);
 
 private:
-  bool isEnoughData(const bool use_map_in_bag);
+  bool isDataReady(const bool use_map_in_bag);
   void onMap(const HADMapBin::ConstSharedPtr map_msg);
   void analyze();
 
