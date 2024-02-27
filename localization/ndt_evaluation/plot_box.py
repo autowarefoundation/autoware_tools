@@ -1,6 +1,5 @@
 import argparse
 import pathlib
-
 import geometry_msgs.msg
 from interpolate_pose import interpolate_pose
 import matplotlib.pyplot as plt
@@ -10,8 +9,6 @@ import pandas as pd
 from rclpy.serialization import deserialize_message
 import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
-from scipy.spatial.transform import Rotation
-from scipy.spatial.transform import Slerp
 import tf_transformations
 
 
