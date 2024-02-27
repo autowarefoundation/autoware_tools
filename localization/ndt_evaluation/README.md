@@ -4,14 +4,15 @@ This directory contains tools for evaluating the performance of the NDT localiza
 
 ## Step1: Record rosbag
 
-In order to use point clouds from different LiDARs in the future, it is useful to record raw point clouds and so on.
-
 ```bash
-$ source ~/autoware/install/setup.bash
-$ ros2 topic list \
-      | grep -e ^/sensing -e ^/vehicle -e ^/localization -e ^/tf_static -e ^/initialpose \
-      > topic_list.txt
-$ ros2 bag record $(cat topic_list.txt)
+ros2 bag record \
+  /localization/kinematic_state \
+  /localization/util/downsample/pointcloud \
+  /sensing/vehicle_velocity_converter/twist_with_covariance \
+  /sensing/imu/imu_data \
+  /tf_static \
+  /sensing/gnss/pose_with_covariance \
+  /initialpose
 ```
 
 ## Step2: Apply `convert_rosbag_for_ndt_evaluation.py`
