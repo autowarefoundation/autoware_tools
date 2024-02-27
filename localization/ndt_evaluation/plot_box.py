@@ -1,5 +1,6 @@
 import argparse
 import pathlib
+
 import geometry_msgs.msg
 from interpolate_pose import interpolate_pose
 import matplotlib.pyplot as plt

@@ -7,8 +7,9 @@ This script fixes the timestamp in the rosbag file to match the simulated time.
 
 import argparse
 import pathlib
-import rosbag2_py
+
 from rclpy.serialization import deserialize_message
+import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
 
 
