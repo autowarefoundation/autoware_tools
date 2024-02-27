@@ -225,7 +225,7 @@ double getRouteLengthWithNoAdjacentLane(
   return value;
 }
 
-bool existTraffcLight(const lanelet::ConstLanelets & lanes)
+bool existTrafficLight(const lanelet::ConstLanelets & lanes)
 {
   for (const auto & lane : lanes) {
     if (!lane.regulatoryElementsAs<lanelet::TrafficLight>().empty()) {
@@ -375,7 +375,8 @@ void DrivingEnvironmentAnalyzer::analyze()
     get_logger(), "- Min speed limit: %.2f [m/s] Max speed limit: %.2f [m/s]", min_speed_limit,
     max_speed_limit);
   RCLCPP_INFO_STREAM(
-    get_logger(), "- Exist traffic light: " << std::boolalpha << existTraffcLight(preferred_lanes));
+    get_logger(),
+    "- Exist traffic light: " << std::boolalpha << existTrafficLight(preferred_lanes));
   RCLCPP_INFO_STREAM(
     get_logger(), "- Exist intersection: " << std::boolalpha << existIntersection(preferred_lanes));
   RCLCPP_INFO_STREAM(
