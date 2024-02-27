@@ -2,6 +2,7 @@ import argparse
 import pathlib
 
 import geometry_msgs.msg
+from interpolate_pose import interpolate_pose
 import matplotlib.pyplot as plt
 import nav_msgs.msg
 import numpy as np
@@ -12,7 +13,6 @@ from rosidl_runtime_py.utilities import get_message
 from scipy.spatial.transform import Rotation
 from scipy.spatial.transform import Slerp
 import tf_transformations
-from interpolate_pose import interpolate_pose
 
 
 def euler_from_quaternion(quaternion):
