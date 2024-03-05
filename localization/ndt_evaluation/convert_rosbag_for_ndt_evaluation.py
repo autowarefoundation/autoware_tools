@@ -8,11 +8,12 @@
 import argparse
 import pathlib
 
+from geometry_msgs.msg import PoseWithCovarianceStamped
 import pandas as pd
-from rclpy.serialization import deserialize_message, serialize_message
+from rclpy.serialization import deserialize_message
+from rclpy.serialization import serialize_message
 import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
-from geometry_msgs.msg import PoseWithCovarianceStamped
 
 REQUIRED_FPS_PATTERN_A = {
     "/localization/kinematic_state": 40,
@@ -42,9 +43,7 @@ def parse_args():
             "/awsim/ground_truth/localization/kinematic_state",
         ],
     )
-    parser.add_argument(
-        "--add_initialpose",
-        action="store_true")
+    parser.add_argument("--add_initialpose", action="store_true")
     return parser.parse_args()
 
 
@@ -125,7 +124,9 @@ if __name__ == "__main__":
 
     # if there is not gnss topic or selected from args, add initialpose
     save_initialpose = (
-        len(topic_name_to_msg_list["/sensing/gnss/pose_with_covariance"]) == 0 or args.add_initialpose)
+        len(topic_name_to_msg_list["/sensing/gnss/pose_with_covariance"]) == 0
+        or args.add_initialpose
+    )
     if save_initialpose:
         print("Add /initialpose")
         type_map["/initialpose"] = "geometry_msgs/msg/PoseWithCovarianceStamped"
@@ -136,9 +137,7 @@ if __name__ == "__main__":
         msg.pose = first_reference.pose
         data = serialize_message(msg)
         timestamp = int(stamp.sec * 1e9 + stamp.nanosec)
-        tuple_list.append(
-            ("/initialpose", data, timestamp)
-        )
+        tuple_list.append(("/initialpose", data, timestamp))
 
     # write rosbag
     rosbag_dir = rosbag_path.parent if rosbag_path.is_dir() else rosbag_path.parent.parent
