@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="map_path" description="point cloud and lanelet2 map directory path"/>
+  <arg name="bag_path" description="bagfile path"/>
+  <arg name="use_map_in_bag" default="false"/>
+  <arg name="lanelet2_map_loader_param_path" default="$(find-pkg-share autoware_launch)/config/map/lanelet2_map_loader.param.yaml"/>
+  <arg name="map_projection_loader_param_path" default="$(find-pkg-share autoware_launch)/config/map/map_projection_loader.param.yaml"/>
+
+  <node_container pkg="rclcpp_components" exec="component_container" name="map_container" namespace="" output="screen">
+    <composable_node pkg="map_loader" plugin="Lanelet2MapLoaderNode" name="lanelet2_map_loader">
+      <param from="$(var lanelet2_map_loader_param_path)"/>
+      <param name="lanelet2_map_path" value="$(var map_path)/lanelet2_map.osm"/>
+      <remap from="output/lanelet2_map" to="/map/vector_map"/>
+    </composable_node>
+
+    <composable_node pkg="driving_environment_analyzer" plugin="driving_environment_analyzer::DrivingEnvironmentAnalyzer" name="driving_environment_analyzer">
+      <param name="bag_path" value="$(var bag_path)"/>
+      <param name="use_map_in_bag" value="$(var use_map_in_bag)"/>
+      <remap from="input/lanelet2_map" to="/map/vector_map"/>
+    </composable_node>
+  </node_container>
+
+  <include file="$(find-pkg-share map_projection_loader)/launch/map_projection_loader.launch.xml">
+    <arg name="param_path" value="$(var map_projection_loader_param_path)"/>
+    <arg name="map_projector_info_path" value="$(var map_path)/map_projector_info.yaml"/>
+    <arg name="lanelet2_map_path" value="$(var map_path)/lanelet2_map.osm"/>
+  </include>
+</launch>
