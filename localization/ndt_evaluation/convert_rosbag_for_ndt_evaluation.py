@@ -54,7 +54,7 @@ def check_rosbag(duration: float, topic_name_to_msg_list: dict, required_fps: di
             "count": [len(msg_list) for msg_list in topic_name_to_msg_list.values()],
         }
     )
-    df = df[df['topic'].isin(required_fps.keys())]
+    df = df[df["topic"].isin(required_fps.keys())]
     df["fps"] = df["count"] / duration
     df["enough_fps"] = df["fps"] > df["topic"].map(required_fps)
     print(df)
