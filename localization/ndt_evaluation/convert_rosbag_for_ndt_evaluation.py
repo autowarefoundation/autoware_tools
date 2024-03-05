@@ -13,14 +13,19 @@ from rclpy.serialization import deserialize_message
 import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
 
-REQUIRED_FPS = {
+REQUIRED_FPS_PATTERN_A = {
     "/localization/kinematic_state": 40,
-    "/localization/util/downsample/pointcloud": 9,
+    "/localization/util/downsample/pointcloud": 7.5,
     "/sensing/vehicle_velocity_converter/twist_with_covariance": 20,
     "/sensing/imu/imu_data": 20,
     "/tf_static": 0,
     "/sensing/gnss/pose_with_covariance": -1,  # optional topic
-    "/initialpose": -1,  # optional topic
+}
+
+REQUIRED_FPS_PATTERN_B = {
+    "/localization/kinematic_state": 40,
+    "/localization/util/downsample/pointcloud": 7.5,
+    "/localization/twist_estimator/twist_with_covariance": 20,
 }
 
 
@@ -39,7 +44,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def check_rosbag(duration: float, topic_name_to_msg_list: dict) -> None:
+def check_rosbag(duration: float, topic_name_to_msg_list: dict, required_fps: dict) -> bool:
     """Check if the rosbag is suitable for ndt evaluation."""
     print(f"{duration=:.1f} sec")
 
@@ -49,40 +54,11 @@ def check_rosbag(duration: float, topic_name_to_msg_list: dict) -> None:
             "count": [len(msg_list) for msg_list in topic_name_to_msg_list.values()],
         }
     )
+    df = df[df['topic'].isin(required_fps.keys())]
     df["fps"] = df["count"] / duration
-    df["enough_fps"] = df["fps"] > df["topic"].map(REQUIRED_FPS)
+    df["enough_fps"] = df["fps"] > df["topic"].map(required_fps)
     print(df)
-
-    # check
-    # All topics must have enough fps
-    assert df[
-        "enough_fps"
-    ].all(), f"NG! FPS is not enough in {df[df['enough_fps'] == False]['topic'].values}"
-
-    # Either /sensing/gnss/pose_with_covariance or /initialpose must be included.
-    assert (
-        len(topic_name_to_msg_list["/sensing/gnss/pose_with_covariance"]) >= 1
-        or len(topic_name_to_msg_list["/initialpose"]) >= 1
-    ), "NG! Neither /sensing/gnss/pose_with_covariance nor /initialpose is found."
-
-    # [Warning] Vehicle should be stopping still for about the first 10 seconds
-    for msg in topic_name_to_msg_list["/localization/kinematic_state"]:
-        if msg.header.stamp.sec > 10:
-            break
-        twist = msg.twist.twist
-        ok = (
-            twist.linear.x < 0.1
-            and twist.linear.y < 0.1
-            and twist.linear.z < 0.1
-            and twist.angular.x < 0.1
-            and twist.angular.y < 0.1
-            and twist.angular.z < 0.1
-        )
-        if not ok:
-            print(f"Warning: Vehicle is not stopping. time = {msg.header.stamp.sec}")
-            break
-
-    print("OK")
+    return df["enough_fps"].all()
 
 
 if __name__ == "__main__":
@@ -103,7 +79,8 @@ if __name__ == "__main__":
     reader.open(storage_options, converter_options)
 
     # filter topics
-    target_topics = list(REQUIRED_FPS.keys())
+    target_topics = list(REQUIRED_FPS_PATTERN_A.keys()) + list(REQUIRED_FPS_PATTERN_B.keys())
+    target_topics = list(set(target_topics))
     if reference_topic_name not in target_topics:
         target_topics.append(reference_topic_name)
     storage_filter = rosbag2_py.StorageFilter(topics=target_topics)
@@ -128,7 +105,16 @@ if __name__ == "__main__":
     duration = (tuple_list[-1][2] - tuple_list[0][2]) * 1e-9
 
     # check
-    check_rosbag(duration, topic_name_to_msg_list)
+    save_topics = list()
+    if check_rosbag(duration, topic_name_to_msg_list, REQUIRED_FPS_PATTERN_A):
+        save_topics = list(REQUIRED_FPS_PATTERN_A.keys())
+        print("OK as pattern A")
+    elif check_rosbag(duration, topic_name_to_msg_list, REQUIRED_FPS_PATTERN_B):
+        save_topics = list(REQUIRED_FPS_PATTERN_B.keys())
+        print("OK as pattern B")
+    else:
+        print("The rosbag is not suitable for ndt evaluation")
+        exit()
 
     # write rosbag
     rosbag_dir = rosbag_path.parent if rosbag_path.is_dir() else rosbag_path.parent.parent
@@ -137,6 +123,8 @@ if __name__ == "__main__":
     storage_options = rosbag2_py.StorageOptions(uri=str(filtered_rosbag_path), storage_id="sqlite3")
     writer.open(storage_options, converter_options)
     for topic_name, topic_type in type_map.items():
+        if topic_name not in save_topics:
+            continue
         if topic_name == reference_topic_name:
             topic_name = "/localization/reference_kinematic_state"
         topic_info = rosbag2_py.TopicMetadata(
@@ -144,6 +132,8 @@ if __name__ == "__main__":
         )
         writer.create_topic(topic_info)
     for topic_name, data, timestamp_rosbag in tuple_list:
+        if topic_name not in save_topics:
+            continue
         if topic_name == reference_topic_name:
             topic_name = "/localization/reference_kinematic_state"
         writer.write(topic_name, data, timestamp_rosbag)
