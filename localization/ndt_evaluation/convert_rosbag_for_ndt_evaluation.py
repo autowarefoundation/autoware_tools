@@ -133,7 +133,7 @@ if __name__ == "__main__":
         save_topics.append("/initialpose")
         stamp = first_reference.header.stamp
         msg = PoseWithCovarianceStamped()
-        msg.header.stamp = stamp
+        msg.header = first_reference.header
         msg.pose = first_reference.pose
         data = serialize_message(msg)
         timestamp = int(stamp.sec * 1e9 + stamp.nanosec)
