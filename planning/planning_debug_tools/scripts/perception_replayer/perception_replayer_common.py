@@ -24,7 +24,7 @@ from autoware_auto_perception_msgs.msg import PredictedObjects
 from autoware_auto_perception_msgs.msg import TrackedObjects
 from autoware_auto_perception_msgs.msg import TrafficSignalArray as AutoTrafficSignalArray
 from autoware_perception_msgs.msg import TrafficSignalArray
-from geometry_msgs.msg import PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
 from nav_msgs.msg import Odometry
 import psutil
 from rclpy.node import Node
@@ -74,6 +74,10 @@ class PerceptionReplayerCommon(Node):
 
         self.recorded_ego_pub = self.create_publisher(
             Odometry, "/perception_reproducer/rosbag_ego_odom", 1
+        )
+
+        self.goal_pose_publisher = self.create_publisher(
+            PoseStamped, "/planning/mission_planning/goal", 1
         )
 
         # load rosbag
