@@ -89,8 +89,8 @@ function PlotValue(name, path, timestamp, value)
   new_series = ScatterXY.new(name)
   index = 0
   while(true) do
-    series_k = TimeseriesView.find( string.format( "%s/"..value..".%d", path, index) )
-    series_s = TimeseriesView.find( string.format( "%s/arclength.%d", path, index) )
+    series_k = TimeseriesView.find( string.format( "%s/"..value.."[%d]", path, index) )
+    series_s = TimeseriesView.find( string.format( "%s/arclength[%d]", path, index) )
     series_size = TimeseriesView.find( string.format( "%s/size", path) )
 
     if series_k == nil or series_s == nil then break end
