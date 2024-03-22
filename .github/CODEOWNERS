@@ -1,3 +1,8 @@
-### Copied from .github/CODEOWNERS-manual ###
-
 ### Automatically generated from package.xml ###
+bag2lanelet/** shinnosuke.hirakawa@tier4.jp taiki.tanaka@tier4.jp
+common/tier4_debug_tools/** ryohsuke.mitsudome@tier4.jp
+driving_environment_analyzer/** satoshi.ota@tier4.jp
+planning/planning_debug_tools/** taiki.tanaka@tier4.jp takamasa.horibe@tier4.jp takayuki.murooka@tier4.jp
+simulator/simulator_compatibility_test/** shpark@morai.ai shumpei.wakabayashi@tier4.jp tomoya.kimura@tier4.jp
+
+### Copied from .github/CODEOWNERS-manual ###
