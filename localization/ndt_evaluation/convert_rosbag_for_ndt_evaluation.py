@@ -98,6 +98,7 @@ if __name__ == "__main__":
     # read rosbag
     topic_name_to_msg_list = {topic: [] for topic in target_topics}
     tuple_list = []
+    topic_name_to_rosbag_timestamp = {topic: [] for topic in target_topics}
     while reader.has_next():
         (topic_name, data, timestamp_rosbag) = reader.read_next()
         tuple_list.append((topic_name, data, timestamp_rosbag))
@@ -105,6 +106,7 @@ if __name__ == "__main__":
         msg_type = get_message(type_map[topic_name])
         msg = deserialize_message(data, msg_type)
         topic_name_to_msg_list[topic_name].append(msg)
+        topic_name_to_rosbag_timestamp[topic_name].append(timestamp_rosbag)
     duration = (tuple_list[-1][2] - tuple_list[0][2]) * 1e-9
 
     # check
@@ -136,7 +138,8 @@ if __name__ == "__main__":
         msg.header = first_reference.header
         msg.pose = first_reference.pose
         data = serialize_message(msg)
-        timestamp = int(stamp.sec * 1e9 + stamp.nanosec)
+        first_pcd = topic_name_to_rosbag_timestamp[reference_topic_name][0]
+        timestamp = first_pcd + int(0.5 * 1e9)
         tuple_list.append(("/initialpose", data, timestamp))
 
     # write rosbag
