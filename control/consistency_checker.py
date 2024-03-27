@@ -1,5 +1,5 @@
 import math
-
+import argparse
 from ament_index_python.packages import get_package_share_directory
 import yaml
 
@@ -13,13 +13,24 @@ def read_yaml(file_path):
 autoware_launch_path = get_package_share_directory("autoware_launch")
 vehicle_description_path = get_package_share_directory("j6_gen1_description")
 
-mpc_param_file_path = (
+default_mpc_param_file_path = (
     f"{autoware_launch_path}/config/control/trajectory_follower/lateral/mpc.param.yaml"
 )
-pid_param_file_path = (
+default_pid_param_file_path = (
     f"{autoware_launch_path}/config/control/trajectory_follower/longitudinal/pid.param.yaml"
 )
-simulator_model_param_file_path = f"{vehicle_description_path}/config/simulator_model.param.yaml"
+default_simulator_model_param_file_path = f"{vehicle_description_path}/config/simulator_model.param.yaml"
+
+parser = argparse.ArgumentParser(description='Process the parameters of the controllers and simulator.')
+
+parser.add_argument('--mpc_param_file', help='Override the default MPC parameter file path', default=default_mpc_param_file_path)
+parser.add_argument('--pid_param_file', help='Override the default PID parameter file path', default=default_pid_param_file_path)
+parser.add_argument('--simulator_model_param_file', help='Override the default simulator model parameter file path', default=default_simulator_model_param_file_path)
+
+args = parser.parse_args()
+mpc_param_file_path = args.mpc_param_file
+pid_param_file_path = args.pid_param_file
+simulator_model_param_file_path = args.simulator_model_param_file
 
 mpc_params = read_yaml(mpc_param_file_path)["/**"]["ros__parameters"]
 pid_params = read_yaml(pid_param_file_path)["/**"]["ros__parameters"]
