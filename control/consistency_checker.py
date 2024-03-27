@@ -1,27 +1,20 @@
 import math
-
 import yaml
-
 
 def read_yaml(file_path):
     """Read YAML file and return the data."""
     with open(file_path, "r") as file:
         return yaml.safe_load(file)
 
+mpc_param_file_path = "/home/shen/pilot-auto.x2/src/autoware/launcher/autoware_launch/config/control/trajectory_follower/lateral/mpc.param.yaml"
+pid_param_file_path = "/home/shen/pilot-auto.x2/src/autoware/launcher/autoware_launch/config/control/trajectory_follower/longitudinal/pid.param.yaml"
+simulator_model_param_file_path = "/home/shen/pilot-auto.x2/src/description/vehicle/j6_gen1_description/j6_gen1_description/config/simulator_model.param.yaml"
 
-# paths to the YAML files
-mpc_param_file_path = "/home/zheshen/pilot-auto.x2/src/autoware/launcher/autoware_launch/config/control/trajectory_follower/lateral/mpc.param.yaml"
-pid_param_file_path = "/home/zheshen/pilot-auto.x2/src/autoware/launcher/autoware_launch/config/control/trajectory_follower/longitudinal/pid.param.yaml"
-simulator_model_param_file_path = "/home/zheshen/pilot-auto.x2/src/description/vehicle/j6_gen1_description/j6_gen1_description/config/simulator_model.param.yaml"
-
-# read the YAML files
 mpc_params = read_yaml(mpc_param_file_path)["/**"]["ros__parameters"]
 pid_params = read_yaml(pid_param_file_path)["/**"]["ros__parameters"]
 simulator_model_params = read_yaml(simulator_model_param_file_path)["/**"]["ros__parameters"]
 
-# compare the parameters
 results = [
-    #   "mpc_vehicle_model_type_consistency": mpc_params["vehicle_model_type"] == simulator_model_params["vehicle_model_type"],  # Should not compare directly. Modify later!!
     (
         "[MPC] steer_delay_difference: {}, (controller: {}, simulator: {})".format(
             simulator_model_params["steer_time_delay"] - mpc_params["input_delay"],
@@ -75,6 +68,5 @@ results = [
     ),
 ]
 
-# print the results
 for item in results:
     print(item)
