@@ -1,6 +1,7 @@
 import math
 
 import yaml
+from ament_index_python.packages import get_package_share_directory
 
 
 def read_yaml(file_path):
@@ -8,10 +9,12 @@ def read_yaml(file_path):
     with open(file_path, "r") as file:
         return yaml.safe_load(file)
 
+autoware_launch_path = get_package_share_directory('autoware_launch')
+vehicle_description_path = get_package_share_directory('j6_gen1_description')
 
-mpc_param_file_path = "/home/shen/pilot-auto.x2/src/autoware/launcher/autoware_launch/config/control/trajectory_follower/lateral/mpc.param.yaml"
-pid_param_file_path = "/home/shen/pilot-auto.x2/src/autoware/launcher/autoware_launch/config/control/trajectory_follower/longitudinal/pid.param.yaml"
-simulator_model_param_file_path = "/home/shen/pilot-auto.x2/src/description/vehicle/j6_gen1_description/j6_gen1_description/config/simulator_model.param.yaml"
+mpc_param_file_path = f"{autoware_launch_path}/config/control/trajectory_follower/lateral/mpc.param.yaml"
+pid_param_file_path = f"{autoware_launch_path}/config/control/trajectory_follower/longitudinal/pid.param.yaml"
+simulator_model_param_file_path = f"{vehicle_description_path}/config/simulator_model.param.yaml"
 
 mpc_params = read_yaml(mpc_param_file_path)["/**"]["ros__parameters"]
 pid_params = read_yaml(pid_param_file_path)["/**"]["ros__parameters"]
