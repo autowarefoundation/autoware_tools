@@ -106,4 +106,20 @@ results = [
 ]
 
 for item in results:
-    print(item)
+    description = item.split(",")[0]  # 提取描述部分，例如 "[MPC] steer_delay_difference: 1.0"
+    value = float(description.split(":")[1].strip())  # 提取差异值
+    error_message = ""
+    if "steer_delay_difference" in item or "steer_time_constant_difference" in item:
+        if value != 0.0:
+            error_message = "\033[91m [ERROR] The parameters of the controller and simulator should be identical.\033[0m"
+    if "acceleration_limit_difference" in item:
+        if value < 0:
+            error_message = "\033[91m [ERROR] The parameter of the controller should be smaller than the parameter of the simulator.\033[0m"
+    if "max_steer_rate_lim_difference_by_curvature" in item or "max_steer_rate_lim_difference_by_velocity" in item:
+        if value < 0:
+            error_message = "\033[91m [ERROR] The parameter of the controller should be smaller than the parameter of the simulator.\033[0m"
+    if "max_acc_difference" in item and value < 0:
+        error_message = "\033[91m [ERROR] The parameter of the controller should be smaller than the parameter of the simulator.\033[0m"
+    if "min_acc_difference" in item and value > 0:
+        error_message = "\033[91m [ERROR] The parameter of the controller should be bigger than the parameter of the simulator.\033[0m"
+    print(f"{item}{error_message}")
