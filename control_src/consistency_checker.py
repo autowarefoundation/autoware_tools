@@ -116,7 +116,11 @@ for item in results:
     description = item.split(",")[0]
     value = float(description.split(":")[1].strip())
     error_message = ""
-    if "steer_delay_difference" in item or "steer_time_constant_difference" in item or "accelerate_delay_difference" in item:
+    if (
+        "steer_delay_difference" in item
+        or "steer_time_constant_difference" in item
+        or "accelerate_delay_difference" in item
+    ):
         if value != 0.0:
             error_message = (
                 "[ERROR] The parameters of the controller and simulator should be identical.\033[0m"
