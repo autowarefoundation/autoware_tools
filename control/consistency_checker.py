@@ -106,8 +106,8 @@ results = [
 ]
 
 for item in results:
-    description = item.split(",")[0]  # 提取描述部分，例如 "[MPC] steer_delay_difference: 1.0"
-    value = float(description.split(":")[1].strip())  # 提取差异值
+    description = item.split(",")[0]
+    value = float(description.split(":")[1].strip())
     error_message = ""
     if "steer_delay_difference" in item or "steer_time_constant_difference" in item:
         if value != 0.0:
