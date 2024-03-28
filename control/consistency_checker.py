@@ -115,7 +115,10 @@ for item in results:
     if "acceleration_limit_difference" in item:
         if value < 0:
             error_message = "\033[91m [ERROR] The parameter of the controller should be smaller than the parameter of the simulator.\033[0m"
-    if "max_steer_rate_lim_difference_by_curvature" in item or "max_steer_rate_lim_difference_by_velocity" in item:
+    if (
+        "max_steer_rate_lim_difference_by_curvature" in item
+        or "max_steer_rate_lim_difference_by_velocity" in item
+    ):
         if value < 0:
             error_message = "\033[91m [ERROR] The parameter of the controller should be smaller than the parameter of the simulator.\033[0m"
     if "max_acc_difference" in item and value < 0:
