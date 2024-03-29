@@ -20,6 +20,7 @@ import functools
 import sys
 
 from PyQt5.QtWidgets import QApplication
+from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from perception_replayer_common import PerceptionReplayerCommon
 import rclpy
@@ -46,6 +47,7 @@ class PerceptionReplayer(PerceptionReplayerCommon):
         for button in self.widget.rate_button:
             button.clicked.connect(functools.partial(self.onSetRate, button))
         self.widget.pub_recorded_ego_pose_button.clicked.connect(self.publish_recorded_ego_pose)
+        self.widget.pub_goal_pose_button.clicked.connect(self.publish_goal)
 
         # start timer callback
         self.delta_time = 0.1
@@ -171,6 +173,17 @@ class PerceptionReplayer(PerceptionReplayerCommon):
 
         self.recorded_ego_pub_as_initialpose.publish(recorded_ego_pose)
         print("Published recorded ego pose as /initialpose")
+
+    def publish_goal(self):
+        if not self.rosbag_ego_odom_data:
+            return
+
+        goal_pose = PoseStamped()
+        goal_pose.header.stamp = self.get_clock().now().to_msg()
+        goal_pose.header.frame_id = "map"
+        goal_pose.pose = self.rosbag_ego_odom_data[-1][1].pose.pose
+        self.goal_pose_publisher.publish(goal_pose)
+        print("Published last recorded ego pose as /planning/mission_planning/goal")
 
 
 if __name__ == "__main__":
