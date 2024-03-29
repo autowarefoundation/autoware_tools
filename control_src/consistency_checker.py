@@ -26,8 +26,8 @@ parser.add_argument(
     "--simulator_model_param_file", help="Override the default simulator model parameter file path"
 )
 
-def main():
 
+def main():
     args = parser.parse_args()
 
     autoware_launch_path = get_package_share_directory("autoware_launch")
@@ -63,7 +63,8 @@ def main():
         ),
         (
             "[MPC] steer_time_constant_difference: {}, (controller: {}, simulator: {})".format(
-                simulator_model_params["steer_time_constant"] - mpc_params["vehicle_model_steer_tau"],
+                simulator_model_params["steer_time_constant"]
+                - mpc_params["vehicle_model_steer_tau"],
                 mpc_params["vehicle_model_steer_tau"],
                 simulator_model_params["steer_time_constant"],
             )
@@ -124,9 +125,7 @@ def main():
             or "accelerate_delay_difference" in item
         ):
             if value != 0.0:
-                error_message = (
-                    "[ERROR] The parameters of the controller and simulator should be identical.\033[0m"
-                )
+                error_message = "[ERROR] The parameters of the controller and simulator should be identical.\033[0m"
         if (
             "acceleration_limit_difference" in item
             or "max_steer_rate_lim_difference_by_curvature" in item
@@ -141,5 +140,6 @@ def main():
         if error_message:
             print(f"\033[91m{error_message}\033[0m\n")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
