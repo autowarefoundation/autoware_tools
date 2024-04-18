@@ -17,7 +17,6 @@
 
 #include "deviation_evaluator/tier4_autoware_utils.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "std_srvs/srv/set_bool.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tier4_autoware_utils/ros/transform_listener.hpp"
 
@@ -27,6 +26,7 @@
 #include "nav_msgs/msg/odometry.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "std_msgs/msg/float64.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 #include "tier4_debug_msgs/msg/float64_stamped.hpp"
 
 #include <tf2/utils.h>

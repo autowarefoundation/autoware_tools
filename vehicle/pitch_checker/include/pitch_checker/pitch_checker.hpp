@@ -18,11 +18,11 @@
 #define PITCH_CHECKER__PITCH_CHECKER_HPP_
 
 #include "rclcpp/rclcpp.hpp"
-#include "std_srvs/srv/trigger.hpp"
 #include "tf2/utils.h"
 
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "std_srvs/srv/trigger.hpp"
 
 #include <fstream>
 #include <map>

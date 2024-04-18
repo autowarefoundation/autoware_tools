@@ -62,6 +62,12 @@ double VelocityCoefModule::get_coef() const
 /**
  * @brief getter function for current estimated standard deviation of coefficient
  */
-double VelocityCoefModule::get_coef_std() const { return calculate_std(coef_vx_list_); }
+double VelocityCoefModule::get_coef_std() const
+{
+  return calculate_std(coef_vx_list_);
+}
 
-bool VelocityCoefModule::empty() const { return coef_vx_.second == 0; }
+bool VelocityCoefModule::empty() const
+{
+  return coef_vx_.second == 0;
+}

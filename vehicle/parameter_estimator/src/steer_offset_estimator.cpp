@@ -71,4 +71,7 @@ void SteerOffsetEstimator::postprocessOutput()
   result_msgs_.covariance = covariance;
 }
 
-void SteerOffsetEstimator::publishData() { debugger_->publishDebugValue(); }
+void SteerOffsetEstimator::publishData()
+{
+  debugger_->publishDebugValue();
+}

@@ -36,7 +36,10 @@ double validateRange(
   return 0.0;
 }
 
-double addOffset(const double val, const double offset) { return val + offset; }
+double addOffset(const double val, const double offset)
+{
+  return val + offset;
+}
 
 TimeDelayEstimatorNode::TimeDelayEstimatorNode(const rclcpp::NodeOptions & node_options)
 : Node("time_delay_estimator", node_options)

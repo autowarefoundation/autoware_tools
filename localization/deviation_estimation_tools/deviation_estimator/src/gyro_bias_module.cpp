@@ -85,4 +85,7 @@ geometry_msgs::msg::Vector3 GyroBiasModule::get_bias_std() const
   return stddev_bias;
 }
 
-bool GyroBiasModule::empty() const { return gyro_bias_list_.empty(); }
+bool GyroBiasModule::empty() const
+{
+  return gyro_bias_list_.empty();
+}

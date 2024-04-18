@@ -74,4 +74,7 @@ bool WheelBaseEstimator::checkIsValidData()
   return true;
 }
 
-void WheelBaseEstimator::publishData() { debugger_->publishDebugValue(); }
+void WheelBaseEstimator::publishData()
+{
+  debugger_->publishDebugValue();
+}

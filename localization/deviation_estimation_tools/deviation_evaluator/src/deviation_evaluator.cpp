@@ -35,7 +35,10 @@ using std::placeholders::_1;
 
 using std::chrono_literals::operator""s;
 
-double double_round(const double x, const int n) { return std::round(x * pow(10, n)) / pow(10, n); }
+double double_round(const double x, const int n)
+{
+  return std::round(x * pow(10, n)) / pow(10, n);
+}
 
 double norm_xy(const geometry_msgs::msg::Point & p1, const geometry_msgs::msg::Point & p2)
 {
