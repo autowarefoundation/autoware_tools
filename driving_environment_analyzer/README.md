@@ -2,7 +2,94 @@
 
 このツールはROSBAGに含まれる走行履歴を元に走行環境のODDを解析するツールです。
 
-## How to use
+## ROSBAGの特定時刻における周囲のODDを解析する場合
+
+この場合にはRvizプラグインである`driving_environment_analyzer_rviz_panel`を使用することをおすすめします。
+
+現在以下の情報が出力可能です。
+
+- EGOの現在車速
+- 現在位置の勾配
+- EGOの挙動
+- 現在の車線情報
+
+こちらのツールはautoware_launchに含まれる`logging_simulator`を使用します。まず以下のコマンドからシミュレータを起動してください。
+
+`ros2 launch autoware_launch logging_simulator.launch.xml map_path:=<MAP> vehicle_model:=<VEHICLE_NAME> sensor_model:=<AIP_NAME> sensing:=false control:=false planning:=false perception:=false localization:=false system:=false`
+
+![fig1](./images/launch_rviz.png)
+
+シミュレータ起動時に地図を読み込むためROSBAGに地図情報が含まれていなくてもODDの解析が可能です。（ただし、その場合にはROSBAG取得の際に使用した地図を指定してシミュレータを起動するようにしてください。）
+
+次に本パッケージに含まれる解析ツールを起動します。Rviz画面左上部のAdd New PanelからDrivingEnvironmentAnalyzerPanelを選択してください。これでRviz左下に新しく操作パネルが追加されます。
+
+![fig1](./images/launch_tool.png)
+![fig1](./images/rviz_overview_1.png)
+
+本ツールはROSBAGファイル指定してロードできる他、複数のROSBAGファイルが格納されているディレクトリを指定することも可能です。ただし、その場合には事前に以下のコマンドで`metadata.yaml`の生成が必要になります。
+
+`ros2 bag reindex <DIR_PATH> sqlite3`
+
+![fig1](./images/select_directory.png)
+
+ROSBAGの読み込みが完了したらODDを解析したい時刻を指定します。時刻の指定にはUnix timeを直接指定するほかスライドバーも使用可能です。左に表示されている日時を参考に調整してください。
+
+![fig1](./images/select_time .png)
+
+また、このときViewsのTarget Flameを`base_link`にしておくことで、指定した時刻のEGOの位置と周囲の状況をRvizで可視化可能です。
+
+![fig1](./images/select_target_frame.png)
+
+時刻の指定が完了したら、`Set time stamp`ボタンを押し、最後に`Analyze dynamic ODD factor`を押すことで解析が始まります。
+
+![fig1](./images/rviz_overview_2.png)
+
+```bash
+[rviz2-11] ***********************************************************
+[rviz2-11]                    ODD analysis result
+[rviz2-11] ***********************************************************
+[rviz2-11] Type: TIME SPECIFIED
+[rviz2-11] Time: 2024-04-22 14:48:05
+[rviz2-11]
+[rviz2-11]
+[rviz2-11] - EGO INFO
+[rviz2-11]   [SPEED]                       : 0 [m/s]
+[rviz2-11]   [ELEVATION ANGLE]             : 0.00963597 [rad]
+[rviz2-11]
+[rviz2-11] - EGO BEHAIOVR
+[rviz2-11]   [AVOIDANCE(R)]                : NONE
+[rviz2-11]   [AVOIDANCE(L)]                : NONE
+[rviz2-11]   [LANE_CHANGE(R)]              : NONE
+[rviz2-11]   [LANE_CHANGE(L)]              : NONE
+[rviz2-11]   [START_PLANNER]               : SAFE: true COMMAND: deactivate
+[rviz2-11]   [GOAL_PLANNER]                : NONE
+[rviz2-11]   [CROSSWALK]                   : NONE
+[rviz2-11]   [INTERSECTION]                : NONE
+[rviz2-11]
+[rviz2-11] - LANE INFO
+[rviz2-11]   [ID]                          : 176126
+[rviz2-11]   [WIDTH]                       : 4.24132 [m]
+[rviz2-11]   [SHAPE]                       : STRAIGHT
+[rviz2-11]   [RIGHT LANE NUM]              : 0
+[rviz2-11]   [LEFT LANE NUM]               : 0
+[rviz2-11]   [TOTAL LANE NUM]              : 1
+[rviz2-11]   [SAME DIRECTION LANE]         : NONE
+[rviz2-11]   [OPPOSITE DIRECTION LANE]     : NONE
+[rviz2-11]   [ROAD SHOULDER]               : EXIST
+[rviz2-11]
+[rviz2-11] - SURROUND OBJECT NUM
+[rviz2-11]   [UNKNOWN]                     : 0
+[rviz2-11]   [CAR]                         : 6
+[rviz2-11]   [TRUCK]                       : 0
+[rviz2-11]   [BUS]                         : 3
+[rviz2-11]   [TRAILER]                     : 2
+[rviz2-11]   [MOTORCYCLE]                  : 0
+[rviz2-11]   [BICYCLE]                     : 0
+[rviz2-11]   [PEDESTRIAN]                  : 7
+[rviz2-11] ***********************************************************
+```
+
+## ROSBAG全体に対して経路沿いのODDを解析する場合
 
 現在以下の情報が出力可能です。
 
