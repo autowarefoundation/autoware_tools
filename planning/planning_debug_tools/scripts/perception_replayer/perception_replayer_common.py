@@ -19,11 +19,10 @@ from subprocess import CalledProcessError
 from subprocess import check_output
 import time
 
-from autoware_auto_perception_msgs.msg import DetectedObjects
-from autoware_auto_perception_msgs.msg import PredictedObjects
-from autoware_auto_perception_msgs.msg import TrackedObjects
-from autoware_auto_perception_msgs.msg import TrafficSignalArray as AutoTrafficSignalArray
-from autoware_perception_msgs.msg import TrafficSignalArray
+from autoware_perception_msgs.msg import DetectedObjects
+from autoware_perception_msgs.msg import PredictedObjects
+from autoware_perception_msgs.msg import TrackedObjects
+from autoware_perception_msgs.msg import TrafficLightGroupArray
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
@@ -45,7 +44,6 @@ class PerceptionReplayerCommon(Node):
         self.rosbag_objects_data = []
         self.rosbag_ego_odom_data = []
         self.rosbag_traffic_signals_data = []
-        self.is_auto_traffic_signals = False
 
         # subscriber
         self.sub_odom = self.create_subscription(
@@ -91,15 +89,9 @@ class PerceptionReplayerCommon(Node):
             self.load_rosbag(args.bag)
         print("Ended loading rosbag")
 
-        # temporary support old auto msgs
-        if self.is_auto_traffic_signals:
-            self.auto_traffic_signals_pub = self.create_publisher(
-                AutoTrafficSignalArray, "/perception/traffic_light_recognition/traffic_signals", 1
-            )
-        else:
-            self.traffic_signals_pub = self.create_publisher(
-                TrafficSignalArray, "/perception/traffic_light_recognition/traffic_signals", 1
-            )
+        self.traffic_signals_pub = self.create_publisher(
+            TrafficLightGroupArray, "/perception/traffic_light_recognition/traffic_signals", 1
+        )
 
         # wait for ready to publish/subscribe
         time.sleep(1.0)
@@ -136,9 +128,6 @@ class PerceptionReplayerCommon(Node):
                 self.rosbag_ego_odom_data.append((stamp, msg))
             if topic == traffic_signals_topic:
                 self.rosbag_traffic_signals_data.append((stamp, msg))
-                self.is_auto_traffic_signals = (
-                    "autoware_auto_perception_msgs" in type(msg).__module__
-                )
 
     def kill_online_perception_node(self):
         # kill node if required

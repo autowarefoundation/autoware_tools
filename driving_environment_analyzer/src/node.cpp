@@ -275,7 +275,7 @@ DrivingEnvironmentAnalyzer::DrivingEnvironmentAnalyzer(const rclcpp::NodeOptions
   timer_ = rclcpp::create_timer(
     this, get_clock(), 100ms, std::bind(&DrivingEnvironmentAnalyzer::analyze, this));
 
-  sub_map_ = create_subscription<HADMapBin>(
+  sub_map_ = create_subscription<LaneletMapBin>(
     "input/lanelet2_map", rclcpp::QoS{1}.transient_local(),
     std::bind(&DrivingEnvironmentAnalyzer::onMap, this, _1));
 
@@ -292,7 +292,7 @@ bool DrivingEnvironmentAnalyzer::isDataReady(const bool use_map_in_bag)
   const std::string topic_map = "/map/vector_map";
 
   rclcpp::Serialization<LaneletRoute> serializer_route;
-  rclcpp::Serialization<HADMapBin> serializer_map;
+  rclcpp::Serialization<LaneletMapBin> serializer_map;
 
   rosbag2_storage::StorageFilter filter;
   filter.topics.emplace_back(topic_route);
@@ -311,7 +311,7 @@ bool DrivingEnvironmentAnalyzer::isDataReady(const bool use_map_in_bag)
 
     if (data->topic_name == topic_map) {
       rclcpp::SerializedMessage serialized_msg(*data->serialized_data);
-      const auto deserialized_message = std::make_shared<HADMapBin>();
+      const auto deserialized_message = std::make_shared<LaneletMapBin>();
       serializer_route.deserialize_message(&serialized_msg, deserialized_message.get());
       route_handler_.setMap(*deserialized_message);
       has_map_data_ = true;
@@ -331,7 +331,7 @@ bool DrivingEnvironmentAnalyzer::isDataReady(const bool use_map_in_bag)
   return true;
 }
 
-void DrivingEnvironmentAnalyzer::onMap(const HADMapBin::ConstSharedPtr msg)
+void DrivingEnvironmentAnalyzer::onMap(const LaneletMapBin::ConstSharedPtr msg)
 {
   route_handler_.setMap(*msg);
   has_map_data_ = true;

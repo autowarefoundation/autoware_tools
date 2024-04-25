@@ -1,8 +1,8 @@
 import time
 
-from autoware_auto_control_msgs.msg import AckermannControlCommand
-from autoware_auto_control_msgs.msg import AckermannLateralCommand
-from autoware_auto_control_msgs.msg import LongitudinalCommand
+from autoware_control_msgs.msg import Control as ControlCommand
+from autoware_control_msgs.msg import Lateral as LateralCommand
+from autoware_control_msgs.msg import Longitudinal as LongitudinalCommand
 import pytest
 import rclpy
 from rclpy.executors import MultiThreadedExecutor
@@ -39,13 +39,13 @@ class Test03LongitudinalCommandAndReportBase:
 
         cls.node = rclpy.create_node("test_03_longitudinal_command_and_report_base")
         cls.sub = cls.node.create_subscription(
-            AckermannControlCommand,
+            ControlCommand,
             "/control/command/control_cmd",
             lambda msg: cls.msgs_rx.append(msg),
             10,
         )
         cls.pub = cls.node.create_publisher(
-            AckermannControlCommand, "/control/command/control_cmd", QOS_RKL10TL
+            ControlCommand, "/control/command/control_cmd", QOS_RKL10TL
         )
         cls.sub_velocity_report = SubscriberVelocityReport()
         cls.executor = MultiThreadedExecutor()
@@ -71,8 +71,8 @@ class Test03LongitudinalCommandAndReportBase:
 
     def generate_control_msg(self, control_cmd):
         stamp = self.node.get_clock().now().to_msg()
-        msg = AckermannControlCommand()
-        lateral_cmd = AckermannLateralCommand()
+        msg = ControlCommand()
+        lateral_cmd = LateralCommand()
         longitudinal_cmd = LongitudinalCommand()
         lateral_cmd.stamp.sec = stamp.sec
         lateral_cmd.stamp.nanosec = stamp.nanosec

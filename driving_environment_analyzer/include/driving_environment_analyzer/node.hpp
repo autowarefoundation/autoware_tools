@@ -20,8 +20,8 @@
 
 #include <route_handler/route_handler.hpp>
 
-#include <autoware_auto_mapping_msgs/msg/had_map_bin.hpp>
-#include <autoware_auto_perception_msgs/msg/predicted_objects.hpp>
+#include <autoware_map_msgs/msg/lanelet_map_bin.hpp>
+#include <autoware_perception_msgs/msg/predicted_objects.hpp>
 #include <autoware_planning_msgs/msg/lanelet_route.hpp>
 #include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/occupancy_grid.hpp>
@@ -36,9 +36,9 @@
 
 namespace driving_environment_analyzer
 {
-using autoware_auto_mapping_msgs::msg::HADMapBin;
-using autoware_auto_perception_msgs::msg::PredictedObject;
-using autoware_auto_perception_msgs::msg::PredictedObjects;
+using autoware_map_msgs::msg::LaneletMapBin;
+using autoware_perception_msgs::msg::PredictedObject;
+using autoware_perception_msgs::msg::PredictedObjects;
 using autoware_planning_msgs::msg::LaneletRoute;
 using geometry_msgs::msg::AccelWithCovarianceStamped;
 using nav_msgs::msg::Odometry;
@@ -50,7 +50,7 @@ public:
 
 private:
   bool isDataReady(const bool use_map_in_bag);
-  void onMap(const HADMapBin::ConstSharedPtr map_msg);
+  void onMap(const LaneletMapBin::ConstSharedPtr map_msg);
   void analyze();
 
   bool has_map_data_{false};
@@ -59,7 +59,7 @@ private:
 
   route_handler::RouteHandler route_handler_;
   LaneletRoute::ConstSharedPtr route_ptr_{nullptr};
-  rclcpp::Subscription<HADMapBin>::SharedPtr sub_map_;
+  rclcpp::Subscription<LaneletMapBin>::SharedPtr sub_map_;
   rclcpp::TimerBase::SharedPtr timer_;
   rosbag2_cpp::Reader reader_;
 };
