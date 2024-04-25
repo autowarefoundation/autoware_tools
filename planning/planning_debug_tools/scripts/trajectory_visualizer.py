@@ -16,13 +16,11 @@
 
 import argparse
 
-from autoware_auto_planning_msgs.msg import Path
-from autoware_auto_planning_msgs.msg import PathPoint
-from autoware_auto_planning_msgs.msg import PathPointWithLaneId
-from autoware_auto_planning_msgs.msg import PathWithLaneId
-from autoware_auto_planning_msgs.msg import Trajectory
-from autoware_auto_planning_msgs.msg import TrajectoryPoint
-from autoware_auto_vehicle_msgs.msg import VelocityReport
+from autoware_planning_msgs.msg import Path
+from autoware_planning_msgs.msg import PathPoint
+from autoware_planning_msgs.msg import Trajectory
+from autoware_planning_msgs.msg import TrajectoryPoint
+from autoware_vehicle_msgs.msg import VelocityReport
 from geometry_msgs.msg import Pose
 from matplotlib import animation
 import matplotlib.pyplot as plt
@@ -33,6 +31,8 @@ import rclpy
 from rclpy.node import Node
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
+from tier4_planning_msgs.msg import PathPointWithLaneId
+from tier4_planning_msgs.msg import PathWithLaneId
 from tier4_planning_msgs.msg import VelocityLimit
 
 parser = argparse.ArgumentParser()
