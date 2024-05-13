@@ -49,7 +49,9 @@ public:
   bool isDataReadyForDynamicODDAnalysis() const { return odd_raw_data_.has_value(); }
 
   void analyzeStaticODDFactor() const;
-  void analyzeDynamicODDFactor() const;
+  void analyzeDynamicODDFactor(std::ofstream & ofs_csv_file) const;
+
+  void addHeader(std::ofstream & ofs_csv_file) const;
 
   void setBagFile(const std::string & file_name);
 

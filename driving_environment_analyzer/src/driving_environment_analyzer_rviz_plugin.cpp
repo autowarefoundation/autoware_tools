@@ -152,6 +152,10 @@ void DrivingEnvironmentAnalyzerPanel::onSelectDirectory()
 
   analyzer_->setBagFile(file_name.toStdString());
 
+  ofs_csv_file_ = std::ofstream(
+    file_name.toStdString() + "/" + file_name.split("/").back().toStdString() + "_odd.csv");
+  analyzer_->addHeader(ofs_csv_file_);
+
   const auto [start_time, end_time] = analyzer_->getBagStartEndTime();
   bag_time_selector_->setRange(start_time, end_time);
   bag_time_slider_->setRange(start_time, end_time);
@@ -168,6 +172,9 @@ void DrivingEnvironmentAnalyzerPanel::onSelectBagFile()
   }
 
   analyzer_->setBagFile(file_name.toStdString());
+
+  ofs_csv_file_ = std::ofstream(file_name.toStdString() + "_odd.csv");
+  analyzer_->addHeader(ofs_csv_file_);
 
   const auto [start_time, end_time] = analyzer_->getBagStartEndTime();
   bag_time_selector_->setRange(start_time, end_time);
@@ -196,7 +203,7 @@ void DrivingEnvironmentAnalyzerPanel::onClickAnalyzeDynamicODDFactor()
     return;
   }
 
-  analyzer_->analyzeDynamicODDFactor();
+  analyzer_->analyzeDynamicODDFactor(ofs_csv_file_);
 }
 
 void DrivingEnvironmentAnalyzerPanel::onClickAnalyzeStaticODDFactor()

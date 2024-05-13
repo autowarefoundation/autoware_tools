@@ -62,6 +62,8 @@ private:
 
   std::shared_ptr<analyzer_core::AnalyzerCore> analyzer_;
 
+  std::ofstream ofs_csv_file_;
+
   QSpinBox * bag_time_selector_;
   QSlider * bag_time_slider_;
   QLabel * bag_name_label_;

@@ -16,7 +16,9 @@
 
 #include "driving_environment_analyzer/utils.hpp"
 
+#include <fstream>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -148,7 +150,40 @@ std::optional<ODDRawData> AnalyzerCore::getRawData(const rcutils_time_point_valu
   return odd_raw_data;
 }
 
-void AnalyzerCore::analyzeDynamicODDFactor() const
+void AnalyzerCore::addHeader(std::ofstream & ofs_csv_file) const
+{
+  ofs_csv_file << "TIME" << ',';
+  ofs_csv_file << "EGO [SPEED]" << ',';
+  ofs_csv_file << "EGO [ELEVATION ANGLE]" << ',';
+  ofs_csv_file << "EGO BEHAVIOR [AVOIDANCE(R)]" << ',';
+  ofs_csv_file << "EGO BEHAVIOR [AVOIDANCE(L)]" << ',';
+  ofs_csv_file << "EGO BEHAVIOR [LANE_CHANGE(R)]" << ',';
+  ofs_csv_file << "EGO BEHAVIOR [LANE_CHANGE(L)]" << ',';
+  ofs_csv_file << "EGO BEHAVIOR [START_PLANNER]" << ',';
+  ofs_csv_file << "EGO BEHAVIOR [GOAL_PLANNER]" << ',';
+  ofs_csv_file << "EGO BEHAVIOR [CROSSWALK]" << ',';
+  ofs_csv_file << "EGO BEHAVIOR [INTERSECTION]" << ',';
+  ofs_csv_file << "LANE [ID]" << ',';
+  ofs_csv_file << "LANE [WIDTH]" << ',';
+  ofs_csv_file << "LANE [SHAPE]" << ',';
+  ofs_csv_file << "LANE [RIGHT LANE NUM]" << ',';
+  ofs_csv_file << "LANE [LEFT LANE NUM]" << ',';
+  ofs_csv_file << "LANE [TOTAL LANE NUM]" << ',';
+  ofs_csv_file << "LANE [SAME DIRECTION LANE]" << ',';
+  ofs_csv_file << "LANE [OPPOSITE DIRECTION LANE]" << ',';
+  ofs_csv_file << "LANE [ROAD SHOULDER]" << ',';
+  ofs_csv_file << "OBJECT [UNKNOWN]" << ',';
+  ofs_csv_file << "OBJECT [CAR]" << ',';
+  ofs_csv_file << "OBJECT [TRUCK]" << ',';
+  ofs_csv_file << "OBJECT [BUS]" << ',';
+  ofs_csv_file << "OBJECT [TRAILER]" << ',';
+  ofs_csv_file << "OBJECT [MOTORCYCLE]" << ',';
+  ofs_csv_file << "OBJECT [BICYCLE]" << ',';
+  ofs_csv_file << "OBJECT [PEDESTRIAN]" << ',';
+  ofs_csv_file << std::endl;
+}
+
+void AnalyzerCore::analyzeDynamicODDFactor(std::ofstream & ofs_csv_file) const
 {
   std::ostringstream ss;
   ss << std::boolalpha << "\n";
@@ -157,10 +192,15 @@ void AnalyzerCore::analyzeDynamicODDFactor() const
   ss << "***********************************************************\n";
   ss << "Type: TIME SPECIFIED\n";
 
+  const auto write = [&ofs_csv_file](const auto & data) {
+    ofs_csv_file << data << ',';
+    return data;
+  };
+
   char buffer[128];
   auto seconds = static_cast<time_t>(odd_raw_data_.value().timestamp);
   strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", localtime(&seconds));
-  ss << "Time: " << buffer << "\n";
+  ss << "Time: " << write(buffer) << "\n";
   ss << "\n";
   ss << "\n";
 
@@ -184,52 +224,61 @@ void AnalyzerCore::analyzeDynamicODDFactor() const
   const auto to_string = [](const bool exist) { return exist ? "EXIST" : "NONE"; };
 
   ss << "- EGO INFO\n";
-  ss << "  [SPEED]                       : " << getEgoSpeed() << " [m/s]\n";
+  ss << "  [SPEED]                       : " << write(getEgoSpeed()) << " [m/s]\n";
   ss << "  [ELEVATION ANGLE]             : "
-     << utils::calcElevationAngle(closest_lanelet, getEgoPose()) << " [rad]\n";
+     << write(utils::calcElevationAngle(closest_lanelet, getEgoPose())) << " [rad]\n";
   ss << "\n";
 
   ss << "- EGO BEHAVIOR\n";
-  ss << "  [AVOIDANCE(R)]                : " << status(Module::AVOIDANCE_RIGHT) << "\n";
-  ss << "  [AVOIDANCE(L)]                : " << status(Module::AVOIDANCE_LEFT) << "\n";
-  ss << "  [LANE_CHANGE(R)]              : " << status(Module::LANE_CHANGE_RIGHT) << "\n";
-  ss << "  [LANE_CHANGE(L)]              : " << status(Module::LANE_CHANGE_LEFT) << "\n";
-  ss << "  [START_PLANNER]               : " << status(Module::START_PLANNER) << "\n";
-  ss << "  [GOAL_PLANNER]                : " << status(Module::GOAL_PLANNER) << "\n";
-  ss << "  [CROSSWALK]                   : " << exist_crosswalk() << "\n";
+  ss << "  [AVOIDANCE(R)]                : " << write(status(Module::AVOIDANCE_RIGHT)) << "\n";
+  ss << "  [AVOIDANCE(L)]                : " << write(status(Module::AVOIDANCE_LEFT)) << "\n";
+  ss << "  [LANE_CHANGE(R)]              : " << write(status(Module::LANE_CHANGE_RIGHT)) << "\n";
+  ss << "  [LANE_CHANGE(L)]              : " << write(status(Module::LANE_CHANGE_LEFT)) << "\n";
+  ss << "  [START_PLANNER]               : " << write(status(Module::START_PLANNER)) << "\n";
+  ss << "  [GOAL_PLANNER]                : " << write(status(Module::GOAL_PLANNER)) << "\n";
+  ss << "  [CROSSWALK]                   : " << write(exist_crosswalk()) << "\n";
   ss << "  [INTERSECTION]                : "
-     << utils::getEgoBehavior(closest_lanelet, route_handler_, getEgoPose()) << "\n";
+     << write(utils::getEgoBehavior(closest_lanelet, route_handler_, getEgoPose())) << "\n";
   ss << "\n";
 
   ss << "- LANE INFO\n";
-  ss << "  [ID]                          : " << closest_lanelet.id() << "\n";
-  ss << "  [WIDTH]                       : " << utils::getLaneWidth(closest_lanelet) << " [m]\n";
-  ss << "  [SHAPE]                       : " << utils::getLaneShape(closest_lanelet) << "\n";
+  ss << "  [ID]                          : " << write(closest_lanelet.id()) << "\n";
+  ss << "  [WIDTH]                       : " << write(utils::getLaneWidth(closest_lanelet))
+     << " [m]\n";
+  ss << "  [SHAPE]                       : " << write(utils::getLaneShape(closest_lanelet)) << "\n";
   ss << "  [RIGHT LANE NUM]              : "
-     << utils::getRightLaneletNum(closest_lanelet, route_handler_) << "\n";
+     << write(utils::getRightLaneletNum(closest_lanelet, route_handler_)) << "\n";
   ss << "  [LEFT LANE NUM]               : "
-     << utils::getLeftLaneletNum(closest_lanelet, route_handler_) << "\n";
+     << write(utils::getLeftLaneletNum(closest_lanelet, route_handler_)) << "\n";
   ss << "  [TOTAL LANE NUM]              : "
-     << utils::getTotalLaneletNum(closest_lanelet, route_handler_) << "\n";
+     << write(utils::getTotalLaneletNum(closest_lanelet, route_handler_)) << "\n";
   ss << "  [SAME DIRECTION LANE]         : "
-     << to_string(utils::existSameDirectionLane(closest_lanelet, route_handler_)) << "\n";
+     << write(to_string(utils::existSameDirectionLane(closest_lanelet, route_handler_))) << "\n";
   ss << "  [OPPOSITE DIRECTION LANE]     : "
-     << to_string(utils::existOppositeDirectionLane(closest_lanelet, route_handler_)) << "\n";
+     << write(to_string(utils::existOppositeDirectionLane(closest_lanelet, route_handler_)))
+     << "\n";
   ss << "  [ROAD SHOULDER]               : "
-     << to_string(utils::existRoadShoulderLane(closest_lanelet, route_handler_)) << "\n";
+     << write(to_string(utils::existRoadShoulderLane(closest_lanelet, route_handler_))) << "\n";
   ss << "\n";
 
   ss << "- SURROUND OBJECT NUM\n";
-  ss << "  [UNKNOWN]                     : " << number(ObjectClassification::UNKNOWN) << "\n";
-  ss << "  [CAR]                         : " << number(ObjectClassification::CAR) << "\n";
-  ss << "  [TRUCK]                       : " << number(ObjectClassification::TRUCK) << "\n";
-  ss << "  [BUS]                         : " << number(ObjectClassification::BUS) << "\n";
-  ss << "  [TRAILER]                     : " << number(ObjectClassification::TRAILER) << "\n";
-  ss << "  [MOTORCYCLE]                  : " << number(ObjectClassification::MOTORCYCLE) << "\n";
-  ss << "  [BICYCLE]                     : " << number(ObjectClassification::BICYCLE) << "\n";
-  ss << "  [PEDESTRIAN]                  : " << number(ObjectClassification::PEDESTRIAN) << "\n";
+  ss << "  [UNKNOWN]                     : " << write(number(ObjectClassification::UNKNOWN))
+     << "\n";
+  ss << "  [CAR]                         : " << write(number(ObjectClassification::CAR)) << "\n";
+  ss << "  [TRUCK]                       : " << write(number(ObjectClassification::TRUCK)) << "\n";
+  ss << "  [BUS]                         : " << write(number(ObjectClassification::BUS)) << "\n";
+  ss << "  [TRAILER]                     : " << write(number(ObjectClassification::TRAILER))
+     << "\n";
+  ss << "  [MOTORCYCLE]                  : " << write(number(ObjectClassification::MOTORCYCLE))
+     << "\n";
+  ss << "  [BICYCLE]                     : " << write(number(ObjectClassification::BICYCLE))
+     << "\n";
+  ss << "  [PEDESTRIAN]                  : " << write(number(ObjectClassification::PEDESTRIAN))
+     << "\n";
 
   ss << "***********************************************************\n";
+
+  ofs_csv_file << std::endl;
 
   RCLCPP_INFO_STREAM(logger_, ss.str());
 }
