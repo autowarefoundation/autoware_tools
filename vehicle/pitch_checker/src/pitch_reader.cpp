@@ -14,6 +14,8 @@
 // limitations under the License.
 //
 
+// cSpell:ignore strvec
+
 #include "pitch_checker/pitch_reader.hpp"
 
 #include <limits>

@@ -1,3 +1,4 @@
+# cSpell:ignore utest
 cmake_minimum_required(VERSION 3.5)
 project(estimator_utils)
 
