@@ -990,8 +990,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#how-to-use" class="md-nav__link">
-    How to use
+  <a href="#rosbagodd" class="md-nav__link">
+    ROSBAGの特定時刻における周囲のODDを解析する場合
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rosbagodd_1" class="md-nav__link">
+    ROSBAG全体に対して経路沿いのODDを解析する場合
   </a>
   
 </li>
@@ -1016,7 +1023,75 @@
 
 <div><h1 id="driving-environment-analyzer">Driving Environment Analyzer<a class="headerlink" href="#driving-environment-analyzer" title="Permanent link">#</a></h1>
 <p>このツールはROSBAGに含まれる走行履歴を元に走行環境のODDを解析するツールです。</p>
-<h2 id="how-to-use">How to use<a class="headerlink" href="#how-to-use" title="Permanent link">#</a></h2>
+<h2 id="rosbagodd">ROSBAGの特定時刻における周囲のODDを解析する場合<a class="headerlink" href="#rosbagodd" title="Permanent link">#</a></h2>
+<p>この場合にはRvizプラグインである<code>driving_environment_analyzer_rviz_panel</code>を使用することをおすすめします。</p>
+<p>現在以下の情報が出力可能です。</p>
+<ul>
+<li>EGOの現在車速</li>
+<li>現在位置の勾配</li>
+<li>EGOの挙動</li>
+<li>現在の車線情報</li>
+</ul>
+<p>こちらのツールはautoware_launchに含まれる<code>logging_simulator</code>を使用します。まず以下のコマンドからシミュレータを起動してください。</p>
+<p><code>ros2 launch autoware_launch logging_simulator.launch.xml map_path:=&lt;MAP&gt; vehicle_model:=&lt;VEHICLE_NAME&gt; sensor_model:=&lt;AIP_NAME&gt; sensing:=false control:=false planning:=false perception:=false localization:=false system:=false</code></p>
+<p><img alt="fig1" src="images/launch_rviz.png"></p>
+<p>シミュレータ起動時に地図を読み込むためROSBAGに地図情報が含まれていなくてもODDの解析が可能です。（ただし、その場合にはROSBAG取得の際に使用した地図を指定してシミュレータを起動するようにしてください。）</p>
+<p>次に本パッケージに含まれる解析ツールを起動します。Rviz画面左上部のAdd New PanelからDrivingEnvironmentAnalyzerPanelを選択してください。これでRviz左下に新しく操作パネルが追加されます。</p>
+<p><img alt="fig1" src="images/launch_tool.png">
+<img alt="fig1" src="images/rviz_overview_1.png"></p>
+<p>本ツールはROSBAGファイル指定してロードできる他、複数のROSBAGファイルが格納されているディレクトリを指定することも可能です。ただし、その場合には事前に以下のコマンドで<code>metadata.yaml</code>の生成が必要になります。</p>
+<p><code>ros2 bag reindex &lt;DIR_PATH&gt; sqlite3</code></p>
+<p><img alt="fig1" src="images/select_directory.png"></p>
+<p>ROSBAGの読み込みが完了したらODDを解析したい時刻を指定します。時刻の指定にはUnix timeを直接指定するほかスライドバーも使用可能です。左に表示されている日時を参考に調整してください。</p>
+<p><img alt="fig1" src="./images/select_time%20.png"></p>
+<p>また、このときViewsのTarget Flameを<code>base_link</code>にしておくことで、指定した時刻のEGOの位置と周囲の状況をRvizで可視化可能です。</p>
+<p><img alt="fig1" src="images/select_target_frame.png"></p>
+<p>時刻の指定が完了したら、<code>Set time stamp</code>ボタンを押し、最後に<code>Analyze dynamic ODD factor</code>を押すことで解析が始まります。</p>
+<p><img alt="fig1" src="images/rviz_overview_2.png"></p>
+<div class="highlight"><pre><span></span><code><span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>***********************************************************
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">                    </span>ODD<span class="w"> </span>analysis<span class="w"> </span>result
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>***********************************************************
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>Type:<span class="w"> </span>TIME<span class="w"> </span>SPECIFIED
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>Time:<span class="w"> </span><span class="m">2024</span>-04-22<span class="w"> </span><span class="m">14</span>:48:05
+<span class="o">[</span>rviz2-11<span class="o">]</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>-<span class="w"> </span>EGO<span class="w"> </span>INFO
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>SPEED<span class="o">]</span><span class="w">                       </span>:<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">[</span>m/s<span class="o">]</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>ELEVATION<span class="w"> </span>ANGLE<span class="o">]</span><span class="w">             </span>:<span class="w"> </span><span class="m">0</span>.00963597<span class="w"> </span><span class="o">[</span>rad<span class="o">]</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>-<span class="w"> </span>EGO<span class="w"> </span>BEHAIOVR
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>AVOIDANCE<span class="o">(</span>R<span class="o">)]</span><span class="w">                </span>:<span class="w"> </span>NONE
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>AVOIDANCE<span class="o">(</span>L<span class="o">)]</span><span class="w">                </span>:<span class="w"> </span>NONE
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>LANE_CHANGE<span class="o">(</span>R<span class="o">)]</span><span class="w">              </span>:<span class="w"> </span>NONE
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>LANE_CHANGE<span class="o">(</span>L<span class="o">)]</span><span class="w">              </span>:<span class="w"> </span>NONE
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>START_PLANNER<span class="o">]</span><span class="w">               </span>:<span class="w"> </span>SAFE:<span class="w"> </span><span class="nb">true</span><span class="w"> </span>COMMAND:<span class="w"> </span>deactivate
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>GOAL_PLANNER<span class="o">]</span><span class="w">                </span>:<span class="w"> </span>NONE
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>CROSSWALK<span class="o">]</span><span class="w">                   </span>:<span class="w"> </span>NONE
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>INTERSECTION<span class="o">]</span><span class="w">                </span>:<span class="w"> </span>NONE
+<span class="o">[</span>rviz2-11<span class="o">]</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>-<span class="w"> </span>LANE<span class="w"> </span>INFO
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>ID<span class="o">]</span><span class="w">                          </span>:<span class="w"> </span><span class="m">176126</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>WIDTH<span class="o">]</span><span class="w">                       </span>:<span class="w"> </span><span class="m">4</span>.24132<span class="w"> </span><span class="o">[</span>m<span class="o">]</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>SHAPE<span class="o">]</span><span class="w">                       </span>:<span class="w"> </span>STRAIGHT
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>RIGHT<span class="w"> </span>LANE<span class="w"> </span>NUM<span class="o">]</span><span class="w">              </span>:<span class="w"> </span><span class="m">0</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>LEFT<span class="w"> </span>LANE<span class="w"> </span>NUM<span class="o">]</span><span class="w">               </span>:<span class="w"> </span><span class="m">0</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>TOTAL<span class="w"> </span>LANE<span class="w"> </span>NUM<span class="o">]</span><span class="w">              </span>:<span class="w"> </span><span class="m">1</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>SAME<span class="w"> </span>DIRECTION<span class="w"> </span>LANE<span class="o">]</span><span class="w">         </span>:<span class="w"> </span>NONE
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>OPPOSITE<span class="w"> </span>DIRECTION<span class="w"> </span>LANE<span class="o">]</span><span class="w">     </span>:<span class="w"> </span>NONE
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>ROAD<span class="w"> </span>SHOULDER<span class="o">]</span><span class="w">               </span>:<span class="w"> </span>EXIST
+<span class="o">[</span>rviz2-11<span class="o">]</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>-<span class="w"> </span>SURROUND<span class="w"> </span>OBJECT<span class="w"> </span>NUM
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>UNKNOWN<span class="o">]</span><span class="w">                     </span>:<span class="w"> </span><span class="m">0</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>CAR<span class="o">]</span><span class="w">                         </span>:<span class="w"> </span><span class="m">6</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>TRUCK<span class="o">]</span><span class="w">                       </span>:<span class="w"> </span><span class="m">0</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>BUS<span class="o">]</span><span class="w">                         </span>:<span class="w"> </span><span class="m">3</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>TRAILER<span class="o">]</span><span class="w">                     </span>:<span class="w"> </span><span class="m">2</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>MOTORCYCLE<span class="o">]</span><span class="w">                  </span>:<span class="w"> </span><span class="m">0</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>BICYCLE<span class="o">]</span><span class="w">                     </span>:<span class="w"> </span><span class="m">0</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>PEDESTRIAN<span class="o">]</span><span class="w">                  </span>:<span class="w"> </span><span class="m">7</span>
+<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>***********************************************************
+</code></pre></div>
+<h2 id="rosbagodd_1">ROSBAG全体に対して経路沿いのODDを解析する場合<a class="headerlink" href="#rosbagodd_1" title="Permanent link">#</a></h2>
 <p>現在以下の情報が出力可能です。</p>
 <ul>
 <li>走行経路の長さ</li>
