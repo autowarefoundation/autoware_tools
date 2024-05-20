@@ -2,7 +2,7 @@
 
 ## Setup
 
-1. Move to the target autoware directory and build the package 
+1. Move to the target autoware directory and build the package
 
    ```sh
    colcon build --packages-select freespace_planning_algorithms --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
