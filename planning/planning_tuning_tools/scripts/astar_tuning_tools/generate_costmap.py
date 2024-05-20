@@ -146,7 +146,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="costmap info")
     parser.add_argument(
         "--save_name",
-        default="costap_generated",
+        default="costmap_generated",
         type=str,
         help="file name without extension to save",
     )
