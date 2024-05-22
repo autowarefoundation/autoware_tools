@@ -14,11 +14,22 @@
    source install/setup.bash
    ```
 
+3. Move to this directory and run
+
+   ```sh
+   pip3 install .
+   ```
+
 ## Costmap generation
 
 ### Usage
 
-1. Run the script `python3 generate_costmap.py --save_name [filename]`
+1. Run the script
+
+   ```sh
+   python3 generate_costmap.py --save_name [filename]
+   ```
+
 2. Then the GUI shows up
    - Drag and drop to put an obstacle
    - Drag and drop the same points again to remove the obstacle
@@ -70,7 +81,12 @@ Search for goals on grid: discretized on x, y, yaw axes.
 
 ### Usage
 
-1. Run the script `python3 visualize_trajectories.py --dir_name [save dir name]`
+1. Run the script
+
+   ```sh
+   python3 visualize_trajectories.py --dir_name [save dir name]
+   ```
+
 2. Then the two GUIs show up
    - Viewer of the searched trajectories
      - Drag and drop to put a goal in specified direction

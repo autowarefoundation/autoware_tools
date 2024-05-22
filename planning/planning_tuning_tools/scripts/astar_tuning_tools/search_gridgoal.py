@@ -18,8 +18,6 @@ import pathlib
 import pickle
 import time
 
-from autoware_auto_planning_msgs.msg import Trajectory
-from autoware_auto_planning_msgs.msg import TrajectoryPoint
 from common.common_classes import Result
 from common.common_classes import SearchInfo
 import freespace_planning_algorithms.astar_search as fp
@@ -44,16 +42,6 @@ def float_range(start, end, step):
             n = n + step
             f_range.append(n)
     return f_range
-
-
-def createTrajectory(waypoints):
-    trajectory = Trajectory()
-    for waypoint in waypoints.waypoints:
-        trajectory_point = TrajectoryPoint()
-        trajectory_point.pose = waypoint
-        trajectory.points.append(trajectory_point)
-
-    return trajectory
 
 
 if __name__ == "__main__":
@@ -139,12 +127,11 @@ if __name__ == "__main__":
                         goal_pose.orientation.z = quaterinon.z
 
                         find = astar.makePlan(start_pose, goal_pose)
-                        trajectory = []
+                        waypoints = fp.PlannerWaypoints()
                         if find:
                             waypoints = astar.getWaypoints()
-                            trajectory = createTrajectory(waypoints)
 
-                        result = Result(x, y, yaw, find, trajectory)
+                        result = Result(x, y, yaw, find, waypoints)
 
                         pickle.dump(result, f)
 
