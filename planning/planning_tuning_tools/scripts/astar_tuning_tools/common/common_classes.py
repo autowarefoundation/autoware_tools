@@ -7,9 +7,9 @@ class SearchInfo:
 
 
 class Result:
-    def __init__(self, x, y, yaw, find, trajectory):
+    def __init__(self, x, y, yaw, find, waypoints):
         self.xs = x
         self.ys = y
         self.yaws = yaw
         self.find = find
-        self.trajectory = trajectory
+        self.waypoints = waypoints

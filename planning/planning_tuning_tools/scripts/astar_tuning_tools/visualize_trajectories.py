@@ -19,6 +19,7 @@ import pickle
 import sys
 
 from autoware_auto_planning_msgs.msg import Trajectory
+from autoware_auto_planning_msgs.msg import TrajectoryPoint
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,6 +31,16 @@ sys.path.append(os.path.dirname(__file__))
 # colors
 TAB_COLORS = mcolors.TABLEAU_COLORS
 COLOR_KEYS = list(TAB_COLORS.keys())
+
+
+def createTrajectory(waypoints):
+    trajectory = Trajectory()
+    for waypoint in waypoints.waypoints:
+        trajectory_point = TrajectoryPoint()
+        trajectory_point.pose = waypoint.pose
+        trajectory.points.append(trajectory_point)
+
+    return trajectory
 
 
 class DrawClickedTrajectory:
@@ -180,7 +191,7 @@ if __name__ == "__main__":
                 with open(filename, "rb") as f:
                     result = pickle.load(f)
                     results[k][i][j] = result.find
-                    trajectories[k][i][j] = result.trajectory
+                    trajectories[k][i][j] = createTrajectory(result.waypoints)
 
     # detect obstacle
     obstacle_x = []
