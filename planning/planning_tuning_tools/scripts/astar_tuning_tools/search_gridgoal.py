@@ -18,8 +18,8 @@ import pathlib
 import pickle
 import time
 
-from common.common_classes import Result
-from common.common_classes import SearchInfo
+from common.common_classes import Result, SearchInfo
+from common.common_functions import param_vector2obj
 import freespace_planning_algorithms.astar_search as fp
 from geometry_msgs.msg import Pose
 import numpy as np
@@ -60,6 +60,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--yaw_discrete", default=10, type=int, help="the descretized number of yaw"
     )
+    parser.add_argument(
+        "--opt_param", default=None, type=str, help="name of optimal param"
+    )
     args = parser.parse_args()
 
     # input proccessing
@@ -71,6 +74,11 @@ if __name__ == "__main__":
     costmap_height_half = costmap.info.resolution * costmap.info.height / 2
     costmap_width_half = costmap.info.resolution * costmap.info.width / 2
 
+    if args.opt_param != None:
+        with open(os.path.dirname(__file__) + "/opt_param/" + args.opt_param + ".txt", "rb") as f:
+            opt_param = pickle.load(f)
+        planner_param, astar_param = param_vector2obj(opt_param)
+    
     # goal grid
     xs = list(
         reversed(float_range(-args.x_resolution, -costmap_height_half, -args.x_resolution))
