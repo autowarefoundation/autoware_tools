@@ -28,6 +28,9 @@ from utils import translate_objects_coordinate
 dist_eps = 1e-2 # (meters)
 
 class PerceptionReproducerV2(PerceptionReplayerCommon):
+    '''
+    PerceptionReproducerV2 is used reproduces perception topic data from rosbag, specifically optimized for use with simulators.
+    '''
     def __init__(self, args):
         self.rosbag_ego_odom_seach_radius = args.seach_radius # (m) the range of the ego odom to search, 
         self.reproduce_cooldown = args.reproduce_cooldown # (sec) the cooldown time for republishing published data, please make sure that it's greater than the ego's stopping time. 

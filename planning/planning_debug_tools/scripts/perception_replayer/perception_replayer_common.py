@@ -32,7 +32,7 @@ from rclpy.serialization import deserialize_message
 from rosbag2_py import StorageFilter
 from rosidl_runtime_py.utilities import get_message
 from sensor_msgs.msg import PointCloud2
-from utils import open_reader
+from utils import open_reader,get_starting_time
 
 
 class PerceptionReplayerCommon(Node):
@@ -79,9 +79,9 @@ class PerceptionReplayerCommon(Node):
         # load rosbag
         print("Stared loading rosbag")
         if os.path.isdir(args.bag):
-            for bag_file in sorted(os.listdir(args.bag)):
-                if bag_file.endswith(self.args.rosbag_format):
-                    self.load_rosbag(args.bag + "/" + bag_file)
+            bags = [ os.path.join(args.bag, base_name) for base_name in os.listdir(args.bag) if base_name.endswith(args.rosbag_format) ]
+            for bag_file in sorted(bags, key=get_starting_time):
+                    self.load_rosbag(bag_file)
         else:
             self.load_rosbag(args.bag)
         print("Ended loading rosbag")
