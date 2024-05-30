@@ -58,10 +58,10 @@ std::string getModuleName(const uint8_t module_type)
       return "avoidance_by_lane_change_right";
     }
     case Module::AVOIDANCE_LEFT: {
-      return "avoidance_left";
+      return "static_obstacle_avoidance_left";
     }
     case Module::AVOIDANCE_RIGHT: {
-      return "avoidance_right";
+      return "static_obstacle_avoidance_right";
     }
     case Module::GOAL_PLANNER: {
       return "goal_planner";
