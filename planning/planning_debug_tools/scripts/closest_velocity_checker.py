@@ -18,7 +18,6 @@ import time
 
 from autoware_control_msgs.msg import Control
 from autoware_planning_msgs.msg import Path
-from tier4_planning_msgs.msg import PathWithLaneId
 from autoware_planning_msgs.msg import Trajectory
 from autoware_vehicle_msgs.msg import Engage
 from autoware_vehicle_msgs.msg import VelocityReport
@@ -32,6 +31,7 @@ from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
 from tier4_debug_msgs.msg import Float32MultiArrayStamped
 from tier4_debug_msgs.msg import Float32Stamped
+from tier4_planning_msgs.msg import PathWithLaneId
 from tier4_planning_msgs.msg import VelocityLimit
 
 REF_LINK = "map"

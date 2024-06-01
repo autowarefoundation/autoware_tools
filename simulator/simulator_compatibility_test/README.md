@@ -145,8 +145,8 @@ Detailed process
 
 ### Input
 
-| Name                                     | Type                                                    | Description        |
-| ---------------------------------------- | ------------------------------------------------------- | ------------------ |
+| Name                                     | Type                                               | Description        |
+| ---------------------------------------- | -------------------------------------------------- | ------------------ |
 | `/vehicle/status/control_mode`           | `autoware_vehicle_msgs::msg::ControlModeReport`    | for [Test Case #1] |
 | `/vehicle/status/gear_status`            | `autoware_vehicle_msgs::msg::GearReport`           | for [Test Case #2] |
 | `/vehicle/status/velocity_status`        | `autoware_vehicle_msgs::msg::VelocityReport`       | for [Test Case #3] |
@@ -156,8 +156,8 @@ Detailed process
 
 ### Output
 
-| Name                                   | Type                                                 | Description            |
-| -------------------------------------- | ---------------------------------------------------- | ---------------------- |
+| Name                                   | Type                                            | Description            |
+| -------------------------------------- | ----------------------------------------------- | ---------------------- |
 | `/control/command/control_mode_cmd`    | `autoware_vehicle_msgs/ControlModeCommand`      | for [Test Case #1]     |
 | `/control/command/gear_cmd`            | `autoware_vehicle_msgs/GearCommand`             | for [Test Case #2]     |
 | `/control/command/control_cmd`         | `autoware_vehicle_msgs/AckermannControlCommand` | for [Test Case #3, #4] |
