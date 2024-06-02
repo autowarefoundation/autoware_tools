@@ -6,6 +6,7 @@ import pathlib
 
 from bag2way import bag2point_stamped
 import folium
+
 from tools.bag2lanelet.scripts.lanelet_xml import LaneletMap
 
 

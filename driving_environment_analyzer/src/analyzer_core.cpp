@@ -53,7 +53,7 @@ void AnalyzerCore::setBagFile(const std::string & file_name)
     route_handler_.setRoute(opt_route.value());
   }
 
-  const auto opt_map = getLastTopic<HADMapBin>("/map/vector_map");
+  const auto opt_map = getLastTopic<LaneletMapBin>("/map/vector_map");
   if (opt_map.has_value()) {
     route_handler_.setMap(opt_map.value());
   }
