@@ -1,4 +1,4 @@
-from autoware_control_msgs.msg import Control as ControlCommand
+from autoware_control_msgs.msg import Control as AckermannControlCommand
 from autoware_control_msgs.msg import Lateral as LateralCommand
 from autoware_control_msgs.msg import Longitudinal as LongitudinalCommand
 import rclpy
@@ -23,11 +23,11 @@ class ControlCommand(Node):
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
         self.topic = "/control/command/control_cmd"
-        self.publisher_ = self.create_publisher(ControlCommand, self.topic, QOS_RKL10TL)
+        self.publisher_ = self.create_publisher(AckermannControlCommand, self.topic, QOS_RKL10TL)
 
     def publish_msg(self, control_cmd):
         stamp = self.get_clock().now().to_msg()
-        msg = ControlCommand()
+        msg = AckermannControlCommand()
         lateral_cmd = LateralCommand()
         longitudinal_cmd = LongitudinalCommand()
         lateral_cmd.stamp.sec = stamp.sec

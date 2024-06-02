@@ -16,7 +16,7 @@
 
 import time
 
-from autoware_control_msgs.msg import Control
+from autoware_control_msgs.msg import Control as AckermannControlCommand
 from autoware_planning_msgs.msg import Path
 from autoware_planning_msgs.msg import Trajectory
 from autoware_vehicle_msgs.msg import Engage
