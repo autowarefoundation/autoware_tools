@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>control_data_collecting_tool</name>
+  <version>1.0.0</version>
+  <description>The pure pursuit control data collection tool package</description>
+  <maintainer email="masayuki.aino@proxima-ai-tech.com">Masayuki Aino</maintainer>
+  <maintainer email="asei.inoue@proxima-ai-tech.com">Asei Inoue</maintainer>
+  <maintainer email="toru.hishinuma@proxima-ai-tech.com">Toru Hishinuma</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <buildtool_depend>autoware_cmake</buildtool_depend>
+
+  <depend>autoware_adapi_v1_msgs</depend>
+  <depend>autoware_auto_control_msgs</depend>
+  <depend>autoware_auto_planning_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>python3-scipy</depend>
+  <depend>rviz_common</depend>
+  <depend>rviz_default_plugins</depend>
+
+  <test_depend>ament_index_python</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>autoware_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <rviz plugin="${prefix}/plugins/plugin_description.xml"/>
+  </export>
+</package>
