@@ -33,7 +33,7 @@ DrivingEnvironmentAnalyzerNode::DrivingEnvironmentAnalyzerNode(
   timer_ = rclcpp::create_timer(
     this, get_clock(), 100ms, std::bind(&DrivingEnvironmentAnalyzerNode::analyze, this));
 
-  sub_map_ = create_subscription<HADMapBin>(
+  sub_map_ = create_subscription<LaneletMapBin>(
     "input/lanelet2_map", rclcpp::QoS{1}.transient_local(),
     std::bind(&DrivingEnvironmentAnalyzerNode::onMap, this, _1));
 
@@ -42,7 +42,7 @@ DrivingEnvironmentAnalyzerNode::DrivingEnvironmentAnalyzerNode(
   analyzer_->setBagFile(declare_parameter<std::string>("bag_path"));
 }
 
-void DrivingEnvironmentAnalyzerNode::onMap(const HADMapBin::ConstSharedPtr msg)
+void DrivingEnvironmentAnalyzerNode::onMap(const LaneletMapBin::ConstSharedPtr msg)
 {
   analyzer_->setMap(*msg);
 }

@@ -112,7 +112,7 @@ void DrivingEnvironmentAnalyzerPanel::onInitialize()
 
   raw_node_ = this->getDisplayContext()->getRosNodeAbstraction().lock()->get_raw_node();
 
-  sub_map_ = raw_node_->create_subscription<HADMapBin>(
+  sub_map_ = raw_node_->create_subscription<LaneletMapBin>(
     "/map/vector_map", rclcpp::QoS{1}.transient_local(),
     std::bind(&DrivingEnvironmentAnalyzerPanel::onMap, this, _1));
 
@@ -126,7 +126,7 @@ void DrivingEnvironmentAnalyzerPanel::onInitialize()
   analyzer_ = std::make_shared<analyzer_core::AnalyzerCore>(*raw_node_);
 }
 
-void DrivingEnvironmentAnalyzerPanel::onMap(const HADMapBin::ConstSharedPtr msg)
+void DrivingEnvironmentAnalyzerPanel::onMap(const LaneletMapBin::ConstSharedPtr msg)
 {
   analyzer_->setMap(*msg);
 }

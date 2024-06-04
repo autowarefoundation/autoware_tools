@@ -60,7 +60,7 @@ public:
     odd_raw_data_ = getRawData(timestamp);
   }
 
-  void setMap(const HADMapBin & msg) { route_handler_.setMap(msg); }
+  void setMap(const LaneletMapBin & msg) { route_handler_.setMap(msg); }
 
   void clearData() { odd_raw_data_ = std::nullopt; }
 

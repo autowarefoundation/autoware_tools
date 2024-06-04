@@ -24,13 +24,13 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rviz_common/panel.hpp>
 
-#include "autoware_auto_vehicle_msgs/msg/velocity_report.hpp"
+#include "autoware_vehicle_msgs/msg/velocity_report.hpp"
 #include "geometry_msgs/msg/accel_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
-#include <autoware_auto_control_msgs/msg/ackermann_control_command.hpp>
-#include <autoware_auto_vehicle_msgs/msg/engage.hpp>
-#include <autoware_auto_vehicle_msgs/msg/gear_command.hpp>
-#include <autoware_auto_vehicle_msgs/msg/gear_report.hpp>
+#include <autoware_control_msgs/msg/control.hpp>
+#include <autoware_vehicle_msgs/msg/engage.hpp>
+#include <autoware_vehicle_msgs/msg/gear_command.hpp>
+#include <autoware_vehicle_msgs/msg/gear_report.hpp>
 #include <tier4_control_msgs/msg/gate_mode.hpp>
 #include <tier4_external_api_msgs/srv/engage.hpp>
 
@@ -38,15 +38,15 @@
 
 namespace rviz_plugins
 {
-using autoware_auto_control_msgs::msg::AckermannControlCommand;
-using autoware_auto_vehicle_msgs::msg::GearCommand;
-using autoware_auto_vehicle_msgs::msg::VelocityReport;
+using autoware_control_msgs::msg::Control;
+using autoware_vehicle_msgs::msg::GearCommand;
+using autoware_vehicle_msgs::msg::VelocityReport;
 using geometry_msgs::msg::AccelWithCovarianceStamped;
 using geometry_msgs::msg::Twist;
 using tier4_control_msgs::msg::GateMode;
 using EngageSrv = tier4_external_api_msgs::srv::Engage;
-using autoware_auto_vehicle_msgs::msg::Engage;
-using autoware_auto_vehicle_msgs::msg::GearReport;
+using autoware_vehicle_msgs::msg::Engage;
+using autoware_vehicle_msgs::msg::GearReport;
 
 class ManualController : public rviz_common::Panel
 {
@@ -77,7 +77,7 @@ protected:
   rclcpp::Subscription<VelocityReport>::SharedPtr sub_velocity_;
   rclcpp::Subscription<Engage>::SharedPtr sub_engage_;
   rclcpp::Publisher<tier4_control_msgs::msg::GateMode>::SharedPtr pub_gate_mode_;
-  rclcpp::Publisher<AckermannControlCommand>::SharedPtr pub_control_command_;
+  rclcpp::Publisher<Control>::SharedPtr pub_control_command_;
   rclcpp::Publisher<GearCommand>::SharedPtr pub_gear_cmd_;
   rclcpp::Client<EngageSrv>::SharedPtr client_engage_;
   rclcpp::Subscription<GearReport>::SharedPtr sub_gear_;
