@@ -19,9 +19,12 @@ from subprocess import CalledProcessError
 from subprocess import check_output
 import time
 
-from autoware_perception_msgs.msg import DetectedObjects, PredictedObjects, TrackedObjects
-from autoware_perception_msgs.msg import TrafficLightGroupArray, TrafficLightGroup, TrafficLightElement
-
+from autoware_perception_msgs.msg import DetectedObjects
+from autoware_perception_msgs.msg import PredictedObjects
+from autoware_perception_msgs.msg import TrackedObjects
+from autoware_perception_msgs.msg import TrafficLightElement
+from autoware_perception_msgs.msg import TrafficLightGroup
+from autoware_perception_msgs.msg import TrafficLightGroupArray
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
@@ -126,7 +129,9 @@ class PerceptionReplayerCommon(Node):
                     # convert old autoware_auto_perception_msgs to new autoware_perception_msgs
                     new_msg = self.objects_pub.msg_type()
                     for field in msg.__slots__:
-                        setattr(new_msg, field, getattr(msg, field))# it's unsafe because the elements inside the message are still the old type, but it works for now on.
+                        setattr(
+                            new_msg, field, getattr(msg, field)
+                        )  # it's unsafe because the elements inside the message are still the old type, but it works for now on.
                     msg = new_msg
                 self.rosbag_objects_data.append((stamp, msg))
             if topic == ego_odom_topic:

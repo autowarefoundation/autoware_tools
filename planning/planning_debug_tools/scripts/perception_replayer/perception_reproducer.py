@@ -115,7 +115,6 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             self.traffic_signals_pub.publish(self.prev_traffic_signals_msg)
         self.stopwatch.toc("transform and publish")
 
-
         self.stopwatch.toc("total on_timer")
 
     def find_nearest_ego_odom_by_observation(self, ego_pose):
