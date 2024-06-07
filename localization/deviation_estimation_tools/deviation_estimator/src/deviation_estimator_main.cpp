@@ -58,8 +58,7 @@ int main(int argc, char ** argv)
   reader.open(storage_options, converter_options);
 
   // Prepare serialization
-  rclcpp::Serialization<autoware_vehicle_msgs::msg::VelocityReport>
-    serialization_velocity_status;
+  rclcpp::Serialization<autoware_vehicle_msgs::msg::VelocityReport> serialization_velocity_status;
   rclcpp::Serialization<tf2_msgs::msg::TFMessage> serialization_tf;
   rclcpp::Serialization<sensor_msgs::msg::Imu> serialization_imu;
   rclcpp::Serialization<geometry_msgs::msg::PoseWithCovarianceStamped> serialization_pose;

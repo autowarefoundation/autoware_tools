@@ -80,10 +80,9 @@ TimeDelayEstimatorNode::TimeDelayEstimatorNode(const rclcpp::NodeOptions & node_
 
   last_manual_time_ = this->now().seconds();
   // input
-  sub_control_mode_report_ =
-    create_subscription<autoware_vehicle_msgs::msg::ControlModeReport>(
-      "~/input/control_mode", queue_size,
-      std::bind(&TimeDelayEstimatorNode::callbackControlModeReport, this, _1));
+  sub_control_mode_report_ = create_subscription<autoware_vehicle_msgs::msg::ControlModeReport>(
+    "~/input/control_mode", queue_size,
+    std::bind(&TimeDelayEstimatorNode::callbackControlModeReport, this, _1));
 
   // response
   sub_input_cmd_ = create_subscription<Float32Stamped>(

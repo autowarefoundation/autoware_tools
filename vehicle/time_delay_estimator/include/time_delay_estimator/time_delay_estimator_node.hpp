@@ -57,8 +57,7 @@ private:
   rclcpp::Publisher<TimeDelay>::SharedPtr pub_time_delay_steer_;
 
   // input subscription
-  rclcpp::Subscription<autoware_vehicle_msgs::msg::ControlModeReport>::SharedPtr
-    sub_control_mode_;
+  rclcpp::Subscription<autoware_vehicle_msgs::msg::ControlModeReport>::SharedPtr sub_control_mode_;
 
   // response subscription
   rclcpp::Subscription<Float32Stamped>::SharedPtr sub_accel_cmd_;

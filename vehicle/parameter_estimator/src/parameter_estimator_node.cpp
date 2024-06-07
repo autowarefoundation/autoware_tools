@@ -73,10 +73,9 @@ ParameterEstimatorNode::ParameterEstimatorNode(const rclcpp::NodeOptions & node_
     sub_steer_ = create_subscription<tier4_calibration_msgs::msg::Float32Stamped>(
       "input/steer", queue_size, std::bind(&ParameterEstimatorNode::callbackSteer, this, _1));
   }
-  sub_control_mode_report_ =
-    create_subscription<autoware_vehicle_msgs::msg::ControlModeReport>(
-      "input/control_mode", queue_size,
-      std::bind(&ParameterEstimatorNode::callbackControlModeReport, this, _1));
+  sub_control_mode_report_ = create_subscription<autoware_vehicle_msgs::msg::ControlModeReport>(
+    "input/control_mode", queue_size,
+    std::bind(&ParameterEstimatorNode::callbackControlModeReport, this, _1));
 
   initTimer(1.0 / update_hz_);
 }

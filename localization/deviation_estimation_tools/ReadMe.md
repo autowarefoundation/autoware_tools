@@ -183,11 +183,11 @@ The parameters and input topic names can be seen in the `deviation_estimator.lau
 
 #### Input
 
-| Name                     | Type                                              | Description          |
-| ------------------------ | ------------------------------------------------- | -------------------- |
-| `in_pose_with_covariance | `geometry_msgs::msg::PoseWithCovarianceStamped`   | Input pose           |
-| `in_imu`                 | `sensor_msgs::msg::Imu`                           | Input IMU data       |
-| `in_wheel_odometry`      | `autoware_vehicle_msgs::msg::VelocityReport` | Input wheel odometry |
+| Name                     | Type                                            | Description          |
+| ------------------------ | ----------------------------------------------- | -------------------- |
+| `in_pose_with_covariance | `geometry_msgs::msg::PoseWithCovarianceStamped` | Input pose           |
+| `in_imu`                 | `sensor_msgs::msg::Imu`                         | Input IMU data       |
+| `in_wheel_odometry`      | `autoware_vehicle_msgs::msg::VelocityReport`    | Input wheel odometry |
 
 #### Output
 

@@ -58,8 +58,7 @@ public:
 
 private:
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr sub_pose_with_cov_;
-  rclcpp::Subscription<autoware_vehicle_msgs::msg::VelocityReport>::SharedPtr
-    sub_wheel_odometry_;
+  rclcpp::Subscription<autoware_vehicle_msgs::msg::VelocityReport>::SharedPtr sub_wheel_odometry_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_imu_;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pub_coef_vx_;
   rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr pub_bias_angvel_;
