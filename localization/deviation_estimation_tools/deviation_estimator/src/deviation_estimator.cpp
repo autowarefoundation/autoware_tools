@@ -167,7 +167,7 @@ DeviationEstimator::DeviationEstimator(
 
   sub_imu_ = create_subscription<sensor_msgs::msg::Imu>(
     "in_imu", 1, std::bind(&DeviationEstimator::callback_imu, this, _1));
-  sub_wheel_odometry_ = create_subscription<autoware_auto_vehicle_msgs::msg::VelocityReport>(
+  sub_wheel_odometry_ = create_subscription<autoware_vehicle_msgs::msg::VelocityReport>(
     "in_wheel_odometry", 1, std::bind(&DeviationEstimator::callback_wheel_odometry, this, _1));
   results_logger_.log_estimated_result_section(
     0.2, 0.0, geometry_msgs::msg::Vector3{}, geometry_msgs::msg::Vector3{});
@@ -200,7 +200,7 @@ void DeviationEstimator::callback_pose_with_covariance(
  * @brief receive velocity data and store it in a buffer
  */
 void DeviationEstimator::callback_wheel_odometry(
-  const autoware_auto_vehicle_msgs::msg::VelocityReport::ConstSharedPtr wheel_odometry_msg_ptr)
+  const autoware_vehicle_msgs::msg::VelocityReport::ConstSharedPtr wheel_odometry_msg_ptr)
 {
   tier4_debug_msgs::msg::Float64Stamped vx;
   vx.stamp = wheel_odometry_msg_ptr->header.stamp;

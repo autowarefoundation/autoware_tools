@@ -58,7 +58,7 @@ int main(int argc, char ** argv)
   reader.open(storage_options, converter_options);
 
   // Prepare serialization
-  rclcpp::Serialization<autoware_auto_vehicle_msgs::msg::VelocityReport>
+  rclcpp::Serialization<autoware_vehicle_msgs::msg::VelocityReport>
     serialization_velocity_status;
   rclcpp::Serialization<tf2_msgs::msg::TFMessage> serialization_tf;
   rclcpp::Serialization<sensor_msgs::msg::Imu> serialization_imu;
@@ -83,8 +83,8 @@ int main(int argc, char ** argv)
     const rclcpp::SerializedMessage msg(*serialized_message->serialized_data);
 
     if (topic_name == "/vehicle/status/velocity_status") {
-      autoware_auto_vehicle_msgs::msg::VelocityReport::SharedPtr velocity_status_msg =
-        std::make_shared<autoware_auto_vehicle_msgs::msg::VelocityReport>();
+      autoware_vehicle_msgs::msg::VelocityReport::SharedPtr velocity_status_msg =
+        std::make_shared<autoware_vehicle_msgs::msg::VelocityReport>();
       serialization_velocity_status.deserialize_message(&msg, velocity_status_msg.get());
       const rclcpp::Time curr_stamp = velocity_status_msg->header.stamp;
       first_stamp = std::min(first_stamp, curr_stamp);

@@ -60,7 +60,7 @@ Topic information: Topic: /localization/pose_estimator/pose_with_covariance | Ty
                    Topic: /clock | Type: rosgraph_msgs/msg/Clock | Count: 57309 | Serialization Format: cdr
                    Topic: /tf_static | Type: tf2_msgs/msg/TFMessage | Count: 2 | Serialization Format: cdr
                    Topic: /sensing/imu/tamagawa/imu_raw | Type: sensor_msgs/msg/Imu | Count: 8076 | Serialization Format: cdr
-                   Topic: /vehicle/status/velocity_status | Type: autoware_auto_vehicle_msgs/msg/VelocityReport | Count: 8275 | Serialization Format: cdr
+                   Topic: /vehicle/status/velocity_status | Type: autoware_vehicle_msgs/msg/VelocityReport | Count: 8275 | Serialization Format: cdr
 
 ```
 
@@ -187,7 +187,7 @@ The parameters and input topic names can be seen in the `deviation_estimator.lau
 | ------------------------ | ------------------------------------------------- | -------------------- |
 | `in_pose_with_covariance | `geometry_msgs::msg::PoseWithCovarianceStamped`   | Input pose           |
 | `in_imu`                 | `sensor_msgs::msg::Imu`                           | Input IMU data       |
-| `in_wheel_odometry`      | `autoware_auto_vehicle_msgs::msg::VelocityReport` | Input wheel odometry |
+| `in_wheel_odometry`      | `autoware_vehicle_msgs::msg::VelocityReport` | Input wheel odometry |
 
 #### Output
 

@@ -76,7 +76,7 @@ void VehicleCmdAnalyzer::publishDebugData()
   // set debug values
   debug_values_.setValues(DebugValues::TYPE::DT, dt);
   debug_values_.setValues(
-    DebugValues::TYPE::CURRENT_TARGET_VEL, vehicle_cmd_ptr_->longitudinal.speed);
+    DebugValues::TYPE::CURRENT_TARGET_VEL, vehicle_cmd_ptr_->longitudinal.velocity);
   debug_values_.setValues(DebugValues::TYPE::CURRENT_TARGET_D_VEL, d_vel);
   debug_values_.setValues(DebugValues::TYPE::CURRENT_TARGET_DD_VEL, dd_vel);
   debug_values_.setValues(
@@ -111,13 +111,13 @@ double VehicleCmdAnalyzer::getDt()
 std::pair<double, double> VehicleCmdAnalyzer::differentiateVelocity(const double dt)
 {
   if (!prev_target_vel_) {
-    prev_target_vel_ = vehicle_cmd_ptr_->longitudinal.speed;
+    prev_target_vel_ = vehicle_cmd_ptr_->longitudinal.velocity;
     prev_target_d_vel_.at(2) = 0.0;
     return {0.0, 0.0};
   }
-  const double d_vel = (vehicle_cmd_ptr_->longitudinal.speed - prev_target_vel_) / dt;
+  const double d_vel = (vehicle_cmd_ptr_->longitudinal.velocity - prev_target_vel_) / dt;
   const double dd_vel = (d_vel - prev_target_d_vel_.at(0)) / 2 / dt;
-  prev_target_vel_ = vehicle_cmd_ptr_->longitudinal.speed;
+  prev_target_vel_ = vehicle_cmd_ptr_->longitudinal.velocity;
   for (int i = 0; i < 2; i++) {
     prev_target_d_vel_.at(i) = prev_target_d_vel_.at(i + 1);
   }
@@ -139,7 +139,7 @@ double VehicleCmdAnalyzer::differentiateAcceleration(const double dt)
 double VehicleCmdAnalyzer::calcLateralAcceleration() const
 {
   const double delta = vehicle_cmd_ptr_->lateral.steering_tire_angle;
-  const double vel = vehicle_cmd_ptr_->longitudinal.speed;
+  const double vel = vehicle_cmd_ptr_->longitudinal.velocity;
   const double a_lat = vel * vel * std::sin(delta) / wheelbase_;
   return a_lat;
 }

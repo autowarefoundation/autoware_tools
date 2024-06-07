@@ -74,7 +74,7 @@ ParameterEstimatorNode::ParameterEstimatorNode(const rclcpp::NodeOptions & node_
       "input/steer", queue_size, std::bind(&ParameterEstimatorNode::callbackSteer, this, _1));
   }
   sub_control_mode_report_ =
-    create_subscription<autoware_auto_vehicle_msgs::msg::ControlModeReport>(
+    create_subscription<autoware_vehicle_msgs::msg::ControlModeReport>(
       "input/control_mode", queue_size,
       std::bind(&ParameterEstimatorNode::callbackControlModeReport, this, _1));
 
@@ -173,11 +173,11 @@ void ParameterEstimatorNode::callbackSteerWheel(
 }
 
 void ParameterEstimatorNode::callbackControlModeReport(
-  const autoware_auto_vehicle_msgs::msg::ControlModeReport::ConstSharedPtr msg)
+  const autoware_vehicle_msgs::msg::ControlModeReport::ConstSharedPtr msg)
 {
   auto & clk = *this->get_clock();
   control_mode_ptr_ = msg;
-  if (control_mode_ptr_->mode == autoware_auto_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS) {
+  if (control_mode_ptr_->mode == autoware_vehicle_msgs::msg::ControlModeReport::AUTONOMOUS) {
     auto_mode_duration_ = (this->now().seconds() - last_manual_time_);
     RCLCPP_DEBUG_STREAM_THROTTLE(
       rclcpp::get_logger("parameter_estimator"), clk, 5000,
