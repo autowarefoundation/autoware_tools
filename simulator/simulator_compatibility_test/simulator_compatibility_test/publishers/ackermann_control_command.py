@@ -1,6 +1,6 @@
-from autoware_auto_control_msgs.msg import AckermannControlCommand
-from autoware_auto_control_msgs.msg import AckermannLateralCommand
-from autoware_auto_control_msgs.msg import LongitudinalCommand
+from autoware_control_msgs.msg import Control as AckermannControlCommand
+from autoware_control_msgs.msg import Lateral as LateralCommand
+from autoware_control_msgs.msg import Longitudinal as LongitudinalCommand
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSDurabilityPolicy
@@ -9,7 +9,7 @@ from rclpy.qos import QoSProfile
 from rclpy.qos import QoSReliabilityPolicy
 
 
-class PublisherAckermannControlCommand(Node):
+class ControlCommand(Node):
     def __init__(self):
         super().__init__("ackermann_control_command_publisher")
 
@@ -28,7 +28,7 @@ class PublisherAckermannControlCommand(Node):
     def publish_msg(self, control_cmd):
         stamp = self.get_clock().now().to_msg()
         msg = AckermannControlCommand()
-        lateral_cmd = AckermannLateralCommand()
+        lateral_cmd = LateralCommand()
         longitudinal_cmd = LongitudinalCommand()
         lateral_cmd.stamp.sec = stamp.sec
         lateral_cmd.stamp.nanosec = stamp.nanosec
@@ -53,7 +53,7 @@ class PublisherAckermannControlCommand(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    node = PublisherAckermannControlCommand()
+    node = ControlCommand()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
