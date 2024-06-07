@@ -30,10 +30,9 @@ VehicleCmdAnalyzer::VehicleCmdAnalyzer(const rclcpp::NodeOptions & options)
   const auto vehicle_info = vehicle_info_util::VehicleInfoUtil(*this).getVehicleInfo();
   wheelbase_ = vehicle_info.wheel_base_m;
 
-  sub_vehicle_cmd_ =
-    this->create_subscription<autoware_control_msgs::msg::Control>(
-      "/control/command/control_cmd", rclcpp::QoS(10),
-      std::bind(&VehicleCmdAnalyzer::callbackVehicleCommand, this, std::placeholders::_1));
+  sub_vehicle_cmd_ = this->create_subscription<autoware_control_msgs::msg::Control>(
+    "/control/command/control_cmd", rclcpp::QoS(10),
+    std::bind(&VehicleCmdAnalyzer::callbackVehicleCommand, this, std::placeholders::_1));
   pub_debug_ = create_publisher<tier4_debug_msgs::msg::Float32MultiArrayStamped>(
     "~/debug_values", rclcpp::QoS{1});
 
@@ -52,8 +51,7 @@ VehicleCmdAnalyzer::VehicleCmdAnalyzer(const rclcpp::NodeOptions & options)
 void VehicleCmdAnalyzer::callbackVehicleCommand(
   const autoware_control_msgs::msg::Control::SharedPtr msg)
 {
-  vehicle_cmd_ptr_ =
-    std::make_shared<autoware_control_msgs::msg::Control>(*msg);
+  vehicle_cmd_ptr_ = std::make_shared<autoware_control_msgs::msg::Control>(*msg);
 }
 
 void VehicleCmdAnalyzer::callbackTimerControl()

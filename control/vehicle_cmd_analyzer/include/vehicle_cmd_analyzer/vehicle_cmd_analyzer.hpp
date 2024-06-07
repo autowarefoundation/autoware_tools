@@ -32,13 +32,11 @@
 class VehicleCmdAnalyzer : public rclcpp::Node
 {
 private:
-  rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr
-    sub_vehicle_cmd_;
+  rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr sub_vehicle_cmd_;
   rclcpp::Publisher<tier4_debug_msgs::msg::Float32MultiArrayStamped>::SharedPtr pub_debug_;
   rclcpp::TimerBase::SharedPtr timer_control_;
 
-  std::shared_ptr<autoware_control_msgs::msg::Control> vehicle_cmd_ptr_{
-    nullptr};
+  std::shared_ptr<autoware_control_msgs::msg::Control> vehicle_cmd_ptr_{nullptr};
 
   // timer callback
   double control_rate_;
@@ -54,8 +52,7 @@ private:
   // debug values
   DebugValues debug_values_;
 
-  void callbackVehicleCommand(
-    const autoware_control_msgs::msg::Control::SharedPtr msg);
+  void callbackVehicleCommand(const autoware_control_msgs::msg::Control::SharedPtr msg);
 
   void callbackTimerControl();
 
