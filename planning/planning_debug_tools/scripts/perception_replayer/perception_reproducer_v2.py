@@ -53,7 +53,7 @@ class PerceptionReproducerV2(PerceptionReplayerCommon):
         self.preprocess_data()
 
         # start main timer callback
-        self.timer = self.create_timer(0.1, self.on_timer)
+        self.timer = self.create_timer(0.05, self.on_timer)
 
         # kill perception process to avoid a conflict of the perception topics
         self.timer_check_perception_process = self.create_timer(3.0, self.on_timer_kill_perception)
@@ -162,20 +162,12 @@ class PerceptionReproducerV2(PerceptionReplayerCommon):
 
         # traffic signals
         if traffic_signals_msg:
-            if self.is_auto_traffic_signals:# temporary support old auto msgs
-                traffic_signals_msg.header.stamp = timestamp_msg
-                self.auto_traffic_signals_pub.publish(traffic_signals_msg)
-            else:
-                traffic_signals_msg.stamp = timestamp_msg
-                self.traffic_signals_pub.publish(traffic_signals_msg)
-
+            traffic_signals_msg.stamp = timestamp_msg
+            self.traffic_signals_pub.publish(traffic_signals_msg)
+            self.prev_traffic_signals_msg = traffic_signals_msg
         elif self.prev_traffic_signals_msg:
-            if self.is_auto_traffic_signals:# temporary support old auto msgs
-                self.prev_traffic_signals_msg.header.stamp = timestamp_msg
-                self.auto_traffic_signals_pub.publish(self.prev_traffic_signals_msg)
-            else:
-                self.prev_traffic_signals_msg.stamp = timestamp_msg
-                self.traffic_signals_pub.publish(self.prev_traffic_signals_msg)
+            self.prev_traffic_signals_msg.stamp = timestamp_msg
+            self.traffic_signals_pub.publish(self.prev_traffic_signals_msg)
         self.stopwatch.toc("transform and publish")
 
         if not repeat_trigger:
@@ -227,7 +219,7 @@ if __name__ == "__main__":
         "-r", "--seach-radius", help="the search radius for searching rosbag's ego odom messages around the nearest ego odom pose (default is 1 meters)", type=float, default=1.0
     )
     parser.add_argument(
-        "-c", "--reproduce-cooldown", help="The cooldown time for republishing published messages (default is 40.0 seconds)", type=float, default=30.0
+        "-c", "--reproduce-cooldown", help="The cooldown time for republishing published messages (default is 40.0 seconds)", type=float, default=40.0
     )
     args = parser.parse_args()
 
