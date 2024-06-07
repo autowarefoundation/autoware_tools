@@ -18,8 +18,8 @@
 #include "driving_environment_analyzer/type_alias.hpp"
 #include "rosbag2_cpp/reader.hpp"
 
+#include <autoware_route_handler/route_handler.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <route_handler/route_handler.hpp>
 
 #include <memory>
 #include <string>
@@ -92,7 +92,7 @@ private:
 
   std::optional<ODDRawData> odd_raw_data_{std::nullopt};
 
-  route_handler::RouteHandler route_handler_;
+  autoware::route_handler::RouteHandler route_handler_;
 
   rosbag2_cpp::Reader reader_;
 
