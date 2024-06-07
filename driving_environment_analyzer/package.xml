@@ -31,6 +31,7 @@
   <depend>qtbase5-dev</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>rosbag2_cpp</depend>
   <depend>route_handler</depend>
   <depend>rviz_common</depend>
   <depend>rviz_default_plugins</depend>
