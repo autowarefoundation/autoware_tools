@@ -143,7 +143,9 @@ class PerceptionReplayerCommon(Node):
                     new_msg.stamp = msg.stamp
                     for traffic_signal in msg.signals:
                         traffic_light_group = TrafficLightGroup()
-                        traffic_light_group.traffic_light_group_id = traffic_signal.traffic_signal_id
+                        traffic_light_group.traffic_light_group_id = (
+                            traffic_signal.traffic_signal_id
+                        )
                         for traffic_signal_element in traffic_signal.elements:
                             traffic_light_element = TrafficLightElement()
                             traffic_light_element.color = traffic_signal_element.color
