@@ -141,17 +141,17 @@ class PerceptionReplayerCommon(Node):
                     # convert old TrafficSignalArray msg to new TrafficLightGroupArray msg.
                     new_msg = self.traffic_signals_pub.msg_type()
                     new_msg.stamp = msg.stamp
-                    for traffc_signal in msg.signals:
-                        traffic_lignt_group = TrafficLightGroup()
-                        traffic_lignt_group.traffic_light_group_id = traffc_signal.traffic_signal_id
-                        for traffic_signal_element in traffc_signal.elements:
+                    for traffic_signal in msg.signals:
+                        traffic_light_group = TrafficLightGroup()
+                        traffic_light_group.traffic_light_group_id = traffic_signal.traffic_signal_id
+                        for traffic_signal_element in traffic_signal.elements:
                             traffic_light_element = TrafficLightElement()
                             traffic_light_element.color = traffic_signal_element.color
                             traffic_light_element.shape = traffic_signal_element.shape
                             traffic_light_element.status = traffic_signal_element.status
                             traffic_light_element.confidence = traffic_signal_element.confidence
-                            traffic_lignt_group.elements.append(traffic_light_element)
-                        new_msg.traffic_light_groups.append(traffic_lignt_group)
+                            traffic_light_group.elements.append(traffic_light_element)
+                        new_msg.traffic_light_groups.append(traffic_light_group)
                     msg = new_msg
                 self.rosbag_traffic_signals_data.append((stamp, msg))
 
