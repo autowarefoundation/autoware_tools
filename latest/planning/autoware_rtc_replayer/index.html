@@ -8,25 +8,27 @@
       
       
       
-        <link rel="canonical" href="https://autowarefoundation.github.io/autoware_tools/latest/bag2lanelet/">
+        <link rel="canonical" href="https://autowarefoundation.github.io/autoware_tools/latest/planning/autoware_rtc_replayer/">
       
       
+        <link rel="prev" href="../../evaluation/tier4_metrics_rviz_plugin/">
       
-        <link rel="next" href="../common/mission_planner_rviz_plugin/">
       
-      <link rel="icon" href="../docs/assets/images/autoware-foundation.png">
+        <link rel="next" href="../planning_debug_tools/">
+      
+      <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.20">
     
     
       
-        <title>bag2lanelet - Autoware Universe Documentation</title>
+        <title>rtc_replayer - Autoware Universe Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -42,11 +44,11 @@
       
     
     
-      <link rel="stylesheet" href="../docs/assets/css/extra.css">
+      <link rel="stylesheet" href="../../docs/assets/css/extra.css">
     
       <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -75,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#bag2lanelet" class="md-skip">
+        <a href="#rtc_replayer" class="md-skip">
           Skip to content
         </a>
       
@@ -95,7 +97,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Autoware Universe Documentation" class="md-header__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
+    <a href="../.." title="Autoware Universe Documentation" class="md-header__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4zm-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-48H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
@@ -114,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              bag2lanelet
+              rtc_replayer
             
           </span>
         </div>
@@ -206,15 +208,13 @@
         
   
   
-    
-  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="./" class="md-tabs__link md-tabs__link--active">
+      <a href="../../bag2lanelet/" class="md-tabs__link">
         Bag2lanelet
       </a>
     </li>
@@ -235,7 +235,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../common/mission_planner_rviz_plugin/" class="md-tabs__link">
+      <a href="../../common/mission_planner_rviz_plugin/" class="md-tabs__link">
         Common
       </a>
     </li>
@@ -253,7 +253,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../driving_environment_analyzer/" class="md-tabs__link">
+      <a href="../../driving_environment_analyzer/" class="md-tabs__link">
         Driving environment analyzer
       </a>
     </li>
@@ -274,7 +274,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
+      <a href="../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
         Evaluation
       </a>
     </li>
@@ -285,6 +285,8 @@
       
         
   
+  
+    
   
 
 
@@ -297,7 +299,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../planning/autoware_rtc_replayer/" class="md-tabs__link">
+      <a href="./" class="md-tabs__link md-tabs__link--active">
         Planning
       </a>
     </li>
@@ -320,7 +322,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../simulator/simulator_compatibility_test/" class="md-tabs__link">
+      <a href="../../simulator/simulator_compatibility_test/" class="md-tabs__link">
         Simulator
       </a>
     </li>
@@ -343,7 +345,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
+      <a href="../../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
         System
       </a>
     </li>
@@ -379,7 +381,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Autoware Universe Documentation" class="md-nav__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
+    <a href="../.." title="Autoware Universe Documentation" class="md-nav__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4zm-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-48H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
@@ -408,16 +410,16 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
       
       
         
@@ -429,12 +431,12 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index md-nav__link--active">
-          <a href="./">Bag2lanelet</a>
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../bag2lanelet/">Bag2lanelet</a>
           
         </div>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Bag2lanelet
@@ -530,7 +532,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/mission_planner_rviz_plugin/">Mission planner rviz plugin</a>
+          <a href="../../common/mission_planner_rviz_plugin/">Mission planner rviz plugin</a>
           
         </div>
       
@@ -578,7 +580,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/rtc_manager_rviz_plugin/">Rtc manager rviz plugin</a>
+          <a href="../../common/rtc_manager_rviz_plugin/">Rtc manager rviz plugin</a>
           
         </div>
       
@@ -626,7 +628,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_automatic_goal_rviz_plugin/">Tier4 automatic goal rviz plugin</a>
+          <a href="../../common/tier4_automatic_goal_rviz_plugin/">Tier4 automatic goal rviz plugin</a>
           
         </div>
       
@@ -674,7 +676,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_control_rviz_plugin/">Tier4 control rviz plugin</a>
+          <a href="../../common/tier4_control_rviz_plugin/">Tier4 control rviz plugin</a>
           
         </div>
       
@@ -722,7 +724,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_debug_rviz_plugin/">Tier4 debug rviz plugin</a>
+          <a href="../../common/tier4_debug_rviz_plugin/">Tier4 debug rviz plugin</a>
           
         </div>
       
@@ -770,7 +772,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_debug_tools/">Tier4 debug tools</a>
+          <a href="../../common/tier4_debug_tools/">Tier4 debug tools</a>
           
         </div>
       
@@ -818,7 +820,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_logging_level_configure_rviz_plugin/">Tier4 logging level configure rviz plugin</a>
+          <a href="../../common/tier4_logging_level_configure_rviz_plugin/">Tier4 logging level configure rviz plugin</a>
           
         </div>
       
@@ -866,7 +868,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_screen_capture_rviz_plugin/">Tier4 screen capture rviz plugin</a>
+          <a href="../../common/tier4_screen_capture_rviz_plugin/">Tier4 screen capture rviz plugin</a>
           
         </div>
       
@@ -914,7 +916,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_simulated_clock_rviz_plugin/">Tier4 simulated clock rviz plugin</a>
+          <a href="../../common/tier4_simulated_clock_rviz_plugin/">Tier4 simulated clock rviz plugin</a>
           
         </div>
       
@@ -962,7 +964,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_target_object_type_rviz_plugin/">Tier4 target object type rviz plugin</a>
+          <a href="../../common/tier4_target_object_type_rviz_plugin/">Tier4 target object type rviz plugin</a>
           
         </div>
       
@@ -1016,7 +1018,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../driving_environment_analyzer/">Driving environment analyzer</a>
+          <a href="../../driving_environment_analyzer/">Driving environment analyzer</a>
           
         </div>
       
@@ -1098,7 +1100,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../evaluation/tier4_metrics_rviz_plugin/">Tier4 metrics rviz plugin</a>
+          <a href="../../evaluation/tier4_metrics_rviz_plugin/">Tier4 metrics rviz plugin</a>
           
         </div>
       
@@ -1130,16 +1132,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
       
       
         
@@ -1154,7 +1156,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           Planning
@@ -1165,18 +1167,18 @@
               
   
   
+    
+  
   
     
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_1" checked>
       
       
         
@@ -1188,12 +1190,12 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../planning/autoware_rtc_replayer/">Autoware rtc replayer</a>
+        <div class="md-nav__link md-nav__link--index md-nav__link--active">
+          <a href="./">Autoware rtc replayer</a>
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_5_1">
           <span class="md-nav__icon md-icon"></span>
           Autoware rtc replayer
@@ -1239,7 +1241,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../planning/planning_debug_tools/">Planning debug tools</a>
+          <a href="../planning_debug_tools/">Planning debug tools</a>
           
             <label for="__nav_5_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1262,7 +1264,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
+      <a href="../planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
         Doc stop reason visualizer
       </a>
     </li>
@@ -1346,7 +1348,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../simulator/simulator_compatibility_test/">Simulator compatibility test</a>
+          <a href="../../simulator/simulator_compatibility_test/">Simulator compatibility test</a>
           
         </div>
       
@@ -1435,7 +1437,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../system/rqt_diagnostic_graph_monitor/">Rqt diagnostic graph monitor</a>
+          <a href="../../system/rqt_diagnostic_graph_monitor/">Rqt diagnostic graph monitor</a>
           
         </div>
       
@@ -1488,37 +1490,30 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#example" class="md-nav__link">
-    Example
+  <a href="#purpose" class="md-nav__link">
+    Purpose
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#requirements" class="md-nav__link">
-    Requirements
+  <a href="#inputs-outputs" class="md-nav__link">
+    Inputs / Outputs
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usage" class="md-nav__link">
-    Usage
-  </a>
-  
-    <nav class="md-nav" aria-label="Usage">
+    <nav class="md-nav" aria-label="Inputs / Outputs">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#generate-lanelet2-file" class="md-nav__link">
-    generate lanelet2 file
+  <a href="#input" class="md-nav__link">
+    Input
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#generate-trajectory-file-for-vector-map-builder" class="md-nav__link">
-    generate trajectory file for Vector Map Builder
+  <a href="#output" class="md-nav__link">
+    Output
   </a>
   
 </li>
@@ -1529,8 +1524,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
-    Limitations
+  <a href="#inner-workings-algorithms" class="md-nav__link">
+    Inner-workings / Algorithms
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assumptions-known-limits" class="md-nav__link">
+    Assumptions / Known limits
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-extensions-unimplemented-parts" class="md-nav__link">
+    Future extensions / Unimplemented parts
   </a>
   
 </li>
@@ -1553,61 +1562,52 @@
   
 
 
-<div><h1 id="bag2lanelet">bag2lanelet<a class="headerlink" href="#bag2lanelet" title="Permanent link">#</a></h1>
-<p>This package generates a lanelet map necessary for Autoware's autonomous driving from rosbag data containing information about Localization (<code>/tf</code>). This enables autonomous driving based on manual driving information.</p>
-<p>The provided functionalities are as follows:</p>
-<ul>
-<li>bag2lanelet.py: Generates lanelet (.osm) from a rosbag based on the position of <code>base_link</code>.</li>
-<li>bag2trajectory.py: Generates trajectory information (.csv) for vector_map_builder from a rosbag.</li>
-</ul>
-<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">#</a></h2>
-<p>As an example, the process of lanelet generation based on driving trajectories from the planning simulator is performed as follows. Typically, the expectation is to use rosbag data from manual driving, rather than from the planning simulator.</p>
-<p>Firstly, you need to run the planning_simulator following the <a href="https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/">planning_simulator tutorial in Autoware Documentation</a>. The process would be, install Autoware, download the maps, run the planning_simulator, and start autonomous driving. Make sure to save the rosbag during this driving session using the following command:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>bag<span class="w"> </span>record<span class="w"> </span>/tf<span class="w"> </span>-o<span class="w"> </span>/tmp/bag2lanelet_sample.bag
-</code></pre></div>
-<p align="center">
-  <img src="./image/psim-kashiwanoha-sample-map.png" alt="kashiwa" width="800">
-</p>
-
-<p>After completing the drive, you can run the <code>bag2lanelet.py</code> script. This requires specifying the output directory, lane width and MGRS coordinates:</p>
-<div class="highlight"><pre><span></span><code>./bag2lanelet.py<span class="w"> </span>/tmp/bag2lanelet_sample.bag<span class="w"> </span>/tmp/bag2lanelet_sample<span class="w"> </span>-l<span class="w"> </span><span class="m">3</span>.0<span class="w"> </span>-m<span class="w"> </span>54SUE
-</code></pre></div>
-<p>The map will be saved in the specified directory, following the naming convention <code>&lt;date&gt;-lanelet2_map.osm</code>. The map generated will appear like this. You can see the example result in <a href="./example/lanelet2_map.osm">./example/lanelet2_map.osm</a>.</p>
-<p>When you relaunch the planning_simulator with the new lanelet2 map, you will see the following.</p>
-<p align="center">
-  <img src="./image/psim-kashiwanoha-bag2lanelet-original-map.png" alt="kashiwa" width="800">
-</p>
-
-<p>Please note that at this stage, although this map works with Autoware, the shape of the lanes will appear jagged. (Refer to the 'Limitations' section for more details.) While this is an issue that should be addressed in the future, it can currently be resolved by loading it in <a href="https://autowarefoundation.github.io/autoware-documentation/main/how-to-guides/integrating-autoware/creating-maps/creating-vector-map/#vector-map-builder">Vector Map Builder</a> as follows.</p>
-<p>Following the documentation of the <a href="https://autowarefoundation.github.io/autoware-documentation/main/how-to-guides/integrating-autoware/creating-maps/creating-vector-map/#vector-map-builder">Vector Map Builder</a>, import the generated Lanelet2 map. You can see the refined lane on the application.</p>
-<p align="center">
-  <img src="./image/vmb-kashiwanoha-bag2lanelet-map.png" alt="kashiwa" width="800">
-</p>
-
-<p>Then, Export the map. You can run the planning_simulator with the refined lanelet2 map and see how it goes on the Rviz.</p>
-<p align="center">
-  <img src="./image/psim-kashiwanoha-bag2lanelet-vmb-map.png" alt="kashiwa" width="800">
-</p>
-
-<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>update
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>ros-humble-tf-transformations<span class="w"> </span>ros-humble-tf-transformations
-pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-</code></pre></div>
-<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
-<p>Check <code>./bag2lanelet.py --help</code></p>
-<h3 id="generate-lanelet2-file">generate lanelet2 file<a class="headerlink" href="#generate-lanelet2-file" title="Permanent link">#</a></h3>
-<p>For given lane width and MGRS coordinate.</p>
-<div class="highlight"><pre><span></span><code>./bag2lanelet.py<span class="w"> </span>/home/autoware/rosbag/sample<span class="w"> </span>.<span class="w">  </span>-l<span class="w"> </span><span class="m">3</span>.0<span class="w"> </span>-m<span class="w"> </span>54SUE
-</code></pre></div>
-<h3 id="generate-trajectory-file-for-vector-map-builder">generate trajectory file for Vector Map Builder<a class="headerlink" href="#generate-trajectory-file-for-vector-map-builder" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code>./bag2trajectory.py<span class="w"> </span>/home/autoware/rosbag/sample<span class="w"> </span>sample.csv
-</code></pre></div>
-<h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">#</a></h2>
-<p>Here is the limitations of this package. Contributions to further improvements are more than welcome.</p>
-<ul>
-<li>Due to the low conversion accuracy from MGRS to latitude and longitude in this script, the lanes in the output lanelet.osm appear jagged. Importing and then exporting through vector_map_builder corrects these values with high accuracy.</li>
-</ul></div>
+<div><h1 id="rtc_replayer">rtc_replayer<a class="headerlink" href="#rtc_replayer" title="Permanent link">#</a></h1>
+<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">#</a></h2>
+<p>The current issue for RTC commands is that service is not recorded to rosbag, so it's very hard to analyze what was happened exactly.
+So this package makes it possible to replay rtc commands service from rosbag rtc status topic to resolve that issue.</p>
+<h2 id="inputs-outputs">Inputs / Outputs<a class="headerlink" href="#inputs-outputs" title="Permanent link">#</a></h2>
+<h3 id="input">Input<a class="headerlink" href="#input" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/debug/rtc_status</code></td>
+<td>tier4_rtc_msgs::msg::CooperateStatusArray</td>
+<td>CooperateStatusArray that is recorded in rosbag</td>
+</tr>
+</tbody>
+</table>
+<h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/api/external/set/rtc_commands</code></td>
+<td>tier4_rtc_msgs::msg::CooperateCommands</td>
+<td>CooperateCommands that is replayed by this package</td>
+</tr>
+</tbody>
+</table>
+<h2 id="inner-workings-algorithms">Inner-workings / Algorithms<a class="headerlink" href="#inner-workings-algorithms" title="Permanent link">#</a></h2>
+<p><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBjb250ZW50U3R5bGVUeXBlPSJ0ZXh0L2NzcyIgaGVpZ2h0PSIyODBweCIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSIgc3R5bGU9IndpZHRoOjEzNnB4O2hlaWdodDoyODBweDtiYWNrZ3JvdW5kOiNGRkZGRkY7IiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAxMzYgMjgwIiB3aWR0aD0iMTM2cHgiIHpvb21BbmRQYW49Im1hZ25pZnkiPjxkZWZzLz48Zz48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGxlbmd0aEFkanVzdD0ic3BhY2luZyIgdGV4dExlbmd0aD0iOTMiIHg9IjIwIiB5PSIzMi45OTUxIj5ydGMgcmVwbGF5ZXI8L3RleHQ+PGVsbGlwc2UgY3g9IjY4IiBjeT0iNTcuMjk2OSIgZmlsbD0iIzIyMjIyMiIgcng9IjEwIiByeT0iMTAiIHN0eWxlPSJzdHJva2U6IzIyMjIyMjtzdHJva2Utd2lkdGg6MS4wOyIvPjxyZWN0IGZpbGw9IiNGMUYxRjEiIGhlaWdodD0iMzMuOTY4OCIgcng9IjEyLjUiIHJ5PSIxMi41IiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjAuNTsiIHdpZHRoPSI2NCIgeD0iMzYiIHk9Ijg3LjI5NjkiLz48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nIiB0ZXh0TGVuZ3RoPSI0NCIgeD0iNDYiIHk9IjEwOC40MzU1Ij5yb3NiYWc8L3RleHQ+PHJlY3QgZmlsbD0iI0YxRjFGMSIgaGVpZ2h0PSIzMy45Njg4IiByeD0iMTIuNSIgcnk9IjEyLjUiIHN0eWxlPSJzdHJva2U6IzE4MTgxODtzdHJva2Utd2lkdGg6MC41OyIgd2lkdGg9Ijk0IiB4PSIyMSIgeT0iMTQxLjI2NTYiLz48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nIiB0ZXh0TGVuZ3RoPSI3NCIgeD0iMzEiIHk9IjE2Mi40MDQzIj5ydGNfcmVwbGF5ZXI8L3RleHQ+PHJlY3QgZmlsbD0iI0YxRjFGMSIgaGVpZ2h0PSIzMy45Njg4IiByeD0iMTIuNSIgcnk9IjEyLjUiIHN0eWxlPSJzdHJva2U6IzE4MTgxODtzdHJva2Utd2lkdGg6MC41OyIgd2lkdGg9Ijk5IiB4PSIxOC41IiB5PSIxOTUuMjM0NCIvPjx0ZXh0IGZpbGw9IiMwMDAwMDAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEyIiBsZW5ndGhBZGp1c3Q9InNwYWNpbmciIHRleHRMZW5ndGg9Ijc5IiB4PSIyOC41IiB5PSIyMTYuMzczIj5ydGNfaW50ZXJmYWNlPC90ZXh0PjxlbGxpcHNlIGN4PSI2OCIgY3k9IjI1OS4yMDMxIiBmaWxsPSJub25lIiByeD0iMTAiIHJ5PSIxMCIgc3R5bGU9InN0cm9rZTojMjIyMjIyO3N0cm9rZS13aWR0aDoxLjU7Ii8+PGxpbmUgc3R5bGU9InN0cm9rZTojMjIyMjIyO3N0cm9rZS13aWR0aDoyLjU7IiB4MT0iNjEuODEyOCIgeDI9Ijc0LjE4NzIiIHkxPSIyNTMuMDE1OSIgeTI9IjI2NS4zOTAzIi8+PGxpbmUgc3R5bGU9InN0cm9rZTojMjIyMjIyO3N0cm9rZS13aWR0aDoyLjU7IiB4MT0iNzQuMTg3MiIgeDI9IjYxLjgxMjgiIHkxPSIyNTMuMDE1OSIgeTI9IjI2NS4zOTAzIi8+PGxpbmUgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDoxLjA7IiB4MT0iNjgiIHgyPSI2OCIgeTE9IjY3LjI5NjkiIHkyPSI4Ny4yOTY5Ii8+PHBvbHlnb24gZmlsbD0iIzE4MTgxOCIgcG9pbnRzPSI2NCw3Ny4yOTY5LDY4LDg3LjI5NjksNzIsNzcuMjk2OSw2OCw4MS4yOTY5IiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjEuMDsiLz48bGluZSBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjEuMDsiIHgxPSI2OCIgeDI9IjY4IiB5MT0iMTIxLjI2NTYiIHkyPSIxNDEuMjY1NiIvPjxwb2x5Z29uIGZpbGw9IiMxODE4MTgiIHBvaW50cz0iNjQsMTMxLjI2NTYsNjgsMTQxLjI2NTYsNzIsMTMxLjI2NTYsNjgsMTM1LjI2NTYiIHN0eWxlPSJzdHJva2U6IzE4MTgxODtzdHJva2Utd2lkdGg6MS4wOyIvPjxsaW5lIHN0eWxlPSJzdHJva2U6IzE4MTgxODtzdHJva2Utd2lkdGg6MS4wOyIgeDE9IjY4IiB4Mj0iNjgiIHkxPSIxNzUuMjM0NCIgeTI9IjE5NS4yMzQ0Ii8+PHBvbHlnb24gZmlsbD0iIzE4MTgxOCIgcG9pbnRzPSI2NCwxODUuMjM0NCw2OCwxOTUuMjM0NCw3MiwxODUuMjM0NCw2OCwxODkuMjM0NCIgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDoxLjA7Ii8+PGxpbmUgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDoxLjA7IiB4MT0iNjgiIHgyPSI2OCIgeTE9IjIyOS4yMDMxIiB5Mj0iMjQ5LjIwMzEiLz48cG9seWdvbiBmaWxsPSIjMTgxODE4IiBwb2ludHM9IjY0LDIzOS4yMDMxLDY4LDI0OS4yMDMxLDcyLDIzOS4yMDMxLDY4LDI0My4yMDMxIiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjEuMDsiLz48IS0tU1JDPVtBeWFpb0tiTEEyZjlMWVhBQlNYOWg0bWp1WWVrSUltZ3VVQW9BaWVsSmFmQ2ptUW5JZkJaT1Q4bVZjUFVJTWZITWM5b0FiMFdESXk1MDAwMF0tLT48L2c+PC9zdmc+" class="uml" alt="uml diagram" title=""></p>
+<h2 id="assumptions-known-limits">Assumptions / Known limits<a class="headerlink" href="#assumptions-known-limits" title="Permanent link">#</a></h2>
+<p>This package can't replay CooperateCommands correctly if CooperateStatusArray is not stable.
+And this replay is always later one step than actual however it will not affect much for behavior.</p>
+<h2 id="future-extensions-unimplemented-parts">Future extensions / Unimplemented parts<a class="headerlink" href="#future-extensions-unimplemented-parts" title="Permanent link">#</a></h2>
+<p>tbd.</p></div>
 
 
 
@@ -1633,15 +1633,30 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
       
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
+          
+          <a href="../../evaluation/tier4_metrics_rviz_plugin/" class="md-footer__link md-footer__link--prev" aria-label="Previous: tier4_metrics_rviz_plugin" rel="prev">
+            <div class="md-footer__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                tier4_metrics_rviz_plugin
+              </div>
+            </div>
+          </a>
+        
         
           
-          <a href="../common/mission_planner_rviz_plugin/" class="md-footer__link md-footer__link--next" aria-label="Next: mission_planner_rviz_plugin" rel="next">
+          <a href="../planning_debug_tools/" class="md-footer__link md-footer__link--next" aria-label="Next: Planning Debug Tools" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                mission_planner_rviz_plugin
+                Planning Debug Tools
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -1677,13 +1692,13 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="../docs/assets/js/mathjax.js"></script>
+          <script src="../../docs/assets/js/mathjax.js"></script>
         
       
         
