@@ -17,13 +17,13 @@
 #ifndef PARAMETER_ESTIMATOR__PARAMETER_ESTIMATOR_NODE_HPP_
 #define PARAMETER_ESTIMATOR__PARAMETER_ESTIMATOR_NODE_HPP_
 
+#include "autoware_vehicle_info_utils/vehicle_info_utils.hpp"
 #include "estimator_utils/estimator_base.hpp"
 #include "parameter_estimator/gear_ratio_estimator.hpp"
 #include "parameter_estimator/parameters.hpp"
 #include "parameter_estimator/steer_offset_estimator.hpp"
 #include "parameter_estimator/wheel_base_estimator.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "vehicle_info_util/vehicle_info_util.hpp"
 
 #include "autoware_vehicle_msgs/msg/control_mode_report.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"

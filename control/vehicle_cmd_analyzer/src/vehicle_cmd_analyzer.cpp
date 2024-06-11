@@ -27,7 +27,7 @@ VehicleCmdAnalyzer::VehicleCmdAnalyzer(const rclcpp::NodeOptions & options)
 {
   control_rate_ = declare_parameter("control_rate", 30.0);
 
-  const auto vehicle_info = vehicle_info_util::VehicleInfoUtil(*this).getVehicleInfo();
+  const auto vehicle_info = autoware::vehicle_info_utils::VehicleInfoUtil(*this).getVehicleInfo();
   wheelbase_ = vehicle_info.wheel_base_m;
 
   sub_vehicle_cmd_ = this->create_subscription<autoware_control_msgs::msg::Control>(
