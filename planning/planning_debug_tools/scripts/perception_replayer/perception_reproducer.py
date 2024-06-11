@@ -42,7 +42,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         )  # it may be set by an individual parameter.
 
         self.reproduce_cool_down = (
-            args.reproduce_cool_down if args.search_radius != 0. else 0.0
+            args.reproduce_cool_down if args.search_radius != 0.0 else 0.0
         )  # (sec) the cool down time for republishing published data, please make sure that it's greater than the ego's stopping time.
 
         super().__init__(args, "perception_reproducer")
@@ -69,7 +69,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             time_diffs.append(time_diff)
             prev_stamp = stamp
 
-        average_ego_odom_interval = 0.1#sum(time_diffs) / len(time_diffs)
+        average_ego_odom_interval = 0.1  # sum(time_diffs) / len(time_diffs)
         self.timer = self.create_timer(average_ego_odom_interval, self.on_timer)
 
         # kill perception process to avoid a conflict of the perception topics

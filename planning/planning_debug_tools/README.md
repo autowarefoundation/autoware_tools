@@ -195,11 +195,12 @@ This script can overlay the perception results from the rosbag on the planning s
 
 ### How it works
 
-Whenever the ego's position changes, a chronological `reproduce_sequence` queue is generated base on its position with a search radius (default to 2 m). 
-If the queue is empty, the nearest odom message in the rosbag is added to the queue. 
+Whenever the ego's position changes, a chronological `reproduce_sequence` queue is generated base on its position with a search radius (default to 2 m).
+If the queue is empty, the nearest odom message in the rosbag is added to the queue.
 When publishing perception messages, the first element in the `reproduce_sequence` is popped and published.
 
 This design results in the following behavior:
+
 - When ego stops, the perception messages are published in chronological order until queue is empty.
 - When the ego moves, a perception message close to ego's position is published.
 
@@ -222,9 +223,8 @@ ros2 run planning_debug_tools perception_reproducer.py -b <dir-to-bag-files>
 
 Instead of publishing predicted objects, you can publish detected/tracked objects by designating `-d` or `-t`, respectively.
 
-You can use  `-r` option to set the search radius in meters for the perception messages. If it is set to 0, the reproducer always publishes the nearest perception message as how did the old perception_reproducer work.
- `-c`(`--reproduce-cool-down`) option is to set the cool down time in seconds, aiming to prevent republishing recently published messages.
-
+You can use `-r` option to set the search radius in meters for the perception messages. If it is set to 0, the reproducer always publishes the nearest perception message as how did the old perception_reproducer work.
+`-c`(`--reproduce-cool-down`) option is to set the cool down time in seconds, aiming to prevent republishing recently published messages.
 
 ## Perception replayer
 
