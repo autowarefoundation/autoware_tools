@@ -205,6 +205,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             self.prev_traffic_signals_msg = traffic_signals_msg
         elif self.prev_traffic_signals_msg:
             self.prev_traffic_signals_msg.stamp = timestamp_msg
+
             self.traffic_signals_pub.publish(self.prev_traffic_signals_msg)
         self.stopwatch.toc("transform and publish")
 

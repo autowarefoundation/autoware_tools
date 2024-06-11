@@ -200,7 +200,7 @@ std::pair<double, double> getElevation(const lanelet::ConstLanelets & lanes)
 }
 
 std::pair<double, double> getSpeedLimit(
-  const lanelet::ConstLanelets & lanes, const route_handler::RouteHandler & route_handler)
+  const lanelet::ConstLanelets & lanes, const RouteHandler & route_handler)
 {
   const auto traffic_rule = route_handler.getTrafficRulesPtr();
 
@@ -217,7 +217,7 @@ std::pair<double, double> getSpeedLimit(
 }
 
 double getRouteLengthWithSameDirectionLane(
-  const lanelet::ConstLanelets & lanes, const route_handler::RouteHandler & route_handler)
+  const lanelet::ConstLanelets & lanes, const RouteHandler & route_handler)
 {
   double value = 0.0;
 
@@ -231,7 +231,7 @@ double getRouteLengthWithSameDirectionLane(
 }
 
 double getRouteLengthWithOppositeDirectionLane(
-  const lanelet::ConstLanelets & lanes, const route_handler::RouteHandler & route_handler)
+  const lanelet::ConstLanelets & lanes, const RouteHandler & route_handler)
 {
   double value = 0.0;
 
@@ -245,7 +245,7 @@ double getRouteLengthWithOppositeDirectionLane(
 }
 
 double getRouteLengthWithNoAdjacentLane(
-  const lanelet::ConstLanelets & lanes, const route_handler::RouteHandler & route_handler)
+  const lanelet::ConstLanelets & lanes, const RouteHandler & route_handler)
 {
   double value = 0.0;
 
@@ -264,8 +264,7 @@ double getRouteLengthWithNoAdjacentLane(
   return value;
 }
 
-bool existSameDirectionLane(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler)
+bool existSameDirectionLane(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler)
 {
   const auto right_lanelet = route_handler.getRightLanelet(lane, true, false);
   const auto left_lanelet = route_handler.getLeftLanelet(lane, true, false);
@@ -273,7 +272,7 @@ bool existSameDirectionLane(
 }
 
 bool existOppositeDirectionLane(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler)
+  const lanelet::ConstLanelet & lane, const RouteHandler & route_handler)
 {
   {
     const auto lanelet = route_handler.getMostRightLanelet(lane, true, false);
@@ -292,8 +291,7 @@ bool existOppositeDirectionLane(
   return false;
 }
 
-bool existRoadShoulderLane(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler)
+bool existRoadShoulderLane(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler)
 {
   {
     const auto lanelet = route_handler.getMostRightLanelet(lane, true, true);
@@ -314,8 +312,7 @@ bool existRoadShoulderLane(
   return false;
 }
 
-int getLeftLaneletNum(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler)
+int getLeftLaneletNum(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler)
 {
   const auto left_lanelet = route_handler.getLeftLanelet(lane, true, false);
   if (left_lanelet.has_value()) {
@@ -330,8 +327,7 @@ int getLeftLaneletNum(
   return 0;
 }
 
-int getRightLaneletNum(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler)
+int getRightLaneletNum(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler)
 {
   const auto right_lanelet = route_handler.getRightLanelet(lane, true, false);
   if (right_lanelet.has_value()) {
@@ -346,8 +342,7 @@ int getRightLaneletNum(
   return 0;
 }
 
-int getTotalLaneletNum(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler)
+int getTotalLaneletNum(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler)
 {
   return getRightLaneletNum(lane, route_handler) + getLeftLaneletNum(lane, route_handler) + 1;
 }
@@ -375,16 +370,14 @@ bool existIntersection(const lanelet::ConstLanelets & lanes)
   return false;
 }
 
-bool existCrosswalk(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler)
+bool existCrosswalk(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler)
 {
   constexpr int PEDESTRIAN_GRAPH_ID = 1;
   const auto overall_graphs = route_handler.getOverallGraphPtr();
   return !overall_graphs->conflictingInGraph(lane, PEDESTRIAN_GRAPH_ID).empty();
 }
 
-bool existCrosswalk(
-  const lanelet::ConstLanelets & lanes, const route_handler::RouteHandler & route_handler)
+bool existCrosswalk(const lanelet::ConstLanelets & lanes, const RouteHandler & route_handler)
 {
   for (const auto & lane : lanes) {
     if (existCrosswalk(lane, route_handler)) {
@@ -439,8 +432,7 @@ std::string getModuleStatus(const CooperateStatusArray & status_array, const uin
 }
 
 std::string getEgoBehavior(
-  const lanelet::ConstLanelet & lane,
-  [[maybe_unused]] const route_handler::RouteHandler & route_handler,
+  const lanelet::ConstLanelet & lane, [[maybe_unused]] const RouteHandler & route_handler,
   [[maybe_unused]] const Pose & pose)
 {
   const std::string turn_direction = lane.attributeOr("turn_direction", "else");
