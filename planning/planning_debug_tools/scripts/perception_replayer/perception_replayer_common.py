@@ -22,6 +22,8 @@ import time
 from autoware_perception_msgs.msg import DetectedObjects
 from autoware_perception_msgs.msg import PredictedObjects
 from autoware_perception_msgs.msg import TrackedObjects
+from autoware_perception_msgs.msg import TrafficLightElement
+from autoware_perception_msgs.msg import TrafficLightGroup
 from autoware_perception_msgs.msg import TrafficLightGroupArray
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import PoseWithCovarianceStamped
@@ -80,6 +82,10 @@ class PerceptionReplayerCommon(Node):
             PoseStamped, "/planning/mission_planning/goal", 1
         )
 
+        self.traffic_signals_pub = self.create_publisher(
+            TrafficLightGroupArray, "/perception/traffic_light_recognition/traffic_signals", 1
+        )
+
         # load rosbag
         print("Stared loading rosbag")
         if os.path.isdir(args.bag):
@@ -93,10 +99,6 @@ class PerceptionReplayerCommon(Node):
         else:
             self.load_rosbag(args.bag)
         print("Ended loading rosbag")
-
-        self.traffic_signals_pub = self.create_publisher(
-            TrafficLightGroupArray, "/perception/traffic_light_recognition/traffic_signals", 1
-        )
 
         # wait for ready to publish/subscribe
         time.sleep(1.0)
@@ -128,10 +130,36 @@ class PerceptionReplayerCommon(Node):
             msg_type = get_message(type_map[topic])
             msg = deserialize_message(data, msg_type)
             if topic == objects_topic:
+                if not isinstance(msg, self.objects_pub.msg_type):
+                    # convert old autoware_auto_perception_msgs to new autoware_perception_msgs
+                    new_msg = self.objects_pub.msg_type()
+                    for field in msg.__slots__:
+                        setattr(
+                            new_msg, field, getattr(msg, field)
+                        )  # it's unsafe because the elements inside the message are still the old type, but it works for now on.
+                    msg = new_msg
                 self.rosbag_objects_data.append((stamp, msg))
             if topic == ego_odom_topic:
                 self.rosbag_ego_odom_data.append((stamp, msg))
             if topic == traffic_signals_topic:
+                if not isinstance(msg, self.traffic_signals_pub.msg_type):
+                    # convert old TrafficSignalArray msg to new TrafficLightGroupArray msg.
+                    new_msg = self.traffic_signals_pub.msg_type()
+                    new_msg.stamp = msg.stamp
+                    for traffic_signal in msg.signals:
+                        traffic_light_group = TrafficLightGroup()
+                        traffic_light_group.traffic_light_group_id = (
+                            traffic_signal.traffic_signal_id
+                        )
+                        for traffic_signal_element in traffic_signal.elements:
+                            traffic_light_element = TrafficLightElement()
+                            traffic_light_element.color = traffic_signal_element.color
+                            traffic_light_element.shape = traffic_signal_element.shape
+                            traffic_light_element.status = traffic_signal_element.status
+                            traffic_light_element.confidence = traffic_signal_element.confidence
+                            traffic_light_group.elements.append(traffic_light_element)
+                        new_msg.traffic_light_groups.append(traffic_light_group)
+                    msg = new_msg
                 self.rosbag_traffic_signals_data.append((stamp, msg))
 
     def kill_online_perception_node(self):
