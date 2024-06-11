@@ -29,10 +29,6 @@ dist_eps = 1e-2  # (meters)
 
 
 class PerceptionReproducer(PerceptionReplayerCommon):
-    """
-    PerceptionReproducer is used reproduces perception topic data from rosbag, specifically optimized for use with simulators.
-    """
-
     def __init__(self, args):
         self.rosbag_ego_odom_search_radius = (
             args.search_radius
@@ -49,7 +45,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
         self.reproduce_sequence_indices = deque()  # contains ego_odom_idx
         self.cool_down_indices = deque()  # contains ego_odom_idx
-        self.ego_odom_id2last_published_timestamp = dict()  # for checking last published timestamp.
+        self.ego_odom_id2last_published_timestamp = {}  # for checking last published timestamp.
 
         self.prev_ego_pos = None
         self.prev_ego_odom_msg = None
@@ -234,13 +230,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         nearest_idx = np.argmin(dists_squared)
         return nearest_idx
 
-    def find_nearby_ego_odom_indies(self, ego_poses, search_radius: float):
-        """
-        Find the indices of the ego odom that are within a certain distance of any ego_pose in the list.
-        Inputs:
-            ego_poses: the list of ego poses to search around.
-            search_radius: the radius to search around the ego_poses.
-        """
+    def find_nearby_ego_odom_indies(self, ego_poses: list, search_radius: float):
         ego_poses_np = np.array([[pose.position.x, pose.position.y] for pose in ego_poses])
         dists_squared = np.sum(
             (self.rosbag_ego_odom_data_numpy[:, None] - ego_poses_np) ** 2, axis=2
