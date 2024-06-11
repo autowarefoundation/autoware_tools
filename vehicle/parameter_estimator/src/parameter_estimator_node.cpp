@@ -31,7 +31,7 @@ ParameterEstimatorNode::ParameterEstimatorNode(const rclcpp::NodeOptions & node_
   durable_qos.transient_local();  // option for latching
 
   // get parameter
-  const auto vehicle_info = autoware::vehicle_info_utils::VehicleInfoUtil(*this).getVehicleInfo();
+  const auto vehicle_info = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
   wheel_base_ = vehicle_info.wheel_base_m;
   use_auto_mode_ = this->declare_parameter<bool>("use_auto_mode", true);
   update_hz_ = this->declare_parameter<double>("update_hz", 10.0);
