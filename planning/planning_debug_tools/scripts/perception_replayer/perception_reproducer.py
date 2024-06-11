@@ -105,7 +105,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             print("No ego pose found.")
             return
 
-        ## Update reproduce list if ego_pos is moved.
+        # Update reproduce list if ego_pos is moved.
         if (
             self.ego_pose is None
             or self.prev_ego_pos is None
@@ -158,7 +158,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
         self.prev_ego_pos = self.ego_pose
 
-        ## get data to publish
+        # get data to publish
         repeat_trigger = len(self.reproduce_sequence_indices) == 0
         if not repeat_trigger:  # pop data from reproduce_sequence if sequence is not empty.
             ego_odom_idx = self.reproduce_sequence_indices.popleft()
@@ -175,7 +175,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             objects_msg = self.perv_objects_msg
             traffic_signals_msg = self.prev_traffic_signals_msg
 
-        ## transform and publish current data.
+        # transform and publish current data.
         self.stopwatch.tic("transform and publish")
 
         # ego odom
