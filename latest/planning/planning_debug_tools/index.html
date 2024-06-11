@@ -2104,6 +2104,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#how-it-works" class="md-nav__link">
+    How it works
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#how-to-use_1" class="md-nav__link">
     How to use
   </a>
@@ -2316,8 +2323,15 @@ add below example value to behavior velocity analyzer and set <code>is_publish_d
 </code></pre></div>
 <h2 id="perception-reproducer">Perception reproducer<a class="headerlink" href="#perception-reproducer" title="Permanent link">#</a></h2>
 <p>This script can overlay the perception results from the rosbag on the planning simulator synchronized with the simulator's ego pose.</p>
-<p>In detail, the ego pose in the rosbag which is closest to the current ego pose in the simulator is calculated.
-The perception results at the timestamp of the closest ego pose is extracted, and published.</p>
+<h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">#</a></h3>
+<p>Whenever the ego's position changes, a chronological <code>reproduce_sequence</code> queue is generated base on its position with a search radius (default to 2 m).
+If the queue is empty, the nearest odom message in the rosbag is added to the queue.
+When publishing perception messages, the first element in the <code>reproduce_sequence</code> is popped and published.</p>
+<p>This design results in the following behavior:</p>
+<ul>
+<li>When ego stops, the perception messages are published in chronological order until queue is empty.</li>
+<li>When the ego moves, a perception message close to ego's position is published.</li>
+</ul>
 <h3 id="how-to-use_1">How to use<a class="headerlink" href="#how-to-use_1" title="Permanent link">#</a></h3>
 <p>First, launch the planning simulator, and put the ego pose.
 Then, run the script according to the following command.</p>
@@ -2328,6 +2342,8 @@ Then, run the script according to the following command.</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_reproducer.py<span class="w"> </span>-b<span class="w"> </span>&lt;dir-to-bag-files&gt;
 </code></pre></div>
 <p>Instead of publishing predicted objects, you can publish detected/tracked objects by designating <code>-d</code> or <code>-t</code>, respectively.</p>
+<p>You can use <code>-r</code> option to set the search radius in meters for the perception messages. If it is set to 0, the reproducer always publishes the nearest perception message as how did the old perception_reproducer work.
+<code>-c</code>(<code>--reproduce-cool-down</code>) option is to set the cool down time in seconds, aiming to prevent republishing recently published messages.</p>
 <h2 id="perception-replayer">Perception replayer<a class="headerlink" href="#perception-replayer" title="Permanent link">#</a></h2>
 <p>A part of the feature is under development.</p>
 <p>This script can overlay the perception results from the rosbag on the planning simulator.</p>
