@@ -19,9 +19,12 @@ from subprocess import CalledProcessError
 from subprocess import check_output
 import time
 
-from autoware_perception_msgs.msg import DetectedObjects, PredictedObjects, TrackedObjects
-from autoware_perception_msgs.msg import TrafficLightGroupArray, TrafficLightGroup, TrafficLightElement
-
+from autoware_perception_msgs.msg import DetectedObjects
+from autoware_perception_msgs.msg import PredictedObjects
+from autoware_perception_msgs.msg import TrackedObjects
+from autoware_perception_msgs.msg import TrafficLightElement
+from autoware_perception_msgs.msg import TrafficLightGroup
+from autoware_perception_msgs.msg import TrafficLightGroupArray
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
@@ -31,6 +34,7 @@ from rclpy.serialization import deserialize_message
 from rosbag2_py import StorageFilter
 from rosidl_runtime_py.utilities import get_message
 from sensor_msgs.msg import PointCloud2
+from utils import get_starting_time
 from utils import open_reader
 
 
@@ -85,9 +89,13 @@ class PerceptionReplayerCommon(Node):
         # load rosbag
         print("Stared loading rosbag")
         if os.path.isdir(args.bag):
-            for bag_file in sorted(os.listdir(args.bag)):
-                if bag_file.endswith(self.args.rosbag_format):
-                    self.load_rosbag(args.bag + "/" + bag_file)
+            bags = [
+                os.path.join(args.bag, base_name)
+                for base_name in os.listdir(args.bag)
+                if base_name.endswith(args.rosbag_format)
+            ]
+            for bag_file in sorted(bags, key=get_starting_time):
+                self.load_rosbag(bag_file)
         else:
             self.load_rosbag(args.bag)
         print("Ended loading rosbag")
@@ -126,7 +134,9 @@ class PerceptionReplayerCommon(Node):
                     # convert old autoware_auto_perception_msgs to new autoware_perception_msgs
                     new_msg = self.objects_pub.msg_type()
                     for field in msg.__slots__:
-                        setattr(new_msg, field, getattr(msg, field))# it's unsafe because the elements inside the message are still the old type, but it works for now on.
+                        setattr(
+                            new_msg, field, getattr(msg, field)
+                        )  # it's unsafe because the elements inside the message are still the old type, but it works for now on.
                     msg = new_msg
                 self.rosbag_objects_data.append((stamp, msg))
             if topic == ego_odom_topic:
@@ -136,17 +146,19 @@ class PerceptionReplayerCommon(Node):
                     # convert old TrafficSignalArray msg to new TrafficLightGroupArray msg.
                     new_msg = self.traffic_signals_pub.msg_type()
                     new_msg.stamp = msg.stamp
-                    for traffc_signal in msg.signals:
-                        traffic_lignt_group = TrafficLightGroup()
-                        traffic_lignt_group.traffic_light_group_id = traffc_signal.traffic_signal_id
-                        for traffic_signal_element in traffc_signal.elements:
+                    for traffic_signal in msg.signals:
+                        traffic_light_group = TrafficLightGroup()
+                        traffic_light_group.traffic_light_group_id = (
+                            traffic_signal.traffic_signal_id
+                        )
+                        for traffic_signal_element in traffic_signal.elements:
                             traffic_light_element = TrafficLightElement()
                             traffic_light_element.color = traffic_signal_element.color
                             traffic_light_element.shape = traffic_signal_element.shape
                             traffic_light_element.status = traffic_signal_element.status
                             traffic_light_element.confidence = traffic_signal_element.confidence
-                            traffic_lignt_group.elements.append(traffic_light_element)
-                        new_msg.traffic_light_groups.append(traffic_lignt_group)
+                            traffic_light_group.elements.append(traffic_light_element)
+                        new_msg.traffic_light_groups.append(traffic_light_group)
                     msg = new_msg
                 self.rosbag_traffic_signals_data.append((stamp, msg))
 

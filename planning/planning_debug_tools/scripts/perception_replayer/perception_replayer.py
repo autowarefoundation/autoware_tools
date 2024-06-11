@@ -105,7 +105,6 @@ class PerceptionReplayer(PerceptionReplayerCommon):
             self.prev_traffic_signals_msg.stamp = timestamp
             self.traffic_signals_pub.publish(self.prev_traffic_signals_msg)
 
-
     def onPushed(self, event):
         if self.widget.button.isChecked():
             self.is_pause = True
