@@ -104,13 +104,13 @@ class VelocityChecker(Node):
 
         # control commands
         self.sub6 = self.create_subscription(
-            Control,
+            AckermannControlCommand,
             "/control/trajectory_follower/control_cmd",
             self.CallBackControlCmd,
             1,
         )
         self.sub7 = self.create_subscription(
-            Control, "/control/command/control_cmd", self.CallBackVehicleCmd, 1
+            AckermannControlCommand, "/control/command/control_cmd", self.CallBackVehicleCmd, 1
         )
 
         # others related to velocity
