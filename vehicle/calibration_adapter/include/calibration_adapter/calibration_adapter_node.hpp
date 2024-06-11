@@ -21,8 +21,8 @@
 #include "estimator_utils/math_utils.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "autoware_auto_control_msgs/msg/ackermann_control_command.hpp"
-#include "autoware_auto_vehicle_msgs/msg/velocity_report.hpp"
+#include "autoware_control_msgs/msg/control.hpp"
+#include "autoware_vehicle_msgs/msg/velocity_report.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "tier4_calibration_msgs/msg/float32_stamped.hpp"
 
@@ -30,8 +30,8 @@
 
 class CalibrationAdapterNode : public CalibrationAdapterNodeBase
 {
-  using Velocity = autoware_auto_vehicle_msgs::msg::VelocityReport;
-  using ControlCommandStamped = autoware_auto_control_msgs::msg::AckermannControlCommand;
+  using Velocity = autoware_vehicle_msgs::msg::VelocityReport;
+  using ControlCommandStamped = autoware_control_msgs::msg::Control;
   using TwistStamped = geometry_msgs::msg::TwistStamped;
 
 public:

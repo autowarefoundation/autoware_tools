@@ -19,8 +19,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-#include "autoware_auto_vehicle_msgs/msg/engage.hpp"
-#include "autoware_auto_vehicle_msgs/msg/steering_report.hpp"
+#include "autoware_vehicle_msgs/msg/engage.hpp"
+#include "autoware_vehicle_msgs/msg/steering_report.hpp"
 #include "tier4_calibration_msgs/msg/bool_stamped.hpp"
 #include "tier4_calibration_msgs/msg/float32_stamped.hpp"
 #include "tier4_vehicle_msgs/msg/actuation_command_stamped.hpp"
@@ -33,8 +33,8 @@ public:
   using ActuationStatusStamped = tier4_vehicle_msgs::msg::ActuationStatusStamped;
   using Float32Stamped = tier4_calibration_msgs::msg::Float32Stamped;
   using BoolStamped = tier4_calibration_msgs::msg::BoolStamped;
-  using EngageStatus = autoware_auto_vehicle_msgs::msg::Engage;
-  using SteeringAngleStatus = autoware_auto_vehicle_msgs::msg::SteeringReport;
+  using EngageStatus = autoware_vehicle_msgs::msg::Engage;
+  using SteeringAngleStatus = autoware_vehicle_msgs::msg::SteeringReport;
   CalibrationAdapterNodeBase();
 
 private:

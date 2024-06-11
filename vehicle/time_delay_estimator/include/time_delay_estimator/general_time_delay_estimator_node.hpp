@@ -23,7 +23,7 @@
 #include "time_delay_estimator/parameters.hpp"
 #include "time_delay_estimator/time_delay_estimator.hpp"
 
-#include "autoware_auto_vehicle_msgs/msg/control_mode_report.hpp"
+#include "autoware_vehicle_msgs/msg/control_mode_report.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/float32.hpp"
 #include "std_msgs/msg/float32_multi_array.hpp"
@@ -44,7 +44,7 @@
 class TimeDelayEstimatorNode : public rclcpp::Node
 {
   using Float32Stamped = tier4_calibration_msgs::msg::Float32Stamped;
-  using ControlModeReport = autoware_auto_vehicle_msgs::msg::ControlModeReport;
+  using ControlModeReport = autoware_vehicle_msgs::msg::ControlModeReport;
   using IsEngaged = tier4_calibration_msgs::msg::BoolStamped;
   using BoolStamped = tier4_calibration_msgs::msg::BoolStamped;
   using TimeDelay = tier4_calibration_msgs::msg::TimeDelay;
@@ -54,7 +54,7 @@ private:
   rclcpp::Publisher<TimeDelay>::SharedPtr pub_time_delay_;
 
   // input subscription
-  rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::ControlModeReport>::SharedPtr
+  rclcpp::Subscription<autoware_vehicle_msgs::msg::ControlModeReport>::SharedPtr
     sub_control_mode_report_;
 
   // response subscription

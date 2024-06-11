@@ -30,10 +30,9 @@ VehicleCmdAnalyzer::VehicleCmdAnalyzer(const rclcpp::NodeOptions & options)
   const auto vehicle_info = vehicle_info_util::VehicleInfoUtil(*this).getVehicleInfo();
   wheelbase_ = vehicle_info.wheel_base_m;
 
-  sub_vehicle_cmd_ =
-    this->create_subscription<autoware_auto_control_msgs::msg::AckermannControlCommand>(
-      "/control/command/control_cmd", rclcpp::QoS(10),
-      std::bind(&VehicleCmdAnalyzer::callbackVehicleCommand, this, std::placeholders::_1));
+  sub_vehicle_cmd_ = this->create_subscription<autoware_control_msgs::msg::Control>(
+    "/control/command/control_cmd", rclcpp::QoS(10),
+    std::bind(&VehicleCmdAnalyzer::callbackVehicleCommand, this, std::placeholders::_1));
   pub_debug_ = create_publisher<tier4_debug_msgs::msg::Float32MultiArrayStamped>(
     "~/debug_values", rclcpp::QoS{1});
 
@@ -50,10 +49,9 @@ VehicleCmdAnalyzer::VehicleCmdAnalyzer(const rclcpp::NodeOptions & options)
 }
 
 void VehicleCmdAnalyzer::callbackVehicleCommand(
-  const autoware_auto_control_msgs::msg::AckermannControlCommand::SharedPtr msg)
+  const autoware_control_msgs::msg::Control::SharedPtr msg)
 {
-  vehicle_cmd_ptr_ =
-    std::make_shared<autoware_auto_control_msgs::msg::AckermannControlCommand>(*msg);
+  vehicle_cmd_ptr_ = std::make_shared<autoware_control_msgs::msg::Control>(*msg);
 }
 
 void VehicleCmdAnalyzer::callbackTimerControl()
@@ -76,7 +74,7 @@ void VehicleCmdAnalyzer::publishDebugData()
   // set debug values
   debug_values_.setValues(DebugValues::TYPE::DT, dt);
   debug_values_.setValues(
-    DebugValues::TYPE::CURRENT_TARGET_VEL, vehicle_cmd_ptr_->longitudinal.speed);
+    DebugValues::TYPE::CURRENT_TARGET_VEL, vehicle_cmd_ptr_->longitudinal.velocity);
   debug_values_.setValues(DebugValues::TYPE::CURRENT_TARGET_D_VEL, d_vel);
   debug_values_.setValues(DebugValues::TYPE::CURRENT_TARGET_DD_VEL, dd_vel);
   debug_values_.setValues(
@@ -111,13 +109,13 @@ double VehicleCmdAnalyzer::getDt()
 std::pair<double, double> VehicleCmdAnalyzer::differentiateVelocity(const double dt)
 {
   if (!prev_target_vel_) {
-    prev_target_vel_ = vehicle_cmd_ptr_->longitudinal.speed;
+    prev_target_vel_ = vehicle_cmd_ptr_->longitudinal.velocity;
     prev_target_d_vel_.at(2) = 0.0;
     return {0.0, 0.0};
   }
-  const double d_vel = (vehicle_cmd_ptr_->longitudinal.speed - prev_target_vel_) / dt;
+  const double d_vel = (vehicle_cmd_ptr_->longitudinal.velocity - prev_target_vel_) / dt;
   const double dd_vel = (d_vel - prev_target_d_vel_.at(0)) / 2 / dt;
-  prev_target_vel_ = vehicle_cmd_ptr_->longitudinal.speed;
+  prev_target_vel_ = vehicle_cmd_ptr_->longitudinal.velocity;
   for (int i = 0; i < 2; i++) {
     prev_target_d_vel_.at(i) = prev_target_d_vel_.at(i + 1);
   }
@@ -139,7 +137,7 @@ double VehicleCmdAnalyzer::differentiateAcceleration(const double dt)
 double VehicleCmdAnalyzer::calcLateralAcceleration() const
 {
   const double delta = vehicle_cmd_ptr_->lateral.steering_tire_angle;
-  const double vel = vehicle_cmd_ptr_->longitudinal.speed;
+  const double vel = vehicle_cmd_ptr_->longitudinal.velocity;
   const double a_lat = vel * vel * std::sin(delta) / wheelbase_;
   return a_lat;
 }

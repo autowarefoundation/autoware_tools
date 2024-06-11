@@ -25,7 +25,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "vehicle_info_util/vehicle_info_util.hpp"
 
-#include "autoware_auto_vehicle_msgs/msg/control_mode_report.hpp"
+#include "autoware_vehicle_msgs/msg/control_mode_report.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "tier4_calibration_msgs/msg/float32_stamped.hpp"
@@ -38,7 +38,7 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr sub_vehicle_twist_;
   rclcpp::Subscription<tier4_calibration_msgs::msg::Float32Stamped>::SharedPtr sub_steer_;
   rclcpp::Subscription<tier4_calibration_msgs::msg::Float32Stamped>::SharedPtr sub_steer_wheel_;
-  rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::ControlModeReport>::SharedPtr
+  rclcpp::Subscription<autoware_vehicle_msgs::msg::ControlModeReport>::SharedPtr
     sub_control_mode_report_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_imu_;
 
@@ -50,7 +50,7 @@ private:
   sensor_msgs::msg::Imu::ConstSharedPtr imu_ptr_;
   tier4_calibration_msgs::msg::Float32Stamped::ConstSharedPtr steer_ptr_;
   tier4_calibration_msgs::msg::Float32Stamped::ConstSharedPtr steer_wheel_ptr_;
-  autoware_auto_vehicle_msgs::msg::ControlModeReport::ConstSharedPtr control_mode_ptr_;
+  autoware_vehicle_msgs::msg::ControlModeReport::ConstSharedPtr control_mode_ptr_;
 
   /**
    * ros parameters
@@ -77,7 +77,7 @@ private:
   void callbackSteer(const tier4_calibration_msgs::msg::Float32Stamped::ConstSharedPtr msg);
   void callbackSteerWheel(const tier4_calibration_msgs::msg::Float32Stamped::ConstSharedPtr msg);
   void callbackControlModeReport(
-    const autoware_auto_vehicle_msgs::msg::ControlModeReport::ConstSharedPtr msg);
+    const autoware_vehicle_msgs::msg::ControlModeReport::ConstSharedPtr msg);
   void timerCallback();
   bool updateGearRatio();
 

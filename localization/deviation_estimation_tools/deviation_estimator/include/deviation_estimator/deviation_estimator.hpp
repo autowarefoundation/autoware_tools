@@ -24,7 +24,7 @@
 #include "tf2/utils.h"
 #include "tier4_autoware_utils/ros/transform_listener.hpp"
 
-#include "autoware_auto_vehicle_msgs/msg/velocity_report.hpp"
+#include "autoware_vehicle_msgs/msg/velocity_report.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
@@ -58,8 +58,7 @@ public:
 
 private:
   rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr sub_pose_with_cov_;
-  rclcpp::Subscription<autoware_auto_vehicle_msgs::msg::VelocityReport>::SharedPtr
-    sub_wheel_odometry_;
+  rclcpp::Subscription<autoware_vehicle_msgs::msg::VelocityReport>::SharedPtr sub_wheel_odometry_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_imu_;
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pub_coef_vx_;
   rclcpp::Publisher<geometry_msgs::msg::Vector3>::SharedPtr pub_bias_angvel_;
@@ -109,7 +108,7 @@ private:
   void callback_pose_with_covariance(geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
   void callback_wheel_odometry(
-    const autoware_auto_vehicle_msgs::msg::VelocityReport::ConstSharedPtr wheel_odometry_msg_ptr);
+    const autoware_vehicle_msgs::msg::VelocityReport::ConstSharedPtr wheel_odometry_msg_ptr);
 
   void callback_imu(const sensor_msgs::msg::Imu::ConstSharedPtr imu_msg_ptr);
 

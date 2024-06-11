@@ -52,7 +52,7 @@ CalibrationAdapterNodeBase::CalibrationAdapterNodeBase() : Node("calibration_ada
   pub_is_engage_ =
     create_publisher<tier4_calibration_msgs::msg::BoolStamped>("~/output/is_engage", durable_qos);
 
-  sub_engage_status_ = create_subscription<autoware_auto_vehicle_msgs::msg::Engage>(
+  sub_engage_status_ = create_subscription<autoware_vehicle_msgs::msg::Engage>(
     "~/input/is_engage", queue_size,
     std::bind(&CalibrationAdapterNodeBase::onEngageStatus, this, _1));
   sub_actuation_status_ = create_subscription<ActuationStatusStamped>(
