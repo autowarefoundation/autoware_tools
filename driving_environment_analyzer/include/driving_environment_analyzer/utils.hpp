@@ -23,6 +23,7 @@
 
 namespace driving_environment_analyzer::utils
 {
+using autoware::route_handler::RouteHandler;
 
 template <class T>
 std::vector<double> calcElevationAngle(const T & points);
@@ -40,44 +41,37 @@ std::pair<double, double> getLaneWidth(const lanelet::ConstLanelets & lanes);
 std::pair<double, double> getElevation(const lanelet::ConstLanelets & lanes);
 
 std::pair<double, double> getSpeedLimit(
-  const lanelet::ConstLanelets & lanes, const route_handler::RouteHandler & route_handler);
+  const lanelet::ConstLanelets & lanes, const RouteHandler & route_handler);
 
 double getRouteLengthWithSameDirectionLane(
-  const lanelet::ConstLanelets & lanes, const route_handler::RouteHandler & route_handler);
+  const lanelet::ConstLanelets & lanes, const RouteHandler & route_handler);
 
 double getRouteLengthWithOppositeDirectionLane(
-  const lanelet::ConstLanelets & lanes, const route_handler::RouteHandler & route_handler);
+  const lanelet::ConstLanelets & lanes, const RouteHandler & route_handler);
 
 double getRouteLengthWithNoAdjacentLane(
-  const lanelet::ConstLanelets & lanes, const route_handler::RouteHandler & route_handler);
+  const lanelet::ConstLanelets & lanes, const RouteHandler & route_handler);
 
-bool existSameDirectionLane(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler);
+bool existSameDirectionLane(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler);
 
 bool existOppositeDirectionLane(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler);
+  const lanelet::ConstLanelet & lane, const RouteHandler & route_handler);
 
-bool existRoadShoulderLane(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler);
+bool existRoadShoulderLane(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler);
 
-int getLeftLaneletNum(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler);
+int getLeftLaneletNum(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler);
 
-int getRightLaneletNum(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler);
+int getRightLaneletNum(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler);
 
-int getTotalLaneletNum(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler);
+int getTotalLaneletNum(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler);
 
 bool existTrafficLight(const lanelet::ConstLanelets & lanes);
 
 bool existIntersection(const lanelet::ConstLanelets & lanes);
 
-bool existCrosswalk(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler);
+bool existCrosswalk(const lanelet::ConstLanelet & lane, const RouteHandler & route_handler);
 
-bool existCrosswalk(
-  const lanelet::ConstLanelets & lanes, const route_handler::RouteHandler & route_handler);
+bool existCrosswalk(const lanelet::ConstLanelets & lanes, const RouteHandler & route_handler);
 
 bool isStraightLane(const lanelet::ConstLanelet & lane);
 
@@ -88,8 +82,7 @@ std::string getLaneShape(const lanelet::ConstLanelet & lane);
 std::string getModuleStatus(const CooperateStatusArray & status_array, const uint8_t module_type);
 
 std::string getEgoBehavior(
-  const lanelet::ConstLanelet & lane, const route_handler::RouteHandler & route_handler,
-  const Pose & pose);
+  const lanelet::ConstLanelet & lane, const RouteHandler & route_handler, const Pose & pose);
 
 }  // namespace driving_environment_analyzer::utils
 

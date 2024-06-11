@@ -19,6 +19,7 @@
   <depend>autoware_lane_departure_checker</depend>
   <depend>autoware_perception_msgs</depend>
   <depend>autoware_planning_msgs</depend>
+  <depend>autoware_route_handler</depend>
   <depend>autoware_vehicle_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>interpolation</depend>
@@ -32,7 +33,6 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>rosbag2_cpp</depend>
-  <depend>route_handler</depend>
   <depend>rviz_common</depend>
   <depend>rviz_default_plugins</depend>
   <depend>sensor_msgs</depend>
