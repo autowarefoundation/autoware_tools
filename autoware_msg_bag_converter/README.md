@@ -15,12 +15,10 @@ Example command is below.
 mkdir -p $HOME/ros_ws/tools/src
 cd $HOME/ros_ws/tools/src
 git clone https://github.com/autowarefoundation/autoware_tools.git
-cd autoware_tools
-vcs import . < build_dependency.repos
-cd autoware_msg_bag_converter
+cd autoware_tools/autoware_msg_bag_converter
 vcs import .. < dependency.repos
 cd $HOME/ros_ws/tools
-colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release
+colcon build --symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release --packages-up-to autoware_msg_bag_converter
 ```
 
 ## usage
