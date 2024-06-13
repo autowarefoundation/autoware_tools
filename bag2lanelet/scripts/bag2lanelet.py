@@ -1,11 +1,11 @@
 #!/bin/env python3
 import argparse
-
+from datetime import datetime
 import os
 import pathlib
-from datetime import datetime
 
-from bag2way import bag2pose, pose2line
+from bag2way import bag2pose
+from bag2way import pose2line
 from lanelet_xml import LaneletMap
 
 
