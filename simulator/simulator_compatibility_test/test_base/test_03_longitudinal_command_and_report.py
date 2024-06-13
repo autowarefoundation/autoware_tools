@@ -101,7 +101,7 @@ class Test03LongitudinalCommandAndReportBase:
             if len(self.msgs_rx) > 2:
                 break
         received = self.msgs_rx[-1]
-        assert received.longitudinal.speed == speed
+        assert received.longitudinal.velocity == speed
         self.msgs_rx.clear()
 
     def set_acceleration(self, acceleration):
