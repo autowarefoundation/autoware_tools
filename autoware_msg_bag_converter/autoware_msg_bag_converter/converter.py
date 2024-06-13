@@ -16,12 +16,11 @@
 # https://github.com/ros2/rosbag2/blob/rolling/rosbag2_py/test/test_sequential_writer.py
 # https://github.com/ros2/rosbag2/blob/rolling/rosbag2_py/test/test_reindexer.py
 
-from rosbag2_py import Reindexer
-from rosbag2_py import TopicMetadata
-
 from autoware_msg_bag_converter.bag import create_reader
 from autoware_msg_bag_converter.bag import create_writer
 from autoware_msg_bag_converter.bag import get_default_storage_options
+from rosbag2_py import Reindexer
+from rosbag2_py import TopicMetadata
 
 
 def change_topic_type(old_type: TopicMetadata) -> TopicMetadata:

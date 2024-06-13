@@ -14,9 +14,8 @@
 
 from pathlib import Path
 
-from rosbag2_py import TopicMetadata
-
 from autoware_msg_bag_converter.converter import change_topic_type
+from rosbag2_py import TopicMetadata
 
 
 def test_change_topic_type() -> None:
