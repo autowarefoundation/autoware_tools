@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoware_auto_planning_msgs.msg import Trajectory
-from autoware_auto_planning_msgs.msg import TrajectoryPoint
+from autoware_planning_msgs.msg import Trajectory
+from autoware_planning_msgs.msg import TrajectoryPoint
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import PolygonStamped
 from nav_msgs.msg import Odometry
