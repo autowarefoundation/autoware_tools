@@ -8,7 +8,7 @@ repositories:
     type: git
     url: https://github.com/autowarefoundation/autoware_common.git
     version: main
-  core/external/autoware_auto_msgs: # TODO(mfc): Remove when autoware_msgs is merged
+  core/external/autoware_auto_msgs:
     type: git
     url: https://github.com/tier4/autoware_auto_msgs.git
     version: tier4/main
