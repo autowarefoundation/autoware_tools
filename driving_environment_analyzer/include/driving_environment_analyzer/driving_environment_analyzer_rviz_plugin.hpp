@@ -58,7 +58,7 @@ public Q_SLOTS:
   void onClickAnalyzeDynamicODDFactor();
 
 private:
-  void onMap(const HADMapBin::ConstSharedPtr map_msg);
+  void onMap(const LaneletMapBin::ConstSharedPtr map_msg);
 
   std::shared_ptr<analyzer_core::AnalyzerCore> analyzer_;
 
@@ -75,7 +75,7 @@ private:
   QPushButton * set_timestamp_btn_;
 
   rclcpp::Node::SharedPtr raw_node_;
-  rclcpp::Subscription<HADMapBin>::SharedPtr sub_map_;
+  rclcpp::Subscription<LaneletMapBin>::SharedPtr sub_map_;
   rclcpp::Publisher<Odometry>::SharedPtr pub_odometry_;
   rclcpp::Publisher<PredictedObjects>::SharedPtr pub_objects_;
   rclcpp::Publisher<TFMessage>::SharedPtr pub_tf_;

@@ -31,12 +31,12 @@ public:
   explicit DrivingEnvironmentAnalyzerNode(const rclcpp::NodeOptions & node_options);
 
 private:
-  void onMap(const HADMapBin::ConstSharedPtr map_msg);
+  void onMap(const LaneletMapBin::ConstSharedPtr map_msg);
   void analyze();
 
   std::shared_ptr<analyzer_core::AnalyzerCore> analyzer_;
 
-  rclcpp::Subscription<HADMapBin>::SharedPtr sub_map_;
+  rclcpp::Subscription<LaneletMapBin>::SharedPtr sub_map_;
   rclcpp::TimerBase::SharedPtr timer_;
   rosbag2_cpp::Reader reader_;
 };
