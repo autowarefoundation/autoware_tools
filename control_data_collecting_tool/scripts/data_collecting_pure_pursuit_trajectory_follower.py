@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoware_auto_control_msgs.msg import AckermannControlCommand
-from autoware_auto_planning_msgs.msg import Trajectory
-from autoware_auto_vehicle_msgs.msg import GearCommand
+from autoware_control_msgs.msg import Control as AckermannControlCommand
+from autoware_planning_msgs.msg import Trajectory
+from autoware_vehicle_msgs.msg import GearCommand
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry
 import numpy as np
@@ -330,7 +330,7 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
         control_cmd_msg.stamp = (
             control_cmd_msg.lateral.stamp
         ) = control_cmd_msg.longitudinal.stamp = (self.get_clock().now().to_msg())
-        control_cmd_msg.longitudinal.speed = trajectory_longitudinal_velocity[nearestIndex]
+        control_cmd_msg.longitudinal.velocity = trajectory_longitudinal_velocity[nearestIndex]
         control_cmd_msg.longitudinal.acceleration = cmd[0]
         control_cmd_msg.lateral.steering_tire_angle = cmd[1]
 

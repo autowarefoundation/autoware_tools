@@ -16,8 +16,8 @@
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
   <depend>autoware_adapi_v1_msgs</depend>
-  <depend>autoware_auto_control_msgs</depend>
-  <depend>autoware_auto_planning_msgs</depend>
+  <depend>autoware_control_msgs</depend>
+  <depend>autoware_planning_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>python3-scipy</depend>
   <depend>rviz_common</depend>
