@@ -3,7 +3,7 @@
 <package format="3">
   <name>autoware_msg_bag_converter</name>
   <version>0.1.0</version>
-  <description>TODO: Package description</description>
+  <description>bag converter to convert autoware_auto msg to autoware_msg</description>
   <maintainer email="hayato.mizushima@tier4.jp">Hayato Mizushima</maintainer>
   <license>Apache-2.0</license>
 
