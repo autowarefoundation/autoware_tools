@@ -23,6 +23,7 @@
 #include <QSpinBox>
 #include <rclcpp/rclcpp.hpp>
 #include <rviz_common/panel.hpp>
+#include <tier4_autoware_utils/ros/polling_subscriber.hpp>
 
 #include "autoware_vehicle_msgs/msg/velocity_report.hpp"
 #include "geometry_msgs/msg/accel_with_covariance_stamped.hpp"
@@ -68,13 +69,13 @@ protected:
   void onTimer();
   void onPublishControlCommand();
   void onGateMode(const GateMode::ConstSharedPtr msg);
-  void onVelocity(const VelocityReport::ConstSharedPtr msg);
-  void onAcceleration(const AccelWithCovarianceStamped::ConstSharedPtr msg);
   void onEngageStatus(const Engage::ConstSharedPtr msg);
   void onGear(const GearReport::ConstSharedPtr msg);
   rclcpp::Node::SharedPtr raw_node_;
   rclcpp::Subscription<GateMode>::SharedPtr sub_gate_mode_;
-  rclcpp::Subscription<VelocityReport>::SharedPtr sub_velocity_;
+  tier4_autoware_utils::InterProcessPollingSubscriber<VelocityReport>::SharedPtr sub_velocity_;
+  tier4_autoware_utils::InterProcessPollingSubscriber<AccelWithCovarianceStamped>::SharedPtr
+    sub_accel_;
   rclcpp::Subscription<Engage>::SharedPtr sub_engage_;
   rclcpp::Publisher<tier4_control_msgs::msg::GateMode>::SharedPtr pub_gate_mode_;
   rclcpp::Publisher<Control>::SharedPtr pub_control_command_;
@@ -84,8 +85,6 @@ protected:
 
   double cruise_velocity_{0.0};
   double steering_angle_{0.0};
-  double current_velocity_{0.0};
-  double current_acceleration_{0.0};
 
   QLabel * gate_mode_label_ptr_;
   QLabel * gear_label_ptr_;
