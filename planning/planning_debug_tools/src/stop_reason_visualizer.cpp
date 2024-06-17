@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <autoware_universe_utils/ros/marker_helper.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <tier4_autoware_utils/ros/marker_helper.hpp>
 
 #include <std_msgs/msg/header.hpp>
 #include <tier4_planning_msgs/msg/stop_reason.hpp>
@@ -49,10 +49,10 @@ public:
 private:
   void onStopReasonArray(const StopReasonArray::ConstSharedPtr msg)
   {
-    using tier4_autoware_utils::appendMarkerArray;
-    using tier4_autoware_utils::createDefaultMarker;
-    using tier4_autoware_utils::createMarkerColor;
-    using tier4_autoware_utils::createMarkerScale;
+    using autoware_universe_utils::appendMarkerArray;
+    using autoware_universe_utils::createDefaultMarker;
+    using autoware_universe_utils::createMarkerColor;
+    using autoware_universe_utils::createMarkerScale;
 
     MarkerArray all_marker_array;
     const auto header = msg->header;

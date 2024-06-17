@@ -14,8 +14,8 @@
 
 #include "deviation_estimator/utils.hpp"
 
+#include "autoware_universe_utils/geometry/geometry.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "tier4_autoware_utils/geometry/geometry.hpp"
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/utils.h>
@@ -93,7 +93,7 @@ geometry_msgs::msg::Point integrate_position(
 {
   double t_prev = rclcpp::Time(vx_list.front().stamp).seconds();
   double yaw = yaw_init;
-  geometry_msgs::msg::Point d_pos = tier4_autoware_utils::createPoint(0.0, 0.0, 0.0);
+  geometry_msgs::msg::Point d_pos = autoware_universe_utils::createPoint(0.0, 0.0, 0.0);
   for (std::size_t i = 0; i < vx_list.size() - 1; ++i) {
     const double t_cur = rclcpp::Time(vx_list[i + 1].stamp).seconds();
     const geometry_msgs::msg::Vector3 gyro_interpolated =
@@ -118,9 +118,9 @@ geometry_msgs::msg::Vector3 calculate_error_rpy(
   const geometry_msgs::msg::Vector3 & gyro_bias)
 {
   const geometry_msgs::msg::Vector3 rpy_0 =
-    tier4_autoware_utils::getRPY(pose_list.front().pose.orientation);
+    autoware_universe_utils::getRPY(pose_list.front().pose.orientation);
   const geometry_msgs::msg::Vector3 rpy_1 =
-    tier4_autoware_utils::getRPY(pose_list.back().pose.orientation);
+    autoware_universe_utils::getRPY(pose_list.back().pose.orientation);
   const geometry_msgs::msg::Vector3 d_rpy = integrate_orientation(gyro_list, gyro_bias);
 
   geometry_msgs::msg::Vector3 error_rpy = createVector3(

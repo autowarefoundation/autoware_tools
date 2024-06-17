@@ -15,9 +15,9 @@
 #ifndef STOP_ACCEL_EVALUATOR__STOP_ACCEL_EVALUATOR_NODE_HPP_
 #define STOP_ACCEL_EVALUATOR__STOP_ACCEL_EVALUATOR_NODE_HPP_
 
+#include "autoware_universe_utils/ros/self_pose_listener.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "signal_processing/lowpass_filter_1d.hpp"
-#include "tier4_autoware_utils/ros/self_pose_listener.hpp"
 
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
@@ -30,10 +30,10 @@
 
 namespace stop_accel_evaluator
 {
+using autoware_universe_utils::SelfPoseListener;
 using geometry_msgs::msg::TwistStamped;
 using nav_msgs::msg::Odometry;
 using sensor_msgs::msg::Imu;
-using tier4_autoware_utils::SelfPoseListener;
 using tier4_debug_msgs::msg::Float32MultiArrayStamped;
 using tier4_debug_msgs::msg::Float32Stamped;
 

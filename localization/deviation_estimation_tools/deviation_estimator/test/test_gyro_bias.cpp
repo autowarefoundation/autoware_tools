@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "autoware_universe_utils/geometry/geometry.hpp"
 #include "deviation_estimator/gyro_bias_module.hpp"
-#include "tier4_autoware_utils/geometry/geometry.hpp"
 
 #include <gtest/gtest.h>
 
@@ -53,7 +53,7 @@ TEST(DeviationEstimatorGyroBias, SmokeTestDefault)
     for (int i = 0; i <= ndt_rate * dt; ++i) {
       geometry_msgs::msg::PoseStamped pose;
       pose.header.stamp = t_start + rclcpp::Duration::from_seconds(1.0 * i / ndt_rate);
-      pose.pose.orientation = tier4_autoware_utils::createQuaternionFromRPY(0.0, 0.0, 0.0);
+      pose.pose.orientation = autoware_universe_utils::createQuaternionFromRPY(0.0, 0.0, 0.0);
       pose_list.push_back(pose);
     }
 
