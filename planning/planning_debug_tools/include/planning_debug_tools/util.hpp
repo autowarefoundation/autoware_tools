@@ -15,7 +15,7 @@
 #ifndef PLANNING_DEBUG_TOOLS__UTIL_HPP_
 #define PLANNING_DEBUG_TOOLS__UTIL_HPP_
 
-#include "autoware_universe_utils/geometry/geometry.hpp"
+#include "autoware/universe_utils/geometry/geometry.hpp"
 #include "motion_utils/trajectory/trajectory.hpp"
 #include "rclcpp/rclcpp.hpp"
 

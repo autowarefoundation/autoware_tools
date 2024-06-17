@@ -16,7 +16,7 @@
 
 #include "deviation_evaluator/deviation_evaluator.hpp"
 
-#include "autoware_universe_utils/geometry/geometry.hpp"
+#include "autoware/universe_utils/geometry/geometry.hpp"
 #include "rclcpp/logging.hpp"
 
 #include <algorithm>

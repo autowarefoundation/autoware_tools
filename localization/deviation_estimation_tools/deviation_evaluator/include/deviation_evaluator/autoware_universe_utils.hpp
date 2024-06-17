@@ -15,9 +15,9 @@
 #ifndef DEVIATION_EVALUATOR__AUTOWARE_UNIVERSE_UTILS_HPP_
 #define DEVIATION_EVALUATOR__AUTOWARE_UNIVERSE_UTILS_HPP_
 
-#include "autoware_universe_utils/geometry/geometry.hpp"
-#include "autoware_universe_utils/math/constants.hpp"
-#include "autoware_universe_utils/math/normalization.hpp"
+#include "autoware/universe_utils/geometry/geometry.hpp"
+#include "autoware/universe_utils/math/constants.hpp"
+#include "autoware/universe_utils/math/normalization.hpp"
 
 #include <tf2/utils.h>
 

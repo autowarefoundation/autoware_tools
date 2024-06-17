@@ -14,7 +14,7 @@
 
 #include "deviation_estimator/gyro_bias_module.hpp"
 
-#include "autoware_universe_utils/geometry/geometry.hpp"
+#include "autoware/universe_utils/geometry/geometry.hpp"
 #include "deviation_estimator/utils.hpp"
 
 /**

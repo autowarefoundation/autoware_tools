@@ -15,7 +15,7 @@
 #ifndef STOP_ACCEL_EVALUATOR__STOP_ACCEL_EVALUATOR_NODE_HPP_
 #define STOP_ACCEL_EVALUATOR__STOP_ACCEL_EVALUATOR_NODE_HPP_
 
-#include "autoware_universe_utils/ros/self_pose_listener.hpp"
+#include "autoware/universe_utils/ros/self_pose_listener.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "signal_processing/lowpass_filter_1d.hpp"
 
