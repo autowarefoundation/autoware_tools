@@ -14,8 +14,8 @@
 
 #include "deviation_estimator/velocity_coef_module.hpp"
 
+#include "autoware/universe_utils/geometry/geometry.hpp"
 #include "deviation_estimator/utils.hpp"
-#include "tier4_autoware_utils/geometry/geometry.hpp"
 
 /**
  * @brief update speed scale factor (or velocity coefficient) based on a given trajectory data
