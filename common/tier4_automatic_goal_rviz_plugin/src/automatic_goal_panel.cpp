@@ -16,7 +16,7 @@
 
 #include "automatic_goal_panel.hpp"
 
-#include <tier4_autoware_utils/ros/marker_helper.hpp>
+#include <autoware/universe_utils/ros/marker_helper.hpp>
 
 namespace rviz_plugins
 {
@@ -439,9 +439,9 @@ void AutowareAutomaticGoalPanel::updateGoalIcon(const unsigned goal_index, const
 
 void AutowareAutomaticGoalPanel::publishMarkers()
 {
-  using tier4_autoware_utils::createDefaultMarker;
-  using tier4_autoware_utils::createMarkerColor;
-  using tier4_autoware_utils::createMarkerScale;
+  using autoware_universe_utils::createDefaultMarker;
+  using autoware_universe_utils::createMarkerColor;
+  using autoware_universe_utils::createMarkerScale;
 
   MarkerArray text_array;
   MarkerArray arrow_array;
