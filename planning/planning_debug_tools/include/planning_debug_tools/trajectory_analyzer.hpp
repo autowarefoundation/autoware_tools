@@ -15,8 +15,8 @@
 #ifndef PLANNING_DEBUG_TOOLS__TRAJECTORY_ANALYZER_HPP_
 #define PLANNING_DEBUG_TOOLS__TRAJECTORY_ANALYZER_HPP_
 
+#include "autoware/motion_utils/trajectory/trajectory.hpp"
 #include "autoware/universe_utils/geometry/geometry.hpp"
-#include "motion_utils/trajectory/trajectory.hpp"
 #include "planning_debug_tools/msg/trajectory_debug_info.hpp"
 #include "planning_debug_tools/util.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -86,8 +86,8 @@ public:
     TrajectoryDebugInfo data;
     data.stamp = node_->now();
     data.size = points.size();
-    data.curvature = motion_utils::calcCurvature(points);
-    const auto arclength_offset = motion_utils::calcSignedArcLength(points, 0, ego_p);
+    data.curvature = autoware_motion_utils::calcCurvature(points);
+    const auto arclength_offset = autoware_motion_utils::calcSignedArcLength(points, 0, ego_p);
     data.arclength = calcPathArcLengthArray(points, -arclength_offset);
     data.velocity = getVelocityArray(points);
     data.acceleration = getAccelerationArray(points);
