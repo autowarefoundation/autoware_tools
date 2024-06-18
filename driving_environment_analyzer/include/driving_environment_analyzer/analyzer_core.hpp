@@ -18,7 +18,7 @@
 #include "driving_environment_analyzer/type_alias.hpp"
 #include "rosbag2_cpp/reader.hpp"
 
-#include <autoware_route_handler/route_handler.hpp>
+#include <autoware/route_handler/route_handler.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <memory>
