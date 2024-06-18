@@ -15,7 +15,7 @@
 #ifndef DRIVING_ENVIRONMENT_ANALYZER__TYPE_ALIAS_HPP_
 #define DRIVING_ENVIRONMENT_ANALYZER__TYPE_ALIAS_HPP_
 
-#include <autoware_route_handler/route_handler.hpp>
+#include <autoware/route_handler/route_handler.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include "tier4_rtc_msgs/msg/command.hpp"
