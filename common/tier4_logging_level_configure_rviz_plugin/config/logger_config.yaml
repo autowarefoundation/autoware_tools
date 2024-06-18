@@ -64,6 +64,10 @@ Planning:
     - node_name: /planning/scenario_planning/lane_driving/behavior_planning/behavior_path_planner
       logger_name: lane_change.utils
 
+  behavior_path_planner_dynamic_obstacle_avoidance:
+    - node_name: /planning/scenario_planning/lane_driving/behavior_planning/behavior_path_planner
+      logger_name: planning.scenario_planning.lane_driving.behavior_planning.behavior_path_planner.dynamic_obstacle_avoidance
+
   behavior_velocity_planner:
     - node_name: /planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner
       logger_name: planning.scenario_planning.lane_driving.behavior_planning.behavior_velocity_planner
