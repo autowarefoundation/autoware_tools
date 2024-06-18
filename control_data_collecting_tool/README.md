@@ -85,16 +85,19 @@ ROS 2 params in `/data_collecting_trajectory_publisher` node:
 
 ROS 2 params in `/data_collecting_pure_pursuit_trajectory_follower` node:
 
-| Name                                      | Type     | Description                                            | Default value |
-| :---------------------------------------- | :------- | :----------------------------------------------------- | :------------ |
-| `wheel_base`                              | `double` | Wheel base [m]                                         | 2.79          |
-| `pure_pursuit_acc_kp`                     | `double` | Pure pursuit accel command propotional gain            | 0.5           |
-| `pure_pursuit_lookahead_length_coef`      | `double` | Pure pursuit lookahead length coef [m/(m/s)]           | 1.0           |
-| `pure_pursuit_lookahead_length_intercept` | `double` | Pure pursuit lookahead length intercept [m]            | 5.0           |
-| `steer_limit`                             | `double` | Steer control input limit [rad]                        | 0.5           |
-| `acc_noise_amp`                           | `double` | Accel command additional sine noise amplitude [m/ss]   | 0.01          |
-| `acc_noise_min_period`                    | `double` | Accel command additional sine noise minimum period [s] | 5.0           |
-| `acc_noise_max_period`                    | `double` | Accel command additional sine noise maximum period [s] | 20.0          |
-| `steer_noise_amp`                         | `double` | Steer command additional sine noise amplitude [rad]    | 0.01          |
-| `steer_noise_max_period`                  | `double` | Steer command additional sine noise maximum period [s] | 5.0           |
-| `steer_noise_min_period`                  | `double` | Steer command additional sine noise minimum period [s] | 20.0          |
+| Name                                     | Type     | Description                                                    | Default value |
+| :--------------------------------------- | :------- | :------------------------------------------------------------- | :------------ |
+| `pure_pursuit_type`                      | `string` | Pure pursuit type (`naive` or `linearized` steer control law ) | `naive`       |
+| `wheel_base`                             | `double` | Wheel base [m]                                                 | 2.79          |
+| `acc_kp`                                 | `double` | Accel command propotional gain                                 | 0.5           |
+| `lookahead_time`                         | `double` | Pure pursuit lookahead time [s]                                | 1.0           |
+| `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                      | 5.0           |
+| `linearized_pure_pursuit_steer_kp_param` | `double` | Linearized pure pursuit steering P gain parameter              | 2.0           |
+| `linearized_pure_pursuit_steer_kd_param` | `double` | Linearized pure pursuit steering D gain parameter              | 2.0           |
+| `steer_limit`                            | `double` | Steer control input limit [rad]                                | 0.5           |
+| `acc_noise_amp`                          | `double` | Accel command additional sine noise amplitude [m/ss]           | 0.01          |
+| `acc_noise_min_period`                   | `double` | Accel command additional sine noise minimum period [s]         | 5.0           |
+| `acc_noise_max_period`                   | `double` | Accel command additional sine noise maximum period [s]         | 20.0          |
+| `steer_noise_amp`                        | `double` | Steer command additional sine noise amplitude [rad]            | 0.01          |
+| `steer_noise_max_period`                 | `double` | Steer command additional sine noise maximum period [s]         | 5.0           |
+| `steer_noise_min_period`                 | `double` | Steer command additional sine noise minimum period [s]         | 20.0          |
