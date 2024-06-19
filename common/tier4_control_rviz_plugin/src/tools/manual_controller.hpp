@@ -21,9 +21,9 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSpinBox>
+#include <autoware/universe_utils/ros/polling_subscriber.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rviz_common/panel.hpp>
-#include <tier4_autoware_utils/ros/polling_subscriber.hpp>
 
 #include "autoware_vehicle_msgs/msg/velocity_report.hpp"
 #include "geometry_msgs/msg/accel_with_covariance_stamped.hpp"
@@ -73,8 +73,8 @@ protected:
   void onGear(const GearReport::ConstSharedPtr msg);
   rclcpp::Node::SharedPtr raw_node_;
   rclcpp::Subscription<GateMode>::SharedPtr sub_gate_mode_;
-  tier4_autoware_utils::InterProcessPollingSubscriber<VelocityReport>::SharedPtr sub_velocity_;
-  tier4_autoware_utils::InterProcessPollingSubscriber<AccelWithCovarianceStamped>::SharedPtr
+  autoware_universe_utils::InterProcessPollingSubscriber<VelocityReport>::SharedPtr sub_velocity_;
+  autoware_universe_utils::InterProcessPollingSubscriber<AccelWithCovarianceStamped>::SharedPtr
     sub_accel_;
   rclcpp::Subscription<Engage>::SharedPtr sub_engage_;
   rclcpp::Publisher<tier4_control_msgs::msg::GateMode>::SharedPtr pub_gate_mode_;
