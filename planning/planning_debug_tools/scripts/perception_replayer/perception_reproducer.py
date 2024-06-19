@@ -265,9 +265,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-c",
         "--reproduce-cool-down",
-        help="The cool down time for republishing published messages (default is 15.0 seconds)",
+        help="The cool down time for republishing published messages (default is 80.0 seconds)",
         type=float,
-        default=60.0,
+        default=80.0,
     )
     args = parser.parse_args()
 
