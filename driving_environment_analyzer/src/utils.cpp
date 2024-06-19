@@ -79,7 +79,7 @@ double calcElevationAngle(const lanelet::ConstLanelet & lane, const Pose & pose)
     return 0.0;
   }
 
-  const size_t idx = autoware_motion_utils::findNearestSegmentIndex(points, pose.position);
+  const size_t idx = autoware::motion_utils::findNearestSegmentIndex(points, pose.position);
 
   const auto p1 = autoware::universe_utils::getPoint(points.at(idx));
   const auto p2 = autoware::universe_utils::getPoint(points.at(idx + 1));
@@ -96,7 +96,7 @@ double getLaneWidth(const lanelet::ConstLanelet & lane)
     return points;
   };
 
-  const auto lon_length = autoware_motion_utils::calcArcLength(to_ros_msg(lane.centerline()));
+  const auto lon_length = autoware::motion_utils::calcArcLength(to_ros_msg(lane.centerline()));
   return boost::geometry::area(lane.polygon2d().basicPolygon()) / lon_length;
 }
 
@@ -118,7 +118,7 @@ double getMaxCurvature(const lanelet::ConstLanelets & lanes)
   double max_value = 0.0;
 
   for (const auto & lane : lanes) {
-    const auto values = autoware_motion_utils::calcCurvature(to_ros_msg(lane.centerline()));
+    const auto values = autoware::motion_utils::calcCurvature(to_ros_msg(lane.centerline()));
     const auto max_value_itr = std::max_element(values.begin(), values.end());
     if (max_value_itr == values.end()) {
       continue;
@@ -146,7 +146,7 @@ std::pair<double, double> getLaneWidth(const lanelet::ConstLanelets & lanes)
   double max_value = 0.0;
 
   for (const auto & lane : lanes) {
-    const auto lon_length = autoware_motion_utils::calcArcLength(to_ros_msg(lane.centerline()));
+    const auto lon_length = autoware::motion_utils::calcArcLength(to_ros_msg(lane.centerline()));
     const auto width = boost::geometry::area(lane.polygon2d().basicPolygon()) / lon_length;
 
     if (min_value > width) {
