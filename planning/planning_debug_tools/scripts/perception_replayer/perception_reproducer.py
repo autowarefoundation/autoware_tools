@@ -258,9 +258,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r",
         "--search-radius",
-        help="the search radius for searching rosbag's ego odom messages around the nearest ego odom pose (default is 2 meters), if the search radius is set to 0, it will always publish the closest message, just as the old reproducer did.",
+        help="the search radius for searching rosbag's ego odom messages around the nearest ego odom pose (default is 1.5 meters), if the search radius is set to 0, it will always publish the closest message, just as the old reproducer did.",
         type=float,
-        default=2.0,
+        default=1.5,
     )
     parser.add_argument(
         "-c",
