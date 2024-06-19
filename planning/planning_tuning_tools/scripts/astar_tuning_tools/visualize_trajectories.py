@@ -161,10 +161,10 @@ class DrawClickedTrajectory:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="place of save result")
-    parser.add_argument("--dir_name", default="default_dir", type=str, help="saved directory name")
+    parser.add_argument("--save_name", default="default_dir", type=str, help="saved directory name")
     args = parser.parse_args()
 
-    save_dir = os.path.dirname(__file__) + "/result/" + args.dir_name
+    save_dir = os.path.dirname(__file__) + "/result/" + args.save_name
 
     # laod search settings
     with open(save_dir + "/info.txt", "rb") as f:

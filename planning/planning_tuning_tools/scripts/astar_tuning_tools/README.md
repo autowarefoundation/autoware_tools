@@ -56,13 +56,13 @@ Search for goals on grid: discretized on x, y, yaw axes.
 1. Run the script
 
    ```sh
-   python3 search_gridgoal.py --dir_name [save dir name]
+   python3 search_gridgoal.py --save_name [save dir name]
    ```
 
    or execute in parallel using [eos run-many](https://github.com/iory/eos/blob/master/eos/run_many.py)
 
    ```sh
-   run-many 'python3 search_gridgoal.py --dir_name [save dir name]' -n 10 -j 10
+   run-many 'python3 search_gridgoal.py --save_name [save dir name]' -n 10 -j 10
    ```
 
 2. Then the trajectories for goals on grid are searched and saved
@@ -71,7 +71,7 @@ Search for goals on grid: discretized on x, y, yaw axes.
 
 | Option           | Type   | Description                                            | Defualt e       |
 | ---------------- | ------ | ------------------------------------------------------ | --------------- |
-| `--dir_name`     | string | directory name to save the results                     | default_dir     |
+| `--save_name`    | string | directory name to save the results                     | default_dir     |
 | `--costmap`      | string | costmap name for search, generated in previous section | costmap_default |
 | `--x_resolution` | float  | goal grid sersolution of the x axis [m]                | 1.0             |
 | `--y_resolution` | float  | goal grid sersolution of the y axis [m]                | 1.0             |
@@ -84,7 +84,7 @@ Search for goals on grid: discretized on x, y, yaw axes.
 1. Run the script
 
    ```sh
-   python3 visualize_trajectories.py --dir_name [save dir name]
+   python3 visualize_trajectories.py --save_name [save dir name]
    ```
 
 2. Then the two GUIs show up
@@ -100,6 +100,6 @@ Search for goals on grid: discretized on x, y, yaw axes.
 
 ### Options
 
-| Option       | Type   | Description                                                       | Defualt e   |
-| ------------ | ------ | ----------------------------------------------------------------- | ----------- |
-| `--dir_name` | string | directory name to save the results, generated in previous section | default_dir |
+| Option        | Type   | Description                                                       | Defualt e   |
+| ------------- | ------ | ----------------------------------------------------------------- | ----------- |
+| `--save_name` | string | directory name to save the results, generated in previous section | default_dir |

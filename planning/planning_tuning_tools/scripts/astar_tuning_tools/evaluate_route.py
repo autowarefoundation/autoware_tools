@@ -18,15 +18,12 @@ import os
 import pickle
 import sys
 
-from autoware_auto_planning_msgs.msg import Trajectory
-import freespace_planning_algorithms.astar_search as fp
-import matplotlib.colors as mcolors
-import matplotlib.pyplot as plt
+import autoware_freespace_planning_algorithms.astar_search as fp
 import numpy as np
-import seaborn as sns
 from tqdm import tqdm
 
 sys.path.append(os.path.dirname(__file__))
+
 
 def count_forawrd_backwrad_change(waypoints):
     count = 0
@@ -40,12 +37,13 @@ def count_forawrd_backwrad_change(waypoints):
 
     return count
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="place of save result")
-    parser.add_argument("--dir_name", default="default_dir", type=str, help="saved directory name")
+    parser.add_argument("--save_name", default="default_dir", type=str, help="saved directory name")
     args = parser.parse_args()
 
-    save_dir = os.path.dirname(__file__) + "/result/" + args.dir_name
+    save_dir = os.path.dirname(__file__) + "/result/" + args.save_name
 
     # laod search settings
     with open(save_dir + "/info.txt", "rb") as f:
@@ -61,7 +59,8 @@ if __name__ == "__main__":
     # load results
     results = np.zeros((len(yaws), len(xs), len(ys)))
     waypoints_all = [
-        [[fp.PlannerWaypoints() for k in range(len(ys))] for j in range(len(xs))] for i in range(len(yaws))
+        [[fp.PlannerWaypoints() for k in range(len(ys))] for j in range(len(xs))]
+        for i in range(len(yaws))
     ]
 
     print("loading result datas...")
@@ -75,22 +74,31 @@ if __name__ == "__main__":
                     waypoints_all[k][i][j] = result.waypoints
 
     # process results
-    N = len(xs)*len(ys)*len(yaws)
+    N = len(xs) * len(ys) * len(yaws)
     print("データ数: ", N)
 
     total_result = 0
-    total_length = 0
-    total_forward_backward_change = 0
+    total_length_rate = 0
+    # total_length = 0
+    total_direction_change = 0
     for i, x in enumerate(xs):
         for j, y in enumerate(ys):
             for k, yaw in enumerate(yaws):
                 total_result += results[k][i][j]
                 if results[k][i][j]:
                     waypoints = waypoints_all[k][i][j]
-                    total_length += waypoints.compute_length()
-                    total_forward_backward_change += count_forawrd_backwrad_change(waypoints)
-    
-    print("成功数: ", total_result)
-    print("成功率: ", total_result/N)
-    print("平均経路長: ", total_length/total_result)
-    print("平均切り返し回数: ", total_forward_backward_change/total_result)
+                    L2_dist = math.hypot(
+                        waypoints.waypoints[1].pose.position.x
+                        - waypoints.waypoints[-1].pose.position.x,
+                        waypoints.waypoints[1].pose.position.y
+                        - waypoints.waypoints[-1].pose.position.y,
+                    )
+                    if L2_dist != 0:
+                        total_length_rate += waypoints.compute_length() / L2_dist
+                    # total_length += waypoints.compute_length()
+                    total_direction_change += count_forawrd_backwrad_change(waypoints)
+
+    print("Success number: ", total_result)
+    print("Success rate: ", total_result / N)
+    print("Average path length ratio: ", total_length_rate / total_result)
+    print("Average direction change number: ", total_direction_change / total_result)

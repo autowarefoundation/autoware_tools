@@ -18,14 +18,15 @@ import pathlib
 import pickle
 import time
 
-from common.common_classes import Result, SearchInfo
+import autoware_freespace_planning_algorithms.astar_search as fp
+from common.common_classes import Result
+from common.common_classes import SearchInfo
 from common.common_functions import param_vector2obj
-import freespace_planning_algorithms.astar_search as fp
+from config.astar_params import astar_param
+from config.astar_params import planner_param
+from config.astar_params import vehicle_shape
 from geometry_msgs.msg import Pose
 import numpy as np
-from param.astar_params import astar_param
-from param.astar_params import planner_param
-from param.astar_params import vehicle_shape
 from pyquaternion import Quaternion
 from tqdm import tqdm
 
@@ -47,7 +48,7 @@ def float_range(start, end, step):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="place of save result")
     parser.add_argument(
-        "--dir_name", default="default_dir", type=str, help="directory name to save"
+        "--save_name", default="default_dir", type=str, help="directory name to save"
     )
     parser.add_argument(
         "--costmap",
@@ -60,13 +61,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--yaw_discrete", default=10, type=int, help="the descretized number of yaw"
     )
-    parser.add_argument(
-        "--opt_param", default=None, type=str, help="name of optimal param"
-    )
+    parser.add_argument("--opt_param", default=None, type=str, help="name of optimal param")
     args = parser.parse_args()
 
     # input proccessing
-    save_dir = os.path.dirname(__file__) + "/result/" + args.dir_name
+    save_dir = os.path.dirname(__file__) + "/result/" + args.save_name
 
     with open(os.path.dirname(__file__) + "/costmap/" + args.costmap + ".txt", "rb") as f:
         costmap = pickle.load(f)
@@ -74,11 +73,11 @@ if __name__ == "__main__":
     costmap_height_half = costmap.info.resolution * costmap.info.height / 2
     costmap_width_half = costmap.info.resolution * costmap.info.width / 2
 
-    if args.opt_param != None:
+    if args.opt_param is not None:
         with open(os.path.dirname(__file__) + "/opt_param/" + args.opt_param + ".txt", "rb") as f:
             opt_param = pickle.load(f)
         planner_param, astar_param = param_vector2obj(opt_param)
-    
+
     # goal grid
     xs = list(
         reversed(float_range(-args.x_resolution, -costmap_height_half, -args.x_resolution))
@@ -88,6 +87,7 @@ if __name__ == "__main__":
     ) + float_range(0, costmap_width_half, args.y_resolution)
     yaws = [(2 * np.pi) * i / args.yaw_discrete for i in range(args.yaw_discrete)]
 
+    verbose = False
     # make files if not.
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -104,6 +104,8 @@ if __name__ == "__main__":
             info = SearchInfo(costmap, xs, ys, yaws)
             pickle.dump(info, f)
 
+        verbose = True
+
         print("save files were generated!")
 
     time.sleep(5)
@@ -117,7 +119,8 @@ if __name__ == "__main__":
 
     start_time = time.monotonic()
 
-    for x in tqdm(xs):
+    x_iter = tqdm(xs) if verbose else xs
+    for x in x_iter:
         for y in ys:
             for i, yaw in enumerate(yaws):
                 # mutual exclusion
@@ -144,4 +147,5 @@ if __name__ == "__main__":
                         pickle.dump(result, f)
 
     end_time = time.monotonic()
-    print("search_time : ", end_time - start_time)
+    if verbose:
+        print("search_time : ", end_time - start_time)

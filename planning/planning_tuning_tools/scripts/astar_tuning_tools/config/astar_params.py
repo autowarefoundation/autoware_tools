@@ -1,4 +1,4 @@
-import freespace_planning_algorithms.astar_search as fp
+import autoware_freespace_planning_algorithms.astar_search as fp
 
 # -- Vehicle Shape --
 vehicle_shape = fp.VehicleShape()
