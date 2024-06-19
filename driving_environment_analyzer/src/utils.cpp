@@ -54,9 +54,9 @@ std::vector<double> calcElevationAngle(const T & points)
   }
 
   for (size_t i = 0; i < points.size() - 1; ++i) {
-    const auto p1 = autoware_universe_utils::getPoint(points.at(i));
-    const auto p2 = autoware_universe_utils::getPoint(points.at(i + 1));
-    elevation_vec.at(i) = autoware_universe_utils::calcElevationAngle(p1, p2);
+    const auto p1 = autoware::universe_utils::getPoint(points.at(i));
+    const auto p2 = autoware::universe_utils::getPoint(points.at(i + 1));
+    elevation_vec.at(i) = autoware::universe_utils::calcElevationAngle(p1, p2);
   }
   elevation_vec.at(elevation_vec.size() - 1) = elevation_vec.at(elevation_vec.size() - 2);
 
@@ -81,9 +81,9 @@ double calcElevationAngle(const lanelet::ConstLanelet & lane, const Pose & pose)
 
   const size_t idx = autoware_motion_utils::findNearestSegmentIndex(points, pose.position);
 
-  const auto p1 = autoware_universe_utils::getPoint(points.at(idx));
-  const auto p2 = autoware_universe_utils::getPoint(points.at(idx + 1));
-  return autoware_universe_utils::calcElevationAngle(p1, p2);
+  const auto p1 = autoware::universe_utils::getPoint(points.at(idx));
+  const auto p2 = autoware::universe_utils::getPoint(points.at(idx + 1));
+  return autoware::universe_utils::calcElevationAngle(p1, p2);
 }
 
 double getLaneWidth(const lanelet::ConstLanelet & lane)

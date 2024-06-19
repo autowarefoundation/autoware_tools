@@ -53,7 +53,7 @@ TEST(DeviationEstimatorGyroStddev, SmokeTestDefault)
     for (int i = 0; i <= ndt_rate * t_window; ++i) {
       geometry_msgs::msg::PoseStamped pose;
       pose.header.stamp = t_start + rclcpp::Duration::from_seconds(1.0 * i / ndt_rate);
-      pose.pose.orientation = autoware_universe_utils::createQuaternionFromRPY(0.0, 0.0, 0.0);
+      pose.pose.orientation = autoware::universe_utils::createQuaternionFromRPY(0.0, 0.0, 0.0);
       pose_list.push_back(pose);
     }
 
@@ -104,7 +104,7 @@ TEST(DeviationEstimatorGyroStddev, SmokeTestWithBias)
     for (int i = 0; i <= ndt_rate * t_window; ++i) {
       geometry_msgs::msg::PoseStamped pose;
       pose.header.stamp = t_start + rclcpp::Duration::from_seconds(1.0 * i / ndt_rate);
-      pose.pose.orientation = autoware_universe_utils::createQuaternionFromRPY(0.0, 0.0, 0.0);
+      pose.pose.orientation = autoware::universe_utils::createQuaternionFromRPY(0.0, 0.0, 0.0);
       pose_list.push_back(pose);
     }
 

@@ -178,7 +178,7 @@ DeviationEstimator::DeviationEstimator(
     declare_parameter<double>("thres_coef_vx"), declare_parameter<double>("thres_stddev_vx"),
     declare_parameter<double>("thres_bias_gyro"), declare_parameter<double>("thres_stddev_gyro"),
     5);
-  transform_listener_ = std::make_shared<autoware_universe_utils::TransformListener>(this);
+  transform_listener_ = std::make_shared<autoware::universe_utils::TransformListener>(this);
 
   RCLCPP_INFO(this->get_logger(), "[Deviation Estimator] launch success");
 }

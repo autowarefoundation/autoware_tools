@@ -81,7 +81,7 @@ private:
   PoseStamped::SharedPtr current_ekf_gt_pose_ptr_;
   PoseStamped::SharedPtr current_ndt_pose_ptr_;
 
-  std::shared_ptr<autoware_universe_utils::TransformListener> transform_listener_;
+  std::shared_ptr<autoware::universe_utils::TransformListener> transform_listener_;
 
   bool has_published_initial_pose_;
 
