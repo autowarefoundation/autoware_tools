@@ -123,7 +123,7 @@ void StopAccelEvaluatorNode::calculateStopAccel()
           const double pitch =
             lpf_pitch_->filter(getPitchByQuaternion(current_pose_ptr->pose.orientation));
 
-          stop_accel_ = accel_sum / accel_num + autoware_universe_utils::gravity *
+          stop_accel_ = accel_sum / accel_num + autoware::universe_utils::gravity *
                                                   std::sin(pitch);  // consider removing gravity
           stop_accel_with_gravity_ = accel_sum / accel_num;         // not consider removing gravity
 

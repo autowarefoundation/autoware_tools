@@ -30,7 +30,7 @@
 
 namespace stop_accel_evaluator
 {
-using autoware_universe_utils::SelfPoseListener;
+using autoware::universe_utils::SelfPoseListener;
 using geometry_msgs::msg::TwistStamped;
 using nav_msgs::msg::Odometry;
 using sensor_msgs::msg::Imu;
