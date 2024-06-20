@@ -145,14 +145,15 @@ class PerceptionReplayerCommon(Node):
                 if not isinstance(msg, self.traffic_signals_pub.msg_type):
                     # convert old `TrafficSignalArray` msg to new `TrafficLightGroupArray` msg.
                     new_msg = self.traffic_signals_pub.msg_type()
-                    assert type(msg).__name__ == 'TrafficSignalArray' and type(new_msg).__name__ == 'TrafficLightGroupArray', f"Unsupported conversion from {type(msg).__name__} to {type(new_msg).__name__}"
-                    
+                    assert (
+                        type(msg).__name__ == "TrafficSignalArray"
+                        and type(new_msg).__name__ == "TrafficLightGroupArray"
+                    ), f"Unsupported conversion from {type(msg).__name__} to {type(new_msg).__name__}"
+
                     new_msg.stamp = msg.header.stamp
                     for traffic_signal in msg.signals:
                         traffic_light_group = TrafficLightGroup()
-                        traffic_light_group.traffic_light_group_id = (
-                            traffic_signal.map_primitive_id
-                        )
+                        traffic_light_group.traffic_light_group_id = traffic_signal.map_primitive_id
                         for traffic_light in traffic_signal.lights:
                             traffic_light_element = TrafficLightElement()
                             traffic_light_element.color = traffic_light.color
