@@ -143,20 +143,22 @@ class PerceptionReplayerCommon(Node):
                 self.rosbag_ego_odom_data.append((stamp, msg))
             if topic == traffic_signals_topic:
                 if not isinstance(msg, self.traffic_signals_pub.msg_type):
-                    # convert old TrafficSignalArray msg to new TrafficLightGroupArray msg.
+                    # convert old `TrafficSignalArray` msg to new `TrafficLightGroupArray` msg.
                     new_msg = self.traffic_signals_pub.msg_type()
-                    new_msg.stamp = msg.stamp
+                    assert type(msg).__name__ == 'TrafficSignalArray' and type(new_msg).__name__ == 'TrafficLightGroupArray', f"Unsupported conversion from {type(msg).__name__} to {type(new_msg).__name__}"
+                    
+                    new_msg.stamp = msg.header.stamp
                     for traffic_signal in msg.signals:
                         traffic_light_group = TrafficLightGroup()
                         traffic_light_group.traffic_light_group_id = (
-                            traffic_signal.traffic_signal_id
+                            traffic_signal.map_primitive_id
                         )
-                        for traffic_signal_element in traffic_signal.elements:
+                        for traffic_light in traffic_signal.lights:
                             traffic_light_element = TrafficLightElement()
-                            traffic_light_element.color = traffic_signal_element.color
-                            traffic_light_element.shape = traffic_signal_element.shape
-                            traffic_light_element.status = traffic_signal_element.status
-                            traffic_light_element.confidence = traffic_signal_element.confidence
+                            traffic_light_element.color = traffic_light.color
+                            traffic_light_element.shape = traffic_light.shape
+                            traffic_light_element.status = traffic_light.status
+                            traffic_light_element.confidence = traffic_light.confidence
                             traffic_light_group.elements.append(traffic_light_element)
                         new_msg.traffic_light_groups.append(traffic_light_group)
                     msg = new_msg
