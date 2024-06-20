@@ -439,9 +439,9 @@ void AutowareAutomaticGoalPanel::updateGoalIcon(const unsigned goal_index, const
 
 void AutowareAutomaticGoalPanel::publishMarkers()
 {
-  using autoware_universe_utils::createDefaultMarker;
-  using autoware_universe_utils::createMarkerColor;
-  using autoware_universe_utils::createMarkerScale;
+  using autoware::universe_utils::createDefaultMarker;
+  using autoware::universe_utils::createMarkerColor;
+  using autoware::universe_utils::createMarkerScale;
 
   MarkerArray text_array;
   MarkerArray arrow_array;

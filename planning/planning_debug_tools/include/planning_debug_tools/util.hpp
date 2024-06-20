@@ -28,11 +28,11 @@
 namespace planning_debug_tools
 {
 
+using autoware::universe_utils::calcDistance2d;
+using autoware::universe_utils::getPoint;
+using autoware::universe_utils::getRPY;
 using autoware_planning_msgs::msg::PathPoint;
 using autoware_planning_msgs::msg::TrajectoryPoint;
-using autoware_universe_utils::calcDistance2d;
-using autoware_universe_utils::getPoint;
-using autoware_universe_utils::getRPY;
 using tier4_planning_msgs::msg::PathPointWithLaneId;
 
 double getVelocity(const PathPoint & p)
@@ -88,7 +88,7 @@ inline std::vector<double> getAccelerationArray(const T & points)
     const auto & prev_point = points.at(i);
     const auto & next_point = points.at(i + 1);
 
-    const double delta_s = autoware_universe_utils::calcDistance2d(prev_point, next_point);
+    const double delta_s = autoware::universe_utils::calcDistance2d(prev_point, next_point);
     if (delta_s == 0.0) {
       segment_wise_a_arr.push_back(0.0);
     } else {
