@@ -29,11 +29,11 @@ template <class Pose1, class Pose2>
 bool isDrivingForward(const Pose1 & src_pose, const Pose2 & dst_pose)
 {
   // check the first point direction
-  const double src_yaw = tf2::getYaw(autoware_universe_utils::getPose(src_pose).orientation);
-  const double pose_direction_yaw = autoware_universe_utils::calcAzimuthAngle(
-    autoware_universe_utils::getPoint(src_pose), autoware_universe_utils::getPoint(dst_pose));
-  return std::fabs(autoware_universe_utils::normalizeRadian(src_yaw - pose_direction_yaw)) <
-         autoware_universe_utils::pi / 2.0;
+  const double src_yaw = tf2::getYaw(autoware::universe_utils::getPose(src_pose).orientation);
+  const double pose_direction_yaw = autoware::universe_utils::calcAzimuthAngle(
+    autoware::universe_utils::getPoint(src_pose), autoware::universe_utils::getPoint(dst_pose));
+  return std::fabs(autoware::universe_utils::normalizeRadian(src_yaw - pose_direction_yaw)) <
+         autoware::universe_utils::pi / 2.0;
 }
 
 /**
@@ -47,8 +47,8 @@ template <class Point1, class Point2>
 geometry_msgs::msg::Point calcInterpolatedPoint(
   const Point1 & src, const Point2 & dst, const double ratio)
 {
-  const auto src_point = autoware_universe_utils::getPoint(src);
-  const auto dst_point = autoware_universe_utils::getPoint(dst);
+  const auto src_point = autoware::universe_utils::getPoint(src);
+  const auto dst_point = autoware::universe_utils::getPoint(dst);
 
   tf2::Vector3 src_vec;
   src_vec.setX(src_point.x);
@@ -92,35 +92,35 @@ geometry_msgs::msg::Pose calcInterpolatedPose(
 
   geometry_msgs::msg::Pose output_pose;
   output_pose.position = calcInterpolatedPoint(
-    autoware_universe_utils::getPoint(src_pose), autoware_universe_utils::getPoint(dst_pose),
+    autoware::universe_utils::getPoint(src_pose), autoware::universe_utils::getPoint(dst_pose),
     clamped_ratio);
 
   if (set_orientation_from_position_direction) {
-    const double input_poses_dist = autoware_universe_utils::calcDistance2d(
-      autoware_universe_utils::getPoint(src_pose), autoware_universe_utils::getPoint(dst_pose));
+    const double input_poses_dist = autoware::universe_utils::calcDistance2d(
+      autoware::universe_utils::getPoint(src_pose), autoware::universe_utils::getPoint(dst_pose));
     const bool is_driving_forward = isDrivingForward(src_pose, dst_pose);
 
     // Get orientation from interpolated point and src_pose
     if ((is_driving_forward && clamped_ratio > 1.0 - (1e-6)) || input_poses_dist < 1e-3) {
-      output_pose.orientation = autoware_universe_utils::getPose(dst_pose).orientation;
+      output_pose.orientation = autoware::universe_utils::getPose(dst_pose).orientation;
     } else if (!is_driving_forward && clamped_ratio < 1e-6) {
-      output_pose.orientation = autoware_universe_utils::getPose(src_pose).orientation;
+      output_pose.orientation = autoware::universe_utils::getPose(src_pose).orientation;
     } else {
       const auto & base_pose = is_driving_forward ? dst_pose : src_pose;
-      const double pitch = autoware_universe_utils::calcElevationAngle(
-        autoware_universe_utils::getPoint(output_pose),
-        autoware_universe_utils::getPoint(base_pose));
-      const double yaw = autoware_universe_utils::calcAzimuthAngle(
-        autoware_universe_utils::getPoint(output_pose),
-        autoware_universe_utils::getPoint(base_pose));
-      output_pose.orientation = autoware_universe_utils::createQuaternionFromRPY(0.0, pitch, yaw);
+      const double pitch = autoware::universe_utils::calcElevationAngle(
+        autoware::universe_utils::getPoint(output_pose),
+        autoware::universe_utils::getPoint(base_pose));
+      const double yaw = autoware::universe_utils::calcAzimuthAngle(
+        autoware::universe_utils::getPoint(output_pose),
+        autoware::universe_utils::getPoint(base_pose));
+      output_pose.orientation = autoware::universe_utils::createQuaternionFromRPY(0.0, pitch, yaw);
     }
   } else {
     // Get orientation by spherical linear interpolation
     tf2::Transform src_tf;
     tf2::Transform dst_tf;
-    tf2::fromMsg(autoware_universe_utils::getPose(src_pose), src_tf);
-    tf2::fromMsg(autoware_universe_utils::getPose(dst_pose), dst_tf);
+    tf2::fromMsg(autoware::universe_utils::getPose(src_pose), src_tf);
+    tf2::fromMsg(autoware::universe_utils::getPose(dst_pose), dst_tf);
     const auto & quaternion = tf2::slerp(src_tf.getRotation(), dst_tf.getRotation(), clamped_ratio);
     output_pose.orientation = tf2::toMsg(quaternion);
   }

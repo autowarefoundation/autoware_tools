@@ -49,10 +49,10 @@ public:
 private:
   void onStopReasonArray(const StopReasonArray::ConstSharedPtr msg)
   {
-    using autoware_universe_utils::appendMarkerArray;
-    using autoware_universe_utils::createDefaultMarker;
-    using autoware_universe_utils::createMarkerColor;
-    using autoware_universe_utils::createMarkerScale;
+    using autoware::universe_utils::appendMarkerArray;
+    using autoware::universe_utils::createDefaultMarker;
+    using autoware::universe_utils::createMarkerColor;
+    using autoware::universe_utils::createMarkerScale;
 
     MarkerArray all_marker_array;
     const auto header = msg->header;

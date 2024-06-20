@@ -52,7 +52,7 @@ public:
   explicit PitchChecker(const rclcpp::NodeOptions & node_options);
 
 private:
-  std::shared_ptr<autoware_universe_utils::TransformListener> transform_listener_;
+  std::shared_ptr<autoware::universe_utils::TransformListener> transform_listener_;
 
   // Timer
   rclcpp::TimerBase::SharedPtr timer_;

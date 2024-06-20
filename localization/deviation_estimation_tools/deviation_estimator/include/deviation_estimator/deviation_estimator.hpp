@@ -103,7 +103,7 @@ private:
   std::unique_ptr<VelocityCoefModule> vel_coef_module_;
   std::unique_ptr<ValidationModule> validation_module_;
 
-  std::shared_ptr<autoware_universe_utils::TransformListener> transform_listener_;
+  std::shared_ptr<autoware::universe_utils::TransformListener> transform_listener_;
 
   void callback_pose_with_covariance(geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 

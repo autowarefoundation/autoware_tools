@@ -102,6 +102,13 @@ ManualController::ManualController(QWidget * parent) : rviz_common::Panel(parent
 void ManualController::update()
 {
   if (!raw_node_) return;
+
+  const auto velocity = sub_velocity_->takeData();
+  const double current_velocity = velocity ? velocity->longitudinal_velocity : 0.0;
+
+  const auto accel = sub_accel_->takeData();
+  const double current_acceleration = accel ? accel->accel.accel.linear.x : 0.0;
+
   Control control_cmd;
   {
     control_cmd.stamp = raw_node_->get_clock()->now();
@@ -114,18 +121,18 @@ void ManualController::update()
      *  a_des = k_const *(v - v_des) + a (k < 0 )
      */
     const double k = -0.5;
-    const double v = current_velocity_;
+    const double v = current_velocity;
     const double v_des = cruise_velocity_;
-    const double a = current_acceleration_;
+    const double a = current_acceleration;
     const double a_des = k * (v - v_des) + a;
     control_cmd.longitudinal.acceleration = std::clamp(a_des, -1.0, 1.0);
   }
   GearCommand gear_cmd;
   {
     const double eps = 0.001;
-    if (control_cmd.longitudinal.velocity > eps && current_velocity_ > -eps) {
+    if (control_cmd.longitudinal.velocity > eps && current_velocity > -eps) {
       gear_cmd.command = GearCommand::DRIVE;
-    } else if (control_cmd.longitudinal.velocity < -eps && current_velocity_ < eps) {
+    } else if (control_cmd.longitudinal.velocity < -eps && current_velocity < eps) {
       gear_cmd.command = GearCommand::REVERSE;
       control_cmd.longitudinal.acceleration *= -1.0;
     } else {
@@ -157,8 +164,12 @@ void ManualController::onInitialize()
   sub_gate_mode_ = raw_node_->create_subscription<GateMode>(
     "/control/current_gate_mode", 10, std::bind(&ManualController::onGateMode, this, _1));
 
-  sub_velocity_ = raw_node_->create_subscription<VelocityReport>(
-    "/vehicle/status/velocity_status", 1, std::bind(&ManualController::onVelocity, this, _1));
+  sub_velocity_ =
+    autoware::universe_utils::InterProcessPollingSubscriber<VelocityReport>::create_subscription(
+      raw_node_.get(), "/vehicle/status/velocity_status", 1);
+
+  sub_accel_ = autoware::universe_utils::InterProcessPollingSubscriber<AccelWithCovarianceStamped>::
+    create_subscription(raw_node_.get(), "/localization/acceleration", 1);
 
   sub_engage_ = raw_node_->create_subscription<Engage>(
     "/api/autoware/get/engage", 10, std::bind(&ManualController::onEngageStatus, this, _1));
@@ -205,16 +216,6 @@ void ManualController::onEngageStatus(const Engage::ConstSharedPtr msg)
     engage_status_label_ptr_->setText(QString::fromStdString("Not Ready"));
     engage_status_label_ptr_->setStyleSheet("background-color: #00FF00;");
   }
-}
-
-void ManualController::onVelocity(const VelocityReport::ConstSharedPtr msg)
-{
-  current_velocity_ = msg->longitudinal_velocity;
-}
-
-void ManualController::onAcceleration(const AccelWithCovarianceStamped::ConstSharedPtr msg)
-{
-  current_acceleration_ = msg->accel.accel.linear.x;
 }
 
 void ManualController::onGear(const GearReport::ConstSharedPtr msg)

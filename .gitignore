@@ -1,1 +1,5 @@
 *.py[cod]
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
