@@ -165,10 +165,10 @@ void ManualController::onInitialize()
     "/control/current_gate_mode", 10, std::bind(&ManualController::onGateMode, this, _1));
 
   sub_velocity_ =
-    autoware_universe_utils::InterProcessPollingSubscriber<VelocityReport>::create_subscription(
+    autoware::universe_utils::InterProcessPollingSubscriber<VelocityReport>::create_subscription(
       raw_node_.get(), "/vehicle/status/velocity_status", 1);
 
-  sub_accel_ = autoware_universe_utils::InterProcessPollingSubscriber<AccelWithCovarianceStamped>::
+  sub_accel_ = autoware::universe_utils::InterProcessPollingSubscriber<AccelWithCovarianceStamped>::
     create_subscription(raw_node_.get(), "/localization/acceleration", 1);
 
   sub_engage_ = raw_node_->create_subscription<Engage>(

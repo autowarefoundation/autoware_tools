@@ -73,8 +73,8 @@ protected:
   void onGear(const GearReport::ConstSharedPtr msg);
   rclcpp::Node::SharedPtr raw_node_;
   rclcpp::Subscription<GateMode>::SharedPtr sub_gate_mode_;
-  autoware_universe_utils::InterProcessPollingSubscriber<VelocityReport>::SharedPtr sub_velocity_;
-  autoware_universe_utils::InterProcessPollingSubscriber<AccelWithCovarianceStamped>::SharedPtr
+  autoware::universe_utils::InterProcessPollingSubscriber<VelocityReport>::SharedPtr sub_velocity_;
+  autoware::universe_utils::InterProcessPollingSubscriber<AccelWithCovarianceStamped>::SharedPtr
     sub_accel_;
   rclcpp::Subscription<Engage>::SharedPtr sub_engage_;
   rclcpp::Publisher<tier4_control_msgs::msg::GateMode>::SharedPtr pub_gate_mode_;
