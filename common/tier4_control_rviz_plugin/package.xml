@@ -5,6 +5,7 @@
   <version>0.1.0</version>
   <description>The tier4_vehicle_rviz_plugin package</description>
   <maintainer email="taiki.tanaka@tier4.jp">Taiki Tanaka</maintainer>
+  <maintainer email="akiro.harada@tier4.jp">Akiro Harada</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
