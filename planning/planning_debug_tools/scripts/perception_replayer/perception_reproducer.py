@@ -65,7 +65,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             time_diffs.append(time_diff)
             prev_stamp = stamp
 
-        average_ego_odom_interval = 0.1  # sum(time_diffs) / len(time_diffs)
+        average_ego_odom_interval = sum(time_diffs) / len(time_diffs)
         self.timer = self.create_timer(average_ego_odom_interval, self.on_timer)
 
         # kill perception process to avoid a conflict of the perception topics
@@ -258,16 +258,16 @@ if __name__ == "__main__":
     parser.add_argument(
         "-r",
         "--search-radius",
-        help="the search radius for searching rosbag's ego odom messages around the nearest ego odom pose (default is 2 meters), if the search radius is set to 0, it will always publish the closest message, just as the old reproducer did.",
+        help="the search radius for searching rosbag's ego odom messages around the nearest ego odom pose (default is 1.5 meters), if the search radius is set to 0, it will always publish the closest message, just as the old reproducer did.",
         type=float,
-        default=2.0,
+        default=1.5,
     )
     parser.add_argument(
         "-c",
         "--reproduce-cool-down",
-        help="The cool down time for republishing published messages (default is 15.0 seconds)",
+        help="The cool down time for republishing published messages (default is 80.0 seconds)",
         type=float,
-        default=15.0,
+        default=80.0,
     )
     args = parser.parse_args()
 
