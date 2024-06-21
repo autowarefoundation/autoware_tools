@@ -73,7 +73,7 @@ ROS 2 params in `/data_collecting_trajectory_publisher` node:
 
 | Name                                     | Type     | Description                                                           | Default value |
 | :--------------------------------------- | :------- | :-------------------------------------------------------------------- | :------------ |
-| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                 | 0.5           |
+| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                 | 2.94          |
 | `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]           | 5.0           |
 | `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]               | 0.5           |
 | `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]    | 2.0           |
@@ -87,11 +87,11 @@ ROS 2 params in `/data_collecting_pure_pursuit_trajectory_follower` node:
 
 | Name                                     | Type     | Description                                                    | Default value |
 | :--------------------------------------- | :------- | :------------------------------------------------------------- | :------------ |
-| `pure_pursuit_type`                      | `string` | Pure pursuit type (`naive` or `linearized` steer control law ) | `naive`       |
+| `pure_pursuit_type`                      | `string` | Pure pursuit type (`naive` or `linearized` steer control law ) | `linearized`  |
 | `wheel_base`                             | `double` | Wheel base [m]                                                 | 2.79          |
 | `acc_kp`                                 | `double` | Accel command propotional gain                                 | 0.5           |
-| `lookahead_time`                         | `double` | Pure pursuit lookahead time [s]                                | 1.0           |
-| `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                      | 5.0           |
+| `lookahead_time`                         | `double` | Pure pursuit lookahead time [s]                                | 1.5           |
+| `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                      | 3.0           |
 | `linearized_pure_pursuit_steer_kp_param` | `double` | Linearized pure pursuit steering P gain parameter              | 2.0           |
 | `linearized_pure_pursuit_steer_kd_param` | `double` | Linearized pure pursuit steering D gain parameter              | 2.0           |
 | `steer_limit`                            | `double` | Steer control input limit [rad]                                | 0.5           |
