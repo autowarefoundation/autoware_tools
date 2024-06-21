@@ -14,20 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+import rclpy
 from autoware_adapi_v1_msgs.msg import OperationModeState
 from autoware_control_msgs.msg import Control as AckermannControlCommand
 from autoware_planning_msgs.msg import Trajectory
 from autoware_vehicle_msgs.msg import GearCommand
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry
-import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
-import rclpy
 from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
 from std_msgs.msg import Bool
-from visualization_msgs.msg import Marker
-from visualization_msgs.msg import MarkerArray
+from visualization_msgs.msg import Marker, MarkerArray
 
 debug_matplotlib_plot_flag = False
 if debug_matplotlib_plot_flag:
@@ -104,10 +103,29 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
             ),
         )
 
+        # lim default values are taken from https://github.com/autowarefoundation/autoware.universe/blob/e90d3569bacaf64711072a94511ccdb619a59464/control/autoware_vehicle_cmd_gate/config/vehicle_cmd_gate.param.yaml
         self.declare_parameter(
-            "steer_limit",
-            0.5,
-            ParameterDescriptor(description="Steer control input limit [rad]"),
+            "lon_acc_lim",
+            5.0,
+            ParameterDescriptor(description="Longitudinal acceleration limit [m/ss]"),
+        )
+
+        self.declare_parameter(
+            "lon_jerk_lim",
+            5.0,
+            ParameterDescriptor(description="Longitudinal jerk limit [m/sss]"),
+        )
+
+        self.declare_parameter(
+            "steer_lim",
+            1.0,
+            ParameterDescriptor(description="Steering angle limit [rad]"),
+        )
+
+        self.declare_parameter(
+            "steer_rate_lim",
+            1.0,
+            ParameterDescriptor(description="Steering angle rate limit [rad/s]"),
         )
 
         self.declare_parameter(
@@ -250,8 +268,6 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
         angz = 2.0 * longitudinal_vel_ref_nearest * np.sin(alpha) / wheel_base
         steer = np.arctan(angz * wheel_base / longitudinal_vel_ref_nearest)
 
-        steer_limit = self.get_parameter("steer_limit").get_parameter_value().double_value
-        steer = np.clip(steer, -steer_limit, steer_limit)
         return np.array([pure_pursuit_acc_cmd, steer])
 
     def linearized_pure_pursuit_control(
@@ -466,6 +482,7 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
         cmd[0] += tmp_acc_noise
         cmd[1] += tmp_steer_noise
 
+        # overwrite control_cmd if received stop request
         if not self.stop_request:
             pass
         else:
@@ -478,6 +495,28 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
                 stop_acc, self._previous_cmd[0] - stop_jerk_lim * self.timer_period_callback
             )
             cmd[1] = 1 * self._previous_cmd[1]
+
+        # apply control_cmd limit
+        lon_acc_lim = self.get_parameter("lon_acc_lim").get_parameter_value().double_value
+        steer_lim = self.get_parameter("steer_lim").get_parameter_value().double_value
+        cmd[0] = np.clip(cmd[0], -lon_acc_lim, lon_acc_lim)
+        cmd[1] = np.clip(cmd[1], -steer_lim, steer_lim)
+        acc_diff_limit = (
+            self.get_parameter("lon_jerk_lim").get_parameter_value().double_value
+            * self.timer_period_callback
+        )
+        steer_diff_limit = (
+            self.get_parameter("steer_rate_lim").get_parameter_value().double_value
+            * self.timer_period_callback
+        )
+        cmd[0] = np.clip(
+            cmd[0], self._previous_cmd[0] - acc_diff_limit, self._previous_cmd[0] + acc_diff_limit
+        )
+        cmd[1] = np.clip(
+            cmd[1],
+            self._previous_cmd[1] - steer_diff_limit,
+            self._previous_cmd[1] + steer_diff_limit,
+        )
 
         if is_applying_control:
             self._previous_cmd = cmd.copy()
