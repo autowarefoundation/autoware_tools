@@ -19,6 +19,12 @@ from subprocess import CalledProcessError
 from subprocess import check_output
 import time
 
+from autoware_auto_perception_msgs.msg import (
+    TrafficSignalArray as autoware_auto_perception_msgs_TrafficSignalArray,
+)
+from autoware_perception_msgs.msg import (
+    TrafficSignalArray as autoware_perception_msgs_TrafficSignalArray,
+)
 from autoware_perception_msgs.msg import DetectedObjects
 from autoware_perception_msgs.msg import PredictedObjects
 from autoware_perception_msgs.msg import TrackedObjects
@@ -143,25 +149,42 @@ class PerceptionReplayerCommon(Node):
                 self.rosbag_ego_odom_data.append((stamp, msg))
             if topic == traffic_signals_topic:
                 if not isinstance(msg, self.traffic_signals_pub.msg_type):
-                    # convert old `TrafficSignalArray` msg to new `TrafficLightGroupArray` msg.
+                    # convert two kinds of old `TrafficSignalArray` msgs to new `TrafficLightGroupArray` msg.
                     new_msg = self.traffic_signals_pub.msg_type()
                     assert (
-                        type(msg).__name__ == "TrafficSignalArray"
-                        and type(new_msg).__name__ == "TrafficLightGroupArray"
-                    ), f"Unsupported conversion from {type(msg).__name__} to {type(new_msg).__name__}"
-
-                    new_msg.stamp = msg.header.stamp
-                    for traffic_signal in msg.signals:
-                        traffic_light_group = TrafficLightGroup()
-                        traffic_light_group.traffic_light_group_id = traffic_signal.map_primitive_id
-                        for traffic_light in traffic_signal.lights:
-                            traffic_light_element = TrafficLightElement()
-                            traffic_light_element.color = traffic_light.color
-                            traffic_light_element.shape = traffic_light.shape
-                            traffic_light_element.status = traffic_light.status
-                            traffic_light_element.confidence = traffic_light.confidence
-                            traffic_light_group.elements.append(traffic_light_element)
-                        new_msg.traffic_light_groups.append(traffic_light_group)
+                        type(new_msg).__name__ == "TrafficLightGroupArray"
+                    ), f"Unsupported conversion to {type(new_msg).__name__}"
+                    if isinstance(msg, autoware_auto_perception_msgs_TrafficSignalArray):
+                        new_msg.stamp = msg.header.stamp
+                        for traffic_signal in msg.signals:
+                            traffic_light_group = TrafficLightGroup()
+                            traffic_light_group.traffic_light_group_id = (
+                                traffic_signal.map_primitive_id
+                            )
+                            for traffic_light in traffic_signal.lights:
+                                traffic_light_element = TrafficLightElement()
+                                traffic_light_element.color = traffic_light.color
+                                traffic_light_element.shape = traffic_light.shape
+                                traffic_light_element.status = traffic_light.status
+                                traffic_light_element.confidence = traffic_light.confidence
+                                traffic_light_group.elements.append(traffic_light_element)
+                            new_msg.traffic_light_groups.append(traffic_light_group)
+                    elif isinstance(msg, autoware_perception_msgs_TrafficSignalArray):
+                        new_msg.stamp = msg.stamp
+                        for traffic_signal in msg.signals:
+                            traffic_light_group = TrafficLightGroup()
+                            traffic_light_group.traffic_light_group_id = (
+                                traffic_signal.traffic_signal_id
+                            )
+                            for traffic_signal_element in traffic_signal.elements:
+                                traffic_light_element = TrafficLightElement()
+                                traffic_light_element.color = traffic_signal_element.color
+                                traffic_light_element.shape = traffic_signal_element.shape
+                                traffic_light_element.status = traffic_signal_element.status
+                                traffic_light_element.confidence = traffic_signal_element.confidence
+                                traffic_light_group.elements.append(traffic_light_element)
+                    else:
+                        raise AssertionError(f"Unsupported conversion from {type(msg)}")
                     msg = new_msg
                 self.rosbag_traffic_signals_data.append((stamp, msg))
 
