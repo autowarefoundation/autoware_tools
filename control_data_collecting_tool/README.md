@@ -67,6 +67,18 @@ This package provides tools for automatically collecting data using pure pursuit
 
    <img src="resource/demo.gif" width="480">
 
+9. If you want to stop data collecting automatic driving, run the following command
+
+   ```bash
+   ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: true" --once
+   ```
+
+10. If you want to restart data collecting automatic driving, run the following command
+
+```bash
+ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once
+```
+
 ## Parameter
 
 ROS 2 params in `/data_collecting_trajectory_publisher` node:
@@ -94,6 +106,8 @@ ROS 2 params in `/data_collecting_pure_pursuit_trajectory_follower` node:
 | `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                      | 3.0           |
 | `linearized_pure_pursuit_steer_kp_param` | `double` | Linearized pure pursuit steering P gain parameter              | 2.0           |
 | `linearized_pure_pursuit_steer_kd_param` | `double` | Linearized pure pursuit steering D gain parameter              | 2.0           |
+| `stop_acc`                               | `double` | Accel command for stopping data collecting driving [m/ss]      | -2.0          |
+| `stop_jerk_lim`                          | `double` | Jerk limit for stopping data collecting driving [m/sss]        | 1.0           |
 | `steer_limit`                            | `double` | Steer control input limit [rad]                                | 0.5           |
 | `acc_noise_amp`                          | `double` | Accel command additional sine noise amplitude [m/ss]           | 0.01          |
 | `acc_noise_min_period`                   | `double` | Accel command additional sine noise minimum period [s]         | 5.0           |
