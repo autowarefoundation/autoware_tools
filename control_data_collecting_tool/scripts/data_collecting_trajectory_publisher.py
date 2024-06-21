@@ -14,22 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoware_planning_msgs.msg import Trajectory
-from autoware_planning_msgs.msg import TrajectoryPoint
-from geometry_msgs.msg import Point
-from geometry_msgs.msg import PolygonStamped
-from nav_msgs.msg import Odometry
 import numpy as np
-from numpy import arctan
-from numpy import cos
-from numpy import pi
-from numpy import sin
-from rcl_interfaces.msg import ParameterDescriptor
 import rclpy
+from autoware_planning_msgs.msg import Trajectory, TrajectoryPoint
+from geometry_msgs.msg import Point, PolygonStamped
+from nav_msgs.msg import Odometry
+from numpy import arctan, cos, pi, sin
+from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
-from visualization_msgs.msg import Marker
-from visualization_msgs.msg import MarkerArray
+from visualization_msgs.msg import Marker, MarkerArray
 
 debug_matplotlib_plot_flag = False
 if debug_matplotlib_plot_flag:
@@ -222,6 +216,12 @@ class DataCollectingTrajectoryPublisher(Node):
         self.trajectory_yaw_data = None
         self.trajectory_longitudinal_velocity_data = None
         self.trajectory_curvature_data = None
+        self.current_target_longitudinal_velocity = (
+            self.get_parameter("target_longitudinal_velocity").get_parameter_value().double_value
+        )
+        self.current_window = (
+            self.get_parameter("mov_ave_window").get_parameter_value().integer_value
+        )
 
         self.one_round_progress_rate = None
 
@@ -232,7 +232,9 @@ class DataCollectingTrajectoryPublisher(Node):
 
     def onDataCollectingArea(self, msg):
         self._data_collecting_area_polygon = msg
+        self.updateNominalTargetTrajectory()
 
+    def updateNominalTargetTrajectory(self):
         data_collecting_area = np.array(
             [
                 np.array(
@@ -322,6 +324,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         # [2-3] smoothing figure eight path
         window = self.get_parameter("mov_ave_window").get_parameter_value().integer_value
+        self.current_window = 1 * window
         if window < len(trajectory_position_data):
             w = np.ones(window) / window
             augmented_position_data = np.vstack(
@@ -371,6 +374,7 @@ class DataCollectingTrajectoryPublisher(Node):
         target_longitudinal_velocity = (
             self.get_parameter("target_longitudinal_velocity").get_parameter_value().double_value
         )
+        self.current_target_longitudinal_velocity = 1 * target_longitudinal_velocity
         trajectory_longitudinal_velocity_data = target_longitudinal_velocity * np.ones(
             len(trajectory_position_data)
         )
@@ -380,8 +384,24 @@ class DataCollectingTrajectoryPublisher(Node):
         self.trajectory_longitudinal_velocity_data = trajectory_longitudinal_velocity_data.copy()
         self.trajectory_curvature_data = trajectory_curvature_data.copy()
 
+        self.get_logger().info("update nominal target trajectory")
+
     def timer_callback(self):
         if self._present_kinematic_state is not None and self.trajectory_position_data is not None:
+            # [0] update nominal target trajectory if changing related ros2 params
+            target_longitudinal_velocity = (
+                self.get_parameter("target_longitudinal_velocity")
+                .get_parameter_value()
+                .double_value
+            )
+            window = self.get_parameter("mov_ave_window").get_parameter_value().integer_value
+            if (
+                np.abs(target_longitudinal_velocity - self.current_target_longitudinal_velocity)
+                > 1e-6
+                or window != self.current_window
+            ):
+                self.updateNominalTargetTrajectory()
+
             # [1] receive observation from topic
             present_position = np.array(
                 [
