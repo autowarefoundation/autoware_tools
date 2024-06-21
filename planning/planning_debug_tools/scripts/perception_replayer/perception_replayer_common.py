@@ -19,16 +19,18 @@ from subprocess import CalledProcessError
 from subprocess import check_output
 import time
 
+from autoware_auto_perception_msgs.msg import (
+    TrafficSignalArray as autoware_auto_perception_msgs_TrafficSignalArray,
+)
+from autoware_perception_msgs.msg import (
+    TrafficSignalArray as autoware_perception_msgs_TrafficSignalArray,
+)
 from autoware_perception_msgs.msg import DetectedObjects
 from autoware_perception_msgs.msg import PredictedObjects
 from autoware_perception_msgs.msg import TrackedObjects
 from autoware_perception_msgs.msg import TrafficLightElement
 from autoware_perception_msgs.msg import TrafficLightGroup
 from autoware_perception_msgs.msg import TrafficLightGroupArray
-
-from autoware_perception_msgs.msg import TrafficSignalArray as autoware_perception_msgs_TrafficSignalArray
-from autoware_auto_perception_msgs.msg import TrafficSignalArray as autoware_auto_perception_msgs_TrafficSignalArray
-
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from nav_msgs.msg import Odometry
@@ -149,12 +151,16 @@ class PerceptionReplayerCommon(Node):
                 if not isinstance(msg, self.traffic_signals_pub.msg_type):
                     # convert two kinds of old `TrafficSignalArray` msgs to new `TrafficLightGroupArray` msg.
                     new_msg = self.traffic_signals_pub.msg_type()
-                    assert type(new_msg).__name__ == "TrafficLightGroupArray", f"Unsupported conversion to {type(new_msg).__name__}"
+                    assert (
+                        type(new_msg).__name__ == "TrafficLightGroupArray"
+                    ), f"Unsupported conversion to {type(new_msg).__name__}"
                     if isinstance(msg, autoware_auto_perception_msgs_TrafficSignalArray):
                         new_msg.stamp = msg.header.stamp
                         for traffic_signal in msg.signals:
                             traffic_light_group = TrafficLightGroup()
-                            traffic_light_group.traffic_light_group_id = traffic_signal.map_primitive_id
+                            traffic_light_group.traffic_light_group_id = (
+                                traffic_signal.map_primitive_id
+                            )
                             for traffic_light in traffic_signal.lights:
                                 traffic_light_element = TrafficLightElement()
                                 traffic_light_element.color = traffic_light.color
