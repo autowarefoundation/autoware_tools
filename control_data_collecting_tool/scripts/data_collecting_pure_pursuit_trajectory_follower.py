@@ -14,17 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import rclpy
+from autoware_adapi_v1_msgs.msg import OperationModeState
 from autoware_control_msgs.msg import Control as AckermannControlCommand
 from autoware_planning_msgs.msg import Trajectory
 from autoware_vehicle_msgs.msg import GearCommand
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry
+import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
+import rclpy
 from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
-from visualization_msgs.msg import Marker, MarkerArray
+from std_msgs.msg import Bool
+from visualization_msgs.msg import Marker
+from visualization_msgs.msg import MarkerArray
 
 debug_matplotlib_plot_flag = False
 if debug_matplotlib_plot_flag:
@@ -86,6 +89,22 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
         )
 
         self.declare_parameter(
+            "stop_acc",
+            -2.0,
+            ParameterDescriptor(
+                description="Accel command for stopping data collecting driving [m/ss]"
+            ),
+        )
+
+        self.declare_parameter(
+            "stop_jerk_lim",
+            1.0,
+            ParameterDescriptor(
+                description="Jerk limit for stopping data collecting driving [m/sss]"
+            ),
+        )
+
+        self.declare_parameter(
             "steer_limit",
             0.5,
             ParameterDescriptor(description="Steer control input limit [rad]"),
@@ -143,6 +162,22 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
         )
         self.sub_trajectory_
 
+        self.sub_operation_mode_ = self.create_subscription(
+            OperationModeState,
+            "/system/operation_mode/state",
+            self.onOperationMode,
+            1,
+        )
+        self.sub_operation_mode_
+
+        self.sub_stop_request_ = self.create_subscription(
+            Bool,
+            "/data_collecting_stop_request",
+            self.onStopRequest,
+            1,
+        )
+        self.sub_stop_request_
+
         self.control_cmd_pub_ = self.create_publisher(
             AckermannControlCommand,
             "/external/selected/control_cmd",
@@ -166,6 +201,9 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
 
         self._present_kinematic_state = None
         self._present_trajectory = None
+        self._present_operation_mode = None
+        self.stop_request = False
+        self._previous_cmd = np.zeros(2)
 
         self.acc_noise_list = []
         self.steer_noise_list = []
@@ -179,6 +217,13 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
 
     def onTrajectory(self, msg):
         self._present_trajectory = msg
+
+    def onOperationMode(self, msg):
+        self._present_operation_mode = msg
+
+    def onStopRequest(self, msg):
+        self.stop_request = msg.data
+        self.get_logger().info("receive " + str(msg))
 
     def timer_callback(self):
         if (self._present_trajectory is not None) and (self._present_kinematic_state is not None):
@@ -314,6 +359,14 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
         trajectory_orientation = np.array(trajectory_orientation)
         trajectory_longitudinal_velocity = np.array(trajectory_longitudinal_velocity)
 
+        is_applying_control = False
+        if self._present_operation_mode is not None:
+            if (
+                self._present_operation_mode.mode == 3
+                and self._present_operation_mode.is_autoware_control_enabled
+            ):
+                is_applying_control = True
+
         nearestIndex = (
             ((trajectory_position[:, :2] - present_position[:2]) ** 2).sum(axis=1).argmin()
         )
@@ -412,6 +465,24 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
 
         cmd[0] += tmp_acc_noise
         cmd[1] += tmp_steer_noise
+
+        if not self.stop_request:
+            pass
+        else:
+            stop_acc = self.get_parameter("stop_acc").get_parameter_value().double_value
+            if stop_acc > 0.0:
+                self.get_logger().info("stop_acc should be negative! Force set to -1.0")
+                stop_acc = -1.0
+            stop_jerk_lim = self.get_parameter("stop_jerk_lim").get_parameter_value().double_value
+            cmd[0] = max(
+                stop_acc, self._previous_cmd[0] - stop_jerk_lim * self.timer_period_callback
+            )
+            cmd[1] = 1 * self._previous_cmd[1]
+
+        if is_applying_control:
+            self._previous_cmd = cmd.copy()
+        else:
+            self._previous_cmd = np.zeros(2)
 
         # [2] publish cmd
         control_cmd_msg = AckermannControlCommand()
