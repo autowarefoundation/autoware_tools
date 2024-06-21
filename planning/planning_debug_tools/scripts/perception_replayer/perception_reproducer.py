@@ -221,7 +221,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             self.ego_odom_id2last_published_timestamp[ego_odom_idx] = timestamp
             self.cool_down_indices.append(ego_odom_idx)
 
-            self.stopwatch.toc("total on_timer")
+        self.stopwatch.toc("total on_timer")
 
     def find_nearest_ego_odom_index(self, ego_pose):
         # nearest search with numpy format is much (~ x100) faster than regular for loop
