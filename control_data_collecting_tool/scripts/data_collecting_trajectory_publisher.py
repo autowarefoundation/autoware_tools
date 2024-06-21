@@ -14,22 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoware_planning_msgs.msg import Trajectory
-from autoware_planning_msgs.msg import TrajectoryPoint
-from geometry_msgs.msg import Point
-from geometry_msgs.msg import PolygonStamped
-from nav_msgs.msg import Odometry
 import numpy as np
-from numpy import arctan
-from numpy import cos
-from numpy import pi
-from numpy import sin
-from rcl_interfaces.msg import ParameterDescriptor
 import rclpy
+from autoware_planning_msgs.msg import Trajectory, TrajectoryPoint
+from geometry_msgs.msg import Point, PolygonStamped
+from nav_msgs.msg import Odometry
+from numpy import arctan, cos, pi, sin
+from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
-from visualization_msgs.msg import Marker
-from visualization_msgs.msg import MarkerArray
+from visualization_msgs.msg import Marker, MarkerArray
 
 debug_matplotlib_plot_flag = False
 if debug_matplotlib_plot_flag:
@@ -119,7 +113,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "max_lateral_accel",
-            0.5,
+            2.94,  # 0.3G
             ParameterDescriptor(description="Max lateral acceleration limit [m/ss]"),
         )
 

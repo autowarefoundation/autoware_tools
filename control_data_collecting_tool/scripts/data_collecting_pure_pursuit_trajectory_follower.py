@@ -14,18 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+import rclpy
 from autoware_control_msgs.msg import Control as AckermannControlCommand
 from autoware_planning_msgs.msg import Trajectory
 from autoware_vehicle_msgs.msg import GearCommand
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry
-import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
-import rclpy
 from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
-from visualization_msgs.msg import Marker
-from visualization_msgs.msg import MarkerArray
+from visualization_msgs.msg import Marker, MarkerArray
 
 debug_matplotlib_plot_flag = False
 if debug_matplotlib_plot_flag:
@@ -44,7 +43,7 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
 
         self.declare_parameter(
             "pure_pursuit_type",
-            "naive",
+            "linearized",
             ParameterDescriptor(
                 description="Pure pursuit type (`naive` or `linearized` steer control law"
             ),
@@ -64,13 +63,13 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
 
         self.declare_parameter(
             "lookahead_time",
-            1.0,
+            1.5,
             ParameterDescriptor(description="Pure pursuit lookahead length coef [m/(m/s)]"),
         )
 
         self.declare_parameter(
             "min_lookahead",
-            5.0,
+            3.0,
             ParameterDescriptor(description="Pure pursuit lookahead length intercept [m]"),
         )
 
