@@ -25,7 +25,7 @@ from utils import StopWatch
 from utils import create_empty_pointcloud
 from utils import translate_objects_coordinate
 
-dist_eps = 1e-2  # (meters)
+dist_eps = 1e-3  # (meters)
 
 
 class PerceptionReproducer(PerceptionReplayerCommon):
@@ -66,6 +66,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             prev_stamp = stamp
 
         average_ego_odom_interval = sum(time_diffs) / len(time_diffs)
+        average_ego_odom_interval*=1.5  # slow down the publication speed.
         self.timer = self.create_timer(average_ego_odom_interval, self.on_timer)
 
         # kill perception process to avoid a conflict of the perception topics
