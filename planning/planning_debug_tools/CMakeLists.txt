@@ -22,6 +22,10 @@ ament_auto_add_library(stop_reason_visualizer_node SHARED
   src/stop_reason_visualizer.cpp
 )
 
+ament_auto_add_library(objects_distance_calculator_node SHARED
+  src/objects_distance_calculator.cpp
+)
+
 if(${rosidl_cmake_VERSION} VERSION_LESS 2.5.0)
     rosidl_target_interfaces(trajectory_analyzer_node
     planning_debug_tools "rosidl_typesupport_cpp")
@@ -40,6 +44,11 @@ rclcpp_components_register_node(trajectory_analyzer_node
 rclcpp_components_register_node(stop_reason_visualizer_node
   PLUGIN "planning_debug_tools::StopReasonVisualizerNode"
   EXECUTABLE stop_reason_visualizer_exe
+)
+
+rclcpp_components_register_node(objects_distance_calculator_node
+  PLUGIN "planning_debug_tools::ObjectsDistanceCalculatorNode"
+  EXECUTABLE objects_distance_calculator_exe
 )
 
 ament_auto_package(
