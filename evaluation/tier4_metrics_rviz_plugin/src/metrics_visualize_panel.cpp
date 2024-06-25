@@ -15,6 +15,7 @@
 
 #include "metrics_visualize_panel.hpp"
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
 #include <rviz_common/display_context.hpp>
 
 #include <X11/Xlib.h>
@@ -95,6 +96,11 @@ void MetricsVisualizePanel::onInitialize()
 
   const auto period = std::chrono::milliseconds(static_cast<int64_t>(1e3 / 10));
   timer_ = raw_node_->create_wall_timer(period, [&]() { onTimer(); });
+
+  const std::string yaml_filepath =
+    ament_index_cpp::get_package_share_directory("tier4_metrics_rviz_plugin") +
+    "/config/metrics_visualize_panel.param.yaml";
+  config_ = YAML::LoadFile(yaml_filepath);
 }
 
 void MetricsVisualizePanel::updateWidgetVisibility(
@@ -224,12 +230,21 @@ void MetricsVisualizePanel::onMetrics(
       QGridLayout * all_metrics_layout = dynamic_cast<QGridLayout *>(all_metrics_widget->layout());
 
       // Add the widgets to the "All Metrics" tab layout
-      all_metrics_layout->addWidget(tableWidget, row, col);
-      all_metrics_layout->setRowStretch(row, false);
-      all_metrics_layout->addWidget(chartViewWidget, row + 1, col);
-      all_metrics_layout->setRowStretch(row + 1, true);
-      all_metrics_layout->setColumnStretch(col, true);
+      try {
+        if (config_[status.name]["table"].as<bool>()) {
+          all_metrics_layout->addWidget(tableWidget, row, col);
+        }
 
+        if (config_[status.name]["graph"].as<bool>()) {
+          all_metrics_layout->addWidget(chartViewWidget, row + 1, col);
+        }
+
+        all_metrics_layout->setRowStretch(row, false);
+        all_metrics_layout->setRowStretch(row + 1, true);
+        all_metrics_layout->setColumnStretch(col, true);
+      } catch (const YAML::Exception & e) {
+        std::cerr << "YAML error: " << e.what() << std::endl;
+      }
       // Also add the widgets to the topic_widgets_map_ for easy management
       topic_widgets_map_[topic_name][status.name] = std::make_pair(tableWidget, chartViewWidget);
     }

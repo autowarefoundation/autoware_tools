@@ -35,6 +35,8 @@
 
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
 
+#include <yaml-cpp/yaml.h>
+
 #include <iostream>
 #include <limits>
 #include <string>
@@ -243,6 +245,9 @@ private:
 
   // Stored metrics data
   std::unordered_map<std::string, Metric> metrics_;
+
+  // Metrics configuration
+  YAML::Node config_;
 
   // Utility functions for managing widget visibility based on topics
   void updateWidgetVisibility(const std::string & target_topic, const bool show);
