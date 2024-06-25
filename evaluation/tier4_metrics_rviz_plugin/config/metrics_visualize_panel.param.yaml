@@ -1,0 +1,51 @@
+curvature:
+  table: true
+  graph: false
+point_interval:
+  table: true
+  graph: false
+length:
+  table: true
+  graph: false
+duration:
+  table: true
+  graph: false
+velocity:
+  table: true
+  graph: false
+acceleration:
+  table: true
+  graph: false
+jerk:
+  table: true
+  graph: false
+lateral_deviation:
+  table: true
+  graph: false
+yaw_deviation:
+  table: true
+  graph: false
+velocity_deviation:
+  table: true
+  graph: false
+stability:
+  table: true
+  graph: false
+stability_frechet:
+  table: true
+  graph: false
+obstacle_distance:
+  table: true
+  graph: false
+obstacle_ttc:
+  table: true
+  graph: false
+modified_goal_longitudinal_deviation:
+  table: true
+  graph: false
+modified_goal_lateral_deviation:
+  table: true
+  graph: false
+modified_goal_yaw_deviation:
+  table: true
+  graph: false
