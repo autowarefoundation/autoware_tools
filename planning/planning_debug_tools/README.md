@@ -7,6 +7,7 @@ This package contains several planning-related debug tools.
 - **Perception reproducer**: generates detected objects from rosbag data in planning simulator environment
 - **processing time checker**: displays processing_time of modules on the terminal
 - **logging level updater**: updates the logging level of the planning modules.
+- **CPU Usage Checker**: displays CPU usage of ROS processes on the terminal
 
 ## Trajectory analyzer
 
@@ -292,3 +293,15 @@ ros2 run planning_debug_tools update_logger_level.sh <module-name> <logger-level
 When you have a typo of the planning module, the script will show the available modules.
 
 ![logging_level_updater_typo](image/logging_level_updater_typo.png)
+
+## CPU Usage Checker
+
+The purpose of the CPU Usage Checker is to monitor and visualize the CPU usage of the ROS processes. By providing a real-time terminal-based visualization, users can easily confirm the cpu usage as in the picture below.
+
+![cpu_usage_checker](image/cpu_usage_checker.png)
+
+You can run the program by the following command.
+
+```bash
+ros2 run planning_debug_tools cpu_usage_checker.py
+```
