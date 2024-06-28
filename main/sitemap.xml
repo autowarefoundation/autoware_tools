@@ -96,6 +96,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://autowarefoundation.github.io/autoware_tools/main/planning/autoware_route_client/</loc>
+         <lastmod>2024-06-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://autowarefoundation.github.io/autoware_tools/main/planning/autoware_rtc_replayer/</loc>
          <lastmod>2024-06-28</lastmod>
          <changefreq>daily</changefreq>
