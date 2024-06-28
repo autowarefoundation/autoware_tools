@@ -58,7 +58,7 @@ def get_trajectory_points(
     D = [(b - a) / 2, -a / 2]
 
     # _O = [0.0, 0.0]  # origin
-    R = a / 2  # radious of the circle
+    R = a / 2  # radius of the circle
     OL = [-(b - a) / 2, 0]  # center of the left circle
     OR = [(b - a) / 2, 0]  # center of the right circle
     OB = np.sqrt((b - a) ** 2 + a**2) / 2  # half length of the linear trajectory
@@ -271,10 +271,10 @@ class DataCollectingTrajectoryPublisher(Node):
 
         vec_from_center_to_point0_data = data_collecting_area[0, :2] - rectangle_center_position
         vec_from_center_to_point1_data = data_collecting_area[1, :2] - rectangle_center_position
-        unitvec_from_center_to_point0_data = vec_from_center_to_point0_data / (
+        unit_vec_from_center_to_point0_data = vec_from_center_to_point0_data / (
             np.sqrt((vec_from_center_to_point0_data**2).sum()) + 1e-10
         )
-        unitvec_from_center_to_point1_data = vec_from_center_to_point1_data / (
+        unit_vec_from_center_to_point1_data = vec_from_center_to_point1_data / (
             np.sqrt((vec_from_center_to_point1_data**2).sum()) + 1e-10
         )
 
@@ -283,15 +283,19 @@ class DataCollectingTrajectoryPublisher(Node):
         if la > lb:
             long_side_length = la
             short_side_length = lb
-            vec_long_side = -unitvec_from_center_to_point0_data + unitvec_from_center_to_point1_data
+            vec_long_side = (
+                -unit_vec_from_center_to_point0_data + unit_vec_from_center_to_point1_data
+            )
         else:
             long_side_length = lb
             short_side_length = la
-            vec_long_side = unitvec_from_center_to_point0_data + unitvec_from_center_to_point1_data
-        unitvec_long_side = vec_long_side / np.sqrt((vec_long_side**2).sum())
-        if unitvec_long_side[1] < 0:
-            unitvec_long_side *= -1
-        yaw_offset = np.arccos(unitvec_long_side[0])
+            vec_long_side = (
+                unit_vec_from_center_to_point0_data + unit_vec_from_center_to_point1_data
+            )
+        unit_vec_long_side = vec_long_side / np.sqrt((vec_long_side**2).sum())
+        if unit_vec_long_side[1] < 0:
+            unit_vec_long_side *= -1
+        yaw_offset = np.arccos(unit_vec_long_side[0])
         if yaw_offset > pi / 2:
             yaw_offset -= pi
 

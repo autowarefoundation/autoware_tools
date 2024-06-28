@@ -9,9 +9,9 @@ This package provides tools for automatically collecting data using pure pursuit
 - This package aims to collect a dataset consisting of control inputs (i.e. `control_cmd`) and observation variables (i.e. `kinematic_state`, `steering_status`, etc).
 - The collected dataset can be used as training dataset for learning-based controllers, including [smart_mpc](https://github.com/autowarefoundation/autoware.universe/tree/f30c0350861d020ad26a45806ab1334895122fab/control/smart_mpc_trajectory_follower).
 - The data collecting approach is as follows:
-  - Seting a figure-eight target trajectory within the specified rectangular area.
+  - Setting a figure-eight target trajectory within the specified rectangular area.
   - Following the trajectory using a pure pursuit control law.
-  - Adding noises to the trajectory and the control command for data diversity, improveing the prediction accuracy of learning model.
+  - Adding noises to the trajectory and the control command for data diversity, improving the prediction accuracy of learning model.
 
 ## How to use
 
@@ -101,7 +101,7 @@ ROS 2 params in `/data_collecting_pure_pursuit_trajectory_follower` node:
 | :--------------------------------------- | :------- | :------------------------------------------------------------- | :------------ |
 | `pure_pursuit_type`                      | `string` | Pure pursuit type (`naive` or `linearized` steer control law ) | `linearized`  |
 | `wheel_base`                             | `double` | Wheel base [m]                                                 | 2.79          |
-| `acc_kp`                                 | `double` | Accel command propotional gain                                 | 0.5           |
+| `acc_kp`                                 | `double` | Accel command proportional gain                                | 0.5           |
 | `lookahead_time`                         | `double` | Pure pursuit lookahead time [s]                                | 1.5           |
 | `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                      | 3.0           |
 | `linearized_pure_pursuit_steer_kp_param` | `double` | Linearized pure pursuit steering P gain parameter              | 2.0           |

@@ -40,7 +40,7 @@ def getYaw(orientation_xyzw):
     return R.from_quat(orientation_xyzw.reshape(-1, 4)).as_euler("xyz")[:, 2]
 
 
-class DataCollectingPurePursuitTrajetoryFollower(Node):
+class DataCollectingPurePursuitTrajectoryFollower(Node):
     def __init__(self):
         super().__init__("data_collecting_pure_pursuit_trajectory_follower")
 
@@ -61,7 +61,7 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
         self.declare_parameter(
             "acc_kp",
             0.5,
-            ParameterDescriptor(description="Pure pursuit accel command propotional gain"),
+            ParameterDescriptor(description="Pure pursuit accel command proportional gain"),
         )
 
         self.declare_parameter(
@@ -266,8 +266,8 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
             np.arctan2(pos_xy_ref_target[1] - pos_xy_obs[1], pos_xy_ref_target[0] - pos_xy_obs[0])
             - pos_yaw_obs[0]
         )
-        angz = 2.0 * longitudinal_vel_ref_nearest * np.sin(alpha) / wheel_base
-        steer = np.arctan(angz * wheel_base / longitudinal_vel_ref_nearest)
+        ang_z = 2.0 * longitudinal_vel_ref_nearest * np.sin(alpha) / wheel_base
+        steer = np.arctan(ang_z * wheel_base / longitudinal_vel_ref_nearest)
 
         return np.array([pure_pursuit_acc_cmd, steer])
 
@@ -284,7 +284,7 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
         wheel_base = self.get_parameter("wheel_base").get_parameter_value().double_value
         acc_kp = self.get_parameter("acc_kp").get_parameter_value().double_value
 
-        # Currently, the following params are not declareed as ROS 2 params.
+        # Currently, the following params are not declared as ROS 2 params.
         lookahead_coef = self.get_parameter("lookahead_time").get_parameter_value().double_value
         lookahead_intercept = self.get_parameter("min_lookahead").get_parameter_value().double_value
 
@@ -618,7 +618,7 @@ class DataCollectingPurePursuitTrajetoryFollower(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    data_collecting_pure_pursuit_trajectory_follower = DataCollectingPurePursuitTrajetoryFollower()
+    data_collecting_pure_pursuit_trajectory_follower = DataCollectingPurePursuitTrajectoryFollower()
 
     rclpy.spin(data_collecting_pure_pursuit_trajectory_follower)
 
