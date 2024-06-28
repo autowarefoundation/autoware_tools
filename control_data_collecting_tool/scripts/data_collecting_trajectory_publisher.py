@@ -14,16 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import rclpy
-from autoware_planning_msgs.msg import Trajectory, TrajectoryPoint
-from geometry_msgs.msg import Point, PolygonStamped
+from autoware_planning_msgs.msg import Trajectory
+from autoware_planning_msgs.msg import TrajectoryPoint
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import PolygonStamped
 from nav_msgs.msg import Odometry
-from numpy import arctan, cos, pi, sin
+import numpy as np
+from numpy import arctan
+from numpy import cos
+from numpy import pi
+from numpy import sin
 from rcl_interfaces.msg import ParameterDescriptor
+import rclpy
 from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
-from visualization_msgs.msg import Marker, MarkerArray
+from visualization_msgs.msg import Marker
+from visualization_msgs.msg import MarkerArray
 
 debug_matplotlib_plot_flag = False
 if debug_matplotlib_plot_flag:
