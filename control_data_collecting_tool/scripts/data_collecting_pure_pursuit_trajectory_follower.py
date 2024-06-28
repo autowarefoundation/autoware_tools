@@ -14,19 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-import rclpy
 from autoware_adapi_v1_msgs.msg import OperationModeState
 from autoware_control_msgs.msg import Control as AckermannControlCommand
 from autoware_planning_msgs.msg import Trajectory
 from autoware_vehicle_msgs.msg import GearCommand
 from geometry_msgs.msg import Point
 from nav_msgs.msg import Odometry
+import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
+import rclpy
 from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
 from std_msgs.msg import Bool
-from visualization_msgs.msg import Marker, MarkerArray
+from visualization_msgs.msg import Marker
+from visualization_msgs.msg import MarkerArray
 
 debug_matplotlib_plot_flag = False
 if debug_matplotlib_plot_flag:
