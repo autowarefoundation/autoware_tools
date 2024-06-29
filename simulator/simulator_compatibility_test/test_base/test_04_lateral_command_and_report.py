@@ -81,7 +81,7 @@ class Test04LateralCommandAndReportBase:
         ]
         longitudinal_cmd.stamp.sec = stamp.sec
         longitudinal_cmd.stamp.nanosec = stamp.nanosec
-        longitudinal_cmd.speed = control_cmd["longitudinal"]["speed"]
+        longitudinal_cmd.velocity = control_cmd["longitudinal"]["speed"]
         longitudinal_cmd.acceleration = control_cmd["longitudinal"]["acceleration"]
         longitudinal_cmd.jerk = control_cmd["longitudinal"]["jerk"]
 
