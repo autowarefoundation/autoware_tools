@@ -8,20 +8,20 @@
       
       
       
-        <link rel="canonical" href="https://autowarefoundation.github.io/autoware_tools/main/CONTRIBUTING/">
+        <link rel="canonical" href="https://autowarefoundation.github.io/autoware_tools/main/control_data_collecting_tool/">
       
       
-        <link rel="prev" href="..">
+        <link rel="prev" href="../control/vehicle_cmd_analyzer/">
       
       
-        <link rel="next" href="../DISCLAIMER/">
+        <link rel="next" href="../driving_environment_analyzer/">
       
       <link rel="icon" href="../docs/assets/images/autoware-foundation.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.20">
     
     
       
-        <title>Contributing - Autoware Universe Documentation</title>
+        <title>Control data collecting tool - Autoware Universe Documentation</title>
       
     
     
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#contributing" class="md-skip">
+        <a href="#control-data-collecting-tool" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributing
+              Control data collecting tool
             
           </span>
         </div>
@@ -270,13 +270,15 @@
         
   
   
+    
+  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="../control_data_collecting_tool/" class="md-tabs__link">
+      <a href="./" class="md-tabs__link md-tabs__link--active">
         Control data collecting tool
       </a>
     </li>
@@ -1218,16 +1220,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
       
       
         
@@ -1239,12 +1241,12 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../control_data_collecting_tool/">Control data collecting tool</a>
+        <div class="md-nav__link md-nav__link--index md-nav__link--active">
+          <a href="./">Control data collecting tool</a>
           
         </div>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_4">
           <span class="md-nav__icon md-icon"></span>
           Control data collecting tool
@@ -2138,6 +2140,35 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-use" class="md-nav__link">
+    How to use
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter" class="md-nav__link">
+    Parameter
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2154,8 +2185,283 @@
   
 
 
-<div><h1 id="contributing">Contributing<a class="headerlink" href="#contributing" title="Permanent link">#</a></h1>
-<p>See <a href="https://autowarefoundation.github.io/autoware-documentation/main/contributing/">https://autowarefoundation.github.io/autoware-documentation/main/contributing/</a>.</p></div>
+<div><h1 id="control-data-collecting-tool">Control data collecting tool<a class="headerlink" href="#control-data-collecting-tool" title="Permanent link">#</a></h1>
+<p>This package provides tools for automatically collecting data using pure pursuit control within a specified rectangular area.</p>
+<p><img src="resource/demo.gif" width="800"></p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h2>
+<ul>
+<li>This package aims to collect a dataset consisting of control inputs (i.e. <code>control_cmd</code>) and observation variables (i.e. <code>kinematic_state</code>, <code>steering_status</code>, etc).</li>
+<li>The collected dataset can be used as training dataset for learning-based controllers, including <a href="https://github.com/autowarefoundation/autoware.universe/tree/f30c0350861d020ad26a45806ab1334895122fab/control/smart_mpc_trajectory_follower">smart_mpc</a>.</li>
+<li>The data collecting approach is as follows:<ul>
+<li>Setting a figure-eight target trajectory within the specified rectangular area.</li>
+<li>Following the trajectory using a pure pursuit control law.</li>
+<li>Adding noises to the trajectory and the control command for data diversity, improving the prediction accuracy of learning model.</li>
+</ul>
+</li>
+</ul>
+<h2 id="how-to-use">How to use<a class="headerlink" href="#how-to-use" title="Permanent link">#</a></h2>
+<ol>
+<li>
+<p>Launch Autoware.</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_launch<span class="w"> </span>planning_simulator.launch.xml<span class="w"> </span>map_path:<span class="o">=</span><span class="nv">$HOME</span>/autoware_map/sample-map-planning<span class="w"> </span>vehicle_model:<span class="o">=</span>sample_vehicle<span class="w"> </span>sensor_model:<span class="o">=</span>sample_sensor_kit
+</code></pre></div>
+</li>
+<li>
+<p>Set an initial pose, see <a href="https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#2-set-an-initial-pose-for-the-ego-vehicle">here</a>.</p>
+</li>
+<li>
+<p>Add <code>DataCollectingAreaSelectionTool</code> rviz plugin.</p>
+<p><img src="resource/add_rviz_plugin.png" width="480"></p>
+</li>
+<li>
+<p>Launch control_data_collecting_tool.</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>control_data_collecting_tool<span class="w"> </span>control_data_collecting_tool.launch.py
+</code></pre></div>
+</li>
+<li>
+<p>Add visualization in rviz:</p>
+<ul>
+<li><code>/data_collecting_area</code><ul>
+<li>Type: Polygon</li>
+</ul>
+</li>
+<li><code>/data_collecting_trajectory_marker_array</code><ul>
+<li>Type: MarkerArray</li>
+</ul>
+</li>
+<li><code>/data_collecting_lookahead_marker_array</code><ul>
+<li>Type: MarkerArray</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>Select <code>DataCollectingAreaSelectionTool</code> plugin.</p>
+<p><img src="resource/select_tool.png" width="480"></p>
+<p>Highlight the data collecting area by dragging the mouse over it.</p>
+<p><img src="resource/select_area.gif" width="480"></p>
+<blockquote>
+<p>[!NOTE]
+You cannot change the data collecting area while driving.</p>
+</blockquote>
+</li>
+<li>
+<p>start recording rosbag data. For example, run the following command:</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>bag<span class="w"> </span>record<span class="w"> </span>/localization/kinematic_state<span class="w"> </span>/localization/acceleration<span class="w"> </span>/vehicle/status/steering_status<span class="w"> </span>/sensing/imu/imu_data<span class="w"> </span>/system/operation_mode/state<span class="w"> </span>/vehicle/status/control_mode<span class="w"> </span>/external/selected/control_cmd<span class="w"> </span>/external/selected/gear_cmd<span class="w"> </span>/data_collecting_trajectory
+</code></pre></div>
+</li>
+<li>
+<p>Click the <code>LOCAL</code> button on <code>OperationMode</code> in <code>AutowareStatePanel</code>.</p>
+<p><img src="resource/push_LOCAL.png" width="480"></p>
+<p>Then, data collecting starts.</p>
+<p><img src="resource/demo.gif" width="480"></p>
+</li>
+<li>
+<p>If you want to stop data collecting automatic driving, run the following command</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>/data_collecting_stop_request<span class="w"> </span>std_msgs/msg/Bool<span class="w"> </span><span class="s2">"data: true"</span><span class="w"> </span>--once
+</code></pre></div>
+</li>
+<li>
+<p>If you want to restart data collecting automatic driving, run the following command</p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>/data_collecting_stop_request<span class="w"> </span>std_msgs/msg/Bool<span class="w"> </span><span class="s2">"data: false"</span><span class="w"> </span>--once
+</code></pre></div>
+<h2 id="parameter">Parameter<a class="headerlink" href="#parameter" title="Permanent link">#</a></h2>
+<p>ROS 2 params in <code>/data_collecting_trajectory_publisher</code> node:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>max_lateral_accel</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Max lateral acceleration limit [m/ss]</td>
+<td align="left">2.94</td>
+</tr>
+<tr>
+<td align="left"><code>lateral_error_threshold</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Lateral error threshold where applying velocity limit [m/s]</td>
+<td align="left">5.0</td>
+</tr>
+<tr>
+<td align="left"><code>yaw_error_threshold</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Yaw error threshold where applying velocity limit [rad]</td>
+<td align="left">0.5</td>
+</tr>
+<tr>
+<td align="left"><code>velocity_limit_by_tracking_error</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Velocity limit applied when tracking error exceeds threshold [m/s]</td>
+<td align="left">2.0</td>
+</tr>
+<tr>
+<td align="left"><code>mov_ave_window</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Moving average smoothing window size</td>
+<td align="left">50</td>
+</tr>
+<tr>
+<td align="left"><code>target_longitudinal_velocity</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Target longitudinal velocity [m/s]</td>
+<td align="left">6.0</td>
+</tr>
+<tr>
+<td align="left"><code>longitudinal_velocity_noise_amp</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Target longitudinal velocity additional sine noise amplitude [m/s]</td>
+<td align="left">0.1</td>
+</tr>
+<tr>
+<td align="left"><code>longitudinal_velocity_noise_min_period</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Target longitudinal velocity additional sine noise minimum period [s]</td>
+<td align="left">5.0</td>
+</tr>
+<tr>
+<td align="left"><code>longitudinal_velocity_noise_max_period</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Target longitudinal velocity additional sine noise maximum period [s]</td>
+<td align="left">20.0</td>
+</tr>
+</tbody>
+</table>
+<p>ROS 2 params in <code>/data_collecting_pure_pursuit_trajectory_follower</code> node:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>pure_pursuit_type</code></td>
+<td align="left"><code>string</code></td>
+<td align="left">Pure pursuit type (<code>naive</code> or <code>linearized</code> steer control law )</td>
+<td align="left"><code>linearized</code></td>
+</tr>
+<tr>
+<td align="left"><code>wheel_base</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Wheel base [m]</td>
+<td align="left">2.79</td>
+</tr>
+<tr>
+<td align="left"><code>acc_kp</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Accel command proportional gain</td>
+<td align="left">0.5</td>
+</tr>
+<tr>
+<td align="left"><code>lookahead_time</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Pure pursuit lookahead time [s]</td>
+<td align="left">1.5</td>
+</tr>
+<tr>
+<td align="left"><code>min_lookahead</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Pure pursuit minimum lookahead length [m]</td>
+<td align="left">3.0</td>
+</tr>
+<tr>
+<td align="left"><code>linearized_pure_pursuit_steer_kp_param</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Linearized pure pursuit steering P gain parameter</td>
+<td align="left">2.0</td>
+</tr>
+<tr>
+<td align="left"><code>linearized_pure_pursuit_steer_kd_param</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Linearized pure pursuit steering D gain parameter</td>
+<td align="left">2.0</td>
+</tr>
+<tr>
+<td align="left"><code>stop_acc</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Accel command for stopping data collecting driving [m/ss]</td>
+<td align="left">-2.0</td>
+</tr>
+<tr>
+<td align="left"><code>stop_jerk_lim</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Jerk limit for stopping data collecting driving [m/sss]</td>
+<td align="left">1.0</td>
+</tr>
+<tr>
+<td align="left"><code>lon_acc_lim</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Longitudinal acceleration limit [m/ss]</td>
+<td align="left">5.0</td>
+</tr>
+<tr>
+<td align="left"><code>lon_jerk_lim</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Longitudinal jerk limit [m/sss]</td>
+<td align="left">5.0</td>
+</tr>
+<tr>
+<td align="left"><code>steer_lim</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Steering angle limit [rad]</td>
+<td align="left">1.0</td>
+</tr>
+<tr>
+<td align="left"><code>steer_rate_lim</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Steering angle rate limit [rad/s]</td>
+<td align="left">1.0</td>
+</tr>
+<tr>
+<td align="left"><code>acc_noise_amp</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Accel command additional sine noise amplitude [m/ss]</td>
+<td align="left">0.01</td>
+</tr>
+<tr>
+<td align="left"><code>acc_noise_min_period</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Accel command additional sine noise minimum period [s]</td>
+<td align="left">5.0</td>
+</tr>
+<tr>
+<td align="left"><code>acc_noise_max_period</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Accel command additional sine noise maximum period [s]</td>
+<td align="left">20.0</td>
+</tr>
+<tr>
+<td align="left"><code>steer_noise_amp</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Steer command additional sine noise amplitude [rad]</td>
+<td align="left">0.01</td>
+</tr>
+<tr>
+<td align="left"><code>steer_noise_max_period</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Steer command additional sine noise maximum period [s]</td>
+<td align="left">5.0</td>
+</tr>
+<tr>
+<td align="left"><code>steer_noise_min_period</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Steer command additional sine noise minimum period [s]</td>
+<td align="left">20.0</td>
+</tr>
+</tbody>
+</table></div>
 
 
 
@@ -2182,7 +2488,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href=".." class="md-footer__link md-footer__link--prev" aria-label="Previous: autoware_tools" rel="prev">
+          <a href="../control/vehicle_cmd_analyzer/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Vehicle Command Analyzer description" rel="prev">
             <div class="md-footer__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
             </div>
@@ -2191,20 +2497,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                autoware_tools
+                Vehicle Command Analyzer description
               </div>
             </div>
           </a>
         
         
           
-          <a href="../DISCLAIMER/" class="md-footer__link md-footer__link--next" aria-label="Next: DISCLAIMER" rel="next">
+          <a href="../driving_environment_analyzer/" class="md-footer__link md-footer__link--next" aria-label="Next: Driving Environment Analyzer" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                DISCLAIMER
+                Driving Environment Analyzer
               </div>
             </div>
             <div class="md-footer__button md-icon">
