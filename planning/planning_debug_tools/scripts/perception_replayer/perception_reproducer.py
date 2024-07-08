@@ -26,8 +26,6 @@ from utils import StopWatch
 from utils import create_empty_pointcloud
 from utils import translate_objects_coordinate
 
-dist_eps = 1e-3  # (meters)
-
 
 class PerceptionReproducer(PerceptionReplayerCommon):
     def __init__(self, args):
@@ -38,26 +36,28 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             self.rosbag_ego_odom_search_radius
         )  # it may be set by an individual parameter.
 
-        self.reproduce_cool_down = (
-            args.reproduce_cool_down if args.search_radius != 0.0 else 0.0
-        )  # (sec) the cool down time for republishing published data, please make sure that it's greater than the ego's stopping time.
+        self.speed_threshold = (
+            args.speed_threshold
+        )  # (m/s) the speed threshold to determine the ego is stopping.
 
         super().__init__(args, "perception_reproducer")
 
         self.reproduce_sequence_indices = deque()  # contains ego_odom_idx
-        self.cool_down_indices = deque()  # contains ego_odom_idx
-        self.ego_odom_id2last_published_timestamp = {}  # for checking last published timestamp.
 
-        self.prev_ego_pos = None
+        self.last_published_idx = 0
+        self.last_published_idx_in_sequence = 0
         self.prev_ego_odom_msg = None
-        self.perv_objects_msg = None
+        self.prev_objects_msg = None
         self.prev_traffic_signals_msg = None
 
         self.stopwatch = StopWatch(self.args.verbose)  # for debug
 
         # refresh cool down for setting initial pose in psim.
+        def refresh_stat():
+            self.last_published_idx = 0
+            self.last_published_idx_in_sequence = 0
         self.sub_init_pos = self.create_subscription(
-            PoseWithCovarianceStamped, "/initialpose", lambda msg: self.cool_down_indices.clear(), 1
+            PoseWithCovarianceStamped, "/initialpose", refresh_stat, 1
         )
 
         # to make some data to accelerate computation
@@ -105,81 +105,81 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             pointcloud_msg = create_empty_pointcloud(timestamp_msg)
             self.pointcloud_pub.publish(pointcloud_msg)
 
-        if not self.ego_pose:
-            print("No ego pose found.")
+        if not self.ego_odom:
+            print("No ego odom found.")
             return
 
-        # Update reproduce list if ego_pos is moved.
-        if (
-            self.ego_pose is None
-            or self.prev_ego_pos is None
-            or (
-                (self.ego_pose.position.x - self.prev_ego_pos.position.x) ** 2
-                + (self.ego_pose.position.y - self.prev_ego_pos.position.y) ** 2
-            )
-            > dist_eps**2
-        ):
-            # find the nearest ego odom by simulation observation
-            self.stopwatch.tic("find_nearest_ego_odom_by_observation")
+        ego_pose = self.ego_odom.pose.pose
+        ego_speed = np.sqrt(self.ego_odom.twist.twist.linear.x**2 +
+                            self.ego_odom.twist.twist.linear.y**2)
+
+        # Just get the closest odom's objects if the ego is moving (old reproducer).
+        if ego_speed > self.speed_threshold or self.prev_ego_odom_msg is None:
+            self.update_counter = 0
+            ego_odom_indices = [self.find_nearest_ego_odom_index(ego_pose)]
+        elif self.update_counter < 50 and len(self.reproduce_sequence_indices) != 0:
+            self.update_counter += 1
+            ego_odom_indices = []
+        else:
+            self.update_counter = 0
+            # find the nearby ego odom arange the ego.
+            self.stopwatch.tic("find_nearby_ego_odom_indies")
             nearby_ego_odom_indies = self.find_nearby_ego_odom_indies(
-                [self.ego_pose], self.ego_odom_search_radius
+                [self.ego_odom.pose.pose], self.ego_odom_search_radius
             )
             nearby_ego_odom_indies = [
                 self.rosbag_ego_odom_data[idx][1].pose.pose for idx in nearby_ego_odom_indies
             ]
-            if not nearby_ego_odom_indies:
-                nearest_ego_odom_ind = self.find_nearest_ego_odom_index(self.ego_pose)
-                nearby_ego_odom_indies += [
-                    self.rosbag_ego_odom_data[nearest_ego_odom_ind][1].pose.pose
-                ]
-            self.stopwatch.toc("find_nearest_ego_odom_by_observation")
+            if len(nearby_ego_odom_indies) == 0:
+                nearby_ego_odom_indies = [self.rosbag_ego_odom_data[self.find_nearest_ego_odom_index(ego_pose)][1].pose.pose
+                                          ]
 
-            # find a list of ego odom around the nearest_ego_odom_pos.
-            self.stopwatch.tic("find_nearby_ego_odom_indies")
+            # find a list of ego odom around the nearby_ego_odom_indies.
             ego_odom_indices = self.find_nearby_ego_odom_indies(
                 nearby_ego_odom_indies, self.rosbag_ego_odom_search_radius
             )
             self.stopwatch.toc("find_nearby_ego_odom_indies")
 
-            # update reproduce_sequence with those data not in cool down list.
-            while self.cool_down_indices:
-                last_timestamp = self.ego_odom_id2last_published_timestamp[
-                    self.cool_down_indices[0]
-                ]
-                if (timestamp - last_timestamp).nanoseconds / 1e9 > self.reproduce_cool_down:
-                    self.cool_down_indices.popleft()
-                else:
-                    break
+            # speed filter for the ego_odom_indices
+            def get_speed(idx):
+                log_ego_odom = self.rosbag_ego_odom_data[idx][1]
+                return np.sqrt(log_ego_odom.twist.twist.linear.x**2 +
+                               log_ego_odom.twist.twist.linear.y**2)
+            ego_odom_indices = [idx for idx in ego_odom_indices if get_speed(
+                idx) < self.speed_threshold]
 
-            self.stopwatch.tic("update reproduce_sequence")
+        # Filter reproduce_sequence with timestamp before self.last_published_idx
+        self.stopwatch.tic("sourt reproduce_sequence")
+        if len(ego_odom_indices) != 0:
+            last_timestamp = self.rosbag_ego_odom_data[self.last_published_idx][0]
             ego_odom_indices = [
-                idx for idx in ego_odom_indices if idx not in self.cool_down_indices
+                idx for idx in ego_odom_indices if self.rosbag_ego_odom_data[idx][0] > last_timestamp
             ]
             ego_odom_indices = sorted(ego_odom_indices)
             self.reproduce_sequence_indices = deque(ego_odom_indices)
+        self.stopwatch.toc("sourt reproduce_sequence")
 
-            self.stopwatch.toc("update reproduce_sequence")
-
-        self.prev_ego_pos = self.ego_pose
-
-        # get data to publish
+        # Get data to publish
         repeat_trigger = len(self.reproduce_sequence_indices) == 0
-        if not repeat_trigger:  # pop data from reproduce_sequence if sequence is not empty.
+        if not repeat_trigger:
             ego_odom_idx = self.reproduce_sequence_indices.popleft()
-            pose_timestamp, ego_odom_msg = self.rosbag_ego_odom_data[ego_odom_idx]
-            # extract message by the nearest ego odom timestamp
-            self.stopwatch.tic("find_topics_by_timestamp")
-            objects_msg, traffic_signals_msg = self.find_topics_by_timestamp(pose_timestamp)
-            self.stopwatch.toc("find_topics_by_timestamp")
-            # if self.args.verbose:
-            #     print("reproduce_sequence_indices: ", list(self.reproduce_sequence_indices)[:20])
+            # if self.update_counter % 5 != 0:
+            #     self.last_published_idx = ego_odom_idx
+            #     return
+        else:
+            ego_odom_idx = self.last_published_idx
+            self.last_published_idx = ego_odom_idx
 
-        else:  # get perv data to publish if reproduce_sequence is empty.
-            ego_odom_msg = self.prev_ego_odom_msg
-            objects_msg = self.perv_objects_msg
-            traffic_signals_msg = self.prev_traffic_signals_msg
+        # extract messages by the nearest ego odom timestamp
+        pose_timestamp, ego_odom_msg = self.rosbag_ego_odom_data[ego_odom_idx]
 
-        # transform and publish current data.
+        self.stopwatch.tic("find_topics_by_timestamp")
+        objects_msg, traffic_signals_msg = self.find_topics_by_timestamp(pose_timestamp)
+        self.stopwatch.toc("find_topics_by_timestamp")
+        if self.args.verbose:
+            print("reproduce_sequence_indices: ", list(self.reproduce_sequence_indices)[:20])
+
+        # Transform and publish current data.
         self.stopwatch.tic("transform and publish")
 
         # ego odom
@@ -197,7 +197,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
                 self.stopwatch.toc("message deepcopy")
 
                 log_ego_pose = ego_odom_msg.pose.pose
-                translate_objects_coordinate(self.ego_pose, log_ego_pose, objects_msg_copied)
+                translate_objects_coordinate(ego_pose, log_ego_pose, objects_msg_copied)
             else:
                 objects_msg_copied = objects_msg
             self.objects_pub.publish(objects_msg_copied)
@@ -212,22 +212,6 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
             self.traffic_signals_pub.publish(self.prev_traffic_signals_msg)
         self.stopwatch.toc("transform and publish")
-
-        if not repeat_trigger:
-            # save data for repeat publication.
-            self.prev_ego_odom_msg = ego_odom_msg
-            self.perv_objects_msg = (
-                objects_msg if objects_msg is not None else self.perv_objects_msg
-            )
-            self.prev_traffic_signals_msg = (
-                traffic_signals_msg
-                if traffic_signals_msg is not None
-                else self.prev_traffic_signals_msg
-            )
-
-            # update cool down info.
-            self.ego_odom_id2last_published_timestamp[ego_odom_idx] = timestamp
-            self.cool_down_indices.append(ego_odom_idx)
 
         self.stopwatch.toc("total on_timer")
 
@@ -268,20 +252,20 @@ if __name__ == "__main__":
         "--search-radius",
         help="the search radius for searching rosbag's ego odom messages around the nearest ego odom pose (default is 1.5 meters), if the search radius is set to 0, it will always publish the closest message, just as the old reproducer did.",
         type=float,
-        default=1.5,
-    )
-    parser.add_argument(
-        "-c",
-        "--reproduce-cool-down",
-        help="The cool down time for republishing published messages (default is 80.0 seconds)",
-        type=float,
-        default=80.0,
+        default=2.0,
     )
     parser.add_argument(
         "--publishing-speed-factor",
         type=float,
         default=1.2,
         help="A factor to slow down the publication speed.",
+    )
+    parser.add_argument(
+        "-s",
+        "--speed-threshold",
+        type=float,
+        default=2.,
+        help="The speed threshold to determine whether to publish in time sequence."
     )
 
     args = parser.parse_args()
