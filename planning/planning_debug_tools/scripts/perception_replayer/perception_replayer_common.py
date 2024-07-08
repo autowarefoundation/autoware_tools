@@ -183,6 +183,7 @@ class PerceptionReplayerCommon(Node):
                                 traffic_light_element.status = traffic_signal_element.status
                                 traffic_light_element.confidence = traffic_signal_element.confidence
                                 traffic_light_group.elements.append(traffic_light_element)
+                            new_msg.traffic_light_groups.append(traffic_light_group)
                     else:
                         raise AssertionError(f"Unsupported conversion from {type(msg)}")
                     msg = new_msg
