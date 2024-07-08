@@ -18,6 +18,7 @@ import argparse
 from collections import deque
 import pickle
 
+from geometry_msgs.msg import PoseWithCovarianceStamped
 import numpy as np
 from perception_replayer_common import PerceptionReplayerCommon
 import rclpy
@@ -25,7 +26,7 @@ from utils import StopWatch
 from utils import create_empty_pointcloud
 from utils import translate_objects_coordinate
 
-dist_eps = 1e-2  # (meters)
+dist_eps = 1e-3  # (meters)
 
 
 class PerceptionReproducer(PerceptionReplayerCommon):
@@ -54,6 +55,11 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
         self.stopwatch = StopWatch(self.args.verbose)  # for debug
 
+        # refresh cool down for setting initial pose in psim.
+        self.sub_init_pos = self.create_subscription(
+            PoseWithCovarianceStamped, "/initialpose", lambda msg: self.cool_down_indices.clear(), 1
+        )
+
         # to make some data to accelerate computation
         self.preprocess_data()
 
@@ -66,6 +72,8 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             prev_stamp = stamp
 
         average_ego_odom_interval = sum(time_diffs) / len(time_diffs)
+        # slow down the publication speed.
+        average_ego_odom_interval *= args.publishing_speed_factor
         self.timer = self.create_timer(average_ego_odom_interval, self.on_timer)
 
         # kill perception process to avoid a conflict of the perception topics
@@ -269,6 +277,13 @@ if __name__ == "__main__":
         type=float,
         default=80.0,
     )
+    parser.add_argument(
+        "--publishing-speed-factor",
+        type=float,
+        default=1.2,
+        help="A factor to slow down the publication speed.",
+    )
+
     args = parser.parse_args()
 
     rclpy.init()
