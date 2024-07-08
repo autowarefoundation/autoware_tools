@@ -18,9 +18,9 @@ import argparse
 from collections import deque
 import pickle
 
+from geometry_msgs.msg import PoseWithCovarianceStamped
 import numpy as np
 from perception_replayer_common import PerceptionReplayerCommon
-from geometry_msgs.msg import PoseWithCovarianceStamped
 import rclpy
 from utils import StopWatch
 from utils import create_empty_pointcloud
@@ -57,7 +57,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
         # refresh cool down for setting initial pose in psim.
         self.sub_init_pos = self.create_subscription(
-            PoseWithCovarianceStamped, "/initialpose", lambda msg:self.cool_down_indices.clear(), 1
+            PoseWithCovarianceStamped, "/initialpose", lambda msg: self.cool_down_indices.clear(), 1
         )
 
         # to make some data to accelerate computation
