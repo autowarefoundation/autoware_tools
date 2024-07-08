@@ -142,7 +142,7 @@ class PerceptionReplayerCommon(Node):
                     for field in msg.__slots__:
                         setattr(
                             new_msg, field, getattr(msg, field)
-                        )  # it's unsafe because the elements inside the message are still the old type, but it works for now on.
+                        )  # it's unsafe because the elements inside the message are still the old type, but it works for now on because they share the same elements' names and structures.
                     msg = new_msg
                 self.rosbag_objects_data.append((stamp, msg))
             if topic == ego_odom_topic:
