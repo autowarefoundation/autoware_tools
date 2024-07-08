@@ -281,7 +281,7 @@ if __name__ == "__main__":
         "--publishing-speed-factor",
         type=float,
         default=1.2,
-        help="A factor to slow down the publication speed."
+        help="A factor to slow down the publication speed.",
     )
 
     args = parser.parse_args()
