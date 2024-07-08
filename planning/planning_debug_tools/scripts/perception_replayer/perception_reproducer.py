@@ -72,7 +72,8 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             prev_stamp = stamp
 
         average_ego_odom_interval = sum(time_diffs) / len(time_diffs)
-        average_ego_odom_interval *= 1.2  # slow down the publication speed.
+        # slow down the publication speed.
+        average_ego_odom_interval *= args.publishing_speed_factor
         self.timer = self.create_timer(average_ego_odom_interval, self.on_timer)
 
         # kill perception process to avoid a conflict of the perception topics
@@ -276,6 +277,13 @@ if __name__ == "__main__":
         type=float,
         default=80.0,
     )
+    parser.add_argument(
+        "--publishing-speed-factor",
+        type=float,
+        default=1.2,
+        help="A factor to slow down the publication speed."
+    )
+
     args = parser.parse_args()
 
     rclpy.init()
