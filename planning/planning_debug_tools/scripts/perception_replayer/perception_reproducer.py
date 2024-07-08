@@ -20,6 +20,7 @@ import pickle
 
 import numpy as np
 from perception_replayer_common import PerceptionReplayerCommon
+from geometry_msgs.msg import PoseWithCovarianceStamped
 import rclpy
 from utils import StopWatch
 from utils import create_empty_pointcloud
@@ -54,6 +55,11 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
         self.stopwatch = StopWatch(self.args.verbose)  # for debug
 
+        # refresh cool down for setting initial pose in psim.
+        self.sub_init_pos = self.create_subscription(
+            PoseWithCovarianceStamped, "/initialpose", lambda msg:self.cool_down_indices.clear(), 1
+        )
+
         # to make some data to accelerate computation
         self.preprocess_data()
 
@@ -66,7 +72,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             prev_stamp = stamp
 
         average_ego_odom_interval = sum(time_diffs) / len(time_diffs)
-        average_ego_odom_interval*=1.2  # slow down the publication speed.
+        average_ego_odom_interval *= 1.2  # slow down the publication speed.
         self.timer = self.create_timer(average_ego_odom_interval, self.on_timer)
 
         # kill perception process to avoid a conflict of the perception topics
