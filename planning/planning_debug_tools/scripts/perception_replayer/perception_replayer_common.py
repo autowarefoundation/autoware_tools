@@ -49,7 +49,7 @@ class PerceptionReplayerCommon(Node):
         super().__init__(name)
         self.args = args
 
-        self.ego_pose = None
+        self.ego_odom = None
         self.rosbag_objects_data = []
         self.rosbag_ego_odom_data = []
         self.rosbag_traffic_signals_data = []
@@ -110,7 +110,7 @@ class PerceptionReplayerCommon(Node):
         time.sleep(1.0)
 
     def on_odom(self, odom):
-        self.ego_pose = odom.pose.pose
+        self.ego_odom = odom
 
     def load_rosbag(self, rosbag2_path: str):
         reader = open_reader(str(rosbag2_path))
