@@ -26,8 +26,6 @@ from utils import StopWatch
 from utils import create_empty_pointcloud
 from utils import translate_objects_coordinate
 
-eps = 1e-1
-
 
 class PerceptionReproducer(PerceptionReplayerCommon):
     def __init__(self, args):
@@ -57,21 +55,15 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         self.reproduce_sequence_indices = deque()  # contains ego_odom_idx
         self.cool_down_indices = deque()  # contains ego_odom_idx
         self.ego_odom_id2last_published_timestamp = {}  # for checking last published timestamp.
+        self.last_sequenced_ego_pose = None
 
         pose_timestamp, self.prev_ego_odom_msg = self.rosbag_ego_odom_data[0]
-        self.perv_objects_msg, self.prev_traffic_signals_msg = self.find_topics_by_timestamp(pose_timestamp)
+        self.perv_objects_msg, self.prev_traffic_signals_msg = self.find_topics_by_timestamp(
+            pose_timestamp)
 
         # start main timer callback
-        time_diffs = []
-        prev_stamp = self.rosbag_ego_odom_data[0][0]
-        for stamp, _ in self.rosbag_ego_odom_data[1:]:
-            time_diff = (stamp - prev_stamp) / 1e9
-            time_diffs.append(time_diff)
-            prev_stamp = stamp
-
-        average_ego_odom_interval = sum(time_diffs) / len(time_diffs)
-        # slow down the publication speed.
-        average_ego_odom_interval *= args.publishing_speed_factor
+        average_ego_odom_interval = np.mean(
+            [(self.rosbag_ego_odom_data[i][0] - self.rosbag_ego_odom_data[i-1][0]) / 1e9 for i in range(1, len(self.rosbag_ego_odom_data))])
         self.timer = self.create_timer(average_ego_odom_interval, self.on_timer)
 
         # kill perception process to avoid a conflict of the perception topics
@@ -107,10 +99,15 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             print("No ego odom found.")
             return
 
-        # Update reproduce list if ego_pos is moved.
         ego_pose = self.ego_odom.pose.pose
-        ego_speed = np.sqrt(self.ego_odom.twist.twist.linear.x ** 2 + self.ego_odom.twist.twist.linear.y ** 2)
-        if ego_speed > eps:
+        dist_moved = np.sqrt(
+            (ego_pose.position.x - self.last_sequenced_ego_pose.position.x) ** 2
+            + (ego_pose.position.y - self.last_sequenced_ego_pose.position.y) ** 2
+        ) if self.last_sequenced_ego_pose else 999
+        # Update the reproduce sequence if ego_pos is moving in a high speed or the distance moved is greater than the search radius.
+        if dist_moved > self.ego_odom_search_radius:
+            self.last_sequenced_ego_pose = ego_pose
+
             # find the nearest ego odom by simulation observation
             self.stopwatch.tic("find_nearest_ego_odom_by_observation")
             nearby_ego_odom_indies = self.find_nearby_ego_odom_indies(
@@ -149,14 +146,14 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             ]
             ego_odom_indices = sorted(ego_odom_indices)
             self.reproduce_sequence_indices = deque(ego_odom_indices)
-
             self.stopwatch.toc("update reproduce_sequence")
 
         if self.args.verbose:
             print("reproduce_sequence_indices: ", list(self.reproduce_sequence_indices)[:20])
 
         # get messages
-        if len(self.reproduce_sequence_indices) != 0:  # pop data from reproduce_sequence if sequence is not empty.
+        repeat_flag = len(self.reproduce_sequence_indices) == 0
+        if not repeat_flag:  # pop data from reproduce_sequence if sequence is not empty.
             self.stopwatch.tic("find_topics_by_timestamp")
             ego_odom_idx = self.reproduce_sequence_indices.popleft()
             # extract messages by the nearest ego odom timestamp
@@ -167,7 +164,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             self.ego_odom_id2last_published_timestamp[ego_odom_idx] = timestamp
             self.cool_down_indices.append(ego_odom_idx)
         else:
-            ego_odom_msg = self.prev_ego_odom_msg if self.prev_ego_odom_msg else self.rosbag_ego_odom_data[0][1]
+            ego_odom_msg = self.prev_ego_odom_msg
             objects_msg = self.perv_objects_msg
             traffic_signals_msg = self.prev_traffic_signals_msg
 
@@ -181,20 +178,25 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         objects_msg = objects_msg if objects_msg else self.perv_objects_msg
         if objects_msg:
             objects_msg.header.stamp = timestamp_msg
-            if self.args.detected_object:
+            if repeat_flag or self.args.detected_object:
                 # copy the messages
                 self.stopwatch.tic("message deepcopy")
                 objects_msg_copied = pickle.loads(
                     pickle.dumps(objects_msg)
                 )  # this is x5 faster than deepcopy
                 self.stopwatch.toc("message deepcopy")
-
-                log_ego_pose = ego_odom_msg.pose.pose
-                translate_objects_coordinate(ego_pose, log_ego_pose, objects_msg_copied)
             else:
                 objects_msg_copied = objects_msg
+
+            if repeat_flag:  # add noise to repeat published objects
+                pass
+
+            if self.args.detected_object:
+                translate_objects_coordinate(ego_pose, ego_odom_msg.pose.pose, objects_msg_copied)
+
             self.objects_pub.publish(objects_msg_copied)
             self.perv_objects_msg = objects_msg
+
         # traffic signals
         traffic_signals_msg = traffic_signals_msg if traffic_signals_msg else self.prev_traffic_signals_msg
         if traffic_signals_msg:
@@ -251,12 +253,6 @@ if __name__ == "__main__":
         help="The cool down time for republishing published messages (default is 80.0 seconds)",
         type=float,
         default=80.0,
-    )
-    parser.add_argument(
-        "--publishing-speed-factor",
-        type=float,
-        default=1.2,
-        help="A factor to slow down the publication speed.",
     )
 
     args = parser.parse_args()
