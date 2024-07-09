@@ -29,16 +29,9 @@ from utils import translate_objects_coordinate
 
 class PerceptionReproducer(PerceptionReplayerCommon):
     def __init__(self, args):
-        self.rosbag_ego_odom_search_radius = (
-            args.search_radius
-        )  # (m) the range of the ego odom to search,
-        self.ego_odom_search_radius = (
-            self.rosbag_ego_odom_search_radius
-        )  # it may be set by an individual parameter.
-
-        self.reproduce_cool_down = (
-            args.reproduce_cool_down if args.search_radius != 0.0 else 0.0
-        )  # (sec) the cool down time for republishing published data, please make sure that it's greater than the ego's stopping time.
+        self.rosbag_ego_odom_search_radius = args.search_radius
+        self.ego_odom_search_radius = self.rosbag_ego_odom_search_radius
+        self.reproduce_cool_down = args.reproduce_cool_down if args.search_radius != 0.0 else 0.0
 
         super().__init__(args, "perception_reproducer")
 
@@ -60,6 +53,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         pose_timestamp, self.prev_ego_odom_msg = self.rosbag_ego_odom_data[0]
         self.perv_objects_msg, self.prev_traffic_signals_msg = self.find_topics_by_timestamp(
             pose_timestamp)
+        self.memorized_unoised_objects_msg = self.memorized_noised_objects_msg = self.perv_objects_msg
 
         # start main timer callback
         average_ego_odom_interval = np.mean(
@@ -100,10 +94,13 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             return
 
         ego_pose = self.ego_odom.pose.pose
+        # ego_speed = np.sqrt(self.ego_odom.twist.twist.linear.x ** 2 +
+        #                     self.ego_odom.twist.twist.linear.y ** 2)
         dist_moved = np.sqrt(
             (ego_pose.position.x - self.last_sequenced_ego_pose.position.x) ** 2
             + (ego_pose.position.y - self.last_sequenced_ego_pose.position.y) ** 2
         ) if self.last_sequenced_ego_pose else 999
+
         # Update the reproduce sequence if ego_pos is moving in a high speed or the distance moved is greater than the search radius.
         if dist_moved > self.ego_odom_search_radius:
             self.last_sequenced_ego_pose = ego_pose
@@ -172,37 +169,30 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         self.stopwatch.tic("transform and publish")
         # ego odom
         if ego_odom_msg:
-            self.recorded_ego_pub.publish(ego_odom_msg)
             self.prev_ego_odom_msg = ego_odom_msg
+            self.recorded_ego_pub.publish(ego_odom_msg)
         # objects
         objects_msg = objects_msg if objects_msg else self.perv_objects_msg
         if objects_msg:
+            self.perv_objects_msg = objects_msg
             objects_msg.header.stamp = timestamp_msg
-            if repeat_flag or self.args.detected_object:
-                # copy the messages
-                self.stopwatch.tic("message deepcopy")
-                objects_msg_copied = pickle.loads(
-                    pickle.dumps(objects_msg)
-                )  # this is x5 faster than deepcopy
-                self.stopwatch.toc("message deepcopy")
-            else:
-                objects_msg_copied = objects_msg
 
-            if repeat_flag:  # add noise to repeat published objects
-                pass
+            # add noise to repeat published objects
+            if repeat_flag and self.args.noise:
+                objects_msg = self.add_perception_noise(objects_msg)
 
             if self.args.detected_object:
-                translate_objects_coordinate(ego_pose, ego_odom_msg.pose.pose, objects_msg_copied)
+                objects_msg = self.copy_message(objects_msg)
+                translate_objects_coordinate(ego_pose, ego_odom_msg.pose.pose, objects_msg)
 
-            self.objects_pub.publish(objects_msg_copied)
-            self.perv_objects_msg = objects_msg
+            self.objects_pub.publish(objects_msg)
 
         # traffic signals
         traffic_signals_msg = traffic_signals_msg if traffic_signals_msg else self.prev_traffic_signals_msg
         if traffic_signals_msg:
             traffic_signals_msg.stamp = timestamp_msg
-            self.traffic_signals_pub.publish(traffic_signals_msg)
             self.prev_traffic_signals_msg = traffic_signals_msg
+            self.traffic_signals_pub.publish(traffic_signals_msg)
 
         self.stopwatch.toc("transform and publish")
 
@@ -224,10 +214,44 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
         return nearby_indices
 
+    def copy_message(self, msg):
+        self.stopwatch.tic("message deepcopy")
+        objects_msg_copied = pickle.loads(
+            pickle.dumps(msg)
+        )  # this is x5 faster than deepcopy
+        self.stopwatch.toc("message deepcopy")
+        return objects_msg_copied
+
+    def add_perception_noise(self,
+                             objects_msg,
+                             update_rate=0.03,
+                             x_noise_std=0.1,
+                             y_noise_std=0.05):
+        if self.memorized_unoised_objects_msg != objects_msg:
+            self.memorized_noised_objects_msg = self.memorized_unoised_objects_msg = objects_msg
+
+        if np.random.rand() < update_rate:
+            self.stopwatch.tic("add noise")
+            self.memorized_noised_objects_msg = self.copy_message(self.memorized_unoised_objects_msg)
+            for obj in self.memorized_noised_objects_msg.objects:
+                noise_x = np.random.normal(0, x_noise_std)
+                noise_y = np.random.normal(0, y_noise_std)
+                if self.args.detected_object or self.args.tracked_object:
+                    obj.kinematics.pose_with_covariance.pose.position.x += noise_x
+                    obj.kinematics.pose_with_covariance.pose.position.y += noise_y
+                else:
+                    obj.kinematics.initial_pose_with_covariance.pose.position.x += noise_x
+                    obj.kinematics.initial_pose_with_covariance.pose.position.y += noise_y
+            self.stopwatch.toc("add noise")
+
+        return self.memorized_noised_objects_msg
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--bag", help="rosbag", default=None)
+    parser.add_argument("-n", "--noise", help="apply perception noise to the objects when publishing repeated messages",
+                        action="store_true", default=True)
     parser.add_argument(
         "-d", "--detected-object", help="publish detected object", action="store_true"
     )
@@ -250,7 +274,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-c",
         "--reproduce-cool-down",
-        help="The cool down time for republishing published messages (default is 80.0 seconds)",
+        help="The cool down time for republishing published messages (default is 80.0 seconds), please make sure that it's greater than the ego's stopping time.",
         type=float,
         default=80.0,
     )
