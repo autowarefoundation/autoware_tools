@@ -53,7 +53,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         pose_timestamp, self.prev_ego_odom_msg = self.rosbag_ego_odom_data[0]
         self.perv_objects_msg, self.prev_traffic_signals_msg = self.find_topics_by_timestamp(
             pose_timestamp)
-        self.memorized_unoised_objects_msg = self.memorized_noised_objects_msg = self.perv_objects_msg
+        self.memorized_original_objects_msg = self.memorized_noised_objects_msg = self.perv_objects_msg
 
         # start main timer callback
         average_ego_odom_interval = np.mean(
@@ -242,13 +242,13 @@ class PerceptionReproducer(PerceptionReplayerCommon):
                              update_rate=0.04,
                              x_noise_std=0.1,
                              y_noise_std=0.05):
-        if self.memorized_unoised_objects_msg != objects_msg:
-            self.memorized_noised_objects_msg = self.memorized_unoised_objects_msg = objects_msg
+        if self.memorized_original_objects_msg != objects_msg:
+            self.memorized_noised_objects_msg = self.memorized_original_objects_msg = objects_msg
 
         if np.random.rand() < update_rate:
             self.stopwatch.tic("add noise")
             self.memorized_noised_objects_msg = self.copy_message(
-                self.memorized_unoised_objects_msg)
+                self.memorized_original_objects_msg)
             for obj in self.memorized_noised_objects_msg.objects:
                 noise_x = np.random.normal(0, x_noise_std)
                 noise_y = np.random.normal(0, y_noise_std)
