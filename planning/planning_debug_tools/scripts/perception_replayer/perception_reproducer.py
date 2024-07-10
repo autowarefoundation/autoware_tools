@@ -253,8 +253,8 @@ class PerceptionReproducer(PerceptionReplayerCommon):
     def add_perception_noise(
         self, objects_msg, update_rate=0.03, x_noise_std=0.1, y_noise_std=0.05
     ):
-        if self.memorized_unoised_objects_msg != objects_msg:
-            self.memorized_noised_objects_msg = self.memorized_unoised_objects_msg = objects_msg
+        if self.memorized_original_objects_msg != objects_msg:
+            self.memorized_noised_objects_msg = self.memorized_original_objects_msg = objects_msg
 
         if np.random.rand() < update_rate:
             self.stopwatch.tic("add noise")
