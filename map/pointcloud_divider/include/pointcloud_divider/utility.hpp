@@ -1,24 +1,23 @@
-#ifndef UTILITY_HPP_
-#define UTILITY_HPP_
+#ifndef POINTCLOUD_DIVIDER__UTILITY_HPP_
+#define POINTCLOUD_DIVIDER__UTILITY_HPP_
 
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <sstream>
-#include <fstream>
-#include <filesystem>
-#include <cstdlib>
 #include <string>
 #include <vector>
 
 namespace util
 {
 // Create a directory
-inline bool make_dir(const std::string& path)
+inline bool make_dir(const std::string & path)
 {
   std::string cmd = "mkdir -p " + path;
   std::string err_msg = "Error: Failed to execute command " + cmd;
 
-  if (std::system(cmd.c_str()))
-  {
+  if (std::system(cmd.c_str())) {
     perror(err_msg.c_str());
     exit(EXIT_FAILURE);
   }
@@ -27,10 +26,9 @@ inline bool make_dir(const std::string& path)
 }
 
 // Remove a file/directory at @path
-inline bool remove(const std::string& path)
+inline bool remove(const std::string & path)
 {
-  if (!std::filesystem::remove_all(path))
-  {
+  if (!std::filesystem::remove_all(path)) {
     std::cerr << "Error: File at " << path << " does not exist." << std::endl;
     return false;
   }
@@ -39,7 +37,7 @@ inline bool remove(const std::string& path)
 }
 
 // Parse the name of the PCD file, and return the number of points in the file
-inline size_t point_num(const std::string& pcd_path)
+inline size_t point_num(const std::string & pcd_path)
 {
   // Get the file name only
   auto last_ubar_pos = pcd_path.rfind("_");
@@ -60,17 +58,15 @@ inline size_t point_num(const std::string& pcd_path)
  * 	@vals[out]	: the output vector of strings
  *
  */
-inline int split(const std::string& line, const std::string& del, std::vector<std::string>& vals)
+inline int split(const std::string & line, const std::string & del, std::vector<std::string> & vals)
 {
   vals.clear();
   size_t start = 0, end = 0;
 
-  do
-  {
+  do {
     end = line.find(del, start);
 
-    if (end != std::string::npos)
-    {
+    if (end != std::string::npos) {
       vals.push_back(line.substr(start, end - start));
 
       start = end + del.size();
@@ -84,4 +80,4 @@ inline int split(const std::string& line, const std::string& del, std::vector<st
 
 }  // namespace util
 
-#endif
+#endif  // POINTCLOUD_DIVIDER__UTILITY_HPP_

@@ -1,16 +1,18 @@
-#ifndef CENTROID_HPP_
-#define CENTROID_HPP_
+#ifndef POINTCLOUD_DIVIDER__CENTROID_HPP_
+#define POINTCLOUD_DIVIDER__CENTROID_HPP_
 
-#include <iostream>
 #include <pcl/point_types.h>
 
+#include <iostream>
+
 template <typename PointT>
-void accumulate(const PointT& p, const PointT& first_p, PointT& acc_diff);
+void accumulate(const PointT & p, const PointT & first_p, PointT & acc_diff);
 template <typename PointT>
-void compute_centroid(const PointT& acc_diff, const PointT& first_p, size_t point_num, PointT& centroid);
+void compute_centroid(
+  const PointT & acc_diff, const PointT & first_p, size_t point_num, PointT & centroid);
 
 template <>
-void accumulate(const pcl::PointXYZ& p, const pcl::PointXYZ& first_p, pcl::PointXYZ& acc_diff)
+void accumulate(const pcl::PointXYZ & p, const pcl::PointXYZ & first_p, pcl::PointXYZ & acc_diff)
 {
   acc_diff.x += p.x - first_p.x;
   acc_diff.y += p.y - first_p.y;
@@ -18,7 +20,7 @@ void accumulate(const pcl::PointXYZ& p, const pcl::PointXYZ& first_p, pcl::Point
 }
 
 template <>
-void accumulate(const pcl::PointXYZI& p, const pcl::PointXYZI& first_p, pcl::PointXYZI& acc_diff)
+void accumulate(const pcl::PointXYZI & p, const pcl::PointXYZI & first_p, pcl::PointXYZI & acc_diff)
 {
   acc_diff.x += p.x - first_p.x;
   acc_diff.y += p.y - first_p.y;
@@ -27,8 +29,9 @@ void accumulate(const pcl::PointXYZI& p, const pcl::PointXYZI& first_p, pcl::Poi
 }
 
 template <>
-void compute_centroid(const pcl::PointXYZ& acc_diff, const pcl::PointXYZ& first_p, size_t point_num,
-                      pcl::PointXYZ& centroid)
+void compute_centroid(
+  const pcl::PointXYZ & acc_diff, const pcl::PointXYZ & first_p, size_t point_num,
+  pcl::PointXYZ & centroid)
 {
   double double_point_num = static_cast<double>(point_num);
 
@@ -38,8 +41,9 @@ void compute_centroid(const pcl::PointXYZ& acc_diff, const pcl::PointXYZ& first_
 }
 
 template <>
-void compute_centroid(const pcl::PointXYZI& acc_diff, const pcl::PointXYZI& first_p, size_t point_num,
-                      pcl::PointXYZI& centroid)
+void compute_centroid(
+  const pcl::PointXYZI & acc_diff, const pcl::PointXYZI & first_p, size_t point_num,
+  pcl::PointXYZI & centroid)
 {
   double double_point_num = static_cast<double>(point_num);
 
@@ -59,14 +63,11 @@ struct Centroid
     memset(&first_point_, 0x00, sizeof(PointT));
   }
 
-  void add(const PointT& p)
+  void add(const PointT & p)
   {
-    if (point_num_ == 0)
-    {
+    if (point_num_ == 0) {
       first_point_ = p;
-    }
-    else
-    {
+    } else {
       accumulate(p, first_point_, acc_diff_);
     }
 
@@ -77,12 +78,9 @@ struct Centroid
   {
     PointT centroid;
 
-    if (point_num_ > 0)
-    {
+    if (point_num_ > 0) {
       compute_centroid(acc_diff_, first_point_, point_num_, centroid);
-    }
-    else
-    {
+    } else {
       std::cerr << "Error: there is no point in the centroid group!" << std::endl;
       exit(EXIT_FAILURE);
     }
@@ -94,4 +92,4 @@ struct Centroid
   size_t point_num_;
 };
 
-#endif
+#endif  // POINTCLOUD_DIVIDER__CENTROID_HPP_

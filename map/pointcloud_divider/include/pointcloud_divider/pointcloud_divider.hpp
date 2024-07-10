@@ -1,19 +1,20 @@
-#ifndef POINTCLOUD_DIVIDER_HPP
-#define POINTCLOUD_DIVIDER_HPP
+#ifndef POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_
+#define POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_
 
-#include <vector>
-#include <string>
 #include <yaml-cpp/yaml.h>
+
+#include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
-#include <tuple>
+#include <vector>
 
 #define PCL_NO_PRECOMPILE
-#include <pcl/io/pcd_io.h>
-#include <pcl/filters/voxel_grid.h>
-
 #include "grid_info.hpp"
 #include "pcd_io.hpp"
+
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/io/pcd_io.h>
 
 template <class PointT>
 class PointCloudDivider
@@ -26,30 +27,25 @@ class PointCloudDivider
   typedef typename GridMapSizeType::iterator GridMapSizeItr;
 
 public:
-  PointCloudDivider()
-  {
-  }
-  ~PointCloudDivider()
-  {
-  }
+  PointCloudDivider() {}
+  ~PointCloudDivider() {}
 
   std::pair<double, double> getGridSize() const
   {
     return std::pair<double, double>(grid_size_x_, grid_size_y_);
   }
 
-  void run(std::vector<std::string>& pcd_names, const std::string& output_dir, const std::string& file_prefix,
-           const std::string& config);
+  void run(
+    std::vector<std::string> & pcd_names, const std::string & output_dir,
+    const std::string & file_prefix, const std::string & config);
 
-  void run(const PclCloudPtr& cloud, const std::string& output_dir, const std::string& file_prefix,
-           const std::string& config);
+  void run(
+    const PclCloudPtr & cloud, const std::string & output_dir, const std::string & file_prefix,
+    const std::string & config);
 
-  std::string makeFileName(const GridInfo<2>& grid) const;
+  std::string makeFileName(const GridInfo<2> & grid) const;
 
-  void setUseLargeGrid(const bool use_large_grid)
-  {
-    use_large_grid_ = use_large_grid;
-  }
+  void setUseLargeGrid(const bool use_large_grid) { use_large_grid_ = use_large_grid; }
 
 private:
   PclCloudPtr merged_ptr_;
@@ -82,18 +78,19 @@ private:
   std::string tmp_dir_;
   CustomPCDReader<PointT> reader_;
 
-  PclCloudPtr loadPCD(const std::string& pcd_name);
-  void savePCD(const std::string& pcd_name, const pcl::PointCloud<PointT>& cloud);
+  PclCloudPtr loadPCD(const std::string & pcd_name);
+  void savePCD(const std::string & pcd_name, const pcl::PointCloud<PointT> & cloud);
   void saveMergedPCD();
-  void dividePointCloud(const PclCloudPtr& cloud_ptr);
+  void dividePointCloud(const PclCloudPtr & cloud_ptr);
   void paramInitialize();
-  void saveGridInfoToYAML(const std::string& yaml_file_path);
+  void saveGridInfoToYAML(const std::string & yaml_file_path);
   void checkOutputDirectoryValidity() const;
 
-  void saveGridPCD(GridMapItr& grid_it);
+  void saveGridPCD(GridMapItr & grid_it);
   void saveTheRest();
   void mergeAndDownsample();
-  void mergeAndDownsample(const std::string& dir_path, std::list<std::string>& pcd_list, size_t total_pnum);
+  void mergeAndDownsample(
+    const std::string & dir_path, std::list<std::string> & pcd_list, size_t total_pnum);
 };
 
-#endif
+#endif  // POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_

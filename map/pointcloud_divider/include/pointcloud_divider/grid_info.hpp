@@ -1,5 +1,5 @@
-#ifndef GRID_INFO_HPP_
-#define GRID_INFO_HPP_
+#ifndef POINTCLOUD_DIVIDER__GRID_INFO_HPP_
+#define POINTCLOUD_DIVIDER__GRID_INFO_HPP_
 
 #include <iostream>
 #include <string>
@@ -10,32 +10,22 @@ struct GridInfo
 {
   int ix, iy, iz;
 
-  GridInfo() : ix(0), iy(0), iz(0)
-  {
-  }
+  GridInfo() : ix(0), iy(0), iz(0) {}
 
-  GridInfo(int x, int y, int z = 0) : ix(x), iy(y), iz(z)
-  {
-  }
+  GridInfo(int x, int y, int z = 0) : ix(x), iy(y), iz(z) {}
 
-  friend bool operator==(const GridInfo& one, const GridInfo& other)
+  friend bool operator==(const GridInfo & one, const GridInfo & other)
   {
     return one.ix == other.ix && one.iy == other.iy && one.iz == other.iz;
   }
 
-  friend bool operator!=(const GridInfo& one, const GridInfo& other)
-  {
-    return !(one == other);
-  }
+  friend bool operator!=(const GridInfo & one, const GridInfo & other) { return !(one == other); }
 
-  friend std::ostream& operator<<(std::ostream& os, const GridInfo& g)
+  friend std::ostream & operator<<(std::ostream & os, const GridInfo & g)
   {
-    if (dim < 3)
-    {
+    if (dim < 3) {
       os << g.ix << "_" << g.iy;
-    }
-    else
-    {
+    } else {
       os << g.ix << "_" << g.iy << "_" << g.iz;
     }
 
@@ -50,7 +40,7 @@ template <>
 struct hash<GridInfo<2>>
 {
 public:
-  size_t operator()(const GridInfo<2>& grid) const
+  size_t operator()(const GridInfo<2> & grid) const
   {
     std::size_t seed = 0;
     seed ^= std::hash<int>{}(grid.ix) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -63,7 +53,7 @@ template <>
 struct hash<GridInfo<3>>
 {
 public:
-  size_t operator()(const GridInfo<3>& grid) const
+  size_t operator()(const GridInfo<3> & grid) const
   {
     std::size_t seed = 0;
 
@@ -78,7 +68,7 @@ public:
 }  // namespace std
 
 template <typename PointT>
-GridInfo<2> pointToGrid2(const PointT& p, double res_x, double res_y)
+GridInfo<2> pointToGrid2(const PointT & p, double res_x, double res_y)
 {
   int x_id = static_cast<int>(std::floor(p.x / res_x) * res_x);
   int y_id = static_cast<int>(std::floor(p.y / res_y) * res_y);
@@ -87,7 +77,7 @@ GridInfo<2> pointToGrid2(const PointT& p, double res_x, double res_y)
 }
 
 template <typename PointT>
-GridInfo<3> pointToGrid3(const PointT& p, double res_x, double res_y, double res_z)
+GridInfo<3> pointToGrid3(const PointT & p, double res_x, double res_y, double res_z)
 {
   int x_id = static_cast<int>(std::floor(p.x / res_x));
   int y_id = static_cast<int>(std::floor(p.y / res_y));
@@ -96,4 +86,4 @@ GridInfo<3> pointToGrid3(const PointT& p, double res_x, double res_y, double res
   return GridInfo<3>(x_id, y_id, z_id);
 }
 
-#endif
+#endif  // POINTCLOUD_DIVIDER__GRID_INFO_HPP_
