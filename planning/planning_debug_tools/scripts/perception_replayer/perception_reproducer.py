@@ -94,14 +94,12 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             return
 
         ego_pose = self.ego_odom.pose.pose
-        # ego_speed = np.sqrt(self.ego_odom.twist.twist.linear.x ** 2 +
-        #                     self.ego_odom.twist.twist.linear.y ** 2)
         dist_moved = np.sqrt(
             (ego_pose.position.x - self.last_sequenced_ego_pose.position.x) ** 2
             + (ego_pose.position.y - self.last_sequenced_ego_pose.position.y) ** 2
         ) if self.last_sequenced_ego_pose else 999
 
-        # Update the reproduce sequence if ego_pos is moving in a high speed or the distance moved is greater than the search radius.
+        # Update the reproduce sequence if the distance moved is greater than the search radius.
         if dist_moved > self.ego_odom_search_radius:
             self.last_sequenced_ego_pose = ego_pose
 
@@ -148,9 +146,26 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         if self.args.verbose:
             print("reproduce_sequence_indices: ", list(self.reproduce_sequence_indices)[:20])
 
-        # get messages
+        # Get messages
         repeat_flag = len(self.reproduce_sequence_indices) == 0
-        if not repeat_flag:  # pop data from reproduce_sequence if sequence is not empty.
+
+        # Add an additional constraint to avoid publishing too fast when there is a speed gap between the ego and the rosbag's ego when ego is departing/stopping while rosbag's ego is moving.
+        if not repeat_flag:
+            ego_speed = np.sqrt(self.ego_odom.twist.twist.linear.x ** 2 +
+                                self.ego_odom.twist.twist.linear.y ** 2)
+            ego_odom_idx = self.reproduce_sequence_indices[0]
+            _, ego_odom_msg = self.rosbag_ego_odom_data[ego_odom_idx]
+            ego_rosbag_speed = np.sqrt(ego_odom_msg.twist.twist.linear.x **
+                                       2 + ego_odom_msg.twist.twist.linear.y ** 2)
+            
+            ego_rosbag_dist = np.sqrt(
+                (ego_pose.position.x - ego_odom_msg.pose.pose.position.x) ** 2 + 
+                (ego_pose.position.y - ego_odom_msg.pose.pose.position.y) ** 2
+            )
+            repeat_flag = ego_rosbag_speed > ego_speed * 5 and ego_rosbag_dist > 1.0
+            # set the speed threshold to many (5) times then ego_speed because this constraint is mainly for departing/stopping (ego speed is close to 0).
+
+        if not repeat_flag:
             self.stopwatch.tic("find_topics_by_timestamp")
             ego_odom_idx = self.reproduce_sequence_indices.popleft()
             # extract messages by the nearest ego odom timestamp
@@ -165,7 +180,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             objects_msg = self.perv_objects_msg
             traffic_signals_msg = self.prev_traffic_signals_msg
 
-        # transform and publish messages.
+        # Transform and publish messages.
         self.stopwatch.tic("transform and publish")
         # ego odom
         if ego_odom_msg:
@@ -224,7 +239,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
     def add_perception_noise(self,
                              objects_msg,
-                             update_rate=0.03,
+                             update_rate=0.04,
                              x_noise_std=0.1,
                              y_noise_std=0.05):
         if self.memorized_unoised_objects_msg != objects_msg:
@@ -232,7 +247,8 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
         if np.random.rand() < update_rate:
             self.stopwatch.tic("add noise")
-            self.memorized_noised_objects_msg = self.copy_message(self.memorized_unoised_objects_msg)
+            self.memorized_noised_objects_msg = self.copy_message(
+                self.memorized_unoised_objects_msg)
             for obj in self.memorized_noised_objects_msg.objects:
                 noise_x = np.random.normal(0, x_noise_std)
                 noise_y = np.random.normal(0, y_noise_std)
