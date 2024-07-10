@@ -18,7 +18,7 @@ This tool can be used with files that have data fields other than `XYZI` (e.g., 
 * Data fields other than `XYZI` are ignored during loading.
 * When loading `XYZ`-only data, the `intensity` field is assigned 0.
 
-## Installation
+<!-- ## Installation
 
 ```bash
 $ git clone https://github.com/MapIV/pointcloud_divider.git
@@ -27,6 +27,14 @@ $ mkdir build
 $ cd build
 $ cmake ..
 $ make
+``` -->
+## Installation
+```bash
+$ cd <PATH_TO_pilot-auto.*> # OR <PATH_TO_autoware>
+$ cd src/
+$ git clone git@github.com:autowarefoundation/autoware_tools.git
+$ cd ..
+$ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-tests --symlink-install --packages-up-to pointcloud_divider
 ```
 
 ## Usage
@@ -34,13 +42,13 @@ $ make
   * Select directory, process all files found with `find $INPUT_DIR -name "*.pcd"`.
 
   ```bash
-  $ ./scripts/pointcloud_divider.sh <INPUT_DIR> <OUTPUT_DIR> <PREFIX> <CONFIG>
+  $ pointcloud_divider.sh <INPUT_DIR> <OUTPUT_DIR> <PREFIX> <CONFIG>
   ```
 
   * Select individual files
 
   ```bash
-  $ ./scripts/divider_core.sh <PCD_0> ... <PCD_N> <OUTPUT_DIR> <PREFIX> <CONFIG>
+  $ divider_core.sh <PCD_0> ... <PCD_N> <OUTPUT_DIR> <PREFIX> <CONFIG>
   ```
 
   | Name            | Description                                  |
@@ -49,11 +57,11 @@ $ make
   | PCD_0 ... PCD_N | Input PCD file name                          |
   | OUTPUT_DIR      | Output directory name                        |
   | PREFIX          | Prefix of output PCD file name               |
-  | CONFIG          | Config file ([default](config/default.yaml)) |
+  | CONFIG          | Config file ([default](autoware_tools/map/pointcloud_divider/config/default.yaml)) |
 
  `INPUT_DIR`, `PCD_N`, `OUTPUT_DIR` and `CONFIG` can be specified as both **relative paths** and **absolute paths**.
 
-NOTE:  The `OUTPUT_DIR` must already exist. If it does not, an error will occur, and the process will terminate.
+NOTE:  The folder `OUTPUT_DIR` is auto generated. If it already exists, all files within that folder will be deleted before the tool runs. Hence, users should backup the important files in that folder if necessary.
 
 ## Parameter
 
