@@ -59,6 +59,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         ) = self.perv_objects_msg
 
         # start main timer callback
+
         average_ego_odom_interval = np.mean(
             [
                 (self.rosbag_ego_odom_data[i][0] - self.rosbag_ego_odom_data[i - 1][0]) / 1e9
