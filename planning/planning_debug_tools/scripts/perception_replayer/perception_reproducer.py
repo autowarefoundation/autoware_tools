@@ -52,12 +52,19 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
         pose_timestamp, self.prev_ego_odom_msg = self.rosbag_ego_odom_data[0]
         self.perv_objects_msg, self.prev_traffic_signals_msg = self.find_topics_by_timestamp(
-            pose_timestamp)
-        self.memorized_original_objects_msg = self.memorized_noised_objects_msg = self.perv_objects_msg
+            pose_timestamp
+        )
+        self.memorized_unoised_objects_msg = (
+            self.memorized_noised_objects_msg
+        ) = self.perv_objects_msg
 
         # start main timer callback
         average_ego_odom_interval = np.mean(
-            [(self.rosbag_ego_odom_data[i][0] - self.rosbag_ego_odom_data[i-1][0]) / 1e9 for i in range(1, len(self.rosbag_ego_odom_data))])
+            [
+                (self.rosbag_ego_odom_data[i][0] - self.rosbag_ego_odom_data[i - 1][0]) / 1e9
+                for i in range(1, len(self.rosbag_ego_odom_data))
+            ]
+        )
         self.timer = self.create_timer(average_ego_odom_interval, self.on_timer)
 
         # kill perception process to avoid a conflict of the perception topics
@@ -94,10 +101,16 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             return
 
         ego_pose = self.ego_odom.pose.pose
-        dist_moved = np.sqrt(
-            (ego_pose.position.x - self.last_sequenced_ego_pose.position.x) ** 2
-            + (ego_pose.position.y - self.last_sequenced_ego_pose.position.y) ** 2
-        ) if self.last_sequenced_ego_pose else 999
+        # ego_speed = np.sqrt(self.ego_odom.twist.twist.linear.x ** 2 +
+        #                     self.ego_odom.twist.twist.linear.y ** 2)
+        dist_moved = (
+            np.sqrt(
+                (ego_pose.position.x - self.last_sequenced_ego_pose.position.x) ** 2
+                + (ego_pose.position.y - self.last_sequenced_ego_pose.position.y) ** 2
+            )
+            if self.last_sequenced_ego_pose
+            else 999
+        )
 
         # Update the reproduce sequence if the distance moved is greater than the search radius.
         if dist_moved > self.ego_odom_search_radius:
@@ -203,7 +216,9 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             self.objects_pub.publish(objects_msg)
 
         # traffic signals
-        traffic_signals_msg = traffic_signals_msg if traffic_signals_msg else self.prev_traffic_signals_msg
+        traffic_signals_msg = (
+            traffic_signals_msg if traffic_signals_msg else self.prev_traffic_signals_msg
+        )
         if traffic_signals_msg:
             traffic_signals_msg.stamp = timestamp_msg
             self.prev_traffic_signals_msg = traffic_signals_msg
@@ -231,24 +246,21 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
     def copy_message(self, msg):
         self.stopwatch.tic("message deepcopy")
-        objects_msg_copied = pickle.loads(
-            pickle.dumps(msg)
-        )  # this is x5 faster than deepcopy
+        objects_msg_copied = pickle.loads(pickle.dumps(msg))  # this is x5 faster than deepcopy
         self.stopwatch.toc("message deepcopy")
         return objects_msg_copied
 
-    def add_perception_noise(self,
-                             objects_msg,
-                             update_rate=0.04,
-                             x_noise_std=0.1,
-                             y_noise_std=0.05):
-        if self.memorized_original_objects_msg != objects_msg:
-            self.memorized_noised_objects_msg = self.memorized_original_objects_msg = objects_msg
+    def add_perception_noise(
+        self, objects_msg, update_rate=0.03, x_noise_std=0.1, y_noise_std=0.05
+    ):
+        if self.memorized_unoised_objects_msg != objects_msg:
+            self.memorized_noised_objects_msg = self.memorized_unoised_objects_msg = objects_msg
 
         if np.random.rand() < update_rate:
             self.stopwatch.tic("add noise")
             self.memorized_noised_objects_msg = self.copy_message(
-                self.memorized_original_objects_msg)
+                self.memorized_unoised_objects_msg
+            )
             for obj in self.memorized_noised_objects_msg.objects:
                 noise_x = np.random.normal(0, x_noise_std)
                 noise_y = np.random.normal(0, y_noise_std)
@@ -266,8 +278,13 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--bag", help="rosbag", default=None)
-    parser.add_argument("-n", "--noise", help="apply perception noise to the objects when publishing repeated messages",
-                        action="store_true", default=True)
+    parser.add_argument(
+        "-n",
+        "--noise",
+        help="apply perception noise to the objects when publishing repeated messages",
+        action="store_true",
+        default=True,
+    )
     parser.add_argument(
         "-d", "--detected-object", help="publish detected object", action="store_true"
     )
