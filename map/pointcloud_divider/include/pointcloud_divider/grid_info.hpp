@@ -68,7 +68,7 @@ public:
 }  // namespace std
 
 template <typename PointT>
-GridInfo<2> pointToGrid2(const PointT& p, float res_x, float res_y)
+GridInfo<2> pointToGrid2(const PointT & p, float res_x, float res_y)
 {
   int x_id = static_cast<int>(std::floor(p.x / res_x) * res_x);
   int y_id = static_cast<int>(std::floor(p.y / res_y) * res_y);
@@ -77,7 +77,7 @@ GridInfo<2> pointToGrid2(const PointT& p, float res_x, float res_y)
 }
 
 template <typename PointT>
-GridInfo<3> pointToGrid3(const PointT& p, float res_x, float res_y, float res_z)
+GridInfo<3> pointToGrid3(const PointT & p, float res_x, float res_y, float res_z)
 {
   int x_id = static_cast<int>(std::floor(p.x / res_x));
   int y_id = static_cast<int>(std::floor(p.y / res_y));
