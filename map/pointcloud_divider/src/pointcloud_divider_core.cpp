@@ -68,8 +68,15 @@ void PointCloudDivider<PointT>::run(
   // Now merge and downsample
   mergeAndDownsample();
 
-  std::string yaml_file_path = output_dir_ + "/" + file_prefix_ + "_metadata.yaml";
-  saveGridInfoToYAML(yaml_file_path);
+  if (merge_pcds_)
+  {
+    saveMergedPCD();
+  }
+  else
+  {
+    std::string yaml_file_path = output_dir_ + "/" + file_prefix_ + "_metadata.yaml";
+    saveGridInfoToYAML(yaml_file_path);
+  }
 }
 
 template <class PointT>
@@ -111,9 +118,46 @@ void PointCloudDivider<PointT>::savePCD(
 template <class PointT>
 void PointCloudDivider<PointT>::saveMergedPCD()
 {
-  if (merge_pcds_) {
-    std::string filename = output_dir_ + "/" + file_prefix_ + ".pcd";
-    savePCD(filename, *merged_ptr_);
+  std::string filename = output_dir_ + "/" + file_prefix_ + ".pcd";
+  PclCloudType merged_cloud;
+
+  merged_cloud.resize(total_point_num_);
+  size_t copy_loc = 0;
+  
+  // Iterate on the segment pcds and combine them
+  for (auto& entry : fs::directory_iterator(output_dir_))
+  {
+    if (fs::is_regular_file(entry.symlink_status()))
+    {
+      auto path = entry.path().string();
+
+      if (path.substr(path.size() - 4) == ".pcd")
+      {
+        // Load the segment pcd
+        PclCloudType seg_cloud;
+
+        if (pcl::io::loadPCDFile(path, seg_cloud))
+        {
+          fprintf(stderr, "[%s, %d] %s::Error: Cannot load a PCD file at %s\n",
+                  __FILE__, __LINE__, __func__, path.c_str());
+          exit(EXIT_FAILURE);
+        }
+
+        memcpy(merged_cloud.data() + copy_loc, seg_cloud.data(), sizeof(PointT) * seg_cloud.size());
+
+        copy_loc += seg_cloud.size();
+
+        // Delete the segment PCD
+        util::remove(path);
+      }
+    }
+  }
+
+  if (pcl::io::savePCDFileBinary(filename, merged_cloud))
+  {
+    fprintf(stderr, "[%s, %d] %s::Error: Cannot save the merged PCD at %s\n",
+            __FILE__, __LINE__, __func__, filename.c_str());
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -365,6 +409,12 @@ void PointCloudDivider<PointT>::mergeAndDownsample(
 
   // Delete the folder containing the segments
   util::remove(dir_path);
+
+  // Count the total number of points
+  if (merge_pcds_)
+  {
+    total_point_num_ += new_cloud->size();
+  }
 }
 
 template <class PointT>
