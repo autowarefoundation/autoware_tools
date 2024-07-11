@@ -33,15 +33,17 @@
 1. Run the script
 
    ```sh
-   ./optimization_operator.sh [costmap name] [intermediate file name]
+   ./optimization_operator.sh [costmap name] [file name]
    ```
+
+2. You can find the optimized parameter at `opt_param/[].yaml`. Substitude the condig parameter of freespace planner (in your autoware) into the optimized parameter manually.
 
 ### Options
 
-| Option                   | Description                                                                                                                                  | Defualt e       |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| `costmap name` -------   | directory name to save the results                                                                                                           | costmap_default |
-| `intermediate file name` | costmap name for search, generated in the next section. If it is set, you can use intermediate file for the other features e.g. visualization | test            |
+| Option         | Description                                                          | Defualt value   |
+| -------------- | -------------------------------------------------------------------- | --------------- |
+| `costmap name` | costmap name to use for optimization, generated in the next section. | costmap_default |
+| `file name`    | directory name to save the results                                   | test            |
 
 ## Costmap generation
 

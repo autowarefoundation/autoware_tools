@@ -175,6 +175,9 @@ if __name__ == "__main__":
         initial_param, initial_temperature, iterations, weight
     )
 
+    if not os.path.exists("opt_param"):
+        os.makedirs("opt_param")
+
     file_name_pkl = os.path.dirname(__file__) + "/opt_param/" + args.save_name + ".txt"
     with open(file_name_pkl, "wb") as file_pkl:
         pickle.dump(best_param, file_pkl)
