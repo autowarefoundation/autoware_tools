@@ -59,7 +59,7 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
   | PCD_0 ... PCD_N | Input PCD file name                                                                |
   | OUTPUT_DIR      | Output directory name                                                              |
   | PREFIX          | Prefix of output PCD file name                                                     |
-  | CONFIG          | Config file ([default](autoware_tools/map/pointcloud_divider/config/default.yaml)) |
+  | CONFIG          | Config file ([default](config/default.yaml)) |
 
 `INPUT_DIR`, `PCD_N`, `OUTPUT_DIR` and `CONFIG` can be specified as both **relative paths** and **absolute paths**.
 
