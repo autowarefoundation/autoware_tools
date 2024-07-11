@@ -53,12 +53,12 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
   divider_core.sh <PCD_0> ... <PCD_N> <OUTPUT_DIR> <PREFIX> <CONFIG>
   ```
 
-  | Name            | Description                                                                        |
-  | --------------- | ---------------------------------------------------------------------------------- |
-  | INPUT_DIR       | Directory that contains all PCD files                                              |
-  | PCD_0 ... PCD_N | Input PCD file name                                                                |
-  | OUTPUT_DIR      | Output directory name                                                              |
-  | PREFIX          | Prefix of output PCD file name                                                     |
+  | Name            | Description                                  |
+  | --------------- | -------------------------------------------- |
+  | INPUT_DIR       | Directory that contains all PCD files        |
+  | PCD_0 ... PCD_N | Input PCD file name                          |
+  | OUTPUT_DIR      | Output directory name                        |
+  | PREFIX          | Prefix of output PCD file name               |
   | CONFIG          | Config file ([default](config/default.yaml)) |
 
 `INPUT_DIR`, `PCD_N`, `OUTPUT_DIR` and `CONFIG` can be specified as both **relative paths** and **absolute paths**.
