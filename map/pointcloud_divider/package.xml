@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>pointcloud_divider</name>
+  <version>0.1.0</version>
+  <description>A package for dividing PCD files to non-overlapped segments</description>
+  <maintainer email="anh.nguyen.2@tier4.jp">Anh Nguyen</maintainer>
+  <license>Apache License 2.0</license>
+
+  <author email="anh.nguyen.2@tier4.jp">Anh Nguyen</author>
+<!-- 
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <buildtool_depend>autoware_cmake</buildtool_depend> -->
+
+  <depend>yaml-cpp</depend>
+  <depend>libpcl-all-dev</depend>
+
+  <!-- <export>
+    <build_type>ament_cmake</build_type>
+  </export> -->
+</package>

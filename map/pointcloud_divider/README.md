@@ -141,4 +141,4 @@ D.pcd: [1400, 2650] # -> 1400 <= x <= 1500, 2650 <= y <= 2800
 
 ## LICENSE
 
-This repository is under [BSD-3-Clauses](LICENSE) license
+Parts of files grid_info.hpp, pointcloud_divider.hpp, pointcloud_divider.cpp, and pointcloud_divider_core.cpp are copied from [MapIV's pointcloud_divider](https://github.com/MapIV/pointcloud_divider) and are under [BSD-3-Clauses](LICENSE) license. The remaining code are under [Apache License 2.0](../../LICENSE)
