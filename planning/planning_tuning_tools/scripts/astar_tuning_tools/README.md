@@ -1,11 +1,11 @@
-# Debug tools for Python wrapper of freespace planning algorithms
+# Parameter tuning tools for freespace planning algorithms
 
 ## Setup
 
 1. Move to the target autoware directory and build the package
 
    ```sh
-   colcon build --packages-select freespace_planning_algorithms --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+   colcon build --packages-up-to freespace_planning_algorithms --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
    ```
 
 2. Source the setup srcript
@@ -19,6 +19,29 @@
    ```sh
    pip3 install .
    ```
+
+## Quick start
+
+```sh
+./optimization_operator.sh
+```
+
+## Optimization
+
+### Usage
+
+1. Run the script
+
+   ```sh
+   ./optimization_operator.sh [costmap name] [intermediate file name]
+   ```
+
+### Options
+
+| Option                   | Description                                                                                                                                  | Defualt e       |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `costmap name` -------   | directory name to save the results                                                                                                           | costmap_default |
+| `intermediate file name` | costmap name for search, generated in the next section. If it is set, you can use intermediate file for the other features e.g. visualization | test            |
 
 ## Costmap generation
 
@@ -69,7 +92,7 @@ Search for goals on grid: discretized on x, y, yaw axes.
 
 ### Options
 
-| Option           | Type   | Description                                            | Defualt e       |
+| Option           | Type   | Description                                            | Defualt value   |
 | ---------------- | ------ | ------------------------------------------------------ | --------------- |
 | `--save_name`    | string | directory name to save the results                     | default_dir     |
 | `--costmap`      | string | costmap name for search, generated in previous section | costmap_default |
@@ -100,6 +123,6 @@ Search for goals on grid: discretized on x, y, yaw axes.
 
 ### Options
 
-| Option        | Type   | Description                                                       | Defualt e   |
-| ------------- | ------ | ----------------------------------------------------------------- | ----------- |
-| `--save_name` | string | directory name to save the results, generated in previous section | default_dir |
+| Option        | Type   | Description                                                       | Defualt value |
+| ------------- | ------ | ----------------------------------------------------------------- | ------------- |
+| `--save_name` | string | directory name to save the results, generated in previous section | default_dir   |

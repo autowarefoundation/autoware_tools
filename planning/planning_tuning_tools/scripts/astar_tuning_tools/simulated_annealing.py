@@ -30,10 +30,10 @@ class Params:
 
 
 class SimjulatedAnnealing:
-    def __init__(self, test_data_set):
+    def __init__(self, val_data_set):
         self.best_param = None
         self.best_energy = None
-        self.test_data_set = test_data_set
+        self.val_data_set = val_data_set
 
     def objective_function(self, param):
         planner_param.curve_weight = param[0]
@@ -49,7 +49,7 @@ class SimjulatedAnnealing:
         total_length_rate = 0
         total_direction_change = 0
 
-        for test_data in self.test_data_set:
+        for test_data in self.val_data_set:
             astar.setMap(test_data.costmap)
             goal_pose = test_data.goal_pose
 
@@ -66,7 +66,7 @@ class SimjulatedAnnealing:
                     total_length_rate += waypoints.compute_length() / L2_dist
                 total_direction_change += self.count_forawrd_backwrad_change(waypoints)
 
-        N = len(self.test_data_set)
+        N = len(self.val_data_set)
         unsuccess_rate = 1 - total_result / N
         average_length_rate = total_length_rate / total_result
         average_forward_backward_change = total_direction_change / total_result
@@ -142,11 +142,14 @@ if __name__ == "__main__":
     with open(os.path.dirname(__file__) + "/costmap/" + args.costmap + ".txt", "rb") as f:
         costmap = pickle.load(f)
 
-    test_data_set = []
+    costmap_height_half = costmap.info.resolution * costmap.info.height / 2
+    costmap_width_half = costmap.info.resolution * costmap.info.width / 2
+
+    val_data_set = []
     for i in range(20):
         goal_pose = Pose()
-        x = np.random.uniform(-4, 4)
-        y = np.random.uniform(-4, 4)
+        x = np.random.uniform(-(costmap_height_half - 3), (costmap_height_half - 3))
+        y = np.random.uniform(-(costmap_width_half - 3), (costmap_width_half - 3))
         yaw = np.random.uniform(-np.pi, np.pi)
 
         goal_pose.position.x = float(x)
@@ -159,23 +162,33 @@ if __name__ == "__main__":
         goal_pose.orientation.y = quaterinon.y
         goal_pose.orientation.z = quaterinon.z
 
-        test_data_set.append(TestData(costmap, goal_pose))
+        val_data_set.append(TestData(costmap, goal_pose))
 
     initial_temperature = 200.0
     iterations = 300
 
-    # initial_param = np.array([144, 6.0, 1.2, 2.0, 0.5, 2.0, 1.0])
     initial_param = np.array([1.2, 2.0, 1.0])
     weight = 0.1 * initial_param
 
-    simulated_annealing = SimjulatedAnnealing(test_data_set)
+    simulated_annealing = SimjulatedAnnealing(val_data_set)
     best_param, best_energy = simulated_annealing.simulated_annealing(
         initial_param, initial_temperature, iterations, weight
     )
 
-    file_name = os.path.dirname(__file__) + "/opt_param/" + args.save_name + ".txt"
-    with open(file_name, "wb") as file1:
-        pickle.dump(best_param, file1)
+    file_name_pkl = os.path.dirname(__file__) + "/opt_param/" + args.save_name + ".txt"
+    with open(file_name_pkl, "wb") as file_pkl:
+        pickle.dump(best_param, file_pkl)
+
+    file_name_yaml = os.path.dirname(__file__) + "/opt_param/" + args.save_name + ".yaml"
+    with open(file_name_yaml, "w") as file_yaml:
+        file_yaml.write("/**:\n")
+        file_yaml.write("  ros__parameters:\n")
+        file_yaml.write("    # -- Configurations common to the all planners --\n")
+        file_yaml.write("    curve_weight: " + str(best_param[0]) + "\n")
+        file_yaml.write("    reverse_weight: " + str(best_param[1]) + "\n")
+        file_yaml.write("    # -- Configurations common to the all planners --\n")
+        file_yaml.write("    distance_heuristic_weight: " + str(best_param[2]) + "\n")
+        print("Optimal parameters are avairable at opt_param/" + args.save_name + ".yaml")
 
     print("Best solution:", best_param)
     print("Objective value at best solution:", best_energy)
