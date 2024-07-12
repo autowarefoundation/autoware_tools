@@ -32,9 +32,11 @@ def exit_curses():
 
 def init_curses() -> curses.window:
     stdscr = curses.initscr()
+    stdscr.nodelay(True)
     curses.noecho()
     curses.cbreak()
     stdscr.keypad(True)
+    curses.mousemask(curses.ALL_MOUSE_EVENTS)
     curses.start_color()
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_WHITE)

@@ -1,13 +1,15 @@
 import curses
 import time
+from typing import Dict
 import uuid
 
+import pyperclip
 import rclpy
 import rclpy.executors
 from rclpy.node import Node
 from tier4_debug_msgs.msg import ProcessingTimeTree as ProcessingTimeTreeMsg
 
-from .print_tree import print_tree
+from .print_tree import print_trees
 from .topic_selector import select_topic
 from .tree import ProcessingTimeTree
 from .utils import exit_curses
@@ -17,12 +19,14 @@ from .utils import init_curses
 class ProcessingTimeVisualizer(Node):
     def __init__(self):
         super().__init__("processing_time_visualizer" + str(uuid.uuid4()).replace("-", "_"))
-
         self.subscriber = self.subscribe_processing_time_tree()
-        self.tree = ProcessingTimeTree()
-        self.worst_case_tree = self.tree
+        self.trees: Dict[str, ProcessingTimeTree] = {}
+        self.worst_case_tree: Dict[str, ProcessingTimeTree] = {}
         self.stdcscr = init_curses()
-        print_tree("🌲 Processing Time Tree 🌲", self.topic_name, self.tree, self.stdcscr)
+        self.show_comment = False
+        print_trees("🌲 Processing Time Tree 🌲", self.topic_name, self.trees, self.stdcscr)
+
+        self.create_timer(0.1, self.update_screen)
 
     def subscribe_processing_time_tree(self):
         topics = []
@@ -55,11 +59,33 @@ class ProcessingTimeVisualizer(Node):
 
         return subscriber
 
+    def update_screen(self):
+        key = self.stdcscr.getch()
+
+        self.show_comment = not self.show_comment if key == ord("c") else self.show_comment
+        logs = print_trees(
+            "🌲 Processing Time Tree 🌲",
+            self.topic_name,
+            self.trees.values(),
+            self.stdcscr,
+            self.show_comment,
+        )
+        if key == ord("y"):
+            pyperclip.copy(logs)
+        if key == ord("q"):
+            raise KeyboardInterrupt
+
     def callback(self, msg: ProcessingTimeTreeMsg):
-        self.tree = ProcessingTimeTree.from_msg(msg)
-        if self.tree.processing_time > self.worst_case_tree.processing_time:
-            self.worst_case_tree = self.tree
-        print_tree("🌲 Processing Time Tree 🌲", self.topic_name, self.tree, self.stdcscr)
+        tree = ProcessingTimeTree.from_msg(msg)
+        self.trees[tree.name] = tree
+        if tree.name not in self.worst_case_tree:
+            self.worst_case_tree[tree.name] = tree
+        else:
+            self.worst_case_tree[tree.name] = (
+                tree
+                if tree.processing_time > self.worst_case_tree[tree.name].processing_time
+                else self.worst_case_tree[tree.name]
+            )
 
 
 def main(args=None):
@@ -74,8 +100,11 @@ def main(args=None):
     except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         node.destroy_node()
         exit_curses()
+        if len(node.worst_case_tree) == 0:
+            exit(1)
         print("⏰ Worst Case Execution Time ⏰")
-        print(node.worst_case_tree)
+        for tree in node.worst_case_tree.values():
+            print(tree, end=None)
 
 
 if __name__ == "__main__":

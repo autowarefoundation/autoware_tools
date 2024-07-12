@@ -11,7 +11,7 @@ setup(
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
     ],
-    install_requires=["setuptools"],
+    install_requires=["setuptools", "pyperclip"],
     zip_safe=True,
     maintainer="Yukinari Hisaki",
     maintainer_email="yukinari.hisaki.2@tier4.jp",

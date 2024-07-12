@@ -4,7 +4,10 @@
   <name>autoware_debug_tools</name>
   <version>0.0.0</version>
   <description>The autoware_debug_tools package</description>
-  <maintainer email="yhisaki31@gmail.com">hisaki</maintainer>
+  <maintainer email="yhisaki31@gmail.com">Yukinari Hisaki</maintainer>
+  <maintainer email="satoshi.ota@tier4.jp">Satoshi Ota</maintainer>
+  <maintainer email="kosuke.takeuchi@tier4.jp">Kosuke Takeuchi</maintainer>
+
   <license>Apache License 2.0</license>
 
   <exec_depend>rclpy</exec_depend>
