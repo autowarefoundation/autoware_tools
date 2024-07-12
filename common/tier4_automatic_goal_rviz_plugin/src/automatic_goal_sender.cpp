@@ -97,6 +97,7 @@ void AutowareAutomaticGoalSender::onOperationMode(const OperationModeState::Cons
     state_ = State::STOPPED;
   else if (msg->mode == OperationModeState::AUTONOMOUS && state_ == State::STARTING)
     state_ = State::STARTED;
+  is_autonomous_mode_available_ = msg->is_autonomous_mode_available;
   onOperationModeUpdated(msg);
 }
 
@@ -131,7 +132,8 @@ void AutowareAutomaticGoalSender::updateAutoExecutionTimerTick()
     RCLCPP_INFO_STREAM(get_logger(), goal << ": Goal set as the next. Planning in progress...");
     if (callPlanToGoalIndex(cli_set_route_, current_goal_)) state_ = State::PLANNING;
 
-  } else if (state_ == State::PLANNED) {  // start plan to next goal
+  } else if (state_ == State::PLANNED && is_autonomous_mode_available_) {  // start plan to next
+                                                                           // goal
     RCLCPP_INFO_STREAM(get_logger(), goal << ": Route has been planned. Route starting...");
     if (callService<ChangeOperationMode>(cli_change_to_autonomous_)) state_ = State::STARTING;
 
