@@ -240,6 +240,21 @@ class DataCollectingTrajectoryPublisher(Node):
         self._data_collecting_area_polygon = msg
         self.updateNominalTargetTrajectory()
 
+    @staticmethod
+    def smooth_bounding(self, upper : float, threshold : float, x: float):
+        """Smooth version of `min` function.
+
+        This function satisfies the following properties:
+        * if `0 <= x <= threshold`, then `smooth_bounding(upper, threshold, x) == x`
+        * monotone increasing
+        * always `smooth_bounding(upper, threshold, x) <= upper`
+        * `fun x => smooth_bounding(upper, threshold, x)` is smooth on `[0, ∞)`
+        """
+        if x <= threshold:
+            return x
+        z = np.exp( - (x - threshold) / (upper - threshold))
+        return upper * (1 - z) + threshold * z
+
     def updateNominalTargetTrajectory(self):
         data_collecting_area = np.array(
             [
@@ -538,9 +553,8 @@ class DataCollectingTrajectoryPublisher(Node):
                     lateral_acc_limit[:aug_data_length],
                 ]
             )
-            trajectory_longitudinal_velocity_data = np.minimum(
-                trajectory_longitudinal_velocity_data, lateral_acc_limit
-            )
+            smooth_fun = np.vectorize(lambda x: self.smooth_bounding(lateral_acc_limit, 0.9 * lateral_acc_limit, x))
+            trajectory_longitudinal_velocity_data = smooth_fun(trajectory_longitudinal_velocity_data)
             # [5-3] apply limit by lateral error
             velocity_limit_by_tracking_error = (
                 self.get_parameter("velocity_limit_by_tracking_error")
@@ -563,9 +577,8 @@ class DataCollectingTrajectoryPublisher(Node):
             tmp_yaw_error = np.abs(present_yaw - trajectory_yaw_data[nearestIndex])
 
             if lateral_error_threshold < tmp_lateral_error or yaw_error_threshold < tmp_yaw_error:
-                trajectory_longitudinal_velocity_data = np.minimum(
-                    trajectory_longitudinal_velocity_data, velocity_limit_by_tracking_error
-                )
+                smooth_fun = np.vectorize(lambda x: self.smooth_bounding(velocity_limit_by_tracking_error, 0.9 * velocity_limit_by_tracking_error, x))
+                trajectory_longitudinal_velocity_data = smooth_fun(trajectory_longitudinal_velocity_data)
 
             # [6] publish
             # [6-1] publish trajectory
