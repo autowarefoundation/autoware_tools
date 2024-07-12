@@ -8,27 +8,27 @@
       
       
       
-        <link rel="canonical" href="https://autowarefoundation.github.io/autoware_tools/latest/control_data_collecting_tool/">
+        <link rel="canonical" href="https://autowarefoundation.github.io/autoware_tools/latest/common/autoware_debug_tools/">
       
       
-        <link rel="prev" href="../control/vehicle_cmd_analyzer/">
+        <link rel="prev" href="../../bag2lanelet/">
       
       
-        <link rel="next" href="../driving_environment_analyzer/">
+        <link rel="next" href="../mission_planner_rviz_plugin/">
       
-      <link rel="icon" href="../docs/assets/images/autoware-foundation.png">
+      <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.20">
     
     
       
-        <title>Control data collecting tool - Autoware Universe Documentation</title>
+        <title>Autoware Debug Tools - Autoware Universe Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -44,11 +44,11 @@
       
     
     
-      <link rel="stylesheet" href="../docs/assets/css/extra.css">
+      <link rel="stylesheet" href="../../docs/assets/css/extra.css">
     
       <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#control-data-collecting-tool" class="md-skip">
+        <a href="#autoware-debug-tools" class="md-skip">
           Skip to content
         </a>
       
@@ -97,7 +97,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Autoware Universe Documentation" class="md-header__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
+    <a href="../.." title="Autoware Universe Documentation" class="md-header__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4zm-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-48H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Control data collecting tool
+              Autoware Debug Tools
             
           </span>
         </div>
@@ -214,7 +214,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../bag2lanelet/" class="md-tabs__link">
+      <a href="../../bag2lanelet/" class="md-tabs__link">
         Bag2lanelet
       </a>
     </li>
@@ -223,6 +223,8 @@
       
         
   
+  
+    
   
 
 
@@ -235,7 +237,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../common/autoware_debug_tools/" class="md-tabs__link">
+      <a href="./" class="md-tabs__link md-tabs__link--active">
         Common
       </a>
     </li>
@@ -258,7 +260,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../control/stop_accel_evaluator/" class="md-tabs__link">
+      <a href="../../control/stop_accel_evaluator/" class="md-tabs__link">
         Control
       </a>
     </li>
@@ -270,15 +272,13 @@
         
   
   
-    
-  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="./" class="md-tabs__link md-tabs__link--active">
+      <a href="../../control_data_collecting_tool/" class="md-tabs__link">
         Control data collecting tool
       </a>
     </li>
@@ -294,7 +294,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../driving_environment_analyzer/" class="md-tabs__link">
+      <a href="../../driving_environment_analyzer/" class="md-tabs__link">
         Driving environment analyzer
       </a>
     </li>
@@ -315,7 +315,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
+      <a href="../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
         Evaluation
       </a>
     </li>
@@ -338,7 +338,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../localization/deviation_estimation_tools/ReadMe/" class="md-tabs__link">
+      <a href="../../localization/deviation_estimation_tools/ReadMe/" class="md-tabs__link">
         Localization
       </a>
     </li>
@@ -361,7 +361,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../planning/autoware_route_client/" class="md-tabs__link">
+      <a href="../../planning/autoware_route_client/" class="md-tabs__link">
         Planning
       </a>
     </li>
@@ -384,7 +384,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../simulator/simulator_compatibility_test/" class="md-tabs__link">
+      <a href="../../simulator/simulator_compatibility_test/" class="md-tabs__link">
         Simulator
       </a>
     </li>
@@ -407,7 +407,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
+      <a href="../../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
         System
       </a>
     </li>
@@ -430,7 +430,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../vehicle/calibration_adapter/" class="md-tabs__link">
+      <a href="../../vehicle/calibration_adapter/" class="md-tabs__link">
         Vehicle
       </a>
     </li>
@@ -466,7 +466,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Autoware Universe Documentation" class="md-nav__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
+    <a href="../.." title="Autoware Universe Documentation" class="md-nav__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4zm-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-48H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
@@ -517,7 +517,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../bag2lanelet/">Bag2lanelet</a>
+          <a href="../../bag2lanelet/">Bag2lanelet</a>
           
         </div>
       
@@ -542,16 +542,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
       
       
         
@@ -584,7 +584,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           Common
@@ -595,18 +595,18 @@
               
   
   
+    
+  
   
     
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" checked>
       
       
         
@@ -618,12 +618,12 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/autoware_debug_tools/">Autoware debug tools</a>
+        <div class="md-nav__link md-nav__link--index md-nav__link--active">
+          <a href="./">Autoware debug tools</a>
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_2_1">
           <span class="md-nav__icon md-icon"></span>
           Autoware debug tools
@@ -667,7 +667,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/mission_planner_rviz_plugin/">Mission planner rviz plugin</a>
+          <a href="../mission_planner_rviz_plugin/">Mission planner rviz plugin</a>
           
         </div>
       
@@ -715,7 +715,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/rtc_manager_rviz_plugin/">Rtc manager rviz plugin</a>
+          <a href="../rtc_manager_rviz_plugin/">Rtc manager rviz plugin</a>
           
         </div>
       
@@ -763,7 +763,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_automatic_goal_rviz_plugin/">Tier4 automatic goal rviz plugin</a>
+          <a href="../tier4_automatic_goal_rviz_plugin/">Tier4 automatic goal rviz plugin</a>
           
         </div>
       
@@ -811,7 +811,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_control_rviz_plugin/">Tier4 control rviz plugin</a>
+          <a href="../tier4_control_rviz_plugin/">Tier4 control rviz plugin</a>
           
         </div>
       
@@ -859,7 +859,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_debug_rviz_plugin/">Tier4 debug rviz plugin</a>
+          <a href="../tier4_debug_rviz_plugin/">Tier4 debug rviz plugin</a>
           
         </div>
       
@@ -907,7 +907,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_debug_tools/">Tier4 debug tools</a>
+          <a href="../tier4_debug_tools/">Tier4 debug tools</a>
           
         </div>
       
@@ -955,7 +955,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_logging_level_configure_rviz_plugin/">Tier4 logging level configure rviz plugin</a>
+          <a href="../tier4_logging_level_configure_rviz_plugin/">Tier4 logging level configure rviz plugin</a>
           
         </div>
       
@@ -1003,7 +1003,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_screen_capture_rviz_plugin/">Tier4 screen capture rviz plugin</a>
+          <a href="../tier4_screen_capture_rviz_plugin/">Tier4 screen capture rviz plugin</a>
           
         </div>
       
@@ -1051,7 +1051,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_simulated_clock_rviz_plugin/">Tier4 simulated clock rviz plugin</a>
+          <a href="../tier4_simulated_clock_rviz_plugin/">Tier4 simulated clock rviz plugin</a>
           
         </div>
       
@@ -1099,7 +1099,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../common/tier4_target_object_type_rviz_plugin/">Tier4 target object type rviz plugin</a>
+          <a href="../tier4_target_object_type_rviz_plugin/">Tier4 target object type rviz plugin</a>
           
         </div>
       
@@ -1190,7 +1190,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../control/stop_accel_evaluator/">Stop accel evaluator</a>
+          <a href="../../control/stop_accel_evaluator/">Stop accel evaluator</a>
           
         </div>
       
@@ -1238,7 +1238,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../control/vehicle_cmd_analyzer/">Vehicle cmd analyzer</a>
+          <a href="../../control/vehicle_cmd_analyzer/">Vehicle cmd analyzer</a>
           
         </div>
       
@@ -1270,16 +1270,16 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
       
       
         
@@ -1291,12 +1291,12 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index md-nav__link--active">
-          <a href="./">Control data collecting tool</a>
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../control_data_collecting_tool/">Control data collecting tool</a>
           
         </div>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_4">
           <span class="md-nav__icon md-icon"></span>
           Control data collecting tool
@@ -1339,7 +1339,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../driving_environment_analyzer/">Driving environment analyzer</a>
+          <a href="../../driving_environment_analyzer/">Driving environment analyzer</a>
           
         </div>
       
@@ -1421,7 +1421,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../evaluation/tier4_metrics_rviz_plugin/">Tier4 metrics rviz plugin</a>
+          <a href="../../evaluation/tier4_metrics_rviz_plugin/">Tier4 metrics rviz plugin</a>
           
         </div>
       
@@ -1523,7 +1523,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
+      <a href="../../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
         deviation_estimation_tools
       </a>
     </li>
@@ -1611,7 +1611,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../planning/autoware_route_client/">Autoware route client</a>
+          <a href="../../planning/autoware_route_client/">Autoware route client</a>
           
         </div>
       
@@ -1659,7 +1659,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../planning/autoware_rtc_replayer/">Autoware rtc replayer</a>
+          <a href="../../planning/autoware_rtc_replayer/">Autoware rtc replayer</a>
           
         </div>
       
@@ -1709,7 +1709,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../planning/planning_debug_tools/">Planning debug tools</a>
+          <a href="../../planning/planning_debug_tools/">Planning debug tools</a>
           
             <label for="__nav_8_3">
               <span class="md-nav__icon md-icon"></span>
@@ -1732,7 +1732,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
+      <a href="../../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
         Doc stop reason visualizer
       </a>
     </li>
@@ -1816,7 +1816,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../simulator/simulator_compatibility_test/">Simulator compatibility test</a>
+          <a href="../../simulator/simulator_compatibility_test/">Simulator compatibility test</a>
           
         </div>
       
@@ -1905,7 +1905,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../system/rqt_diagnostic_graph_monitor/">Rqt diagnostic graph monitor</a>
+          <a href="../../system/rqt_diagnostic_graph_monitor/">Rqt diagnostic graph monitor</a>
           
         </div>
       
@@ -2000,7 +2000,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../vehicle/calibration_adapter/">Calibration adapter</a>
+          <a href="../../vehicle/calibration_adapter/">Calibration adapter</a>
           
         </div>
       
@@ -2048,7 +2048,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../vehicle/parameter_estimator/">Parameter estimator</a>
+          <a href="../../vehicle/parameter_estimator/">Parameter estimator</a>
           
         </div>
       
@@ -2096,7 +2096,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../vehicle/pitch_checker/">Pitch checker</a>
+          <a href="../../vehicle/pitch_checker/">Pitch checker</a>
           
         </div>
       
@@ -2144,7 +2144,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../vehicle/time_delay_estimator/">Time delay estimator</a>
+          <a href="../../vehicle/time_delay_estimator/">Time delay estimator</a>
           
         </div>
       
@@ -2197,23 +2197,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    Overview
+  <a href="#processing-time-visualizer" class="md-nav__link">
+    Processing Time Visualizer
+  </a>
+  
+    <nav class="md-nav" aria-label="Processing Time Visualizer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    Usage
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-use" class="md-nav__link">
-    How to use
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#parameter" class="md-nav__link">
-    Parameter
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2235,283 +2234,26 @@
   
 
 
-<div><h1 id="control-data-collecting-tool">Control data collecting tool<a class="headerlink" href="#control-data-collecting-tool" title="Permanent link">#</a></h1>
-<p>This package provides tools for automatically collecting data using pure pursuit control within a specified rectangular area.</p>
-<p><img src="resource/demo.gif" width="800"></p>
-<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h2>
-<ul>
-<li>This package aims to collect a dataset consisting of control inputs (i.e. <code>control_cmd</code>) and observation variables (i.e. <code>kinematic_state</code>, <code>steering_status</code>, etc).</li>
-<li>The collected dataset can be used as training dataset for learning-based controllers, including <a href="https://github.com/autowarefoundation/autoware.universe/tree/f30c0350861d020ad26a45806ab1334895122fab/control/smart_mpc_trajectory_follower">smart_mpc</a>.</li>
-<li>The data collecting approach is as follows:<ul>
-<li>Setting a figure-eight target trajectory within the specified rectangular area.</li>
-<li>Following the trajectory using a pure pursuit control law.</li>
-<li>Adding noises to the trajectory and the control command for data diversity, improving the prediction accuracy of learning model.</li>
-</ul>
-</li>
-</ul>
-<h2 id="how-to-use">How to use<a class="headerlink" href="#how-to-use" title="Permanent link">#</a></h2>
+<div><h1 id="autoware-debug-tools">Autoware Debug Tools<a class="headerlink" href="#autoware-debug-tools" title="Permanent link">#</a></h1>
+<p>This package provides tools for debugging Autoware.</p>
+<h2 id="processing-time-visualizer">Processing Time Visualizer<a class="headerlink" href="#processing-time-visualizer" title="Permanent link">#</a></h2>
+<p>This tool visualizes <code>tier4_debug_msgs/msg/ProcessingTimeTree</code> messages.</p>
+<h3 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h3>
 <ol>
 <li>
-<p>Launch Autoware.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_launch<span class="w"> </span>planning_simulator.launch.xml<span class="w"> </span>map_path:<span class="o">=</span><span class="nv">$HOME</span>/autoware_map/sample-map-planning<span class="w"> </span>vehicle_model:<span class="o">=</span>sample_vehicle<span class="w"> </span>sensor_model:<span class="o">=</span>sample_sensor_kit
+<p>Run the following command to start the visualizer.</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_debug_tools<span class="w"> </span>processing_time_visualizer
 </code></pre></div>
 </li>
 <li>
-<p>Set an initial pose, see <a href="https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#2-set-an-initial-pose-for-the-ego-vehicle">here</a>.</p>
+<p>Select a topic to visualize.</p>
+<p><img alt="select_topic" src="images/select-topic.png"></p>
 </li>
 <li>
-<p>Add <code>DataCollectingAreaSelectionTool</code> rviz plugin.</p>
-<p><img src="resource/add_rviz_plugin.png" width="480"></p>
+<p>Then, the visualizer will show the processing time tree.</p>
+<p><img alt="visualize-tree" src="images/visualize-tree.png"></p>
 </li>
-<li>
-<p>Launch control_data_collecting_tool.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>control_data_collecting_tool<span class="w"> </span>control_data_collecting_tool.launch.py
-</code></pre></div>
-</li>
-<li>
-<p>Add visualization in rviz:</p>
-<ul>
-<li><code>/data_collecting_area</code><ul>
-<li>Type: Polygon</li>
-</ul>
-</li>
-<li><code>/data_collecting_trajectory_marker_array</code><ul>
-<li>Type: MarkerArray</li>
-</ul>
-</li>
-<li><code>/data_collecting_lookahead_marker_array</code><ul>
-<li>Type: MarkerArray</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p>Select <code>DataCollectingAreaSelectionTool</code> plugin.</p>
-<p><img src="resource/select_tool.png" width="480"></p>
-<p>Highlight the data collecting area by dragging the mouse over it.</p>
-<p><img src="resource/select_area.gif" width="480"></p>
-<blockquote>
-<p>[!NOTE]
-You cannot change the data collecting area while driving.</p>
-</blockquote>
-</li>
-<li>
-<p>start recording rosbag data. For example, run the following command:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>bag<span class="w"> </span>record<span class="w"> </span>/localization/kinematic_state<span class="w"> </span>/localization/acceleration<span class="w"> </span>/vehicle/status/steering_status<span class="w"> </span>/sensing/imu/imu_data<span class="w"> </span>/system/operation_mode/state<span class="w"> </span>/vehicle/status/control_mode<span class="w"> </span>/external/selected/control_cmd<span class="w"> </span>/external/selected/gear_cmd<span class="w"> </span>/data_collecting_trajectory
-</code></pre></div>
-</li>
-<li>
-<p>Click the <code>LOCAL</code> button on <code>OperationMode</code> in <code>AutowareStatePanel</code>.</p>
-<p><img src="resource/push_LOCAL.png" width="480"></p>
-<p>Then, data collecting starts.</p>
-<p><img src="resource/demo.gif" width="480"></p>
-</li>
-<li>
-<p>If you want to stop data collecting automatic driving, run the following command</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>/data_collecting_stop_request<span class="w"> </span>std_msgs/msg/Bool<span class="w"> </span><span class="s2">"data: true"</span><span class="w"> </span>--once
-</code></pre></div>
-</li>
-<li>
-<p>If you want to restart data collecting automatic driving, run the following command</p>
-</li>
-</ol>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>/data_collecting_stop_request<span class="w"> </span>std_msgs/msg/Bool<span class="w"> </span><span class="s2">"data: false"</span><span class="w"> </span>--once
-</code></pre></div>
-<h2 id="parameter">Parameter<a class="headerlink" href="#parameter" title="Permanent link">#</a></h2>
-<p>ROS 2 params in <code>/data_collecting_trajectory_publisher</code> node:</p>
-<table>
-<thead>
-<tr>
-<th align="left">Name</th>
-<th align="left">Type</th>
-<th align="left">Description</th>
-<th align="left">Default value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="left"><code>max_lateral_accel</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Max lateral acceleration limit [m/ss]</td>
-<td align="left">2.94</td>
-</tr>
-<tr>
-<td align="left"><code>lateral_error_threshold</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Lateral error threshold where applying velocity limit [m/s]</td>
-<td align="left">5.0</td>
-</tr>
-<tr>
-<td align="left"><code>yaw_error_threshold</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Yaw error threshold where applying velocity limit [rad]</td>
-<td align="left">0.5</td>
-</tr>
-<tr>
-<td align="left"><code>velocity_limit_by_tracking_error</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Velocity limit applied when tracking error exceeds threshold [m/s]</td>
-<td align="left">2.0</td>
-</tr>
-<tr>
-<td align="left"><code>mov_ave_window</code></td>
-<td align="left"><code>int</code></td>
-<td align="left">Moving average smoothing window size</td>
-<td align="left">50</td>
-</tr>
-<tr>
-<td align="left"><code>target_longitudinal_velocity</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Target longitudinal velocity [m/s]</td>
-<td align="left">6.0</td>
-</tr>
-<tr>
-<td align="left"><code>longitudinal_velocity_noise_amp</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Target longitudinal velocity additional sine noise amplitude [m/s]</td>
-<td align="left">0.1</td>
-</tr>
-<tr>
-<td align="left"><code>longitudinal_velocity_noise_min_period</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Target longitudinal velocity additional sine noise minimum period [s]</td>
-<td align="left">5.0</td>
-</tr>
-<tr>
-<td align="left"><code>longitudinal_velocity_noise_max_period</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Target longitudinal velocity additional sine noise maximum period [s]</td>
-<td align="left">20.0</td>
-</tr>
-</tbody>
-</table>
-<p>ROS 2 params in <code>/data_collecting_pure_pursuit_trajectory_follower</code> node:</p>
-<table>
-<thead>
-<tr>
-<th align="left">Name</th>
-<th align="left">Type</th>
-<th align="left">Description</th>
-<th align="left">Default value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="left"><code>pure_pursuit_type</code></td>
-<td align="left"><code>string</code></td>
-<td align="left">Pure pursuit type (<code>naive</code> or <code>linearized</code> steer control law )</td>
-<td align="left"><code>linearized</code></td>
-</tr>
-<tr>
-<td align="left"><code>wheel_base</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Wheel base [m]</td>
-<td align="left">2.79</td>
-</tr>
-<tr>
-<td align="left"><code>acc_kp</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Accel command proportional gain</td>
-<td align="left">0.5</td>
-</tr>
-<tr>
-<td align="left"><code>lookahead_time</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Pure pursuit lookahead time [s]</td>
-<td align="left">1.5</td>
-</tr>
-<tr>
-<td align="left"><code>min_lookahead</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Pure pursuit minimum lookahead length [m]</td>
-<td align="left">3.0</td>
-</tr>
-<tr>
-<td align="left"><code>linearized_pure_pursuit_steer_kp_param</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Linearized pure pursuit steering P gain parameter</td>
-<td align="left">2.0</td>
-</tr>
-<tr>
-<td align="left"><code>linearized_pure_pursuit_steer_kd_param</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Linearized pure pursuit steering D gain parameter</td>
-<td align="left">2.0</td>
-</tr>
-<tr>
-<td align="left"><code>stop_acc</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Accel command for stopping data collecting driving [m/ss]</td>
-<td align="left">-2.0</td>
-</tr>
-<tr>
-<td align="left"><code>stop_jerk_lim</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Jerk limit for stopping data collecting driving [m/sss]</td>
-<td align="left">1.0</td>
-</tr>
-<tr>
-<td align="left"><code>lon_acc_lim</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Longitudinal acceleration limit [m/ss]</td>
-<td align="left">5.0</td>
-</tr>
-<tr>
-<td align="left"><code>lon_jerk_lim</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Longitudinal jerk limit [m/sss]</td>
-<td align="left">5.0</td>
-</tr>
-<tr>
-<td align="left"><code>steer_lim</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Steering angle limit [rad]</td>
-<td align="left">1.0</td>
-</tr>
-<tr>
-<td align="left"><code>steer_rate_lim</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Steering angle rate limit [rad/s]</td>
-<td align="left">1.0</td>
-</tr>
-<tr>
-<td align="left"><code>acc_noise_amp</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Accel command additional sine noise amplitude [m/ss]</td>
-<td align="left">0.01</td>
-</tr>
-<tr>
-<td align="left"><code>acc_noise_min_period</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Accel command additional sine noise minimum period [s]</td>
-<td align="left">5.0</td>
-</tr>
-<tr>
-<td align="left"><code>acc_noise_max_period</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Accel command additional sine noise maximum period [s]</td>
-<td align="left">20.0</td>
-</tr>
-<tr>
-<td align="left"><code>steer_noise_amp</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Steer command additional sine noise amplitude [rad]</td>
-<td align="left">0.01</td>
-</tr>
-<tr>
-<td align="left"><code>steer_noise_max_period</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Steer command additional sine noise maximum period [s]</td>
-<td align="left">5.0</td>
-</tr>
-<tr>
-<td align="left"><code>steer_noise_min_period</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Steer command additional sine noise minimum period [s]</td>
-<td align="left">20.0</td>
-</tr>
-</tbody>
-</table></div>
+</ol></div>
 
 
 
@@ -2538,7 +2280,7 @@ You cannot change the data collecting area while driving.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../control/vehicle_cmd_analyzer/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Vehicle Command Analyzer description" rel="prev">
+          <a href="../../bag2lanelet/" class="md-footer__link md-footer__link--prev" aria-label="Previous: bag2lanelet" rel="prev">
             <div class="md-footer__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
             </div>
@@ -2547,20 +2289,20 @@ You cannot change the data collecting area while driving.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Vehicle Command Analyzer description
+                bag2lanelet
               </div>
             </div>
           </a>
         
         
           
-          <a href="../driving_environment_analyzer/" class="md-footer__link md-footer__link--next" aria-label="Next: Driving Environment Analyzer" rel="next">
+          <a href="../mission_planner_rviz_plugin/" class="md-footer__link md-footer__link--next" aria-label="Next: mission_planner_rviz_plugin" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Driving Environment Analyzer
+                mission_planner_rviz_plugin
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -2596,13 +2338,13 @@ You cannot change the data collecting area while driving.</p>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="../docs/assets/js/mathjax.js"></script>
+          <script src="../../docs/assets/js/mathjax.js"></script>
         
       
         
