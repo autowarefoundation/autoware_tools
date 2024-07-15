@@ -32,9 +32,19 @@ from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 
 debug_matplotlib_plot_flag = False
+Differential_Smoothing_Flag = True
 if debug_matplotlib_plot_flag:
     import matplotlib.pyplot as plt
 
+def smooth_bounding(upper: np.ndarray, threshold : np.ndarray, x: np.ndarray):
+    result = np.zeros(x.shape)
+    for i in range(x.shape[0]):
+        if x[i] <= threshold[i]:
+            result[i] = x[i]
+        else:
+            z = np.exp( - (x[i] - threshold[i]) / (upper[i] - threshold[i]))
+            result[i] = upper[i] * (1 - z) + threshold[i] * z 
+    return result
 
 def getYaw(orientation_xyzw):
     return R.from_quat(orientation_xyzw.reshape(-1, 4)).as_euler("xyz")[:, 2]
@@ -538,9 +548,14 @@ class DataCollectingTrajectoryPublisher(Node):
                     lateral_acc_limit[:aug_data_length],
                 ]
             )
-            trajectory_longitudinal_velocity_data = np.minimum(
-                trajectory_longitudinal_velocity_data, lateral_acc_limit
-            )
+            if Differential_Smoothing_Flag:
+                trajectory_longitudinal_velocity_data = smooth_bounding(lateral_acc_limit,
+                                                                            0.9 * lateral_acc_limit,
+                                                                            trajectory_longitudinal_velocity_data)
+            else:
+                trajectory_longitudinal_velocity_data = np.minimum(
+                    trajectory_longitudinal_velocity_data, lateral_acc_limit
+                )
             # [5-3] apply limit by lateral error
             velocity_limit_by_tracking_error = (
                 self.get_parameter("velocity_limit_by_tracking_error")
@@ -563,9 +578,13 @@ class DataCollectingTrajectoryPublisher(Node):
             tmp_yaw_error = np.abs(present_yaw - trajectory_yaw_data[nearestIndex])
 
             if lateral_error_threshold < tmp_lateral_error or yaw_error_threshold < tmp_yaw_error:
-                trajectory_longitudinal_velocity_data = np.minimum(
-                    trajectory_longitudinal_velocity_data, velocity_limit_by_tracking_error
-                )
+                if Differential_Smoothing_Flag:
+                    velocity_limit_by_tracking_error_array = velocity_limit_by_tracking_error * np.ones(trajectory_longitudinal_velocity_data.shape)
+                    trajectory_longitudinal_velocity_data = smooth_bounding(velocity_limit_by_tracking_error_array, 0.9 * velocity_limit_by_tracking_error_array, trajectory_longitudinal_velocity_data)
+                else:
+                    trajectory_longitudinal_velocity_data = np.minimum(
+                        trajectory_longitudinal_velocity_data, velocity_limit_by_tracking_error
+                    )
 
             # [6] publish
             # [6-1] publish trajectory
