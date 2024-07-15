@@ -317,7 +317,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
             if np.abs(yaw_err) < np.pi:
                 break
 
-        lookahead = lookahead_coef + lookahead_intercept * np.abs(longitudinal_vel_obs)
+        lookahead = lookahead_intercept + lookahead_coef * np.abs(longitudinal_vel_obs)
         linearized_pure_pursuit_steer_kp = (
             linearized_pure_pursuit_steer_kp_param * wheel_base / (lookahead * lookahead)
         )
