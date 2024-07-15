@@ -85,7 +85,7 @@ ROS 2 params in `/data_collecting_trajectory_publisher` node:
 
 | Name                                     | Type     | Description                                                           | Default value |
 | :--------------------------------------- | :------- | :-------------------------------------------------------------------- | :------------ |
-| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                 | 2.94          |
+| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                 | 0.5           |
 | `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]           | 5.0           |
 | `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]               | 0.5           |
 | `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]    | 2.0           |
