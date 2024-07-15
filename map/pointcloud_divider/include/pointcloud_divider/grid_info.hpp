@@ -48,7 +48,7 @@ struct GridInfo
 };
 
 // This is for unordered_map and unordered_set
-// For 2D voxel grid 
+// For 2D voxel grid
 namespace std
 {
 template <>
