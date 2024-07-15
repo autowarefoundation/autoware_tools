@@ -89,33 +89,33 @@ def get_trajectory_points(
             x[i] = (b - a) * t / (2 * OB)
             y[i] = a * t / (2 * OB)
             yaw[i] = θB
-            curve[i] = 1e10
+            curve[i] = 1e-10
         if OB <= t and t <= OB + BD:
             t1 = t - OB
             t1_rad = t1 / R
             x[i] = OR[0] + R * cos(pi / 2 - t1_rad)
             y[i] = OR[1] + R * sin(pi / 2 - t1_rad)
             yaw[i] = -t1_rad
-            curve[i] = R
+            curve[i] = 1/R
         if OB + BD <= t and t <= OB + BD + AD:
             t2 = t - (OB + BD)
             x[i] = D[0] - (b - a) * t2 / (2 * OB)
             y[i] = D[1] + a * t2 / (2 * OB)
             yaw[i] = pi - θB
-            curve[i] = 1e10
+            curve[i] = 1e-10
         if OB + BD + AD <= t and t <= OB + BD + AD + AC:
             t3 = t - (OB + BD + AD)
             t3_rad = t3 / R
             x[i] = OL[0] + R * cos(pi / 2 + t3_rad)
             y[i] = OL[1] + R * sin(pi / 2 + t3_rad)
             yaw[i] = pi + t3_rad
-            curve[i] = R
+            curve[i] = 1/R
         if OB + BD + AD + AC <= t and t <= OB + BD + AD + AC + CO:
             t4 = t - (OB + BD + AD + AC)
             x[i] = C[0] + (b - a) * t4 / (2 * OB)
             y[i] = C[1] + a * t4 / (2 * OB)
             yaw[i] = θB
-            curve[i] = 1e10
+            curve[i] = 1e-10
     # drop rest
     x = x[:i_end]
     y = y[:i_end]
@@ -129,7 +129,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "max_lateral_accel",
-            2.94,  # 0.3G
+            0.5,  # 0.3G
             ParameterDescriptor(description="Max lateral acceleration limit [m/ss]"),
         )
 
@@ -541,7 +541,7 @@ class DataCollectingTrajectoryPublisher(Node):
             max_lateral_accel = (
                 self.get_parameter("max_lateral_accel").get_parameter_value().double_value
             )
-            lateral_acc_limit = np.sqrt(max_lateral_accel * trajectory_curvature_data)
+            lateral_acc_limit = np.sqrt(max_lateral_accel / trajectory_curvature_data)
             lateral_acc_limit = np.hstack(
                 [
                     lateral_acc_limit,
