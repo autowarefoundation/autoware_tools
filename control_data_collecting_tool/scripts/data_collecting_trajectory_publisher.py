@@ -33,6 +33,7 @@ from visualization_msgs.msg import MarkerArray
 
 debug_matplotlib_plot_flag = False
 Differential_Smoothing_Flag = True
+Use_Curvature_Radius_Flag = False
 if debug_matplotlib_plot_flag:
     import matplotlib.pyplot as plt
 
@@ -120,7 +121,10 @@ def get_trajectory_points(
     x = x[:i_end]
     y = y[:i_end]
     yaw = yaw[:i_end]
-    return np.array([x, y]).T, yaw, curve[:i_end]
+    if Use_Curvature_Radius_Flag:
+        return np.array([x, y]).T, yaw, 1/curve[:i_end]
+    else:
+        return np.array([x, y]).T, yaw, curve[:i_end]
 
 
 class DataCollectingTrajectoryPublisher(Node):
@@ -390,6 +394,18 @@ class DataCollectingTrajectoryPublisher(Node):
 
             trajectory_yaw_data = smoothed_trajectory_yaw_data.copy()
 
+            if not Use_Curvature_Radius_Flag:
+                augmented_curvature_data = np.hstack(
+                    [
+                        trajectory_curvature_data[-window:],
+                        trajectory_curvature_data,
+                        trajectory_curvature_data[:window],
+                    ]
+                )
+                trajectory_curvature_data = (
+                    1 * np.convolve(augmented_curvature_data, w, mode="same")[window:-window]
+                )
+
         # [2-4] nominal velocity
         target_longitudinal_velocity = (
             self.get_parameter("target_longitudinal_velocity").get_parameter_value().double_value
@@ -541,7 +557,10 @@ class DataCollectingTrajectoryPublisher(Node):
             max_lateral_accel = (
                 self.get_parameter("max_lateral_accel").get_parameter_value().double_value
             )
-            lateral_acc_limit = np.sqrt(max_lateral_accel / trajectory_curvature_data)
+            if Use_Curvature_Radius_Flag:
+                lateral_acc_limit = np.sqrt(max_lateral_accel * trajectory_curvature_data)
+            else:
+                lateral_acc_limit = np.sqrt(max_lateral_accel / trajectory_curvature_data)
             lateral_acc_limit = np.hstack(
                 [
                     lateral_acc_limit,
