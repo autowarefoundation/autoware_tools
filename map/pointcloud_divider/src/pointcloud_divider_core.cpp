@@ -414,9 +414,9 @@ void PointCloudDivider<PointT>::mergeAndDownsample(
   std::string seg_name_only = dir_path.substr(start_name + 1, end_name - start_name);
 
   // Parse the @seg_path to get the indices of the segment
-  auto ubar_pos = seg_name_only.rfind("_");
-  int gx = std::stoi(seg_name_only.substr(0, ubar_pos));
-  int gy = std::stoi(seg_name_only.substr(ubar_pos + 1));
+  auto underbar_pos = seg_name_only.rfind("_");
+  int gx = std::stoi(seg_name_only.substr(0, underbar_pos));
+  int gy = std::stoi(seg_name_only.substr(underbar_pos + 1));
 
   grid_set_.insert(GridInfo<2>(gx, gy));
 
