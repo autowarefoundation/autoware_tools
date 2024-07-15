@@ -207,13 +207,13 @@ void PointCloudDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
 
   std::cout << "\tProcessing a block of " << cloud_ptr->size() << " points... \r" << std::flush;
 
-  size_t progress = 0, total_pnum = cloud_ptr->size();
+  size_t progress = 0, total_point_num = cloud_ptr->size();
 
   for (const PointT p : *cloud_ptr) {
     if (progress % 10000 == 0 || progress == cloud_ptr->size()) {
       std::cout << "\tProcessing a block of " << cloud_ptr->size() << " points... "
                 << static_cast<int>(
-                     static_cast<float>(progress) / static_cast<float>(total_pnum) * 100)
+                     static_cast<float>(progress) / static_cast<float>(total_point_num) * 100)
                 << "%\r" << std::flush;
     }
     ++progress;
@@ -344,7 +344,7 @@ void PointCloudDivider<PointT>::mergeAndDownsample()
       ++progress;
 
       std::list<std::string> pcd_list;
-      size_t total_pnum = 0;
+      size_t total_point_num = 0;
 
       for (auto & seg_entry : fs::directory_iterator(tmp_dir_entry.path())) {
         if (fs::is_regular_file(seg_entry.symlink_status())) {
@@ -353,13 +353,13 @@ void PointCloudDivider<PointT>::mergeAndDownsample()
 
           if (ext == ".pcd") {
             pcd_list.push_back(fname);
-            total_pnum += util::point_num(fname);
+            total_point_num += util::point_num(fname);
           }
         }
       }
 
       // Fuse all PCDs and downsample if necessary
-      mergeAndDownsample(tmp_dir_entry.path().string(), pcd_list, total_pnum);
+      mergeAndDownsample(tmp_dir_entry.path().string(), pcd_list, total_point_num);
     }
   }
 
@@ -371,11 +371,11 @@ void PointCloudDivider<PointT>::mergeAndDownsample()
 
 template <class PointT>
 void PointCloudDivider<PointT>::mergeAndDownsample(
-  const std::string & dir_path, std::list<std::string> & pcd_list, size_t total_pnum)
+  const std::string & dir_path, std::list<std::string> & pcd_list, size_t total_point_num)
 {
   PclCloudPtr new_cloud(new PclCloudType);
 
-  new_cloud->reserve(total_pnum);
+  new_cloud->reserve(total_point_num);
 
   // Merge all PCDs to a single point cloud
   for (auto & fname : pcd_list) {

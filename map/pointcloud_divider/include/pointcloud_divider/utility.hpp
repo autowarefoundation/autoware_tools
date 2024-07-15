@@ -54,11 +54,11 @@ inline bool remove(const std::string & path)
 inline size_t point_num(const std::string & pcd_path)
 {
   // Get the file name only
-  auto last_ubar_pos = pcd_path.rfind("_");
+  auto last_underbar_pos = pcd_path.rfind("_");
   auto last_dot_pos = pcd_path.rfind(".");
-  auto pnum_str = pcd_path.substr(last_ubar_pos + 1, last_dot_pos - last_ubar_pos - 1);
+  auto point_num_str = pcd_path.substr(last_underbar_pos + 1, last_dot_pos - last_underbar_pos - 1);
 
-  return std::stoi(pnum_str);
+  return std::stoi(point_num_str);
 }
 
 /**

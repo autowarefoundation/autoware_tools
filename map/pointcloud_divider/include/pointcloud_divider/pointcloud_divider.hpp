@@ -120,7 +120,7 @@ private:
   size_t resident_point_num_ = 0;
   std::string tmp_dir_;
   CustomPCDReader<PointT> reader_;
-  size_t total_point_num_ = 0;  // Used when mergning all pcds
+  size_t total_point_num_ = 0;  // Used when merging all pcds
 
   PclCloudPtr loadPCD(const std::string & pcd_name);
   void savePCD(const std::string & pcd_name, const pcl::PointCloud<PointT> & cloud);
@@ -134,7 +134,7 @@ private:
   void saveTheRest();
   void mergeAndDownsample();
   void mergeAndDownsample(
-    const std::string & dir_path, std::list<std::string> & pcd_list, size_t total_pnum);
+    const std::string & dir_path, std::list<std::string> & pcd_list, size_t total_point_num);
 };
 
 #endif  // POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_
