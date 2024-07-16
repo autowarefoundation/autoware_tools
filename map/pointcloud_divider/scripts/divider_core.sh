@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Obtain the path to the application
-SCRIPT_DIR=$(
-    cd $(dirname $0)
-    pwd
-)
-DIV_DIR=${SCRIPT_DIR%/*}
 PCD_DIV="pointcloud_divider"
 
 # Show usage
@@ -73,4 +67,4 @@ PREFIX=${ARGV[$((ARGC - 2))]}
 CONFIG_FILE=${ARGV[$((ARGC - 1))]}
 
 # Call the pointcloud_divider
-$PCD_DIV $N_PCD $PCD_FILES $OUTPUT_DIR $PREFIX $CONFIG_FILE
+$PCD_DIV $N_PCD "$PCD_FILES" "$OUTPUT_DIR" "$PREFIX" "$CONFIG_FILE"

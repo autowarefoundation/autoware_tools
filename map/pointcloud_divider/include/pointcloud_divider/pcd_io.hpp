@@ -68,7 +68,6 @@ template <typename PointT>
 class CustomPCDReader
 {
   typedef pcl::PointCloud<PointT> PclCloudType;
-  typedef std::tuple<size_t, std::string, int> FieldMetaType;
 
 public:
   CustomPCDReader()
@@ -319,7 +318,7 @@ void CustomPCDReader<PointT>::readHeader(std::ifstream & input)
       }
 
       // After finish parsing fields, break
-      // TODO: Roll back to the previous position
+      // TODO (anh.nguyen@tier4.jp): Should I roll back to the previous position?
       break;
     }
   } catch (...) {

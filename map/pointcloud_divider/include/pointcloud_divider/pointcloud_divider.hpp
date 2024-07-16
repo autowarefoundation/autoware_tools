@@ -48,9 +48,12 @@
 
 #include <string>
 #include <tuple>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <utility>
+#include <list>
 
 #define PCL_NO_PRECOMPILE
 #include "grid_info.hpp"

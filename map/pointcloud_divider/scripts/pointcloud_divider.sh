@@ -2,7 +2,7 @@
 
 # Obtain the path to the primary script
 SCRIPT_DIR=$(
-    cd $(dirname $0)
+    cd $(dirname "$0") || exit
     pwd
 )
 DIV_CORE=$SCRIPT_DIR"/divider_core.sh"
@@ -62,10 +62,12 @@ if [ ! -e "$INPUT_DIR" ]; then
     usage
     exit 1
 fi
-PCD_FILES=$(find $INPUT_DIR -name "*.pcd" -printf "%p ")
+
+PCD_FILES=$(find "$INPUT_DIR" -name "*.pcd" -printf "%p ")
 
 # Check the number of PCD files
-PCD_FILE_COUNT=$(echo $PCD_FILES | wc -w)
+PCD_FILE_COUNT=$(echo "$PCD_FILES" | wc -w)
+
 if [ "$PCD_FILE_COUNT" -eq 0 ]; then
     echo "Error: No valid PCD files are found."
     usage
@@ -73,4 +75,4 @@ if [ "$PCD_FILE_COUNT" -eq 0 ]; then
 fi
 
 # Call the primary script
-$DIV_CORE $PCD_FILES $OUTPUT_DIR $PREFIX $CONFIG_FILE
+$DIV_CORE "$PCD_FILES" "$OUTPUT_DIR" "$PREFIX" "$CONFIG_FILE"
