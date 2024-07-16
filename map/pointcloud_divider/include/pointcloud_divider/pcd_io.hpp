@@ -318,7 +318,7 @@ void CustomPCDReader<PointT>::readHeader(std::ifstream & input)
       }
 
       // After finish parsing fields, break
-      // TODO (anh.nguyen@tier4.jp): Should I roll back to the previous position?
+      // TODO(AnhNguyen): Should I roll back to the previous position?
       break;
     }
   } catch (...) {
