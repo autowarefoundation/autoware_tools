@@ -109,7 +109,7 @@ How the PCD file is named
    grid_size_y: 20
    ```
 
-1. Downsampling and merging divided point clouds into a single file
+2. Downsampling and merging divided point clouds into a single file
 
    ```yaml
    use_large_grid: false
