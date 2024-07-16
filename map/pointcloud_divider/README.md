@@ -101,23 +101,23 @@ How the PCD file is named
 
 1. Dividing a single point cloud without downsampling
 
-```yaml
-use_large_grid: false
-merge_pcds: false
-leaf_size: -1.0 # any negative number
-grid_size_x: 20
-grid_size_y: 20
-```
+   ```yaml
+   use_large_grid: false
+   merge_pcds: false
+   leaf_size: -1.0 # any negative number
+   grid_size_x: 20
+   grid_size_y: 20
+   ```
 
-2. Downsampling and merging divided point clouds into a single file
+1. Downsampling and merging divided point clouds into a single file
 
-```yaml
-use_large_grid: false
-merge_pcds: true
-leaf_size: 0.2
-grid_size_x: 20
-grid_size_y: 20
-```
+   ```yaml
+   use_large_grid: false
+   merge_pcds: true
+   leaf_size: 0.2
+   grid_size_x: 20
+   grid_size_y: 20
+   ```
 
 ## Metadata YAML Format
 

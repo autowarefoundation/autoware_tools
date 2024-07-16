@@ -2,7 +2,7 @@
 
 # Obtain the path to the primary script
 SCRIPT_DIR=$(
-    cd $(dirname "$0") || exit
+    cd "$(dirname "$0")" || exit
     pwd
 )
 DIV_CORE=$SCRIPT_DIR"/divider_core.sh"
