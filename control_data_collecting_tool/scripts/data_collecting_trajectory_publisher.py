@@ -33,19 +33,21 @@ from visualization_msgs.msg import MarkerArray
 
 debug_matplotlib_plot_flag = False
 Differential_Smoothing_Flag = True
-Use_Curvature_Radius_Flag = False
+USE_CURVATURE_RADIUS_FLAG = False
 if debug_matplotlib_plot_flag:
     import matplotlib.pyplot as plt
 
-def smooth_bounding(upper: np.ndarray, threshold : np.ndarray, x: np.ndarray):
+
+def smooth_bounding(upper: np.ndarray, threshold: np.ndarray, x: np.ndarray):
     result = np.zeros(x.shape)
     for i in range(x.shape[0]):
         if x[i] <= threshold[i]:
             result[i] = x[i]
         else:
-            z = np.exp( - (x[i] - threshold[i]) / (upper[i] - threshold[i]))
-            result[i] = upper[i] * (1 - z) + threshold[i] * z 
+            z = np.exp(-(x[i] - threshold[i]) / (upper[i] - threshold[i]))
+            result[i] = upper[i] * (1 - z) + threshold[i] * z
     return result
+
 
 def getYaw(orientation_xyzw):
     return R.from_quat(orientation_xyzw.reshape(-1, 4)).as_euler("xyz")[:, 2]
@@ -97,7 +99,7 @@ def get_trajectory_points(
             x[i] = OR[0] + R * cos(pi / 2 - t1_rad)
             y[i] = OR[1] + R * sin(pi / 2 - t1_rad)
             yaw[i] = -t1_rad
-            curve[i] = 1/R
+            curve[i] = 1 / R
         if OB + BD <= t and t <= OB + BD + AD:
             t2 = t - (OB + BD)
             x[i] = D[0] - (b - a) * t2 / (2 * OB)
@@ -110,7 +112,7 @@ def get_trajectory_points(
             x[i] = OL[0] + R * cos(pi / 2 + t3_rad)
             y[i] = OL[1] + R * sin(pi / 2 + t3_rad)
             yaw[i] = pi + t3_rad
-            curve[i] = 1/R
+            curve[i] = 1 / R
         if OB + BD + AD + AC <= t and t <= OB + BD + AD + AC + CO:
             t4 = t - (OB + BD + AD + AC)
             x[i] = C[0] + (b - a) * t4 / (2 * OB)
@@ -121,8 +123,8 @@ def get_trajectory_points(
     x = x[:i_end]
     y = y[:i_end]
     yaw = yaw[:i_end]
-    if Use_Curvature_Radius_Flag:
-        return np.array([x, y]).T, yaw, 1/curve[:i_end]
+    if USE_CURVATURE_RADIUS_FLAG:
+        return np.array([x, y]).T, yaw, 1 / curve[:i_end]
     else:
         return np.array([x, y]).T, yaw, curve[:i_end]
 
@@ -394,7 +396,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
             trajectory_yaw_data = smoothed_trajectory_yaw_data.copy()
 
-            if not Use_Curvature_Radius_Flag:
+            if not USE_CURVATURE_RADIUS_FLAG:
                 augmented_curvature_data = np.hstack(
                     [
                         trajectory_curvature_data[-window:],
@@ -557,7 +559,7 @@ class DataCollectingTrajectoryPublisher(Node):
             max_lateral_accel = (
                 self.get_parameter("max_lateral_accel").get_parameter_value().double_value
             )
-            if Use_Curvature_Radius_Flag:
+            if USE_CURVATURE_RADIUS_FLAG:
                 lateral_acc_limit = np.sqrt(max_lateral_accel * trajectory_curvature_data)
             else:
                 lateral_acc_limit = np.sqrt(max_lateral_accel / trajectory_curvature_data)
@@ -568,9 +570,11 @@ class DataCollectingTrajectoryPublisher(Node):
                 ]
             )
             if Differential_Smoothing_Flag:
-                trajectory_longitudinal_velocity_data = smooth_bounding(lateral_acc_limit,
-                                                                            0.9 * lateral_acc_limit,
-                                                                            trajectory_longitudinal_velocity_data)
+                trajectory_longitudinal_velocity_data = smooth_bounding(
+                    lateral_acc_limit,
+                    0.9 * lateral_acc_limit,
+                    trajectory_longitudinal_velocity_data,
+                )
             else:
                 trajectory_longitudinal_velocity_data = np.minimum(
                     trajectory_longitudinal_velocity_data, lateral_acc_limit
@@ -598,8 +602,15 @@ class DataCollectingTrajectoryPublisher(Node):
 
             if lateral_error_threshold < tmp_lateral_error or yaw_error_threshold < tmp_yaw_error:
                 if Differential_Smoothing_Flag:
-                    velocity_limit_by_tracking_error_array = velocity_limit_by_tracking_error * np.ones(trajectory_longitudinal_velocity_data.shape)
-                    trajectory_longitudinal_velocity_data = smooth_bounding(velocity_limit_by_tracking_error_array, 0.9 * velocity_limit_by_tracking_error_array, trajectory_longitudinal_velocity_data)
+                    velocity_limit_by_tracking_error_array = (
+                        velocity_limit_by_tracking_error
+                        * np.ones(trajectory_longitudinal_velocity_data.shape)
+                    )
+                    trajectory_longitudinal_velocity_data = smooth_bounding(
+                        velocity_limit_by_tracking_error_array,
+                        0.9 * velocity_limit_by_tracking_error_array,
+                        trajectory_longitudinal_velocity_data,
+                    )
                 else:
                     trajectory_longitudinal_velocity_data = np.minimum(
                         trajectory_longitudinal_velocity_data, velocity_limit_by_tracking_error
