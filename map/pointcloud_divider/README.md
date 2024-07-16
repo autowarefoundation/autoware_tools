@@ -100,7 +100,7 @@ How the PCD file is named
 ### Parameter example
 
 1. Dividing a single point cloud without downsampling
-   
+
    ```yaml
    use_large_grid: false
    merge_pcds: false
@@ -108,8 +108,9 @@ How the PCD file is named
    grid_size_x: 20
    grid_size_y: 20
    ```
+
 1. Downsampling and merging divided point clouds into a single file
-   
+
    ```yaml
    use_large_grid: false
    merge_pcds: true
