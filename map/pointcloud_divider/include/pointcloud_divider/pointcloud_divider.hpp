@@ -94,14 +94,12 @@ public:
   void setUseLargeGrid(const bool use_large_grid) { use_large_grid_ = use_large_grid; }
 
 private:
-  PclCloudPtr merged_ptr_;
   std::string output_dir_, file_prefix_, config_file_;
 
   std::unordered_set<GridInfo<2>> grid_set_;
 
   // Params from yaml
   bool use_large_grid_ = false;
-  bool merge_pcds_ = false;
   double leaf_size_ = 0.1;
   double grid_size_x_ = 100;
   double grid_size_y_ = 100;
@@ -123,11 +121,9 @@ private:
   size_t resident_point_num_ = 0;
   std::string tmp_dir_;
   CustomPCDReader<PointT> reader_;
-  size_t total_point_num_ = 0;  // Used when merging all pcds
 
   PclCloudPtr loadPCD(const std::string & pcd_name);
   void savePCD(const std::string & pcd_name, const pcl::PointCloud<PointT> & cloud);
-  void saveMergedPCD();
   void dividePointCloud(const PclCloudPtr & cloud_ptr);
   void paramInitialize();
   void saveGridInfoToYAML(const std::string & yaml_file_path);

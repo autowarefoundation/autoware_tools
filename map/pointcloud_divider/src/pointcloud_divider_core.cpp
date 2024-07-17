@@ -111,12 +111,8 @@ void PointCloudDivider<PointT>::run(
   // Now merge and downsample
   mergeAndDownsample();
 
-  if (merge_pcds_) {
-    saveMergedPCD();
-  } else {
-    std::string yaml_file_path = output_dir_ + "/" + file_prefix_ + "_metadata.yaml";
-    saveGridInfoToYAML(yaml_file_path);
-  }
+  std::string yaml_file_path = output_dir_ + "/" + file_prefix_ + "_metadata.yaml";
+  saveGridInfoToYAML(yaml_file_path);
 }
 
 template <class PointT>
@@ -152,49 +148,6 @@ void PointCloudDivider<PointT>::savePCD(
   if (pcl::io::savePCDFileBinary(path, cloud) == -1) {
     std::cerr << "Error: Cannot save PCD: " << path << std::endl;
     exit(1);
-  }
-}
-
-template <class PointT>
-void PointCloudDivider<PointT>::saveMergedPCD()
-{
-  std::string filename = output_dir_ + "/" + file_prefix_ + ".pcd";
-  PclCloudType merged_cloud;
-
-  merged_cloud.resize(total_point_num_);
-  size_t copy_loc = 0;
-
-  // Iterate on the segment pcds and combine them
-  for (auto & entry : fs::directory_iterator(output_dir_)) {
-    if (fs::is_regular_file(entry.symlink_status())) {
-      auto path = entry.path().string();
-
-      if (path.substr(path.size() - 4) == ".pcd") {
-        // Load the segment pcd
-        PclCloudType seg_cloud;
-
-        if (pcl::io::loadPCDFile(path, seg_cloud)) {
-          fprintf(
-            stderr, "[%s, %d] %s::Error: Cannot load a PCD file at %s\n", __FILE__, __LINE__,
-            __func__, path.c_str());
-          exit(EXIT_FAILURE);
-        }
-
-        memcpy(merged_cloud.data() + copy_loc, seg_cloud.data(), sizeof(PointT) * seg_cloud.size());
-
-        copy_loc += seg_cloud.size();
-
-        // Delete the segment PCD
-        util::remove(path);
-      }
-    }
-  }
-
-  if (pcl::io::savePCDFileBinary(filename, merged_cloud)) {
-    fprintf(
-      stderr, "[%s, %d] %s::Error: Cannot save the merged PCD at %s\n", __FILE__, __LINE__,
-      __func__, filename.c_str());
-    exit(EXIT_FAILURE);
   }
 }
 
@@ -377,7 +330,7 @@ void PointCloudDivider<PointT>::mergeAndDownsample(
 
   new_cloud->reserve(total_point_num);
 
-  // Merge all PCDs to a single point cloud
+  // Merge all PCDs that belong to the specified segment to a single segment point cloud
   for (auto & fname : pcd_list) {
     PclCloudType seg_cloud;
 
@@ -446,11 +399,6 @@ void PointCloudDivider<PointT>::mergeAndDownsample(
 
   // Delete the folder containing the segments
   util::remove(dir_path);
-
-  // Count the total number of points
-  if (merge_pcds_) {
-    total_point_num_ += new_cloud->size();
-  }
 }
 
 template <class PointT>
@@ -470,7 +418,6 @@ void PointCloudDivider<PointT>::paramInitialize()
   try {
     YAML::Node conf = YAML::LoadFile(config_file_)["pointcloud_divider"];
     use_large_grid_ = conf["use_large_grid"].as<bool>();
-    merge_pcds_ = conf["merge_pcds"].as<bool>();
     leaf_size_ = conf["leaf_size"].as<double>();
     grid_size_x_ = conf["grid_size_x"].as<double>();
     grid_size_y_ = conf["grid_size_y"].as<double>();
@@ -481,8 +428,6 @@ void PointCloudDivider<PointT>::paramInitialize()
 
   g_grid_size_x_ = grid_size_x_ * 10;
   g_grid_size_y_ = grid_size_y_ * 10;
-
-  if (merge_pcds_) merged_ptr_.reset(new pcl::PointCloud<PointT>);
 }
 
 template <class PointT>
