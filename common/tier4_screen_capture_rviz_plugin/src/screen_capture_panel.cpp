@@ -170,7 +170,6 @@ void AutowareScreenCapturePanel::onClickVideoCapture(bool use_buffer)
                               .rgbSwapped()
                               .size();
         current_movie_size_ = cv::Size(q_size.width(), q_size.height());
-
         is_buffering_ = use_buffer;
         if (!is_buffering_) {
           writer_.open(
@@ -200,7 +199,6 @@ void AutowareScreenCapturePanel::onClickVideoCapture(bool use_buffer)
 void AutowareScreenCapturePanel::onTimer()
 {
   if (!main_window_) return;
-
   // this is deprecated but only way to capture nicely
   QScreen * screen = QGuiApplication::primaryScreen();
   QPixmap original_pixmap = screen->grabWindow(main_window_->winId());
