@@ -85,7 +85,16 @@ void AutowareScreenCapturePanel::onCaptureVideoTrigger(
   [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr req,
   const std_srvs::srv::Trigger::Response::SharedPtr res)
 {
-  onClickVideoCapture();
+  onClickVideoCapture(false);
+  res->success = true;
+  res->message = stateToString(state_);
+}
+
+void AutowareScreenCapturePanel::onCaptureVideoWithBufferTrigger(
+  [[maybe_unused]] const std_srvs::srv::Trigger::Request::SharedPtr req,
+  const std_srvs::srv::Trigger::Response::SharedPtr res)
+{
+  onClickVideoCapture(true);
   res->success = true;
   res->message = stateToString(state_);
 }
@@ -105,6 +114,9 @@ void AutowareScreenCapturePanel::onInitialize()
   capture_video_srv_ = raw_node_->create_service<std_srvs::srv::Trigger>(
     "/debug/capture/video",
     std::bind(&AutowareScreenCapturePanel::onCaptureVideoTrigger, this, _1, _2));
+  capture_video_with_buffer_srv_ = raw_node_->create_service<std_srvs::srv::Trigger>(
+    "/debug/capture/video_with_buffer",
+    std::bind(&AutowareScreenCapturePanel::onCaptureVideoWithBufferTrigger, this, _1, _2));
   capture_screen_shot_srv_ = raw_node_->create_service<std_srvs::srv::Trigger>(
     "/debug/capture/screen_shot",
     std::bind(&AutowareScreenCapturePanel::onCaptureScreenShotTrigger, this, _1, _2));
@@ -126,7 +138,7 @@ void AutowareScreenCapturePanel::onClickScreenCapture()
     time_text + ".png");
 }
 
-void AutowareScreenCapturePanel::onClickVideoCapture()
+void AutowareScreenCapturePanel::onClickVideoCapture(bool use_buffer)
 {
   const int clock = static_cast<int>(1e3 / capture_hz_->value());
   try {
@@ -158,15 +170,25 @@ void AutowareScreenCapturePanel::onClickVideoCapture()
                               .rgbSwapped()
                               .size();
         current_movie_size_ = cv::Size(q_size.width(), q_size.height());
-        writer_.open(
-          "capture/" + file_name_prefix_->text().toStdString() + capture_file_name_ + ".mp4",
-          fourcc, capture_hz_->value(), current_movie_size_);
+
+        is_buffering_ = use_buffer;
+        if (!is_buffering_) {
+          writer_.open(
+            "capture/" + file_name_prefix_->text().toStdString() + capture_file_name_ + ".mp4",
+            fourcc, capture_hz_->value(), current_movie_size_);
+        } else {
+          frame_buffer_.clear();
+        }
       }
       capture_timer_->start(clock);
       state_ = State::CAPTURING;
       break;
     case State::CAPTURING:
-      writer_.release();
+      if (is_buffering_) {
+        saveBufferedVideo();
+      } else {
+        writer_.release();
+      }
       capture_timer_->stop();
       capture_to_mp4_button_ptr_->setText("waiting for capture");
       capture_to_mp4_button_ptr_->setStyleSheet("background-color: #00FF00;");
@@ -178,6 +200,7 @@ void AutowareScreenCapturePanel::onClickVideoCapture()
 void AutowareScreenCapturePanel::onTimer()
 {
   if (!main_window_) return;
+
   // this is deprecated but only way to capture nicely
   QScreen * screen = QGuiApplication::primaryScreen();
   QPixmap original_pixmap = screen->grabWindow(main_window_->winId());
@@ -189,14 +212,60 @@ void AutowareScreenCapturePanel::onTimer()
   cv::Mat image(
     size, CV_8UC3, const_cast<uchar *>(q_image.bits()),
     static_cast<size_t>(q_image.bytesPerLine()));
-  if (size != current_movie_size_) {
-    cv::Mat new_image;
-    cv::resize(image, new_image, current_movie_size_);
-    writer_.write(new_image);
+
+  if (is_buffering_) {
+    // Buffering mode: Store frame in buffer
+    frame_buffer_.push_back({image.clone(), rclcpp::Clock().now()});
+    if (frame_buffer_.size() > buffer_size_) {
+      frame_buffer_.pop_front();
+    }
   } else {
-    writer_.write(image);
+    // Normal mode: Write frame to video file
+    if (size != current_movie_size_) {
+      cv::Mat new_image;
+      cv::resize(image, new_image, current_movie_size_);
+      writer_.write(new_image);
+    } else {
+      writer_.write(image);
+    }
   }
+
   cv::waitKey(0);
+}
+
+void AutowareScreenCapturePanel::captureFrameToBuffer()
+{
+  QScreen * screen = QGuiApplication::primaryScreen();
+  QPixmap original_pixmap = screen->grabWindow(main_window_->winId());
+  const auto q_image =
+    original_pixmap.toImage().convertToFormat(QImage::Format_RGB888).rgbSwapped();
+  cv::Mat image(
+    q_image.height(), q_image.width(), CV_8UC3, const_cast<uchar *>(q_image.bits()),
+    static_cast<size_t>(q_image.bytesPerLine()));
+
+  frame_buffer_.push_back({image, rclcpp::Clock().now()});
+  if (frame_buffer_.size() > buffer_size_) {
+    frame_buffer_.pop_front();
+  }
+}
+
+void AutowareScreenCapturePanel::saveBufferedVideo()
+{
+  if (frame_buffer_.empty()) return;
+
+  int fourcc = cv::VideoWriter::fourcc('h', '2', '6', '4');  // mp4
+  cv::VideoWriter buffered_writer;
+  buffered_writer.open(
+    "capture/" + file_name_prefix_->text().toStdString() + capture_file_name_ + "_buffered.mp4",
+    fourcc, capture_hz_->value(), current_movie_size_);
+
+  for (const auto & [frame, _] : frame_buffer_) {
+    cv::Mat resized_frame;
+    cv::resize(frame, resized_frame, current_movie_size_);
+    buffered_writer.write(resized_frame);
+  }
+
+  buffered_writer.release();
 }
 
 void AutowareScreenCapturePanel::update()

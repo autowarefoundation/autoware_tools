@@ -44,6 +44,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <deque>
+#include <utility>
 
 class QLineEdit;
 
@@ -58,9 +60,14 @@ public:
   void onInitialize() override;
   void createWallTimer();
   void onTimer();
+  void captureFrameToBuffer();
+  void saveBufferedVideo();
   void save(rviz_common::Config config) const override;
   void load(const rviz_common::Config & config) override;
   void onCaptureVideoTrigger(
+    const std_srvs::srv::Trigger::Request::SharedPtr req,
+    const std_srvs::srv::Trigger::Response::SharedPtr res);
+  void onCaptureVideoWithBufferTrigger(
     const std_srvs::srv::Trigger::Request::SharedPtr req,
     const std_srvs::srv::Trigger::Response::SharedPtr res);
   void onCaptureScreenShotTrigger(
@@ -69,7 +76,7 @@ public:
 
 public Q_SLOTS:
   void onClickScreenCapture();
-  void onClickVideoCapture();
+  void onClickVideoCapture(bool use_buffer = false);
   void onPrefixChanged();
   void onRateChanged();
 
@@ -85,9 +92,14 @@ private:
   State state_;
   std::string capture_file_name_;
   bool is_capture_{false};
+  bool is_buffering_{false};
   cv::VideoWriter writer_;
   cv::Size current_movie_size_;
   std::vector<cv::Mat> image_vec_;
+  std::deque<std::pair<cv::Mat, rclcpp::Time>> frame_buffer_;
+  // Size of the frame buffer (number of frames to keep in memory)
+  // At 10 Hz capture rate, 100 frames correspond to approximately 10 seconds of video
+  const size_t buffer_size_ = 100;
 
   static std::string stateToString(const State & state)
   {
@@ -102,6 +114,7 @@ private:
 
 protected:
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr capture_video_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr capture_video_with_buffer_srv_;
   rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr capture_screen_shot_srv_;
   rclcpp::Node::SharedPtr raw_node_;
 };
