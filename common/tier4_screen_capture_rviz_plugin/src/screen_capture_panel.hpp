@@ -41,11 +41,11 @@
 // ros
 #include <std_srvs/srv/trigger.hpp>
 
+#include <deque>
 #include <memory>
 #include <string>
-#include <vector>
-#include <deque>
 #include <utility>
+#include <vector>
 
 class QLineEdit;
 
