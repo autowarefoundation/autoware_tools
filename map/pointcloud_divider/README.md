@@ -5,7 +5,6 @@
 This is a tool for processing pcd files, and it can perform the following functions:
 
 - Dividing point clouds
-- Merging point clouds
 - Downsampling point clouds
 - Generating metadata to efficiently handle the divided point clouds
 
@@ -67,25 +66,19 @@ NOTE: The folder `OUTPUT_DIR` is auto generated. If it already exists, all files
 
 ## Parameter
 
-- **merge_pcds** [boolean]
-
-  All PCD files are merge into a single PCD. No divided PCD files are generated.
-
 - **leaf_size** [double]
 
   The leaf_size of voxel grid filter for pointcloud downsampling. The unit is meters [m].
   If the value is less than or equal to 0, downsampling is skipped.
 
-- **grid*size*[xy]** [int]
+- **grid_size[xy]** [int]
 
   The size of the grid for dividing point clouds. The unit is meters [m].
-  **NOTE: Even if `merge_pcds` is true, this is used to determine the clusters for downsampling.**
   Therefore, when downsampling without dividing the point cloud, users should not set an excessively large value, such as 100,000. Specifying a large grid size will attempt to load all point clouds into memory and process them at once, which will result in abnormal memory usage.
 
 - **use_large_grid** [boolean]
 
   Pack output PCD files in larger grid directory.
-  When `merge_pcds` is true, this parameter is ignored.
   The large grid is fixed at 10 times the size of grid*size*[xy].
   For example, if the point cloud is divided into 10m x 10m PCD files, a subdirectory like 00100_00100 will contain up to 100 PCD files.
 
@@ -99,21 +92,19 @@ How the PCD file is named
 
 ### Parameter example
 
-1. Dividing a single point cloud without downsampling
+1. Dividing point clouds without downsampling
 
    ```yaml
    use_large_grid: false
-   merge_pcds: false
    leaf_size: -1.0 # any negative number
    grid_size_x: 20
    grid_size_y: 20
    ```
 
-2. Downsampling and merging divided point clouds into a single file
+2. Dividing and downsampling point clouds
 
    ```yaml
    use_large_grid: false
-   merge_pcds: true
    leaf_size: 0.2
    grid_size_x: 20
    grid_size_y: 20
