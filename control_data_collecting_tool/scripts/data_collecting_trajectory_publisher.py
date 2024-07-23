@@ -461,8 +461,8 @@ class DataCollectingTrajectoryPublisher(Node):
             if self.grid_update_time_interval > time_elapsed.nanoseconds / 1e9:
                 return
         # update collected acceleration and velocity grid
-        for cbar in self.axs[1].collections:
-            cbar.colorbar.remove()
+        for collection in self.axs[1].collections:
+            collection.colorbar.remove()
         self.axs[1].cla()
         self.heatmap = sns.heatmap(
             self.collected_data_counts,
