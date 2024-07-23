@@ -56,10 +56,10 @@
 
 #include "utility.hpp"
 
+#include <pcl/PCLPointField.h>
+#include <pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/PCLPointField.h>
 
 #include <fstream>
 #include <iostream>
@@ -77,15 +77,13 @@ public:
     buffer_ = nullptr;
     clear();
 
-    // Remember field sizes 
+    // Remember field sizes
     fields_ = pcl::getFields<PointT>();
     size_t i = 0;
 
-    for (const auto & field : fields_)
-    {
+    for (const auto & field : fields_) {
       // Remove unidentified fields
-      if (field.name == "_")
-      {
+      if (field.name == "_") {
         continue;
       }
 
@@ -129,7 +127,7 @@ private:
   void writeABlockASCII(const PclCloudType & input, size_t loc, size_t proc_size);
 
   // If the number of points written to file is less than the number of points
-  // in the header, fill the remaining points with 0. This often indicates 
+  // in the header, fill the remaining points with 0. This often indicates
   // that there are something wrong with the processing, and filling by 0 helps
   // analyze the problem easier.
   void padding();
@@ -170,7 +168,7 @@ private:
   size_t point_size_, write_size_;
   char * buffer_;
   std::string pcd_path_;  // Path to the current opening PCD
-  size_t written_pnum_; // To track the number of points written to the file
+  size_t written_pnum_;   // To track the number of points written to the file
 };
 
 template <typename PointT>
@@ -193,10 +191,10 @@ void CustomPCDWriter<PointT>::setOutput(const std::string & pcd_path)
 template <typename PointT>
 void CustomPCDWriter<PointT>::writeMetadata(size_t point_num, bool binary_mode)
 {
-  if (!file_.is_open())
-  {
-    fprintf(stderr, "[%s, %d] %s::Error: File is not opening at %s!\n", __FILE__, __LINE__, __func__, 
-            pcd_path_.c_str());
+  if (!file_.is_open()) {
+    fprintf(
+      stderr, "[%s, %d] %s::Error: File is not opening at %s!\n", __FILE__, __LINE__, __func__,
+      pcd_path_.c_str());
     exit(EXIT_FAILURE);
   }
 
@@ -207,12 +205,9 @@ void CustomPCDWriter<PointT>::writeMetadata(size_t point_num, bool binary_mode)
 
   binary_ = binary_mode;
 
-  if (binary_)
-  {    
+  if (binary_) {
     file_ << "DATA binary" << std::endl;
-  }
-  else
-  {
+  } else {
     file_ << "DATA ascii" << std::endl;
   }
 }
@@ -221,43 +216,40 @@ template <typename PointT>
 void CustomPCDWriter<PointT>::write(const PclCloudType & input)
 {
   // TODO (anh.nguyen.2@tier4.jp): check the number of points written to the output file
-  for (size_t read_loc = 0; read_loc < input.size(); read_loc += block_size_)
-  {
-    size_t proc_size = (read_loc + block_size_ < input.size()) ? block_size_ : input.size() - proc_size;
+  for (size_t read_loc = 0; read_loc < input.size(); read_loc += block_size_) {
+    size_t proc_size =
+      (read_loc + block_size_ < input.size()) ? block_size_ : input.size() - proc_size;
 
-    if (binary_)
-    {
+    if (binary_) {
       writeABlockBinary(input, read_loc, proc_size);
-    }
-    else
-    {
+    } else {
       writeABlockASCII(input, read_loc, proc_size);
     }
   }
 }
 
 template <typename PointT>
-void CustomPCDWriter<PointT>::writeABlockBinary(const PclCloudType & input, size_t loc, size_t proc_size)
+void CustomPCDWriter<PointT>::writeABlockBinary(
+  const PclCloudType & input, size_t loc, size_t proc_size)
 {
   // TODO (anh.nguyen.2@tier4.jp): check the number of points written to the output file
   // Read points to the write buffer
-  for (size_t i = loc, write_loc = 0; i < proc_size; ++i)
-  {
-    const char* p = reinterpret_cast<const char*>(&input[i]);
+  for (size_t i = loc, write_loc = 0; i < proc_size; ++i) {
+    const char * p = reinterpret_cast<const char *>(&input[i]);
 
-    for (size_t fid = 0; fid < fields_.size(); ++fid)
-    {
+    for (size_t fid = 0; fid < fields_.size(); ++fid) {
       memcpy(buffer_ + write_loc, p + fields_[fid].offset, field_sizes_[fid]);
       write_loc += field_sizes_[fid];
     }
   }
-  
+
   // Write the buffer to the file
   file_.write(buffer_, proc_size * point_size_);
 }
 
 template <typename PointT>
-void CustomPCDWriter<PointT>::writeABlockASCII(const PclCloudType & cloud, size_t loc, size_t proc_size)
+void CustomPCDWriter<PointT>::writeABlockASCII(
+  const PclCloudType & cloud, size_t loc, size_t proc_size)
 {
   // To reduce I/O cost, write several points together
   std::ostringstream stream;
@@ -265,129 +257,144 @@ void CustomPCDWriter<PointT>::writeABlockASCII(const PclCloudType & cloud, size_
   const size_t max_pnum = 10;
   size_t packed_pnum = 0;
 
-  for (size_t i = loc; i < proc_size; ++i)
-  {
+  for (size_t i = loc; i < proc_size; ++i) {
     auto & point = cloud[i];
 
     // Copied from the PCL library
-     for (size_t d = 0; d < fields_.size(); ++d)
-    {
+    for (size_t d = 0; d < fields_.size(); ++d) {
       // Ignore invalid padded dimensions that are inherited from binary data
-      if (fields_[d].name == "_")
-        continue;
+      if (fields_[d].name == "_") continue;
 
       int count = fields_[d].count;
-      if (count == 0) 
-        count = 1;          // we simply cannot tolerate 0 counts (coming from older converter code)
+      if (count == 0)
+        count = 1;  // we simply cannot tolerate 0 counts (coming from older converter code)
 
-      for (int c = 0; c < count; ++c)
-      {
-        switch (fields_[d].datatype)
-        {
+      for (int c = 0; c < count; ++c) {
+        switch (fields_[d].datatype) {
           // TODO(anh.nguyen.2@tier4.jp): PCL 1.12 has not supported BOOL, INT64, and UINT64 yet
           // case pcl::PCLPointField::BOOL:
           // {
           //   bool value;
-          //   memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(bool), sizeof(bool));
-          //   stream << boost::numeric_cast<std::int32_t>(value);
+          //   memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c *
+          //   sizeof(bool), sizeof(bool)); stream << boost::numeric_cast<std::int32_t>(value);
           //   break;
           // }
-          case pcl::PCLPointField::INT8:
-          {
+          case pcl::PCLPointField::INT8: {
             std::int8_t value;
-            memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(std::int8_t), sizeof(std::int8_t));
+            memcpy(
+              &value,
+              reinterpret_cast<const char *>(&point) + fields_[d].offset + c * sizeof(std::int8_t),
+              sizeof(std::int8_t));
             stream << boost::numeric_cast<std::int32_t>(value);
             break;
           }
-          case pcl::PCLPointField::UINT8:
-          {
+          case pcl::PCLPointField::UINT8: {
             std::uint8_t value;
-            memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(std::uint8_t), sizeof(std::uint8_t));
+            memcpy(
+              &value,
+              reinterpret_cast<const char *>(&point) + fields_[d].offset + c * sizeof(std::uint8_t),
+              sizeof(std::uint8_t));
             stream << boost::numeric_cast<std::uint32_t>(value);
             break;
           }
-          case pcl::PCLPointField::INT16:
-          {
+          case pcl::PCLPointField::INT16: {
             std::int16_t value;
-            memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(std::int16_t), sizeof(std::int16_t));
+            memcpy(
+              &value,
+              reinterpret_cast<const char *>(&point) + fields_[d].offset + c * sizeof(std::int16_t),
+              sizeof(std::int16_t));
             stream << boost::numeric_cast<std::int16_t>(value);
             break;
           }
-          case pcl::PCLPointField::UINT16:
-          {
+          case pcl::PCLPointField::UINT16: {
             std::uint16_t value;
-            memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(std::uint16_t), sizeof(std::uint16_t));
+            memcpy(
+              &value,
+              reinterpret_cast<const char *>(&point) + fields_[d].offset +
+                c * sizeof(std::uint16_t),
+              sizeof(std::uint16_t));
             stream << boost::numeric_cast<std::uint16_t>(value);
             break;
           }
-          case pcl::PCLPointField::INT32:
-          {
+          case pcl::PCLPointField::INT32: {
             std::int32_t value;
-            memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(std::int32_t), sizeof(std::int32_t));
+            memcpy(
+              &value,
+              reinterpret_cast<const char *>(&point) + fields_[d].offset + c * sizeof(std::int32_t),
+              sizeof(std::int32_t));
             stream << boost::numeric_cast<std::int32_t>(value);
             break;
           }
-          case pcl::PCLPointField::UINT32:
-          {
+          case pcl::PCLPointField::UINT32: {
             std::uint32_t value;
-            memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(std::uint32_t), sizeof(std::uint32_t));
+            memcpy(
+              &value,
+              reinterpret_cast<const char *>(&point) + fields_[d].offset +
+                c * sizeof(std::uint32_t),
+              sizeof(std::uint32_t));
             stream << boost::numeric_cast<std::uint32_t>(value);
             break;
           }
           // case pcl::PCLPointField::INT64:
           // {
           //   std::int64_t value;
-          //   memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(std::int64_t), sizeof(std::int64_t));
-          //   stream << boost::numeric_cast<std::int64_t>(value);
-          //   break;
+          //   memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c *
+          //   sizeof(std::int64_t), sizeof(std::int64_t)); stream <<
+          //   boost::numeric_cast<std::int64_t>(value); break;
           // }
           // case pcl::PCLPointField::UINT64:
           // {
           //   std::uint64_t value;
-          //   memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(std::uint64_t), sizeof(std::uint64_t));
-          //   stream << boost::numeric_cast<std::uint64_t>(value);
-          //   break;
+          //   memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c *
+          //   sizeof(std::uint64_t), sizeof(std::uint64_t)); stream <<
+          //   boost::numeric_cast<std::uint64_t>(value); break;
           // }
-          case pcl::PCLPointField::FLOAT32:
-          {
+          case pcl::PCLPointField::FLOAT32: {
             /*
              * Despite the float type, store the rgb field as uint32
              * because several fully opaque color values are mapped to
              * nan.
              */
-            if ("rgb" == fields_[d].name)
-            {
+            if ("rgb" == fields_[d].name) {
               std::uint32_t value;
-              memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(float), sizeof(float));
+              memcpy(
+                &value,
+                reinterpret_cast<const char *>(&point) + fields_[d].offset + c * sizeof(float),
+                sizeof(float));
               stream << boost::numeric_cast<std::uint32_t>(value);
               break;
             }
             float value;
-            memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(float), sizeof(float));
-            if (std::isnan (value))
+            memcpy(
+              &value,
+              reinterpret_cast<const char *>(&point) + fields_[d].offset + c * sizeof(float),
+              sizeof(float));
+            if (std::isnan(value))
               stream << "nan";
             else
               stream << boost::numeric_cast<float>(value);
             break;
           }
-          case pcl::PCLPointField::FLOAT64:
-          {
+          case pcl::PCLPointField::FLOAT64: {
             double value;
-            memcpy (&value, reinterpret_cast<const char*>(&point) + fields_[d].offset + c * sizeof(double), sizeof(double));
-            if (std::isnan (value))
+            memcpy(
+              &value,
+              reinterpret_cast<const char *>(&point) + fields_[d].offset + c * sizeof(double),
+              sizeof(double));
+            if (std::isnan(value))
               stream << "nan";
             else
               stream << boost::numeric_cast<double>(value);
             break;
           }
           default:
-            fprintf(stderr, "[%s, %d] %s::Incorrect field data type specified (%d)!\n",
-                    __FILE__, __LINE__, __func__, fields_[d].datatype);
+            fprintf(
+              stderr, "[%s, %d] %s::Incorrect field data type specified (%d)!\n", __FILE__,
+              __LINE__, __func__, fields_[d].datatype);
             break;
         }
 
-        if (d < fields_.size() - 1 || c < static_cast<int> (fields_[d].count - 1))
-        {
+        if (d < fields_.size() - 1 || c < static_cast<int>(fields_[d].count - 1)) {
           stream << " ";
         }
       }
@@ -397,24 +404,22 @@ void CustomPCDWriter<PointT>::writeABlockASCII(const PclCloudType & cloud, size_
 
     ++packed_pnum;
 
-    if (packed_pnum == max_pnum)
-    {
+    if (packed_pnum == max_pnum) {
       // Copy the stream, trim it, and write it to disk
-      std::string result = stream.str ();
-      boost::trim (result);
-      stream.str ("");
+      std::string result = stream.str();
+      boost::trim(result);
+      stream.str("");
       file_ << result << "\n";
       packed_pnum = 0;
     }
   }
 
   // Write the rest of stream to file
-  if (packed_pnum > 0)
-  {
+  if (packed_pnum > 0) {
     // Copy the stream, trim it, and write it to disk
-    std::string result = stream.str ();
-    boost::trim (result);
-    stream.str ("");
+    std::string result = stream.str();
+    boost::trim(result);
+    stream.str("");
     file_ << result << "\n";
     packed_pnum = 0;
   }
@@ -423,8 +428,7 @@ void CustomPCDWriter<PointT>::writeABlockASCII(const PclCloudType & cloud, size_
 template <typename PointT>
 void CustomPCDWriter<PointT>::padding()
 {
-  if (written_pnum_ < point_num_)
-  {
+  if (written_pnum_ < point_num_) {
     PclCloudType all_zeros;
 
     all_zeros.reserve(point_num_ - written_pnum_);
@@ -432,6 +436,5 @@ void CustomPCDWriter<PointT>::padding()
     write(all_zeros);
   }
 }
-
 
 #endif  // POINTCLOUD_DIVIDER__PCD_IO_WRITER_HPP_

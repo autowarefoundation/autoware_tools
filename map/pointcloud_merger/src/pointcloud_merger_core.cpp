@@ -41,9 +41,9 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <pointcloud_merger/pointcloud_merger.hpp>
-#include <pointcloud_divider/utility.hpp>
 #include <pointcloud_divider/pointcloud_divider.hpp>
+#include <pointcloud_divider/utility.hpp>
+#include <pointcloud_merger/pointcloud_merger.hpp>
 
 #include <filesystem>
 
@@ -51,8 +51,7 @@ namespace fs = std::filesystem;
 
 template <class PointT>
 void PointCloudMerger<PointT>::run(
-  std::vector<std::string> & pcd_names, const std::string & output_pcd,
-  const std::string & config)
+  std::vector<std::string> & pcd_names, const std::string & output_pcd, const std::string & config)
 {
   output_pcd_ = output_pcd;
   config_file_ = config;
@@ -60,13 +59,12 @@ void PointCloudMerger<PointT>::run(
   grid_set_.clear();
   paramInitialize();
 
-  // Just in case the downsampling option is on 
-  if (leaf_size_ > 0)
-  {
+  // Just in case the downsampling option is on
+  if (leaf_size_ > 0) {
     tmp_dir_ = "./pointcloud_merger_tmp/";
-    
+
     if (fs::exists(tmp_dir_)) {
-     fs::remove_all(tmp_dir_);
+      fs::remove_all(tmp_dir_);
     }
 
     util::make_dir(tmp_dir_);
@@ -76,13 +74,10 @@ void PointCloudMerger<PointT>::run(
     fs::remove_all(output_pcd_);
   }
 
-  if (leaf_size_ > 0)
-  {
+  if (leaf_size_ > 0) {
     mergeWithDownsample(pcd_names);
     util::remove(tmp_dir_);
-  }
-  else
-  {
+  } else {
     mergeWithoutDownsample(pcd_names);
   }
 }
@@ -103,15 +98,12 @@ void PointCloudMerger<PointT>::mergeWithDownsample(std::vector<std::string> & in
   std::vector<std::string> seg_names;
   fs::path tmp_path(tmp_dir_);
 
-  for (auto & entry : fs::directory_iterator(tmp_path))
-  {
-    if (fs::is_regular_file(entry.symlink_status()))
-    {
+  for (auto & entry : fs::directory_iterator(tmp_path)) {
+    if (fs::is_regular_file(entry.symlink_status())) {
       auto fname = entry.path().string();
       auto ext = fname.substr(fname.size() - 4);
 
-      if (ext == ".pcd")
-      {
+      if (ext == ".pcd") {
         seg_names.push_back(fname);
       }
     }
@@ -139,12 +131,10 @@ void PointCloudMerger<PointT>::mergeWithoutDownsample(std::vector<std::string> &
   writer_.setOutput(output_pcd_);
   writer_.writeMetadata(total_point_num);
 
-  for (const auto & pcd_name : pcd_names)
-  {
+  for (const auto & pcd_name : pcd_names) {
     reader.setInput(pcd_name);
 
-    do
-    {
+    do {
       PclCloudType new_cloud;
 
       reader.readABlock(new_cloud);
