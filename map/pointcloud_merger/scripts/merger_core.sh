@@ -53,9 +53,9 @@ ARGV=("$@")
 N_PCD=$((ARGC - 2))
 
 # Prepare PCD file names
-PCD_FILES=""
+PCD_FILES=()
 for ((i = 0; i < N_PCD; i++)); do
-    PCD_FILES+="${ARGV[i]}"" "
+    PCD_FILES=("${PCD_FILES[@]}" "${ARGV[i]}")
 done
 
 # Remove trailing space if any
@@ -66,4 +66,4 @@ OUTPUT_PCD=${ARGV[$((ARGC - 2))]}
 CONFIG_FILE=${ARGV[$((ARGC - 1))]}
 
 # Call the pointcloud_divider
-$PCD_MER $N_PCD $PCD_FILES $OUTPUT_PCD $CONFIG_FILE
+$PCD_MER "${N_PCD}" "${PCD_FILES[@]}" "${OUTPUT_PCD}" "${CONFIG_FILE}"

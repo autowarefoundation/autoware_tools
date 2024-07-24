@@ -99,9 +99,7 @@ public:
 
   ~CustomPCDReader()
   {
-    if (buffer_) {
-      delete[] buffer_;
-    }
+    clear();
   }
 
 private:

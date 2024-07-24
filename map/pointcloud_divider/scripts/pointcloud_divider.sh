@@ -63,7 +63,7 @@ if [ ! -e "$INPUT_DIR" ]; then
     exit 1
 fi
 
-PCD_FILES=$(find "$INPUT_DIR" -name "*.pcd" -printf "%p ")
+IFS=" " read -ra PCD_FILES <<< "$(find "$INPUT_DIR" -name "*.pcd" -printf "%p ")"
 
 # Check the number of PCD files
 PCD_FILE_COUNT=$(echo "$PCD_FILES" | wc -w)
@@ -75,4 +75,4 @@ if [ "$PCD_FILE_COUNT" -eq 0 ]; then
 fi
 
 # Call the primary script
-$DIV_CORE $PCD_FILES $OUTPUT_DIR $PREFIX $CONFIG_FILE
+$DIV_CORE "${PCD_FILES[@]}" "${OUTPUT_DIR}" "${PREFIX}" "${CONFIG_FILE}"
