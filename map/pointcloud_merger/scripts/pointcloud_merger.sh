@@ -65,7 +65,7 @@ fi
 IFS=" " read -ra PCD_FILES <<<"$(find "$INPUT_DIR" -name "*.pcd" -printf "%p ")"
 
 # Check the number of PCD files
-PCD_FILE_COUNT=$(echo "{$PCD_FILES[@]}" | wc -w)
+PCD_FILE_COUNT=$(echo "${PCD_FILES[@]}" | wc -w)
 
 if [ "$PCD_FILE_COUNT" -eq 0 ]; then
     echo "Error: No valid PCD files are found."
