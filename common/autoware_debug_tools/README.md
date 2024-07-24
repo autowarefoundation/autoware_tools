@@ -21,3 +21,15 @@ This tool visualizes `tier4_debug_msgs/msg/ProcessingTimeTree` messages.
 3. Then, the visualizer will show the processing time tree.
 
    ![visualize-tree](images/visualize-tree.png)
+
+## System Usage Monitor
+
+The purpose of the System Usage Monitor is to monitor, visualize and publish the CPU usage and memory usage of the ROS processes. By providing a real-time terminal-based visualization, users can easily confirm the cpu and memory usage as in the picture below.
+
+![system_usage_monitor](image/system_usage_monitor.png)
+
+You can run the program by the following command.
+
+```bash
+ros2 run autoware_debug_tools system_usage_monitor
+```
