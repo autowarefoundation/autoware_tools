@@ -172,8 +172,8 @@ private:
   size_t block_size_ = 30000000;  // Maximum number of points to write in each writeABlock
   size_t point_size_, write_size_;
   char * buffer_;
-  std::string pcd_path_;  // Path to the current opening PCD
-  size_t written_point_num_;   // To track the number of points written to the file
+  std::string pcd_path_;      // Path to the current opening PCD
+  size_t written_point_num_;  // To track the number of points written to the file
 };
 
 template <typename PointT>
