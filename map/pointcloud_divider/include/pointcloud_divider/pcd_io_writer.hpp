@@ -240,7 +240,6 @@ template <typename PointT>
 void CustomPCDWriter<PointT>::writeABlockBinary(
   const PclCloudType & input, size_t loc, size_t proc_size)
 {
-  // TODO (anh.nguyen.2@tier4.jp): check the number of points written to the output file
   // Read points to the write buffer
   for (size_t i = loc, write_loc = 0; i < proc_size; ++i) {
     const char * p = reinterpret_cast<const char *>(&input[i]);

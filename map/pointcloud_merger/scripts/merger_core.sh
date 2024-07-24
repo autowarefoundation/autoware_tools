@@ -58,9 +58,6 @@ for ((i = 0; i < N_PCD; i++)); do
     PCD_FILES=("${PCD_FILES[@]}" "${ARGV[i]}")
 done
 
-# Remove trailing space if any
-PCD_FILES="$(echo -e "${PCD_FILES}" | sed -e 's/[[:space:]]*$//')"
-
 # Prepare other file paths
 OUTPUT_PCD=${ARGV[$((ARGC - 2))]}
 CONFIG_FILE=${ARGV[$((ARGC - 1))]}

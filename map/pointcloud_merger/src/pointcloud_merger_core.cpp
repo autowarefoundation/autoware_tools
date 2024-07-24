@@ -148,9 +148,7 @@ void PointCloudMerger<PointT>::mergeWithoutDownsample(std::vector<std::string> &
       PclCloudType new_cloud;
 
       reader.readABlock(new_cloud);
-
       writer_.write(new_cloud);
-
     } while (reader.good());
   }
 }
