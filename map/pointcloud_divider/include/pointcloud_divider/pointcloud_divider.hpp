@@ -91,10 +91,7 @@ public:
 
   void run(const std::vector<std::string> & pcd_names);
 
-  void setPrefix(const std::string & prefix)
-  {
-    file_prefix_ = prefix;
-  }
+  void setPrefix(const std::string & prefix) { file_prefix_ = prefix; }
 
   void setOutputDir(const std::string & output_dir)
   {
@@ -110,20 +107,11 @@ public:
     g_grid_size_y_ = grid_size_y_ * 10;
   }
 
-  void setLargeGridMode(bool use_large_grid)
-  {
-    use_large_grid_ = use_large_grid;
-  }
+  void setLargeGridMode(bool use_large_grid) { use_large_grid_ = use_large_grid; }
 
-  void setLeafSize(float leaf_size)
-  {
-    leaf_size_ = leaf_size;
-  }
+  void setLeafSize(float leaf_size) { leaf_size_ = leaf_size; }
 
-  void setDebugMode(bool mode)
-  {
-    debug_mode_ = mode;
-  }
+  void setDebugMode(bool mode) { debug_mode_ = mode; }
 
   std::string makeFileName(const GridInfo<2> & grid) const;
 
@@ -157,7 +145,7 @@ private:
   size_t resident_point_num_ = 0;
   std::string tmp_dir_;
   CustomPCDReader<PointT> reader_;
-  bool debug_mode_ = true; // Print debug messages or not
+  bool debug_mode_ = true;  // Print debug messages or not
 
   PclCloudPtr loadPCD(const std::string & pcd_name);
   void savePCD(const std::string & pcd_name, const pcl::PointCloud<PointT> & cloud);

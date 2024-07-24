@@ -41,8 +41,8 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef POINTCLOUD_MERGER_HPP_
-#define POINTCLOUD_MERGER_HPP_
+#ifndef POINTCLOUD_MERGER__POINTCLOUD_MERGER_HPP_
+#define POINTCLOUD_MERGER__POINTCLOUD_MERGER_HPP_
 
 #include <yaml-cpp/yaml.h>
 
@@ -79,8 +79,8 @@ private:
   CustomPCDWriter<PointT> writer_;
 
   void paramInitialize();
-  void mergeWithoutDownsample(std::vector<std::string>& input_pcds);
-  void mergeWithDownsample(std::vector<std::string>& input_pcds);
+  void mergeWithoutDownsample(std::vector<std::string> & input_pcds);
+  void mergeWithDownsample(std::vector<std::string> & input_pcds);
 };
 
-#endif  // POINTCLOUD_MERGER_HPP_
+#endif  // POINTCLOUD_MERGER__POINTCLOUD_MERGER_HPP_

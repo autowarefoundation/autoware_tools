@@ -65,7 +65,7 @@ void PointCloudDivider<PointT>::run(
   paramInitialize();
 
   grid_set_.clear();
-  
+
   checkOutputDirectoryValidity();
   dividePointCloud(cloud_ptr);
   mergeAndDownsample();
@@ -105,8 +105,7 @@ void PointCloudDivider<PointT>::run(const std::vector<std::string> & pcd_names)
   std::cerr << "Dividing..." << std::endl;
 
   for (const std::string & pcd_name : pcd_names) {
-    if (debug_mode_)
-    {
+    if (debug_mode_) {
       std::cout << "Processing file " << pcd_name << "..." << std::endl;
     }
 
@@ -173,8 +172,7 @@ void PointCloudDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
     return;
   }
 
-  if (debug_mode_)
-  {
+  if (debug_mode_) {
     std::cout << "\tProcessing a block of " << cloud_ptr->size() << " points... \r" << std::flush;
   }
 
@@ -238,8 +236,7 @@ void PointCloudDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
     }
   }
 
-  if (debug_mode_)
-  {
+  if (debug_mode_) {
     std::cout << "\tProcessing a block of " << cloud_ptr->size() << " points... 100%" << std::endl;
   }
 }
@@ -311,11 +308,10 @@ void PointCloudDivider<PointT>::mergeAndDownsample()
 
   for (auto & tmp_dir_entry : fs::directory_iterator(tmp_path)) {
     if (fs::is_directory(tmp_dir_entry.symlink_status())) {
-      if (debug_mode_)
-      {
+      if (debug_mode_) {
         std::cout << "\tProcessing... "
                   << static_cast<int>(
-                      static_cast<float>(progress) / static_cast<float>(seg_num) * 100)
+                       static_cast<float>(progress) / static_cast<float>(seg_num) * 100)
                   << "%\r" << std::flush;
         ++progress;
       }
@@ -340,8 +336,7 @@ void PointCloudDivider<PointT>::mergeAndDownsample()
     }
   }
 
-  if (debug_mode_)
-  {
+  if (debug_mode_) {
     std::cout << "\tProcessing... 100%" << std::endl;
   }
 

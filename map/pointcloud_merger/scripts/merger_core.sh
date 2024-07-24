@@ -9,7 +9,7 @@ Usage:
   $0 <PCD_0> ... <PCD_N> <OUTPUT_PCD> <CONFIG_FILE>
 
 Description:
-  Merge PCD files into a single PCD file with or without downsampling. 
+  Merge PCD files into a single PCD file with or without downsampling.
 
 Options:
   None

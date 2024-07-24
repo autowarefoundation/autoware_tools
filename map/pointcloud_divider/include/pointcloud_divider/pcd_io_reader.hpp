@@ -90,8 +90,7 @@ public:
 
   size_t point_num()
   {
-    if (file_.is_open())
-    {
+    if (file_.is_open()) {
       return point_num_;
     }
 
