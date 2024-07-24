@@ -63,7 +63,7 @@ if [ ! -e "$INPUT_DIR" ]; then
     exit 1
 fi
 
-IFS=" " read -ra PCD_FILES <<< "$(find "$INPUT_DIR" -name "*.pcd" -printf "%p ")"
+IFS=" " read -ra PCD_FILES <<<"$(find "$INPUT_DIR" -name "*.pcd" -printf "%p ")"
 
 # Check the number of PCD files
 PCD_FILE_COUNT=$(echo "$PCD_FILES" | wc -w)

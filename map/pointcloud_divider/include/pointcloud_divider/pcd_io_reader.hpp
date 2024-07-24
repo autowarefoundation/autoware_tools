@@ -97,10 +97,7 @@ public:
     return 0;
   }
 
-  ~CustomPCDReader()
-  {
-    clear();
-  }
+  ~CustomPCDReader() { clear(); }
 
 private:
   void readHeader(std::ifstream & input);
