@@ -76,7 +76,7 @@ public:
   {
     buffer_ = nullptr;
     point_num_ = 0;
-    written_pnum_ = 0;
+    written_point_num_ = 0;
     binary_ = true;
     point_size_ = 0;
     write_size_ = 0;
@@ -117,7 +117,7 @@ private:
     fields_.clear();
     field_sizes_.clear();
     point_num_ = 0;
-    written_pnum_ = 0;
+    written_point_num_ = 0;
     binary_ = true;
 
     if (file_.is_open()) {
@@ -173,7 +173,7 @@ private:
   size_t point_size_, write_size_;
   char * buffer_;
   std::string pcd_path_;  // Path to the current opening PCD
-  size_t written_pnum_;   // To track the number of points written to the file
+  size_t written_point_num_;   // To track the number of points written to the file
 };
 
 template <typename PointT>
@@ -233,7 +233,7 @@ void CustomPCDWriter<PointT>::write(const PclCloudType & input)
     }
   }
 
-  written_pnum_ += input.size();
+  written_point_num_ += input.size();
 }
 
 template <typename PointT>
@@ -262,8 +262,8 @@ void CustomPCDWriter<PointT>::writeABlockASCII(
   // To reduce I/O cost, write several points together
   std::ostringstream stream;
   // When the number of points in the stream reach this number, write the stream to file
-  const size_t max_pnum = 10;
-  size_t packed_pnum = 0;
+  const size_t max_point_num = 10;
+  size_t packed_point_num = 0;
 
   for (size_t i = loc; i < proc_size; ++i) {
     auto & point = cloud[i];
@@ -410,36 +410,36 @@ void CustomPCDWriter<PointT>::writeABlockASCII(
 
     stream << "\n";
 
-    ++packed_pnum;
+    ++packed_point_num;
 
-    if (packed_pnum == max_pnum) {
+    if (packed_point_num == max_point_num) {
       // Copy the stream, trim it, and write it to disk
       std::string result = stream.str();
       boost::trim(result);
       stream.str("");
       file_ << result << "\n";
-      packed_pnum = 0;
+      packed_point_num = 0;
     }
   }
 
   // Write the rest of stream to file
-  if (packed_pnum > 0) {
+  if (packed_point_num > 0) {
     // Copy the stream, trim it, and write it to disk
     std::string result = stream.str();
     boost::trim(result);
     stream.str("");
     file_ << result << "\n";
-    packed_pnum = 0;
+    packed_point_num = 0;
   }
 }
 
 template <typename PointT>
 void CustomPCDWriter<PointT>::padding()
 {
-  if (written_pnum_ < point_num_) {
+  if (written_point_num_ < point_num_) {
     PclCloudType all_zeros;
 
-    all_zeros.resize(point_num_ - written_pnum_);
+    all_zeros.resize(point_num_ - written_point_num_);
 
     PointT zp;
 
