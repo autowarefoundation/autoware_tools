@@ -19,6 +19,7 @@ from autoware_planning_msgs.msg import TrajectoryPoint
 from geometry_msgs.msg import AccelWithCovarianceStamped
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import PolygonStamped
+import matplotlib.pyplot as plt
 from nav_msgs.msg import Odometry
 import numpy as np
 from numpy import arctan
@@ -36,8 +37,6 @@ from visualization_msgs.msg import MarkerArray
 debug_matplotlib_plot_flag = False
 Differential_Smoothing_Flag = True
 USE_CURVATURE_RADIUS_FLAG = False
-if debug_matplotlib_plot_flag:
-    import matplotlib.pyplot as plt
 
 
 def smooth_bounding(upper: np.ndarray, threshold: np.ndarray, x: np.ndarray):
