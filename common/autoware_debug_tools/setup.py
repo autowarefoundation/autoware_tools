@@ -21,6 +21,7 @@ setup(
     entry_points={
         "console_scripts": [
             "processing_time_visualizer = autoware_debug_tools.processing_time_visualizer.node:main",
+            "system_usage_monitor = autoware_debug_tools.system_usage_monitor:main",
         ],
     },
 )
