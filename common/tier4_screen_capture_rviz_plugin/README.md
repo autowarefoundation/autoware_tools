@@ -6,10 +6,11 @@ This plugin captures the screen of rviz.
 
 ## Interface
 
-| Name                         | Type                     | Description                        |
-| ---------------------------- | ------------------------ | ---------------------------------- |
-| `/debug/capture/video`       | `std_srvs::srv::Trigger` | Trigger to start screen capturing. |
-| `/debug/capture/screen_shot` | `std_srvs::srv::Trigger` | Trigger to capture screen shot.    |
+| Name                               | Type                     | Description                                    |
+| ---------------------------------- | ------------------------ | ---------------------------------------------- |
+| `/debug/capture/video`             | `std_srvs::srv::Trigger` | Trigger to start screen capturing.             |
+| `/debug/capture/video_with_buffer` | `std_srvs::srv::Trigger` | Trigger to start screen capturing with buffer. |
+| `/debug/capture/screen_shot`       | `std_srvs::srv::Trigger` | Trigger to capture screen shot.                |
 
 ## Assumptions / Known limits
 
