@@ -20,6 +20,10 @@ import sys
 import threading
 
 import psutil
+import rclpy
+from rclpy.node import Node
+from tier4_debug_msgs.msg import SystemUsage
+from tier4_debug_msgs.msg import SystemUsageArray
 
 
 def signal_handler(sig, frame):
@@ -30,7 +34,7 @@ def get_system_usage(pid, system_usages, interval):
     try:
         proc = psutil.Process(pid)
         cpu_usage = proc.cpu_percent(interval=interval)
-        memory_usage = proc.memory_info().rss / 1024**2
+        memory_usage = proc.memory_info().rss
         cmdline = proc.cmdline()
         process_name = " ".join(cmdline)
         component = (
@@ -51,15 +55,12 @@ def get_system_usage(pid, system_usages, interval):
         pass
 
 
-def print_system_usage(system_usages):
+def print_system_usage(sorted_system_usages):
     # clear terminal
     os.system("clear")
-    if not system_usages:
+    if not sorted_system_usages:
         print("No processes found with the specified name.")
         return
-
-    # sort in the order of component name
-    sorted_system_usages = sorted(system_usages.items(), key=lambda x: x[1]["component"])
 
     print("|" + "-" * 202 + "|")
     print(
@@ -84,7 +85,7 @@ def print_system_usage(system_usages):
         component = data["component"]
         container = data["container"]
         cpu_usage = data["cpu_usage"]
-        memory_usage = data["memory_usage"]
+        memory_usage = data["memory_usage"] / 1024**2
         cpu_bar = "#" * int(cpu_usage * 0.5)
         memory_bar = "#" * int(memory_usage * 0.06)
 
@@ -112,8 +113,17 @@ def print_system_usage(system_usages):
     print("|" + "-" * 202 + "|")
 
 
-def main():
+def main(args=None):
     signal.signal(signal.SIGINT, signal_handler)
+
+    rclpy.init(args=args)
+    node = Node("system_usage_monitor")
+
+    pub_system_usage = node.create_publisher(
+        SystemUsageArray,
+        "~/system_usage",
+        1,
+    )
 
     system_usages = {}
     while True:
@@ -136,8 +146,25 @@ def main():
         for thread in threads:
             thread.join()
 
+        # sort in the order of component name
+        sorted_system_usages = sorted(
+            system_usages.items(), key=lambda x: x[1]["component"] + x[1]["container"]
+        )
+
         # print system usage
-        print_system_usage(system_usages)
+        print_system_usage(sorted_system_usages)
+
+        # publish system usage
+        system_usage_array = SystemUsageArray()
+        system_usage_array.stamp = node.get_clock().now().to_msg()
+        for pid, data in sorted_system_usages:
+            system_usage = SystemUsage()
+            system_usage.pid = pid
+            system_usage.name = data["component"] + "/" + data["container"]
+            system_usage.cpu_usage = data["cpu_usage"]
+            system_usage.memory_usage = float(data["memory_usage"])
+            system_usage_array.system_usage.append(system_usage)
+        pub_system_usage.publish(system_usage_array)
 
 
 if __name__ == "__main__":
