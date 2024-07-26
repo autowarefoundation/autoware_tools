@@ -480,6 +480,7 @@ class DataCollectingTrajectoryPublisher(Node):
         self.axs[1].set_ylabel("Velocity bins")
         self.axs[1].set_title("Counts of Observations in Each Grid Cell")
         self.last_grid_update_time = self.get_clock().now()
+        self.fig.canvas.draw()
 
     def timer_callback(self):
         if (
