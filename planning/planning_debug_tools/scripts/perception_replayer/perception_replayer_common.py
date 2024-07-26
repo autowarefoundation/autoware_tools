@@ -49,7 +49,7 @@ class PerceptionReplayerCommon(Node):
         super().__init__(name)
         self.args = args
 
-        self.ego_pose = None
+        self.ego_odom = None
         self.rosbag_objects_data = []
         self.rosbag_ego_odom_data = []
         self.rosbag_traffic_signals_data = []
@@ -110,7 +110,7 @@ class PerceptionReplayerCommon(Node):
         time.sleep(1.0)
 
     def on_odom(self, odom):
-        self.ego_pose = odom.pose.pose
+        self.ego_odom = odom
 
     def load_rosbag(self, rosbag2_path: str):
         reader = open_reader(str(rosbag2_path))
@@ -142,7 +142,7 @@ class PerceptionReplayerCommon(Node):
                     for field in msg.__slots__:
                         setattr(
                             new_msg, field, getattr(msg, field)
-                        )  # it's unsafe because the elements inside the message are still the old type, but it works for now on.
+                        )  # it's unsafe because the elements inside the message are still the old type, but it works for now on because they share the same elements' names and structures.
                     msg = new_msg
                 self.rosbag_objects_data.append((stamp, msg))
             if topic == ego_odom_topic:
@@ -183,6 +183,7 @@ class PerceptionReplayerCommon(Node):
                                 traffic_light_element.status = traffic_signal_element.status
                                 traffic_light_element.confidence = traffic_signal_element.confidence
                                 traffic_light_group.elements.append(traffic_light_element)
+                            new_msg.traffic_light_groups.append(traffic_light_group)
                     else:
                         raise AssertionError(f"Unsupported conversion from {type(msg)}")
                     msg = new_msg

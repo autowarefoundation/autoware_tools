@@ -274,13 +274,13 @@ class VelocityChecker(Node):
 
     def CallBackControlCmd(self, msg):
         # self.get_logger().info('CONTROL_CMD called')
-        self.data_arr[CONTROL_CMD] = msg.longitudinal.speed
+        self.data_arr[CONTROL_CMD] = msg.longitudinal.velocity
         self.data_arr[CONTROL_CMD_ACC] = msg.longitudinal.acceleration
         return
 
     def CallBackVehicleCmd(self, msg):
         # self.get_logger().info('VEHICLE_CMD called')
-        self.data_arr[VEHICLE_CMD] = msg.longitudinal.speed
+        self.data_arr[VEHICLE_CMD] = msg.longitudinal.velocity
         self.data_arr[VEHICLE_CMD_ACC] = msg.longitudinal.acceleration
         return
 

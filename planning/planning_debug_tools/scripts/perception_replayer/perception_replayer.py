@@ -84,8 +84,8 @@ class PerceptionReplayer(PerceptionReplayerCommon):
         if objects_msg:
             objects_msg.header.stamp = timestamp
             if self.args.detected_object:
-                if not self.ego_pose:
-                    print("No ego pose found.")
+                if not self.ego_odom:
+                    print("No ego odom found.")
                     return
 
                 ego_odom = self.find_ego_odom_by_timestamp(self.bag_timestamp)
@@ -93,7 +93,7 @@ class PerceptionReplayer(PerceptionReplayerCommon):
                     return
                 log_ego_pose = ego_odom.pose.pose
 
-                translate_objects_coordinate(self.ego_pose, log_ego_pose, objects_msg)
+                translate_objects_coordinate(self.ego_odom.pose.pose, log_ego_pose, objects_msg)
             self.objects_pub.publish(objects_msg)
 
         # traffic signals

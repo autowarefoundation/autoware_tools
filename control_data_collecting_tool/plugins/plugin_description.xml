@@ -1,0 +1,6 @@
+<library path="control_data_collecting_tool">
+  <class name="rviz_plugins/DataCollectingAreaSelectionTool"
+         type="rviz_plugins::DataCollectingAreaSelectionTool"
+         base_class_type="rviz_common::Tool">
+  </class>
+</library>

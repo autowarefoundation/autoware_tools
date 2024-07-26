@@ -168,6 +168,7 @@ protected:
   std::vector<Route> goals_list_{};
   std::map<unsigned, std::pair<std::string, unsigned>> goals_achieved_{};
   std::string goals_achieved_file_path_{};
+  bool is_autonomous_mode_available_{false};
 
 private:
   void loadParams(rclcpp::Node * node);

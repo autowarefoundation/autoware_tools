@@ -2,7 +2,8 @@
   "ignorePaths": [
     "**/perception/**",
     "sensing/tier4_pcl_extensions/include/**",
-    "perception/bytetrack/lib/**"
+    "perception/bytetrack/lib/**",
+    "common/autoware_debug_tools/**"
   ],
   "ignoreRegExpList": [],
   "words": ["dltype", "tvmgen", "quantizer", "imageio", "mimsave"]
