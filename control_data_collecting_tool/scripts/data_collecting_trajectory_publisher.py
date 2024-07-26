@@ -141,6 +141,8 @@ class DataCollectingTrajectoryPublisher(Node):
         self.collected_data_counts = np.zeros((self.num_bins, self.num_bins))
         self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins + 1)
         self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins + 1)
+        self.v_bin_centers = (self.v_bins[:-1] + self.v_bins[1:]) / 2
+        self.a_bin_centers = (self.a_bins[:-1] + self.a_bins[1:]) / 2
         self.fig, self.axs = plt.subplots(2, 1, figsize=(10, 12))
         self.grid_update_time_interval = 1
         self.last_grid_update_time = None
@@ -461,15 +463,18 @@ class DataCollectingTrajectoryPublisher(Node):
                 return
         # update collected acceleration and velocity grid
         for collection in self.axs[1].collections:
-            collection.colorbar.remove()
+            if collection.colorbar is not None:
+                collection.colorbar.remove()
         self.axs[1].cla()
         self.heatmap = sns.heatmap(
             self.collected_data_counts,
             annot=True,
             cmap="coolwarm",
-            xticklabels=np.round(self.a_bins, 2),
-            yticklabels=np.round(self.v_bins, 2),
+            xticklabels=np.round(self.a_bin_centers, 2),
+            yticklabels=np.round(self.v_bin_centers, 2),
             ax=self.axs[1],
+            linewidths=0.1,
+            linecolor="gray",
         )
         self.axs[1].set_xlabel("Acceleration bins")
         self.axs[1].set_ylabel("Velocity bins")
