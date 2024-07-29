@@ -98,7 +98,10 @@ if __name__ == "__main__":
                     # total_length += waypoints.compute_length()
                     total_direction_change += count_forawrd_backwrad_change(waypoints)
 
-    print("Success number: ", total_result)
-    print("Success rate: ", total_result / N)
-    print("Average path length ratio: ", total_length_rate / total_result)
-    print("Average direction change number: ", total_direction_change / total_result)
+    if total_result != 0:
+        print("Success number: ", total_result)
+        print("Success rate: ", total_result / N)
+        print("Average path length ratio: ", total_length_rate / total_result)
+        print("Average direction change number: ", total_direction_change / total_result)
+    else:
+        print("No goals are found...")

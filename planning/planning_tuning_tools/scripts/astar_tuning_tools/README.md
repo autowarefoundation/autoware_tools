@@ -5,7 +5,7 @@
 1. Move to the target autoware directory and build the package
 
    ```sh
-   colcon build --packages-up-to freespace_planning_algorithms --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+   colcon build --packages-up-to autoware_freespace_planning_algorithms --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
    ```
 
 2. Source the setup srcript

@@ -137,7 +137,13 @@ if __name__ == "__main__":
                         goal_pose.orientation.y = quaterinon.y
                         goal_pose.orientation.z = quaterinon.z
 
-                        find = astar.makePlan(start_pose, goal_pose)
+                        try:
+                            find = astar.makePlan(start_pose, goal_pose)
+                        except RuntimeError:
+                            find = False
+                        else:
+                            find = False
+
                         waypoints = fp.PlannerWaypoints()
                         if find:
                             waypoints = astar.getWaypoints()

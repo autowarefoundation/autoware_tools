@@ -5,14 +5,12 @@ import pickle
 import random
 
 import autoware_freespace_planning_algorithms.astar_search as fp
-from config.astar_params import astar_param
-from config.astar_params import planner_param
-from config.astar_params import vehicle_shape
 from geometry_msgs.msg import Pose
 from nav_msgs.msg import OccupancyGrid
 import numpy as np
 from pyquaternion import Quaternion
 from tqdm import tqdm
+import yaml
 
 costmap = OccupancyGrid()
 
@@ -23,24 +21,71 @@ class TestData:
         self.goal_pose = goal_pose
 
 
-class Params:
-    def __init__(self, planner_param, astar_param):
-        self.planner_param = planner_param
-        self.astar_param = astar_param
+class OptimizationVariable:
+    def __init__(self, param_obj, config_dict):
+        self.param_obj = param_obj
+
+        # processing
+        use_attrs = []
+        mins = []
+        maxs = []
+        for key in config_dict.keys():
+            param_config = config_dict[key]
+            setattr(self.param_obj, key, param_config["initial"])
+            if param_config["use_optimization"]:
+                use_attrs.append(key)
+                mins.append(param_config["min"])
+                maxs.append(param_config["max"])
+
+        self.use_attrs = use_attrs
+        self.mins = np.array(mins)
+        self.maxs = np.array(maxs)
+        self.N = len(mins)
+
+    def increment(self, diff, update):
+        diff_normalized = self.normalize(diff)
+
+        param_obj_tmp = self.param_obj
+        for i, attr in enumerate(self.use_attrs):
+            curr_value = getattr(param_obj_tmp, attr)
+            updated_value = np.clip(curr_value + diff_normalized[i], self.mins[i], self.maxs[i])
+            setattr(param_obj_tmp, attr, updated_value)
+        if update:
+            self.param_obj = param_obj_tmp
+
+        return param_obj_tmp
+
+    def normalize(self, diff):
+        param_range = self.maxs - self.mins
+        return diff * param_range / 20
+
+    def set_param(self, param_obj):
+        self.param_obj = param_obj
+
+    def get_param(self):
+        return self.param_obj
 
 
-class SimjulatedAnnealing:
-    def __init__(self, val_data_set):
+class SimulatedAnnealing:
+    def __init__(self, config_path, val_data_set):
+        with open(config_path) as file:
+            all_config = yaml.safe_load(file)
+
+        self.planner_var = OptimizationVariable(
+            fp.PlannerCommonParam(), all_config["planner_param"]
+        )
+        self.astar_var = OptimizationVariable(fp.AstarParam(), all_config["astar_param"])
+        self.vehicle_var = OptimizationVariable(fp.VehicleShape(), all_config["vehicle_shape"])
+
         self.best_param = None
         self.best_energy = None
+
         self.val_data_set = val_data_set
 
-    def objective_function(self, param):
-        planner_param.curve_weight = param[0]
-        planner_param.reverse_weight = param[1]
-
-        # -- A* search Configurations --
-        astar_param.distance_heuristic_weight = param[2]
+    def objective_function(self, params):
+        planner_param = params[0]
+        astar_param = params[1]
+        vehicle_shape = params[2]
 
         astar = fp.AstarSearch(planner_param, vehicle_shape, astar_param)
         start_pose = Pose()
@@ -53,7 +98,13 @@ class SimjulatedAnnealing:
             astar.setMap(test_data.costmap)
             goal_pose = test_data.goal_pose
 
-            find = astar.makePlan(start_pose, goal_pose)
+            try:
+                find = astar.makePlan(start_pose, goal_pose)
+            except RuntimeError:
+                find = False
+            else:
+                find = False
+
             waypoints = fp.PlannerWaypoints()
             if find:
                 total_result += 1
@@ -64,52 +115,68 @@ class SimjulatedAnnealing:
                 )
                 if L2_dist != 0:
                     total_length_rate += waypoints.compute_length() / L2_dist
-                total_direction_change += self.count_forawrd_backwrad_change(waypoints)
+                total_direction_change += self.count_forward_backward_change(waypoints)
 
         N = len(self.val_data_set)
-        unsuccess_rate = 1 - total_result / N
-        average_length_rate = total_length_rate / total_result
-        average_forward_backward_change = total_direction_change / total_result
-
-        return 10 * unsuccess_rate + average_length_rate + 10 * average_forward_backward_change
+        if total_result != 0:
+            unsuccess_rate = 1 - total_result / N
+            average_length_rate = total_length_rate / total_result
+            average_forward_backward_change = total_direction_change / total_result
+            return 10 * unsuccess_rate + average_length_rate + 10 * average_forward_backward_change
+        else:
+            return 1000
 
     # Define the cooling schedule function
     def cooling_schedule(self, t, initial_temperature):
         return initial_temperature / (1 + t)
 
     # Simulated Annealing algorithm
-    def simulated_annealing(self, initial_param, initial_temperature, iterations, weight):
-        current_param = initial_param
-        current_energy = self.objective_function(current_param)
+    def simulated_annealing(self, initial_temperature, iterations):
+        current_params = [
+            self.planner_var.get_param(),
+            self.astar_var.get_param(),
+            self.vehicle_var.get_param(),
+        ]
+        current_energy = self.objective_function(current_params)
         print("Initial objective value:", current_energy)
 
-        best_param = current_param
-        best_energy = current_energy
+        self.best_param = current_params
+        self.best_energy = current_energy
 
         for t in tqdm(range(iterations)):
             temperature = self.cooling_schedule(t, initial_temperature)
 
-            neighbor_param = current_param + weight * np.random.uniform(
-                -1, 1, 3
-            )  # Small random change
-            neighbor_energy = self.objective_function(neighbor_param)
+            # Small random change
+            planner_diff = np.random.uniform(-1, 1, self.planner_var.N)
+            astar_diff = np.random.uniform(-1, 1, self.astar_var.N)
+            vehicle_diff = np.random.uniform(-1, 1, self.vehicle_var.N)
+            neighbor_params = [
+                self.planner_var.increment(planner_diff, update=False),
+                self.astar_var.increment(astar_diff, update=False),
+                self.vehicle_var.increment(vehicle_diff, update=False),
+            ]
+            neighbor_energy = self.objective_function(neighbor_params)
 
             if neighbor_energy < current_energy or random.random() < math.exp(
                 (current_energy - neighbor_energy) / temperature
             ):
-                current_param = neighbor_param
+                current_params = [
+                    self.planner_var.increment(planner_diff, update=True),
+                    self.astar_var.increment(astar_diff, update=True),
+                    self.vehicle_var.increment(vehicle_diff, update=True),
+                ]
                 current_energy = neighbor_energy
 
-                if neighbor_energy < best_energy:
-                    best_param = neighbor_param
-                    best_energy = neighbor_energy
+                if neighbor_energy < self.best_energy:
+                    self.best_param = neighbor_params
+                    self.best_energy = neighbor_energy
 
-        return best_param, best_energy
+        return self.best_param, self.best_energy
 
     def get_result(self):
-        return best_param, best_energy
+        return self.best_param, self.best_energy
 
-    def count_forawrd_backwrad_change(self, waypoints):
+    def count_forward_backward_change(self, waypoints):
         count = 0
         if len(waypoints.waypoints):
             pre_is_back = waypoints.waypoints[0].is_back
@@ -120,6 +187,16 @@ class SimjulatedAnnealing:
                 pre_is_back = is_back
 
         return count
+
+
+def save_param_as_yaml(params, save_name):
+    param_dict = {}
+    param_dict["planner_param"] = vars(params[0])
+    param_dict["astar_param"] = vars(params[1])
+    param_dict["vehicle_shape"] = vars(params[2])
+    with open(save_name, "w") as f:
+        yaml.dump(param_dict, f)
+        print("optimized parameters are saved!!")
 
 
 # Example usage
@@ -139,6 +216,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    config_path = os.path.dirname(__file__) + "/config/optimization_config.yaml"
+
     with open(os.path.dirname(__file__) + "/costmap/" + args.costmap + ".txt", "rb") as f:
         costmap = pickle.load(f)
 
@@ -155,43 +234,26 @@ if __name__ == "__main__":
         goal_pose.position.x = float(x)
         goal_pose.position.y = float(y)
 
-        quaterinon = Quaternion(axis=[0, 0, 1], angle=yaw)
+        quaternion = Quaternion(axis=[0, 0, 1], angle=yaw)
 
-        goal_pose.orientation.w = quaterinon.w
-        goal_pose.orientation.x = quaterinon.x
-        goal_pose.orientation.y = quaterinon.y
-        goal_pose.orientation.z = quaterinon.z
+        goal_pose.orientation.w = quaternion.w
+        goal_pose.orientation.x = quaternion.x
+        goal_pose.orientation.y = quaternion.y
+        goal_pose.orientation.z = quaternion.z
 
         val_data_set.append(TestData(costmap, goal_pose))
 
     initial_temperature = 200.0
     iterations = 300
 
-    initial_param = np.array([1.2, 2.0, 1.0])
-    weight = 0.1 * initial_param
-
-    simulated_annealing = SimjulatedAnnealing(val_data_set)
+    simulated_annealing = SimulatedAnnealing(config_path, val_data_set)
     best_param, best_energy = simulated_annealing.simulated_annealing(
-        initial_param, initial_temperature, iterations, weight
+        initial_temperature, iterations
     )
 
     if not os.path.exists("opt_param"):
         os.makedirs("opt_param")
 
-    file_name_pkl = os.path.dirname(__file__) + "/opt_param/" + args.save_name + ".txt"
-    with open(file_name_pkl, "wb") as file_pkl:
-        pickle.dump(best_param, file_pkl)
-
+    # TODO: how to save optimal parameter
     file_name_yaml = os.path.dirname(__file__) + "/opt_param/" + args.save_name + ".yaml"
-    with open(file_name_yaml, "w") as file_yaml:
-        file_yaml.write("/**:\n")
-        file_yaml.write("  ros__parameters:\n")
-        file_yaml.write("    # -- Configurations common to the all planners --\n")
-        file_yaml.write("    curve_weight: " + str(best_param[0]) + "\n")
-        file_yaml.write("    reverse_weight: " + str(best_param[1]) + "\n")
-        file_yaml.write("    # -- Configurations common to the all planners --\n")
-        file_yaml.write("    distance_heuristic_weight: " + str(best_param[2]) + "\n")
-        print("Optimal parameters are avairable at opt_param/" + args.save_name + ".yaml")
-
-    print("Best solution:", best_param)
-    print("Objective value at best solution:", best_energy)
+    save_param_as_yaml(best_param, file_name_yaml)
