@@ -242,7 +242,7 @@ RTCManagerPanel::RTCManagerPanel(QWidget * parent) : rviz_common::Panel(parent)
     rtc_table_ = new QTableWidget();
     rtc_table_->setColumnCount(column_size_);
     rtc_table_->setHorizontalHeaderLabels(
-      {"ID", "Module", "AW Safe", "Received Cmd", "AutoMode", "StartDistance", "FinishDistance"});
+      {"ID", "Module", "AW Safe", "Received Cmd", "AutoMode", "State", "StartDistance", "FinishDistance"});
     rtc_table_->setVerticalHeader(vertical_header);
     rtc_table_->setHorizontalHeader(horizontal_header);
     rtc_table_layout->addWidget(rtc_table_);
@@ -438,13 +438,42 @@ void RTCManagerPanel::onRTCStatus(const CooperateStatusArray::ConstSharedPtr msg
       rtc_table_->setCellWidget(cnt, 4, label);
     }
 
+    // State
+    std::string module_state = "NONE";
+    {
+      switch (status.state.type)
+      {
+      case State::WAITING_FOR_EXECUTION:
+        module_state = "Waiting";
+        break;
+      case State::RUNNING:
+        module_state = "Running";
+        break;
+      case State::ABORTING:
+        module_state = "Aborting";
+        break;
+      case State::SUCCEEDED:
+        module_state = "Succeeded";
+        break;
+      case State::FAILED:
+        module_state = "Failed";
+        break;
+      default:
+        break;
+      }
+      auto label = new QLabel(QString::fromStdString(module_state));
+      label->setAlignment(Qt::AlignCenter);
+      label->setText(QString::fromStdString(module_state));
+      rtc_table_->setCellWidget(cnt, 5 , label);
+    }
+
     // start distance
     {
       std::string start_distance = std::to_string(status.start_distance);
       auto label = new QLabel(QString::fromStdString(start_distance));
       label->setAlignment(Qt::AlignCenter);
       label->setText(QString::fromStdString(start_distance));
-      rtc_table_->setCellWidget(cnt, 5, label);
+      rtc_table_->setCellWidget(cnt, 6, label);
     }
 
     // finish distance
@@ -453,7 +482,7 @@ void RTCManagerPanel::onRTCStatus(const CooperateStatusArray::ConstSharedPtr msg
       auto label = new QLabel(QString::fromStdString(finish_distance));
       label->setAlignment(Qt::AlignCenter);
       label->setText(QString::fromStdString(finish_distance));
-      rtc_table_->setCellWidget(cnt, 6, label);
+      rtc_table_->setCellWidget(cnt, 7, label);
     }
 
     // add color for recognition
