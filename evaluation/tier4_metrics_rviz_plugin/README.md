@@ -6,8 +6,8 @@ This plugin panel to visualize `planning_evaluator` output.
 
 ## Inputs / Outputs
 
-| Name                                     | Type                                    | Description                           |
-| ---------------------------------------- | --------------------------------------- | ------------------------------------- |
+| Name                                   | Type                                    | Description                           |
+| -------------------------------------- | --------------------------------------- | ------------------------------------- |
 | `/planning/planning_evaluator/metrics` | `diagnostic_msgs::msg::DiagnosticArray` | Subscribe `planning_evaluator` output |
 
 ## HowToUse
