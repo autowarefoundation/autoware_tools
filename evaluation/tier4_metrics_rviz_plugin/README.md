@@ -8,7 +8,7 @@ This plugin panel to visualize `planning_evaluator` output.
 
 | Name                                     | Type                                    | Description                           |
 | ---------------------------------------- | --------------------------------------- | ------------------------------------- |
-| `/diagnostic/planning_evaluator/metrics` | `diagnostic_msgs::msg::DiagnosticArray` | Subscribe `planning_evaluator` output |
+| `/planning/planning_evaluator/metrics` | `diagnostic_msgs::msg::DiagnosticArray` | Subscribe `planning_evaluator` output |
 
 ## HowToUse
 
