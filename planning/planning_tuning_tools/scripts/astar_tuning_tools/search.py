@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import math
 import os
 import pathlib
 import pickle
@@ -29,6 +30,34 @@ from geometry_msgs.msg import Pose
 import numpy as np
 from pyquaternion import Quaternion
 from tqdm import tqdm
+
+
+def search_one(astar, start_pose, goal_pose):
+    try:
+        find = astar.makePlan(start_pose, goal_pose)
+    except RuntimeError:
+        find = False
+    else:
+        find = False
+
+    waypoints = fp.PlannerWaypoints()
+    distance_to_obstacles = []
+    if find:
+        waypoints = astar.getWaypoints()
+        for waypoint in waypoints.waypoints:
+            distance_to_obstacles.append(astar.getDistanceToObstacle(waypoint.pose))
+
+    x = goal_pose.position.x
+    y = goal_pose.position.y
+    qw = goal_pose.orientation.w
+    qx = goal_pose.orientation.x
+    qy = goal_pose.orientation.y
+    qz = goal_pose.orientation.z
+    t0 = +2.0 * (qw * qz + qx * qy)
+    t1 = +1.0 - 2.0 * (qy * qy + qz * qz)
+    yaw = math.atan2(t0, t1)
+
+    return Result(x, y, yaw, find, waypoints, distance_to_obstacles)
 
 
 def float_range(start, end, step):
@@ -137,18 +166,7 @@ if __name__ == "__main__":
                         goal_pose.orientation.y = quaterinon.y
                         goal_pose.orientation.z = quaterinon.z
 
-                        try:
-                            find = astar.makePlan(start_pose, goal_pose)
-                        except RuntimeError:
-                            find = False
-                        else:
-                            find = False
-
-                        waypoints = fp.PlannerWaypoints()
-                        if find:
-                            waypoints = astar.getWaypoints()
-
-                        result = Result(x, y, yaw, find, waypoints)
+                        result = search_one(astar, start_pose, goal_pose)
 
                         pickle.dump(result, f)
 

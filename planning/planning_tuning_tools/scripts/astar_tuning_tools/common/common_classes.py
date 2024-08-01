@@ -7,9 +7,10 @@ class SearchInfo:
 
 
 class Result:
-    def __init__(self, x, y, yaw, find, waypoints):
+    def __init__(self, x, y, yaw, find, waypoints, distance_to_obstacles):
         self.xs = x
         self.ys = y
         self.yaws = yaw
         self.find = find
         self.waypoints = waypoints
+        self.distance_to_obstacles = distance_to_obstacles

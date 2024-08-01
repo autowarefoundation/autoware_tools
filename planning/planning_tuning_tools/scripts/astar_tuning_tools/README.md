@@ -26,6 +26,9 @@
 ./optimization_operator.sh
 ```
 
+Default costmap is belows:
+![default costmap](figs/costmap_default.png)
+
 ## Optimization
 
 ### Usage
@@ -81,13 +84,13 @@ Search for goals on grid: discretized on x, y, yaw axes.
 1. Run the script
 
    ```sh
-   python3 search_gridgoal.py --save_name [save dir name]
+   python3 search.py --save_name [save dir name]
    ```
 
    or execute in parallel using [eos run-many](https://github.com/iory/eos/blob/master/eos/run_many.py)
 
    ```sh
-   run-many 'python3 search_gridgoal.py --save_name [save dir name]' -n 10 -j 10
+   run-many 'python3 search.py --save_name [save dir name]' -n 10 -j 10
    ```
 
 2. Then the trajectories for goals on grid are searched and saved

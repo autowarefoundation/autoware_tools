@@ -3,12 +3,15 @@ import math
 import os
 import pickle
 import random
+import time
 
 import autoware_freespace_planning_algorithms.astar_search as fp
+from evaluator import Evaluator
 from geometry_msgs.msg import Pose
 from nav_msgs.msg import OccupancyGrid
 import numpy as np
 from pyquaternion import Quaternion
+from search import search_one
 from tqdm import tqdm
 import yaml
 
@@ -23,20 +26,19 @@ class TestData:
 
 class OptimizationVariable:
     def __init__(self, param_obj, config_dict):
-        self.param_obj = param_obj
-
         # processing
         use_attrs = []
         mins = []
         maxs = []
         for key in config_dict.keys():
             param_config = config_dict[key]
-            setattr(self.param_obj, key, param_config["initial"])
+            setattr(param_obj, key, param_config["initial"])
             if param_config["use_optimization"]:
                 use_attrs.append(key)
                 mins.append(param_config["min"])
                 maxs.append(param_config["max"])
 
+        self.param_obj = param_obj
         self.use_attrs = use_attrs
         self.mins = np.array(mins)
         self.maxs = np.array(maxs)
@@ -68,6 +70,9 @@ class OptimizationVariable:
 
 class SimulatedAnnealing:
     def __init__(self, config_path, val_data_set):
+        self.evaluator = Evaluator()
+        self.evaluator.set_config(config_path)
+
         with open(config_path) as file:
             all_config = yaml.safe_load(file)
 
@@ -90,41 +95,18 @@ class SimulatedAnnealing:
         astar = fp.AstarSearch(planner_param, vehicle_shape, astar_param)
         start_pose = Pose()
 
-        total_result = 0
-        total_length_rate = 0
-        total_direction_change = 0
+        results = []
 
+        start_time = time.monotonic()
         for test_data in self.val_data_set:
             astar.setMap(test_data.costmap)
             goal_pose = test_data.goal_pose
+            results.append(search_one(astar, start_pose, goal_pose))
+        end_time = time.monotonic()
 
-            try:
-                find = astar.makePlan(start_pose, goal_pose)
-            except RuntimeError:
-                find = False
-            else:
-                find = False
-
-            waypoints = fp.PlannerWaypoints()
-            if find:
-                total_result += 1
-                waypoints = astar.getWaypoints()
-                L2_dist = math.hypot(
-                    goal_pose.position.x - start_pose.position.x,
-                    goal_pose.position.y - start_pose.position.y,
-                )
-                if L2_dist != 0:
-                    total_length_rate += waypoints.compute_length() / L2_dist
-                total_direction_change += self.count_forward_backward_change(waypoints)
-
-        N = len(self.val_data_set)
-        if total_result != 0:
-            unsuccess_rate = 1 - total_result / N
-            average_length_rate = total_length_rate / total_result
-            average_forward_backward_change = total_direction_change / total_result
-            return 10 * unsuccess_rate + average_length_rate + 10 * average_forward_backward_change
-        else:
-            return 1000
+        self.evaluator.set_results(results)
+        self.evaluator.set_calculation_time(end_time - start_time)
+        return self.evaluator.evaluate()
 
     # Define the cooling schedule function
     def cooling_schedule(self, t, initial_temperature):
@@ -250,6 +232,8 @@ if __name__ == "__main__":
     best_param, best_energy = simulated_annealing.simulated_annealing(
         initial_temperature, iterations
     )
+
+    print(vars(best_param[0]))
 
     if not os.path.exists("opt_param"):
         os.makedirs("opt_param")

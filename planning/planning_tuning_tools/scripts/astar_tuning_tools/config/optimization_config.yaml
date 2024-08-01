@@ -1,3 +1,23 @@
+evaluation:
+  unsuccess_rate:
+    use_optimization: true
+    weight: 10
+  path_length_rate:
+    use_optimization: true
+    weight: 1
+  direction_change:
+    use_optimization: true
+    weight: 10
+  distance_to_obstacle_average:
+    use_optimization: true
+    weight: 1
+  distance_to_obstacle_minimum:
+    use_optimization: true
+    weight: 1
+  calculation_time:
+    use_optimization: true
+    weight: 0.001
+
 planner_param:
   time_limit:
     use_optimization: false
