@@ -9,6 +9,8 @@
   <author email="richard-v@macnica.co.jp">Vincent Richard</author>
   <author email="masaki.baba@tier4.jp">Masaki Baba</author>
 
+  <build_depend>ament_cmake</build_depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>
