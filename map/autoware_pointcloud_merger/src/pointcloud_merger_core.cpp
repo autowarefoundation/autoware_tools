@@ -41,9 +41,9 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <pointcloud_divider/pointcloud_divider.hpp>
-#include <pointcloud_divider/utility.hpp>
-#include <pointcloud_merger/pointcloud_merger.hpp>
+#include <autoware/pointcloud_divider/pointcloud_divider.hpp>
+#include <autoware/pointcloud_divider/utility.hpp>
+#include <autoware/pointcloud_merger/pointcloud_merger.hpp>
 
 #include <filesystem>
 

@@ -1,4 +1,4 @@
-# pointcloud_divider
+# autoware_pointcloud_divider
 
 (Updated 2024/06/18)
 
@@ -16,17 +16,6 @@ This tool can be used with files that have data fields other than `XYZI` (e.g., 
 
 - Data fields other than `XYZI` are ignored during loading.
 - When loading `XYZ`-only data, the `intensity` field is assigned 0.
-
-<!-- ## Installation
-
-```bash
-$ git clone https://github.com/MapIV/pointcloud_divider.git
-$ cd pointcloud_divider
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make
-``` -->
 
 ## Installation
 

@@ -1,2 +1,2 @@
 pointcloud_merger:
-  leaf_size: 0.1
+  leaf_size: -0.1

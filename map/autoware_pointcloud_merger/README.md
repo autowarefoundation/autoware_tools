@@ -1,4 +1,4 @@
-# pointcloud_merger
+# autoware_pointcloud_merger
 
 (Updated 2024/06/18)
 

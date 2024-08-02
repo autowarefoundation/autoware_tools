@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PCD_DIV="pointcloud_divider"
+PCD_DIV="autoware_pointcloud_divider_node"
 
 # Show usage
 function usage() {

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>pointcloud_divider</name>
+  <name>autoware_pointcloud_merger</name>
   <version>0.1.0</version>
   <description>A package for dividing PCD files to non-overlapped segments</description>
   <maintainer email="anh.nguyen.2@tier4.jp">Anh Nguyen</maintainer>
@@ -13,6 +13,7 @@
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
   <depend>libpcl-all-dev</depend>
+  <depend>autoware_pointcloud_divider</depend>
   <depend>yaml-cpp</depend>
 
   <export>

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(pointcloud_divider)
+project(autoware_pointcloud_merger)
 
 # Enable support for C++17
 if (${CMAKE_VERSION} VERSION_LESS "3.1.0")
@@ -17,36 +17,32 @@ find_package(PCL REQUIRED)
 
 include_directories(include)
 
-# Add divider library
-add_library(pointcloud_divider_lib SHARED src/pointcloud_divider_core.cpp src/voxel_grid_filter.cpp)
-target_link_libraries(pointcloud_divider_lib yaml-cpp ${PCL_LIBRARIES})
+add_library(${PROJECT_NAME}_lib SHARED src/pointcloud_merger_core.cpp)
+target_link_libraries(${PROJECT_NAME}_lib yaml-cpp ${PCL_LIBRARIES})
+ament_target_dependencies(${PROJECT_NAME}_lib autoware_pointcloud_divider)
 
-ament_export_libraries(pointcloud_divider_lib)
+ament_export_libraries(${PROJECT_NAME}_lib)
 
-install(TARGETS pointcloud_divider_lib
-        EXPORT pointcloud_divider_lib
+install(TARGETS ${PROJECT_NAME}_lib
+        EXPORT ${PROJECT_NAME}_lib
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         INCLUDES DESTINATION include)
 
-add_executable(pointcloud_divider src/pointcloud_divider.cpp)
+ament_auto_add_executable(${PROJECT_NAME}_node src/pointcloud_merger.cpp)
 
 # Linking libraries
-target_link_libraries(pointcloud_divider ${PROJECT_NAME}_lib)
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME}_lib)
 
-install(DIRECTORY include/
-        DESTINATION include
-        )
-
-install(TARGETS pointcloud_divider
-        EXPORT pointcloud_divider
+install(TARGETS ${PROJECT_NAME}_node
+        EXPORT ${PROJECT_NAME}_node
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         INCLUDES DESTINATION include
-        )
+)
 
-install(PROGRAMS scripts/pointcloud_divider.sh scripts/divider_core.sh DESTINATION bin)
+install(PROGRAMS scripts/pointcloud_merger.sh scripts/merger_core.sh DESTINATION bin)
 
 ament_auto_package()

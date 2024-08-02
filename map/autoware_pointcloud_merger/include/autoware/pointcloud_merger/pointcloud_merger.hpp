@@ -50,7 +50,7 @@
 #include <vector>
 
 #define PCL_NO_PRECOMPILE
-#include <pointcloud_divider/pcd_io.hpp>
+#include <autoware/pointcloud_divider/pcd_io.hpp>
 
 template <class PointT>
 class PointCloudMerger

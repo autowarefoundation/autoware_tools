@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PCD_MER="pointcloud_merger"
+PCD_MER="autoware_pointcloud_merger_node"
 
 # Show usage
 function usage() {

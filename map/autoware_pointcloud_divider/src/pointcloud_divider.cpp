@@ -27,7 +27,7 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <pointcloud_merger/pointcloud_merger.hpp>
+#include <autoware/pointcloud_divider/pointcloud_divider.hpp>
 
 #include <pcl/console/print.h>
 
@@ -49,9 +49,9 @@ int main(int argc, char * argv[])
 
   const int n_pcd = std::stoi(argv[1]);
 
-  if (argc != 4 + n_pcd) {
+  if (argc != 5 + n_pcd) {
     printErrorAndExit(
-      "There should be " + std::to_string(4 + n_pcd) +
+      "There should be " + std::to_string(5 + n_pcd) +
       " runtime arguments. input: " + std::to_string(argc));
   }
 
@@ -59,13 +59,14 @@ int main(int argc, char * argv[])
   for (int pcd_id = 0; pcd_id < n_pcd; pcd_id++) {
     pcd_name.push_back(argv[2 + pcd_id]);
   }
-  const std::string output_pcd = argv[n_pcd + 2];
-  const std::string config = argv[n_pcd + 3];
+  const std::string output_dir = argv[n_pcd + 2];
+  const std::string prefix = argv[n_pcd + 3];
+  const std::string config = argv[n_pcd + 4];
 
   // Currently, any PCD will be loaded as pcl::PointXYZI.
-  PointCloudMerger<pcl::PointXYZI> divider;
-  divider.run(pcd_name, output_pcd, config);
+  PointCloudDivider<pcl::PointXYZI> divider;
+  divider.run(pcd_name, output_dir, prefix, config);
 
-  std::cout << "pointcloud_merger has finished successfully" << std::endl;
+  std::cout << "pointcloud_divider has finished successfully" << std::endl;
   return 0;
 }

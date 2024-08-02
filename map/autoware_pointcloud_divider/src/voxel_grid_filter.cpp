@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <pointcloud_divider/centroid.hpp>
-#include <pointcloud_divider/grid_info.hpp>
-#include <pointcloud_divider/voxel_grid_filter.hpp>
+#include <autoware/pointcloud_divider/centroid.hpp>
+#include <autoware/pointcloud_divider/grid_info.hpp>
+#include <autoware/pointcloud_divider/voxel_grid_filter.hpp>
 
 #include <unordered_map>
 
