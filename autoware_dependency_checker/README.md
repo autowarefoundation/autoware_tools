@@ -26,9 +26,9 @@ $ source
 
 # run
 $ cd to/your/autoware
-$ ros2 run ros2 run autoware_dependency_checker dependency_checker.sh
+$ ros2 run autoware_dependency_checker dependency_checker.sh
 
 # run in some package
 $ cd to/some/package
-$ ros2 run ros2 run autoware_dependency_checker dependency_checker.sh
+$ ros2 run autoware_dependency_checker dependency_checker.sh
 ```
