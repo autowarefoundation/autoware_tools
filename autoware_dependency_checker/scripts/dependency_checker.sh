@@ -1,6 +1,6 @@
 #!/bin/bash
-# This script find recursively all package.xml in the src/ subdirectory
-# Then check if all package marked <depend> are effectly used somewhere in the package.
+# This script finds recursively all package.xml in the src/ subdirectory
+# Then check if all packages marked <depend> are effectively used somewhere in the package.
 # Packages marked <depend> normally either provide shared libraries or custom messages
 
 # Packages that should always be <buildtool_depend>, not <depend>
@@ -10,7 +10,7 @@ curr_dir=$(pwd)
 
 # Out of pattern packages
 # These will get checked with `package_name/.*` pattern
-# autoware_*_msg is handle in the following process, so you don't need to add here
+# autoware_*_msg is handled in the following process, so you don't need to add here
 EXCLUDE_PACKAGES=(
     "autoware_ad_api_specs"
     "autoware_lanelet2_extension"
@@ -18,10 +18,13 @@ EXCLUDE_PACKAGES=(
 )
 
 # Find all package names under the current directory
-ALL_PACKAGE=($(find $curr_dir -not \( -path $curr_dir/install -prune \) -not \( -path $curr_dir/build -prune \) -name "package.xml" -exec dirname {} \; | xargs -n 1 basename | sort -u))
+mapfile -t ALL_PACKAGE < <(find "$curr_dir" \
+    -not \( -path "$curr_dir/install" -prune \) \
+    -not \( -path "$curr_dir/build" -prune \) \
+    -name "package.xml" -print0 | xargs -0 -n 1 dirname | xargs -n 1 basename | sort -u)
 
 # Find all autoware packages starting with "autoware_"
-# These package will get checked with `autoware/pkg_name/.*`
+# These packages will get checked with `autoware/pkg_name/.*`
 BASE_RULE_TARGET=()
 for pkg_name in "${ALL_PACKAGE[@]}"; do
     if [[ $pkg_name == autoware_* ]]; then
@@ -39,13 +42,17 @@ for pkg_name in "${ALL_PACKAGE[@]}"; do
     fi
 done
 
-pkgs=$(find $curr_dir -not \( -path $curr_dir/install -prune \) -not \( -path $curr_dir/build -prune \) -name "package.xml")
+pkgs=$(find "$curr_dir" \
+    -not \( -path "$curr_dir/install" -prune \) \
+    -not \( -path "$curr_dir/build" -prune \) \
+    -name "package.xml")
+
 for pkg in $pkgs; do
     echo "--- Checking $pkg ---"
     # Get all packages marked <depend>. For example:
     #   <depend>dep_name</depend>
-    deps=$(grep -d skip -oP '^\s*<depend>\K[^<]+' $pkg)
-    dir=$(dirname $pkg)
+    deps=$(grep -d skip -oP '^\s*<depend>\K[^<]+' "$pkg")
+    dir=$(dirname "$pkg")
 
     if [[ ! -f "$dir/CMakeLists.txt" ]]; then
         echo "Skipping package with no CMakeLists.txt (is python package?)"
@@ -55,20 +62,20 @@ for pkg in $pkgs; do
 
     for dep in $deps; do
         # filter out buildtools (should not use <depend>)
-        if [[ $(echo "$KNOWN_BUILDTOOLS" | grep "$dep" | wc -l) -ne 0 ]]; then
-            echo "$dep should be rather be marked as <buildtool_depend>, not <depend>"
+        if grep -q "$dep" <<<"$KNOWN_BUILDTOOLS"; then
+            echo "$dep should rather be marked as <buildtool_depend>, not <depend>"
             continue
         fi
 
         # filter out ament stuff (should not use <depend>)
         if [[ $dep =~ ament_.*$ ]]; then
-            echo "$dep should be rather be marked as either <build_depend> or <test_depend>, not <depend>"
+            echo "$dep should rather be marked as either <build_depend> or <test_depend>, not <depend>"
             continue
         fi
 
         # filter out python stuff (should not use <depend>)
         if [[ $dep =~ python-.*$ ]]; then
-            echo "$dep should be rather be marked as either <build_depend> or <test_depend>, not <depend>"
+            echo "$dep should rather be marked as either <build_depend> or <test_depend>, not <depend>"
             continue
         fi
 
@@ -98,10 +105,10 @@ for pkg in $pkgs; do
         [[ $dep == "autoware_auto_common" ]] && header_regex="(common|helper_functions)/.*"
         [[ $dep == "ndt_omp" ]] && header_regex="(pclomp|multigrid_pclomp)/.*"
         [[ $dep == "planning_test_utils" ]] && header_regex="planning_interface_test_manager/.*"
-        [[ $dep == "shape_estimation" ]] && header_regex="autoware/shape_estimation/.*"]
+        [[ $dep == "shape_estimation" ]] && header_regex="autoware/shape_estimation/.*"
         # Add more as needed...
 
-        # Check the dependecy with the including rule:
+        # Check the dependency with the including rule:
         #   autoware_pkg_name -> autoware/pkg_name/.*
         #   autoware_*_msgs   -> autoware_*_msgs/.*
         for autoware_pkg in "${BASE_RULE_TARGET[@]}"; do
@@ -123,19 +130,21 @@ for pkg in $pkgs; do
         # #include "tier4_autoware_utils/geometry/geometry.hpp"
         # Note: whether these includes are actually useful is out-of-scope of this script
         # There are many great tools for that.
-        include_regex="^#include [<\"]$header_regex[>\"]"
+        include_regex="^#include [<\"]${header_regex}[>\"]"
 
         # Dependencies defining custom messages may also be re-used in other messages or services
         # By convention, these packages must be named "*_msgs", excepted for "builtin_interfaces"
         if [[ $dep =~ .*_msgs$ ]] || [[ $dep == "builtin_interfaces" ]]; then
-            grep -wIPrq "$dep" "$dir" --include \*.msg --include \*.srv --include \*.idl
-            [[ $? -eq 0 ]] && continue # found!
+            if grep -wIPrq "$dep" "$dir" --include \*.msg --include \*.srv --include \*.idl; then
+                continue # found!
+            fi
         fi
 
         # Check if the dependency is included anywhere in the source files
-        grep -wIPrq "$include_regex" "$dir" \
-            --include \*.c --include \*.cc --include \*.cpp --include \*.h --include \*.hpp
-        [[ $? -eq 0 ]] && continue # found!
+        if grep -wIPrq "$include_regex" "$dir" \
+            --include \*.c --include \*.cc --include \*.cpp --include \*.h --include \*.hpp; then
+            continue # found!
+        fi
 
         echo "$dep seems not to be used"
 
