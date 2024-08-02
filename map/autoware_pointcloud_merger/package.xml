@@ -12,8 +12,8 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
-  <depend>libpcl-all-dev</depend>
   <depend>autoware_pointcloud_divider</depend>
+  <depend>libpcl-all-dev</depend>
   <depend>yaml-cpp</depend>
 
   <export>

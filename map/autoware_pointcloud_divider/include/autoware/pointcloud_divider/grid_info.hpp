@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef POINTCLOUD_DIVIDER__GRID_INFO_HPP_
-#define POINTCLOUD_DIVIDER__GRID_INFO_HPP_
+#ifndef AUTOWARE__POINTCLOUD_DIVIDER__GRID_INFO_HPP_
+#define AUTOWARE__POINTCLOUD_DIVIDER__GRID_INFO_HPP_
 
 #include <iostream>
 #include <string>
@@ -104,4 +104,4 @@ GridInfo<3> pointToGrid3(const PointT & p, float res_x, float res_y, float res_z
   return GridInfo<3>(x_id, y_id, z_id);
 }
 
-#endif  // POINTCLOUD_DIVIDER__GRID_INFO_HPP_
+#endif  // AUTOWARE__POINTCLOUD_DIVIDER__GRID_INFO_HPP_

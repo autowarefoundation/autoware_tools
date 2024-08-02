@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef POINTCLOUD_DIVIDER__PCD_IO_HPP_
-#define POINTCLOUD_DIVIDER__PCD_IO_HPP_
+#ifndef AUTOWARE__POINTCLOUD_DIVIDER__PCD_IO_HPP_
+#define AUTOWARE__POINTCLOUD_DIVIDER__PCD_IO_HPP_
 
 #include "pcd_io_reader.hpp"
 #include "pcd_io_writer.hpp"
 
-#endif  // POINTCLOUD_DIVIDER__PCD_IO_HPP_
+#endif  // AUTOWARE__POINTCLOUD_DIVIDER__PCD_IO_HPP_

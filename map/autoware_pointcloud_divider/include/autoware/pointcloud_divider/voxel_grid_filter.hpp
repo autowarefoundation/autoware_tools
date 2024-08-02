@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef POINTCLOUD_DIVIDER__VOXEL_GRID_FILTER_HPP_
-#define POINTCLOUD_DIVIDER__VOXEL_GRID_FILTER_HPP_
+#ifndef AUTOWARE__POINTCLOUD_DIVIDER__VOXEL_GRID_FILTER_HPP_
+#define AUTOWARE__POINTCLOUD_DIVIDER__VOXEL_GRID_FILTER_HPP_
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -45,4 +45,4 @@ private:
 template class VoxelGridFilter<pcl::PointXYZ>;
 template class VoxelGridFilter<pcl::PointXYZI>;
 
-#endif  // POINTCLOUD_DIVIDER__VOXEL_GRID_FILTER_HPP_
+#endif  // AUTOWARE__POINTCLOUD_DIVIDER__VOXEL_GRID_FILTER_HPP_

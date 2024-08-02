@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef POINTCLOUD_DIVIDER__CENTROID_HPP_
-#define POINTCLOUD_DIVIDER__CENTROID_HPP_
+#ifndef AUTOWARE__POINTCLOUD_DIVIDER__CENTROID_HPP_
+#define AUTOWARE__POINTCLOUD_DIVIDER__CENTROID_HPP_
 
 #include <pcl/point_types.h>
 
@@ -106,4 +106,4 @@ struct Centroid
   size_t point_num_;
 };
 
-#endif  // POINTCLOUD_DIVIDER__CENTROID_HPP_
+#endif  // AUTOWARE__POINTCLOUD_DIVIDER__CENTROID_HPP_

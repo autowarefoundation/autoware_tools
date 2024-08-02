@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef POINTCLOUD_DIVIDER__UTILITY_HPP_
-#define POINTCLOUD_DIVIDER__UTILITY_HPP_
+#ifndef AUTOWARE__POINTCLOUD_DIVIDER__UTILITY_HPP_
+#define AUTOWARE__POINTCLOUD_DIVIDER__UTILITY_HPP_
 
 #include <cstdlib>
 #include <filesystem>
@@ -94,4 +94,4 @@ inline int split(const std::string & line, const std::string & del, std::vector<
 
 }  // namespace util
 
-#endif  // POINTCLOUD_DIVIDER__UTILITY_HPP_
+#endif  // AUTOWARE__POINTCLOUD_DIVIDER__UTILITY_HPP_

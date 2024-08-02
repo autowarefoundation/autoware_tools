@@ -51,8 +51,8 @@
  *
  */
 
-#ifndef POINTCLOUD_DIVIDER__PCD_IO_READER_HPP_
-#define POINTCLOUD_DIVIDER__PCD_IO_READER_HPP_
+#ifndef AUTOWARE__POINTCLOUD_DIVIDER__PCD_IO_READER_HPP_
+#define AUTOWARE__POINTCLOUD_DIVIDER__PCD_IO_READER_HPP_
 
 #include "utility.hpp"
 
@@ -541,4 +541,4 @@ size_t CustomPCDReader<PointT>::readABlock(std::ifstream & input, PclCloudType &
   return readABlockASCII(input, output);
 }
 
-#endif  // POINTCLOUD_DIVIDER__PCD_IO_READER_HPP_
+#endif  // AUTOWARE__POINTCLOUD_DIVIDER__PCD_IO_READER_HPP_
