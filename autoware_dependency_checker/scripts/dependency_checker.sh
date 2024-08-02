@@ -12,8 +12,9 @@ curr_dir=$(pwd)
 # These will get checked with `package_name/.*` pattern
 # autoware_*_msg is handle in the following process, so you don't need to add here
 EXCLUDE_PACKAGES=(
-    "autoware_lanelet2_extension"
     "autoware_ad_api_specs"
+    "autoware_lanelet2_extension"
+    "autoware_raw_vehicle_cmd_converter"
 )
 
 # Find all package names under the current directory
@@ -21,15 +22,20 @@ ALL_PACKAGE=($(find $curr_dir -not \( -path $curr_dir/install -prune \) -not \( 
 
 # Find all autoware packages starting with "autoware_"
 # These package will get checked with `autoware/pkg_name/.*`
-AUTOWARE_PREFIX_PACKAGES=()
+BASE_RULE_TARGET=()
 for pkg_name in "${ALL_PACKAGE[@]}"; do
     if [[ $pkg_name == autoware_* ]]; then
+        filter_flag=0
+
         for exclude_pkg_name in "${EXCLUDE_PACKAGES[@]}"; do
-            if [[ $pkg_name != $exclude_pkg_name ]]; then
-                AUTOWARE_PREFIX_PACKAGES+=("$pkg_name")
+            if [[ $pkg_name == "$exclude_pkg_name" ]]; then
+                filter_flag=1
                 break
             fi
         done
+        if [[ $filter_flag -eq 0 ]]; then
+            BASE_RULE_TARGET+=("$pkg_name")
+        fi
     fi
 done
 
@@ -98,7 +104,7 @@ for pkg in $pkgs; do
         # Check the dependecy with the including rule:
         #   autoware_pkg_name -> autoware/pkg_name/.*
         #   autoware_*_msgs   -> autoware_*_msgs/.*
-        for autoware_pkg in "${AUTOWARE_PREFIX_PACKAGES[@]}"; do
+        for autoware_pkg in "${BASE_RULE_TARGET[@]}"; do
             if [[ $dep == "$autoware_pkg" ]]; then
                 # for the autoware_*_msgs
                 if [[ $autoware_pkg == *_msgs ]]; then
