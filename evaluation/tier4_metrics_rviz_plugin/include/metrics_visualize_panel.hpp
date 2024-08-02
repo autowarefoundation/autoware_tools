@@ -209,7 +209,7 @@ private:
 
   // Topics from which metrics are collected
   std::vector<std::string> topics_ = {
-    "/diagnostic/planning_evaluator/metrics", "/diagnostic/perception_online_evaluator/metrics"};
+    "/planning/planning_evaluator/metrics", "/perception/perception_online_evaluator/metrics"};
 
   // Timer and metrics message callback
   void onTimer();
