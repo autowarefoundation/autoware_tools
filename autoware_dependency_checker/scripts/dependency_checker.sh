@@ -6,7 +6,7 @@
 # Packages that should always be <buildtool_depend>, not <depend>
 KNOWN_BUILDTOOLS="rosidl_default_generators;autoware_cmake;eigen3_cmake_module"
 
-curr_dir=$(pwd)
+current_dir=$(pwd)
 
 # Out of pattern packages
 # These will get checked with `package_name/.*` pattern
@@ -18,15 +18,15 @@ EXCLUDE_PACKAGES=(
 )
 
 # Find all package names under the current directory
-mapfile -t ALL_PACKAGE < <(find "$curr_dir" \
-    -not \( -path "$curr_dir/install" -prune \) \
-    -not \( -path "$curr_dir/build" -prune \) \
+mapfile -t ALL_PACKAGES < <(find "$current_dir" \
+    -not \( -path "$current_dir/install" -prune \) \
+    -not \( -path "$current_dir/build" -prune \) \
     -name "package.xml" -print0 | xargs -0 -n 1 dirname | xargs -n 1 basename | sort -u)
 
 # Find all autoware packages starting with "autoware_"
 # These packages will get checked with `autoware/pkg_name/.*`
-BASE_RULE_TARGET=()
-for pkg_name in "${ALL_PACKAGE[@]}"; do
+BASE_RULE_TARGETS=()
+for pkg_name in "${ALL_PACKAGES[@]}"; do
     if [[ $pkg_name == autoware_* ]]; then
         filter_flag=0
 
@@ -37,14 +37,14 @@ for pkg_name in "${ALL_PACKAGE[@]}"; do
             fi
         done
         if [[ $filter_flag -eq 0 ]]; then
-            BASE_RULE_TARGET+=("$pkg_name")
+            BASE_RULE_TARGETS+=("$pkg_name")
         fi
     fi
 done
 
-pkgs=$(find "$curr_dir" \
-    -not \( -path "$curr_dir/install" -prune \) \
-    -not \( -path "$curr_dir/build" -prune \) \
+pkgs=$(find "$current_dir" \
+    -not \( -path "$current_dir/install" -prune \) \
+    -not \( -path "$current_dir/build" -prune \) \
     -name "package.xml")
 
 for pkg in $pkgs; do
@@ -111,7 +111,7 @@ for pkg in $pkgs; do
         # Check the dependency with the including rule:
         #   autoware_pkg_name -> autoware/pkg_name/.*
         #   autoware_*_msgs   -> autoware_*_msgs/.*
-        for autoware_pkg in "${BASE_RULE_TARGET[@]}"; do
+        for autoware_pkg in "${BASE_RULE_TARGETS[@]}"; do
             if [[ $dep == "$autoware_pkg" ]]; then
                 # for the autoware_*_msgs
                 if [[ $autoware_pkg == *_msgs ]]; then

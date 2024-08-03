@@ -3,7 +3,7 @@
 This package provides a script for checking whether each package's dependencies listed in a package.xml are used or not.
 Currently, it mainly checks packages that start with `autoware_`.
 
-## Depedency Checking
+## Dependency Checking
 
 The script will try to match the dependencies and the headers by reading the dependencies listed in package.xml and the included headers in the source files.
 
