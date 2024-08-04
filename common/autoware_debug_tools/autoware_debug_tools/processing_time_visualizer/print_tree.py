@@ -13,6 +13,7 @@ def print_trees(
     trees: List[ProcessingTimeTree],
     stdscr: curses.window,
     show_comment: bool = False,
+    summarize: bool = False
 ):
     stdscr.clear()
     height, width = stdscr.getmaxyx()
@@ -21,7 +22,9 @@ def print_trees(
         : width - 2
     ]
     stdscr.addstr(1, 0, topic_showing, curses.color_pair(1))
-    tree_lines = list(chain.from_iterable(tree.to_lines(show_comment) + [""] for tree in trees))
+    tree_lines = list(
+        chain.from_iterable(tree.to_lines(show_comment, summarize) + [""] for tree in trees)
+    )
     tree_lines = wrap_lines(tree_lines, width, height - 2)
     for i, line in enumerate(tree_lines):
         stdscr.addstr(i + 2, 1, line)

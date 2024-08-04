@@ -17,13 +17,14 @@ from .utils import init_curses
 
 
 class ProcessingTimeVisualizer(Node):
-    def __init__(self):
+    def __init__(self, summarize: bool = False):
         super().__init__("processing_time_visualizer" + str(uuid.uuid4()).replace("-", "_"))
         self.subscriber = self.subscribe_processing_time_tree()
         self.trees: Dict[str, ProcessingTimeTree] = {}
         self.worst_case_tree: Dict[str, ProcessingTimeTree] = {}
         self.stdcscr = init_curses()
         self.show_comment = False
+        self.summarize_output = summarize
         print_trees("🌲 Processing Time Tree 🌲", self.topic_name, self.trees, self.stdcscr)
 
         self.create_timer(0.1, self.update_screen)
@@ -69,6 +70,7 @@ class ProcessingTimeVisualizer(Node):
             self.trees.values(),
             self.stdcscr,
             self.show_comment,
+            self.summarize_output
         )
         if key == ord("y"):
             pyperclip.copy(logs)
@@ -76,7 +78,7 @@ class ProcessingTimeVisualizer(Node):
             raise KeyboardInterrupt
 
     def callback(self, msg: ProcessingTimeTreeMsg):
-        tree = ProcessingTimeTree.from_msg(msg)
+        tree = ProcessingTimeTree.from_msg(msg, self.summarize_output)
         self.trees[tree.name] = tree
         if tree.name not in self.worst_case_tree:
             self.worst_case_tree[tree.name] = tree
@@ -89,9 +91,20 @@ class ProcessingTimeVisualizer(Node):
 
 
 def main(args=None):
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Tool for visualizing tier4_debug_msgs/msg/ProcessingTimeTree messages."
+    )
+    parser.add_argument(
+        "--summarize",
+        action='store_true',
+        help="If this option is set, it will print out the summary of each processing scope."
+    )
+    term_args = parser.parse_args()
+
     rclpy.init(args=args)
     try:
-        node = ProcessingTimeVisualizer()
+        node = ProcessingTimeVisualizer(term_args.summarize)
     except KeyboardInterrupt:
         exit_curses()
         return
@@ -104,7 +117,10 @@ def main(args=None):
             exit(1)
         print("⏰ Worst Case Execution Time ⏰")
         for tree in node.worst_case_tree.values():
-            print(tree, end=None)
+            tree_str = "".join(
+                [line + "\n" for line in tree.to_lines(summarize=term_args.summarize)]
+            )
+            print(tree_str, end=None)
 
 
 if __name__ == "__main__":
