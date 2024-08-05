@@ -456,13 +456,11 @@ size_t CustomPCDReader<PointT>::readABlockBinary(std::ifstream & input, PclCloud
 
   PointT p;
 
-  memset(&p, 0x00, sizeof(p));
-
   if (input) {
     input.read(buffer_, read_size_);
 
     // Parse the buffer and convert to point
-    for (size_t i = 0; i < input.gcount(); i += point_size_) {
+    for (long int i = 0; i < input.gcount(); i += point_size_) {
       parsePoint(buffer_ + i, read_sizes_, read_loc_, p);
       output.push_back(p);
     }
@@ -508,8 +506,6 @@ size_t CustomPCDReader<PointT>::readABlockASCII(std::ifstream & input, PclCloudT
   std::string point_line;
 
   PointT p;
-
-  memset(&p, 0x00, sizeof(p));
 
   while (input) {
     std::getline(input, point_line);

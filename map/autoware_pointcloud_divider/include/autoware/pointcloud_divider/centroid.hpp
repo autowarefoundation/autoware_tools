@@ -19,6 +19,8 @@
 
 #include <iostream>
 
+#include "utility.hpp"
+
 template <typename PointT>
 void accumulate(const PointT & p, const PointT & first_p, PointT & acc_diff);
 template <typename PointT>
@@ -73,8 +75,8 @@ struct Centroid
   Centroid()
   {
     point_num_ = 0;
-    memset(&acc_diff_, 0x00, sizeof(PointT));
-    memset(&first_point_, 0x00, sizeof(PointT));
+    util::zero_point(acc_diff_);
+    util::zero_point(first_point_);
   }
 
   void add(const PointT & p)

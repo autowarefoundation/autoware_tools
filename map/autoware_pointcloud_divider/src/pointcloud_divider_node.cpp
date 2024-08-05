@@ -41,7 +41,7 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <autoware/pointcloud_divider/pointcloud_divider.hpp>
+#include <autoware/pointcloud_divider/pointcloud_divider_node.hpp>
 #include <autoware/pointcloud_divider/utility.hpp>
 #include <autoware/pointcloud_divider/voxel_grid_filter.hpp>
 
@@ -52,6 +52,9 @@
 
 namespace fs = std::filesystem;
 
+namespace autoware::pointcloud_divider
+{
+  
 template <class PointT>
 void PointCloudDivider<PointT>::run(
   const PclCloudPtr & cloud_ptr, const std::string & output_dir, const std::string & file_prefix,
@@ -200,7 +203,6 @@ void PointCloudDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
       std::get<2>(new_grid) = 0;           // Prev size is 0
     } else {
       auto & cloud = std::get<0>(it->second);
-      auto & counter = std::get<1>(it->second);
       auto & prev_size = std::get<2>(it->second);
 
       cloud.push_back(p);
@@ -379,7 +381,7 @@ void PointCloudDivider<PointT>::mergeAndDownsample(
 
   // Save the new_cloud
   // Extract segment name only (format gx_gy)
-  size_t end_name, start_name;
+  int end_name, start_name;
 
   for (end_name = dir_path.size() - 1; end_name >= 0 && dir_path[end_name] == '/'; --end_name) {
   }
@@ -474,8 +476,54 @@ void PointCloudDivider<PointT>::saveGridInfoToYAML(const std::string & yaml_file
   yaml_file.close();
 }
 
-// template class PointCloudDivider<pcl::PointXYZ>;
+template class PointCloudDivider<pcl::PointXYZ>;
 template class PointCloudDivider<pcl::PointXYZI>;
-// template class PointCloudDivider<pcl::PointXYZINormal>;
-// template class PointCloudDivider<pcl::PointXYZRGB>;
-// template class PointCloudDivider<pcl::PointNormal>;
+
+}
+
+#include <rclcpp_components/register_node_macro.hpp>
+RCLCPP_COMPONENTS_REGISTER_NODE(autoware::pointcloud_divider::PointCloudDivider<pcl::PointXYZ>)
+RCLCPP_COMPONENTS_REGISTER_NODE(autoware::pointcloud_divider::PointCloudDivider<pcl::PointXYZI>)
+
+void printErrorAndExit(const std::string & message)
+{
+  std::cerr << "Error: " << message << std::endl;
+  exit(1);
+}
+
+int main(int argc, char * argv[])
+{
+  rclcpp::init(argc, argv);
+  rclcpp::NodeOptions node_options;
+
+  // Change the default PCL's log level to suppress the following message:
+  // `Failed to find match for field 'intensity'.`
+  pcl::console::setVerbosityLevel(pcl::console::VERBOSITY_LEVEL::L_ERROR);
+
+  if (argc <= 1) {
+    printErrorAndExit("There should be at least 6 runtime arguments.");
+  }
+
+  const int n_pcd = std::stoi(argv[1]);
+
+  if (argc != 5 + n_pcd) {
+    printErrorAndExit(
+      "There should be " + std::to_string(5 + n_pcd) +
+      " runtime arguments. input: " + std::to_string(argc));
+  }
+
+  std::vector<std::string> pcd_name;
+  for (int pcd_id = 0; pcd_id < n_pcd; pcd_id++) {
+    pcd_name.push_back(argv[2 + pcd_id]);
+  }
+  const std::string output_dir = argv[n_pcd + 2];
+  const std::string prefix = argv[n_pcd + 3];
+  const std::string config = argv[n_pcd + 4];
+
+  // Currently, any PCD will be loaded as pcl::PointXYZI.
+  autoware::pointcloud_divider::PointCloudDivider<pcl::PointXYZI> divider(node_options);
+  divider.run(pcd_name, output_dir, prefix, config);
+
+  std::cout << "pointcloud_divider has finished successfully" << std::endl;
+  return 0;
+}

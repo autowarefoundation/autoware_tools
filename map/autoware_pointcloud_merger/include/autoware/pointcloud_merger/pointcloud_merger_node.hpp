@@ -52,14 +52,21 @@
 #define PCL_NO_PRECOMPILE
 #include <autoware/pointcloud_divider/pcd_io.hpp>
 
+#include <rclcpp/rclcpp.hpp>
+
+namespace autoware::pointcloud_merger
+{
+
 template <class PointT>
-class PointCloudMerger
+class PointCloudMerger : public rclcpp::Node
 {
   typedef pcl::PointCloud<PointT> PclCloudType;
   typedef typename PclCloudType::Ptr PclCloudPtr;
 
 public:
-  PointCloudMerger() {}
+  explicit PointCloudMerger(const rclcpp::NodeOptions & node_options)
+  : Node("pointcloud_merger", node_options)
+  {}
   ~PointCloudMerger() {}
 
   void run(
@@ -82,5 +89,7 @@ private:
   void mergeWithoutDownsample(std::vector<std::string> & input_pcds);
   void mergeWithDownsample(std::vector<std::string> & input_pcds);
 };
+
+}
 
 #endif  // AUTOWARE__POINTCLOUD_MERGER__POINTCLOUD_MERGER_HPP_

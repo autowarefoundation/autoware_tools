@@ -23,6 +23,8 @@
 #include <string>
 #include <vector>
 
+#include <pcl/point_types.h>
+
 namespace util
 {
 // Create a directory
@@ -90,6 +92,18 @@ inline int split(const std::string & line, const std::string & del, std::vector<
   vals.push_back(line.substr(start));
 
   return vals.size();
+}
+
+template <typename PointT> inline void zero_point(PointT& p);
+
+template <> inline void zero_point(pcl::PointXYZ& p)
+{
+  p.x = p.y = p.z = 0;
+}
+
+template <> inline void zero_point(pcl::PointXYZI& p)
+{
+  p.x = p.y = p.z = p.intensity = 0;
 }
 
 }  // namespace util

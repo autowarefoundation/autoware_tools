@@ -41,13 +41,20 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <autoware/pointcloud_divider/pointcloud_divider.hpp>
+#include <autoware/pointcloud_divider/pointcloud_divider_node.hpp>
+#include <autoware/pointcloud_merger/pointcloud_merger_node.hpp>
 #include <autoware/pointcloud_divider/utility.hpp>
-#include <autoware/pointcloud_merger/pointcloud_merger.hpp>
+#include <autoware/pointcloud_merger/pointcloud_merger_node.hpp>
 
 #include <filesystem>
 
+#include <pcl/console/print.h>
+
+
 namespace fs = std::filesystem;
+
+namespace autoware::pointcloud_merger
+{
 
 template <class PointT>
 void PointCloudMerger<PointT>::run(
@@ -86,7 +93,7 @@ void PointCloudMerger<PointT>::mergeWithDownsample(std::vector<std::string> & in
 {
   std::cout << "Downsampling by PointCloudDivider" << std::endl;
   // Divide the input clouds to smaller segments
-  PointCloudDivider<PointT> pcd_divider;
+  autoware::pointcloud_divider::PointCloudDivider<PointT> pcd_divider(this->get_node_options());
 
   pcd_divider.setOutputDir(tmp_dir_);
   pcd_divider.setGridSize(leaf_size_ * 100, leaf_size_ * 100);
@@ -170,3 +177,52 @@ template class PointCloudMerger<pcl::PointXYZI>;
 // template class PointCloudMerger<pcl::PointXYZINormal>;
 // template class PointCloudMerger<pcl::PointXYZRGB>;
 // template class PointCloudMerger<pcl::PointNormal>;
+
+}
+
+#include <rclcpp_components/register_node_macro.hpp>
+RCLCPP_COMPONENTS_REGISTER_NODE(autoware::pointcloud_merger::PointCloudMerger<pcl::PointXYZ>)
+RCLCPP_COMPONENTS_REGISTER_NODE(autoware::pointcloud_merger::PointCloudMerger<pcl::PointXYZI>)
+
+
+void printErrorAndExit(const std::string & message)
+{
+  std::cerr << "Error: " << message << std::endl;
+  exit(1);
+}
+
+int main(int argc, char * argv[])
+{
+  rclcpp::init(argc, argv);
+  rclcpp::NodeOptions node_options;
+
+  // Change the default PCL's log level to suppress the following message:
+  // `Failed to find match for field 'intensity'.`
+  pcl::console::setVerbosityLevel(pcl::console::VERBOSITY_LEVEL::L_ERROR);
+
+  if (argc <= 1) {
+    printErrorAndExit("There should be at least 6 runtime arguments.");
+  }
+
+  const int n_pcd = std::stoi(argv[1]);
+
+  if (argc != 4 + n_pcd) {
+    printErrorAndExit(
+      "There should be " + std::to_string(4 + n_pcd) +
+      " runtime arguments. input: " + std::to_string(argc));
+  }
+
+  std::vector<std::string> pcd_name;
+  for (int pcd_id = 0; pcd_id < n_pcd; pcd_id++) {
+    pcd_name.push_back(argv[2 + pcd_id]);
+  }
+  const std::string output_pcd = argv[n_pcd + 2];
+  const std::string config = argv[n_pcd + 3];
+
+  // Currently, any PCD will be loaded as pcl::PointXYZI.
+  autoware::pointcloud_merger::PointCloudMerger<pcl::PointXYZI> merger(node_options);
+  merger.run(pcd_name, output_pcd, config);
+
+  std::cout << "pointcloud_merger has finished successfully" << std::endl;
+  return 0;
+}

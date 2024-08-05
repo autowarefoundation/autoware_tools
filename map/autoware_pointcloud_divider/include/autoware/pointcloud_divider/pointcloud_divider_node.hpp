@@ -62,8 +62,13 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
 
+#include <rclcpp/rclcpp.hpp>
+
+namespace autoware::pointcloud_divider
+{
+
 template <class PointT>
-class PointCloudDivider
+class PointCloudDivider : public rclcpp::Node
 {
   typedef pcl::PointCloud<PointT> PclCloudType;
   typedef typename PclCloudType::Ptr PclCloudPtr;
@@ -73,7 +78,12 @@ class PointCloudDivider
   typedef typename GridMapSizeType::iterator GridMapSizeItr;
 
 public:
-  PointCloudDivider() {}
+  explicit PointCloudDivider(const rclcpp::NodeOptions & node_options) 
+  : Node("pointcloud_divider", node_options) 
+  {
+
+  }
+
   ~PointCloudDivider() {}
 
   std::pair<double, double> getGridSize() const
@@ -160,5 +170,7 @@ private:
   void mergeAndDownsample(
     const std::string & dir_path, std::list<std::string> & pcd_list, size_t total_point_num);
 };
+
+}
 
 #endif  // AUTOWARE__POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_
