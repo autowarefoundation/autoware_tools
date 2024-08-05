@@ -22,7 +22,7 @@ This tool visualizes `tier4_debug_msgs/msg/ProcessingTimeTree` messages.
 
    ![visualize-tree](images/visualize-tree.png)
 
-#### summarize output
+#### summarized output
 
 Running with `--summarize`, it will output the summarized information.
 
