@@ -11,7 +11,7 @@ class ProcessingTimeTree:
         comment: str = "",
         id: int = 1,  # noqa
         parent_id: int = 0,
-        run_count: int = 1
+        run_count: int = 1,
     ):
         self.name = name
         self.processing_time = processing_time

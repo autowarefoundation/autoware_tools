@@ -70,7 +70,7 @@ class ProcessingTimeVisualizer(Node):
             self.trees.values(),
             self.stdcscr,
             self.show_comment,
-            self.summarize_output
+            self.summarize_output,
         )
         if key == ord("y"):
             pyperclip.copy(logs)
@@ -92,13 +92,14 @@ class ProcessingTimeVisualizer(Node):
 
 def main(args=None):
     import argparse
+
     parser = argparse.ArgumentParser(
         description="Tool for visualizing tier4_debug_msgs/msg/ProcessingTimeTree messages."
     )
     parser.add_argument(
         "--summarize",
-        action='store_true',
-        help="If this option is set, it will print out the summary of each processing scope."
+        action="store_true",
+        help="If this option is set, it will print out the summary of each processing scope.",
     )
     term_args = parser.parse_args()
 

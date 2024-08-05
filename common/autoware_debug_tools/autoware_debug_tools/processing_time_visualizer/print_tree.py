@@ -13,7 +13,7 @@ def print_trees(
     trees: List[ProcessingTimeTree],
     stdscr: curses.window,
     show_comment: bool = False,
-    summarize: bool = False
+    summarize: bool = False,
 ):
     stdscr.clear()
     height, width = stdscr.getmaxyx()
