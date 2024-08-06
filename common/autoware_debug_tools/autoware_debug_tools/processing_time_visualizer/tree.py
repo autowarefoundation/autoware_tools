@@ -112,8 +112,15 @@ class ProcessingTimeTree:
             line = ""
             if not is_root:
                 line += prefix + ("└── " if is_last else "├── ")
-            line += f"{node.name}: {node.processing_time:.2f} [ms]"
-            line += f", run count: {node.run_count}" if summarize else ""
+            line += (
+                (
+                    f"{node.name}: total {node.processing_time:.2f} [ms], "
+                    f"avg. {node.processing_time / node.run_count:.2f} [ms], "
+                    f"run count: {node.run_count}"
+                )
+                if summarize
+                else f"{node.name}: {node.processing_time:.2f} [ms]"
+            )
             line += f": {node.comment}" if show_comment and node.comment else ""
             lines.append(line)
             # Recur for each child node
