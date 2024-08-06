@@ -2324,6 +2324,27 @@
 <p><img alt="visualize-tree" src="images/visualize-tree.png"></p>
 </li>
 </ol>
+<h4 id="summarized-output">summarized output<a class="headerlink" href="#summarized-output" title="Permanent link">#</a></h4>
+<p>Running with <code>--summarize</code>, it will output the summarized information.</p>
+<div class="highlight"><pre><span></span><code>&gt; ros2 run autoware_debug_tools processing_time_visualizer --summarize
+
+objectsCallback: 17.99 [ms], run count: 1
+    ├── removeStaleTrafficLightInfo: 0.00 [ms], run count: 1
+    ├── updateObjectData: 0.03 [ms], run count: 13
+    ├── getCurrentLanelets: 4.81 [ms], run count: 13
+    │   ├── checkCloseLaneletCondition: 2.43 [ms], run count: 130
+    │   ├── isDuplicated: 0.02 [ms], run count: 17
+    │   └── calculateLocalLikelihood: 0.66 [ms], run count: 12
+    ├── updateRoadUsersHistory: 0.30 [ms], run count: 13
+    └── getPredictedReferencePath: 5.47 [ms], run count: 5
+        ├── predictObjectManeuver: 0.40 [ms], run count: 5
+        │   └── predictObjectManeuverByLatDiffDistance: 0.34 [ms], run count: 5
+        │       └── calcRightLateralOffset: 0.03 [ms], run count: 12
+        ├── calculateManeuverProbability: 0.01 [ms], run count: 5
+        └── addReferencePaths: 4.66 [ms], run count: 15
+            ├── updateFuturePossibleLanelets: 0.08 [ms], run count: 8
+            └── convertPathType: 4.29 [ms], run count: 8
+</code></pre></div>
 <h2 id="system-usage-monitor">System Usage Monitor<a class="headerlink" href="#system-usage-monitor" title="Permanent link">#</a></h2>
 <p>The purpose of the System Usage Monitor is to monitor, visualize and publish the CPU usage and memory usage of the ROS processes. By providing a real-time terminal-based visualization, users can easily confirm the cpu and memory usage as in the picture below.</p>
 <p><img alt="system_usage_monitor" src="images/system_usage_monitor.png"></p>
