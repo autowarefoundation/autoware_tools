@@ -138,6 +138,14 @@ class ProcessingTimeTree:
         construct_string(self, lines, "", True, True)
         return lines
 
+    def __dict__(self) -> dict:
+        return {
+            "name": self.name,
+            "processing_time": self.processing_time,
+            "comment": self.comment,
+            "children": [child.__dict__() for child in self.children],
+        }
+
     def __str__(self) -> str:
         return "".join([line + "\n" for line in self.to_lines()])
 

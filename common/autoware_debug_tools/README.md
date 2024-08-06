@@ -52,7 +52,7 @@ objectsCallback: 17.99 [ms], run count: 1
 
 The purpose of the System Usage Monitor is to monitor, visualize and publish the CPU usage and memory usage of the ROS processes. By providing a real-time terminal-based visualization, users can easily confirm the cpu and memory usage as in the picture below.
 
-![system_usage_monitor](image/system_usage_monitor.png)
+![system_usage_monitor](images/system_usage_monitor.png)
 
 You can run the program by the following command.
 

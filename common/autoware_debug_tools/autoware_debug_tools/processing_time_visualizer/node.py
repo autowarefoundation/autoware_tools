@@ -1,4 +1,5 @@
 import curses
+import json
 import time
 from typing import Dict
 import uuid
@@ -20,6 +21,7 @@ class ProcessingTimeVisualizer(Node):
     def __init__(self):
         super().__init__("processing_time_visualizer" + str(uuid.uuid4()).replace("-", "_"))
         self.subscriber = self.subscribe_processing_time_tree()
+        self.quit_option = None
         self.trees: Dict[str, ProcessingTimeTree] = {}
         self.worst_case_tree: Dict[str, ProcessingTimeTree] = {}
         self.stdcscr = init_curses()
@@ -76,6 +78,10 @@ class ProcessingTimeVisualizer(Node):
         if key == ord("y"):
             pyperclip.copy(logs)
         if key == ord("q"):
+            self.quit_option = "q"
+            raise KeyboardInterrupt
+        if key == ord("r"):
+            self.quit_option = "r"
             raise KeyboardInterrupt
 
     def callback(self, msg: ProcessingTimeTreeMsg):
@@ -103,6 +109,8 @@ def main(args=None):
     except (KeyboardInterrupt, rclpy.executors.ExternalShutdownException):
         node.destroy_node()
         exit_curses()
+        if node.quit_option == "r":
+            pyperclip.copy(json.dumps([v.__dict__() for v in node.worst_case_tree.values()]))
         if len(node.worst_case_tree) == 0:
             exit(1)
         print("⏰ Worst Case Execution Time ⏰")
