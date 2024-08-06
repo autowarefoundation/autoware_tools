@@ -26,6 +26,7 @@ class ProcessingTimeVisualizer(Node):
         self.worst_case_tree: Dict[str, ProcessingTimeTree] = {}
         self.stdcscr = init_curses()
         self.show_comment = False
+        self.summarize_output = False
         print_trees("🌲 Processing Time Tree 🌲", self.topic_name, self.trees, self.stdcscr)
 
         self.create_timer(0.1, self.update_screen)
@@ -65,12 +66,16 @@ class ProcessingTimeVisualizer(Node):
         key = self.stdcscr.getch()
 
         self.show_comment = not self.show_comment if key == ord("c") else self.show_comment
+        self.summarize_output = (
+            not self.summarize_output if key == ord("s") else self.summarize_output
+        )
         logs = print_trees(
             "🌲 Processing Time Tree 🌲",
             self.topic_name,
             self.trees.values(),
             self.stdcscr,
             self.show_comment,
+            self.summarize_output,
         )
         if key == ord("y"):
             pyperclip.copy(logs)
@@ -82,7 +87,7 @@ class ProcessingTimeVisualizer(Node):
             raise KeyboardInterrupt
 
     def callback(self, msg: ProcessingTimeTreeMsg):
-        tree = ProcessingTimeTree.from_msg(msg)
+        tree = ProcessingTimeTree.from_msg(msg, self.summarize_output)
         self.trees[tree.name] = tree
         if tree.name not in self.worst_case_tree:
             self.worst_case_tree[tree.name] = tree
@@ -112,7 +117,10 @@ def main(args=None):
             exit(1)
         print("⏰ Worst Case Execution Time ⏰")
         for tree in node.worst_case_tree.values():
-            print(tree, end=None)
+            tree_str = "".join(
+                [line + "\n" for line in tree.to_lines(summarize=node.summarize_output)]
+            )
+            print(tree_str, end=None)
 
 
 if __name__ == "__main__":
