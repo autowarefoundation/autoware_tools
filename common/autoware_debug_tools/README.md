@@ -60,13 +60,13 @@ ros2 run autoware_debug_tools memory_usage_plotter <bag-path>
 There are several options.
 
 - `-c`:
-  - can designate modules in the specific component (e.g. `all`, `planning`, `system`, etc).
-- `-n N:
-  - can pick up top N critical modules.
-- `-g <string>`
-  - can filter the modules which include `<string>`.
-- `-y <float>`
-  - can set the height of the plot.
+  - can filter modules in the specific component (e.g. `all`, `planning`, `system`, etc).
+- `-n <number>`:
+  - can pick up top `<number>` critical modules.
+- `-g <text>`
+  - can filter the modules which include `<text>`.
+- `-y <val>`
+  - can set the height of the plot to `<val>`.
 
 ### Examples
 
