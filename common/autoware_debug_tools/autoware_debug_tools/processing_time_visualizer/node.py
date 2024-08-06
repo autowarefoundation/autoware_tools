@@ -66,7 +66,9 @@ class ProcessingTimeVisualizer(Node):
         key = self.stdcscr.getch()
 
         self.show_comment = not self.show_comment if key == ord("c") else self.show_comment
-        self.summarize_output = not self.summarize_output if key == ord("s") else self.summarize_output
+        self.summarize_output = (
+            not self.summarize_output if key == ord("s") else self.summarize_output
+        )
         logs = print_trees(
             "🌲 Processing Time Tree 🌲",
             self.topic_name,
