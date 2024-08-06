@@ -17,14 +17,14 @@ from .utils import init_curses
 
 
 class ProcessingTimeVisualizer(Node):
-    def __init__(self, summarize: bool = False):
+    def __init__(self):
         super().__init__("processing_time_visualizer" + str(uuid.uuid4()).replace("-", "_"))
         self.subscriber = self.subscribe_processing_time_tree()
         self.trees: Dict[str, ProcessingTimeTree] = {}
         self.worst_case_tree: Dict[str, ProcessingTimeTree] = {}
         self.stdcscr = init_curses()
         self.show_comment = False
-        self.summarize_output = summarize
+        self.summarize_output = False
         print_trees("🌲 Processing Time Tree 🌲", self.topic_name, self.trees, self.stdcscr)
 
         self.create_timer(0.1, self.update_screen)
@@ -64,6 +64,7 @@ class ProcessingTimeVisualizer(Node):
         key = self.stdcscr.getch()
 
         self.show_comment = not self.show_comment if key == ord("c") else self.show_comment
+        self.summarize_output = not self.summarize_output if key == ord("s") else self.summarize_output
         logs = print_trees(
             "🌲 Processing Time Tree 🌲",
             self.topic_name,
@@ -91,21 +92,9 @@ class ProcessingTimeVisualizer(Node):
 
 
 def main(args=None):
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="Tool for visualizing tier4_debug_msgs/msg/ProcessingTimeTree messages."
-    )
-    parser.add_argument(
-        "--summarize",
-        action="store_true",
-        help="If this option is set, it will print out the summary of each processing scope.",
-    )
-    term_args = parser.parse_args()
-
     rclpy.init(args=args)
     try:
-        node = ProcessingTimeVisualizer(term_args.summarize)
+        node = ProcessingTimeVisualizer()
     except KeyboardInterrupt:
         exit_curses()
         return
@@ -119,7 +108,7 @@ def main(args=None):
         print("⏰ Worst Case Execution Time ⏰")
         for tree in node.worst_case_tree.values():
             tree_str = "".join(
-                [line + "\n" for line in tree.to_lines(summarize=term_args.summarize)]
+                [line + "\n" for line in tree.to_lines(summarize=node.summarize_output)]
             )
             print(tree_str, end=None)
 

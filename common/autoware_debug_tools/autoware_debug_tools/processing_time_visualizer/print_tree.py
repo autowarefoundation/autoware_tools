@@ -28,7 +28,7 @@ def print_trees(
     tree_lines = wrap_lines(tree_lines, width, height - 2)
     for i, line in enumerate(tree_lines):
         stdscr.addstr(i + 2, 1, line)
-    stdscr.addstr(height - 1, 0, "'q' => quit. 'c' => show comment. 'y' => copy."[: width - 2])
+    stdscr.addstr(height - 1, 0, "'q' => quit. 'c' => show comment. 's' => summarize. 'y' => copy."[: width - 2])
     stdscr.refresh()
 
     return "".join([line + "\n" for line in tree_lines])
