@@ -2286,6 +2286,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#system-performance-plotter" class="md-nav__link">
+    System Performance Plotter
+  </a>
+  
+    <nav class="md-nav" aria-label="System Performance Plotter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage_1" class="md-nav__link">
+    Usage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    Examples
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2350,7 +2377,51 @@ objectsCallback: 17.99 [ms], run count: 1
 <p><img alt="system_usage_monitor" src="images/system_usage_monitor.png"></p>
 <p>You can run the program by the following command.</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_debug_tools<span class="w"> </span>system_usage_monitor
-</code></pre></div></div>
+</code></pre></div>
+<h2 id="system-performance-plotter">System Performance Plotter<a class="headerlink" href="#system-performance-plotter" title="Permanent link">#</a></h2>
+<p>This script plots the following metrics by each Autoware's module.</p>
+<ul>
+<li>processing time</li>
+<li>CPU usage</li>
+<li>memory usage</li>
+</ul>
+<h3 id="usage_1">Usage<a class="headerlink" href="#usage_1" title="Permanent link">#</a></h3>
+<p>Run the following commands according to your purpose.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># plot processing time</span>
+ros2<span class="w"> </span>run<span class="w"> </span>autoware_debug_tools<span class="w"> </span>processing_time_plotter<span class="w"> </span>&lt;bag-path&gt;
+
+<span class="c1"># plot CPU usage</span>
+ros2<span class="w"> </span>run<span class="w"> </span>autoware_debug_tools<span class="w"> </span>cpu_usage_plotter<span class="w"> </span>&lt;bag-path&gt;
+
+<span class="c1"># plot memory usage</span>
+ros2<span class="w"> </span>run<span class="w"> </span>autoware_debug_tools<span class="w"> </span>memory_usage_plotter<span class="w"> </span>&lt;bag-path&gt;
+</code></pre></div>
+<p>There are several options.</p>
+<ul>
+<li><code>-c</code>:<ul>
+<li>can filter modules in the specific component (e.g. <code>all</code>, <code>planning</code>, <code>system</code>, etc).</li>
+</ul>
+</li>
+<li><code>-n &lt;number&gt;</code>:<ul>
+<li>can pick up top <code>&lt;number&gt;</code> critical modules.</li>
+</ul>
+</li>
+<li><code>-g &lt;text&gt;</code><ul>
+<li>can filter the modules which include <code>&lt;text&gt;</code>.</li>
+</ul>
+</li>
+<li><code>-y &lt;val&gt;</code><ul>
+<li>can set the height of the plot to <code>&lt;val&gt;</code>.</li>
+</ul>
+</li>
+</ul>
+<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_debug_tools<span class="w"> </span>processing_time_plotter<span class="w"> </span>&lt;bag-path&gt;<span class="w"> </span>-c<span class="w"> </span>planning<span class="w"> </span>-g<span class="w"> </span>behavior_path<span class="w"> </span>-y<span class="w"> </span><span class="m">300</span>
+</code></pre></div>
+<p><img alt="processing_time_plot_example" src="images/processing_time_plot_example.png"></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_debug_tools<span class="w"> </span>cpu_usage_plotter<span class="w"> </span>&lt;bag-path&gt;<span class="w"> </span>-n<span class="w"> </span><span class="m">20</span>
+</code></pre></div>
+<p><img alt="cpu_usage_plot_example" src="images/cpu_usage_plot_example.png"></p></div>
 
 
 
