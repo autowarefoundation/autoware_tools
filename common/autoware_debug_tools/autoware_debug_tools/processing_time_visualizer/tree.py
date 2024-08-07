@@ -137,6 +137,23 @@ class ProcessingTimeTree:
         # Start the recursive string construction with the root node
         construct_string(self, lines, "", True, True)
         return lines
+    
+    # sum up the processing tree time
+    # if the incoming tree has new nodes, add them to the current tree
+    # count the number of times the tree has been updated
+    def sum(self, other: "ProcessingTimeTree") -> None:
+        self.processing_time += other.processing_time
+        self.run_count += other.run_count
+
+        for other_child in other.children:
+            found = False
+            for child in self.children:
+                if child == other_child:
+                    child.sum(other_child)
+                    found = True
+                    break
+            if not found:
+                self.children.append(other_child)
 
     def __dict__(self) -> dict:
         return {
