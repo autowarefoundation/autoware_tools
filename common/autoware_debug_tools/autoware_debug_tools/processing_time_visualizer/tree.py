@@ -112,10 +112,19 @@ class ProcessingTimeTree:
             line = ""
             if not is_root:
                 line += prefix + ("└── " if is_last else "├── ")
+            # average processing time
+            average_processing_time = node.processing_time / node.run_count if node.run_count > 0 else 0
+            # percentage of processing time
+            percentage = (
+                f"{(node.processing_time / self.processing_time * 100):.2f}%"
+                if self.processing_time > 0
+                else "0.00%"
+            )
             line += (
                 (
-                    f"{node.name}: total {node.processing_time:.2f} [ms], "
-                    f"avg. {node.processing_time / node.run_count:.2f} [ms], "
+                    f"{percentage} {node.name}: "
+                    f"total {node.processing_time:.2f} [ms], "
+                    f"avg. {average_processing_time:.2f} [ms], "
                     f"run count: {node.run_count}"
                 )
                 if summarize
