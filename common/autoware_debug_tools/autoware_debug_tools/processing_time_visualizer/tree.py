@@ -116,7 +116,9 @@ class ProcessingTimeTree:
                 line += prefix + ("└── " if is_last else "├── ")
 
             # average processing time
-            average_processing_time = node.processing_time / node.run_count if node.run_count > 0 else 0
+            average_processing_time = (
+                node.processing_time / node.run_count if node.run_count > 0 else 0
+            )
             # percentage of processing time
             percentage = (
                 f"{(node.processing_time / self.processing_time * 100):.2f}%"
@@ -155,12 +157,9 @@ class ProcessingTimeTree:
                 )
                 last_line = prefix
                 last_line += "    └── " if is_root else "│   └── "
-                last_line += (
-                    f"{rest_percentage} rest: "
-                    f"{rest_processing_time:.2f} [ms]"
-                )
+                last_line += f"{rest_percentage} rest: " f"{rest_processing_time:.2f} [ms]"
                 lines.append(last_line)
-            
+
             return node.processing_time
 
         lines = []
@@ -168,7 +167,7 @@ class ProcessingTimeTree:
         construct_string(self, lines, "", True, True)
 
         return lines
-    
+
     # sum up the processing tree time
     # if the incoming tree has new nodes, add them to the current tree
     # count the number of times the tree has been updated
