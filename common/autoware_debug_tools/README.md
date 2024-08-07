@@ -59,3 +59,51 @@ You can run the program by the following command.
 ```bash
 ros2 run autoware_debug_tools system_usage_monitor
 ```
+
+## System Performance Plotter
+
+This script plots the following metrics by each Autoware's module.
+
+- processing time
+- CPU usage
+- memory usage
+
+### Usage
+
+Run the following commands according to your purpose.
+
+```bash
+# plot processing time
+ros2 run autoware_debug_tools processing_time_plotter <bag-path>
+
+# plot CPU usage
+ros2 run autoware_debug_tools cpu_usage_plotter <bag-path>
+
+# plot memory usage
+ros2 run autoware_debug_tools memory_usage_plotter <bag-path>
+```
+
+There are several options.
+
+- `-c`:
+  - can filter modules in the specific component (e.g. `all`, `planning`, `system`, etc).
+- `-n <number>`:
+  - can pick up top `<number>` critical modules.
+- `-g <text>`
+  - can filter the modules which include `<text>`.
+- `-y <val>`
+  - can set the height of the plot to `<val>`.
+
+### Examples
+
+```bash
+ros2 run autoware_debug_tools processing_time_plotter <bag-path> -c planning -g behavior_path -y 300
+```
+
+![processing_time_plot_example](images/processing_time_plot_example.png)
+
+```bash
+ros2 run autoware_debug_tools cpu_usage_plotter <bag-path> -n 20
+```
+
+![cpu_usage_plot_example](images/cpu_usage_plot_example.png)
