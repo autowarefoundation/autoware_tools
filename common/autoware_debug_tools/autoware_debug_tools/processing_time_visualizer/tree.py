@@ -171,7 +171,7 @@ class ProcessingTimeTree:
     # sum up the processing tree time
     # if the incoming tree has new nodes, add them to the current tree
     # count the number of times the tree has been updated
-    def sum(self, other: "ProcessingTimeTree") -> None:
+    def summarize_tree(self, other: "ProcessingTimeTree") -> None:
         self.processing_time += other.processing_time
         self.run_count += other.run_count
 
@@ -179,7 +179,7 @@ class ProcessingTimeTree:
             found = False
             for child in self.children:
                 if child == other_child:
-                    child.sum(other_child)
+                    child.summarize_tree(other_child)
                     found = True
                     break
             if not found:

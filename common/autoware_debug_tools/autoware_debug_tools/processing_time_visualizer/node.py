@@ -103,7 +103,7 @@ class ProcessingTimeVisualizer(Node):
         if tree.name not in self.total_tree:
             self.total_tree[tree.name] = tree
         else:
-            self.total_tree[tree.name].sum(tree)
+            self.total_tree[tree.name].summarize_tree(tree)
 
 
 def main(args=None):
