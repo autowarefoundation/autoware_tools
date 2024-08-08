@@ -122,12 +122,6 @@ def main(args=None):
             pyperclip.copy(json.dumps([v.__dict__() for v in node.worst_case_tree.values()]))
         if len(node.worst_case_tree) == 0:
             exit(1)
-        print("⏰ Worst Case Execution Time ⏰")
-        for tree in node.worst_case_tree.values():
-            tree_str = "".join(
-                [line + "\n" for line in tree.to_lines(summarize=node.summarize_output)]
-            )
-            print(tree_str, end=None)
 
         print("🌲 Total Processing Time Tree 🌲")
         for tree in node.total_tree.values():
@@ -136,6 +130,12 @@ def main(args=None):
             )
             print(tree_str, end=None)
 
+        print("⏰ Worst Case Execution Time ⏰")
+        for tree in node.worst_case_tree.values():
+            tree_str = "".join(
+                [line + "\n" for line in tree.to_lines(summarize=node.summarize_output)]
+            )
+            print(tree_str, end=None)
 
 if __name__ == "__main__":
     main()
