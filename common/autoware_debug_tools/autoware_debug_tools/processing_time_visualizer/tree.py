@@ -107,15 +107,29 @@ class ProcessingTimeTree:
             prefix: str,
             is_last: bool,
             is_root: bool,
-        ) -> None:
+        ) -> float:
             # If not the root, append the prefix and the node information
             line = ""
+            has_children = len(node.children) > 0
+            is_last = is_last and not has_children
             if not is_root:
                 line += prefix + ("└── " if is_last else "├── ")
+
+            # average processing time
+            average_processing_time = (
+                node.processing_time / node.run_count if node.run_count > 0 else 0
+            )
+            # percentage of processing time
+            percentage = (
+                f"{(node.processing_time / self.processing_time * 100):.2f}%"
+                if self.processing_time > 0
+                else "0.00%"
+            )
             line += (
                 (
-                    f"{node.name}: total {node.processing_time:.2f} [ms], "
-                    f"avg. {node.processing_time / node.run_count:.2f} [ms], "
+                    f"{percentage} {node.name}: "
+                    f"total {node.processing_time:.2f} [ms], "
+                    f"avg. {average_processing_time:.2f} [ms], "
                     f"run count: {node.run_count}"
                 )
                 if summarize
@@ -124,19 +138,52 @@ class ProcessingTimeTree:
             line += f": {node.comment}" if show_comment and node.comment else ""
             lines.append(line)
             # Recur for each child node
+            children_processing_time = 0.0
             for i, child in enumerate(node.children):
-                construct_string(
+                children_processing_time += construct_string(
                     child,
                     lines,
-                    prefix + ("    " if is_last else "│   "),
-                    i == len(node.children) - 1,
+                    prefix + ("    " if (is_last or is_root) else "│   "),
+                    False,
                     False,
                 )
+            # if it has children, add the rest of the processing time
+            if has_children:
+                rest_processing_time = node.processing_time - children_processing_time
+                rest_percentage = (
+                    f"{(rest_processing_time / self.processing_time * 100):.2f}%"
+                    if self.processing_time > 0
+                    else "0.00%"
+                )
+                last_line = prefix
+                last_line += "    └── " if is_root else "│   └── "
+                last_line += f"{rest_percentage} rest: " f"{rest_processing_time:.2f} [ms]"
+                lines.append(last_line)
+
+            return node.processing_time
 
         lines = []
         # Start the recursive string construction with the root node
         construct_string(self, lines, "", True, True)
+
         return lines
+
+    # sum up the processing tree time
+    # if the incoming tree has new nodes, add them to the current tree
+    # count the number of times the tree has been updated
+    def summarize_tree(self, other: "ProcessingTimeTree") -> None:
+        self.processing_time += other.processing_time
+        self.run_count += other.run_count
+
+        for other_child in other.children:
+            found = False
+            for child in self.children:
+                if child == other_child:
+                    child.summarize_tree(other_child)
+                    found = True
+                    break
+            if not found:
+                self.children.append(other_child)
 
     def __dict__(self) -> dict:
         return {
