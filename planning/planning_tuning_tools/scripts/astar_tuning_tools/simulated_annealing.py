@@ -112,7 +112,6 @@ class SimulatedAnnealing:
 
         self.evaluator.set_results(results)
         self.evaluator.set_calculation_time(end_time - start_time)
-        self.evaluator.print_result()
         return self.evaluator.evaluate()
 
     # Define the cooling schedule function
@@ -241,7 +240,7 @@ if __name__ == "__main__":
         val_data_set.append(TestData(costmap, goal_pose))
 
     initial_temperature = 200.0
-    iterations = 50
+    iterations = 100
 
     simulated_annealing = SimulatedAnnealing(config_path, val_data_set)
     simulated_annealing.simulated_annealing(initial_temperature, iterations)

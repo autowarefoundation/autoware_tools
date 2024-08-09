@@ -30,7 +30,7 @@ from geometry_msgs.msg import Pose
 import numpy as np
 from pyquaternion import Quaternion
 from tqdm import tqdm
-
+import yaml
 
 def search_one(astar, start_pose, goal_pose):
     try:
@@ -101,9 +101,14 @@ if __name__ == "__main__":
     costmap_width_half = costmap.info.resolution * costmap.info.width / 2
 
     if args.opt_param is not None:
-        with open(os.path.dirname(__file__) + "/opt_param/" + args.opt_param + ".txt", "rb") as f:
-            opt_param = pickle.load(f)
-        planner_param, astar_param = param_vector2obj(opt_param)
+        with open(os.path.dirname(__file__) + "/opt_param/" + args.opt_param + ".yaml", "rb") as f:
+            all_config = yaml.safe_load(f)
+        for key in all_config["planner_param"].keys():
+            setattr(planner_param, key, all_config["planner_param"][key])
+        for key in all_config["astar_param"].keys():
+            setattr(astar_param, key, all_config["astar_param"][key])
+        for key in all_config["vehicle_shape"].keys():
+            setattr(vehicle_shape, key, all_config["vehicle_shape"][key])
 
     # goal grid
     xs = list(
