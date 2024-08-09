@@ -32,8 +32,8 @@ class Evaluator:
         self.unsuccess_rate = None
         self.path_length_rate = None
         self.direction_change = None
-        self.distance_to_obstacle_average = None
-        self.distance_to_obstacle_minimum = None
+        self.minus_distance_to_obstacle_average = None
+        self.minus_distance_to_obstacle_minimum = None
         self.calculation_time = None
         if results is not None:
             self.set_results(results)
@@ -46,7 +46,7 @@ class Evaluator:
         for key in config_dict.keys():
             param_config = config_dict[key]
             if param_config["use_optimization"]:
-                self.indicator[key] = param_config["weight"]
+                self.indicator[key] = param_config["weight"]                
 
     def evaluate(self):
         if len(self.indicator) == 0:
@@ -76,9 +76,9 @@ class Evaluator:
                 N_success += 1
                 waypoints = result.waypoints
                 L2_dist = math.hypot(
-                    waypoints.waypoints[1].pose.position.x
+                    waypoints.waypoints[0].pose.position.x
                     - waypoints.waypoints[-1].pose.position.x,
-                    waypoints.waypoints[1].pose.position.y
+                    waypoints.waypoints[0].pose.position.y
                     - waypoints.waypoints[-1].pose.position.y,
                 )
                 if L2_dist != 0:
@@ -91,10 +91,10 @@ class Evaluator:
         self.N_success = N_success
         if N_success != 0:
             self.unsuccess_rate = 1 - N_success / N
-            self.length_rate = total_length_rate / N_success
+            self.path_length_rate = total_length_rate / N_success
             self.direction_change = total_direction_change / N_success
-            self.distance_to_obstacle_average = total_distance_to_obstacle_average / N_success
-            self.distance_to_obstacle_minimum = total_distance_to_obstacle_minimum / N_success
+            self.minus_distance_to_obstacle_average = -total_distance_to_obstacle_average / N_success
+            self.minus_distance_to_obstacle_minimum = -total_distance_to_obstacle_minimum / N_success
 
     def set_results_from_path(self, dir_path):
         # laod search settings
@@ -145,10 +145,10 @@ class Evaluator:
                 self.path_length_rate,
             )
             print("Average of direction change number: ", self.direction_change)
-            print("Average of distance to obstacle: ", self.distance_to_obstacle_average)
+            print("Average of distance to obstacle: ", -self.minus_distance_to_obstacle_average)
             print(
                 "Average of minimium distance to obstacle in path: ",
-                self.distance_to_obstacle_minimum,
+                -self.minus_distance_to_obstacle_minimum,
             )
         else:
             print("No goals were found...")

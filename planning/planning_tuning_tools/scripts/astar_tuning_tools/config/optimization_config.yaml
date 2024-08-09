@@ -1,19 +1,19 @@
 evaluation:
   unsuccess_rate:
     use_optimization: true
-    weight: 10
+    weight: 10.0
   path_length_rate:
     use_optimization: true
-    weight: 1
+    weight: 1.0
   direction_change:
     use_optimization: true
-    weight: 10
-  distance_to_obstacle_average:
-    use_optimization: true
-    weight: 1
-  distance_to_obstacle_minimum:
-    use_optimization: true
-    weight: 1
+    weight: 10.0
+  minus_distance_to_obstacle_average:
+    use_optimization: false
+    weight: 0.01
+  minus_distance_to_obstacle_minimum:
+    use_optimization: false
+    weight: 0.01
   calculation_time:
     use_optimization: true
     weight: 0.001
@@ -126,6 +126,16 @@ vehicle_shape:
   width:
     use_optimization: false
     initial: 1.896
+    min: 0
+    max: 1
+  base_length:
+    use_optimization: false
+    initial: 2.79
+    min: 0
+    max: 1
+  max_steering:
+    use_optimization: false
+    initial: 0.7
     min: 0
     max: 1
   base2back:

@@ -4,8 +4,10 @@ import autoware_freespace_planning_algorithms.astar_search as fp
 vehicle_shape = fp.VehicleShape()
 vehicle_shape.length = 4.89
 vehicle_shape.width = 1.896
+vehicle_shape.base_length = 2.79
+vehicle_shape.max_steering = 0.7
 vehicle_shape.base2back = 1.1
-
+vehicle_shape.setMinMaxDimension()
 
 # -- Planner Common Parameter --
 planner_param = fp.PlannerCommonParam()

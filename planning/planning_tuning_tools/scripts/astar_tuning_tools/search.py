@@ -37,8 +37,6 @@ def search_one(astar, start_pose, goal_pose):
         find = astar.makePlan(start_pose, goal_pose)
     except RuntimeError:
         find = False
-    else:
-        find = False
 
     waypoints = fp.PlannerWaypoints()
     distance_to_obstacles = []
@@ -88,12 +86,12 @@ if __name__ == "__main__":
     parser.add_argument("--x_resolution", default=1.0, type=float, help="interval of goal x")
     parser.add_argument("--y_resolution", default=1.0, type=float, help="interval of goal y")
     parser.add_argument(
-        "--yaw_discrete", default=10, type=int, help="the descretized number of yaw"
+        "--yaw_discrete", default=10, type=int, help="the discretized number of yaw"
     )
     parser.add_argument("--opt_param", default=None, type=str, help="name of optimal param")
     args = parser.parse_args()
 
-    # input proccessing
+    # input processing
     save_dir = os.path.dirname(__file__) + "/result/" + args.save_name
 
     with open(os.path.dirname(__file__) + "/costmap/" + args.costmap + ".txt", "rb") as f:
