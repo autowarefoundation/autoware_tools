@@ -22,24 +22,32 @@
 
 ## Quick start
 
-```sh
-./optimization_operator.sh
-```
+1. Select the parameters which is used for the optimization in the [configuration file](config/optimization_config.yaml).
 
-Default costmap is belows:
+2. Run the bash file with an arbitrary file name.
+
+   ```sh
+   ./optimization_operator.sh costmap_default [file name]
+   ```
+
+3. You can find the optimized parameter at `opt_param/[file name].yaml`. Substitude the config parameters of freespace planner (in your autoware) into the optimized parameter manually.
+
+Default costmap used for the optimization is below:
 ![default costmap](figs/costmap_default.png)
 
 ## Optimization
 
 ### Usage
 
-1. Run the script
+1. Select the parameters which is used for the optimization in the [configuration file](config/optimization_config.yaml).
+
+2. Run the bash file with an arbitrary file name.
 
    ```sh
    ./optimization_operator.sh [costmap name] [file name]
    ```
 
-2. You can find the optimized parameter at `opt_param/[].yaml`. Substitude the condig parameter of freespace planner (in your autoware) into the optimized parameter manually.
+3. You can find the optimized parameter at `opt_param/[file name].yaml`. Substitude the config parameters of freespace planner (in your autoware) into the optimized parameter manually.
 
 ### Options
 

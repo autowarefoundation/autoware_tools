@@ -67,6 +67,12 @@ class OptimizationVariable:
     def get_param(self):
         return self.param_obj
 
+    def get_param_as_dict(self):
+        param_dict = {}
+        for i, attr in enumerate(self.use_attrs):
+            param_dict[attr] = getattr(self.param_obj, attr)
+        return param_dict
+
 
 class SimulatedAnnealing:
     def __init__(self, config_path, val_data_set):
@@ -106,6 +112,7 @@ class SimulatedAnnealing:
 
         self.evaluator.set_results(results)
         self.evaluator.set_calculation_time(end_time - start_time)
+        self.evaluator.print_result()
         return self.evaluator.evaluate()
 
     # Define the cooling schedule function
@@ -125,38 +132,46 @@ class SimulatedAnnealing:
         self.best_param = current_params
         self.best_energy = current_energy
 
-        for t in tqdm(range(iterations)):
-            temperature = self.cooling_schedule(t, initial_temperature)
+        with tqdm(range(iterations)) as pbar:
+            for t in pbar:
+                temperature = self.cooling_schedule(t, initial_temperature)
 
-            # Small random change
-            planner_diff = np.random.uniform(-1, 1, self.planner_var.N)
-            astar_diff = np.random.uniform(-1, 1, self.astar_var.N)
-            vehicle_diff = np.random.uniform(-1, 1, self.vehicle_var.N)
-            neighbor_params = [
-                self.planner_var.increment(planner_diff, update=False),
-                self.astar_var.increment(astar_diff, update=False),
-                self.vehicle_var.increment(vehicle_diff, update=False),
-            ]
-            neighbor_energy = self.objective_function(neighbor_params)
-
-            if neighbor_energy < current_energy or random.random() < math.exp(
-                (current_energy - neighbor_energy) / temperature
-            ):
-                current_params = [
-                    self.planner_var.increment(planner_diff, update=True),
-                    self.astar_var.increment(astar_diff, update=True),
-                    self.vehicle_var.increment(vehicle_diff, update=True),
+                # Small random change
+                planner_diff = np.random.uniform(-1, 1, self.planner_var.N)
+                astar_diff = np.random.uniform(-1, 1, self.astar_var.N)
+                vehicle_diff = np.random.uniform(-1, 1, self.vehicle_var.N)
+                neighbor_params = [
+                    self.planner_var.increment(planner_diff, update=False),
+                    self.astar_var.increment(astar_diff, update=False),
+                    self.vehicle_var.increment(vehicle_diff, update=False),
                 ]
-                current_energy = neighbor_energy
+                neighbor_energy = self.objective_function(neighbor_params)
 
-                if neighbor_energy < self.best_energy:
-                    self.best_param = neighbor_params
-                    self.best_energy = neighbor_energy
+                if neighbor_energy < current_energy or random.random() < math.exp(
+                    (current_energy - neighbor_energy) / temperature
+                ):
+                    current_params = [
+                        self.planner_var.increment(planner_diff, update=True),
+                        self.astar_var.increment(astar_diff, update=True),
+                        self.vehicle_var.increment(vehicle_diff, update=True),
+                    ]
+                    current_energy = neighbor_energy
 
-        return self.best_param, self.best_energy
+                    if neighbor_energy < self.best_energy:
+                        self.best_param = neighbor_params
+                        self.best_energy = neighbor_energy
+
+                pbar.set_postfix(best_value=self.best_energy)
 
     def get_result(self):
         return self.best_param, self.best_energy
+
+    def get_result_as_dict(self):
+        return [
+            self.planner_var.get_param_as_dict(),
+            self.astar_var.get_param_as_dict(),
+            self.vehicle_var.get_param_as_dict(),
+        ]
 
     def count_forward_backward_change(self, waypoints):
         count = 0
@@ -173,9 +188,9 @@ class SimulatedAnnealing:
 
 def save_param_as_yaml(params, save_name):
     param_dict = {}
-    param_dict["planner_param"] = vars(params[0])
-    param_dict["astar_param"] = vars(params[1])
-    param_dict["vehicle_shape"] = vars(params[2])
+    param_dict["planner_param"] = params[0]
+    param_dict["astar_param"] = params[1]
+    param_dict["vehicle_shape"] = params[2]
     with open(save_name, "w") as f:
         yaml.dump(param_dict, f)
         print("optimized parameters are saved!!")
@@ -226,18 +241,17 @@ if __name__ == "__main__":
         val_data_set.append(TestData(costmap, goal_pose))
 
     initial_temperature = 200.0
-    iterations = 300
+    iterations = 50
 
     simulated_annealing = SimulatedAnnealing(config_path, val_data_set)
-    best_param, best_energy = simulated_annealing.simulated_annealing(
-        initial_temperature, iterations
-    )
+    simulated_annealing.simulated_annealing(initial_temperature, iterations)
+    best_params_dict = simulated_annealing.get_result_as_dict()
 
-    print(vars(best_param[0]))
+    print(best_params_dict)
 
     if not os.path.exists("opt_param"):
         os.makedirs("opt_param")
 
     # TODO: how to save optimal parameter
     file_name_yaml = os.path.dirname(__file__) + "/opt_param/" + args.save_name + ".yaml"
-    save_param_as_yaml(best_param, file_name_yaml)
+    save_param_as_yaml(best_params_dict, file_name_yaml)

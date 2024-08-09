@@ -46,7 +46,7 @@ class Evaluator:
         for key in config_dict.keys():
             param_config = config_dict[key]
             if param_config["use_optimization"]:
-                self.indicator[key] = param_config["weight"]                
+                self.indicator[key] = param_config["weight"]
 
     def evaluate(self):
         if len(self.indicator) == 0:
@@ -93,8 +93,12 @@ class Evaluator:
             self.unsuccess_rate = 1 - N_success / N
             self.path_length_rate = total_length_rate / N_success
             self.direction_change = total_direction_change / N_success
-            self.minus_distance_to_obstacle_average = -total_distance_to_obstacle_average / N_success
-            self.minus_distance_to_obstacle_minimum = -total_distance_to_obstacle_minimum / N_success
+            self.minus_distance_to_obstacle_average = (
+                -total_distance_to_obstacle_average / N_success
+            )
+            self.minus_distance_to_obstacle_minimum = (
+                -total_distance_to_obstacle_minimum / N_success
+            )
 
     def set_results_from_path(self, dir_path):
         # laod search settings
