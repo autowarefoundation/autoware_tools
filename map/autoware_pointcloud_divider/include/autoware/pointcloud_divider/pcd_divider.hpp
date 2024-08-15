@@ -41,8 +41,8 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOWARE__POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_
-#define AUTOWARE__POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_
+#ifndef AUTOWARE__POINTCLOUD_DIVIDER__PCD_DIVIDER_HPP_
+#define AUTOWARE__POINTCLOUD_DIVIDER__PCD_DIVIDER_HPP_
 
 #include <yaml-cpp/yaml.h>
 
@@ -59,6 +59,9 @@
 #include "grid_info.hpp"
 #include "pcd_io.hpp"
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
 
@@ -68,7 +71,7 @@ namespace autoware::pointcloud_divider
 {
 
 template <class PointT>
-class PointCloudDivider : public rclcpp::Node
+class PCDDivider 
 {
   typedef pcl::PointCloud<PointT> PclCloudType;
   typedef typename PclCloudType::Ptr PclCloudPtr;
@@ -78,37 +81,31 @@ class PointCloudDivider : public rclcpp::Node
   typedef typename GridMapSizeType::iterator GridMapSizeItr;
 
 public:
-  explicit PointCloudDivider(const rclcpp::NodeOptions & node_options) 
-  : Node("pointcloud_divider", node_options) 
-  {
+  explicit PCDDivider(const rclcpp::Logger & logger) 
+  : logger_(logger)
+  {}
 
+  // Functions to set input parameters
+  void setInput(const std::string & input_pcd_or_dir) {
+    input_pcd_or_dir_ = input_pcd_or_dir;
   }
 
-  ~PointCloudDivider() {}
-
-  std::pair<double, double> getGridSize() const
-  {
-    return std::pair<double, double>(grid_size_x_, grid_size_y_);
-  }
-
-  void run(
-    std::vector<std::string> & pcd_names, const std::string & output_dir,
-    const std::string & file_prefix, const std::string & config);
-
-  void run(
-    const PclCloudPtr & cloud, const std::string & output_dir, const std::string & file_prefix,
-    const std::string & config);
-
-  void run(const std::vector<std::string> & pcd_names);
-
-  void setPrefix(const std::string & prefix) { file_prefix_ = prefix; }
-
-  void setOutputDir(const std::string & output_dir)
-  {
+  void setOutputDir(const std::string & output_dir) {
     output_dir_ = output_dir;
     tmp_dir_ = output_dir + "/tmp/";
   }
 
+  void setPrefix(const std::string & prefix) { 
+    file_prefix_ = prefix; 
+  }
+
+  void setConfig(const std::string & config) {
+    config_file_ = config;
+
+    paramInitialize();
+  }
+
+  // Used to manually set parameters when a config file is not available
   void setGridSize(float res_x, float res_y)
   {
     grid_size_x_ = res_x;
@@ -117,18 +114,27 @@ public:
     g_grid_size_y_ = grid_size_y_ * 10;
   }
 
-  void setLargeGridMode(bool use_large_grid) { use_large_grid_ = use_large_grid; }
+  void setLargeGridMode(bool use_large_grid) { 
+    use_large_grid_ = use_large_grid; 
+  }
 
-  void setLeafSize(float leaf_size) { leaf_size_ = leaf_size; }
+  void setLeafSize(float leaf_size) { 
+    leaf_size_ = leaf_size; 
+  }
 
-  void setDebugMode(bool mode) { debug_mode_ = mode; }
+  void setDebugMode(bool mode) { 
+    debug_mode_ = mode; 
+  }
 
-  std::string makeFileName(const GridInfo<2> & grid) const;
+  std::pair<double, double> getGridSize() const {
+    return std::pair<double, double>(grid_size_x_, grid_size_y_);
+  }
 
-  void setUseLargeGrid(const bool use_large_grid) { use_large_grid_ = use_large_grid; }
+  void run();
+  void run(const std::vector<std::string> & pcd_names);
 
 private:
-  std::string output_dir_, file_prefix_, config_file_;
+  std::string input_pcd_or_dir_, output_dir_, file_prefix_, config_file_;
 
   std::unordered_set<GridInfo<2>> grid_set_;
 
@@ -156,13 +162,19 @@ private:
   std::string tmp_dir_;
   CustomPCDReader<PointT> reader_;
   bool debug_mode_ = true;  // Print debug messages or not
+  rclcpp::Logger logger_;
+
+  // Find all PCD files from the input path
+  std::vector<std::string> discoverPCDs(const std::string & input);
+
+  std::string makeFileName(const GridInfo<2> & grid) const;
 
   PclCloudPtr loadPCD(const std::string & pcd_name);
   void savePCD(const std::string & pcd_name, const pcl::PointCloud<PointT> & cloud);
   void dividePointCloud(const PclCloudPtr & cloud_ptr);
   void paramInitialize();
   void saveGridInfoToYAML(const std::string & yaml_file_path);
-  void checkOutputDirectoryValidity() const;
+  void checkOutputDirectoryValidity();
 
   void saveGridPCD(GridMapItr & grid_it);
   void saveTheRest();

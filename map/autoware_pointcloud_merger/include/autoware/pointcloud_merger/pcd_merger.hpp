@@ -41,8 +41,8 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef AUTOWARE__POINTCLOUD_MERGER__POINTCLOUD_MERGER_HPP_
-#define AUTOWARE__POINTCLOUD_MERGER__POINTCLOUD_MERGER_HPP_
+#ifndef AUTOWARE__POINTCLOUD_MERGER__PCD_MERGER_HPP_
+#define AUTOWARE__POINTCLOUD_MERGER__PCD_MERGER_HPP_
 
 #include <yaml-cpp/yaml.h>
 
@@ -53,28 +53,47 @@
 #include <autoware/pointcloud_divider/pcd_io.hpp>
 
 #include <rclcpp/rclcpp.hpp>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
+#include <rclcpp/rclcpp.hpp>
 
 namespace autoware::pointcloud_merger
 {
 
 template <class PointT>
-class PointCloudMerger : public rclcpp::Node
+class PCDMerger 
 {
   typedef pcl::PointCloud<PointT> PclCloudType;
   typedef typename PclCloudType::Ptr PclCloudPtr;
 
 public:
-  explicit PointCloudMerger(const rclcpp::NodeOptions & node_options)
-  : Node("pointcloud_merger", node_options)
-  {}
-  ~PointCloudMerger() {}
+  explicit PCDMerger(const rclcpp::Logger & logger)
+  : logger_(logger) {}
 
-  void run(
-    std::vector<std::string> & pcd_names, const std::string & output_pcd,
-    const std::string & config);
+  void setInput(const std::string & input) {
+    input_dir_ = input;
+  }
+
+  void setOutput(const std::string & output) {
+    output_pcd_ = output;
+  }
+
+  void setConfig(const std::string & config_file) {
+    config_file_ = config_file;
+
+    paramInitialize();
+  }
+   
+  void setLeafSize(double leaf_size) {
+    leaf_size_ = leaf_size;
+  }
+
+  void run();
+  void run(const std::vector<std::string> & pcd_names);
 
 private:
-  std::string output_pcd_, config_file_;
+  std::string output_pcd_, config_file_, input_dir_;
 
   // Params from yaml
   double leaf_size_ = 0.1;
@@ -84,10 +103,12 @@ private:
 
   std::string tmp_dir_;
   CustomPCDWriter<PointT> writer_;
+  rclcpp::Logger logger_;
 
+  std::vector<std::string> discoverPCDs(const std::string & input);
   void paramInitialize();
-  void mergeWithoutDownsample(std::vector<std::string> & input_pcds);
-  void mergeWithDownsample(std::vector<std::string> & input_pcds);
+  void mergeWithoutDownsample(const std::vector<std::string> & input_pcds);
+  void mergeWithDownsample(const std::vector<std::string> & input_pcds);
 };
 
 }

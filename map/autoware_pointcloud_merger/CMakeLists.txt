@@ -17,7 +17,7 @@ find_package(PCL REQUIRED)
 
 include_directories(include)
 
-ament_auto_add_library(${PROJECT_NAME} SHARED src/pointcloud_merger_node.cpp)
+ament_auto_add_library(${PROJECT_NAME} SHARED src/pointcloud_merger_node.cpp src/pcd_merger.cpp)
 target_link_libraries(${PROJECT_NAME} yaml-cpp ${PCL_LIBRARIES})
 ament_target_dependencies(${PROJECT_NAME} autoware_pointcloud_divider)
 
@@ -34,6 +34,6 @@ install(TARGETS ${PROJECT_NAME}_node
         INCLUDES DESTINATION include
         )
 
-install(PROGRAMS scripts/pointcloud_merger.sh scripts/merger_core.sh DESTINATION bin)
+# install(PROGRAMS scripts/pointcloud_merger.sh scripts/merger_core.sh DESTINATION bin)
 
-ament_auto_package()
+ament_auto_package(INSTALL_TO_SHARE launch config)

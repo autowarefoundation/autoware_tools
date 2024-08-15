@@ -1,5 +1,0 @@
-pointcloud_divider:
-  use_large_grid: false
-  leaf_size: 0.2
-  grid_size_x: 20
-  grid_size_y: 20

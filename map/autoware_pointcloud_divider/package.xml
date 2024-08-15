@@ -17,6 +17,8 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
 
+  <exec_depend>ros2launch</exec_depend>
+
   <export>
     <build_type>ament_cmake</build_type>
   </export>

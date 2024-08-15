@@ -14,30 +14,26 @@ endif ()
 
 # Find packages
 find_package(yaml-cpp REQUIRED)
-find_package(PCL REQUIRED common)
+find_package(PCL REQUIRED COMPONENTS common io filters)
 
 include_directories(include)
 
 # Add divider library
-ament_auto_add_library(${PROJECT_NAME} SHARED src/pointcloud_divider_node.cpp src/voxel_grid_filter.cpp)
+ament_auto_add_library(${PROJECT_NAME} SHARED src/pointcloud_divider_node.cpp src/voxel_grid_filter.cpp src/pcd_divider.cpp)
 target_link_libraries(${PROJECT_NAME} yaml-cpp ${PCL_LIBRARIES})
 rclcpp_components_register_node(${PROJECT_NAME} 
   PLUGIN "autoware::pointcloud_divider::PointCloudDivider"
   EXECUTABLE ${PROJECT_NAME}_node
 )
 
-# install(DIRECTORY include/
-#         DESTINATION include
-#         )
-
-install(TARGETS ${PROJECT_NAME}_node
-        EXPORT ${PROJECT_NAME}_node
+install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}
         RUNTIME DESTINATION bin
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         INCLUDES DESTINATION include
         )
 
-install(PROGRAMS scripts/pointcloud_divider.sh scripts/divider_core.sh DESTINATION bin)
+# install(PROGRAMS scripts/pointcloud_divider.sh scripts/divider_core.sh DESTINATION bin)
 
-ament_auto_package()
+ament_auto_package(INSTALL_TO_SHARE launch config)

@@ -1,0 +1,4 @@
+/**:
+  ros__parameters:
+    # Downsampling resolution
+    leaf_size: -0.1
