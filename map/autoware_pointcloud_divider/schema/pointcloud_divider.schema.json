@@ -1,0 +1,78 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Parameters for autoware point cloud divider node",
+    "type": "object",
+    "definitions": {
+        "autoware_pointcloud_divider": {
+            "type": "object",
+            "properties": {
+                "use_large_grid": {
+                    "type": "boolean",
+                    "description": "Pack small segments to larger folders",
+                    "default": "false"
+                },
+                "leaf_size": {
+                    "type": "number",
+                    "description": "Resolution in meter for downsampling the output segments. Setting to negative to get the raw output PCDs.",
+                    "default": "0.2"
+                },
+                "grid_size_x": {
+                    "type": "number",
+                    "description": "The x size in meter of the output segments",
+                    "default": "20"
+                },
+                "grid_size_y": {
+                    "type": "number",
+                    "description": "The y size in meter of the output segments",
+                    "default": "20"
+                },
+                "input_pcd_or_dir": {
+                    "type": "string",
+                    "description": "The path to the folder containing the input PCD files",
+                    "default": ""
+                },
+                "output_pcd_dir": {
+                    "type": "string",
+                    "description": "The path to the folder containing the output PCD files",
+                    "default": ""
+                },
+                "prefix": {
+                    "type": "string",
+                    "description": "The prefix for the name of the output PCD files",
+                    "default": ""
+                },
+                "point_type": {
+                    "type": "string",
+                    "description": "Type of the point when processing PCD files. Could be point_xyz or point_xyzi",
+                    "default": "point_xyzi"
+                }
+            },
+            "required": [
+                "grid_size_x",
+                "grid_size_y",
+                "input_pcd_or_dir",
+                "output_pcd_dir",
+                "prefix"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "properties": {
+        "/**": {
+            "type": "object",
+            "properties": {
+                "ros__parameters": {
+                    "$ref": "#/definitions/autoware_pointcloud_divider"
+                }
+            },
+            "required": [
+                "ros__parameters"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "required": [
+        "/**"
+    ],
+    "additionalProperties": false
+}

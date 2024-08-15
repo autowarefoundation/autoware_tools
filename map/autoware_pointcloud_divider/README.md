@@ -53,23 +53,9 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
 
 NOTE: The folder `OUTPUT_DIR` is auto generated. If it already exists, all files within that folder will be deleted before the tool runs. Hence, users should backup the important files in that folder if necessary.
 
-## Parameter
+### Parameters
 
-- **leaf_size** [double]
-
-  The leaf_size of voxel grid filter for pointcloud downsampling. The unit is meters [m].
-  If the value is less than or equal to 0, downsampling is skipped.
-
-- **grid_size[xy]** [int]
-
-  The size of the grid for dividing point clouds. The unit is meters [m].
-  Therefore, when downsampling without dividing the point cloud, users should not set an excessively large value, such as 100,000. Specifying a large grid size will attempt to load all point clouds into memory and process them at once, which will result in abnormal memory usage.
-
-- **use_large_grid** [boolean]
-
-  Pack output PCD files in larger grid directory.
-  The large grid is fixed at 10 times the size of grid*size*[xy].
-  For example, if the point cloud is divided into 10m x 10m PCD files, a subdirectory like 00100_00100 will contain up to 100 PCD files.
+{{ json_to_markdown("map/autoware_pointcloud_divider/schema/pointcloud_divider.schema.json") }}
 
 How the point cloud is processed.
 
@@ -121,4 +107,4 @@ D.pcd: [1400, 2650] # -> 1400 <= x <= 1500, 2650 <= y <= 2800
 
 ## LICENSE
 
-Parts of files grid_info.hpp, pointcloud_divider.hpp, pointcloud_divider.cpp, and pointcloud_divider_core.cpp are copied from [MapIV's pointcloud_divider](https://github.com/MapIV/pointcloud_divider) and are under [BSD-3-Clauses](LICENSE) license. The remaining code are under [Apache License 2.0](../../LICENSE)
+Parts of files grid_info.hpp, pcd_divider.hpp, and pcd_divider.cpp are copied from [MapIV's pointcloud_divider](https://github.com/MapIV/pointcloud_divider) and are under [BSD-3-Clauses](LICENSE) license. The remaining code are under [Apache License 2.0](../../LICENSE)

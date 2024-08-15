@@ -1,13 +1,9 @@
 <launch>
-  <arg name="input_pcd_dir" default="" description="Path to the folder containing the input PCD files"/>
-  <arg name="output_pcd" default="" description="Path to the merged PCD file"/>
   <arg name="config_file" default="$(find-pkg-share autoware_pointcloud_merger)/config/pointcloud_merger.param.yaml" description="Path to the configuration YAML file"/>
 
   <group>
     <node pkg="autoware_pointcloud_merger" exec="autoware_pointcloud_merger_node" name="pointcloud_merger" output="screen">
-      <param name="input_pcd_dir" value="$(var input_pcd_dir)"/>
-      <param name="output_pcd" value="$(var output_pcd)"/>
-      <param name="config_file" value="$(var config_file)"/>
+      <param from="$(var config_file)" allow_substs="true"/>
     </node>
   </group>
 </launch>

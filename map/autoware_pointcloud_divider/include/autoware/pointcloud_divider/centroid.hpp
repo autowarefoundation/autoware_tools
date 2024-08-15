@@ -15,11 +15,11 @@
 #ifndef AUTOWARE__POINTCLOUD_DIVIDER__CENTROID_HPP_
 #define AUTOWARE__POINTCLOUD_DIVIDER__CENTROID_HPP_
 
+#include "utility.hpp"
+
 #include <pcl/point_types.h>
 
 #include <iostream>
-
-#include "utility.hpp"
 
 template <typename PointT>
 void accumulate(const PointT & p, const PointT & first_p, PointT & acc_diff);

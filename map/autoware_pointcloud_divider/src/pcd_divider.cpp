@@ -62,7 +62,7 @@ std::vector<std::string> PCDDivider<PointT>::discoverPCDs(const std::string & in
   // Discover PCD files in the input_dir
   std::vector<std::string> pcd_list;
   fs::path input_path(input);
-  
+
   if (fs::is_directory(input_path)) {
     RCLCPP_INFO(logger_, "Input PCD directory: %s", input.c_str());
 
@@ -88,9 +88,7 @@ std::vector<std::string> PCDDivider<PointT>::discoverPCDs(const std::string & in
       RCLCPP_ERROR(logger_, "Error: The input file is not PCD format %s", input.c_str());
       exit(EXIT_FAILURE);
     }
-  }
-  else
-  {
+  } else {
     RCLCPP_ERROR(logger_, "Error: Invalid input %s", input.c_str());
     exit(EXIT_FAILURE);
   }
@@ -128,7 +126,7 @@ void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
       auto cloud_ptr = loadPCD(pcd_name);
 
       dividePointCloud(cloud_ptr);
-    } while (reader_.good());
+    } while (reader_.good() && rclcpp::ok());
   }
 
   saveTheRest();
@@ -145,7 +143,7 @@ void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
 }
 
 template <class PointT>
-void PCDDivider<PointT>::checkOutputDirectoryValidity() 
+void PCDDivider<PointT>::checkOutputDirectoryValidity()
 {
   tmp_dir_ = output_dir_ + "/tmp/";
 
@@ -162,8 +160,7 @@ void PCDDivider<PointT>::checkOutputDirectoryValidity()
 }
 
 template <class PointT>
-typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(
-  const std::string & pcd_name)
+typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(const std::string & pcd_name)
 {
   if (pcd_name != reader_.get_path()) {
     reader_.setInput(pcd_name);
@@ -177,8 +174,7 @@ typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(
 }
 
 template <class PointT>
-void PCDDivider<PointT>::savePCD(
-  const std::string & path, const pcl::PointCloud<PointT> & cloud)
+void PCDDivider<PointT>::savePCD(const std::string & path, const pcl::PointCloud<PointT> & cloud)
 {
   if (pcl::io::savePCDFileBinary(path, cloud) == -1) {
     RCLCPP_ERROR(logger_, "Error: Cannot save PCD: %s", path.c_str());
@@ -482,4 +478,4 @@ void PCDDivider<PointT>::saveGridInfoToYAML(const std::string & yaml_file_path)
 template class PCDDivider<pcl::PointXYZ>;
 template class PCDDivider<pcl::PointXYZI>;
 
-}
+}  // namespace autoware::pointcloud_divider

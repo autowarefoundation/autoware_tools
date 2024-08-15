@@ -44,13 +44,12 @@
 #include "include/pointcloud_merger_node.hpp"
 
 #include <autoware/pointcloud_divider/pcd_divider.hpp>
-#include <autoware/pointcloud_merger/pcd_merger.hpp>
 #include <autoware/pointcloud_divider/utility.hpp>
-
-#include <filesystem>
+#include <autoware/pointcloud_merger/pcd_merger.hpp>
 
 #include <pcl/console/print.h>
 
+#include <filesystem>
 
 namespace fs = std::filesystem;
 
@@ -62,27 +61,25 @@ std::vector<std::string> PCDMerger<PointT>::discoverPCDs(const std::string & inp
 {
   fs::path input_path(input);
 
-  if (!fs::is_directory(input_path))
-  {
+  if (!fs::is_directory(input_path)) {
     RCLCPP_ERROR(logger_, "Error: Invalid input directory %s", input.c_str());
     rclcpp::shutdown();
   }
 
   std::vector<std::string> pcd_list;
 
-  for (auto & entry : fs::directory_iterator(input_path))
-  {
-    if (fs::is_regular_file(entry.symlink_status()))
-    {
+  for (auto & entry : fs::directory_iterator(input_path)) {
+    if (fs::is_regular_file(entry.symlink_status())) {
       auto file_name = entry.path().string();
       auto extension = entry.path().extension().string();
 
-      if (extension == ".pcd" || extension == ".PCD")
-      {
+      if (extension == ".pcd" || extension == ".PCD") {
         pcd_list.push_back(file_name);
       }
     }
   }
+
+  RCLCPP_INFO(logger_, "Found %lu PCD files", pcd_list.size());
 
   return pcd_list;
 }
@@ -98,10 +95,6 @@ void PCDMerger<PointT>::run()
 template <class PointT>
 void PCDMerger<PointT>::run(const std::vector<std::string> & pcd_names)
 {
-  RCLCPP_INFO(logger_, "Input directory: %s", input_dir_.c_str());
-  RCLCPP_INFO(logger_, "Output PCD path: %s", output_pcd_.c_str());
-  RCLCPP_INFO(logger_, "Config file path: %s", config_file_.c_str());
-
   // Just in case the downsampling option is on
   if (leaf_size_ > 0) {
     tmp_dir_ = "./pointcloud_merger_tmp/";
@@ -161,6 +154,12 @@ void PCDMerger<PointT>::mergeWithDownsample(const std::vector<std::string> & inp
 template <class PointT>
 void PCDMerger<PointT>::mergeWithoutDownsample(const std::vector<std::string> & input_pcds)
 {
+  if (input_pcds.size() == 0) {
+    RCLCPP_INFO(logger_, "No input PCDs. Return!");
+
+    return;
+  }
+
   // Check the number of points of the merger
   size_t total_point_num = 0;
   CustomPCDReader<PointT> reader;
@@ -174,8 +173,16 @@ void PCDMerger<PointT>::mergeWithoutDownsample(const std::vector<std::string> & 
   writer_.setOutput(output_pcd_);
   writer_.writeMetadata(total_point_num, true);
 
+  size_t file_counter = 0;
+
   for (const auto & pcd_name : input_pcds) {
-    RCLCPP_INFO(logger_, "Processing file %s...", pcd_name.c_str());
+    if (!rclcpp::ok()) {
+      return;
+    }
+
+    RCLCPP_INFO(
+      logger_, "Processing file [%lu/%lu] %s", file_counter, input_pcds.size(), pcd_name.c_str());
+    ++file_counter;
 
     reader.setInput(pcd_name);
 
@@ -184,7 +191,7 @@ void PCDMerger<PointT>::mergeWithoutDownsample(const std::vector<std::string> & 
 
       reader.readABlock(new_cloud);
       writer_.write(new_cloud);
-    } while (reader.good());
+    } while (reader.good() && rclcpp::ok());
   }
 }
 
@@ -210,5 +217,4 @@ template class PCDMerger<pcl::PointXYZI>;
 // template class PCDMerger<pcl::PointXYZRGB>;
 // template class PCDMerger<pcl::PointNormal>;
 
-}
-
+}  // namespace autoware::pointcloud_merger

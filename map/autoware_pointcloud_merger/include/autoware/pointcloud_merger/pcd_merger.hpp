@@ -51,43 +51,35 @@
 
 #define PCL_NO_PRECOMPILE
 #include <autoware/pointcloud_divider/pcd_io.hpp>
-
 #include <rclcpp/rclcpp.hpp>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-
-#include <rclcpp/rclcpp.hpp>
 
 namespace autoware::pointcloud_merger
 {
 
 template <class PointT>
-class PCDMerger 
+class PCDMerger
 {
   typedef pcl::PointCloud<PointT> PclCloudType;
   typedef typename PclCloudType::Ptr PclCloudPtr;
 
 public:
-  explicit PCDMerger(const rclcpp::Logger & logger)
-  : logger_(logger) {}
+  explicit PCDMerger(const rclcpp::Logger & logger) : logger_(logger) {}
 
-  void setInput(const std::string & input) {
-    input_dir_ = input;
-  }
+  void setInput(const std::string & input) { input_dir_ = input; }
 
-  void setOutput(const std::string & output) {
-    output_pcd_ = output;
-  }
+  void setOutput(const std::string & output) { output_pcd_ = output; }
 
-  void setConfig(const std::string & config_file) {
+  void setConfig(const std::string & config_file)
+  {
     config_file_ = config_file;
 
     paramInitialize();
   }
-   
-  void setLeafSize(double leaf_size) {
-    leaf_size_ = leaf_size;
-  }
+
+  void setLeafSize(double leaf_size) { leaf_size_ = leaf_size; }
 
   void run();
   void run(const std::vector<std::string> & pcd_names);
@@ -111,6 +103,6 @@ private:
   void mergeWithDownsample(const std::vector<std::string> & input_pcds);
 };
 
-}
+}  // namespace autoware::pointcloud_merger
 
 #endif  // AUTOWARE__POINTCLOUD_MERGER__POINTCLOUD_MERGER_HPP_

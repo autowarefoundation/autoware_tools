@@ -59,19 +59,18 @@
 #include "grid_info.hpp"
 #include "pcd_io.hpp"
 
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
+#include <rclcpp/rclcpp.hpp>
 
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
-
-#include <rclcpp/rclcpp.hpp>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
 
 namespace autoware::pointcloud_divider
 {
 
 template <class PointT>
-class PCDDivider 
+class PCDDivider
 {
   typedef pcl::PointCloud<PointT> PclCloudType;
   typedef typename PclCloudType::Ptr PclCloudPtr;
@@ -81,25 +80,21 @@ class PCDDivider
   typedef typename GridMapSizeType::iterator GridMapSizeItr;
 
 public:
-  explicit PCDDivider(const rclcpp::Logger & logger) 
-  : logger_(logger)
-  {}
+  explicit PCDDivider(const rclcpp::Logger & logger) : logger_(logger) {}
 
   // Functions to set input parameters
-  void setInput(const std::string & input_pcd_or_dir) {
-    input_pcd_or_dir_ = input_pcd_or_dir;
-  }
+  void setInput(const std::string & input_pcd_or_dir) { input_pcd_or_dir_ = input_pcd_or_dir; }
 
-  void setOutputDir(const std::string & output_dir) {
+  void setOutputDir(const std::string & output_dir)
+  {
     output_dir_ = output_dir;
     tmp_dir_ = output_dir + "/tmp/";
   }
 
-  void setPrefix(const std::string & prefix) { 
-    file_prefix_ = prefix; 
-  }
+  void setPrefix(const std::string & prefix) { file_prefix_ = prefix; }
 
-  void setConfig(const std::string & config) {
+  void setConfig(const std::string & config)
+  {
     config_file_ = config;
 
     paramInitialize();
@@ -114,19 +109,14 @@ public:
     g_grid_size_y_ = grid_size_y_ * 10;
   }
 
-  void setLargeGridMode(bool use_large_grid) { 
-    use_large_grid_ = use_large_grid; 
-  }
+  void setLargeGridMode(bool use_large_grid) { use_large_grid_ = use_large_grid; }
 
-  void setLeafSize(float leaf_size) { 
-    leaf_size_ = leaf_size; 
-  }
+  void setLeafSize(float leaf_size) { leaf_size_ = leaf_size; }
 
-  void setDebugMode(bool mode) { 
-    debug_mode_ = mode; 
-  }
+  void setDebugMode(bool mode) { debug_mode_ = mode; }
 
-  std::pair<double, double> getGridSize() const {
+  std::pair<double, double> getGridSize() const
+  {
     return std::pair<double, double>(grid_size_x_, grid_size_y_);
   }
 
@@ -183,6 +173,6 @@ private:
     const std::string & dir_path, std::list<std::string> & pcd_list, size_t total_point_num);
 };
 
-}
+}  // namespace autoware::pointcloud_divider
 
 #endif  // AUTOWARE__POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_

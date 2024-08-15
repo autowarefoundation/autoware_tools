@@ -25,11 +25,10 @@ namespace autoware::pointcloud_divider
 
 class PointCloudDivider : public rclcpp::Node
 {
-
 public:
-    explicit PointCloudDivider(const rclcpp::NodeOptions & node_options);
+  explicit PointCloudDivider(const rclcpp::NodeOptions & node_options);
 };
 
-}
+}  // namespace autoware::pointcloud_divider
 
 #endif

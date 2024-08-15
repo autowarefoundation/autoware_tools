@@ -25,11 +25,10 @@ namespace autoware::pointcloud_merger
 
 class PointCloudMerger : public rclcpp::Node
 {
-
 public:
-    explicit PointCloudMerger(const rclcpp::NodeOptions & node_options);
+  explicit PointCloudMerger(const rclcpp::NodeOptions & node_options);
 };
 
-}
+}  // namespace autoware::pointcloud_merger
 
 #endif

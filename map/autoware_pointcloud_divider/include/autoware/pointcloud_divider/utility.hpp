@@ -15,6 +15,8 @@
 #ifndef AUTOWARE__POINTCLOUD_DIVIDER__UTILITY_HPP_
 #define AUTOWARE__POINTCLOUD_DIVIDER__UTILITY_HPP_
 
+#include <pcl/point_types.h>
+
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -22,8 +24,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <pcl/point_types.h>
 
 namespace util
 {
@@ -94,14 +94,17 @@ inline int split(const std::string & line, const std::string & del, std::vector<
   return vals.size();
 }
 
-template <typename PointT> inline void zero_point(PointT& p);
+template <typename PointT>
+inline void zero_point(PointT & p);
 
-template <> inline void zero_point(pcl::PointXYZ& p)
+template <>
+inline void zero_point(pcl::PointXYZ & p)
 {
   p.x = p.y = p.z = 0;
 }
 
-template <> inline void zero_point(pcl::PointXYZI& p)
+template <>
+inline void zero_point(pcl::PointXYZI & p)
 {
   p.x = p.y = p.z = p.intensity = 0;
 }

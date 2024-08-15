@@ -2,5 +2,9 @@
   ros__parameters:
     use_large_grid: false
     leaf_size: 0.2
-    grid_size_x: 20
-    grid_size_y: 20
+    grid_size_x: 20.0
+    grid_size_y: 20.0
+    input_pcd_or_dir: $(var input_pcd_or_dir) # Path to the folder containing the input PCD files
+    output_pcd_dir: $(var output_pcd_dir) # Path to the folder containing the segmented PCD files
+    prefix: $(var prefix) # Prefix for the name of the output PCD files
+    point_type: "point_xyzi"

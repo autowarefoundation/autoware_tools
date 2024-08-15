@@ -51,11 +51,13 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
 
 ## Parameter
 
-- **leaf_size** [double]
+{{ json_to_markdown("map/autoware_pointcloud_merger/schema/pointcloud_merger.schema.json") }}
+
+<!-- - **leaf_size** [double]
 
   The leaf_size of voxel grid filter for pointcloud downsampling. The unit is meters [m].
-  If the value is less than or equal to 0, downsampling is skipped.
+  If the value is less than or equal to 0, downsampling is skipped. -->
 
 ## LICENSE
 
-Parts of files grid_info.hpp, pointcloud_divider.hpp, pointcloud_divider.cpp, and pointcloud_divider_core.cpp are copied from [MapIV's pointcloud_divider](https://github.com/MapIV/pointcloud_divider) and are under [BSD-3-Clauses](LICENSE) license. The remaining code are under [Apache License 2.0](../../LICENSE)
+Parts of files pcd_merger.hpp, and pcd_merger.cpp are copied from [MapIV's pointcloud_divider](https://github.com/MapIV/pointcloud_divider) and are under [BSD-3-Clauses](LICENSE) license. The remaining code are under [Apache License 2.0](../../LICENSE)
