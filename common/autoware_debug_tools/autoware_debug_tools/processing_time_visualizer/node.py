@@ -1,3 +1,4 @@
+import argparse
 import curses
 import json
 import time
@@ -18,8 +19,9 @@ from .utils import init_curses
 
 
 class ProcessingTimeVisualizer(Node):
-    def __init__(self):
+    def __init__(self, topic_name=None):
         super().__init__("processing_time_visualizer" + str(uuid.uuid4()).replace("-", "_"))
+        self.topic_name = topic_name
         self.subscriber = self.subscribe_processing_time_tree()
         self.quit_option = None
         self.trees: Dict[str, ProcessingTimeTree] = {}
@@ -33,33 +35,54 @@ class ProcessingTimeVisualizer(Node):
         self.create_timer(0.1, self.update_screen)
 
     def subscribe_processing_time_tree(self):
-        topics = []
-
-        s = time.time()
-        while True:
+        if self.topic_name:
+            topic_found = False
             for topic_name, topic_types in self.get_topic_names_and_types():
-                for topic_type in topic_types:
-                    if (
-                        topic_type == "tier4_debug_msgs/msg/ProcessingTimeTree"
-                        and topic_name not in topics
-                    ):
-                        topics.append(topic_name)
+                if (
+                    topic_name == self.topic_name
+                    and "tier4_debug_msgs/msg/ProcessingTimeTree" in topic_types
+                ):
+                    topic_found = True
+                    break
 
-            if time.time() - s > 1.0:
-                break
-
-        if len(topics) == 0:
-            self.get_logger().info("No ProcessingTimeTree topic found")
-            self.get_logger().info("Exiting...")
-            exit(1)
+            if not topic_found:
+                self.get_logger().info(f"Specified topic '{self.topic_name}' not found.")
+                self.get_logger().info("Exiting...")
+                exit(1)
+            else:
+                subscriber = self.create_subscription(
+                    ProcessingTimeTreeMsg,
+                    self.topic_name,
+                    self.callback,
+                    10,
+                )
         else:
-            self.topic_name = curses.wrapper(select_topic, topics)
-            subscriber = self.create_subscription(
-                ProcessingTimeTreeMsg,
-                self.topic_name,
-                self.callback,
-                10,
-            )
+            topics = []
+            s = time.time()
+            while True:
+                for topic_name, topic_types in self.get_topic_names_and_types():
+                    for topic_type in topic_types:
+                        if (
+                            topic_type == "tier4_debug_msgs/msg/ProcessingTimeTree"
+                            and topic_name not in topics
+                        ):
+                            topics.append(topic_name)
+
+                if time.time() - s > 1.0:
+                    break
+
+            if len(topics) == 0:
+                self.get_logger().info("No ProcessingTimeTree topic found")
+                self.get_logger().info("Exiting...")
+                exit(1)
+            else:
+                self.topic_name = curses.wrapper(select_topic, topics)
+                subscriber = self.create_subscription(
+                    ProcessingTimeTreeMsg,
+                    self.topic_name,
+                    self.callback,
+                    10,
+                )
 
         return subscriber
 
@@ -107,9 +130,13 @@ class ProcessingTimeVisualizer(Node):
 
 
 def main(args=None):
+    parser = argparse.ArgumentParser(description="Processing Time Visualizer")
+    parser.add_argument("-t", "--topic", type=str, help="Specify the topic name to subscribe to")
+    parsed_args = parser.parse_args(args)
+
     rclpy.init(args=args)
     try:
-        node = ProcessingTimeVisualizer()
+        node = ProcessingTimeVisualizer(topic_name=parsed_args.topic)
     except KeyboardInterrupt:
         exit_curses()
         return
