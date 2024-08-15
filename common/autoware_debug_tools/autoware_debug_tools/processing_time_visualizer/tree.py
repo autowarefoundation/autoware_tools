@@ -1,9 +1,29 @@
-from typing import Dict
+from typing import Dict, List, Optional
+from abc import ABC, abstractmethod
 
 from tier4_debug_msgs.msg import ProcessingTimeTree as ProcessingTimeTreeMsg
+from tier4_debug_msgs.msg import ProcessingTimeNode as ProcessingTimeNodeMsg
 
 
-class ProcessingTimeTree:
+class TreeBase(ABC):
+    def __init__(self, name: str = "", comment: str = ""):
+        self.name = name
+        self.comment = comment
+        self.children: List["TreeBase"] = []
+
+    @abstractmethod
+    def to_lines(self, show_comment: bool = True) -> List[str]:
+        pass
+
+    @property
+    def has_children(self) -> bool:
+        return bool(self.children)
+
+    def __str__(self) -> str:
+        return "\n".join(self.to_lines())
+
+
+class ProcessingTimeTree(TreeBase):
     def __init__(
         self,
         name: str = "",
@@ -11,190 +31,148 @@ class ProcessingTimeTree:
         comment: str = "",
         id: int = 1,  # noqa
         parent_id: int = 0,
-        run_count: int = 1,
     ):
-        self.name = name
+        super().__init__(name, comment)
         self.processing_time = processing_time
-        self.comment = comment
         self.id = id
         self.parent_id = parent_id
-        self.run_count = run_count
-        self.children = []
-        # Dict of {node name: node id}
-        self.children_node_name_to_id: Dict[str, int] = {}
 
     @classmethod
-    def from_msg(cls, msg: ProcessingTimeTreeMsg, summarize: bool = False) -> "ProcessingTimeTree":
-        if summarize:
-            node_dict: Dict[int, ProcessingTimeTree] = {}
-            # Mapping for children whose parent gets merged
-            parent_alias_dict: Dict[int, int] = {}
+    def from_msg(cls, msg: ProcessingTimeTreeMsg) -> "ProcessingTimeTree":
 
-            for node in msg.nodes:
-                parent_id = node.parent_id
-                aliased_parent_id = parent_alias_dict.get(node.parent_id)
+        nodes: List[ProcessingTimeNodeMsg] = msg.nodes
 
-                if aliased_parent_id or parent_id in node_dict:
-                    if aliased_parent_id:
-                        parent_id = aliased_parent_id
+        node_dict = {
+            node.id: cls(
+                node.name, node.processing_time, node.comment, node.id, node.parent_id
+            )
+            for node in nodes
+        }
 
-                    # If node name already exist, use that node for aggregation
-                    agg_node_id = node_dict[parent_id].children_node_name_to_id.get(node.name)
-                    if agg_node_id:
-                        agg_node = node_dict[agg_node_id]
+        for node in list(node_dict.values()):
+            parent = node_dict.get(node.parent_id)
+            if parent:
+                parent.children.append(node)
 
-                        # Create alias from current node to agg_node for its child nodes
-                        if node.id not in parent_alias_dict:
-                            parent_alias_dict[node.id] = agg_node_id
+        return node_dict[1]  # Return the root node
 
-                        agg_node.processing_time += node.processing_time
-                        agg_node.run_count += 1
-                    else:
-                        # If it is not in parent's children_name_to_id, it is not in node_dict
-                        node_dict[node.id] = ProcessingTimeTree(
-                            node.name, node.processing_time, node.comment, node.id, parent_id
-                        )
-
-                        node_dict[parent_id].children_node_name_to_id[node.name] = node.id
-                else:
-                    node_dict[node.id] = ProcessingTimeTree(
-                        node.name, node.processing_time, node.comment, node.id, node.parent_id
-                    )
-
-            # Build the tree structure
-            for node in list(node_dict.values()):
-                parent = node_dict.get(node.parent_id)
-                if parent is None:
-                    aliased_parent_id = parent_alias_dict.get(node.parent_id)
-                    parent = node_dict.get(aliased_parent_id)
-
-                if parent:
-                    # Checking the case child came first
-                    agg_node_id = parent.children_node_name_to_id.get(node.name)
-                    if agg_node_id:
-                        # Avoid aggregated node itself
-                        if agg_node_id != node.id:
-                            agg_node = node_dict[agg_node_id]
-                            agg_node.processing_time += node.processing_time
-                            agg_node.run_count += 1
-                    else:
-                        parent.children_node_name_to_id[node.name] = node.id
-
-                    parent.children.append(node)
-        else:
-            # Create a dictionary to map node IDs to ProcessingTimeTree objects
-            node_dict: Dict[int, ProcessingTimeTree] = {
-                node.id: ProcessingTimeTree(
-                    node.name, node.processing_time, node.comment, node.id, node.parent_id
-                )
-                for node in msg.nodes
-            }
-
-            # Build the tree structure
-            for node in list(node_dict.values()):
-                parent = node_dict.get(node.parent_id)
-                if parent:
-                    parent.children.append(node)
-
-        root = node_dict[1]
-
-        return root
-
-    def to_lines(self, show_comment: bool = True, summarize: bool = False) -> str:
+    def to_lines(self, show_comment: bool = True) -> List[str]:
         def construct_string(
             node: "ProcessingTimeTree",
-            lines: list,
+            lines: List[str],
             prefix: str,
             is_last: bool,
             is_root: bool,
-        ) -> float:
-            # If not the root, append the prefix and the node information
+        ) -> None:
             line = ""
-            has_children = len(node.children) > 0
-            is_last = is_last and not has_children
             if not is_root:
                 line += prefix + ("└── " if is_last else "├── ")
-
-            # average processing time
-            average_processing_time = (
-                node.processing_time / node.run_count if node.run_count > 0 else 0
-            )
-            # percentage of processing time
-            percentage = (
-                f"{(node.processing_time / self.processing_time * 100):.2f}%"
-                if self.processing_time > 0
-                else "0.00%"
-            )
-            line += (
-                (
-                    f"{percentage} {node.name}: "
-                    f"total {node.processing_time:.2f} [ms], "
-                    f"avg. {average_processing_time:.2f} [ms], "
-                    f"run count: {node.run_count}"
+            line += f"{node.name}: {node.processing_time:.2f} [ms]"
+            line += f": {node.comment}" if show_comment and node.comment else ""
+            lines.append(line)
+            for i, child in enumerate(node.children):
+                construct_string(
+                    child,
+                    lines,
+                    prefix + ("    " if is_last else "│   "),
+                    i == len(node.children) - 1,
+                    False,
                 )
-                if summarize
-                else f"{node.name}: {node.processing_time:.2f} [ms]"
+
+        lines: List[str] = []
+        construct_string(self, lines, "", True, True)
+        return lines
+
+
+class SummarizedProcessingTimeTree(TreeBase):
+    def __init__(
+        self,
+        name: str = "",
+        total_processing_time: float = 0.0,
+        run_count: int = 0,
+        comment: str = "",
+    ):
+        super().__init__(name, comment)
+        self.total_processing_time = total_processing_time
+        self.run_count = run_count
+
+    @property
+    def avg_processing_time(self) -> float:
+        return (
+            self.total_processing_time / self.run_count if self.run_count > 0 else 0.0
+        )
+
+    @classmethod
+    def from_processing_time_tree(
+        cls, tree: ProcessingTimeTree
+    ) -> "SummarizedProcessingTimeTree":
+        def convert_to_summarized_tree_without_summarizing(
+            node: ProcessingTimeTree,
+        ) -> SummarizedProcessingTimeTree:
+            summarized_node = cls(
+                name=node.name,
+                total_processing_time=node.processing_time,
+                run_count=1,
+                comment=node.comment,
+            )
+            children: List[SummarizedProcessingTimeTree] = [
+                convert_to_summarized_tree_without_summarizing(child)
+                for child in node.children
+            ]
+            summarized_node.children = children
+            return summarized_node
+
+        tree = convert_to_summarized_tree_without_summarizing(tree)
+
+        def summarize_tree(node: SummarizedProcessingTimeTree) -> None:
+            summarized_children: Dict[str, SummarizedProcessingTimeTree] = {}
+            for child in node.children:
+                if child.name in summarized_children:
+                    summarized_children[
+                        child.name
+                    ].total_processing_time += child.total_processing_time
+                    summarized_children[child.name].run_count += child.run_count
+                    summarized_children[child.name].children.extend(child.children)
+                else:
+                    summarized_children[child.name] = child
+            node.children = list(summarized_children.values())
+            for child in node.children:
+                summarize_tree(child)
+
+        summarize_tree(tree)
+        return tree
+
+    def to_lines(self, show_comment: bool = True) -> List[str]:
+        def construct_string(
+            node: "SummarizedProcessingTimeTree",
+            lines: List[str],
+            prefix: str,
+            is_last: bool,
+            is_root: bool,
+        ) -> None:
+            line = ""
+            if not is_root:
+                line += prefix + ("└── " if is_last else "├── ")
+            percentage = 100.0 * node.total_processing_time / self.total_processing_time
+            line += (
+                f"{percentage:.2f}% {node.name}: total {node.total_processing_time:.2f} [ms], "
+                f"avg. {node.avg_processing_time:.2f} [ms], "
+                f"run count: {node.run_count}"
             )
             line += f": {node.comment}" if show_comment and node.comment else ""
             lines.append(line)
-            # Recur for each child node
-            children_processing_time = 0.0
             for i, child in enumerate(node.children):
-                children_processing_time += construct_string(
+                construct_string(
                     child,
                     lines,
-                    prefix + ("    " if (is_last or is_root) else "│   "),
-                    False,
+                    prefix + ("    " if is_last else "│   "),
+                    i == len(node.children) - 1,
                     False,
                 )
-            # if it has children, add the rest of the processing time
-            if has_children:
-                rest_processing_time = node.processing_time - children_processing_time
-                rest_percentage = (
-                    f"{(rest_processing_time / self.processing_time * 100):.2f}%"
-                    if self.processing_time > 0
-                    else "0.00%"
-                )
-                last_line = prefix
-                last_line += "    └── " if is_root else "│   └── "
-                last_line += f"{rest_percentage} rest: " f"{rest_processing_time:.2f} [ms]"
-                lines.append(last_line)
+            # rest_processing_time = node.total_processing_time - sum(
+            #     child.processing_time for child in node.children
+            # )
 
-            return node.processing_time
-
-        lines = []
-        # Start the recursive string construction with the root node
+        lines: List[str] = []
         construct_string(self, lines, "", True, True)
-
         return lines
-
-    # sum up the processing tree time
-    # if the incoming tree has new nodes, add them to the current tree
-    # count the number of times the tree has been updated
-    def summarize_tree(self, other: "ProcessingTimeTree") -> None:
-        self.processing_time += other.processing_time
-        self.run_count += other.run_count
-
-        for other_child in other.children:
-            found = False
-            for child in self.children:
-                if child == other_child:
-                    child.summarize_tree(other_child)
-                    found = True
-                    break
-            if not found:
-                self.children.append(other_child)
-
-    def __dict__(self) -> dict:
-        return {
-            "name": self.name,
-            "processing_time": self.processing_time,
-            "comment": self.comment,
-            "children": [child.__dict__() for child in self.children],
-        }
-
-    def __str__(self) -> str:
-        return "".join([line + "\n" for line in self.to_lines()])
-
-    def __eq__(self, other: "ProcessingTimeTree") -> bool:
-        return self.name == other.name
