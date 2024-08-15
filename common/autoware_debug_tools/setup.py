@@ -22,6 +22,9 @@ setup(
         "console_scripts": [
             "processing_time_visualizer = autoware_debug_tools.processing_time_visualizer.node:main",
             "system_usage_monitor = autoware_debug_tools.system_usage_monitor:main",
+            "processing_time_plotter = autoware_debug_tools.system_performance_plotter.processing_time_plotter:main",
+            "cpu_usage_plotter = autoware_debug_tools.system_performance_plotter.cpu_usage_plotter:main",
+            "memory_usage_plotter = autoware_debug_tools.system_performance_plotter.memory_usage_plotter:main",
         ],
     },
 )
