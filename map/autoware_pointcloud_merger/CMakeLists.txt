@@ -34,6 +34,4 @@ install(TARGETS ${PROJECT_NAME}_node
         INCLUDES DESTINATION include
         )
 
-# install(PROGRAMS scripts/pointcloud_merger.sh scripts/merger_core.sh DESTINATION bin)
-
 ament_auto_package(INSTALL_TO_SHARE launch config)

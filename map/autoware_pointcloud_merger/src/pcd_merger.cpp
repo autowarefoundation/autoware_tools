@@ -103,7 +103,7 @@ void PCDMerger<PointT>::run(const std::vector<std::string> & pcd_names)
       fs::remove_all(tmp_dir_);
     }
 
-    util::make_dir(tmp_dir_);
+    autoware::pointcloud_divider::util::make_dir(tmp_dir_);
   }
 
   if (fs::exists(output_pcd_)) {
@@ -112,7 +112,7 @@ void PCDMerger<PointT>::run(const std::vector<std::string> & pcd_names)
 
   if (leaf_size_ > 0) {
     mergeWithDownsample(pcd_names);
-    util::remove(tmp_dir_);
+    autoware::pointcloud_divider::util::remove(tmp_dir_);
   } else {
     mergeWithoutDownsample(pcd_names);
   }
@@ -162,7 +162,7 @@ void PCDMerger<PointT>::mergeWithoutDownsample(const std::vector<std::string> & 
 
   // Check the number of points of the merger
   size_t total_point_num = 0;
-  CustomPCDReader<PointT> reader;
+  autoware::pointcloud_divider::CustomPCDReader<PointT> reader;
 
   for (const auto & pcd_name : input_pcds) {
     reader.setInput(pcd_name);

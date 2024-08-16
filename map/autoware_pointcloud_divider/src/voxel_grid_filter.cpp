@@ -18,6 +18,9 @@
 
 #include <unordered_map>
 
+namespace autoware::pointcloud_divider
+{
+
 template <typename PointT>
 void VoxelGridFilter<PointT>::filter(const PclCloudType & input, PclCloudType & output)
 {
@@ -40,3 +43,5 @@ void VoxelGridFilter<PointT>::filter(const PclCloudType & input, PclCloudType & 
     output.push_back(it.second.get());
   }
 }
+
+}  // namespace autoware::pointcloud_divider

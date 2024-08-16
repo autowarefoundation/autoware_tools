@@ -34,6 +34,4 @@ install(TARGETS ${PROJECT_NAME}
         INCLUDES DESTINATION include
         )
 
-# install(PROGRAMS scripts/pointcloud_divider.sh scripts/divider_core.sh DESTINATION bin)
-
 ament_auto_package(INSTALL_TO_SHARE launch config)

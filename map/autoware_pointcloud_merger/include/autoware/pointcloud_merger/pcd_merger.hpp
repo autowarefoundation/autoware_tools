@@ -94,7 +94,7 @@ private:
   const size_t max_block_size_ = 500000;
 
   std::string tmp_dir_;
-  CustomPCDWriter<PointT> writer_;
+  autoware::pointcloud_divider::CustomPCDWriter<PointT> writer_;
   rclcpp::Logger logger_;
 
   std::vector<std::string> discoverPCDs(const std::string & input);

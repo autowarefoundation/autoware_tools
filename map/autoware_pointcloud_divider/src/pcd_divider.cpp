@@ -126,6 +126,7 @@ void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
       auto cloud_ptr = loadPCD(pcd_name);
 
       dividePointCloud(cloud_ptr);
+
     } while (reader_.good() && rclcpp::ok());
   }
 
@@ -204,6 +205,7 @@ void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
       auto & new_grid = grid_to_cloud_[tmp];
 
       std::get<0>(new_grid).reserve(max_block_size_);
+
       std::get<0>(new_grid).push_back(p);  // Push the first point to the cloud
       std::get<1>(new_grid) = 0;           // Counter set to 0
       std::get<2>(new_grid) = 0;           // Prev size is 0

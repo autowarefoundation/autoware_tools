@@ -19,6 +19,9 @@
 #include <string>
 #include <tuple>
 
+namespace autoware::pointcloud_divider
+{
+
 template <int dim>
 struct GridInfo
 {
@@ -47,15 +50,17 @@ struct GridInfo
   }
 };
 
+}  // namespace autoware::pointcloud_divider
+
 // This is for unordered_map and unordered_set
 // For 2D voxel grid
 namespace std
 {
 template <>
-struct hash<GridInfo<2>>
+struct hash<autoware::pointcloud_divider::GridInfo<2>>
 {
 public:
-  size_t operator()(const GridInfo<2> & grid) const
+  size_t operator()(const autoware::pointcloud_divider::GridInfo<2> & grid) const
   {
     std::size_t seed = 0;
     seed ^= std::hash<int>{}(grid.ix) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
@@ -66,10 +71,10 @@ public:
 
 // For 3D voxel grid
 template <>
-struct hash<GridInfo<3>>
+struct hash<autoware::pointcloud_divider::GridInfo<3>>
 {
 public:
-  size_t operator()(const GridInfo<3> & grid) const
+  size_t operator()(const autoware::pointcloud_divider::GridInfo<3> & grid) const
   {
     std::size_t seed = 0;
 
@@ -85,23 +90,24 @@ public:
 
 // Compute the index of the 2D voxel that contains a point
 template <typename PointT>
-GridInfo<2> pointToGrid2(const PointT & p, float res_x, float res_y)
+autoware::pointcloud_divider::GridInfo<2> pointToGrid2(const PointT & p, float res_x, float res_y)
 {
   int x_id = static_cast<int>(std::floor(p.x / res_x) * res_x);
   int y_id = static_cast<int>(std::floor(p.y / res_y) * res_y);
 
-  return GridInfo<2>(x_id, y_id);
+  return autoware::pointcloud_divider::GridInfo<2>(x_id, y_id);
 }
 
 // Compute the index of the 3D voxel that contains a point
 template <typename PointT>
-GridInfo<3> pointToGrid3(const PointT & p, float res_x, float res_y, float res_z)
+autoware::pointcloud_divider::GridInfo<3> pointToGrid3(
+  const PointT & p, float res_x, float res_y, float res_z)
 {
   int x_id = static_cast<int>(std::floor(p.x / res_x));
   int y_id = static_cast<int>(std::floor(p.y / res_y));
   int z_id = static_cast<int>(std::floor(p.z / res_z));
 
-  return GridInfo<3>(x_id, y_id, z_id);
+  return autoware::pointcloud_divider::GridInfo<3>(x_id, y_id, z_id);
 }
 
 #endif  // AUTOWARE__POINTCLOUD_DIVIDER__GRID_INFO_HPP_

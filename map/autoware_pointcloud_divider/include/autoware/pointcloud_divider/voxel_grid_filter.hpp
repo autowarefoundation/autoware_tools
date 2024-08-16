@@ -20,6 +20,9 @@
 
 #include <iostream>
 
+namespace autoware::pointcloud_divider
+{
+
 template <typename PointT>
 class VoxelGridFilter
 {
@@ -44,5 +47,7 @@ private:
 
 template class VoxelGridFilter<pcl::PointXYZ>;
 template class VoxelGridFilter<pcl::PointXYZI>;
+
+}  // namespace autoware::pointcloud_divider
 
 #endif  // AUTOWARE__POINTCLOUD_DIVIDER__VOXEL_GRID_FILTER_HPP_

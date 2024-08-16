@@ -66,6 +66,9 @@
 #include <string>
 #include <vector>
 
+namespace autoware::pointcloud_divider
+{
+
 template <typename PointT>
 class CustomPCDWriter
 {
@@ -449,5 +452,7 @@ void CustomPCDWriter<PointT>::padding()
     write(all_zeros);
   }
 }
+
+}  // namespace autoware::pointcloud_divider
 
 #endif  // AUTOWARE__POINTCLOUD_DIVIDER__PCD_IO_WRITER_HPP_

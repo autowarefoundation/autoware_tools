@@ -64,6 +64,13 @@
 #include <string>
 #include <vector>
 
+namespace autoware::pointcloud_divider
+{
+
+#ifndef INVALID_LOC_
+#define INVALID_LOC_ (0xFFFF)
+#endif
+
 template <typename PointT>
 class CustomPCDReader
 {
@@ -140,7 +147,7 @@ private:
   std::vector<std::string> field_names_;
   std::vector<size_t> field_sizes_;
   std::vector<std::string> field_types_;
-  std::vector<int> field_counts_;
+  std::vector<size_t> field_counts_;
   // Viewpoint
   float origin_x_, origin_y_, origin_z_;
   float orientation_w_, orientation_x_, orientation_y_, orientation_z_;
@@ -180,10 +187,17 @@ size_t CustomPCDReader<PointT>::readABlock(PclCloudType & output)
   return readABlock(file_, output);
 }
 
+// Build the location vectors for reading binary points
 template <typename PointT>
 inline void buildReadMetadata(
   std::vector<std::string> & field_names, std::vector<size_t> & field_sizes,
-  std::vector<size_t> & read_loc, std::vector<size_t> & read_sizes);
+  std::vector<size_t> & field_counts, std::vector<size_t> & read_loc,
+  std::vector<size_t> & read_sizes);
+
+// Build the location vector for reading ascii points
+template <typename PointT>
+inline void buildReadMetadataASCII(
+  std::vector<std::string> & field_names, std::vector<size_t> & read_loc);
 
 template <typename PointT>
 void CustomPCDReader<PointT>::readHeader(std::ifstream & input)
@@ -268,7 +282,7 @@ void CustomPCDReader<PointT>::readHeader(std::ifstream & input)
         }
 
         for (size_t i = 1; i < vals.size(); ++i) {
-          field_types_.push_back(vals[i]);
+          field_counts_.push_back(std::stoi(vals[i]));
         }
 
         continue;
@@ -336,7 +350,7 @@ void CustomPCDReader<PointT>::readHeader(std::ifstream & input)
   point_size_ = read_size_ = 0;
 
   for (size_t i = 0; i < field_sizes_.size(); ++i) {
-    point_size_ += field_sizes_[i];
+    point_size_ += field_sizes_[i] * field_counts_[i];
   }
 
   read_size_ = point_size_ * block_size_;
@@ -349,7 +363,11 @@ void CustomPCDReader<PointT>::readHeader(std::ifstream & input)
 
   if (field_sizes_.size() > 0) {
     // Construct read loc and read size, used to read data from files to points
-    buildReadMetadata<PointT>(field_names_, field_sizes_, read_loc_, read_sizes_);
+    if (binary_) {
+      buildReadMetadata<PointT>(field_names_, field_sizes_, field_counts_, read_loc_, read_sizes_);
+    } else {
+      buildReadMetadataASCII<PointT>(field_names_, read_loc_);
+    }
   }
 }
 
@@ -359,7 +377,7 @@ inline void setFieldReadMetadata(
   size_t & read_size)
 {
   for (size_t i = 0; i < field_names.size(); ++i) {
-    if (field_names[i].find(field_tag) != std::string::npos) {
+    if (field_names[i] == field_tag) {
       read_loc = tmp_read_loc[i];
       read_size = field_sizes[i];
 
@@ -373,10 +391,27 @@ inline void setFieldReadMetadata(
   read_size = 0;
 }
 
+inline void setFieldReadMetadata(
+  const std::string & field_tag, std::vector<std::string> & field_names, size_t & read_loc)
+{
+  for (size_t i = 0; i < field_names.size(); ++i) {
+    if (field_names[i] == field_tag) {
+      read_loc = i;
+
+      return;
+    }
+  }
+
+  // If the field tag was not found, set read_loc to -1
+  std::cerr << "Field " << field_tag << " is not available, and will be set to 0." << std::endl;
+  read_loc = INVALID_LOC_;
+}
+
 template <>
 inline void buildReadMetadata<pcl::PointXYZ>(
   std::vector<std::string> & field_names, std::vector<size_t> & field_sizes,
-  std::vector<size_t> & read_loc, std::vector<size_t> & read_sizes)
+  std::vector<size_t> & field_counts, std::vector<size_t> & read_loc,
+  std::vector<size_t> & read_sizes)
 {
   size_t field_num = field_names.size();
 
@@ -388,7 +423,7 @@ inline void buildReadMetadata<pcl::PointXYZ>(
   tmp_read_loc[0] = 0;
 
   for (size_t i = 0; i < field_num - 1; ++i) {
-    tmp_read_loc[i + 1] = field_sizes[i] + tmp_read_loc[i];
+    tmp_read_loc[i + 1] = field_sizes[i] * field_counts[i] + tmp_read_loc[i];
   }
 
   // Find field x, y, z
@@ -400,7 +435,8 @@ inline void buildReadMetadata<pcl::PointXYZ>(
 template <>
 inline void buildReadMetadata<pcl::PointXYZI>(
   std::vector<std::string> & field_names, std::vector<size_t> & field_sizes,
-  std::vector<size_t> & read_loc, std::vector<size_t> & read_sizes)
+  std::vector<size_t> & field_counts, std::vector<size_t> & read_loc,
+  std::vector<size_t> & read_sizes)
 {
   size_t field_num = field_names.size();
 
@@ -412,7 +448,7 @@ inline void buildReadMetadata<pcl::PointXYZI>(
   tmp_read_loc[0] = 0;
 
   for (size_t i = 0; i < field_num - 1; ++i) {
-    tmp_read_loc[i + 1] = field_sizes[i] + tmp_read_loc[i];
+    tmp_read_loc[i + 1] = field_sizes[i] * field_counts[i] + tmp_read_loc[i];
   }
 
   // Find field x, y, z, intensity
@@ -421,6 +457,29 @@ inline void buildReadMetadata<pcl::PointXYZI>(
   setFieldReadMetadata("z", field_names, field_sizes, tmp_read_loc, read_loc[2], read_sizes[2]);
   setFieldReadMetadata(
     "intensity", field_names, field_sizes, tmp_read_loc, read_loc[3], read_sizes[3]);
+}
+
+template <>
+inline void buildReadMetadataASCII<pcl::PointXYZ>(
+  std::vector<std::string> & field_names, std::vector<size_t> & read_loc)
+{
+  read_loc.resize(3);
+
+  setFieldReadMetadata("x", field_names, read_loc[0]);
+  setFieldReadMetadata("y", field_names, read_loc[1]);
+  setFieldReadMetadata("z", field_names, read_loc[2]);
+}
+
+template <>
+inline void buildReadMetadataASCII<pcl::PointXYZI>(
+  std::vector<std::string> & field_names, std::vector<size_t> & read_loc)
+{
+  read_loc.resize(4);
+
+  setFieldReadMetadata("x", field_names, read_loc[0]);
+  setFieldReadMetadata("y", field_names, read_loc[1]);
+  setFieldReadMetadata("z", field_names, read_loc[2]);
+  setFieldReadMetadata("intensity", field_names, read_loc[3]);
 }
 
 template <typename PointT>
@@ -472,29 +531,31 @@ size_t CustomPCDReader<PointT>::readABlockBinary(std::ifstream & input, PclCloud
 }
 
 template <typename PointT>
-void parsePoint(const std::string & point_line, PointT & output);
+void parsePoint(const std::string & point_line, const std::vector<size_t> & loc, PointT & output);
 
 template <>
-inline void parsePoint(const std::string & point_line, pcl::PointXYZ & output)
+inline void parsePoint(
+  const std::string & point_line, const std::vector<size_t> & loc, pcl::PointXYZ & output)
 {
   std::vector<std::string> vals;
 
   util::split(point_line, " ", vals);
-  output.x = std::stof(vals[0]);
-  output.y = std::stof(vals[1]);
-  output.z = std::stof(vals[2]);
+  output.x = (loc[0] != INVALID_LOC_) ? std::stof(vals[loc[0]]) : 0;
+  output.y = (loc[1] != INVALID_LOC_) ? std::stof(vals[loc[1]]) : 0;
+  output.z = (loc[2] != INVALID_LOC_) ? std::stof(vals[loc[2]]) : 0;
 }
 
 template <>
-inline void parsePoint(const std::string & point_line, pcl::PointXYZI & output)
+inline void parsePoint(
+  const std::string & point_line, const std::vector<size_t> & loc, pcl::PointXYZI & output)
 {
   std::vector<std::string> vals;
 
   util::split(point_line, " ", vals);
-  output.x = std::stof(vals[0]);
-  output.y = std::stof(vals[1]);
-  output.z = std::stof(vals[2]);
-  output.intensity = (vals.size() < 4) ? 0 : std::stof(vals[3]);
+  output.x = (loc[0] != INVALID_LOC_) ? std::stof(vals[loc[0]]) : 0;
+  output.y = (loc[1] != INVALID_LOC_) ? std::stof(vals[loc[1]]) : 0;
+  output.z = (loc[2] != INVALID_LOC_) ? std::stof(vals[loc[2]]) : 0;
+  output.intensity = (loc[3] != INVALID_LOC_) ? std::stof(vals[loc[3]]) : 0;
 }
 
 template <typename PointT>
@@ -512,7 +573,7 @@ size_t CustomPCDReader<PointT>::readABlockASCII(std::ifstream & input, PclCloudT
 
     if (!input.fail()) {
       // Parse the buffer and convert to point
-      parsePoint(point_line, p);
+      parsePoint(point_line, read_loc_, p);
       output.push_back(p);
     } else {
       fprintf(
@@ -536,5 +597,7 @@ size_t CustomPCDReader<PointT>::readABlock(std::ifstream & input, PclCloudType &
 
   return readABlockASCII(input, output);
 }
+
+}  // namespace autoware::pointcloud_divider
 
 #endif  // AUTOWARE__POINTCLOUD_DIVIDER__PCD_IO_READER_HPP_

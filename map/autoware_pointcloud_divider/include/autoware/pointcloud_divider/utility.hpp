@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-namespace util
+namespace autoware::pointcloud_divider::util
 {
 // Create a directory
 inline bool make_dir(const std::string & path)
@@ -109,6 +109,6 @@ inline void zero_point(pcl::PointXYZI & p)
   p.x = p.y = p.z = p.intensity = 0;
 }
 
-}  // namespace util
+}  // namespace autoware::pointcloud_divider::util
 
 #endif  // AUTOWARE__POINTCLOUD_DIVIDER__UTILITY_HPP_

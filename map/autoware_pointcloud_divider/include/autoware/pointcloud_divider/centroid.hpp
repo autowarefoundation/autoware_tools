@@ -21,6 +21,9 @@
 
 #include <iostream>
 
+namespace autoware::pointcloud_divider
+{
+
 template <typename PointT>
 void accumulate(const PointT & p, const PointT & first_p, PointT & acc_diff);
 template <typename PointT>
@@ -107,5 +110,7 @@ struct Centroid
   PointT acc_diff_, first_point_;
   size_t point_num_;
 };
+
+}  // Namespace autoware::pointcloud_divider
 
 #endif  // AUTOWARE__POINTCLOUD_DIVIDER__CENTROID_HPP_
