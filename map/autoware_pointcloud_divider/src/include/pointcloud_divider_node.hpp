@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef AUTOWARE__POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_
-#define AUTOWARE__POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_
+#ifndef POINTCLOUD_DIVIDER_NODE_HPP_
+#define POINTCLOUD_DIVIDER_NODE_HPP_
 
 #include <string>
 
@@ -31,4 +31,4 @@ public:
 
 }  // namespace autoware::pointcloud_divider
 
-#endif
+#endif  // POINTCLOUD_DIVIDER_NODE_HPP_

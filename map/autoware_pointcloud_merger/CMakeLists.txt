@@ -21,7 +21,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED src/pointcloud_merger_node.cpp src
 target_link_libraries(${PROJECT_NAME} yaml-cpp ${PCL_LIBRARIES})
 ament_target_dependencies(${PROJECT_NAME} autoware_pointcloud_divider)
 
-rclcpp_components_register_node(${PROJECT_NAME} 
+rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN "autoware::pointcloud_merger::PointCloudMerger"
   EXECUTABLE ${PROJECT_NAME}_node
 )

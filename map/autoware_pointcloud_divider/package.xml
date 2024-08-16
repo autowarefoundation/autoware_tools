@@ -13,9 +13,9 @@
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
   <depend>libpcl-all-dev</depend>
-  <depend>yaml-cpp</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>yaml-cpp</depend>
 
   <exec_depend>ros2launch</exec_depend>
 

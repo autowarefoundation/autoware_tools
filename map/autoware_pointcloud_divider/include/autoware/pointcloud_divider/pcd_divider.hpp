@@ -175,4 +175,4 @@ private:
 
 }  // namespace autoware::pointcloud_divider
 
-#endif  // AUTOWARE__POINTCLOUD_DIVIDER__POINTCLOUD_DIVIDER_HPP_
+#endif  // AUTOWARE__POINTCLOUD_DIVIDER__PCD_DIVIDER_HPP_

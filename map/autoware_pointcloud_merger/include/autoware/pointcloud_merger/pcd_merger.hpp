@@ -105,4 +105,4 @@ private:
 
 }  // namespace autoware::pointcloud_merger
 
-#endif  // AUTOWARE__POINTCLOUD_MERGER__POINTCLOUD_MERGER_HPP_
+#endif  // AUTOWARE__POINTCLOUD_MERGER__PCD_MERGER_HPP_

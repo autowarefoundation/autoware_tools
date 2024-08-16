@@ -21,7 +21,7 @@ include_directories(include)
 # Add divider library
 ament_auto_add_library(${PROJECT_NAME} SHARED src/pointcloud_divider_node.cpp src/voxel_grid_filter.cpp src/pcd_divider.cpp)
 target_link_libraries(${PROJECT_NAME} yaml-cpp ${PCL_LIBRARIES})
-rclcpp_components_register_node(${PROJECT_NAME} 
+rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN "autoware::pointcloud_divider::PointCloudDivider"
   EXECUTABLE ${PROJECT_NAME}_node
 )
