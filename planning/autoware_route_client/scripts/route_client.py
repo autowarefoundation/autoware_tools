@@ -93,7 +93,11 @@ def main(args=None):
         rclpy.spin_once(client)
         if client.future.done():
             try:
-                client.get_logger().info("Service requested.")
+                response = client.future.result()
+                if response.status.success:
+                    client.get_logger().info("Service succeeded: %s" % response.status.message)
+                else:
+                    client.get_logger().info("Service failed: %s" % response.status.message)
             except Exception as e:
                 client.get_logger().info("Error: %r" % (e,))
             break
