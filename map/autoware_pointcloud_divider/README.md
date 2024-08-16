@@ -1,6 +1,6 @@
 # autoware_pointcloud_divider
 
-(Updated 2024/06/18)
+(Updated 2024/08/16)
 
 This is a tool for processing pcd files, and it can perform the following functions:
 
@@ -10,7 +10,7 @@ This is a tool for processing pcd files, and it can perform the following functi
 
 ## Supported Data Format
 
-**Currently, only `pcl::PointXYZI` is supported. Any PCD will be loaded as `pcl::PointXYZI` .**
+**Currently, only `pcl::PointXYZ` and `pcl::PointXYZ` are supported. Any PCD will be loaded as those two types.**
 
 This tool can be used with files that have data fields other than `XYZI` (e.g., `XYZRGB`) and files that only contain `XYZ`.
 
@@ -32,24 +32,18 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
 - Select directory, process all files found with `find $INPUT_DIR -name "*.pcd"`.
 
   ```bash
-  pointcloud_divider.sh <INPUT_DIR> <OUTPUT_DIR> <PREFIX> <CONFIG>
+  $ ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=<PREFIX>
   ```
 
-- Select individual files
-
-  ```bash
-  divider_core.sh <PCD_0> ... <PCD_N> <OUTPUT_DIR> <PREFIX> <CONFIG>
-  ```
 
   | Name            | Description                                  |
   | --------------- | -------------------------------------------- |
   | INPUT_DIR       | Directory that contains all PCD files        |
-  | PCD_0 ... PCD_N | Input PCD file name                          |
   | OUTPUT_DIR      | Output directory name                        |
   | PREFIX          | Prefix of output PCD file name               |
-  | CONFIG          | Config file ([default](config/default.yaml)) |
 
-`INPUT_DIR`, `PCD_N`, `OUTPUT_DIR` and `CONFIG` can be specified as both **relative paths** and **absolute paths**.
+
+`INPUT_DIR` and `OUTPUT_DIR` should be specified as **absolute paths**.
 
 NOTE: The folder `OUTPUT_DIR` is auto generated. If it already exists, all files within that folder will be deleted before the tool runs. Hence, users should backup the important files in that folder if necessary.
 

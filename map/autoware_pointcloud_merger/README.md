@@ -1,6 +1,6 @@
 # autoware_pointcloud_merger
 
-(Updated 2024/06/18)
+(Updated 2024/08/16)
 
 This is a tool for processing pcd files, and it can perform the following functions:
 
@@ -9,7 +9,7 @@ This is a tool for processing pcd files, and it can perform the following functi
 
 ## Supported Data Format
 
-**Currently, only `pcl::PointXYZI` is supported. Any PCD will be loaded as `pcl::PointXYZI` .**
+**Currently, only `pcl::PointXYZ` and `pcl::PointXYZI` are supported. Any PCD will be loaded as those two types .**
 
 This tool can be used with files that have data fields other than `XYZI` (e.g., `XYZRGB`) and files that only contain `XYZ`.
 
@@ -28,35 +28,23 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
 
 ## Usage
 
-- Select directory, process all files found with `find $INPUT_DIR -name "*.pcd"`.
+- Merger all PCD files from the input directory into a single output PCD
 
   ```bash
-  pointcloud_merger.sh <INPUT_DIR> <OUTPUT_PCD> <CONFIG>
+  $ ros2 launch autoware_pointcloud_merger pointcloud_merger.launch.xml input_pcd_dir:=<INPUT_DIR> output_pcd:=<OUTPUT_PCD> 
   ```
 
-- Select individual files
-
-  ```bash
-  merger_core.sh <PCD_0> ... <PCD_N> <OUTPUT_PCD> <CONFIG>
-  ```
 
   | Name            | Description                                  |
   | --------------- | -------------------------------------------- |
-  | INPUT_DIR       | Directory that contains all PCD files        |
-  | PCD_0 ... PCD_N | Input PCD file name                          |
+  | INPUT_DIR       | Directory that contains all input PCD files        |
   | OUTPUT_PCD      | Name of the output PCD file                  |
-  | CONFIG          | Config file ([default](config/default.yaml)) |
 
-`INPUT_DIR`, `PCD_N`, `OUTPUT_PCD` and `CONFIG` can be specified as both **relative paths** and **absolute paths**.
+`INPUT_DIR` and `OUTPUT_PCD` should be specified as **absolute paths**.
 
 ## Parameter
 
 {{ json_to_markdown("map/autoware_pointcloud_merger/schema/pointcloud_merger.schema.json") }}
-
-<!-- - **leaf_size** [double]
-
-  The leaf_size of voxel grid filter for pointcloud downsampling. The unit is meters [m].
-  If the value is less than or equal to 0, downsampling is skipped. -->
 
 ## LICENSE
 
