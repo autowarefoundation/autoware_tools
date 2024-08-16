@@ -162,7 +162,7 @@ class TrajectoryVisualizer(Node):
         self.sub8 = message_filters.Subscriber(
             self,
             Trajectory,
-            lane_driving + "/motion_planning/obstacle_avoidance_planner/trajectory",
+            lane_driving + "/motion_planning/path_optimizer/trajectory",
         )
         self.sub9 = message_filters.Subscriber(self, Trajectory, lane_driving + "/trajectory")
 

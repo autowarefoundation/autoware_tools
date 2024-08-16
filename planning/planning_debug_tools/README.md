@@ -43,7 +43,7 @@ in Global code
 ```lua
 behavior_path = '/planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id/debug_info'
 behavior_velocity = '/planning/scenario_planning/lane_driving/behavior_planning/path/debug_info'
-motion_avoid = '/planning/scenario_planning/lane_driving/motion_planning/obstacle_avoidance_planner/trajectory/debug_info'
+motion_avoid = '/planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory/debug_info'
 motion_smoother_latacc = '/planning/scenario_planning/motion_velocity_smoother/debug/trajectory_lateral_acc_filtered/debug_info'
 motion_smoother = '/planning/scenario_planning/trajectory/debug_info'
 ```
