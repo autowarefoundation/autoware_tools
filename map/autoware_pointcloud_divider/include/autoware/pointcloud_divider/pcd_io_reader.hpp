@@ -519,7 +519,7 @@ size_t CustomPCDReader<PointT>::readABlockBinary(std::ifstream & input, PclCloud
     input.read(buffer_, read_size_);
 
     // Parse the buffer and convert to point
-    for (long int i = 0; i < input.gcount(); i += point_size_) {
+    for (int i = 0; i < input.gcount(); i += point_size_) {
       parsePoint(buffer_ + i, read_sizes_, read_loc_, p);
       output.push_back(p);
     }

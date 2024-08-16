@@ -126,7 +126,6 @@ void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
       auto cloud_ptr = loadPCD(pcd_name);
 
       dividePointCloud(cloud_ptr);
-
     } while (reader_.good() && rclcpp::ok());
   }
 

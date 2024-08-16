@@ -203,7 +203,6 @@ void PCDMerger<PointT>::paramInitialize()
     auto params = conf["/**"]["ros__parameters"];
 
     leaf_size_ = params["leaf_size"].as<double>();
-
   } catch (YAML::Exception & e) {
     RCLCPP_ERROR(logger_, "YAML Error: %s", e.what());
     rclcpp::shutdown();

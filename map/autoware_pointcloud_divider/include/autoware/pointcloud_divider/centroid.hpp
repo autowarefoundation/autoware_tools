@@ -111,6 +111,6 @@ struct Centroid
   size_t point_num_;
 };
 
-}  // Namespace autoware::pointcloud_divider
+}  // namespace autoware::pointcloud_divider
 
 #endif  // AUTOWARE__POINTCLOUD_DIVIDER__CENTROID_HPP_
