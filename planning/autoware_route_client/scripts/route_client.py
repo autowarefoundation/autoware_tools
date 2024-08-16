@@ -95,13 +95,9 @@ def main(args=None):
             try:
                 response = client.future.result()
                 if response.status.success:
-                    client.get_logger().info(
-                        "Service succeeded: %s" % response.status.message
-                    )
+                    client.get_logger().info("Service succeeded: %s" % response.status.message)
                 else:
-                    client.get_logger().info(
-                        "Service failed: %s" % response.status.message
-                    )
+                    client.get_logger().info("Service failed: %s" % response.status.message)
             except Exception as e:
                 client.get_logger().info("Error: %r" % (e,))
             break
