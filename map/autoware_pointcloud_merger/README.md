@@ -31,14 +31,13 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
 - Merger all PCD files from the input directory into a single output PCD
 
   ```bash
-  $ ros2 launch autoware_pointcloud_merger pointcloud_merger.launch.xml input_pcd_dir:=<INPUT_DIR> output_pcd:=<OUTPUT_PCD> 
+  ros2 launch autoware_pointcloud_merger pointcloud_merger.launch.xml input_pcd_dir:=<INPUT_DIR> output_pcd:=<OUTPUT_PCD>
   ```
 
-
-  | Name            | Description                                  |
-  | --------------- | -------------------------------------------- |
-  | INPUT_DIR       | Directory that contains all input PCD files        |
-  | OUTPUT_PCD      | Name of the output PCD file                  |
+  | Name       | Description                                 |
+  | ---------- | ------------------------------------------- |
+  | INPUT_DIR  | Directory that contains all input PCD files |
+  | OUTPUT_PCD | Name of the output PCD file                 |
 
 `INPUT_DIR` and `OUTPUT_PCD` should be specified as **absolute paths**.
 

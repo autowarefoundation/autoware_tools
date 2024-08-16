@@ -32,16 +32,14 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
 - Select directory, process all files found with `find $INPUT_DIR -name "*.pcd"`.
 
   ```bash
-  $ ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=<PREFIX>
+  ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=<PREFIX>
   ```
 
-
-  | Name            | Description                                  |
-  | --------------- | -------------------------------------------- |
-  | INPUT_DIR       | Directory that contains all PCD files        |
-  | OUTPUT_DIR      | Output directory name                        |
-  | PREFIX          | Prefix of output PCD file name               |
-
+  | Name       | Description                           |
+  | ---------- | ------------------------------------- |
+  | INPUT_DIR  | Directory that contains all PCD files |
+  | OUTPUT_DIR | Output directory name                 |
+  | PREFIX     | Prefix of output PCD file name        |
 
 `INPUT_DIR` and `OUTPUT_DIR` should be specified as **absolute paths**.
 
