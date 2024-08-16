@@ -120,7 +120,7 @@ class TrajectoryVisualizer(Node):
 
         self.behavior_path_planner_path = PathWithLaneId()
         self.behavior_velocity_planner_path = Path()
-        self.obstacle_avoid_traj = Trajectory()
+        self.path_optimizer_traj = Trajectory()
         self.obstacle_stop_traj = Trajectory()
 
         self.plotted = [False] * 9
@@ -252,7 +252,7 @@ class TrajectoryVisualizer(Node):
         self.update_behavior_velocity_planner_path = True
 
     def CallbackObstacleAvoidTraj(self, cmd):
-        self.obstacle_avoid_traj = cmd
+        self.path_optimizer_traj = cmd
         self.update_traj_ob_avoid = True
 
     def CallbackObstacleStopTraj(self, cmd):
@@ -265,7 +265,7 @@ class TrajectoryVisualizer(Node):
         (self.im2,) = self.ax1.plot(
             [], [], label="1: behavior_velocity_planner_path", marker="", ls="--"
         )
-        (self.im3,) = self.ax1.plot([], [], label="2: obstacle_avoid_traj", marker="", ls="-.")
+        (self.im3,) = self.ax1.plot([], [], label="2: path_optimizer_traj", marker="", ls="-.")
         (self.im4,) = self.ax1.plot([], [], label="3: obstacle_stop_traj", marker="", ls="--")
         (self.im5,) = self.ax1.plot([], [], label="4-1: opt input", marker="", ls="--")
         (self.im6,) = self.ax1.plot(
@@ -347,7 +347,7 @@ class TrajectoryVisualizer(Node):
                 self.update_behavior_velocity_planner_path,
                 self.im2,
             ),
-            (self.obstacle_avoid_traj, self.update_traj_ob_avoid, self.im3),
+            (self.path_optimizer_traj, self.update_traj_ob_avoid, self.im3),
             (self.obstacle_stop_traj, self.update_traj_ob_stop, self.im4),
             (self.trajectory_raw, self.update_traj_raw, self.im5),
             (self.trajectory_external_velocity_limited, self.update_ex_vel_lim, self.im6),
