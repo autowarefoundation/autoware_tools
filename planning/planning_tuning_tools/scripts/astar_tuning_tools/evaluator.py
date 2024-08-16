@@ -34,6 +34,9 @@ class Evaluator:
         self.direction_change = None
         self.minus_distance_to_obstacle_average = None
         self.minus_distance_to_obstacle_minimum = None
+        self.steering_average = None
+        self.steering_minimum = None
+        self.reverse_distance = None
         self.calculation_time = None
         if results is not None:
             self.set_results(results)
@@ -70,6 +73,9 @@ class Evaluator:
         total_direction_change = 0
         total_distance_to_obstacle_average = 0
         total_distance_to_obstacle_minimum = 0
+        total_steering_average = 0
+        total_steering_minimum = 0
+        total_reverse_distance = 0
 
         for result in results:
             if result.find:
@@ -86,6 +92,9 @@ class Evaluator:
                 total_direction_change += self.count_forward_backward_change(waypoints)
                 total_distance_to_obstacle_average += np.mean(result.distance_to_obstacles)
                 total_distance_to_obstacle_minimum += min(result.distance_to_obstacles)
+                total_steering_average += np.mean(result.steerings)
+                total_steering_minimum += min(result.steerings)
+                total_reverse_distance += self.calculate_reverse_distance(waypoints)
 
         self.N = N
         self.N_success = N_success
@@ -99,6 +108,9 @@ class Evaluator:
             self.minus_distance_to_obstacle_minimum = (
                 -total_distance_to_obstacle_minimum / N_success
             )
+            self.steering_average = total_steering_average / N_success
+            self.steering_minimum = total_steering_minimum / N_success
+            self.reverse_distance = total_reverse_distance / N_success
 
     def set_results_from_path(self, dir_path):
         # laod search settings
@@ -133,6 +145,17 @@ class Evaluator:
                 pre_is_back = is_back
 
         return count
+    
+    def calculate_reverse_distance(self, waypoints):
+        reverse_distance = 0
+        pre_position = waypoints.waypoints[0].pose.position
+        for waypoint in waypoints.waypoints:
+            position = waypoint.pose.position
+            if waypoint.is_back:
+                reverse_distance += math.hypot(position.x-pre_position.x, position.y-pre_position.y)
+            pre_position = position
+
+        return reverse_distance
 
     def print_result(self):
         if self.N is None:

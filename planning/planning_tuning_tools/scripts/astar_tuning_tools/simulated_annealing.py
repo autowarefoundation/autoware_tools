@@ -239,8 +239,8 @@ if __name__ == "__main__":
 
         val_data_set.append(TestData(costmap, goal_pose))
 
-    initial_temperature = 200.0
-    iterations = 100
+    initial_temperature = 500.0
+    iterations = 1000
 
     simulated_annealing = SimulatedAnnealing(config_path, val_data_set)
     simulated_annealing.simulated_annealing(initial_temperature, iterations)

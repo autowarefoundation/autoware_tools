@@ -32,6 +32,16 @@ from pyquaternion import Quaternion
 from tqdm import tqdm
 import yaml
 
+def pose2yaw(pose):
+    qw = pose.orientation.w
+    qx = pose.orientation.x
+    qy = pose.orientation.y
+    qz = pose.orientation.z
+    t0 = +2.0 * (qw * qz + qx * qy)
+    t1 = +1.0 - 2.0 * (qy * qy + qz * qz)
+    yaw = math.atan2(t0, t1)
+    return yaw
+
 def search_one(astar, start_pose, goal_pose):
     try:
         find = astar.makePlan(start_pose, goal_pose)
@@ -40,22 +50,21 @@ def search_one(astar, start_pose, goal_pose):
 
     waypoints = fp.PlannerWaypoints()
     distance_to_obstacles = []
+    steerings = []
     if find:
         waypoints = astar.getWaypoints()
+        pre_yaw = pose2yaw(waypoints.waypoints[0].pose)
         for waypoint in waypoints.waypoints:
             distance_to_obstacles.append(astar.getDistanceToObstacle(waypoint.pose))
+            yaw = pose2yaw(waypoint.pose)
+            steerings.append(yaw-pre_yaw)
+            pre_yaw = yaw
 
     x = goal_pose.position.x
     y = goal_pose.position.y
-    qw = goal_pose.orientation.w
-    qx = goal_pose.orientation.x
-    qy = goal_pose.orientation.y
-    qz = goal_pose.orientation.z
-    t0 = +2.0 * (qw * qz + qx * qy)
-    t1 = +1.0 - 2.0 * (qy * qy + qz * qz)
-    yaw = math.atan2(t0, t1)
+    yaw = pose2yaw(goal_pose)
 
-    return Result(x, y, yaw, find, waypoints, distance_to_obstacles)
+    return Result(x, y, yaw, find, waypoints, distance_to_obstacles, steerings)
 
 
 def float_range(start, end, step):

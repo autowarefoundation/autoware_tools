@@ -14,6 +14,15 @@ evaluation:
   minus_distance_to_obstacle_minimum:
     use_optimization: false
     weight: 0.01
+  steering_average:
+    use_optimization: false
+    weight: 0.01
+  steering_minimum:
+    use_optimization: false
+    weight: 0.01
+  reverse_distance:
+    use_optimization: false
+    weight: 0.01
   calculation_time:
     use_optimization: true
     weight: 0.001
@@ -102,20 +111,20 @@ astar_param:
     min: 0
     max: 1
   distance_heuristic_weight:
-    use_optimization: false
+    use_optimization: true
     initial: 1.5
     min: 0
-    max: 1
+    max: 5
   smoothness_weight:
-    use_optimization: false
+    use_optimization: true
     initial: 0.5
     min: 0
-    max: 1
+    max: 5
   obstacle_distance_weight:
-    use_optimization: false
+    use_optimization: true
     initial: 1.5
     min: 0
-    max: 1
+    max: 5
 
 vehicle_shape:
   length:
