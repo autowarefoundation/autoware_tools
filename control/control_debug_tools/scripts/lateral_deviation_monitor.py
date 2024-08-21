@@ -46,6 +46,12 @@ class SteeringAndLateralDeviationMonitor(Node):
         self.lateral_deviation = None
         self.steering_diff = None
 
+        # For tracking max values
+        self.max_control_steering_angle = 0
+        self.max_vehicle_steering_angle = 0
+        self.max_lateral_deviation = 0
+        self.max_steering_diff = 0
+
         # For plotting
         self.plot = plot
         if self.plot:
@@ -63,11 +69,13 @@ class SteeringAndLateralDeviationMonitor(Node):
     def control_cmd_callback(self, msg):
         self.control_steering_angle = msg.lateral.steering_tire_angle
         self.update_steering_diff()
+        self.update_max_values()
         self.display_values()
 
     def steering_status_callback(self, msg):
         self.vehicle_steering_angle = msg.steering_tire_angle
         self.update_steering_diff()
+        self.update_max_values()
         self.display_values()
 
     def metrics_callback(self, msg):
@@ -76,12 +84,29 @@ class SteeringAndLateralDeviationMonitor(Node):
                 for value in status.values:
                     if value.key == "metric_value":
                         self.lateral_deviation = float(value.value)
+                        self.update_max_values()
                         self.display_values()
                         break
 
     def update_steering_diff(self):
         if self.control_steering_angle is not None and self.vehicle_steering_angle is not None:
             self.steering_diff = self.control_steering_angle - self.vehicle_steering_angle
+
+    def update_max_values(self):
+        if self.control_steering_angle is not None:
+            self.max_control_steering_angle = max(
+                self.max_control_steering_angle, abs(self.control_steering_angle)
+            )
+        if self.vehicle_steering_angle is not None:
+            self.max_vehicle_steering_angle = max(
+                self.max_vehicle_steering_angle, abs(self.vehicle_steering_angle)
+            )
+        if self.lateral_deviation is not None:
+            self.max_lateral_deviation = max(
+                self.max_lateral_deviation, abs(self.lateral_deviation)
+            )
+        if self.steering_diff is not None:
+            self.max_steering_diff = max(self.max_steering_diff, abs(self.steering_diff))
 
     def display_values(self):
         if (
@@ -92,10 +117,10 @@ class SteeringAndLateralDeviationMonitor(Node):
         ):
             self.get_logger().info(
                 f"\n{'-'*40}\n"
-                f"{colored('Control Steering Angle: ', 'red')}{self.control_steering_angle:.2f} [rad]\n"
-                f"{colored('Vehicle Steering Angle: ', 'green')}{self.vehicle_steering_angle:.2f} [rad]\n"
-                f"{colored('Steering Diff: ', 'magenta')}{self.steering_diff:.2f} [rad]\n"
-                f"{colored('Lateral Deviation: ', 'blue')}{self.lateral_deviation:.4f} [m]\n"
+                f"{colored('Control Steering Angle: ', 'red')}{self.control_steering_angle:.2f} [rad] (Max: {self.max_control_steering_angle:.2f} [rad])\n"
+                f"{colored('Vehicle Steering Angle: ', 'green')}{self.vehicle_steering_angle:.2f} [rad] (Max: {self.max_vehicle_steering_angle:.2f} [rad])\n"
+                f"{colored('Steering Diff: ', 'magenta')}{self.steering_diff:.2f} [rad] (Max: {self.max_steering_diff:.2f} [rad])\n"
+                f"{colored('Lateral Deviation: ', 'blue')}{self.lateral_deviation:.4f} [m] (Max: {self.max_lateral_deviation:.4f} [m])\n"
                 f"{'-'*40}\n"
             )
             if self.plot:
