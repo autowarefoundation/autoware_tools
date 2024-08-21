@@ -1,0 +1,294 @@
+{
+  "configById": {
+    "Plot!2xxq5nc": {
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/manual_metrics.data[40:59]",
+          "enabled": true,
+          "color": "#4e98e2",
+          "label": "longitudinal jerk (manual)",
+          "lineSize": 4
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/system_metrics.data[40:59]",
+          "enabled": true,
+          "color": "#f5774d",
+          "lineSize": 4,
+          "label": "longitudinal jerk (system)"
+        }
+      ],
+      "minYValue": -2,
+      "maxYValue": 2,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "index",
+      "sidebarDimension": 240,
+      "minXValue": 0,
+      "maxXValue": 20
+    },
+    "Plot!2s3vi1i": {
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/manual_score.data[1]",
+          "enabled": true,
+          "color": "#4e98e2",
+          "label": "longitudinal confortability (manual)",
+          "lineSize": 1.5,
+          "showLine": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/system_score.data[1]",
+          "enabled": true,
+          "color": "#f5774d",
+          "lineSize": 1.5,
+          "label": "longitudinal confortability (system)"
+        }
+      ],
+      "minYValue": 0,
+      "maxYValue": 1,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "followingViewWidth": 500
+    },
+    "Plot!na5bbq": {
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/manual_score.data[0]",
+          "enabled": true,
+          "color": "#4e98e2",
+          "label": "lateral confortability (manual)",
+          "lineSize": 1.5,
+          "showLine": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/system_score.data[0]",
+          "enabled": true,
+          "color": "#f5774d",
+          "lineSize": 1.5,
+          "label": "lateral confortability (system)"
+        }
+      ],
+      "minYValue": 0,
+      "maxYValue": 1,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "followingViewWidth": 500
+    },
+    "Plot!1oow4ne": {
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/manual_metrics.data[60:79]",
+          "enabled": true,
+          "color": "#4e98e2",
+          "label": "travel_distance (manual)",
+          "lineSize": 4
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/system_metrics.data[60:79]",
+          "enabled": true,
+          "color": "#f5774d",
+          "lineSize": 4,
+          "label": "travel_distance (system)"
+        }
+      ],
+      "minYValue": 0,
+      "maxYValue": 150,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "index",
+      "sidebarDimension": 240,
+      "minXValue": 0,
+      "maxXValue": 20
+    },
+    "Plot!3wovlah": {
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/manual_score.data[2]",
+          "enabled": true,
+          "color": "#4e98e2",
+          "label": "efficiency (manual)",
+          "lineSize": 1.5,
+          "showLine": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/system_score.data[2]",
+          "enabled": true,
+          "color": "#f5774d",
+          "lineSize": 1.5,
+          "label": "efficiency (system)"
+        }
+      ],
+      "minYValue": 0,
+      "maxYValue": 1,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "followingViewWidth": 500
+    },
+    "Plot!4jh9z4a": {
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/manual_metrics.data[80:99]",
+          "enabled": true,
+          "color": "#4e98e2",
+          "label": "minimum ttc (manual)",
+          "lineSize": 4
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/system_metrics.data[80:99]",
+          "enabled": true,
+          "color": "#f5774d",
+          "label": "minimum ttc (system)",
+          "lineSize": 4
+        }
+      ],
+      "minYValue": 0,
+      "maxYValue": 20,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "index",
+      "sidebarDimension": 240,
+      "minXValue": 0,
+      "maxXValue": 20
+    },
+    "Plot!37j6i8x": {
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/manual_score.data[3]",
+          "enabled": true,
+          "color": "#4e98e2",
+          "label": "safety (manual)",
+          "lineSize": 1.5,
+          "showLine": true
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/system_score.data[3]",
+          "enabled": true,
+          "color": "#f5774d",
+          "label": "safety (system)"
+        }
+      ],
+      "minYValue": 0,
+      "maxYValue": 1,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "timestamp",
+      "sidebarDimension": 240,
+      "followingViewWidth": 500
+    },
+    "Plot!3qlhcp2": {
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/manual_metrics.data[0:19]",
+          "enabled": true,
+          "color": "#4e98e2",
+          "label": "lateral acceleration (manual)",
+          "lineSize": 4
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/behavior_analyzer/system_metrics.data[0:19]",
+          "enabled": true,
+          "color": "#f5774d",
+          "lineSize": 4,
+          "label": "lateral acceleration (system)"
+        }
+      ],
+      "minYValue": -2,
+      "maxYValue": 2,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": false,
+      "isSynced": true,
+      "xAxisVal": "index",
+      "sidebarDimension": 240,
+      "minXValue": 0,
+      "maxXValue": 20
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "first": {
+      "first": {
+        "first": "Plot!2xxq5nc",
+        "second": "Plot!3qlhcp2",
+        "direction": "column"
+      },
+      "second": {
+        "first": "Plot!2s3vi1i",
+        "second": "Plot!na5bbq",
+        "direction": "column"
+      },
+      "direction": "row"
+    },
+    "second": {
+      "first": {
+        "first": "Plot!1oow4ne",
+        "second": "Plot!3wovlah",
+        "direction": "row"
+      },
+      "second": {
+        "first": "Plot!4jh9z4a",
+        "second": "Plot!37j6i8x",
+        "direction": "row"
+      },
+      "direction": "column"
+    },
+    "direction": "column",
+    "splitPercentage": 35.595105672969964
+  }
+}
