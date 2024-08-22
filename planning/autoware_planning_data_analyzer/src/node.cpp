@@ -34,12 +34,10 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
 
   pub_marker_ = create_publisher<MarkerArray>("~/marker", 1);
-  pub_odometry_ = create_publisher<Odometry>("/localization/kinematic_state", rclcpp::QoS(1));
-  pub_objects_ =
-    create_publisher<PredictedObjects>("/perception/object_recognition/objects", rclcpp::QoS(1));
-  pub_trajectory_ =
-    create_publisher<Trajectory>("/planning/scenario_planning/trajectory", rclcpp::QoS(1));
-  pub_tf_ = create_publisher<TFMessage>("/tf", rclcpp::QoS(1));
+  pub_odometry_ = create_publisher<Odometry>(odometry_topic_name_, rclcpp::QoS(1));
+  pub_objects_ = create_publisher<PredictedObjects>(objects_topic_name_, rclcpp::QoS(1));
+  pub_trajectory_ = create_publisher<Trajectory>(trajectory_topic_name_, rclcpp::QoS(1));
+  pub_tf_ = create_publisher<TFMessage>(tf_topic_name_, rclcpp::QoS(1));
 
   pub_manual_metrics_ =
     create_publisher<Float32MultiArrayStamped>("~/manual_metrics", rclcpp::QoS{1});
@@ -60,8 +58,15 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
 
   reader_.open(declare_parameter<std::string>("bag_path"));
 
-  trimmed_data_ = std::make_shared<TrimmedData>(
+  bag_data_ = std::make_shared<BagData>(
     duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
+  bag_data_->buffers.emplace(tf_topic_name_, std::make_shared<Buffer<TFMessage>>());
+  bag_data_->buffers.emplace(odometry_topic_name_, std::make_shared<Buffer<Odometry>>());
+  bag_data_->buffers.emplace(
+    acceleration_topic_name_, std::make_shared<Buffer<AccelWithCovarianceStamped>>());
+  bag_data_->buffers.emplace(trajectory_topic_name_, std::make_shared<Buffer<Trajectory>>());
+  bag_data_->buffers.emplace(objects_topic_name_, std::make_shared<Buffer<PredictedObjects>>());
+  bag_data_->buffers.emplace(steering_topic_name_, std::make_shared<Buffer<SteeringReport>>());
 
   parameters_ = std::make_shared<Parameters>();
   parameters_->resample_num = declare_parameter<int>("resample_num");
@@ -80,71 +85,78 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
     declare_parameter<std::vector<double>>("target_state.longitudinal_accelerations");
 }
 
-void BehaviorAnalyzerNode::update(std::shared_ptr<TrimmedData> & trimmed_data) const
+void BehaviorAnalyzerNode::update(std::shared_ptr<BagData> & bag_data) const
 {
   rosbag2_storage::StorageFilter filter;
-  filter.topics.emplace_back("/tf");
-  filter.topics.emplace_back("/localization/kinematic_state");
-  filter.topics.emplace_back("/localization/acceleration");
-  filter.topics.emplace_back("/perception/object_recognition/objects");
-  filter.topics.emplace_back("/vehicle/status/steering_status");
-  filter.topics.emplace_back("/planning/scenario_planning/trajectory");
+  filter.topics.emplace_back(tf_topic_name_);
+  filter.topics.emplace_back(odometry_topic_name_);
+  filter.topics.emplace_back(acceleration_topic_name_);
+  filter.topics.emplace_back(objects_topic_name_);
+  filter.topics.emplace_back(steering_topic_name_);
+  filter.topics.emplace_back(trajectory_topic_name_);
   reader_.set_filter(filter);
 
   if (!reader_.has_next()) {
     return;
   }
 
-  trimmed_data->update(0.1 * 1e9);
+  bag_data->update(0.1 * 1e9);
 
   while (reader_.has_next()) {
     const auto next_data = reader_.read_next();
     rclcpp::SerializedMessage serialized_msg(*next_data->serialized_data);
 
-    if (trimmed_data->is_ready()) {
+    if (bag_data->ready()) {
       break;
     }
 
-    if (next_data->topic_name == "/tf") {
+    if (next_data->topic_name == tf_topic_name_) {
       rclcpp::Serialization<TFMessage> serializer;
       const auto deserialized_message = std::make_shared<TFMessage>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      trimmed_data->buf_tf.append(*deserialized_message);
+      std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(tf_topic_name_))
+        ->append(*deserialized_message);
     }
 
-    if (next_data->topic_name == "/localization/kinematic_state") {
+    if (next_data->topic_name == odometry_topic_name_) {
       rclcpp::Serialization<Odometry> serializer;
       const auto deserialized_message = std::make_shared<Odometry>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      trimmed_data->buf_odometry.append(*deserialized_message);
+      std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(odometry_topic_name_))
+        ->append(*deserialized_message);
     }
 
-    if (next_data->topic_name == "/localization/acceleration") {
+    if (next_data->topic_name == acceleration_topic_name_) {
       rclcpp::Serialization<AccelWithCovarianceStamped> serializer;
       const auto deserialized_message = std::make_shared<AccelWithCovarianceStamped>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      trimmed_data->buf_accel.append(*deserialized_message);
+      std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
+        bag_data->buffers.at(acceleration_topic_name_))
+        ->append(*deserialized_message);
     }
 
-    if (next_data->topic_name == "/perception/object_recognition/objects") {
+    if (next_data->topic_name == objects_topic_name_) {
       rclcpp::Serialization<PredictedObjects> serializer;
       const auto deserialized_message = std::make_shared<PredictedObjects>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      trimmed_data->buf_objects.append(*deserialized_message);
+      std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(objects_topic_name_))
+        ->append(*deserialized_message);
     }
 
-    if (next_data->topic_name == "/vehicle/status/steering_status") {
+    if (next_data->topic_name == steering_topic_name_) {
       rclcpp::Serialization<SteeringReport> serializer;
       const auto deserialized_message = std::make_shared<SteeringReport>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      trimmed_data->buf_steer.append(*deserialized_message);
+      std::dynamic_pointer_cast<Buffer<SteeringReport>>(bag_data->buffers.at(steering_topic_name_))
+        ->append(*deserialized_message);
     }
 
-    if (next_data->topic_name == "/planning/scenario_planning/trajectory") {
+    if (next_data->topic_name == trajectory_topic_name_) {
       rclcpp::Serialization<Trajectory> serializer;
       const auto deserialized_message = std::make_shared<Trajectory>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      trimmed_data->buf_trajectory.append(*deserialized_message);
+      std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(trajectory_topic_name_))
+        ->append(*deserialized_message);
     }
   }
 }
@@ -166,28 +178,34 @@ void BehaviorAnalyzerNode::rewind(
 {
   reader_.seek(0);
 
-  trimmed_data_.reset();
-  trimmed_data_ = std::make_shared<TrimmedData>(
+  bag_data_.reset();
+  bag_data_ = std::make_shared<BagData>(
     duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
 
   res->success = true;
 }
 
-void BehaviorAnalyzerNode::process(const std::shared_ptr<TrimmedData> & trimmed_data) const
+void BehaviorAnalyzerNode::process(const std::shared_ptr<BagData> & bag_data) const
 {
-  const auto data_set = std::make_shared<DataSet>(trimmed_data, vehicle_info_, parameters_);
+  const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, parameters_);
 
-  const auto opt_tf = trimmed_data->buf_tf.get(trimmed_data->timestamp);
+  const auto opt_tf =
+    std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(tf_topic_name_))
+      ->get(bag_data->timestamp);
   if (opt_tf.has_value()) {
     pub_tf_->publish(opt_tf.value());
   }
 
-  const auto opt_objects = trimmed_data->buf_objects.get(trimmed_data->timestamp);
+  const auto opt_objects =
+    std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(objects_topic_name_))
+      ->get(bag_data->timestamp);
   if (opt_objects.has_value()) {
     pub_objects_->publish(opt_objects.value());
   }
 
-  const auto opt_trajectory = trimmed_data->buf_trajectory.get(trimmed_data->timestamp);
+  const auto opt_trajectory =
+    std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(trajectory_topic_name_))
+      ->get(bag_data->timestamp);
   if (opt_trajectory.has_value()) {
     pub_trajectory_->publish(opt_trajectory.value());
   }
@@ -339,9 +357,9 @@ void BehaviorAnalyzerNode::on_timer()
     return;
   }
 
-  update(trimmed_data_);
+  update(bag_data_);
 
-  process(trimmed_data_);
+  process(bag_data_);
 }
 }  // namespace autoware::behavior_analyzer
 

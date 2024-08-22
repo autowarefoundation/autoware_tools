@@ -28,7 +28,7 @@ namespace autoware::behavior_analyzer
 {
 
 template <>
-bool Buffer<SteeringReport>::is_ready() const
+bool Buffer<SteeringReport>::ready() const
 {
   if (msgs.empty()) {
     return false;
@@ -40,7 +40,7 @@ bool Buffer<SteeringReport>::is_ready() const
 }
 
 template <>
-bool Buffer<TFMessage>::is_ready() const
+bool Buffer<TFMessage>::ready() const
 {
   if (msgs.empty()) {
     return false;
@@ -115,14 +115,17 @@ auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> std::
 }
 
 CommonData::CommonData(
-  const std::shared_ptr<TrimmedData> & trimmed_data,
-  const vehicle_info_utils::VehicleInfo & vehicle_info, const size_t resample_num,
-  const double time_resolution, const std::string & tag)
+  const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
+  const size_t resample_num, const double time_resolution, const std::string & tag)
 : vehicle_info{vehicle_info}, resample_num(resample_num), tag{tag}
 {
+  objects_history.reserve(resample_num);
+
+  const auto objects_buffer_ptr = std::dynamic_pointer_cast<Buffer<PredictedObjects>>(
+    bag_data->buffers.at("/perception/object_recognition/objects"));
   for (size_t i = 0; i < resample_num; i++) {
     const auto opt_objects =
-      trimmed_data->buf_objects.get(trimmed_data->timestamp + 1e9 * time_resolution * i);
+      objects_buffer_ptr->get(bag_data->timestamp + 1e9 * time_resolution * i);
     if (!opt_objects.has_value()) {
       break;
     }
@@ -251,28 +254,39 @@ double CommonData::total() const
 }
 
 ManualDrivingData::ManualDrivingData(
-  const std::shared_ptr<TrimmedData> & trimmed_data,
-  const vehicle_info_utils::VehicleInfo & vehicle_info, const size_t resample_num,
-  const double time_resolution)
-: CommonData(trimmed_data, vehicle_info, resample_num, time_resolution, "manual")
+  const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
+  const size_t resample_num, const double time_resolution)
+: CommonData(bag_data, vehicle_info, resample_num, time_resolution, "manual")
 {
+  odometry_history.reserve(resample_num);
+  accel_history.reserve(resample_num);
+  steer_history.reserve(resample_num);
+
+  const auto odometry_buffer_ptr = std::dynamic_pointer_cast<Buffer<Odometry>>(
+    bag_data->buffers.at("/localization/kinematic_state"));
+  const auto acceleration_buffer_ptr =
+    std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
+      bag_data->buffers.at("/localization/acceleration"));
+  const auto steering_buffer_ptr = std::dynamic_pointer_cast<Buffer<SteeringReport>>(
+    bag_data->buffers.at("/vehicle/status/steering_status"));
+
   for (size_t i = 0; i < resample_num; i++) {
     const auto opt_odometry =
-      trimmed_data->buf_odometry.get(trimmed_data->timestamp + 1e9 * time_resolution * i);
+      odometry_buffer_ptr->get(bag_data->timestamp + 1e9 * time_resolution * i);
     if (!opt_odometry.has_value()) {
       break;
     }
     odometry_history.push_back(opt_odometry.value());
 
     const auto opt_accel =
-      trimmed_data->buf_accel.get(trimmed_data->timestamp + 1e9 * time_resolution * i);
+      acceleration_buffer_ptr->get(bag_data->timestamp + 1e9 * time_resolution * i);
     if (!opt_accel.has_value()) {
       break;
     }
     accel_history.push_back(opt_accel.value());
 
     const auto opt_steer =
-      trimmed_data->buf_steer.get(trimmed_data->timestamp + 1e9 * time_resolution * i);
+      steering_buffer_ptr->get(bag_data->timestamp + 1e9 * time_resolution * i);
     if (!opt_steer.has_value()) {
       break;
     }
@@ -320,11 +334,10 @@ double ManualDrivingData::travel_distance(const size_t idx) const
 }
 
 TrajectoryData::TrajectoryData(
-  const std::shared_ptr<TrimmedData> & trimmed_data,
-  const vehicle_info_utils::VehicleInfo & vehicle_info, const size_t resample_num,
-  const double time_resolution, const std::string & tag,
+  const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
+  const size_t resample_num, const double time_resolution, const std::string & tag,
   const std::vector<TrajectoryPoint> & points)
-: CommonData(trimmed_data, vehicle_info, resample_num, time_resolution, tag), points{points}
+: CommonData(bag_data, vehicle_info, resample_num, time_resolution, tag), points{points}
 {
   calculate();
 }
@@ -361,26 +374,31 @@ bool TrajectoryData::feasible() const
 }
 
 SamplingTrajectoryData::SamplingTrajectoryData(
-  const std::shared_ptr<TrimmedData> & trimmed_data,
-  const vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<Parameters> & parameters)
 {
-  const auto opt_odometry = trimmed_data->buf_odometry.get(trimmed_data->timestamp);
+  const auto opt_odometry = std::dynamic_pointer_cast<Buffer<Odometry>>(
+                              bag_data->buffers.at("/localization/kinematic_state"))
+                              ->get(bag_data->timestamp);
   if (!opt_odometry.has_value()) {
     throw std::logic_error("data is not enough.");
   }
 
-  const auto opt_accel = trimmed_data->buf_accel.get(trimmed_data->timestamp);
+  const auto opt_accel = std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
+                           bag_data->buffers.at("/localization/acceleration"))
+                           ->get(bag_data->timestamp);
   if (!opt_accel.has_value()) {
     throw std::logic_error("data is not enough.");
   }
 
-  const auto opt_trajectory = trimmed_data->buf_trajectory.get(trimmed_data->timestamp);
+  const auto opt_trajectory = std::dynamic_pointer_cast<Buffer<Trajectory>>(
+                                bag_data->buffers.at("/planning/scenario_planning/trajectory"))
+                                ->get(bag_data->timestamp);
   if (!opt_trajectory.has_value()) {
     throw std::logic_error("data is not enough.");
   }
   data.emplace_back(
-    trimmed_data, vehicle_info, parameters->resample_num, parameters->time_resolution, "autoware",
+    bag_data, vehicle_info, parameters->resample_num, parameters->time_resolution, "autoware",
     utils::resampling(
       opt_trajectory.value(), opt_odometry.value().pose.pose, parameters->resample_num,
       parameters->time_resolution));
@@ -390,7 +408,7 @@ SamplingTrajectoryData::SamplingTrajectoryData(
          opt_odometry.value().twist.twist.linear.x, opt_accel.value().accel.accel.linear.x,
          vehicle_info, parameters)) {
     data.emplace_back(
-      trimmed_data, vehicle_info, parameters->resample_num, parameters->time_resolution, "frenet",
+      bag_data, vehicle_info, parameters->resample_num, parameters->time_resolution, "frenet",
       sample);
   }
 

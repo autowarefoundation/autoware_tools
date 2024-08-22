@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -51,14 +52,20 @@ struct FrenetPoint
   double distance{0.0};  // lateral
 };
 
+struct BufferBase
+{
+  virtual bool ready() const = 0;
+  virtual void remove_old_data(const rcutils_time_point_value_t now) = 0;
+};
+
 template <class T>
-struct Buffer
+struct Buffer : BufferBase
 {
   std::vector<T> msgs;
 
   const double BUFFER_TIME = 20.0 * 1e9;
 
-  bool is_ready() const
+  bool ready() const override
   {
     if (msgs.empty()) {
       return false;
@@ -69,7 +76,7 @@ struct Buffer
            BUFFER_TIME;
   }
 
-  void remove_old_data(const rcutils_time_point_value_t now)
+  void remove_old_data(const rcutils_time_point_value_t now) override
   {
     const auto itr = std::remove_if(msgs.begin(), msgs.end(), [&now, this](const auto & msg) {
       return rclcpp::Time(msg.header.stamp).nanoseconds() < now;
@@ -78,8 +85,6 @@ struct Buffer
   }
 
   void append(const T & msg) { msgs.push_back(msg); }
-
-  auto get() const -> T { return msgs.front(); }
 
   auto get(const rcutils_time_point_value_t now) const -> std::optional<T>
   {
@@ -93,15 +98,13 @@ struct Buffer
 
     return *itr;
   }
-
-  auto get_all_data() const -> std::vector<T> { return msgs; }
 };
 
 template <>
-bool Buffer<SteeringReport>::is_ready() const;
+bool Buffer<SteeringReport>::ready() const;
 
 template <>
-bool Buffer<TFMessage>::is_ready() const;
+bool Buffer<TFMessage>::ready() const;
 
 template <>
 void Buffer<SteeringReport>::remove_old_data(const rcutils_time_point_value_t now);
@@ -116,16 +119,11 @@ auto Buffer<SteeringReport>::get(const rcutils_time_point_value_t now) const
 template <>
 auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> std::optional<TFMessage>;
 
-struct TrimmedData
+struct BagData
 {
-  explicit TrimmedData(const rcutils_time_point_value_t timestamp) : timestamp{timestamp} {}
+  explicit BagData(const rcutils_time_point_value_t timestamp) : timestamp{timestamp} {}
 
-  Buffer<TFMessage> buf_tf;
-  Buffer<Odometry> buf_odometry;
-  Buffer<PredictedObjects> buf_objects;
-  Buffer<AccelWithCovarianceStamped> buf_accel;
-  Buffer<SteeringReport> buf_steer;
-  Buffer<Trajectory> buf_trajectory;
+  std::map<std::string, std::shared_ptr<BufferBase>> buffers{};
 
   rcutils_time_point_value_t timestamp;
 
@@ -137,25 +135,22 @@ struct TrimmedData
 
   void remove_old_data()
   {
-    buf_tf.remove_old_data(timestamp);
-    buf_odometry.remove_old_data(timestamp);
-    buf_objects.remove_old_data(timestamp);
-    buf_accel.remove_old_data(timestamp);
-    buf_steer.remove_old_data(timestamp);
-    buf_trajectory.remove_old_data(timestamp);
+    std::for_each(buffers.begin(), buffers.end(), [this](const auto & buffer) {
+      buffer.second->remove_old_data(timestamp);
+    });
   }
 
-  bool is_ready() const
+  bool ready() const
   {
-    return buf_tf.is_ready() && buf_objects.is_ready() && buf_odometry.is_ready() &&
-           buf_accel.is_ready() && buf_steer.is_ready() && buf_trajectory.is_ready();
+    return std::all_of(
+      buffers.begin(), buffers.end(), [](const auto & buffer) { return buffer.second->ready(); });
   }
 };
 
 struct CommonData
 {
   CommonData(
-    const std::shared_ptr<TrimmedData> & trimmed_data,
+    const std::shared_ptr<BagData> & trimmed_data,
     const vehicle_info_utils::VehicleInfo & vehicle_info, const size_t resample_num,
     const double time_resolution, const std::string & tag);
 
@@ -196,7 +191,7 @@ struct CommonData
 struct ManualDrivingData : CommonData
 {
   ManualDrivingData(
-    const std::shared_ptr<TrimmedData> & trimmed_data,
+    const std::shared_ptr<BagData> & trimmed_data,
     const vehicle_info_utils::VehicleInfo & vehicle_info, const size_t resample_num,
     const double time_resolution);
 
@@ -218,7 +213,7 @@ struct ManualDrivingData : CommonData
 struct TrajectoryData : CommonData
 {
   TrajectoryData(
-    const std::shared_ptr<TrimmedData> & trimmed_data,
+    const std::shared_ptr<BagData> & trimmed_data,
     const vehicle_info_utils::VehicleInfo & vehicle_info, const size_t resample_num,
     const double time_resolution, const std::string & tag,
     const std::vector<TrajectoryPoint> & points);
@@ -256,7 +251,7 @@ struct Parameters
 struct SamplingTrajectoryData
 {
   SamplingTrajectoryData(
-    const std::shared_ptr<TrimmedData> & trimmed_data,
+    const std::shared_ptr<BagData> & trimmed_data,
     const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters);
 
@@ -276,7 +271,7 @@ struct SamplingTrajectoryData
 struct DataSet
 {
   DataSet(
-    const std::shared_ptr<TrimmedData> & trimmed_data,
+    const std::shared_ptr<BagData> & trimmed_data,
     const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters)
   : manual{ManualDrivingData(

@@ -46,9 +46,9 @@ private:
 
   void rewind(const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res);
 
-  void update(std::shared_ptr<TrimmedData> & trimmed_data) const;
+  void update(std::shared_ptr<BagData> & trimmed_data) const;
 
-  void process(const std::shared_ptr<TrimmedData> & trimmed_data) const;
+  void process(const std::shared_ptr<BagData> & trimmed_data) const;
 
   void metrics(const std::shared_ptr<DataSet> & data_set) const;
 
@@ -71,9 +71,16 @@ private:
 
   vehicle_info_utils::VehicleInfo vehicle_info_;
 
-  std::shared_ptr<TrimmedData> trimmed_data_;
+  std::shared_ptr<BagData> bag_data_;
 
   std::shared_ptr<Parameters> parameters_;
+
+  const std::string tf_topic_name_ = "/tf";
+  const std::string odometry_topic_name_ = "/localization/kinematic_state";
+  const std::string acceleration_topic_name_ = "/localization/acceleration";
+  const std::string objects_topic_name_ = "/perception/object_recognition/objects";
+  const std::string trajectory_topic_name_ = "/planning/scenario_planning/trajectory";
+  const std::string steering_topic_name_ = "/vehicle/status/steering_status";
 
   mutable rosbag2_cpp::Reader reader_;
 
