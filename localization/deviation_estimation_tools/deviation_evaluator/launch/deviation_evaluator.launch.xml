@@ -51,7 +51,7 @@
   </group>
 
   <group>
-    <include file="$(find-pkg-share imu_corrector)/launch/imu_corrector.launch.xml">
+    <include file="$(find-pkg-share autoware_imu_corrector)/launch/imu_corrector.launch.xml">
       <arg name="input_topic" value="$(var in_imu)"/>
       <arg name="output_topic" value="$(var out_imu)"/>
       <arg name="param_file" value="$(var imu_corrector_param_path)"/>
