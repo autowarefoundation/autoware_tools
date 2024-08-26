@@ -85,8 +85,6 @@ private:
   const std::string steering_topic_name_ = "/vehicle/status/steering_status";
 
   mutable rosbag2_cpp::Reader reader_;
-
-  bool is_ready_{false};
 };
 }  // namespace autoware::behavior_analyzer
 

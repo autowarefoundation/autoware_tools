@@ -142,9 +142,10 @@ auto convertToFrenetPoint(const T & points, const Point & search_point_geom, con
 }
 
 auto prepareSamplingParameters(
-  const autoware::sampler_common::State & initial_state, const double base_length,
-  const autoware::sampler_common::transform::Spline2D & path_spline, const double trajectory_length,
-  const TargetStateParameters & parameters) -> autoware::frenet_planner::SamplingParameters
+  const autoware::sampler_common::Configuration & initial_state, const double base_length,
+  const autoware::sampler_common::transform::Spline2D & path_spline,
+  [[maybe_unused]] const double trajectory_length, const TargetStateParameters & parameters)
+  -> autoware::frenet_planner::SamplingParameters
 {
   autoware::frenet_planner::SamplingParameters sampling_parameters;
 
@@ -153,23 +154,22 @@ auto prepareSamplingParameters(
   const auto max_s = path_spline.lastS();
   autoware::frenet_planner::SamplingParameter p;
   p.target_duration = 10.0;
-  for (const auto lon_position : parameters.lon_positions) {
+  for (const auto lon_acceleration : parameters.lon_accelerations) {
+    p.target_state.longitudinal_acceleration = lon_acceleration;
+    p.target_state.longitudinal_velocity =
+      initial_state.velocity + lon_acceleration * p.target_duration;
     p.target_state.position.s = std::min(
       max_s, path_spline.frenet(initial_state.pose).s +
-               std::max(0.0, lon_position * trajectory_length - base_length));
-    for (const auto lon_velocity : parameters.lon_velocities) {
-      p.target_state.longitudinal_velocity = lon_velocity;
-      for (const auto lon_acceleration : parameters.lon_accelerations) {
-        p.target_state.longitudinal_acceleration = lon_acceleration;
-        for (const auto lat_position : parameters.lat_positions) {
-          p.target_state.position.d = lat_position;
-          for (const auto lat_velocity : parameters.lat_velocities) {
-            p.target_state.lateral_velocity = lat_velocity;
-            for (const auto lat_acceleration : parameters.lat_accelerations) {
-              p.target_state.lateral_acceleration = lat_acceleration;
-              sampling_parameters.parameters.push_back(p);
-            }
-          }
+               std::max(
+                 0.0, initial_state.velocity * p.target_duration +
+                        0.5 * lon_acceleration * std::pow(p.target_duration, 2.0) - base_length));
+    for (const auto lat_position : parameters.lat_positions) {
+      p.target_state.position.d = lat_position;
+      for (const auto lat_velocity : parameters.lat_velocities) {
+        p.target_state.lateral_velocity = lat_velocity;
+        for (const auto lat_acceleration : parameters.lat_accelerations) {
+          p.target_state.lateral_acceleration = lat_acceleration;
+          sampling_parameters.parameters.push_back(p);
         }
       }
     }
@@ -214,9 +214,10 @@ auto sampling(
   const auto reference_trajectory =
     autoware::path_sampler::preparePathSpline(trajectory.points, true);
 
-  autoware::sampler_common::State current_state;
+  autoware::sampler_common::Configuration current_state;
   current_state.pose = {p_ego.position.x, p_ego.position.y};
   current_state.heading = tf2::getYaw(p_ego.orientation);
+  current_state.velocity = v_ego;
 
   current_state.frenet = reference_trajectory.frenet(current_state.pose);
   // current_state.pose = reference_trajectory.cartesian(current_state.frenet.s);

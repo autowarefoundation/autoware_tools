@@ -31,6 +31,8 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   timer_ = rclcpp::create_timer(
     this, get_clock(), 100ms, std::bind(&BehaviorAnalyzerNode::on_timer, this));
 
+  timer_->cancel();
+
   vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
 
   pub_marker_ = create_publisher<MarkerArray>("~/marker", 1);
@@ -164,10 +166,11 @@ void BehaviorAnalyzerNode::update(std::shared_ptr<BagData> & bag_data) const
 void BehaviorAnalyzerNode::play(
   const SetBool::Request::SharedPtr req, SetBool::Response::SharedPtr res)
 {
-  is_ready_ = req->data;
-  if (is_ready_) {
+  if (req->data) {
+    timer_->reset();
     RCLCPP_INFO(get_logger(), "start evaluation.");
   } else {
+    timer_->cancel();
     RCLCPP_INFO(get_logger(), "stop evaluation.");
   }
   res->success = true;
@@ -380,10 +383,6 @@ void BehaviorAnalyzerNode::print(const std::shared_ptr<DataSet> & data_set) cons
 
 void BehaviorAnalyzerNode::on_timer()
 {
-  if (!is_ready_) {
-    return;
-  }
-
   update(bag_data_);
 
   process(bag_data_);
