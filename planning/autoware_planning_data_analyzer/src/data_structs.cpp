@@ -369,7 +369,7 @@ double TrajectoryData::travel_distance(const size_t idx) const
 
 bool TrajectoryData::feasible() const
 {
-  const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps > 0.0; };
+  const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps > -1e-3; };
   return std::all_of(points.begin(), points.end(), condition);
 }
 
@@ -411,6 +411,14 @@ SamplingTrajectoryData::SamplingTrajectoryData(
       bag_data, vehicle_info, parameters->resample_num, parameters->time_resolution, "frenet",
       sample);
   }
+
+  std::vector<TrajectoryPoint> stop_points(parameters->resample_num);
+  for (auto & stop_point : stop_points) {
+    stop_point.pose = opt_odometry.value().pose.pose;
+  }
+  data.emplace_back(
+    bag_data, vehicle_info, parameters->resample_num, parameters->time_resolution, "stop",
+    stop_points);
 
   std::sort(
     data.begin(), data.end(), [](const auto & a, const auto & b) { return a.total() > b.total(); });

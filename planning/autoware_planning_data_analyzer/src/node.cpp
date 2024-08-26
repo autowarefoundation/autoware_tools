@@ -215,6 +215,8 @@ void BehaviorAnalyzerNode::process(const std::shared_ptr<BagData> & bag_data) co
   score(data_set);
 
   visualize(data_set);
+
+  print(data_set);
 }
 
 void BehaviorAnalyzerNode::metrics(const std::shared_ptr<DataSet> & data_set) const
@@ -239,7 +241,8 @@ void BehaviorAnalyzerNode::metrics(const std::shared_ptr<DataSet> & data_set) co
     pub_manual_metrics_->publish(msg);
   }
 
-  {
+  const auto autoware_trajectory = data_set->sampling.autoware();
+  if (autoware_trajectory.has_value()) {
     Float32MultiArrayStamped msg{};
 
     msg.stamp = now();
@@ -251,10 +254,10 @@ void BehaviorAnalyzerNode::metrics(const std::shared_ptr<DataSet> & data_set) co
       std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
     };
 
-    set_metrics(data_set->sampling.autoware(), METRIC::LATERAL_ACCEL);
-    set_metrics(data_set->sampling.autoware(), METRIC::LONGITUDINAL_JERK);
-    set_metrics(data_set->sampling.autoware(), METRIC::TRAVEL_DISTANCE);
-    set_metrics(data_set->sampling.autoware(), METRIC::MINIMUM_TTC);
+    set_metrics(autoware_trajectory.value(), METRIC::LATERAL_ACCEL);
+    set_metrics(autoware_trajectory.value(), METRIC::LONGITUDINAL_JERK);
+    set_metrics(autoware_trajectory.value(), METRIC::TRAVEL_DISTANCE);
+    set_metrics(autoware_trajectory.value(), METRIC::MINIMUM_TTC);
 
     pub_system_metrics_->publish(msg);
   }
@@ -280,7 +283,8 @@ void BehaviorAnalyzerNode::score(const std::shared_ptr<DataSet> & data_set) cons
     pub_manual_score_->publish(msg);
   }
 
-  {
+  const auto autoware_trajectory = data_set->sampling.autoware();
+  if (autoware_trajectory.has_value()) {
     Float32MultiArrayStamped msg{};
 
     msg.stamp = now();
@@ -290,10 +294,10 @@ void BehaviorAnalyzerNode::score(const std::shared_ptr<DataSet> & data_set) cons
       msg.data.at(static_cast<size_t>(score_type)) = static_cast<float>(data.scores.at(score_type));
     };
 
-    set_reward(data_set->sampling.autoware(), SCORE::LONGITUDINAL_COMFORTABILITY);
-    set_reward(data_set->sampling.autoware(), SCORE::LATERAL_COMFORTABILITY);
-    set_reward(data_set->sampling.autoware(), SCORE::EFFICIENCY);
-    set_reward(data_set->sampling.autoware(), SCORE::SAFETY);
+    set_reward(autoware_trajectory.value(), SCORE::LONGITUDINAL_COMFORTABILITY);
+    set_reward(autoware_trajectory.value(), SCORE::LATERAL_COMFORTABILITY);
+    set_reward(autoware_trajectory.value(), SCORE::EFFICIENCY);
+    set_reward(autoware_trajectory.value(), SCORE::SAFETY);
 
     pub_system_score_->publish(msg);
   }
@@ -309,14 +313,6 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "manual", i++, Marker::ARROW,
       createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 0.0, 0.0, 0.999));
     marker.pose = point.pose.pose;
-    msg.markers.push_back(marker);
-  }
-
-  for (const auto & point : data_set->sampling.autoware().points) {
-    Marker marker = createDefaultMarker(
-      "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "system", i++, Marker::ARROW,
-      createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 1.0, 0.0, 0.999));
-    marker.pose = point.pose;
     msg.markers.push_back(marker);
   }
 
@@ -338,17 +334,48 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
     msg.markers.push_back(marker);
   }
 
-  {
+  const auto best_trajectory = data_set->sampling.best();
+  if (best_trajectory.has_value()) {
     Marker marker = createDefaultMarker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "best", i++, Marker::LINE_STRIP,
       createMarkerScale(0.2, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
-    for (const auto & point : data_set->sampling.best().points) {
+    for (const auto & point : best_trajectory.value().points) {
       marker.points.push_back(point.pose.position);
     }
     msg.markers.push_back(marker);
   }
 
+  const auto autoware_trajectory = data_set->sampling.autoware();
+  if (autoware_trajectory.has_value()) {
+    for (const auto & point : autoware_trajectory.value().points) {
+      Marker marker = createDefaultMarker(
+        "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "system", i++, Marker::ARROW,
+        createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 1.0, 0.0, 0.999));
+      marker.pose = point.pose;
+      msg.markers.push_back(marker);
+    }
+  }
+
   pub_marker_->publish(msg);
+}
+
+void BehaviorAnalyzerNode::print(const std::shared_ptr<DataSet> & data_set) const
+{
+  const auto autoware_trajectory = data_set->sampling.autoware();
+  if (!autoware_trajectory.has_value()) {
+    return;
+  }
+
+  const auto best_trajectory = data_set->sampling.best();
+  if (!best_trajectory.has_value()) {
+    return;
+  }
+
+  std::cout << "---result---" << std::endl;
+  std::cout << "[HUMAN] SCORE:" << data_set->manual.total() << std::endl;
+  std::cout << "[AUTOWARE] SCORE:" << autoware_trajectory.value().total() << std::endl;
+  std::cout << "[SAMPLING] BEST SCORE:" << best_trajectory.value().total() << "("
+            << best_trajectory.value().tag << ")" << std::endl;
 }
 
 void BehaviorAnalyzerNode::on_timer()

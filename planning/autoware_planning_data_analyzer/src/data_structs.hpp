@@ -255,13 +255,18 @@ struct SamplingTrajectoryData
     const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters);
 
-  auto best() const -> TrajectoryData { return data.front(); }
+  auto best() const -> std::optional<TrajectoryData>
+  {
+    if (data.empty()) return std::nullopt;
+    return data.front();
+  }
 
-  auto autoware() const -> TrajectoryData
+  auto autoware() const -> std::optional<TrajectoryData>
   {
     const auto itr = std::find_if(data.begin(), data.end(), [](const auto & trajectory) {
       return trajectory.tag == "autoware";
     });
+    if (itr == data.end()) return std::nullopt;
     return *itr;
   }
 
