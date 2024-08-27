@@ -75,6 +75,7 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   parameters_->w_lon_comfortability = declare_parameter<double>("weight.lon_comfortability");
   parameters_->w_efficiency = declare_parameter<double>("weight.efficiency");
   parameters_->w_safety = declare_parameter<double>("weight.safety");
+  parameters_->dt = declare_parameter<double>("grid_seach.dt");
   parameters_->grid = declare_parameter<std::vector<double>>("grid_seach.grid");
   parameters_->target_state.lat_positions =
     declare_parameter<std::vector<double>>("target_state.lateral_positions");
@@ -90,7 +91,7 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
     declare_parameter<std::vector<double>>("target_state.longitudinal_accelerations");
 }
 
-void BehaviorAnalyzerNode::update(const std::shared_ptr<BagData> & bag_data) const
+void BehaviorAnalyzerNode::update(const std::shared_ptr<BagData> & bag_data, const double dt) const
 {
   rosbag2_storage::StorageFilter filter;
   filter.topics.emplace_back(TOPIC::TF);
@@ -101,7 +102,7 @@ void BehaviorAnalyzerNode::update(const std::shared_ptr<BagData> & bag_data) con
   filter.topics.emplace_back(TOPIC::TRAJECTORY);
   reader_.set_filter(filter);
 
-  bag_data->update(0.1 * 1e9);
+  bag_data->update(dt * 1e9);
 
   while (reader_.has_next()) {
     const auto next_data = reader_.read_next();
@@ -244,7 +245,7 @@ double BehaviorAnalyzerNode::search(
 
   double mse = 0.0;
   while (reader_.has_next()) {
-    update(bag_data);
+    update(bag_data, parameters_->dt);
 
     const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, p_tmp);
     const auto mean_square_error = data_set->loss();
@@ -451,7 +452,7 @@ void BehaviorAnalyzerNode::print(const std::shared_ptr<DataSet> & data_set) cons
 void BehaviorAnalyzerNode::on_timer()
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  update(bag_data_);
+  update(bag_data_, 0.1);
   analyze(bag_data_);
 }
 }  // namespace autoware::behavior_analyzer

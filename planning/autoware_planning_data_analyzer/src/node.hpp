@@ -49,7 +49,7 @@ private:
 
   void weight(const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res);
 
-  void update(const std::shared_ptr<BagData> & bag_data) const;
+  void update(const std::shared_ptr<BagData> & bag_data, const double dt) const;
 
   void analyze(const std::shared_ptr<BagData> & bag_data) const;
 

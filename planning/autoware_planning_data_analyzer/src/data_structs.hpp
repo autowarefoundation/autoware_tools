@@ -82,6 +82,7 @@ struct Parameters
   double w_lon_comfortability{1.0};
   double w_efficiency{1.0};
   double w_safety{1.0};
+  double dt{1.0};
   std::vector<double> grid{};
   TargetStateParameters target_state{};
 };
