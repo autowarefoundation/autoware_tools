@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -46,9 +47,11 @@ private:
 
   void rewind(const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res);
 
-  void update(std::shared_ptr<BagData> & trimmed_data) const;
+  void weight(const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res);
 
-  void process(const std::shared_ptr<BagData> & trimmed_data) const;
+  void update(const std::shared_ptr<BagData> & bag_data) const;
+
+  void analyze(const std::shared_ptr<BagData> & bag_data) const;
 
   void metrics(const std::shared_ptr<DataSet> & data_set) const;
 
@@ -57,6 +60,8 @@ private:
   void visualize(const std::shared_ptr<DataSet> & data_set) const;
 
   void print(const std::shared_ptr<DataSet> & data_set) const;
+
+  double search(const double w0, const double w1, const double w2, const double w3) const;
 
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_marker_;
@@ -70,6 +75,7 @@ private:
   rclcpp::Publisher<Float32MultiArrayStamped>::SharedPtr pub_system_score_;
   rclcpp::Service<SetBool>::SharedPtr srv_play_;
   rclcpp::Service<Trigger>::SharedPtr srv_rewind_;
+  rclcpp::Service<Trigger>::SharedPtr srv_weight_;
 
   vehicle_info_utils::VehicleInfo vehicle_info_;
 
@@ -77,12 +83,7 @@ private:
 
   std::shared_ptr<Parameters> parameters_;
 
-  const std::string tf_topic_name_ = "/tf";
-  const std::string odometry_topic_name_ = "/localization/kinematic_state";
-  const std::string acceleration_topic_name_ = "/localization/acceleration";
-  const std::string objects_topic_name_ = "/perception/object_recognition/objects";
-  const std::string trajectory_topic_name_ = "/planning/scenario_planning/trajectory";
-  const std::string steering_topic_name_ = "/vehicle/status/steering_status";
+  mutable std::mutex mutex_;
 
   mutable rosbag2_cpp::Reader reader_;
 };

@@ -27,6 +27,13 @@
 namespace autoware::behavior_analyzer
 {
 
+std::string TOPIC::TF = "/tf";                                             // NOLINT
+std::string TOPIC::ODOMETRY = "/localization/kinematic_state";             // NOLINT
+std::string TOPIC::ACCELERATION = "/localization/acceleration";            // NOLINT
+std::string TOPIC::OBJECTS = "/perception/object_recognition/objects";     // NOLINT
+std::string TOPIC::TRAJECTORY = "/planning/scenario_planning/trajectory";  // NOLINT
+std::string TOPIC::STEERING = "/vehicle/status/steering_status";           // NOLINT
+
 template <>
 bool Buffer<SteeringReport>::ready() const
 {
@@ -116,16 +123,16 @@ auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> std::
 
 CommonData::CommonData(
   const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
-  const size_t resample_num, const double time_resolution, const std::string & tag)
-: vehicle_info{vehicle_info}, resample_num(resample_num), tag{tag}
+  const std::shared_ptr<Parameters> & parameters, const std::string & tag)
+: vehicle_info{vehicle_info}, parameters{parameters}, tag{tag}
 {
-  objects_history.reserve(resample_num);
+  objects_history.reserve(parameters->resample_num);
 
   const auto objects_buffer_ptr = std::dynamic_pointer_cast<Buffer<PredictedObjects>>(
     bag_data->buffers.at("/perception/object_recognition/objects"));
-  for (size_t i = 0; i < resample_num; i++) {
+  for (size_t i = 0; i < parameters->resample_num; i++) {
     const auto opt_objects =
-      objects_buffer_ptr->get(bag_data->timestamp + 1e9 * time_resolution * i);
+      objects_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->time_resolution * i);
     if (!opt_objects.has_value()) {
       break;
     }
@@ -140,7 +147,7 @@ void CommonData::calculate()
   std::vector<double> longitudinal_jerk_values;
   std::vector<double> travel_distance_values;
 
-  for (size_t i = 0; i < resample_num - 1; i++) {
+  for (size_t i = 0; i < parameters->resample_num - 1; i++) {
     lateral_accel_values.push_back(lateral_accel(i));
     longitudinal_jerk_values.push_back(longitudinal_jerk(i));
     minimum_ttc_values.push_back(minimum_ttc(i));
@@ -148,10 +155,10 @@ void CommonData::calculate()
   }
 
   {
-    lateral_accel_values.push_back(lateral_accel(resample_num - 1));
+    lateral_accel_values.push_back(lateral_accel(parameters->resample_num - 1));
     longitudinal_jerk_values.push_back(0.0);
-    minimum_ttc_values.push_back(minimum_ttc(resample_num - 1));
-    travel_distance_values.push_back(travel_distance(resample_num - 1));
+    minimum_ttc_values.push_back(minimum_ttc(parameters->resample_num - 1));
+    travel_distance_values.push_back(travel_distance(parameters->resample_num - 1));
   }
 
   values.emplace(METRIC::LATERAL_ACCEL, lateral_accel_values);
@@ -177,12 +184,12 @@ double CommonData::longitudinal_comfortability() const
     return (max - std::clamp(value, min, max)) / (max - min);
   };
 
-  for (size_t i = 0; i < resample_num; i++) {
+  for (size_t i = 0; i < parameters->resample_num; i++) {
     score +=
       normalize(std::pow(TIME_FACTOR, i) * std::abs(values.at(METRIC::LONGITUDINAL_JERK).at(i)));
   }
 
-  return score / resample_num;
+  return score / parameters->resample_num;
 }
 
 double CommonData::lateral_comfortability() const
@@ -197,11 +204,11 @@ double CommonData::lateral_comfortability() const
     return (max - std::clamp(value, min, max)) / (max - min);
   };
 
-  for (size_t i = 0; i < resample_num; i++) {
+  for (size_t i = 0; i < parameters->resample_num; i++) {
     score += normalize(std::pow(TIME_FACTOR, i) * std::abs(values.at(METRIC::LATERAL_ACCEL).at(i)));
   }
 
-  return score / resample_num;
+  return score / parameters->resample_num;
 }
 
 double CommonData::efficiency() const
@@ -216,11 +223,11 @@ double CommonData::efficiency() const
     return std::clamp(value, min, max) / (max - min);
   };
 
-  for (size_t i = 0; i < resample_num; i++) {
+  for (size_t i = 0; i < parameters->resample_num; i++) {
     score += normalize(std::pow(TIME_FACTOR, i) * values.at(METRIC::TRAVEL_DISTANCE).at(i) / 0.5);
   }
 
-  return score / resample_num;
+  return score / parameters->resample_num;
 }
 
 double CommonData::safety() const
@@ -235,32 +242,29 @@ double CommonData::safety() const
     return std::clamp(value, min, max) / (max - min);
   };
 
-  for (size_t i = 0; i < resample_num; i++) {
+  for (size_t i = 0; i < parameters->resample_num; i++) {
     score += normalize(std::pow(TIME_FACTOR, i) * values.at(METRIC::MINIMUM_TTC).at(i));
   }
 
-  return score / resample_num;
+  return score / parameters->resample_num;
 }
 
 double CommonData::total() const
 {
-  constexpr double w0 = 1.0;
-  constexpr double w1 = 1.0;
-  constexpr double w2 = 1.0;
-  constexpr double w3 = 1.0;
-  return w0 * scores.at(SCORE::LATERAL_COMFORTABILITY) +
-         w1 * scores.at(SCORE::LONGITUDINAL_COMFORTABILITY) + w2 * scores.at(SCORE::EFFICIENCY) +
-         w3 * scores.at(SCORE::SAFETY);
+  return parameters->w_lat_comfortability * scores.at(SCORE::LATERAL_COMFORTABILITY) +
+         parameters->w_lon_comfortability * scores.at(SCORE::LONGITUDINAL_COMFORTABILITY) +
+         parameters->w_efficiency * scores.at(SCORE::EFFICIENCY) +
+         parameters->w_safety * scores.at(SCORE::SAFETY);
 }
 
 ManualDrivingData::ManualDrivingData(
   const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
-  const size_t resample_num, const double time_resolution)
-: CommonData(bag_data, vehicle_info, resample_num, time_resolution, "manual")
+  const std::shared_ptr<Parameters> & parameters)
+: CommonData(bag_data, vehicle_info, parameters, "manual")
 {
-  odometry_history.reserve(resample_num);
-  accel_history.reserve(resample_num);
-  steer_history.reserve(resample_num);
+  odometry_history.reserve(parameters->resample_num);
+  accel_history.reserve(parameters->resample_num);
+  steer_history.reserve(parameters->resample_num);
 
   const auto odometry_buffer_ptr = std::dynamic_pointer_cast<Buffer<Odometry>>(
     bag_data->buffers.at("/localization/kinematic_state"));
@@ -270,23 +274,23 @@ ManualDrivingData::ManualDrivingData(
   const auto steering_buffer_ptr = std::dynamic_pointer_cast<Buffer<SteeringReport>>(
     bag_data->buffers.at("/vehicle/status/steering_status"));
 
-  for (size_t i = 0; i < resample_num; i++) {
+  for (size_t i = 0; i < parameters->resample_num; i++) {
     const auto opt_odometry =
-      odometry_buffer_ptr->get(bag_data->timestamp + 1e9 * time_resolution * i);
+      odometry_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->time_resolution * i);
     if (!opt_odometry.has_value()) {
       break;
     }
     odometry_history.push_back(opt_odometry.value());
 
     const auto opt_accel =
-      acceleration_buffer_ptr->get(bag_data->timestamp + 1e9 * time_resolution * i);
+      acceleration_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->time_resolution * i);
     if (!opt_accel.has_value()) {
       break;
     }
     accel_history.push_back(opt_accel.value());
 
     const auto opt_steer =
-      steering_buffer_ptr->get(bag_data->timestamp + 1e9 * time_resolution * i);
+      steering_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->time_resolution * i);
     if (!opt_steer.has_value()) {
       break;
     }
@@ -335,9 +339,9 @@ double ManualDrivingData::travel_distance(const size_t idx) const
 
 TrajectoryData::TrajectoryData(
   const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
-  const size_t resample_num, const double time_resolution, const std::string & tag,
+  const std::shared_ptr<Parameters> & parameters, const std::string & tag,
   const std::vector<TrajectoryPoint> & points)
-: CommonData(bag_data, vehicle_info, resample_num, time_resolution, tag), points{points}
+: CommonData(bag_data, vehicle_info, parameters, tag), points{points}
 {
   calculate();
 }
@@ -398,7 +402,7 @@ SamplingTrajectoryData::SamplingTrajectoryData(
     throw std::logic_error("data is not enough.");
   }
   data.emplace_back(
-    bag_data, vehicle_info, parameters->resample_num, parameters->time_resolution, "autoware",
+    bag_data, vehicle_info, parameters, "autoware",
     utils::resampling(
       opt_trajectory.value(), opt_odometry.value().pose.pose, parameters->resample_num,
       parameters->time_resolution));
@@ -407,18 +411,14 @@ SamplingTrajectoryData::SamplingTrajectoryData(
          opt_trajectory.value(), opt_odometry.value().pose.pose,
          opt_odometry.value().twist.twist.linear.x, opt_accel.value().accel.accel.linear.x,
          vehicle_info, parameters)) {
-    data.emplace_back(
-      bag_data, vehicle_info, parameters->resample_num, parameters->time_resolution, "frenet",
-      sample);
+    data.emplace_back(bag_data, vehicle_info, parameters, "frenet", sample);
   }
 
   std::vector<TrajectoryPoint> stop_points(parameters->resample_num);
   for (auto & stop_point : stop_points) {
     stop_point.pose = opt_odometry.value().pose.pose;
   }
-  data.emplace_back(
-    bag_data, vehicle_info, parameters->resample_num, parameters->time_resolution, "stop",
-    stop_points);
+  data.emplace_back(bag_data, vehicle_info, parameters, "stop", stop_points);
 
   std::sort(
     data.begin(), data.end(), [](const auto & a, const auto & b) { return a.total() > b.total(); });

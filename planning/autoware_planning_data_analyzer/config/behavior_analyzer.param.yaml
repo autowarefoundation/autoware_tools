@@ -10,3 +10,12 @@
       longitudinal_positions: [0.0]
       longitudinal_velocities: [0.0]
       longitudinal_accelerations: [-0.2, -0.1, 0.0, 0.1, 0.2]
+
+    weight:
+      lat_comfortability: 1.0
+      lon_comfortability: 1.0
+      efficiency: 1.0
+      safety: 1.0
+
+    grid_seach:
+      grid: [0.01, 0.1, 0.3, 0.5, 0.8, 1.0]

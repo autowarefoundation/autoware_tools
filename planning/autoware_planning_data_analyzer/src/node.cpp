@@ -36,10 +36,10 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
 
   pub_marker_ = create_publisher<MarkerArray>("~/marker", 1);
-  pub_odometry_ = create_publisher<Odometry>(odometry_topic_name_, rclcpp::QoS(1));
-  pub_objects_ = create_publisher<PredictedObjects>(objects_topic_name_, rclcpp::QoS(1));
-  pub_trajectory_ = create_publisher<Trajectory>(trajectory_topic_name_, rclcpp::QoS(1));
-  pub_tf_ = create_publisher<TFMessage>(tf_topic_name_, rclcpp::QoS(1));
+  pub_odometry_ = create_publisher<Odometry>(TOPIC::ODOMETRY, rclcpp::QoS(1));
+  pub_objects_ = create_publisher<PredictedObjects>(TOPIC::OBJECTS, rclcpp::QoS(1));
+  pub_trajectory_ = create_publisher<Trajectory>(TOPIC::TRAJECTORY, rclcpp::QoS(1));
+  pub_tf_ = create_publisher<TFMessage>(TOPIC::TF, rclcpp::QoS(1));
 
   pub_manual_metrics_ =
     create_publisher<Float32MultiArrayStamped>("~/manual_metrics", rclcpp::QoS{1});
@@ -58,21 +58,24 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
     std::bind(&BehaviorAnalyzerNode::rewind, this, std::placeholders::_1, std::placeholders::_2),
     rclcpp::ServicesQoS().get_rmw_qos_profile());
 
+  srv_weight_ = this->create_service<Trigger>(
+    "weight_grid_search",
+    std::bind(&BehaviorAnalyzerNode::weight, this, std::placeholders::_1, std::placeholders::_2),
+    rclcpp::ServicesQoS().get_rmw_qos_profile());
+
   reader_.open(declare_parameter<std::string>("bag_path"));
 
   bag_data_ = std::make_shared<BagData>(
     duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
-  bag_data_->buffers.emplace(tf_topic_name_, std::make_shared<Buffer<TFMessage>>());
-  bag_data_->buffers.emplace(odometry_topic_name_, std::make_shared<Buffer<Odometry>>());
-  bag_data_->buffers.emplace(
-    acceleration_topic_name_, std::make_shared<Buffer<AccelWithCovarianceStamped>>());
-  bag_data_->buffers.emplace(trajectory_topic_name_, std::make_shared<Buffer<Trajectory>>());
-  bag_data_->buffers.emplace(objects_topic_name_, std::make_shared<Buffer<PredictedObjects>>());
-  bag_data_->buffers.emplace(steering_topic_name_, std::make_shared<Buffer<SteeringReport>>());
 
   parameters_ = std::make_shared<Parameters>();
   parameters_->resample_num = declare_parameter<int>("resample_num");
   parameters_->time_resolution = declare_parameter<double>("time_resolution");
+  parameters_->w_lat_comfortability = declare_parameter<double>("weight.lat_comfortability");
+  parameters_->w_lon_comfortability = declare_parameter<double>("weight.lon_comfortability");
+  parameters_->w_efficiency = declare_parameter<double>("weight.efficiency");
+  parameters_->w_safety = declare_parameter<double>("weight.safety");
+  parameters_->grid = declare_parameter<std::vector<double>>("grid_seach.grid");
   parameters_->target_state.lat_positions =
     declare_parameter<std::vector<double>>("target_state.lateral_positions");
   parameters_->target_state.lat_velocities =
@@ -87,20 +90,16 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
     declare_parameter<std::vector<double>>("target_state.longitudinal_accelerations");
 }
 
-void BehaviorAnalyzerNode::update(std::shared_ptr<BagData> & bag_data) const
+void BehaviorAnalyzerNode::update(const std::shared_ptr<BagData> & bag_data) const
 {
   rosbag2_storage::StorageFilter filter;
-  filter.topics.emplace_back(tf_topic_name_);
-  filter.topics.emplace_back(odometry_topic_name_);
-  filter.topics.emplace_back(acceleration_topic_name_);
-  filter.topics.emplace_back(objects_topic_name_);
-  filter.topics.emplace_back(steering_topic_name_);
-  filter.topics.emplace_back(trajectory_topic_name_);
+  filter.topics.emplace_back(TOPIC::TF);
+  filter.topics.emplace_back(TOPIC::ODOMETRY);
+  filter.topics.emplace_back(TOPIC::ACCELERATION);
+  filter.topics.emplace_back(TOPIC::OBJECTS);
+  filter.topics.emplace_back(TOPIC::STEERING);
+  filter.topics.emplace_back(TOPIC::TRAJECTORY);
   reader_.set_filter(filter);
-
-  if (!reader_.has_next()) {
-    return;
-  }
 
   bag_data->update(0.1 * 1e9);
 
@@ -112,52 +111,52 @@ void BehaviorAnalyzerNode::update(std::shared_ptr<BagData> & bag_data) const
       break;
     }
 
-    if (next_data->topic_name == tf_topic_name_) {
+    if (next_data->topic_name == TOPIC::TF) {
       rclcpp::Serialization<TFMessage> serializer;
       const auto deserialized_message = std::make_shared<TFMessage>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(tf_topic_name_))
+      std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(TOPIC::TF))
         ->append(*deserialized_message);
     }
 
-    if (next_data->topic_name == odometry_topic_name_) {
+    if (next_data->topic_name == TOPIC::ODOMETRY) {
       rclcpp::Serialization<Odometry> serializer;
       const auto deserialized_message = std::make_shared<Odometry>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(odometry_topic_name_))
+      std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY))
         ->append(*deserialized_message);
     }
 
-    if (next_data->topic_name == acceleration_topic_name_) {
+    if (next_data->topic_name == TOPIC::ACCELERATION) {
       rclcpp::Serialization<AccelWithCovarianceStamped> serializer;
       const auto deserialized_message = std::make_shared<AccelWithCovarianceStamped>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
       std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
-        bag_data->buffers.at(acceleration_topic_name_))
+        bag_data->buffers.at(TOPIC::ACCELERATION))
         ->append(*deserialized_message);
     }
 
-    if (next_data->topic_name == objects_topic_name_) {
+    if (next_data->topic_name == TOPIC::OBJECTS) {
       rclcpp::Serialization<PredictedObjects> serializer;
       const auto deserialized_message = std::make_shared<PredictedObjects>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(objects_topic_name_))
+      std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(TOPIC::OBJECTS))
         ->append(*deserialized_message);
     }
 
-    if (next_data->topic_name == steering_topic_name_) {
+    if (next_data->topic_name == TOPIC::STEERING) {
       rclcpp::Serialization<SteeringReport> serializer;
       const auto deserialized_message = std::make_shared<SteeringReport>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      std::dynamic_pointer_cast<Buffer<SteeringReport>>(bag_data->buffers.at(steering_topic_name_))
+      std::dynamic_pointer_cast<Buffer<SteeringReport>>(bag_data->buffers.at(TOPIC::STEERING))
         ->append(*deserialized_message);
     }
 
-    if (next_data->topic_name == trajectory_topic_name_) {
+    if (next_data->topic_name == TOPIC::TRAJECTORY) {
       rclcpp::Serialization<Trajectory> serializer;
       const auto deserialized_message = std::make_shared<Trajectory>();
       serializer.deserialize_message(&serialized_msg, deserialized_message.get());
-      std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(trajectory_topic_name_))
+      std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(TOPIC::TRAJECTORY))
         ->append(*deserialized_message);
     }
   }
@@ -166,6 +165,7 @@ void BehaviorAnalyzerNode::update(std::shared_ptr<BagData> & bag_data) const
 void BehaviorAnalyzerNode::play(
   const SetBool::Request::SharedPtr req, SetBool::Response::SharedPtr res)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (req->data) {
     timer_->reset();
     RCLCPP_INFO(get_logger(), "start evaluation.");
@@ -179,6 +179,7 @@ void BehaviorAnalyzerNode::play(
 void BehaviorAnalyzerNode::rewind(
   [[maybe_unused]] const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   reader_.seek(0);
 
   bag_data_.reset();
@@ -188,26 +189,92 @@ void BehaviorAnalyzerNode::rewind(
   res->success = true;
 }
 
-void BehaviorAnalyzerNode::process(const std::shared_ptr<BagData> & bag_data) const
+void BehaviorAnalyzerNode::weight(
+  [[maybe_unused]] const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  RCLCPP_INFO(get_logger(), "start weight grid seach.");
+
+  double minimum_mse = std::numeric_limits<double>::max();
+  double best_w0 = 0.0;
+  double best_w1 = 0.0;
+  double best_w2 = 0.0;
+  double best_w3 = 0.0;
+
+  for (const auto & w_lat_comfortability : parameters_->grid) {
+    for (const auto & w_lon_comfortability : parameters_->grid) {
+      for (const auto & w_efficiency : parameters_->grid) {
+        for (const auto & w_safety : parameters_->grid) {
+          const auto mse =
+            search(w_lat_comfortability, w_lon_comfortability, w_efficiency, w_safety);
+          if (mse < minimum_mse) {
+            minimum_mse = mse;
+            best_w0 = w_lat_comfortability;
+            best_w1 = w_lon_comfortability;
+            best_w2 = w_efficiency;
+            best_w3 = w_safety;
+          }
+          std::cout << "---result---" << std::endl;
+          std::cout << "    MSE:" << mse << " [w0]:" << w_lat_comfortability
+                    << " [w1]:" << w_lon_comfortability << " [w2]:" << w_efficiency
+                    << " [w3]:" << w_safety << std::endl;
+          std::cout << "MIN MSE:" << minimum_mse << " [w0]:" << best_w0 << " [w1]:" << best_w1
+                    << " [w2]:" << best_w2 << " [w3]:" << best_w3 << std::endl;
+        }
+      }
+    }
+  }
+  RCLCPP_INFO(get_logger(), "finish weight grid seach.");
+
+  res->success = true;
+}
+
+double BehaviorAnalyzerNode::search(
+  const double w0, const double w1, const double w2, const double w3) const
+{
+  reader_.seek(0);
+  const auto bag_data = std::make_shared<BagData>(
+    duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
+
+  auto p_tmp = parameters_;
+  p_tmp->w_lat_comfortability = w0;
+  p_tmp->w_lon_comfortability = w1;
+  p_tmp->w_efficiency = w2;
+  p_tmp->w_safety = w3;
+
+  double mse = 0.0;
+  while (reader_.has_next()) {
+    update(bag_data);
+
+    const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, p_tmp);
+    const auto mean_square_error = data_set->loss();
+    if (mean_square_error.has_value()) {
+      mse += mean_square_error.value();
+    }
+  }
+
+  return mse;
+}
+
+void BehaviorAnalyzerNode::analyze(const std::shared_ptr<BagData> & bag_data) const
 {
   const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, parameters_);
 
-  const auto opt_tf =
-    std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(tf_topic_name_))
-      ->get(bag_data->timestamp);
+  const auto opt_tf = std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(TOPIC::TF))
+                        ->get(bag_data->timestamp);
   if (opt_tf.has_value()) {
     pub_tf_->publish(opt_tf.value());
   }
 
   const auto opt_objects =
-    std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(objects_topic_name_))
+    std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(TOPIC::OBJECTS))
       ->get(bag_data->timestamp);
   if (opt_objects.has_value()) {
     pub_objects_->publish(opt_objects.value());
   }
 
   const auto opt_trajectory =
-    std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(trajectory_topic_name_))
+    std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(TOPIC::TRAJECTORY))
       ->get(bag_data->timestamp);
   if (opt_trajectory.has_value()) {
     pub_trajectory_->publish(opt_trajectory.value());
@@ -228,10 +295,10 @@ void BehaviorAnalyzerNode::metrics(const std::shared_ptr<DataSet> & data_set) co
     Float32MultiArrayStamped msg{};
 
     msg.stamp = now();
-    msg.data.resize(static_cast<size_t>(METRIC::SIZE) * data_set->manual.resample_num);
+    msg.data.resize(static_cast<size_t>(METRIC::SIZE) * parameters_->resample_num);
 
-    const auto set_metrics = [&msg](const auto & data, const auto metric_type) {
-      const auto offset = static_cast<size_t>(metric_type) * data.resample_num;
+    const auto set_metrics = [&msg, this](const auto & data, const auto metric_type) {
+      const auto offset = static_cast<size_t>(metric_type) * parameters_->resample_num;
       const auto metric = data.values.at(metric_type);
       std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
     };
@@ -249,10 +316,10 @@ void BehaviorAnalyzerNode::metrics(const std::shared_ptr<DataSet> & data_set) co
     Float32MultiArrayStamped msg{};
 
     msg.stamp = now();
-    msg.data.resize(static_cast<size_t>(METRIC::SIZE) * data_set->manual.resample_num);
+    msg.data.resize(static_cast<size_t>(METRIC::SIZE) * parameters_->resample_num);
 
-    const auto set_metrics = [&msg](const auto & data, const auto metric_type) {
-      const auto offset = static_cast<size_t>(metric_type) * data.resample_num;
+    const auto set_metrics = [&msg, this](const auto & data, const auto metric_type) {
+      const auto offset = static_cast<size_t>(metric_type) * parameters_->resample_num;
       const auto metric = data.values.at(metric_type);
       std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
     };
@@ -383,9 +450,9 @@ void BehaviorAnalyzerNode::print(const std::shared_ptr<DataSet> & data_set) cons
 
 void BehaviorAnalyzerNode::on_timer()
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   update(bag_data_);
-
-  process(bag_data_);
+  analyze(bag_data_);
 }
 }  // namespace autoware::behavior_analyzer
 

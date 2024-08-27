@@ -17,6 +17,8 @@
 
 #include "type_alias.hpp"
 
+#include <autoware/universe_utils/geometry/geometry.hpp>
+
 #include <algorithm>
 #include <limits>
 #include <map>
@@ -46,10 +48,42 @@ enum class SCORE {
   SIZE
 };
 
+struct TOPIC
+{
+  static std::string TF;
+  static std::string ODOMETRY;
+  static std::string ACCELERATION;
+  static std::string OBJECTS;
+  static std::string TRAJECTORY;
+  static std::string STEERING;
+};
+
 struct FrenetPoint
 {
   double length{0.0};    // longitudinal
   double distance{0.0};  // lateral
+};
+
+struct TargetStateParameters
+{
+  std::vector<double> lat_positions{};
+  std::vector<double> lat_velocities{};
+  std::vector<double> lat_accelerations{};
+  std::vector<double> lon_positions{};
+  std::vector<double> lon_velocities{};
+  std::vector<double> lon_accelerations{};
+};
+
+struct Parameters
+{
+  size_t resample_num{20};
+  double time_resolution{0.5};
+  double w_lat_comfortability{1.0};
+  double w_lon_comfortability{1.0};
+  double w_efficiency{1.0};
+  double w_safety{1.0};
+  std::vector<double> grid{};
+  TargetStateParameters target_state{};
 };
 
 struct BufferBase
@@ -121,7 +155,15 @@ auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> std::
 
 struct BagData
 {
-  explicit BagData(const rcutils_time_point_value_t timestamp) : timestamp{timestamp} {}
+  explicit BagData(const rcutils_time_point_value_t timestamp) : timestamp{timestamp}
+  {
+    buffers.emplace(TOPIC::TF, std::make_shared<Buffer<TFMessage>>());
+    buffers.emplace(TOPIC::ODOMETRY, std::make_shared<Buffer<Odometry>>());
+    buffers.emplace(TOPIC::ACCELERATION, std::make_shared<Buffer<AccelWithCovarianceStamped>>());
+    buffers.emplace(TOPIC::TRAJECTORY, std::make_shared<Buffer<Trajectory>>());
+    buffers.emplace(TOPIC::OBJECTS, std::make_shared<Buffer<PredictedObjects>>());
+    buffers.emplace(TOPIC::STEERING, std::make_shared<Buffer<SteeringReport>>());
+  }
 
   std::map<std::string, std::shared_ptr<BufferBase>> buffers{};
 
@@ -151,8 +193,8 @@ struct CommonData
 {
   CommonData(
     const std::shared_ptr<BagData> & trimmed_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info, const size_t resample_num,
-    const double time_resolution, const std::string & tag);
+    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<Parameters> & parameters, const std::string & tag);
 
   void calculate();
 
@@ -183,7 +225,7 @@ struct CommonData
 
   vehicle_info_utils::VehicleInfo vehicle_info;
 
-  size_t resample_num;
+  std::shared_ptr<Parameters> parameters;
 
   std::string tag{""};
 };
@@ -192,8 +234,8 @@ struct ManualDrivingData : CommonData
 {
   ManualDrivingData(
     const std::shared_ptr<BagData> & trimmed_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info, const size_t resample_num,
-    const double time_resolution);
+    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<Parameters> & parameters);
 
   double lateral_accel(const size_t idx) const override;
 
@@ -214,8 +256,8 @@ struct TrajectoryData : CommonData
 {
   TrajectoryData(
     const std::shared_ptr<BagData> & trimmed_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info, const size_t resample_num,
-    const double time_resolution, const std::string & tag,
+    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<Parameters> & parameters, const std::string & tag,
     const std::vector<TrajectoryPoint> & points);
 
   double lateral_accel(const size_t idx) const override;
@@ -229,23 +271,6 @@ struct TrajectoryData : CommonData
   bool feasible() const override;
 
   std::vector<TrajectoryPoint> points;
-};
-
-struct TargetStateParameters
-{
-  std::vector<double> lat_positions{};
-  std::vector<double> lat_velocities{};
-  std::vector<double> lat_accelerations{};
-  std::vector<double> lon_positions{};
-  std::vector<double> lon_velocities{};
-  std::vector<double> lon_accelerations{};
-};
-
-struct Parameters
-{
-  size_t resample_num{20};
-  double time_resolution{0.5};
-  TargetStateParameters target_state{};
 };
 
 struct SamplingTrajectoryData
@@ -279,10 +304,30 @@ struct DataSet
     const std::shared_ptr<BagData> & trimmed_data,
     const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters)
-  : manual{ManualDrivingData(
-      trimmed_data, vehicle_info, parameters->resample_num, parameters->time_resolution)},
+  : manual{ManualDrivingData(trimmed_data, vehicle_info, parameters)},
     sampling{SamplingTrajectoryData(trimmed_data, vehicle_info, parameters)}
   {
+  }
+
+  auto loss() const -> std::optional<double>
+  {
+    const auto best = sampling.best();
+    if (!best.has_value()) {
+      return std::nullopt;
+    }
+
+    if (manual.odometry_history.size() != best.value().points.size()) {
+      return std::nullopt;
+    }
+
+    double mse = 0.0;
+    for (size_t i = 0; i < manual.odometry_history.size(); i++) {
+      const auto & p1 = manual.odometry_history.at(i).pose.pose;
+      const auto & p2 = best.value().points.at(i);
+      mse = (mse * i + autoware::universe_utils::calcSquaredDistance2d(p1, p2)) / (i + 1);
+    }
+
+    return mse;
   }
 
   ManualDrivingData manual;
