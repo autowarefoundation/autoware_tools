@@ -109,10 +109,16 @@ public:
   void updateData(const double time, const DiagnosticStatus & status)
   {
     for (const auto & [key, value] : status.values) {
-      const double data = std::stod(value);
-      labels.at(key)->setText(QString::fromStdString(toString(data)));
-      plots.at(key)->append(time, data);
-      updateMinMax(data);
+      try {
+        const double data = std::stod(value);
+        labels.at(key)->setText(QString::fromStdString(toString(data)));
+        plots.at(key)->append(time, data);
+        updateMinMax(data);
+      } catch (const std::exception & e) {
+        RCLCPP_DEBUG(
+          rclcpp::get_logger(__func__), "%s invalid argument. KEY:%s VALUE:%s", e.what(),
+          key.c_str(), value.c_str());
+      }
     }
 
     {
