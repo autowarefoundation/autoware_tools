@@ -136,7 +136,7 @@ class TrajectoryVisualizer(Node):
         )
 
         # BUFFER_SIZE = 65536*100
-        optimizer_debug = "/planning/scenario_planning/motion_velocity_smoother/debug/"
+        optimizer_debug = "/planning/scenario_planning/velocity_smoother/debug/"
         self.sub1 = message_filters.Subscriber(
             self, Trajectory, optimizer_debug + "trajectory_external_velocity_limited"
         )
@@ -329,8 +329,8 @@ class TrajectoryVisualizer(Node):
         self.get_logger().info("plot start")
 
         if self.update_traj_final:
-            self.im10.set_data(0, self.localization_vx)
-            self.im11.set_data(0, self.vehicle_vx)
+            self.im10.set_data([0], [self.localization_vx])
+            self.im11.set_data([0], [self.vehicle_vx])
 
             if self.velocity_limit is not None:
                 x = [PLOT_MIN_ARCLENGTH, PLOT_MAX_ARCLENGTH]
