@@ -244,7 +244,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "max_lateral_accel",
-            0.5,  # 0.3G
+            0.5,
             ParameterDescriptor(description="Max lateral acceleration limit [m/ss]"),
         )
 
