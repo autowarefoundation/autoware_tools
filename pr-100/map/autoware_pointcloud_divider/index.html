@@ -2495,7 +2495,6 @@
 
 
 <div><h1 id="autoware_pointcloud_divider">autoware_pointcloud_divider<a class="headerlink" href="#autoware_pointcloud_divider" title="Permanent link">#</a></h1>
-<p>(Updated 2024/08/16)</p>
 <p>This is a tool for processing pcd files, and it can perform the following functions:</p>
 <ul>
 <li>Dividing point clouds</li>
@@ -2503,7 +2502,7 @@
 <li>Generating metadata to efficiently handle the divided point clouds</li>
 </ul>
 <h2 id="supported-data-format">Supported Data Format<a class="headerlink" href="#supported-data-format" title="Permanent link">#</a></h2>
-<p><strong>Currently, only <code>pcl::PointXYZ</code> and <code>pcl::PointXYZ</code> are supported. Any PCD will be loaded as those two types.</strong></p>
+<p><strong>Currently, only <code>pcl::PointXYZ</code> and <code>pcl::PointXYZI</code> are supported. Any PCD will be loaded as those two types.</strong></p>
 <p>This tool can be used with files that have data fields other than <code>XYZI</code> (e.g., <code>XYZRGB</code>) and files that only contain <code>XYZ</code>.</p>
 <ul>
 <li>Data fields other than <code>XYZI</code> are ignored during loading.</li>
@@ -2514,7 +2513,7 @@
 <span class="nb">cd</span><span class="w"> </span>src/
 git<span class="w"> </span>clone<span class="w"> </span>git@github.com:autowarefoundation/autoware_tools.git
 <span class="nb">cd</span><span class="w"> </span>..
-colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>--catkin-skip-building-tests<span class="w"> </span>--symlink-install<span class="w"> </span>--packages-up-to<span class="w"> </span>pointcloud_divider
+colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>--catkin-skip-building-tests<span class="w"> </span>--symlink-install<span class="w"> </span>--packages-up-to<span class="w"> </span>autoware_pointcloud_divider
 </code></pre></div>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
 <ul>
@@ -2619,7 +2618,7 @@ colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span cla
 </tbody>
 </table>
 <p>How the point cloud is processed.</p>
-<p><img alt="node_diagram" src="docs/how_to_be_downsampled.drawio.svg"></p>
+<p><img alt="node_diagram" src="docs/pcd_divider.drawio.svg"></p>
 <p>How the PCD file is named</p>
 <p><img alt="node_diagram" src="docs/output_file_name_pattern.drawio.svg"></p>
 <h3 id="parameter-example">Parameter example<a class="headerlink" href="#parameter-example" title="Permanent link">#</a></h3>
