@@ -18,8 +18,8 @@ for module in "${behavior_velocity_module_list[@]}"; do
 done
 
 # obstacle avoidance planner
-node_name_dict["obstacle_avoidance_planner"]=/planning/scenario_planning/lane_driving/motion_planning/obstacle_avoidance_planner
-logger_name_dict["obstacle_avoidance_planner"]=/planning/scenario_planning/lane_driving/motion_planning/obstacle_avoidance_planner
+node_name_dict["path_optimizer"]=/planning/scenario_planning/lane_driving/motion_planning/path_optimizer
+logger_name_dict["path_optimizer"]=/planning/scenario_planning/lane_driving/motion_planning/path_optimizer
 
 # motion velocity smoother
 node_name_dict["motion_velocity_smoother"]=/planning/scenario_planning/motion_velocity_smoother
