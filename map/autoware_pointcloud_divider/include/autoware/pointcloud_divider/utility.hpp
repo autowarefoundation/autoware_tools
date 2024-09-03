@@ -53,7 +53,7 @@ inline bool remove(const std::string & path)
 }
 
 // Parse the name of the PCD file, and return the number of points in the file
-// Can only be used for file names formated as "***_<point_number>.pcd"
+// Can only be used for file names of "***_<point_number>.pcd" format
 inline size_t point_num(const std::string & pcd_path)
 {
   // Get the file name only
