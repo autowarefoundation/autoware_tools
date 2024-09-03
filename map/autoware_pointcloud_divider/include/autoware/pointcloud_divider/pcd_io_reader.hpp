@@ -228,7 +228,7 @@ void CustomPCDReader<PointT>::readHeader(std::ifstream & input)
 
       if (vals[0] == "FIELDS") {
         for (size_t i = 1; i < vals.size(); ++i) {
-          field_names_.push_back(vals[i]);
+          field_names_.push_back(util::trim(vals[i]));
         }
 
         continue;
@@ -264,7 +264,7 @@ void CustomPCDReader<PointT>::readHeader(std::ifstream & input)
         }
 
         for (size_t i = 1; i < vals.size(); ++i) {
-          field_types_.push_back(vals[i]);
+          field_types_.push_back(util::trim(vals[i]));
         }
 
         continue;

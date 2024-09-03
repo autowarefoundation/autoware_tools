@@ -53,6 +53,7 @@ inline bool remove(const std::string & path)
 }
 
 // Parse the name of the PCD file, and return the number of points in the file
+// Can only be used for file names formated as "***_<point_number>.pcd"
 inline size_t point_num(const std::string & pcd_path)
 {
   // Get the file name only
@@ -107,6 +108,24 @@ template <>
 inline void zero_point(pcl::PointXYZI & p)
 {
   p.x = p.y = p.z = p.intensity = 0;
+}
+
+// Remove trailing whitespace, newline, and carriage return characters from a string
+inline std::string trim(const std::string & input)
+{
+  std::string output;
+
+  if (!input.empty()) {
+    output.reserve(input.size());
+
+    for (auto & c : input) {
+      if (c != ' ' && c != '\n' && c != '\r') {
+        output.push_back(c);
+      }
+    }
+  }
+
+  return output;
 }
 
 }  // namespace autoware::pointcloud_divider::util

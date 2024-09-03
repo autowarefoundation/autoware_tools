@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     use_large_grid: false
-    leaf_size: 0.2
+    leaf_size: -0.1
     grid_size_x: 20.0
     grid_size_y: 20.0
     input_pcd_or_dir: $(var input_pcd_or_dir) # Path to the folder containing the input PCD files

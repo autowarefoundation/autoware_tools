@@ -1,7 +1,5 @@
 # autoware_pointcloud_divider
 
-(Updated 2024/08/16)
-
 This is a tool for processing pcd files, and it can perform the following functions:
 
 - Dividing point clouds
@@ -10,7 +8,7 @@ This is a tool for processing pcd files, and it can perform the following functi
 
 ## Supported Data Format
 
-**Currently, only `pcl::PointXYZ` and `pcl::PointXYZ` are supported. Any PCD will be loaded as those two types.**
+**Currently, only `pcl::PointXYZ` and `pcl::PointXYZI` are supported. Any PCD will be loaded as those two types.**
 
 This tool can be used with files that have data fields other than `XYZI` (e.g., `XYZRGB`) and files that only contain `XYZ`.
 
@@ -24,7 +22,7 @@ cd <PATH_TO_pilot-auto.*> # OR <PATH_TO_autoware>
 cd src/
 git clone git@github.com:autowarefoundation/autoware_tools.git
 cd ..
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-tests --symlink-install --packages-up-to pointcloud_divider
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-tests --symlink-install --packages-up-to autoware_pointcloud_divider
 ```
 
 ## Usage
@@ -51,7 +49,7 @@ NOTE: The folder `OUTPUT_DIR` is auto generated. If it already exists, all files
 
 How the point cloud is processed.
 
-![node_diagram](docs/how_to_be_downsampled.drawio.svg)
+![node_diagram](docs/pcd_divider.drawio.svg)
 
 How the PCD file is named
 

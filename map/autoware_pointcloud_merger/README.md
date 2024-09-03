@@ -1,7 +1,5 @@
 # autoware_pointcloud_merger
 
-(Updated 2024/08/16)
-
 This is a tool for processing pcd files, and it can perform the following functions:
 
 - Merging multiple PCD files to a single PCD file
@@ -23,7 +21,7 @@ cd <PATH_TO_pilot-auto.*> # OR <PATH_TO_autoware>
 cd src/
 git clone git@github.com:autowarefoundation/autoware_tools.git
 cd ..
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-tests --symlink-install --packages-up-to pointcloud_merger
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-tests --symlink-install --packages-up-to autoware_pointcloud_merger
 ```
 
 ## Usage

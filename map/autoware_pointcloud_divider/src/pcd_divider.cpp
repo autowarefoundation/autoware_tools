@@ -136,7 +136,7 @@ void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
   // Now merge and downsample
   mergeAndDownsample();
 
-  std::string yaml_file_path = output_dir_ + "/" + file_prefix_ + "_metadata.yaml";
+  std::string yaml_file_path = output_dir_ + "/pointcloud_map_metadata.yaml";
   saveGridInfoToYAML(yaml_file_path);
 
   RCLCPP_INFO(logger_, "Done!");
@@ -155,7 +155,7 @@ void PCDDivider<PointT>::checkOutputDirectoryValidity()
     fs::remove_all(output_dir_);
   }
 
-  util::make_dir(output_dir_);
+  util::make_dir(output_dir_ + "/pointcloud_map.pcd/");
   util::make_dir(tmp_dir_);
 }
 
@@ -400,15 +400,15 @@ void PCDDivider<PointT>::mergeAndDownsample(
   if (use_large_grid_) {
     int large_gx = static_cast<int>(std::floor(static_cast<float>(gx) / g_grid_size_x_));
     int large_gy = static_cast<int>(std::floor(static_cast<float>(gy) / g_grid_size_y_));
-    std::string large_folder =
-      output_dir_ + "/" + std::to_string(large_gx) + "_" + std::to_string(large_gy) + "/";
+    std::string large_folder = output_dir_ + "/pointcloud_map.pcd/" + std::to_string(large_gx) +
+                               "_" + std::to_string(large_gy) + "/";
 
     // Create a new folder for the large grid
     util::make_dir(large_folder);
 
     save_path = large_folder + file_prefix_ + "_" + seg_name_only + ".pcd";
   } else {
-    save_path = output_dir_ + "/" + file_prefix_ + "_" + seg_name_only + ".pcd";
+    save_path = output_dir_ + "/pointcloud_map.pcd/" + file_prefix_ + "_" + seg_name_only + ".pcd";
   }
 
   // Save the merged (filtered) cloud
@@ -425,12 +425,7 @@ void PCDDivider<PointT>::mergeAndDownsample(
 template <class PointT>
 std::string PCDDivider<PointT>::makeFileName(const GridInfo<2> & grid) const
 {
-  std::string file_name = output_dir_;
-
-  file_name = file_name + file_prefix_ + "_";
-  file_name = file_name + std::to_string(grid.ix) + "_" + std::to_string(grid.iy) + ".pcd";
-
-  return file_name;
+  return file_prefix_ + "_" + std::to_string(grid.ix) + "_" + std::to_string(grid.iy) + ".pcd";
 }
 
 template <class PointT>
