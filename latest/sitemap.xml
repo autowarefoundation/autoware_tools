@@ -111,6 +111,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://autowarefoundation.github.io/autoware_tools/latest/planning/autoware_planning_data_analyzer/</loc>
+         <lastmod>2024-09-03</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://autowarefoundation.github.io/autoware_tools/latest/planning/autoware_route_client/</loc>
          <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
