@@ -39,7 +39,7 @@
           "value": "/behavior_analyzer/manual_score.data[1]",
           "enabled": true,
           "color": "#4e98e2",
-          "label": "longitudinal confortability (manual)",
+          "label": "longitudinal comfortabiilty (manual)",
           "lineSize": 1.5,
           "showLine": true
         },
@@ -49,7 +49,7 @@
           "enabled": true,
           "color": "#f5774d",
           "lineSize": 1.5,
-          "label": "longitudinal confortability (system)"
+          "label": "longitudinal comfortabiilty (system)"
         }
       ],
       "minYValue": 0,
@@ -71,7 +71,7 @@
           "value": "/behavior_analyzer/manual_score.data[0]",
           "enabled": true,
           "color": "#4e98e2",
-          "label": "lateral confortability (manual)",
+          "label": "lateral comfortabiilty (manual)",
           "lineSize": 1.5,
           "showLine": true
         },
@@ -81,7 +81,7 @@
           "enabled": true,
           "color": "#f5774d",
           "lineSize": 1.5,
-          "label": "lateral confortability (system)"
+          "label": "lateral comfortabiilty (system)"
         }
       ],
       "minYValue": 0,
