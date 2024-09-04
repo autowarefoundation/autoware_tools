@@ -74,17 +74,33 @@ struct TargetStateParameters
   std::vector<double> lon_accelerations{};
 };
 
+struct GridSearchParameters
+{
+  double min{0.0};
+  double max{1.0};
+  double resolusion{0.01};
+  double dt{1.0};
+};
+
 struct Parameters
 {
   size_t resample_num{20};
   double time_resolution{0.5};
-  double w_lat_comfortability{1.0};
-  double w_lon_comfortability{1.0};
-  double w_efficiency{1.0};
-  double w_safety{1.0};
-  double dt{1.0};
-  std::vector<double> grid{};
+  double w0{1.0};
+  double w1{1.0};
+  double w2{1.0};
+  double w3{1.0};
+  GridSearchParameters grid_seach{};
   TargetStateParameters target_state{};
+};
+
+struct Result
+{
+  double loss{0.0};
+  double w0{0.0};
+  double w1{0.0};
+  double w2{0.0};
+  double w3{0.0};
 };
 
 struct BufferBase
@@ -93,7 +109,7 @@ struct BufferBase
   virtual void remove_old_data(const rcutils_time_point_value_t now) = 0;
 };
 
-template <class T>
+template <typename T>
 struct Buffer : BufferBase
 {
   std::vector<T> msgs;
@@ -121,17 +137,17 @@ struct Buffer : BufferBase
 
   void append(const T & msg) { msgs.push_back(msg); }
 
-  auto get(const rcutils_time_point_value_t now) const -> std::optional<T>
+  auto get(const rcutils_time_point_value_t now) const -> typename T::SharedPtr
   {
     const auto itr = std::find_if(msgs.begin(), msgs.end(), [&now, this](const auto & msg) {
       return rclcpp::Time(msg.header.stamp).nanoseconds() > now;
     });
 
     if (itr == msgs.end()) {
-      return std::nullopt;
+      return nullptr;
     }
 
-    return *itr;
+    return std::make_shared<T>(*itr);
   }
 };
 
@@ -149,10 +165,10 @@ void Buffer<TFMessage>::remove_old_data(const rcutils_time_point_value_t now);
 
 template <>
 auto Buffer<SteeringReport>::get(const rcutils_time_point_value_t now) const
-  -> std::optional<SteeringReport>;
+  -> SteeringReport::SharedPtr;
 
 template <>
-auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> std::optional<TFMessage>;
+auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> TFMessage::SharedPtr;
 
 struct BagData
 {
@@ -193,8 +209,7 @@ struct BagData
 struct CommonData
 {
   CommonData(
-    const std::shared_ptr<BagData> & trimmed_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::string & tag);
 
   void calculate();
@@ -207,7 +222,7 @@ struct CommonData
 
   double safety() const;
 
-  double total() const;
+  double total(const double w0, const double w1, const double w2, const double w3) const;
 
   virtual double lateral_accel(const size_t idx) const = 0;
 
@@ -219,10 +234,17 @@ struct CommonData
 
   virtual bool feasible() const = 0;
 
-  std::vector<PredictedObjects> objects_history;
+  virtual bool ready() const = 0;
 
-  std::unordered_map<METRIC, std::vector<double>> values;
-  std::unordered_map<SCORE, double> scores;
+  std::vector<PredictedObjects::SharedPtr> objects_history;
+
+  std::vector<std::vector<double>> values;
+
+  std::vector<double> scores;
+
+  // std::unordered_map<METRIC, std::vector<double>> values;
+
+  // std::unordered_map<SCORE, double> scores;
 
   vehicle_info_utils::VehicleInfo vehicle_info;
 
@@ -234,8 +256,7 @@ struct CommonData
 struct ManualDrivingData : CommonData
 {
   ManualDrivingData(
-    const std::shared_ptr<BagData> & trimmed_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters);
 
   double lateral_accel(const size_t idx) const override;
@@ -248,16 +269,17 @@ struct ManualDrivingData : CommonData
 
   bool feasible() const override { return true; }
 
-  std::vector<Odometry> odometry_history;
-  std::vector<AccelWithCovarianceStamped> accel_history;
-  std::vector<SteeringReport> steer_history;
+  bool ready() const override;
+
+  std::vector<Odometry::SharedPtr> odometry_history;
+  std::vector<AccelWithCovarianceStamped::SharedPtr> accel_history;
+  std::vector<SteeringReport::SharedPtr> steer_history;
 };
 
 struct TrajectoryData : CommonData
 {
   TrajectoryData(
-    const std::shared_ptr<BagData> & trimmed_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::string & tag,
     const std::vector<TrajectoryPoint> & points);
 
@@ -271,20 +293,36 @@ struct TrajectoryData : CommonData
 
   bool feasible() const override;
 
+  bool ready() const override;
+
   std::vector<TrajectoryPoint> points;
 };
 
 struct SamplingTrajectoryData
 {
   SamplingTrajectoryData(
-    const std::shared_ptr<BagData> & trimmed_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters);
 
-  auto best() const -> std::optional<TrajectoryData>
+  auto best(const double w0, const double w1, const double w2, const double w3) const
+    -> std::optional<TrajectoryData>
   {
-    if (data.empty()) return std::nullopt;
-    return data.front();
+    auto sort_by_score = data;
+
+    std::sort(
+      sort_by_score.begin(), sort_by_score.end(),
+      [&w0, &w1, &w2, &w3](const auto & a, const auto & b) {
+        return a.total(w0, w1, w2, w3) > b.total(w0, w1, w2, w3);
+      });
+
+    const auto itr = std::remove_if(
+      sort_by_score.begin(), sort_by_score.end(), [](const auto & d) { return !d.feasible(); });
+
+    sort_by_score.erase(itr, sort_by_score.end());
+
+    if (sort_by_score.empty()) return std::nullopt;
+
+    return sort_by_score.front();
   }
 
   auto autoware() const -> std::optional<TrajectoryData>
@@ -302,30 +340,32 @@ struct SamplingTrajectoryData
 struct DataSet
 {
   DataSet(
-    const std::shared_ptr<BagData> & trimmed_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters)
-  : manual{ManualDrivingData(trimmed_data, vehicle_info, parameters)},
-    sampling{SamplingTrajectoryData(trimmed_data, vehicle_info, parameters)}
+  : manual{ManualDrivingData(bag_data, vehicle_info, parameters)},
+    sampling{SamplingTrajectoryData(bag_data, vehicle_info, parameters)},
+    parameters{parameters}
   {
   }
 
-  auto loss() const -> std::optional<double>
+  auto loss(const double w0, const double w1, const double w2, const double w3) const -> double
   {
-    const auto best = sampling.best();
+    const auto best = sampling.best(w0, w1, w2, w3);
     if (!best.has_value()) {
-      return std::nullopt;
+      throw std::logic_error("no found best trajectory.");
     }
 
-    if (manual.odometry_history.size() != best.value().points.size()) {
-      return std::nullopt;
-    }
+    const auto min_size = std::min(manual.odometry_history.size(), best.value().points.size());
 
     double mse = 0.0;
-    for (size_t i = 0; i < manual.odometry_history.size(); i++) {
-      const auto & p1 = manual.odometry_history.at(i).pose.pose;
+    for (size_t i = 0; i < min_size; i++) {
+      const auto & p1 = manual.odometry_history.at(i)->pose.pose;
       const auto & p2 = best.value().points.at(i);
       mse = (mse * i + autoware::universe_utils::calcSquaredDistance2d(p1, p2)) / (i + 1);
+    }
+
+    if (!std::isfinite(mse)) {
+      throw std::logic_error("loss value is invalid.");
     }
 
     return mse;
@@ -333,6 +373,8 @@ struct DataSet
 
   ManualDrivingData manual;
   SamplingTrajectoryData sampling;
+
+  std::shared_ptr<Parameters> parameters;
 };
 
 }  // namespace autoware::behavior_analyzer
