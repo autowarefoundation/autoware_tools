@@ -1,0 +1,9 @@
+<launch>
+  <arg name="config_file_path" default="$(find-pkg-share autoware_pointcloud_divider)/config/pointcloud_divider.param.yaml" description="Path to the configuration YAML file"/>
+
+  <group>
+    <node pkg="autoware_pointcloud_divider" exec="autoware_pointcloud_divider_node" name="pointcloud_divider" output="screen">
+      <param from="$(var config_file_path)" allow_substs="true"/>
+    </node>
+  </group>
+</launch>
