@@ -64,7 +64,6 @@ def get_trajectory_points(
     C = [-(b / 2 - (1.0 - np.sqrt(3) / 2) * a), -a / 2]
     D = [(b / 2 - (1.0 - np.sqrt(3) / 2) * a), -a / 2]
 
-
     R = a  # radius of the circle
     OL = [-b / 2 + a, 0]  # center of the left circle
     OR = [b / 2 - a, 0]  # center of the right circle
