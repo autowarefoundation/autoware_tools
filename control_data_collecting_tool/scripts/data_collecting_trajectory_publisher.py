@@ -60,36 +60,10 @@ def get_trajectory_points(
     a = short_side_length
     b = long_side_length
 
-    t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
-    x = t_array.copy()
-    y = t_array.copy()
-    yaw = t_array.copy()
-
     # Boundary points between circular and linear trajectory
-    # _A = [-(b - a) / 2, a / 2]
-    # _B = [(b - a) / 2, a / 2]
-    C = [-(b - a) / 2, -a / 2]
-    D = [(b - a) / 2, -a / 2]
-
-    # _O = [0.0, 0.0]  # origin
-    R = a / 2  # radius of the circle
-    OL = [-(b - a) / 2, 0]  # center of the left circle
-    OR = [(b - a) / 2, 0]  # center of the right circle
-    OB = np.sqrt((b - a) ** 2 + a**2) / 2  # half length of the linear trajectory
-    AD = 2 * OB
-    θB = arctan(a / (b - a))  # Angle that OB makes with respect to x-axis
-    BD = pi * a / 2  # the length of arc BD
-    AC = BD
-    CO = OB
-
-    curve = t_array.copy()
-    parts = ["part" for i in range(len(curve))]
-    achievement_rates = np.zeros(len(curve))
-
-    i_end = t_array.shape[0]
-
     C = [-(b / 2 - (1.0 - np.sqrt(3) / 2) * a), -a / 2]
     D = [(b / 2 - (1.0 - np.sqrt(3) / 2) * a), -a / 2]
+
 
     R = a  # radius of the circle
     OL = [-b / 2 + a, 0]  # center of the left circle
@@ -114,6 +88,7 @@ def get_trajectory_points(
     curve = t_array.copy()
     achievement_rates = t_array.copy()
     parts = ["part" for _ in range(len(t_array.copy()))]
+    i_end = t_array.shape[0]
 
     for i, t in enumerate(t_array):
         if t > OB + BD + AD + AC + CO:
@@ -258,7 +233,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "yaw_error_threshold",
-            5.0,
+            0.75,
             ParameterDescriptor(
                 description="Yaw error threshold where applying velocity limit [rad]"
             ),
@@ -286,7 +261,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "longitudinal_velocity_noise_amp",
-            5.0,
+            0.0,
             ParameterDescriptor(
                 description="Target longitudinal velocity additional sine noise amplitude [m/s]"
             ),
@@ -342,7 +317,7 @@ class DataCollectingTrajectoryPublisher(Node):
         )
         self.sub_data_collecting_area_
 
-        self.timer_period_callback = 0.003  # 30ms
+        self.timer_period_callback = 0.03  # 30ms
         self.traj_step = 0.1
 
         self.timer = self.create_timer(self.timer_period_callback, self.timer_callback)
@@ -743,7 +718,7 @@ class DataCollectingTrajectoryPublisher(Node):
                     )  # 4 is minimum noise_data_num
                     for i in range(noise_data_num):
                         self.vel_noise_list.append(
-                            0.0 * tmp_noise_vel * np.sin(2.0 * np.pi * i / noise_data_num)
+                            tmp_noise_vel * np.sin(2.0 * np.pi * i / noise_data_num)
                         )
             self.vel_noise_list.pop(0)
 
