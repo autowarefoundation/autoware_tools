@@ -80,6 +80,7 @@ struct GridSearchParameters
   double max{1.0};
   double resolusion{0.01};
   double dt{1.0};
+  size_t thread_num{4};
 };
 
 struct Parameters
@@ -96,6 +97,10 @@ struct Parameters
 
 struct Result
 {
+  Result(const double w0, const double w1, const double w2, const double w3)
+  : w0{w0}, w1{w1}, w2{w2}, w3{w3}
+  {
+  }
   double loss{0.0};
   double w0{0.0};
   double w1{0.0};
