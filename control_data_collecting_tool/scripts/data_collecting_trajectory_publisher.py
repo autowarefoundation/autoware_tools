@@ -39,8 +39,9 @@ Differential_Smoothing_Flag = True
 USE_CURVATURE_RADIUS_FLAG = False
 
 #COURSE_NAME = "eight_course"
-COURSE_NAME = "u_shaped_return"
-#COURSE_NAME = "straight_line"
+#COURSE_NAME = "u_shaped_return"
+#COURSE_NAME = "straight_line_positive"
+COURSE_NAME = "straight_line_negative"
 
 def smooth_bounding(upper: np.ndarray, threshold: np.ndarray, x: np.ndarray):
     result = np.zeros(x.shape)
@@ -170,17 +171,27 @@ def get_straight_line_course_trajectory_points(
     total_distance = b
 
     t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
-    x = np.linspace( -total_distance/2, total_distance/2, len(t_array))
-    y = np.zeros( len(t_array) )
-    yaw = np.zeros( len(t_array) )
+
+    if COURSE_NAME == "straight_line_positive":
+        yaw = np.zeros( len(t_array) )
+        parts = ["linear_positive" for _ in range(len(t_array.copy()))]
+        x = np.linspace( -total_distance/2, total_distance/2, len(t_array))
+        y = np.zeros( len(t_array) )
+
+    elif COURSE_NAME == "straight_line_negative":
+        yaw = pi * np.ones( len(t_array) )
+        parts = ["linear_negative" for _ in range(len(t_array.copy()))]
+        x = np.linspace( total_distance/2, -total_distance/2, len(t_array))
+        y = np.zeros( len(t_array) )
+
     curve =  1e-9 * np.ones(len(t_array))
     achievement_rates = np.linspace( 0.0, 1.0 ,len(t_array))
-    parts = ["linear_negative" for _ in range(len(t_array.copy()))]
 
     if USE_CURVATURE_RADIUS_FLAG:
         return np.vstack((x, y)).T, yaw, 1 / curve, parts, achievement_rates
     else:
         return np.vstack((x, y)).T, yaw, curve, parts, achievement_rates
+    
 
 def get_u_shaped_return_course_trajectory_points(
     long_side_length: float, short_side_length: float, step: float, total_distance: float
@@ -611,7 +622,7 @@ class DataCollectingTrajectoryPublisher(Node):
                 ):
                     if COURSE_NAME == "eight_course" or COURSE_NAME == "u_shaped_return":
                         target_vel = np.min([self.v_max / N, max_vel_from_lateral_acc / 2.0])
-                    elif COURSE_NAME == "straight_line":
+                    elif COURSE_NAME == "straight_line_positive" or COURSE_NAME == "straight_line_negative":
                         target_vel = 0.0
 
             # set target velocity on circle part
@@ -707,7 +718,7 @@ class DataCollectingTrajectoryPublisher(Node):
                 total_distance,
             )
         
-        elif COURSE_NAME == "straight_line":
+        elif COURSE_NAME == "straight_line_positive" or COURSE_NAME == "straight_line_negative":
             (
                 trajectory_position_data,
                 trajectory_yaw_data,
