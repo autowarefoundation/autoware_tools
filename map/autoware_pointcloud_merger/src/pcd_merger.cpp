@@ -136,7 +136,7 @@ void PCDMerger<PointT>::mergeWithDownsample(const std::vector<std::string> & inp
   std::vector<std::string> seg_names;
   fs::path tmp_path(tmp_dir_);
 
-  for (auto & entry : fs::directory_iterator(tmp_path)) {
+  for (auto & entry : fs::recursive_directory_iterator(tmp_path)) {
     if (fs::is_regular_file(entry.symlink_status())) {
       auto fname = entry.path().string();
       auto ext = fname.substr(fname.size() - 4);
