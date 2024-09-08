@@ -39,7 +39,6 @@ Differential_Smoothing_Flag = True
 USE_CURVATURE_RADIUS_FLAG = True
 
 
-
 def smooth_bounding(upper: np.ndarray, threshold: np.ndarray, x: np.ndarray):
     result = np.zeros(x.shape)
     for i in range(x.shape[0]):
@@ -157,7 +156,6 @@ def get_trajectory_points(
         return np.array([x, y]).T, yaw, 1 / curve[:i_end], parts, achievement_rates
     else:
         return np.array([x, y]).T, yaw, curve[:i_end], parts, achievement_rates
-
 
 
 class DataCollectingTrajectoryPublisher(Node):
