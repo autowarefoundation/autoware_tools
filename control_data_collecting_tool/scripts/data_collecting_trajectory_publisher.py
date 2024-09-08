@@ -36,19 +36,8 @@ from visualization_msgs.msg import MarkerArray
 
 debug_matplotlib_plot_flag = True
 Differential_Smoothing_Flag = True
-USE_CURVATURE_RADIUS_FLAG = False
+USE_CURVATURE_RADIUS_FLAG = True
 
-# COURSE_NAME = "eight_course"
-COURSE_NAME = "u_shaped_return"
-# COURSE_NAME = "straight_line_positive"
-# COURSE_NAME = "straight_line_negative"
-
-NUM_BINS_V = 10
-NUM_BINS_STEER = 10
-NUM_BINS_A = 10
-V_NUB, V_MAX = 0.0, 11.2
-STEER_MIN, STEER_MAX = -1.0, 1.0
-A_MIN, A_MAX = -1.0, 1.0
 
 
 def smooth_bounding(upper: np.ndarray, threshold: np.ndarray, x: np.ndarray):
@@ -66,7 +55,7 @@ def getYaw(orientation_xyzw):
     return R.from_quat(orientation_xyzw.reshape(-1, 4)).as_euler("xyz")[:, 2]
 
 
-def get_eight_course_trajectory_points(
+def get_trajectory_points(
     long_side_length: float, short_side_length: float, step: float, total_distance: float
 ):
     a = short_side_length
@@ -170,129 +159,6 @@ def get_eight_course_trajectory_points(
         return np.array([x, y]).T, yaw, curve[:i_end], parts, achievement_rates
 
 
-def get_straight_line_course_trajectory_points(
-    long_side_length: float, short_side_length: float, step: float
-):
-    a = short_side_length
-    b = long_side_length
-
-    total_distance = b
-
-    t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
-
-    if COURSE_NAME == "straight_line_positive":
-        yaw = np.zeros(len(t_array))
-        parts = ["linear_positive" for _ in range(len(t_array.copy()))]
-        x = np.linspace(-total_distance / 2, total_distance / 2, len(t_array))
-        y = np.zeros(len(t_array))
-
-    elif COURSE_NAME == "straight_line_negative":
-        yaw = pi * np.ones(len(t_array))
-        parts = ["linear_negative" for _ in range(len(t_array.copy()))]
-        x = np.linspace(total_distance / 2, -total_distance / 2, len(t_array))
-        y = np.zeros(len(t_array))
-
-    curve = 1e-9 * np.ones(len(t_array))
-    achievement_rates = np.linspace(0.0, 1.0, len(t_array))
-
-    if USE_CURVATURE_RADIUS_FLAG:
-        return np.vstack((x, y)).T, yaw, 1 / curve, parts, achievement_rates
-    else:
-        return np.vstack((x, y)).T, yaw, curve, parts, achievement_rates
-
-
-def get_u_shaped_return_course_trajectory_points(
-    long_side_length: float, short_side_length: float, step: float, total_distance: float
-):
-    a = short_side_length
-    b = long_side_length
-
-    t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
-    x = t_array.copy()
-    y = t_array.copy()
-    yaw = t_array.copy()
-
-    # Boundary points between circular and linear trajectory
-    A = [-(b - a) / 2, a / 2]
-    B = [(b - a) / 2, a / 2]
-    C = [-(b - a) / 2, -a / 2]
-    D = [(b - a) / 2, -a / 2]
-
-    # _O = [0.0, 0.0]  # origin
-    R = a / 2  # radius of the circle
-    OL = [-(b - a) / 2, 0]  # center of the left circle
-    OR = [(b - a) / 2, 0]  # center of the right circle
-
-    AB = b - a
-    arc_BD = pi * R
-    DC = b - a
-    arc_CA = pi * R
-
-    total_distance = 2 * AB + 2 * np.pi * R
-
-    t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
-    x = [0.0 for i in range(len(t_array.copy()))]
-    y = [0.0 for i in range(len(t_array.copy()))]
-    yaw = t_array.copy()
-    curve = t_array.copy()
-    achievement_rates = t_array.copy()
-    parts = ["part" for _ in range(len(t_array.copy()))]
-    i_end = t_array.shape[0]
-
-    for i, t in enumerate(t_array):
-        if t > AB + arc_BD + DC + arc_CA:
-            i_end = i
-            break
-
-        if 0 <= t and t <= AB:
-            section_rate = t / AB
-            x[i] = section_rate * B[0] + (1 - section_rate) * A[0]
-            y[i] = section_rate * B[1] + (1 - section_rate) * A[1]
-            yaw[i] = 0.0
-            curve[i] = 1e-10
-            parts[i] = "linear_positive"
-            achievement_rates[i] = section_rate
-
-        if AB <= t and t <= AB + arc_BD:
-            section_rate = (t - AB) / arc_BD
-            x[i] = OR[0] + R * cos(pi / 2 - pi * section_rate)
-            y[i] = OR[1] + R * sin(pi / 2 - pi * section_rate)
-            yaw[i] = pi / 2 - pi * section_rate - pi / 2
-            curve[i] = 1.0 / R
-            parts[i] = "right_circle"
-            achievement_rates[i] = section_rate
-
-        if AB + arc_BD <= t and t <= AB + arc_BD + DC:
-            section_rate = (t - AB - arc_BD) / DC
-            x[i] = section_rate * C[0] + (1 - section_rate) * D[0]
-            y[i] = section_rate * C[1] + (1 - section_rate) * D[1]
-            yaw[i] = pi
-            curve[i] = 1e-10
-            parts[i] = "linear_negative"
-            achievement_rates[i] = section_rate
-
-        if AB + arc_BD + DC <= t and t <= AB + arc_BD + DC + arc_CA:
-            section_rate = (t - AB - arc_BD - DC) / arc_CA
-            x[i] = OL[0] + R * cos(3 * pi / 2 - pi * section_rate)
-            y[i] = OL[1] + R * sin(3 * pi / 2 - pi * section_rate)
-            yaw[i] = 3 * pi / 2 - pi * section_rate - pi / 2
-            curve[i] = 1.0 / R
-            parts[i] = "left_circle"
-            achievement_rates[i] = section_rate
-
-    # drop rest
-    x = x[:i_end]
-    y = y[:i_end]
-    yaw = yaw[:i_end]
-    curve = curve[:i_end]
-    parts = parts[:i_end]
-    achievement_rates = achievement_rates[:i_end]
-
-    if USE_CURVATURE_RADIUS_FLAG:
-        return np.array([x, y]).T, yaw, 1 / curve[:i_end], parts, achievement_rates
-    else:
-        return np.array([x, y]).T, yaw, curve[:i_end], parts, achievement_rates
-
 
 class DataCollectingTrajectoryPublisher(Node):
     def __init__(self):
@@ -300,26 +166,24 @@ class DataCollectingTrajectoryPublisher(Node):
 
         # velocity and acceleration grid
         # velocity and steer grid
-        self.num_bins_v = NUM_BINS_V
-        self.num_bins_steer = NUM_BINS_STEER
-        self.num_bins_a = NUM_BINS_A
-        self.v_min, self.v_max = V_NUB, V_MAX
-        self.steer_min, self.steer_max = STEER_MIN, STEER_MAX
-        self.a_min, self.a_max = A_MIN, A_MAX
+        self.num_bins = 10
+        self.v_min, self.v_max = 0, 11.2
+        self.steer_min, self.steer_max = -1.0, 1.0
+        self.a_min, self.a_max = -1.0, 1.0
 
-        self.collected_data_counts_of_vel_acc = np.zeros((self.num_bins_v, self.num_bins_a))
-        self.collected_data_counts_of_vel_steer = np.zeros((self.num_bins_v, self.num_bins_steer))
+        self.collected_data_counts_of_vel_acc = np.zeros((self.num_bins, self.num_bins))
+        self.collected_data_counts_of_vel_steer = np.zeros((self.num_bins, self.num_bins))
 
-        self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins_v + 1)
-        self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins_steer + 1)
-        self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins_a + 1)
+        self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins + 1)
+        self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins + 1)
+        self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins + 1)
 
         self.v_bin_centers = (self.v_bins[:-1] + self.v_bins[1:]) / 2
         self.steer_bin_centers = (self.steer_bins[:-1] + self.steer_bins[1:]) / 2
         self.a_bin_centers = (self.a_bins[:-1] + self.a_bins[1:]) / 2
 
         self.fig, self.axs = plt.subplots(4, 1, figsize=(12, 20))
-        self.grid_update_time_interval = 5.0
+        self.grid_update_time_interval = 1
         self.last_grid_update_time = None
         plt.ion()
 
@@ -362,7 +226,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "lateral_error_threshold",
-            2.0,
+            5.0,
             ParameterDescriptor(
                 description="Lateral error threshold where applying velocity limit [m/s]"
             ),
@@ -386,7 +250,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "mov_ave_window",
-            50,
+            200,
             ParameterDescriptor(description="Moving average smoothing window size"),
         )
 
@@ -487,164 +351,6 @@ class DataCollectingTrajectoryPublisher(Node):
         self._data_collecting_area_polygon = msg
         self.updateNominalTargetTrajectory()
 
-    def get_target_velocity(self, nearestIndex):
-        part = self.trajectory_parts[
-            nearestIndex
-        ]  # "left_circle", "right_circle", "linear_positive", "linear_negative"
-        achievement_rate = self.trajectory_achievement_rates[nearestIndex]
-        current_vel = self._present_kinematic_state.twist.twist.linear.x
-        current_acc = self._present_acceleration.accel.accel.linear.x
-
-        acc_kp_of_pure_pursuit = self.get_parameter("acc_kp").get_parameter_value().double_value
-        N_V = self.num_bins_v
-        N_A = self.num_bins_a
-
-        self.acc_hist[:-1] = 1.0 * self.acc_hist[1:]
-        self.acc_hist[-1] = current_acc
-        self.vel_hist[:-1] = 1.0 * self.vel_hist[1:]
-        self.vel_hist[-1] = current_vel
-
-        max_lateral_accel = (
-            self.get_parameter("max_lateral_accel").get_parameter_value().double_value
-        )
-        if USE_CURVATURE_RADIUS_FLAG:
-            max_vel_from_lateral_acc = np.sqrt(
-                max_lateral_accel * self.trajectory_curvature_data[nearestIndex]
-            )
-        else:
-            max_vel_from_lateral_acc = np.sqrt(
-                max_lateral_accel / self.trajectory_curvature_data[nearestIndex]
-            )
-
-        target_vel = min([self.v_max / N_V, max_vel_from_lateral_acc])
-
-        # set self.target_acc_on_line and self.target_vel_on_line after vehicle from circle part to linear part
-        min_data_num_margin = 5
-        min_index_list = []
-        if (self.prev_part == "left_circle" or self.prev_part == "right_circle") and (
-            part == "linear_positive" or part == "linear_negative"
-        ):
-            self.on_line_vel_flag = True
-            min_num_data = 1e12
-
-            # do not collect data when velocity and acceleration are low
-            exclude_idx_list = [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (0, 2)]
-            # do not collect data when velocity and acceleration are high
-            exclude_idx_list += [
-                (-1 + N_V, -1 + N_A),
-                (-2 + N_V, -1 + N_A),
-                (-3 + N_V, -1 + N_A),
-                (-1 + N_V, -2 + N_A),
-                (-2 + N_V, -2 + N_A),
-                (-1 + N_V, -3 + N_A),
-            ]
-
-            for i in range(0, N_V):
-                for j in range(0, N_A):
-                    if (i, j) not in exclude_idx_list:
-                        if (
-                            min_num_data - min_data_num_margin
-                            > self.collected_data_counts_of_vel_acc[i, j]
-                        ):
-                            min_num_data = self.collected_data_counts_of_vel_acc[i, j]
-                            min_index_list.clear()
-                            min_index_list.append((j, i))
-
-                        elif (
-                            min_num_data + min_data_num_margin
-                            > self.collected_data_counts_of_vel_acc[i, j]
-                        ):
-                            min_index_list.append((j, i))
-
-            self.acc_idx, self.vel_idx = min_index_list[np.random.randint(0, len(min_index_list))]
-            self.target_acc_on_line = self.a_bin_centers[self.acc_idx]
-            self.target_vel_on_line = self.v_bin_centers[self.vel_idx]
-
-            if self.target_vel_on_line > self.v_max * 3.0 / 4.0:
-                self.deceleration_rate = 0.55
-            elif self.target_vel_on_line > self.v_max / 2.0:
-                self.deceleration_rate = 0.65
-            else:
-                self.deceleration_rate = 0.85
-
-        # set target velocity on linear part
-        if part == "linear_positive" or part == "linear_negative":
-            if (
-                current_vel > self.target_vel_on_line - self.v_max / N_V / 8.0
-                and self.target_vel_on_line >= self.v_max / 2.0
-            ):
-                self.on_line_vel_flag = False
-            elif (
-                abs(current_vel - self.target_vel_on_line) < self.v_max / N_V / 4.0
-                and self.target_vel_on_line < self.v_max / 2.0
-            ):
-                self.on_line_vel_flag = False
-
-            # accelerate until vehicle reaches target_vel_on_line
-            if 0.0 <= achievement_rate and achievement_rate < 0.45 and self.on_line_vel_flag:
-                target_vel = self.target_vel_on_line
-
-                if (
-                    current_vel > self.target_vel_on_line - self.v_max / N_V * 0.5
-                    and self.target_acc_on_line > 2.0 * self.a_max / N_A
-                ):
-                    target_vel = current_vel + self.target_acc_on_line / acc_kp_of_pure_pursuit
-
-            # collect target_acceleration data when current velcity is close to target_vel_on_line
-            elif (
-                achievement_rate < self.deceleration_rate
-                or self.target_vel_on_line < self.v_max / 2.0
-            ):
-                if self.collected_data_counts_of_vel_acc[self.vel_idx, self.acc_idx] > 50:
-                    self.acc_idx = np.argmin(self.collected_data_counts_of_vel_acc[self.vel_idx, :])
-                    self.target_acc_on_line = self.a_bin_centers[self.acc_idx]
-
-                if (
-                    current_vel
-                    < max(
-                        [self.target_vel_on_line - 1.0 * self.v_max / N_V, self.v_max / N_V / 2.0]
-                    )
-                    and self.target_acc_on_line < 0.0
-                ):
-                    self.acc_idx = np.argmin(
-                        self.collected_data_counts_of_vel_acc[self.vel_idx, int(N_A / 2.0) : N_A]
-                    ) + int(N_A / 2)
-                    self.target_acc_on_line = self.a_bin_centers[self.acc_idx]
-
-                elif (
-                    current_vel > self.target_vel_on_line + 1.0 * self.v_max / N_V
-                    and self.target_acc_on_line > 0.0
-                ):
-                    self.acc_idx = np.argmin(
-                        self.collected_data_counts_of_vel_acc[self.vel_idx, 0 : int(N_A / 2.0)]
-                    )
-                    self.target_acc_on_line = self.a_bin_centers[self.acc_idx]
-
-                target_vel = current_vel + self.target_acc_on_line / acc_kp_of_pure_pursuit
-
-            # deceleration
-            if self.deceleration_rate <= achievement_rate:
-                if COURSE_NAME == "eight_course" or COURSE_NAME == "u_shaped_return":
-                    target_vel = np.min([self.v_max / 10.0, max_vel_from_lateral_acc / 2.0])
-                elif (
-                    COURSE_NAME == "straight_line_positive"
-                    or COURSE_NAME == "straight_line_negative"
-                ):
-                    target_vel = 0.0
-
-        # set target velocity on circle part
-        if part == "left_circle" or part == "right_circle":
-            if achievement_rate < 0.10 and self.target_vel_on_line > self.v_max / 2.0:
-                target_vel = np.min([self.v_max / 10.0, max_vel_from_lateral_acc / 2.0])
-            elif achievement_rate < 0.50:
-                target_vel = max_vel_from_lateral_acc / 2.0
-            else:
-                target_vel = max_vel_from_lateral_acc
-
-        self.prev_part = part
-
-        return target_vel
-
     def updateNominalTargetTrajectory(self):
         data_collecting_area = np.array(
             [
@@ -710,54 +416,18 @@ class DataCollectingTrajectoryPublisher(Node):
 
         actual_long_side = max(long_side_length - long_side_margin, 1.1)
         actual_short_side = max(short_side_length - long_side_margin, 1.0)
-
-        if COURSE_NAME == "eight_course":
-            (
-                trajectory_position_data,
-                trajectory_yaw_data,
-                trajectory_curvature_data,
-                self.trajectory_parts,
-                self.trajectory_achievement_rates,
-            ) = get_eight_course_trajectory_points(
-                actual_long_side,
-                actual_short_side,
-                self.traj_step,
-                total_distance,
-            )
-
-        elif COURSE_NAME == "straight_line_positive" or COURSE_NAME == "straight_line_negative":
-            (
-                trajectory_position_data,
-                trajectory_yaw_data,
-                trajectory_curvature_data,
-                self.trajectory_parts,
-                self.trajectory_achievement_rates,
-            ) = get_straight_line_course_trajectory_points(
-                actual_long_side,
-                actual_short_side,
-                self.traj_step,
-            )
-
-        elif COURSE_NAME == "u_shaped_return":
-            (
-                trajectory_position_data,
-                trajectory_yaw_data,
-                trajectory_curvature_data,
-                self.trajectory_parts,
-                self.trajectory_achievement_rates,
-            ) = get_u_shaped_return_course_trajectory_points(
-                actual_long_side,
-                actual_short_side,
-                self.traj_step,
-                total_distance,
-            )
-
-        else:
-            self.trajectory_position_data = None
-            self.trajectory_yaw_data = None
-            self.trajectory_longitudinal_velocity_data = None
-            self.trajectory_curvature_data = None
-
+        (
+            trajectory_position_data,
+            trajectory_yaw_data,
+            trajectory_curvature_data,
+            self.trajectory_parts,
+            self.trajectory_achievement_rates,
+        ) = get_trajectory_points(
+            actual_long_side,
+            actual_short_side,
+            self.traj_step,
+            total_distance,
+        )
         for i in range(len(trajectory_yaw_data)):
             if trajectory_yaw_data[i] > np.pi:
                 trajectory_yaw_data[i] -= 2 * np.pi
@@ -834,12 +504,13 @@ class DataCollectingTrajectoryPublisher(Node):
                 trajectory_curvature_data = (
                     1 * np.convolve(augmented_curvature_data, w, mode="same")[window:-window]
                 )
+
         # [2-4] nominal velocity
         target_longitudinal_velocity = (
             self.get_parameter("target_longitudinal_velocity").get_parameter_value().double_value
         )
 
-        trajectory_longitudinal_velocity_data = target_longitudinal_velocity * np.zeros(
+        trajectory_longitudinal_velocity_data = target_longitudinal_velocity * np.ones(
             len(trajectory_position_data)
         )
         self.current_target_longitudinal_velocity = 1 * target_longitudinal_velocity
@@ -856,13 +527,13 @@ class DataCollectingTrajectoryPublisher(Node):
         steer_bin = np.digitize(steer, self.steer_bins) - 1
         a_bin = np.digitize(a, self.a_bins) - 1
 
-        if 0 <= v_bin < self.num_bins_v and 0 <= a_bin < self.num_bins_a:
+        if 0 <= v_bin < self.num_bins and 0 <= a_bin < self.num_bins:
             self.collected_data_counts_of_vel_acc[v_bin, a_bin] += 1
 
-        if 0 <= v_bin < self.num_bins_v and 0 <= steer_bin < self.num_bins_steer:
+        if 0 <= v_bin < self.num_bins and 0 <= steer_bin < self.num_bins:
             self.collected_data_counts_of_vel_steer[v_bin, steer_bin] += 1
 
-    def plot_data_collection_grid(self):
+    def plot_data_collection_grid(self, part, rate):
         # do not update if enough time has not passed
         if self.last_grid_update_time is not None:
             time_elapsed = self.get_clock().now() - self.last_grid_update_time
@@ -938,7 +609,6 @@ class DataCollectingTrajectoryPublisher(Node):
         la = (l1 + l3) / 2
         lb = (l2 + l4) / 2
         title_of_fig = "rectangle : (la,lb) = " + str((la, lb))
-        title_of_fig += "total num of data = " + str(np.sum(self.collected_data_counts_of_vel_acc))
         self.fig.suptitle(title_of_fig)
 
         self.fig.canvas.draw()
@@ -1080,11 +750,161 @@ class DataCollectingTrajectoryPublisher(Node):
             self.one_round_progress_rate = 1.0 * nearestIndex / len(trajectory_position_data)
 
             # set target velocity
-            target_vel = self.get_target_velocity(nearestIndex)
+            part = self.trajectory_parts[
+                nearestIndex
+            ]  # "left_circle", "right_circle", "linear_positive", "linear_negative"
+            achievement_rate = self.trajectory_achievement_rates[nearestIndex]
+            current_vel = self._present_kinematic_state.twist.twist.linear.x
+            current_acc = self._present_acceleration.accel.accel.linear.x
+
+            acc_kp_of_pure_pursuit = self.get_parameter("acc_kp").get_parameter_value().double_value
+            N = self.num_bins
+
+            self.acc_hist[:-1] = 1.0 * self.acc_hist[1:]
+            self.acc_hist[-1] = current_acc
+            self.vel_hist[:-1] = 1.0 * self.vel_hist[1:]
+            self.vel_hist[-1] = current_vel
+
+            max_lateral_accel = (
+                self.get_parameter("max_lateral_accel").get_parameter_value().double_value
+            )
+            if USE_CURVATURE_RADIUS_FLAG:
+                max_vel_from_lateral_acc = np.sqrt(
+                    max_lateral_accel * trajectory_curvature_data[nearestIndex]
+                )
+            else:
+                max_vel_from_lateral_acc = np.sqrt(
+                    max_lateral_accel / trajectory_curvature_data[nearestIndex]
+                )
+
+            target_vel = min([self.v_max / N, max_vel_from_lateral_acc])
+
+            # set self.target_acc_on_line and self.target_vel_on_line after vehicle from circle part to linear part
+            min_data_num_margin = 10
+            min_index_list = []
+            if (self.prev_part == "left_circle" or self.prev_part == "right_circle") and (
+                part == "linear_positive" or part == "linear_negative"
+            ):
+                self.on_line_vel_flag = True
+                min_num_data = 1e12
+
+                # do not collect data when velocity and acceleration are low
+                exclude_idx_list = [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (0, 2)]
+                # do not collect data when velocity and acceleration are high
+                exclude_idx_list += [
+                    (-1 + N, -1 + N),
+                    (-2 + N, -1 + N),
+                    (-3 + N, -1 + N),
+                    (-1 + N, -2 + N),
+                    (-2 + N, -2 + N),
+                    (-1 + N, -3 + N),
+                ]
+
+                for i in range(0, N):
+                    for j in range(0, N):
+                        if (i, j) not in exclude_idx_list:
+                            if (
+                                min_num_data - min_data_num_margin
+                                > self.collected_data_counts_of_vel_acc[i, j]
+                            ):
+                                min_num_data = self.collected_data_counts_of_vel_acc[i, j]
+                                min_index_list.clear()
+                                min_index_list.append((j, i))
+
+                            elif (
+                                min_num_data + min_data_num_margin
+                                > self.collected_data_counts_of_vel_acc[i, j]
+                            ):
+                                min_index_list.append((j, i))
+
+                self.acc_idx, self.vel_idx = min_index_list[
+                    np.random.randint(0, len(min_index_list))
+                ]
+                self.target_acc_on_line = self.a_bin_centers[self.acc_idx]
+                self.target_vel_on_line = self.v_bin_centers[self.vel_idx]
+
+                if self.target_vel_on_line > self.v_max * 3.0 / 4.0:
+                    self.deceleration_rate = 0.55
+                elif self.target_vel_on_line > self.v_max / 2.0:
+                    self.deceleration_rate = 0.60
+                else:
+                    self.deceleration_rate = 1.0
+
+            # set target velocity on linear part
+            if part == "linear_positive" or part == "linear_negative":
+                if (
+                    current_vel > self.target_vel_on_line - self.v_max / N / 8.0
+                    and self.target_vel_on_line >= self.v_max / 2.0
+                ):
+                    self.on_line_vel_flag = False
+                elif (
+                    abs(current_vel - self.target_vel_on_line) < self.v_max / N / 4.0
+                    and self.target_vel_on_line < self.v_max / 2.0
+                ):
+                    self.on_line_vel_flag = False
+
+                # accelerate until vehicle reaches target_vel_on_line
+                if 0.0 <= achievement_rate and achievement_rate < 0.45 and self.on_line_vel_flag:
+                    target_vel = self.target_vel_on_line
+
+                    if (
+                        current_vel > self.target_vel_on_line - self.v_max / N
+                        and self.target_acc_on_line > 2.0 * self.a_max / N
+                    ):
+                        target_vel = current_vel + self.target_acc_on_line / acc_kp_of_pure_pursuit
+
+                # collect target_acceleration data when current velcity is close to target_vel_on_line
+                elif (
+                    achievement_rate < self.deceleration_rate
+                    or self.target_vel_on_line < self.v_max / 2.0
+                ):
+                    if self.collected_data_counts_of_vel_acc[self.vel_idx, self.acc_idx] > 50:
+                        self.acc_idx = np.argmin(
+                            self.collected_data_counts_of_vel_acc[self.vel_idx, :]
+                        )
+                        self.target_acc_on_line = self.a_bin_centers[self.acc_idx]
+
+                    if (
+                        current_vel
+                        < max([self.target_vel_on_line - 1.0 * self.v_max / N, self.v_max / N])
+                        and self.target_acc_on_line < 0.0
+                    ):
+                        self.acc_idx = np.argmin(
+                            self.collected_data_counts_of_vel_acc[self.vel_idx, int(N / 2.0) : N]
+                        ) + int(N / 2)
+                        self.target_acc_on_line = self.a_bin_centers[self.acc_idx]
+
+                    elif (
+                        current_vel > self.target_vel_on_line + 1.0 * self.v_max / N
+                        and self.target_acc_on_line >= 0.0
+                    ):
+                        self.acc_idx = np.argmin(
+                            self.collected_data_counts_of_vel_acc[self.vel_idx, 0 : int(N / 2.0)]
+                        )
+                        self.target_acc_on_line = self.a_bin_centers[self.acc_idx]
+
+                    target_vel = current_vel + self.target_acc_on_line / acc_kp_of_pure_pursuit
+
+                # deceleration
+                if (
+                    self.deceleration_rate <= achievement_rate
+                    and self.target_vel_on_line > self.v_max / 2.0
+                ):
+                    target_vel = 2.0 * self.v_max / N
+
+            # set target velocity on circle part
+            if part == "left_circle" or part == "right_circle":
+                if achievement_rate < 0.10 and self.target_vel_on_line > self.v_max / 2.0:
+                    target_vel = self.v_max / N
+                elif achievement_rate < 0.50:
+                    target_vel = max_vel_from_lateral_acc / 2.0
+                else:
+                    target_vel = max_vel_from_lateral_acc
 
             trajectory_longitudinal_velocity_data = np.array(
                 [target_vel for _ in range(len(trajectory_longitudinal_velocity_data))]
             )
+            self.prev_part = part
 
             # [5] modify target velocity
             # [5-1] add noise
@@ -1109,9 +929,6 @@ class DataCollectingTrajectoryPublisher(Node):
             )
 
             # [5-2] apply lateral accel limitself.acc_hist[-1] = current_acc
-            max_lateral_accel = (
-                self.get_parameter("max_lateral_accel").get_parameter_value().double_value
-            )
             if USE_CURVATURE_RADIUS_FLAG:
                 lateral_acc_limit = np.sqrt(max_lateral_accel * trajectory_curvature_data)
             else:
@@ -1315,7 +1132,7 @@ class DataCollectingTrajectoryPublisher(Node):
                 self.axs[0].set_xlabel("future timestamp [s]")
                 self.axs[0].set_ylabel("longitudinal_velocity [m/s]")
                 self.axs[0].legend(fontsize=8)
-                self.plot_data_collection_grid()
+                self.plot_data_collection_grid(part, achievement_rate)
                 plt.pause(0.01)
 
 
