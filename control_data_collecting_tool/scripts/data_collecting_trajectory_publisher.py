@@ -39,9 +39,16 @@ Differential_Smoothing_Flag = True
 USE_CURVATURE_RADIUS_FLAG = False
 
 #COURSE_NAME = "eight_course"
-#COURSE_NAME = "u_shaped_return"
+COURSE_NAME = "u_shaped_return"
 #COURSE_NAME = "straight_line_positive"
-COURSE_NAME = "straight_line_negative"
+#COURSE_NAME = "straight_line_negative"
+
+NUM_BINS_V = 10
+NUM_BINS_STEER = 10
+NUM_BINS_A = 10
+V_NUB, V_MAX= 0.0, 11.2
+STEER_MIN, STEER_MAX = -1.0, 1.0
+A_MIN, A_MAX = -1.0, 1.0
 
 def smooth_bounding(upper: np.ndarray, threshold: np.ndarray, x: np.ndarray):
     result = np.zeros(x.shape)
@@ -294,17 +301,19 @@ class DataCollectingTrajectoryPublisher(Node):
 
         # velocity and acceleration grid
         # velocity and steer grid
-        self.num_bins = 10
-        self.v_min, self.v_max = 0, 11.2
-        self.steer_min, self.steer_max = -1.0, 1.0
-        self.a_min, self.a_max = -1.5, 1.5
+        self.num_bins_v = NUM_BINS_V
+        self.num_bins_steer = NUM_BINS_STEER
+        self.num_bins_a = NUM_BINS_A
+        self.v_min, self.v_max = V_NUB, V_MAX
+        self.steer_min, self.steer_max = STEER_MIN, STEER_MAX
+        self.a_min, self.a_max = A_MIN, A_MAX
 
-        self.collected_data_counts_of_vel_acc = np.zeros((self.num_bins, self.num_bins))
-        self.collected_data_counts_of_vel_steer = np.zeros((self.num_bins, self.num_bins))
+        self.collected_data_counts_of_vel_acc = np.zeros((self.num_bins_v, self.num_bins_a))
+        self.collected_data_counts_of_vel_steer = np.zeros((self.num_bins_v, self.num_bins_steer))
 
-        self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins + 1)
-        self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins + 1)
-        self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins + 1)
+        self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins_v + 1)
+        self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins_steer + 1)
+        self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins_a + 1)
 
         self.v_bin_centers = (self.v_bins[:-1] + self.v_bins[1:]) / 2
         self.steer_bin_centers = (self.steer_bins[:-1] + self.steer_bins[1:]) / 2
@@ -354,7 +363,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "lateral_error_threshold",
-            5.0,
+            2.0,
             ParameterDescriptor(
                 description="Lateral error threshold where applying velocity limit [m/s]"
             ),
@@ -489,7 +498,8 @@ class DataCollectingTrajectoryPublisher(Node):
             current_acc = self._present_acceleration.accel.accel.linear.x
 
             acc_kp_of_pure_pursuit = self.get_parameter("acc_kp").get_parameter_value().double_value
-            N = self.num_bins
+            N_V = self.num_bins_v
+            N_A = self.num_bins_a
 
             self.acc_hist[:-1] = 1.0 * self.acc_hist[1:]
             self.acc_hist[-1] = current_acc
@@ -508,7 +518,7 @@ class DataCollectingTrajectoryPublisher(Node):
                     max_lateral_accel / self.trajectory_curvature_data[nearestIndex]
                 )
 
-            target_vel = min([self.v_max / N, max_vel_from_lateral_acc])
+            target_vel = min([self.v_max / N_V, max_vel_from_lateral_acc])
 
             # set self.target_acc_on_line and self.target_vel_on_line after vehicle from circle part to linear part
             min_data_num_margin = 5
@@ -519,20 +529,21 @@ class DataCollectingTrajectoryPublisher(Node):
                 self.on_line_vel_flag = True
                 min_num_data = 1e12
 
+                
                 # do not collect data when velocity and acceleration are low
                 exclude_idx_list = [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (0, 2)]
                 # do not collect data when velocity and acceleration are high
                 exclude_idx_list += [
-                    (-1 + N, -1 + N),
-                    (-2 + N, -1 + N),
-                    (-3 + N, -1 + N),
-                    (-1 + N, -2 + N),
-                    (-2 + N, -2 + N),
-                    (-1 + N, -3 + N),
+                    (-1 + N_V, -1 + N_A),
+                    (-2 + N_V, -1 + N_A),
+                    (-3 + N_V, -1 + N_A),
+                    (-1 + N_V, -2 + N_A),
+                    (-2 + N_V, -2 + N_A),
+                    (-1 + N_V, -3 + N_A),
                 ]
 
-                for i in range(0, N):
-                    for j in range(0, N):
+                for i in range(0, N_V):
+                    for j in range(0, N_A):
                         if (i, j) not in exclude_idx_list:
                             if (
                                 min_num_data - min_data_num_margin
@@ -564,12 +575,12 @@ class DataCollectingTrajectoryPublisher(Node):
             # set target velocity on linear part
             if part == "linear_positive" or part == "linear_negative":
                 if (
-                    current_vel > self.target_vel_on_line - self.v_max / N / 8.0
+                    current_vel > self.target_vel_on_line - self.v_max / N_V / 8.0
                     and self.target_vel_on_line >= self.v_max / 2.0
                 ):
                     self.on_line_vel_flag = False
                 elif (
-                    abs(current_vel - self.target_vel_on_line) < self.v_max / N / 4.0
+                    abs(current_vel - self.target_vel_on_line) < self.v_max / N_V / 4.0
                     and self.target_vel_on_line < self.v_max / 2.0
                 ):
                     self.on_line_vel_flag = False
@@ -579,8 +590,8 @@ class DataCollectingTrajectoryPublisher(Node):
                     target_vel = self.target_vel_on_line
 
                     if (
-                        current_vel > self.target_vel_on_line - self.v_max / N * 0.5
-                        and self.target_acc_on_line > 2.0 * self.a_max / N
+                        current_vel > self.target_vel_on_line - self.v_max / N_V * 0.5
+                        and self.target_acc_on_line > 2.0 * self.a_max / N_A
                     ):
                         target_vel = current_vel + self.target_acc_on_line / acc_kp_of_pure_pursuit
 
@@ -597,20 +608,20 @@ class DataCollectingTrajectoryPublisher(Node):
 
                     if (
                         current_vel
-                        < max([self.target_vel_on_line - 1.0 * self.v_max / N, self.v_max / N / 2.0])
+                        < max([self.target_vel_on_line - 1.0 * self.v_max / N_V, self.v_max / N_V / 2.0])
                         and self.target_acc_on_line < 0.0
                     ):
                         self.acc_idx = np.argmin(
-                            self.collected_data_counts_of_vel_acc[self.vel_idx, int(N / 2.0) : N]
-                        ) + int(N / 2)
+                            self.collected_data_counts_of_vel_acc[self.vel_idx, int(N_A / 2.0) : N_A]
+                        ) + int(N_A/ 2)
                         self.target_acc_on_line = self.a_bin_centers[self.acc_idx]
 
                     elif (
-                        current_vel > self.target_vel_on_line + 1.0 * self.v_max / N
+                        current_vel > self.target_vel_on_line + 1.0 * self.v_max / N_V
                         and self.target_acc_on_line > 0.0
                     ):
                         self.acc_idx = np.argmin(
-                            self.collected_data_counts_of_vel_acc[self.vel_idx, 0 : int(N / 2.0)]
+                            self.collected_data_counts_of_vel_acc[self.vel_idx, 0 : int(N_A / 2.0)]
                         )
                         self.target_acc_on_line = self.a_bin_centers[self.acc_idx]
 
@@ -621,14 +632,14 @@ class DataCollectingTrajectoryPublisher(Node):
                     self.deceleration_rate <= achievement_rate
                 ):
                     if COURSE_NAME == "eight_course" or COURSE_NAME == "u_shaped_return":
-                        target_vel = np.min([self.v_max / N, max_vel_from_lateral_acc / 2.0])
+                        target_vel = np.min([self.v_max / 10.0, max_vel_from_lateral_acc / 2.0])
                     elif COURSE_NAME == "straight_line_positive" or COURSE_NAME == "straight_line_negative":
                         target_vel = 0.0
 
             # set target velocity on circle part
             if part == "left_circle" or part == "right_circle":
                 if achievement_rate < 0.10 and self.target_vel_on_line > self.v_max / 2.0:
-                    target_vel = np.min([self.v_max / N, max_vel_from_lateral_acc / 2.0])
+                    target_vel = np.min([self.v_max / 10.0, max_vel_from_lateral_acc / 2.0])
                 elif achievement_rate < 0.50:
                     target_vel = max_vel_from_lateral_acc / 2.0
                 else:
@@ -850,10 +861,10 @@ class DataCollectingTrajectoryPublisher(Node):
         steer_bin = np.digitize(steer, self.steer_bins) - 1
         a_bin = np.digitize(a, self.a_bins) - 1
 
-        if 0 <= v_bin < self.num_bins and 0 <= a_bin < self.num_bins:
+        if 0 <= v_bin < self.num_bins_v and 0 <= a_bin < self.num_bins_a:
             self.collected_data_counts_of_vel_acc[v_bin, a_bin] += 1
 
-        if 0 <= v_bin < self.num_bins and 0 <= steer_bin < self.num_bins:
+        if 0 <= v_bin < self.num_bins_v and 0 <= steer_bin < self.num_bins_steer:
             self.collected_data_counts_of_vel_steer[v_bin, steer_bin] += 1
 
     def plot_data_collection_grid(self):
