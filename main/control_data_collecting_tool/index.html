@@ -2670,13 +2670,13 @@ You cannot change the data collecting area while driving.</p>
 <td align="left"><code>yaw_error_threshold</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Yaw error threshold where applying velocity limit [rad]</td>
-<td align="left">0.5</td>
+<td align="left">0.75</td>
 </tr>
 <tr>
 <td align="left"><code>velocity_limit_by_tracking_error</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Velocity limit applied when tracking error exceeds threshold [m/s]</td>
-<td align="left">2.0</td>
+<td align="left">1.0</td>
 </tr>
 <tr>
 <td align="left"><code>mov_ave_window</code></td>
@@ -2694,7 +2694,7 @@ You cannot change the data collecting area while driving.</p>
 <td align="left"><code>longitudinal_velocity_noise_amp</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Target longitudinal velocity additional sine noise amplitude [m/s]</td>
-<td align="left">0.1</td>
+<td align="left">0.01</td>
 </tr>
 <tr>
 <td align="left"><code>longitudinal_velocity_noise_min_period</code></td>
@@ -2737,19 +2737,19 @@ You cannot change the data collecting area while driving.</p>
 <td align="left"><code>acc_kp</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Accel command proportional gain</td>
-<td align="left">0.5</td>
+<td align="left">1.0</td>
 </tr>
 <tr>
 <td align="left"><code>lookahead_time</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Pure pursuit lookahead time [s]</td>
-<td align="left">1.5</td>
+<td align="left">2.0</td>
 </tr>
 <tr>
 <td align="left"><code>min_lookahead</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Pure pursuit minimum lookahead length [m]</td>
-<td align="left">3.0</td>
+<td align="left">2.0</td>
 </tr>
 <tr>
 <td align="left"><code>linearized_pure_pursuit_steer_kp_param</code></td>
