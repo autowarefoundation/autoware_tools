@@ -85,7 +85,7 @@ class VelocityChecker(Node):
         )
         self.sub2 = self.create_subscription(
             Trajectory,
-            lane_drv + "/motion_planning/obstacle_avoidance_planner/trajectory",
+            lane_drv + "/motion_planning/path_optimizer/trajectory",
             self.CallBackAvoidTrajectory,
             1,
         )
