@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <node pkg="autoware_lanelet2_map_utils" exec="fix_z_value_by_pcd" name="fix_z_value_by_pcd" output="screen">
+    <param from="$(find-pkg-share autoware_lanelet2_map_utils)/config/fix_z_value_by_pcd.param.yaml" allow_substs="true"/>
+  </node>
+</launch>
