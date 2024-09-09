@@ -198,7 +198,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.on_line_vel_flag = True
 
-        self.previouse_target_vel = 2.0
+        self.previous_target_vel = 2.0
         self.deceleration_rate = 0.6
 
         self.vel_hist = np.zeros(50)
@@ -851,7 +851,7 @@ class DataCollectingTrajectoryPublisher(Node):
                     ):
                         target_vel = current_vel + self.target_acc_on_line / acc_kp_of_pure_pursuit
 
-                # collect target_acceleration data when current velcity is close to target_vel_on_line
+                # collect target_acceleration data when current velocity is close to target_vel_on_line
                 elif (
                     achievement_rate < self.deceleration_rate
                     or self.target_vel_on_line < self.v_max / 2.0
@@ -926,7 +926,7 @@ class DataCollectingTrajectoryPublisher(Node):
                 trajectory_longitudinal_velocity_data.copy()
             )
 
-            # [5-2] apply lateral accel limitself.acc_hist[-1] = current_acc
+            # [5-2] apply lateral accel limit
             if USE_CURVATURE_RADIUS_FLAG:
                 lateral_acc_limit = np.sqrt(max_lateral_accel * trajectory_curvature_data)
             else:
