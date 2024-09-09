@@ -71,7 +71,7 @@ def get_trajectory_points(
         (b / 2 + (1.0 - np.sqrt(3) / 2) * a) ** 2 + (a / 2) ** 2
     )  # half length of the linear trajectory
     AD = 2 * OB
-    θB = np.arctan(
+    θB = arctan(
         a / 2 / (b / 2 + (1.0 - np.sqrt(3) / 2) * a)
     )  # Angle that OB makes with respect to x-axis
     BD = 2 * np.pi * R / 6  # the length of arc BD
@@ -106,8 +106,8 @@ def get_trajectory_points(
         if OB <= t and t <= OB + BD:
             t1 = t - OB
             t1_rad = t1 / R
-            x[i] = OR[0] + R * np.cos(np.pi / 6 - t1_rad)
-            y[i] = OR[1] + R * np.sin(np.pi / 6 - t1_rad)
+            x[i] = OR[0] + R * cos(np.pi / 6 - t1_rad)
+            y[i] = OR[1] + R * sin(np.pi / 6 - t1_rad)
             yaw[i] = -t1_rad
             curve[i] = 1 / R
             parts[i] = "right_circle"
@@ -126,8 +126,8 @@ def get_trajectory_points(
         if OB + BD + AD <= t and t <= OB + BD + AD + AC:
             t3 = t - (OB + BD + AD)
             t3_rad = t3 / R
-            x[i] = OL[0] - R * np.cos(-np.pi / 6 + t3_rad)
-            y[i] = OL[1] - R * np.sin(-np.pi / 6 + t3_rad)
+            x[i] = OL[0] - R * cos(-np.pi / 6 + t3_rad)
+            y[i] = OL[1] - R * sin(-np.pi / 6 + t3_rad)
             yaw[i] = np.pi + t3_rad
             curve[i] = 1 / R
 
@@ -435,8 +435,8 @@ class DataCollectingTrajectoryPublisher(Node):
         # [2-2] translation and rotation of origin
         rot_matrix = np.array(
             [
-                [np.cos(yaw_offset), -np.sin(yaw_offset)],
-                [np.sin(yaw_offset), np.cos(yaw_offset)],
+                [cos(yaw_offset), -sin(yaw_offset)],
+                [sin(yaw_offset), cos(yaw_offset)],
             ]
         )
         trajectory_position_data = (rot_matrix @ trajectory_position_data.T).T
@@ -717,7 +717,7 @@ class DataCollectingTrajectoryPublisher(Node):
                     )  # 4 is minimum noise_data_num
                     for i in range(noise_data_num):
                         self.vel_noise_list.append(
-                            tmp_noise_vel * np.sin(2.0 * np.pi * i / noise_data_num)
+                            tmp_noise_vel * sin(2.0 * np.pi * i / noise_data_num)
                         )
             self.vel_noise_list.pop(0)
 
@@ -996,12 +996,8 @@ class DataCollectingTrajectoryPublisher(Node):
 
                 tmp_traj_point.pose.orientation.x = 0.0
                 tmp_traj_point.pose.orientation.y = 0.0
-                tmp_traj_point.pose.orientation.z = np.sin(
-                    trajectory_yaw_data[i + nearestIndex] / 2
-                )
-                tmp_traj_point.pose.orientation.w = np.cos(
-                    trajectory_yaw_data[i + nearestIndex] / 2
-                )
+                tmp_traj_point.pose.orientation.z = sin(trajectory_yaw_data[i + nearestIndex] / 2)
+                tmp_traj_point.pose.orientation.w = cos(trajectory_yaw_data[i + nearestIndex] / 2)
 
                 tmp_traj_point.longitudinal_velocity_mps = trajectory_longitudinal_velocity_data[
                     i + nearestIndex
