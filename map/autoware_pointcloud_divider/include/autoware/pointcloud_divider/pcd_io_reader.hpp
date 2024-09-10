@@ -155,7 +155,7 @@ private:
   float orientation_w_, orientation_x_, orientation_y_, orientation_z_;
   // Number of points in the PCD file
   size_t point_num_;
-  // Number of points readed so far, reset every time setInput is called
+  // Number of points loaded so far, reset every time setInput is called
   size_t loaded_point_num_;
   bool binary_;                   // Data: true: binary, false: ascii
   std::ifstream file_;            // Input stream of the PCD file
