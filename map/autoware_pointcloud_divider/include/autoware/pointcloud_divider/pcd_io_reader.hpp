@@ -56,6 +56,7 @@
 
 #include "utility.hpp"
 
+#include <pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -124,6 +125,7 @@ private:
     origin_x_ = origin_y_ = origin_z_ = 0.0;
     orientation_w_ = orientation_x_ = orientation_y_ = orientation_z_ = 0.0;
     point_num_ = 0;
+    loaded_point_num_ = 0;
     binary_ = true;
 
     if (file_.is_open()) {
@@ -153,14 +155,16 @@ private:
   float orientation_w_, orientation_x_, orientation_y_, orientation_z_;
   // Number of points in the PCD file
   size_t point_num_;
+  // Number of points loaded so far, reset every time setInput is called
+  size_t loaded_point_num_;
   bool binary_;                   // Data: true: binary, false: ascii
   std::ifstream file_;            // Input stream of the PCD file
   size_t block_size_ = 30000000;  // Number of points to read in each readABlock
   size_t point_size_, read_size_;
   char * buffer_;
-  std::string pcd_path_;  // Path to the current opening PCD
-  std::vector<size_t> read_loc_;
-  std::vector<size_t> read_sizes_;
+  std::string pcd_path_;            // Path to the current opening PCD
+  std::vector<size_t> read_loc_;    // Locations to read fields of a point
+  std::vector<size_t> read_sizes_;  // Sizes of fields of a point
 };
 
 template <typename PointT>
@@ -519,9 +523,14 @@ size_t CustomPCDReader<PointT>::readABlockBinary(std::ifstream & input, PclCloud
     input.read(buffer_, read_size_);
 
     // Parse the buffer and convert to point
-    for (int i = 0; i < input.gcount(); i += point_size_) {
+    for (int i = 0; i < input.gcount() && loaded_point_num_ < point_num_;
+         i += point_size_, ++loaded_point_num_) {
       parsePoint(buffer_ + i, read_sizes_, read_loc_, p);
       output.push_back(p);
+    }
+
+    if (loaded_point_num_ == point_num_) {
+      input.setstate(std::ios_base::eofbit);
     }
 
     return input.gcount();
@@ -565,27 +574,33 @@ size_t CustomPCDReader<PointT>::readABlockASCII(std::ifstream & input, PclCloudT
   output.reserve(block_size_);
 
   std::string point_line;
+  size_t read_byte_num = 0;
 
   PointT p;
 
-  while (input) {
+  while (input && loaded_point_num_ < point_num_) {
     std::getline(input, point_line);
 
     if (!input.fail()) {
       // Parse the buffer and convert to point
       parsePoint(point_line, read_loc_, p);
       output.push_back(p);
+
+      read_byte_num += input.gcount();
+      ++loaded_point_num_;
     } else {
       fprintf(
         stderr, "[%s, %d] %s::Error: Failed to read a block of points from file. File %s\n",
         __FILE__, __LINE__, __func__, pcd_path_.c_str());
       exit(EXIT_FAILURE);
     }
-
-    return input.gcount();
   }
 
-  return 0;
+  if (loaded_point_num_ == point_num_) {
+    input.setstate(std::ios_base::eofbit);
+  }
+
+  return read_byte_num;
 }
 
 template <typename PointT>
