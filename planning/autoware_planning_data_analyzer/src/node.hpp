@@ -61,8 +61,6 @@ private:
 
   void print(const std::shared_ptr<DataSet> & data_set) const;
 
-  double search(const double w0, const double w1, const double w2, const double w3) const;
-
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_marker_;
   rclcpp::Publisher<Odometry>::SharedPtr pub_odometry_;

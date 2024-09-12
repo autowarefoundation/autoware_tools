@@ -14,6 +14,8 @@
 
 #include "node.hpp"
 
+#include "autoware/universe_utils/system/stop_watch.hpp"
+
 #include <autoware/universe_utils/ros/marker_helper.hpp>
 
 namespace autoware::behavior_analyzer
@@ -71,12 +73,15 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   parameters_ = std::make_shared<Parameters>();
   parameters_->resample_num = declare_parameter<int>("resample_num");
   parameters_->time_resolution = declare_parameter<double>("time_resolution");
-  parameters_->w_lat_comfortability = declare_parameter<double>("weight.lat_comfortability");
-  parameters_->w_lon_comfortability = declare_parameter<double>("weight.lon_comfortability");
-  parameters_->w_efficiency = declare_parameter<double>("weight.efficiency");
-  parameters_->w_safety = declare_parameter<double>("weight.safety");
-  parameters_->dt = declare_parameter<double>("grid_seach.dt");
-  parameters_->grid = declare_parameter<std::vector<double>>("grid_seach.grid");
+  parameters_->w0 = declare_parameter<double>("weight.lat_comfortability");
+  parameters_->w1 = declare_parameter<double>("weight.lon_comfortability");
+  parameters_->w2 = declare_parameter<double>("weight.efficiency");
+  parameters_->w3 = declare_parameter<double>("weight.safety");
+  parameters_->grid_seach.dt = declare_parameter<double>("grid_seach.dt");
+  parameters_->grid_seach.min = declare_parameter<double>("grid_seach.min");
+  parameters_->grid_seach.max = declare_parameter<double>("grid_seach.max");
+  parameters_->grid_seach.resolusion = declare_parameter<double>("grid_seach.resolusion");
+  parameters_->grid_seach.thread_num = declare_parameter<int>("grid_seach.thread_num");
   parameters_->target_state.lat_positions =
     declare_parameter<std::vector<double>>("target_state.lateral_positions");
   parameters_->target_state.lat_velocities =
@@ -196,89 +201,125 @@ void BehaviorAnalyzerNode::weight(
   std::lock_guard<std::mutex> lock(mutex_);
   RCLCPP_INFO(get_logger(), "start weight grid seach.");
 
-  double minimum_mse = std::numeric_limits<double>::max();
-  double best_w0 = 0.0;
-  double best_w1 = 0.0;
-  double best_w2 = 0.0;
-  double best_w3 = 0.0;
+  const auto & p = parameters_;
 
-  for (const auto & w_lat_comfortability : parameters_->grid) {
-    for (const auto & w_lon_comfortability : parameters_->grid) {
-      for (const auto & w_efficiency : parameters_->grid) {
-        for (const auto & w_safety : parameters_->grid) {
-          const auto mse =
-            search(w_lat_comfortability, w_lon_comfortability, w_efficiency, w_safety);
-          if (mse < minimum_mse) {
-            minimum_mse = mse;
-            best_w0 = w_lat_comfortability;
-            best_w1 = w_lon_comfortability;
-            best_w2 = w_efficiency;
-            best_w3 = w_safety;
-          }
-          std::cout << "---result---" << std::endl;
-          std::cout << "    MSE:" << mse << " [w0]:" << w_lat_comfortability
-                    << " [w1]:" << w_lon_comfortability << " [w2]:" << w_efficiency
-                    << " [w3]:" << w_safety << std::endl;
-          std::cout << "MIN MSE:" << minimum_mse << " [w0]:" << best_w0 << " [w1]:" << best_w1
-                    << " [w2]:" << best_w2 << " [w3]:" << best_w3 << std::endl;
+  reader_.seek(0);
+  const auto bag_data = std::make_shared<BagData>(
+    duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
+
+  std::vector<Result> weight_grid;
+
+  double resolusion = p->grid_seach.resolusion;
+  double min = p->grid_seach.min;
+  double max = p->grid_seach.max;
+  for (double w0 = min; w0 < max + 0.1 * resolusion; w0 += resolusion) {
+    for (double w1 = min; w1 < max + 0.1 * resolusion; w1 += resolusion) {
+      for (double w2 = min; w2 < max + 0.1 * resolusion; w2 += resolusion) {
+        for (double w3 = min; w3 < max + 0.1 * resolusion; w3 += resolusion) {
+          weight_grid.emplace_back(w0, w1, w2, w3);
         }
       }
     }
   }
+
+  const auto show_best_result = [&weight_grid]() {
+    auto sort_by_loss = weight_grid;
+    std::sort(sort_by_loss.begin(), sort_by_loss.end(), [](const auto & a, const auto & b) {
+      return a.loss < b.loss;
+    });
+
+    const auto best = sort_by_loss.front();
+
+    std::cout << std::fixed;
+    std::cout << std::setprecision(4);
+    std::cout << " [w0]:" << best.w0 << " [w1]:" << best.w1 << " [w2]:" << best.w2
+              << " [w3]:" << best.w3 << " [loss]:" << best.loss << std::endl;
+  };
+
+  autoware::universe_utils::StopWatch<std::chrono::milliseconds> stop_watch;
+
+  stop_watch.tic("total_time");
+  while (reader_.has_next() && rclcpp::ok()) {
+    update(bag_data, p->grid_seach.dt);
+
+    if (!bag_data->ready()) break;
+
+    const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, p);
+
+    std::mutex grid_mutex;
+
+    const auto update = [&weight_grid, &grid_mutex](const auto & data_set, const auto idx) {
+      double w0 = 0.0;
+      double w1 = 0.0;
+      double w2 = 0.0;
+      double w3 = 0.0;
+
+      {
+        std::lock_guard<std::mutex> lock(grid_mutex);
+        if (idx + 1 > weight_grid.size()) return;
+        w0 = weight_grid.at(idx).w0;
+        w1 = weight_grid.at(idx).w1;
+        w2 = weight_grid.at(idx).w2;
+        w3 = weight_grid.at(idx).w3;
+      }
+
+      const auto loss = data_set->loss(w0, w1, w2, w3);
+
+      {
+        std::lock_guard<std::mutex> lock(grid_mutex);
+        if (idx < weight_grid.size()) {
+          weight_grid.at(idx).loss += loss;
+        }
+      }
+    };
+
+    size_t i = 0;
+    while (rclcpp::ok()) {
+      std::vector<std::thread> threads;
+      for (size_t thread_id = 0; thread_id < p->grid_seach.thread_num; thread_id++) {
+        threads.emplace_back(update, data_set, i + thread_id);
+      }
+
+      for (auto & t : threads) t.join();
+
+      if (i + 1 > weight_grid.size()) break;
+
+      i += p->grid_seach.thread_num;
+    }
+
+    show_best_result();
+  }
+  std::cout << "process time: " << stop_watch.toc("total_time") << "[ms]" << std::endl;
+
   RCLCPP_INFO(get_logger(), "finish weight grid seach.");
 
   res->success = true;
 }
 
-double BehaviorAnalyzerNode::search(
-  const double w0, const double w1, const double w2, const double w3) const
-{
-  reader_.seek(0);
-  const auto bag_data = std::make_shared<BagData>(
-    duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
-
-  auto p_tmp = parameters_;
-  p_tmp->w_lat_comfortability = w0;
-  p_tmp->w_lon_comfortability = w1;
-  p_tmp->w_efficiency = w2;
-  p_tmp->w_safety = w3;
-
-  double mse = 0.0;
-  while (reader_.has_next()) {
-    update(bag_data, parameters_->dt);
-
-    const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, p_tmp);
-    const auto mean_square_error = data_set->loss();
-    if (mean_square_error.has_value()) {
-      mse += mean_square_error.value();
-    }
-  }
-
-  return mse;
-}
-
 void BehaviorAnalyzerNode::analyze(const std::shared_ptr<BagData> & bag_data) const
 {
+  if (!bag_data->ready()) return;
+
   const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, parameters_);
 
   const auto opt_tf = std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(TOPIC::TF))
                         ->get(bag_data->timestamp);
-  if (opt_tf.has_value()) {
-    pub_tf_->publish(opt_tf.value());
+  if (opt_tf) {
+    pub_tf_->publish(*opt_tf);
   }
 
   const auto opt_objects =
     std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(TOPIC::OBJECTS))
       ->get(bag_data->timestamp);
-  if (opt_objects.has_value()) {
-    pub_objects_->publish(opt_objects.value());
+  if (opt_objects) {
+    pub_objects_->publish(*opt_objects);
   }
 
   const auto opt_trajectory =
     std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(TOPIC::TRAJECTORY))
       ->get(bag_data->timestamp);
-  if (opt_trajectory.has_value()) {
-    pub_trajectory_->publish(opt_trajectory.value());
+  if (opt_trajectory) {
+    pub_trajectory_->publish(*opt_trajectory);
   }
 
   metrics(data_set);
@@ -300,7 +341,7 @@ void BehaviorAnalyzerNode::metrics(const std::shared_ptr<DataSet> & data_set) co
 
     const auto set_metrics = [&msg, this](const auto & data, const auto metric_type) {
       const auto offset = static_cast<size_t>(metric_type) * parameters_->resample_num;
-      const auto metric = data.values.at(metric_type);
+      const auto metric = data.values.at(static_cast<size_t>(metric_type));
       std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
     };
 
@@ -321,7 +362,7 @@ void BehaviorAnalyzerNode::metrics(const std::shared_ptr<DataSet> & data_set) co
 
     const auto set_metrics = [&msg, this](const auto & data, const auto metric_type) {
       const auto offset = static_cast<size_t>(metric_type) * parameters_->resample_num;
-      const auto metric = data.values.at(metric_type);
+      const auto metric = data.values.at(static_cast<size_t>(metric_type));
       std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
     };
 
@@ -343,7 +384,8 @@ void BehaviorAnalyzerNode::score(const std::shared_ptr<DataSet> & data_set) cons
     msg.data.resize(static_cast<size_t>(SCORE::SIZE));
 
     const auto set_reward = [&msg](const auto & data, const auto score_type) {
-      msg.data.at(static_cast<size_t>(score_type)) = static_cast<float>(data.scores.at(score_type));
+      msg.data.at(static_cast<size_t>(static_cast<size_t>(score_type))) =
+        static_cast<float>(data.scores.at(static_cast<size_t>(score_type)));
     };
 
     set_reward(data_set->manual, SCORE::LONGITUDINAL_COMFORTABILITY);
@@ -362,7 +404,8 @@ void BehaviorAnalyzerNode::score(const std::shared_ptr<DataSet> & data_set) cons
     msg.data.resize(static_cast<size_t>(SCORE::SIZE));
 
     const auto set_reward = [&msg](const auto & data, const auto score_type) {
-      msg.data.at(static_cast<size_t>(score_type)) = static_cast<float>(data.scores.at(score_type));
+      msg.data.at(static_cast<size_t>(static_cast<size_t>(score_type))) =
+        static_cast<float>(data.scores.at(static_cast<size_t>(score_type)));
     };
 
     set_reward(autoware_trajectory.value(), SCORE::LONGITUDINAL_COMFORTABILITY);
@@ -383,7 +426,7 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
     Marker marker = createDefaultMarker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "manual", i++, Marker::ARROW,
       createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 0.0, 0.0, 0.999));
-    marker.pose = point.pose.pose;
+    marker.pose = point->pose.pose;
     msg.markers.push_back(marker);
   }
 
@@ -405,7 +448,8 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
     msg.markers.push_back(marker);
   }
 
-  const auto best_trajectory = data_set->sampling.best();
+  const auto best_trajectory =
+    data_set->sampling.best(parameters_->w0, parameters_->w1, parameters_->w2, parameters_->w3);
   if (best_trajectory.has_value()) {
     Marker marker = createDefaultMarker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "best", i++, Marker::LINE_STRIP,
@@ -437,16 +481,19 @@ void BehaviorAnalyzerNode::print(const std::shared_ptr<DataSet> & data_set) cons
     return;
   }
 
-  const auto best_trajectory = data_set->sampling.best();
+  const auto & p = parameters_;
+
+  const auto best_trajectory = data_set->sampling.best(p->w0, p->w1, p->w2, p->w3);
   if (!best_trajectory.has_value()) {
     return;
   }
 
   std::cout << "---result---" << std::endl;
-  std::cout << "[HUMAN] SCORE:" << data_set->manual.total() << std::endl;
-  std::cout << "[AUTOWARE] SCORE:" << autoware_trajectory.value().total() << std::endl;
-  std::cout << "[SAMPLING] BEST SCORE:" << best_trajectory.value().total() << "("
-            << best_trajectory.value().tag << ")" << std::endl;
+  std::cout << "[HUMAN] SCORE:" << data_set->manual.total(p->w0, p->w1, p->w2, p->w3) << std::endl;
+  std::cout << "[AUTOWARE] SCORE:" << autoware_trajectory.value().total(p->w0, p->w1, p->w2, p->w3)
+            << std::endl;
+  std::cout << "[SAMPLING] BEST SCORE:" << best_trajectory.value().total(p->w0, p->w1, p->w2, p->w3)
+            << "(" << best_trajectory.value().tag << ")" << std::endl;
 }
 
 void BehaviorAnalyzerNode::on_timer()
