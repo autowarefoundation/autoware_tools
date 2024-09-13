@@ -141,12 +141,12 @@ MissingRegulatoryElementsChecker::checkMissingReglatoryElementsInCrosswalk(
     map.regulatoryElementLayer | ranges::views::filter([](auto && elem) {
       const auto & attrs = elem->attributes();
       const auto & it = attrs.find(lanelet::AttributeName::Subtype);
-      return it != attrs.end();  // && it->second == lanelet::AttributeValueString::Crosswalk;
-    });                          /* |
-                              ranges::views::filter([](auto && elem) {
-                                const auto & param = elem->getParameters();
-                                return param.find(lanelet::RoleNameString::Refers) != param.end();
-                              });*/
+      return it != attrs.end() && it->second == lanelet::AttributeValueString::Crosswalk;
+    }) |
+    ranges::views::filter([](auto && elem) {
+      const auto & param = elem->getParameters();
+      return param.find(lanelet::RoleNameString::Refers) != param.end();
+    });
 
   std::cout << "reg_elem_cw" << std::endl;
   for (const auto & id : reg_elem_cw) {

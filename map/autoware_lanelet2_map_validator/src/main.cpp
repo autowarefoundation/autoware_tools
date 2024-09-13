@@ -15,12 +15,8 @@
 #include "autoware_lanelet2_map_validator/validation.hpp"
 #include "lanelet2_validation/Validation.h"
 
-#include <rclcpp/rclcpp.hpp>
-
 int main(int argc, char * argv[])
 {
-  rclcpp::init(argc, argv);
-  auto node = rclcpp::Node::make_shared("autoware_lanelet2_map_validator");
 
   auto config = lanelet::autoware::validation::parseCommandLine(
     argc, const_cast<const char **>(argv));  // NOLINT
