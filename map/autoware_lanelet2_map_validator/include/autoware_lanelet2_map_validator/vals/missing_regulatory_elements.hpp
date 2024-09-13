@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef AUTOWARE_LANELET2_EXTENSION__AUTOWARE_LANELET2_VALIDATION__VALS__MISSING_REGULATORY_ELEMENTS_HPP_
-#define AUTOWARE_LANELET2_EXTENSION__AUTOWARE_LANELET2_VALIDATION__VALS__MISSING_REGULATORY_ELEMENTS_HPP_
+#ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__VALS__MISSING_REGULATORY_ELEMENTS_HPP_
+#define AUTOWARE_LANELET2_MAP_VALIDATOR__VALS__MISSING_REGULATORY_ELEMENTS_HPP_
 
 #include "autoware_lanelet2_map_validator/utils.hpp"
-#include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>
 
+#include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/transform.hpp>
 #include <range/v3/view/unique.hpp>
@@ -51,4 +51,4 @@ private:
 }  // namespace validation
 }  // namespace lanelet
 
-#endif  // AUTOWARE_LANELET2_EXTENSION__AUTOWARE_LANELET2_VALIDATION__VALS__MISSING_REGULATORY_ELEMENTS_HPP_
+#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALS__MISSING_REGULATORY_ELEMENTS_HPP_

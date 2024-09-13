@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "autoware_lanelet2_map_validator/validation.hpp"
+
 #include <autoware_lanelet2_extension/projection/mgrs_projector.hpp>
 #include <autoware_lanelet2_extension/projection/transverse_mercator_projector.hpp>
 

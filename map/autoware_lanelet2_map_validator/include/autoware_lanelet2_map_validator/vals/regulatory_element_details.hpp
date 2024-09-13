@@ -13,9 +13,9 @@
 // limitations under the License.
 
 #include "autoware_lanelet2_map_validator/utils.hpp"
+
 #include <autoware_lanelet2_extension/regulatory_elements/autoware_traffic_light.hpp>
 #include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>
-
 #include <range/v3/view/filter.hpp>
 
 #include <lanelet2_core/LaneletMap.h>
@@ -29,8 +29,8 @@ namespace lanelet
 namespace validation
 {
 
-#ifndef LANELET2_EXTENSION__AUTOWARE_LANELET2_VALIDATION__VALS__REGULATORY_ELEMENT_DETAILS_HPP_
-#define LANELET2_EXTENSION__AUTOWARE_LANELET2_VALIDATION__VALS__REGULATORY_ELEMENT_DETAILS_HPP_
+#ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__VALS__REGULATORY_ELEMENT_DETAILS_HPP_
+#define AUTOWARE_LANELET2_MAP_VALIDATOR__VALS__REGULATORY_ELEMENT_DETAILS_HPP_
 
 class RegulatoryElementDetailsChecker : public lanelet::validation::MapValidator
 {
@@ -47,4 +47,4 @@ private:
 }  // namespace validation
 }  // namespace lanelet
 
-#endif  // LANELET2_EXTENSION__AUTOWARE_LANELET2_VALIDATION__VALS__REGULATORY_ELEMENT_DETAILS_HPP_
+#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALS__REGULATORY_ELEMENT_DETAILS_HPP_

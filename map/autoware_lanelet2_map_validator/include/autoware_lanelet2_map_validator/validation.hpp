@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef AUTOWARE_LANELET2_EXTENSION__AUTOWARE_LANELET2_VALIDATION__VALIDATION_HPP_
-#define AUTOWARE_LANELET2_EXTENSION__AUTOWARE_LANELET2_VALIDATION__VALIDATION_HPP_
+#ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATION_HPP_
+#define AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATION_HPP_
 
 #include "autoware_lanelet2_map_validator/cli.hpp"
 #include "autoware_lanelet2_map_validator/utils.hpp"
@@ -49,4 +49,4 @@ std::vector<lanelet::validation::DetectedIssues> validateMap(const MetaConfig & 
 }  // namespace autoware
 }  // namespace lanelet
 
-#endif  // AUTOWARE_LANELET2_EXTENSION__AUTOWARE_LANELET2_VALIDATION__VALIDATION_HPP_
+#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATION_HPP_

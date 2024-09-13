@@ -53,7 +53,6 @@ MissingRegulatoryElementsChecker::checkMissingReglatoryElementsInTrafficLight(
     }) |
     ranges::views::transform([](auto && ls) { return ls.id(); }) | ranges::views::unique;
 
-  
   std::cout << "tl_ids" << std::endl;
   std::cout << typeid(decltype(tl_ids)).name() << std::endl;
   for (const auto & id : tl_ids) {
@@ -142,12 +141,12 @@ MissingRegulatoryElementsChecker::checkMissingReglatoryElementsInCrosswalk(
     map.regulatoryElementLayer | ranges::views::filter([](auto && elem) {
       const auto & attrs = elem->attributes();
       const auto & it = attrs.find(lanelet::AttributeName::Subtype);
-      return it != attrs.end();// && it->second == lanelet::AttributeValueString::Crosswalk;
-    });/* |
-    ranges::views::filter([](auto && elem) {
-      const auto & param = elem->getParameters();
-      return param.find(lanelet::RoleNameString::Refers) != param.end();
-    });*/
+      return it != attrs.end();  // && it->second == lanelet::AttributeValueString::Crosswalk;
+    });                          /* |
+                              ranges::views::filter([](auto && elem) {
+                                const auto & param = elem->getParameters();
+                                return param.find(lanelet::RoleNameString::Refers) != param.end();
+                              });*/
 
   std::cout << "reg_elem_cw" << std::endl;
   for (const auto & id : reg_elem_cw) {
