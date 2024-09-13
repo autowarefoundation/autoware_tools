@@ -17,7 +17,6 @@
 
 int main(int argc, char * argv[])
 {
-
   auto config = lanelet::autoware::validation::parseCommandLine(
     argc, const_cast<const char **>(argv));  // NOLINT
 
