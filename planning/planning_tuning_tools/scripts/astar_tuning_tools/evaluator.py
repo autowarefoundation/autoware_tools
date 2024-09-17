@@ -145,14 +145,16 @@ class Evaluator:
                 pre_is_back = is_back
 
         return count
-    
+
     def calculate_reverse_distance(self, waypoints):
         reverse_distance = 0
         pre_position = waypoints.waypoints[0].pose.position
         for waypoint in waypoints.waypoints:
             position = waypoint.pose.position
             if waypoint.is_back:
-                reverse_distance += math.hypot(position.x-pre_position.x, position.y-pre_position.y)
+                reverse_distance += math.hypot(
+                    position.x - pre_position.x, position.y - pre_position.y
+                )
             pre_position = position
 
         return reverse_distance
