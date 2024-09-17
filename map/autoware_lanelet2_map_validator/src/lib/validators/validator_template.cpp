@@ -12,33 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__CLI_HPP_
-#define AUTOWARE_LANELET2_MAP_VALIDATOR__CLI_HPP_
-
-#include <boost/program_options.hpp>
-
-#include <lanelet2_validation/Cli.h>
-
-#include <iostream>
-#include <string>
+#include <autoware_lanelet2_map_validator/validators/validator_template.hpp>
 
 namespace lanelet
 {
-namespace autoware
-{
 namespace validation
 {
-struct MetaConfig
-{
-  lanelet::validation::CommandLineConfig command_line_config;
-  std::string projector_type;
-  bool read_yaml = false;
-};
+  lanelet::validation::RegisterMapValidator<ValidatorTemplate> reg;
 
-MetaConfig parseCommandLine(int argc, const char * argv[]);
-
-}  // namespace validation
-}  // namespace autoware
-}  // namespace lanelet
-
-#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__CLI_HPP_
+  lanelet::validation::Issues ValidatorTemplate::operator()(
+    const lanelet::LaneletMap & map)
+  {
+    lanelet::validation::Issues issues;
+    
+    // Remove this line and write down how to append issues
+    (void)map;
+    
+    return issues;
+  }
+}
+}
