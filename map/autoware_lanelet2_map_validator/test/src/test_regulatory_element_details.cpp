@@ -13,9 +13,8 @@
 // limitations under the License.
 
 #include "autoware_lanelet2_map_validator/validators/regulatory_element_details.hpp"
-
-#include <string>
-#include <set>
+#include <autoware_lanelet2_map_validator/validators/crosswalk/regulatory_element_details_for_crosswalks.hpp>
+#include <autoware_lanelet2_map_validator/validators/traffic_light/regulatory_element_details_for_traffic_lights.hpp>
 
 #include <gtest/gtest.h>
 
@@ -132,7 +131,6 @@ public:
     }
   }
   AttributeMap sl_attr, tl_attr, cw_attr, cw_poly_attr, tl_re_attr, cw_re_attr;
-  lanelet::validation::RegulatoryElementDetailsChecker checker_;
 
 private:
 };
@@ -140,26 +138,29 @@ private:
 TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
 {
   std::string expected_validators_concat =
-    "mapping.crosswalk.missing_regulatory_elements,"
-    "mapping.stop_line.missing_regulatory_elements,"
-    "mapping.traffic_light.missing_regulatory_elements";
+    "mapping.crosswalk.regulatory_element_details,"
+    "mapping.traffic_light.regulatory_element_details";
 
   lanelet::validation::Strings validators = lanelet::validation::availabeChecks(
-    target_validators);
-  uint8_t expected_num_validators = 3;
+    expected_validators_concat);
+  uint8_t expected_num_validators = 2;
   std::cout << "size: " << validators.size() << std::endl;
   EXPECT_EQ(expected_num_validators, validators.size());
 
   std::set<std::string> expected_validators_set = {
-    "mapping.crosswalk.missing_regulatory_elements",
-    "mapping.stop_line.missing_regulatory_elements",
-    "mapping.traffic_light.missing_regulatory_elements"
+    "mapping.crosswalk.regulatory_element_details",
+    "mapping.traffic_light.regulatory_element_details"
   };
 
-  for (const auto & v : validators) {
-    std::cout << v.name() << std::endl;
-    EXPECT_TRUE(expected_validators_set.find(v.name()) != expected_validators_set.end())
-      << "Unexpected validator found: " << v.name();
+  std::set<std::string> testing_validators_set = {
+    lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator::name(),
+    lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator::name()
+  };
+
+  for (const auto & name : testing_validators_set) {
+    std::cout << name << std::endl;
+    EXPECT_TRUE(expected_validators_set.find(name) != expected_validators_set.end())
+      << "Unexpected validator found: " << name;
   }
 }
 
@@ -180,6 +181,7 @@ TEST_F(TestSuite, RegulatoryElementofTrafficLightWithoutTrafficLight)  // NOLINT
   test_map_ptr->add(tl_reg_elem_no_tl);
   addTestMap(test_map_ptr);
 
+  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker_;
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 2;
@@ -219,6 +221,7 @@ TEST_F(TestSuite, RegulatoryElementofTrafficLightWithoutStopLine)  // NOLINT for
   test_map_ptr->add(tl_reg_elem_no_sl);
   addTestMap(test_map_ptr);
 
+  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker_;
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 2;
@@ -263,6 +266,7 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutPolygon)  // NOLINT for gte
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({cw_no_poly});
   addTestMap(test_map_ptr);
 
+  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker_;
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 2;
@@ -304,6 +308,7 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutStopline)  // NOLINT for gt
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({cw_no_sl});
   addTestMap(test_map_ptr);
 
+  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker_;
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
@@ -337,6 +342,7 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutCrosswalk)  // NOLINT for g
   addTestMap(test_map_ptr);
   test_map_ptr->add(reg_elem);
 
+  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker_;
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 2;

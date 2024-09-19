@@ -13,6 +13,9 @@
 // limitations under the License.
 
 #include "autoware_lanelet2_map_validator/validators/missing_regulatory_elements.hpp"
+#include <autoware_lanelet2_map_validator/validators/crosswalk/missing_regulatory_elements_for_crosswalks.hpp>
+#include <autoware_lanelet2_map_validator/validators/stop_line/missing_regulatory_elements_for_stop_lines.hpp>
+#include <autoware_lanelet2_map_validator/validators/traffic_light/missing_regulatory_elements_for_traffic_lights.hpp>
 
 #include <gtest/gtest.h>
 
@@ -129,19 +132,39 @@ public:
     }
   }
   AttributeMap sl_attr_, tl_attr_, cw_attr_, cw_poly_attr_, tl_re_attr_, cw_re_attr_;
-  lanelet::validation::MissingRegulatoryElementsChecker checker_;
 
 private:
 };
 
 TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
 {
+  std::string expected_validators_concat =
+    "mapping.crosswalk.missing_regulatory_elements,"
+    "mapping.stop_line.missing_regulatory_elements,"
+    "mapping.traffic_light.missing_regulatory_elements";
+
   lanelet::validation::Strings validators = lanelet::validation::availabeChecks(
-    lanelet::validation::MissingRegulatoryElementsChecker::name());
-  uint8_t expected_num_validators = 1;
+    expected_validators_concat);
+  uint8_t expected_num_validators = 3;
+  std::cout << "size: " << validators.size() << std::endl;
   EXPECT_EQ(expected_num_validators, validators.size());
-  for (const auto & v : validators) {
-    EXPECT_EQ(lanelet::validation::MissingRegulatoryElementsChecker::name(), v);
+
+  std::set<std::string> expected_validators_set = {
+    "mapping.crosswalk.missing_regulatory_elements",
+    "mapping.stop_line.missing_regulatory_elements",
+    "mapping.traffic_light.missing_regulatory_elements"
+  };
+
+  std::set<std::string> testing_validators_set = {
+    lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator::name(),
+    lanelet::validation::MissingRegulatoryElementsForStopLinesValidator::name(),
+    lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator::name()
+  };
+
+  for (const auto & name : testing_validators_set) {
+    std::cout << name << std::endl;
+    EXPECT_TRUE(expected_validators_set.find(name) != expected_validators_set.end())
+      << "Unexpected validator found: " << name;
   }
 }
 
@@ -154,10 +177,11 @@ TEST_F(TestSuite, MissingRegulatoryElementOfTrafficLight)  // NOLINT for gtest
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({tl_no_reg_elem});
   addTestMap(test_map_ptr);
 
+  lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator checker_;
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
-  static constexpr const char * expected_message = "Traffic light must have a regulatory element.";
+  static constexpr const char * expected_message = "No regulatory element refers to this traffic light.";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     EXPECT_EQ(99999, issue.id);
@@ -179,10 +203,11 @@ TEST_F(TestSuite, MissingRegulatoryElementOfCrosswalk)  // NOLINT for gtest
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({cw_no_reg_elem});
   addTestMap(test_map_ptr);
 
+  lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker_;
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
-  static constexpr const char * expected_message = "Crosswalk must have a regulatory element.";
+  static constexpr const char * expected_message = "No regulatory element refers to this crosswalk.";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     EXPECT_EQ(99999, issue.id);
@@ -201,10 +226,11 @@ TEST_F(TestSuite, MissingRegulatoryElementOfStopLine)  // NOLINT for gtest
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({sl_no_reg_elem});
   addTestMap(test_map_ptr);
 
+  lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker_;
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
-  static constexpr const char * expected_message = "Stop Line must have a regulatory element.";
+  static constexpr const char * expected_message = "No regulatory element refers to this stop line.";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     EXPECT_EQ(99999, issue.id);
