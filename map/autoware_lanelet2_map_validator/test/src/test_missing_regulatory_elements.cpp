@@ -12,10 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "autoware_lanelet2_map_validator/validators/missing_regulatory_elements.hpp"
 #include <autoware_lanelet2_map_validator/validators/crosswalk/missing_regulatory_elements_for_crosswalks.hpp>
 #include <autoware_lanelet2_map_validator/validators/stop_line/missing_regulatory_elements_for_stop_lines.hpp>
 #include <autoware_lanelet2_map_validator/validators/traffic_light/missing_regulatory_elements_for_traffic_lights.hpp>
+
+#include <autoware_lanelet2_extension/regulatory_elements/autoware_traffic_light.hpp>
+#include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>
+
+#include <lanelet2_core/LaneletMap.h>
 
 #include <gtest/gtest.h>
 
