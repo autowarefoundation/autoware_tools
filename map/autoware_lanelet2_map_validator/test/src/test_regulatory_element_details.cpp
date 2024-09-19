@@ -14,6 +14,9 @@
 
 #include "autoware_lanelet2_map_validator/validators/regulatory_element_details.hpp"
 
+#include <string>
+#include <set>
+
 #include <gtest/gtest.h>
 
 using lanelet::AttributeMap;
@@ -136,12 +139,27 @@ private:
 
 TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
 {
+  std::string expected_validators_concat =
+    "mapping.crosswalk.missing_regulatory_elements,"
+    "mapping.stop_line.missing_regulatory_elements,"
+    "mapping.traffic_light.missing_regulatory_elements";
+
   lanelet::validation::Strings validators = lanelet::validation::availabeChecks(
-    lanelet::validation::RegulatoryElementDetailsChecker::name());
-  uint8_t expected_num_validators = 1;
+    target_validators);
+  uint8_t expected_num_validators = 3;
+  std::cout << "size: " << validators.size() << std::endl;
   EXPECT_EQ(expected_num_validators, validators.size());
+
+  std::set<std::string> expected_validators_set = {
+    "mapping.crosswalk.missing_regulatory_elements",
+    "mapping.stop_line.missing_regulatory_elements",
+    "mapping.traffic_light.missing_regulatory_elements"
+  };
+
   for (const auto & v : validators) {
-    EXPECT_EQ(lanelet::validation::RegulatoryElementDetailsChecker::name(), v);
+    std::cout << v.name() << std::endl;
+    EXPECT_TRUE(expected_validators_set.find(v.name()) != expected_validators_set.end())
+      << "Unexpected validator found: " << v.name();
   }
 }
 

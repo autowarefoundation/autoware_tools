@@ -32,7 +32,8 @@ struct MetaConfig
 {
   lanelet::validation::CommandLineConfig command_line_config;
   std::string projector_type;
-  bool read_yaml = false;
+  std::string requirements_file;
+  std::string output_file_path;
 };
 
 MetaConfig parseCommandLine(int argc, const char * argv[]);

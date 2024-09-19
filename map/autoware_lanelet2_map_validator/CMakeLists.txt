@@ -5,6 +5,7 @@ find_package(autoware_cmake REQUIRED)
 autoware_package()
 
 ament_auto_find_build_dependencies()
+find_package(yaml-cpp REQUIRED)
 
 include_directories(
   include
@@ -15,10 +16,11 @@ ament_auto_add_library(autoware_lanelet2_map_validator_lib SHARED
   ${autoware_lanelet2_map_validator_lib_src}
 )
 
-ament_auto_add_executable(autoware_lanelet2_map_validator src/main.cpp)
+ament_auto_add_executable(autoware_lanelet2_map_validator src/new_main.cpp)
 add_dependencies(autoware_lanelet2_map_validator autoware_lanelet2_map_validator_lib)
 target_link_libraries(autoware_lanelet2_map_validator
   autoware_lanelet2_map_validator_lib
+  yaml-cpp
 )
 
 if(BUILD_TESTING)

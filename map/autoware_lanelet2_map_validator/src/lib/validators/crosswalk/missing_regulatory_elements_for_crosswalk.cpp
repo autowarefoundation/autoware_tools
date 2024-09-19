@@ -68,16 +68,6 @@ namespace
       }
     }
 
-    std::cout << "cw_ids" << std::endl;
-    for (const auto & id : cw_ids) {
-      std::cout << id << std::endl;
-    }
-
-    std::cout << "tl_elem_with_cw_" << std::endl;
-    for (const auto & id : tl_elem_with_cw_) {
-      std::cout << id << std::endl;
-    }
-
     // Filter regulatory elements whose type is crosswalk and has refers
     auto reg_elem_cw =
       map.regulatoryElementLayer | ranges::views::filter([](auto && elem) {
@@ -90,11 +80,6 @@ namespace
         return param.find(lanelet::RoleNameString::Refers) != param.end();
       });
 
-    std::cout << "reg_elem_cw" << std::endl;
-    for (const auto & id : reg_elem_cw) {
-      std::cout << id << std::endl;
-    }
-
     // Get all lanelets of crosswalk referred by regulatory elements
     std::set<lanelet::Id> cw_ids_reg_elem;
     for (const auto & elem : reg_elem_cw) {
@@ -102,11 +87,6 @@ namespace
       for (const lanelet::ConstLanelet & refer : refers) {
         cw_ids_reg_elem.insert(refer.id());
       }
-    }
-
-    std::cout << "cw_ids_reg_elem" << std::endl;
-    for (const auto & id : cw_ids_reg_elem) {
-      std::cout << id << std::endl;
     }
 
     // Check if all lanelets of crosswalk referred by regulatory elements

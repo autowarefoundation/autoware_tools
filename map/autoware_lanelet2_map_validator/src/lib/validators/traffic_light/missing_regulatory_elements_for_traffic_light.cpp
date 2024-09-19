@@ -58,12 +58,6 @@ namespace
       }) |
       ranges::views::transform([](auto && ls) { return ls.id(); }) | ranges::views::unique;
 
-    std::cout << "tl_ids" << std::endl;
-    std::cout << typeid(decltype(tl_ids)).name() << std::endl;
-    for (const auto & id : tl_ids) {
-      std::cout << id << std::endl;
-    }
-
     // Filter regulatory elements whose type is traffic light and has refers
     auto reg_elem_tl = map.regulatoryElementLayer | ranges::views::filter([](auto && elem) {
                         const auto & attrs = elem->attributes();
@@ -73,10 +67,6 @@ namespace
                                 it->second == lanelet::AttributeValueString::TrafficLight &&
                                 params.find(lanelet::RoleNameString::Refers) != params.end();
                       });
-    std::cout << "reg_elem_tl" << std::endl;
-    for (const auto & id : reg_elem_tl) {
-      std::cout << id << std::endl;
-    }
 
     // Get all line strings of traffic light referred by regulatory elements
     std::set<lanelet::Id> tl_ids_reg_elem;
@@ -86,11 +76,6 @@ namespace
       for (const auto & refer : refers) {
         tl_ids_reg_elem.insert(refer.id());
       }
-    }
-
-    std::cout << "tl_ids_reg_elem" << std::endl;
-    for (const auto & id : tl_ids_reg_elem) {
-      std::cout << id << std::endl;
     }
 
     // Check if all line strings of traffic light referred by regulatory elements
