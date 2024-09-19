@@ -16,7 +16,7 @@ ament_auto_add_library(autoware_lanelet2_map_validator_lib SHARED
   ${autoware_lanelet2_map_validator_lib_src}
 )
 
-ament_auto_add_executable(autoware_lanelet2_map_validator src/new_main.cpp)
+ament_auto_add_executable(autoware_lanelet2_map_validator src/main.cpp)
 add_dependencies(autoware_lanelet2_map_validator autoware_lanelet2_map_validator_lib)
 target_link_libraries(autoware_lanelet2_map_validator
   autoware_lanelet2_map_validator_lib
