@@ -105,13 +105,12 @@ private:
   QSpinBox * rate_;
   QMainWindow * main_window_{nullptr};
 
-  cv::Size current_movie_size_;
+  cv::Size size_;
 
   std::deque<cv::Mat> movie_;
 
   std::deque<cv::Mat> buffer_;
 
-  // std::deque<std::pair<cv::Mat, rclcpp::Time>> frame_buffer_;
   // Size of the frame buffer (number of frames to keep in memory)
   // At 10 Hz capture rate, 100 frames correspond to approximately 10 seconds of video
   const size_t buffer_size_ = 100;
