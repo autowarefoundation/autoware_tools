@@ -12,15 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <autoware_lanelet2_extension/regulatory_elements/autoware_traffic_light.hpp>
+#include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>
 #include <autoware_lanelet2_map_validator/validators/crosswalk/regulatory_element_details_for_crosswalks.hpp>
 #include <autoware_lanelet2_map_validator/validators/traffic_light/regulatory_element_details_for_traffic_lights.hpp>
 
-#include <autoware_lanelet2_extension/regulatory_elements/autoware_traffic_light.hpp>
-#include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>
-
-#include <lanelet2_core/LaneletMap.h>
-
 #include <gtest/gtest.h>
+#include <lanelet2_core/LaneletMap.h>
 
 using lanelet::AttributeMap;
 using lanelet::AttributeName;
@@ -145,21 +143,19 @@ TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
     "mapping.crosswalk.regulatory_element_details,"
     "mapping.traffic_light.regulatory_element_details";
 
-  lanelet::validation::Strings validators = lanelet::validation::availabeChecks(
-    expected_validators_concat);
+  lanelet::validation::Strings validators =
+    lanelet::validation::availabeChecks(expected_validators_concat);
   uint8_t expected_num_validators = 2;
   std::cout << "size: " << validators.size() << std::endl;
   EXPECT_EQ(expected_num_validators, validators.size());
 
   std::set<std::string> expected_validators_set = {
     "mapping.crosswalk.regulatory_element_details",
-    "mapping.traffic_light.regulatory_element_details"
-  };
+    "mapping.traffic_light.regulatory_element_details"};
 
   std::set<std::string> testing_validators_set = {
     lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator::name(),
-    lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator::name()
-  };
+    lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator::name()};
 
   for (const auto & name : testing_validators_set) {
     std::cout << name << std::endl;

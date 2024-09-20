@@ -25,7 +25,6 @@ namespace validation
 class MissingRegulatoryElementsForStopLinesValidator : public lanelet::validation::MapValidator
 {
 public:
-  
   constexpr static const char * name() { return "mapping.stop_line.missing_regulatory_elements"; }
 
   lanelet::validation::Issues operator()(const lanelet::LaneletMap & map) override;
@@ -34,7 +33,7 @@ private:
   lanelet::validation::Issues checkMissingRegulatoryElementsForStopLines(
     const lanelet::LaneletMap & map);
 };
-} // namespace validation
-} // namespace lanelet
+}  // namespace validation
+}  // namespace lanelet
 
-#endif // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_
+#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_

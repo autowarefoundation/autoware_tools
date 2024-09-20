@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHTS__REGULATORY_ELEMENT_DETAILS_FOR_TRAFFIC_LIGHTS_HPP_
-#define AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHTS__REGULATORY_ELEMENT_DETAILS_FOR_TRAFFIC_LIGHTS_HPP_
+#ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHT__REGULATORY_ELEMENT_DETAILS_FOR_TRAFFIC_LIGHTS_HPP_
+#define AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHT__REGULATORY_ELEMENT_DETAILS_FOR_TRAFFIC_LIGHTS_HPP_
 
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
@@ -28,15 +28,19 @@ class RegulatoryElementsDetailsForTrafficLightsValidator : public lanelet::valid
 {
 public:
   // Write the validator's name here
-  constexpr static const char * name() { return "mapping.traffic_light.regulatory_element_details"; }
+  constexpr static const char * name()
+  {
+    return "mapping.traffic_light.regulatory_element_details";
+  }
 
   lanelet::validation::Issues operator()(const lanelet::LaneletMap & map) override;
 
 private:
   bool isPedestrianTrafficLight(const std::vector<lanelet::ConstLineString3d> & traffic_lights);
-  lanelet::validation::Issues checkRegulatoryElementOfTrafficLights(const lanelet::LaneletMap & map);
+  lanelet::validation::Issues checkRegulatoryElementOfTrafficLights(
+    const lanelet::LaneletMap & map);
 };
-} // namespace validation
-} // namespace lanelet
+}  // namespace validation
+}  // namespace lanelet
 
-#endif // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHTS__REGULATORY_ELEMENT_DETAILS_FOR_TRAFFIC_LIGHTS_HPP_
+#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHT__REGULATORY_ELEMENT_DETAILS_FOR_TRAFFIC_LIGHTS_HPP_

@@ -14,7 +14,6 @@
 
 #include <autoware_lanelet2_map_validator/utils.hpp>
 #include <autoware_lanelet2_map_validator/validators/crosswalk/missing_regulatory_elements_for_crosswalks.hpp>
-
 #include <range/v3/view/filter.hpp>
 
 #include <lanelet2_core/LaneletMap.h>
@@ -25,80 +24,80 @@ namespace lanelet
 {
 namespace validation
 {
-namespace 
+namespace
 {
-  lanelet::validation::RegisterMapValidator<MissingRegulatoryElementsForCrosswalksValidator> reg;
+lanelet::validation::RegisterMapValidator<MissingRegulatoryElementsForCrosswalksValidator> reg;
 }
 
-  lanelet::validation::Issues MissingRegulatoryElementsForCrosswalksValidator::operator()(
-    const lanelet::LaneletMap & map)
-  {
-    lanelet::validation::Issues issues;
-    
-    lanelet::autoware::validation::appendIssues(
-      issues, checkMissingRegulatoryElementsForCrosswalks(map));
-    
-    return issues;
-  }
+lanelet::validation::Issues MissingRegulatoryElementsForCrosswalksValidator::operator()(
+  const lanelet::LaneletMap & map)
+{
+  lanelet::validation::Issues issues;
 
-  lanelet::validation::Issues
-  MissingRegulatoryElementsForCrosswalksValidator::checkMissingRegulatoryElementsForCrosswalks(
-    const lanelet::LaneletMap & map)
-  {
-    lanelet::validation::Issues issues;
+  lanelet::autoware::validation::appendIssues(
+    issues, checkMissingRegulatoryElementsForCrosswalks(map));
 
-    // Get all lanelets whose type is crosswalk
-    std::set<lanelet::Id> cw_ids;
-    std::set<lanelet::Id> tl_elem_with_cw_;
-    for (const auto & ll : map.laneletLayer) {
-      const auto & attrs = ll.attributes();
-      const auto & it = attrs.find(lanelet::AttributeName::Subtype);
-      // Check if this lanelet is crosswalk
-      if (it != attrs.end() && it->second == lanelet::AttributeValueString::Crosswalk) {
-        cw_ids.insert(ll.id());
+  return issues;
+}
 
-        // Check if crosswalk has reg elem of traffic light
-        for (const auto & elem : ll.regulatoryElements()) {
-          const auto & attrs = elem->attributes();
-          const auto & it = attrs.find(lanelet::AttributeName::Subtype);
-          if (it != attrs.end() && it->second == lanelet::AttributeValueString::TrafficLight) {
-            tl_elem_with_cw_.insert(elem->id());
-          }
+lanelet::validation::Issues
+MissingRegulatoryElementsForCrosswalksValidator::checkMissingRegulatoryElementsForCrosswalks(
+  const lanelet::LaneletMap & map)
+{
+  lanelet::validation::Issues issues;
+
+  // Get all lanelets whose type is crosswalk
+  std::set<lanelet::Id> cw_ids;
+  std::set<lanelet::Id> tl_elem_with_cw_;
+  for (const auto & ll : map.laneletLayer) {
+    const auto & attrs = ll.attributes();
+    const auto & it = attrs.find(lanelet::AttributeName::Subtype);
+    // Check if this lanelet is crosswalk
+    if (it != attrs.end() && it->second == lanelet::AttributeValueString::Crosswalk) {
+      cw_ids.insert(ll.id());
+
+      // Check if crosswalk has reg elem of traffic light
+      for (const auto & elem : ll.regulatoryElements()) {
+        const auto & attrs = elem->attributes();
+        const auto & it = attrs.find(lanelet::AttributeName::Subtype);
+        if (it != attrs.end() && it->second == lanelet::AttributeValueString::TrafficLight) {
+          tl_elem_with_cw_.insert(elem->id());
         }
       }
     }
-
-    // Filter regulatory elements whose type is crosswalk and has refers
-    auto reg_elem_cw =
-      map.regulatoryElementLayer | ranges::views::filter([](auto && elem) {
-        const auto & attrs = elem->attributes();
-        const auto & it = attrs.find(lanelet::AttributeName::Subtype);
-        return it != attrs.end() && it->second == lanelet::AttributeValueString::Crosswalk;
-      }) |
-      ranges::views::filter([](auto && elem) {
-        const auto & param = elem->getParameters();
-        return param.find(lanelet::RoleNameString::Refers) != param.end();
-      });
-
-    // Get all lanelets of crosswalk referred by regulatory elements
-    std::set<lanelet::Id> cw_ids_reg_elem;
-    for (const auto & elem : reg_elem_cw) {
-      const auto & refers = elem->getParameters<lanelet::ConstLanelet>(lanelet::RoleName::Refers);
-      for (const lanelet::ConstLanelet & refer : refers) {
-        cw_ids_reg_elem.insert(refer.id());
-      }
-    }
-
-    // Check if all lanelets of crosswalk referred by regulatory elements
-    for (const auto & cw_id : cw_ids) {
-      if (cw_ids_reg_elem.find(cw_id) == cw_ids_reg_elem.end()) {
-        issues.emplace_back(
-          lanelet::validation::Severity::Error, lanelet::validation::Primitive::Lanelet, cw_id,
-          "No regulatory element refers to this crosswalk.");
-      }
-    }
-
-    return issues;
   }
-} // namespace validation
-} // namespace lanelet2
+
+  // Filter regulatory elements whose type is crosswalk and has refers
+  auto reg_elem_cw =
+    map.regulatoryElementLayer | ranges::views::filter([](auto && elem) {
+      const auto & attrs = elem->attributes();
+      const auto & it = attrs.find(lanelet::AttributeName::Subtype);
+      return it != attrs.end() && it->second == lanelet::AttributeValueString::Crosswalk;
+    }) |
+    ranges::views::filter([](auto && elem) {
+      const auto & param = elem->getParameters();
+      return param.find(lanelet::RoleNameString::Refers) != param.end();
+    });
+
+  // Get all lanelets of crosswalk referred by regulatory elements
+  std::set<lanelet::Id> cw_ids_reg_elem;
+  for (const auto & elem : reg_elem_cw) {
+    const auto & refers = elem->getParameters<lanelet::ConstLanelet>(lanelet::RoleName::Refers);
+    for (const lanelet::ConstLanelet & refer : refers) {
+      cw_ids_reg_elem.insert(refer.id());
+    }
+  }
+
+  // Check if all lanelets of crosswalk referred by regulatory elements
+  for (const auto & cw_id : cw_ids) {
+    if (cw_ids_reg_elem.find(cw_id) == cw_ids_reg_elem.end()) {
+      issues.emplace_back(
+        lanelet::validation::Severity::Error, lanelet::validation::Primitive::Lanelet, cw_id,
+        "No regulatory element refers to this crosswalk.");
+    }
+  }
+
+  return issues;
+}
+}  // namespace validation
+}  // namespace lanelet

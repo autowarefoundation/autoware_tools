@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__VALS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
-#define AUTOWARE_LANELET2_MAP_VALIDATOR__VALS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
+#ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
+#define AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
 
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
@@ -25,7 +25,6 @@ namespace validation
 class MissingRegulatoryElementsForCrosswalksValidator : public lanelet::validation::MapValidator
 {
 public:
-  
   constexpr static const char * name() { return "mapping.crosswalk.missing_regulatory_elements"; }
 
   lanelet::validation::Issues operator()(const lanelet::LaneletMap & map) override;
@@ -33,9 +32,8 @@ public:
 private:
   lanelet::validation::Issues checkMissingRegulatoryElementsForCrosswalks(
     const lanelet::LaneletMap & map);
-  
 };
-} // namespace validation
-} // namespace lanelet
+}  // namespace validation
+}  // namespace lanelet
 
-#endif // AUTOWARE_LANELET2_MAP_VALIDATOR__VALS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
+#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_

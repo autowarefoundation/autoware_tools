@@ -32,7 +32,7 @@ public:
 
 private:
 };
-} // namespace validation
-} // namespace lanelet
+}  // namespace validation
+}  // namespace lanelet
 
-#endif // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__VALIDATOR_TEMPLATE_HPP_
+#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__VALIDATOR_TEMPLATE_HPP_

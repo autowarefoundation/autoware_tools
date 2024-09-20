@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <autoware_lanelet2_map_validator/utils.hpp>
-
 #include <autoware_lanelet2_map_validator/validators/traffic_light/regulatory_element_details_for_traffic_lights.hpp>
 #include <range/v3/view/filter.hpp>
 
@@ -29,84 +28,85 @@ namespace
 lanelet::validation::RegisterMapValidator<RegulatoryElementsDetailsForTrafficLightsValidator> reg;
 }  // namespace
 
-  lanelet::validation::Issues RegulatoryElementsDetailsForTrafficLightsValidator::operator()(
-    const lanelet::LaneletMap & map)
-  {
-    // All issues found by all validators
-    lanelet::validation::Issues issues;
+lanelet::validation::Issues RegulatoryElementsDetailsForTrafficLightsValidator::operator()(
+  const lanelet::LaneletMap & map)
+{
+  // All issues found by all validators
+  lanelet::validation::Issues issues;
 
-    // Append issues found by each validator
-    lanelet::autoware::validation::appendIssues(issues, checkRegulatoryElementOfTrafficLights(map));
-    return issues;
+  // Append issues found by each validator
+  lanelet::autoware::validation::appendIssues(issues, checkRegulatoryElementOfTrafficLights(map));
+  return issues;
+}
+
+bool RegulatoryElementsDetailsForTrafficLightsValidator::isPedestrianTrafficLight(
+  const std::vector<lanelet::ConstLineString3d> & traffic_lights)
+{
+  for (const auto & tl : traffic_lights) {
+    const auto & attrs = tl.attributes();
+    const auto & it = attrs.find(lanelet::AttributeName::Subtype);
+    if (it == attrs.end() || it->second != "red_green") {
+      return false;
+    }
   }
+  return true;
+}
 
-  bool RegulatoryElementsDetailsForTrafficLightsValidator::isPedestrianTrafficLight(
-    const std::vector<lanelet::ConstLineString3d> & traffic_lights)
-  {
-    for (const auto & tl : traffic_lights) {
-      const auto & attrs = tl.attributes();
+lanelet::validation::Issues
+RegulatoryElementsDetailsForTrafficLightsValidator::checkRegulatoryElementOfTrafficLights(
+  const lanelet::LaneletMap & map)
+{
+  lanelet::validation::Issues issues;
+  // filter regulatory element whose Subtype is traffic light
+  auto elems =
+    map.regulatoryElementLayer | ranges::views::filter([](auto && elem) {
+      const auto & attrs = elem->attributes();
       const auto & it = attrs.find(lanelet::AttributeName::Subtype);
-      if (it == attrs.end() || it->second != "red_green") {
-        return false;
-      }
+      return it != attrs.end() && it->second == lanelet::AttributeValueString::TrafficLight;
+    });
+
+  for (const auto & elem : elems) {
+    // Get line strings of traffic light referred by regulatory element
+    auto refers = elem->getParameters<lanelet::ConstLineString3d>(lanelet::RoleName::Refers);
+    // Get stop line referred by regulatory element
+    auto ref_lines = elem->getParameters<lanelet::ConstLineString3d>(lanelet::RoleName::RefLine);
+    const auto & issue_tl = lanelet::validation::Issue(
+      lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString,
+      lanelet::utils::getId(),
+      "Refers of traffic light regulatory element must have type of traffic_light.");
+    lanelet::autoware::validation::checkPrimitivesType(
+      refers, lanelet::AttributeValueString::TrafficLight, issue_tl, issues);
+
+    const auto & issue_sl = lanelet::validation::Issue(
+      lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString,
+      lanelet::utils::getId(),
+      "Refline of traffic light regulatory element must have type of stop_line.");
+    lanelet::autoware::validation::checkPrimitivesType(
+      ref_lines, lanelet::AttributeValueString::StopLine, issue_sl, issues);
+
+    if (refers.empty()) {
+      issues.emplace_back(
+        lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
+        elem->id(), "Regulatory element of traffic light must have a traffic light(refers).");
     }
-    return true;
-  }
+    // TODO(sgk-000): Check correct behavior if regulatory element has two or more traffic light
+    //  else if (refers.size() != 1) {
+    //   issues.emplace_back(
+    //     lanelet::validation::Severity::Error,
+    //     lanelet::validation::Primitive::RegulatoryElement, elem->id(), "Regulatory element of
+    //     traffic light must have only one traffic light(refers).");
+    // }
 
-  lanelet::validation::Issues RegulatoryElementsDetailsForTrafficLightsValidator::checkRegulatoryElementOfTrafficLights(
-    const lanelet::LaneletMap & map)
-  {
-    lanelet::validation::Issues issues;
-    // filter regulatory element whose Subtype is traffic light
-    auto elems =
-      map.regulatoryElementLayer | ranges::views::filter([](auto && elem) {
-        const auto & attrs = elem->attributes();
-        const auto & it = attrs.find(lanelet::AttributeName::Subtype);
-        return it != attrs.end() && it->second == lanelet::AttributeValueString::TrafficLight;
-      });
-
-    for (const auto & elem : elems) {
-      // Get line strings of traffic light referred by regulatory element
-      auto refers = elem->getParameters<lanelet::ConstLineString3d>(lanelet::RoleName::Refers);
-      // Get stop line referred by regulatory element
-      auto ref_lines = elem->getParameters<lanelet::ConstLineString3d>(lanelet::RoleName::RefLine);
-      const auto & issue_tl = lanelet::validation::Issue(
-        lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString,
-        lanelet::utils::getId(),
-        "Refers of traffic light regulatory element must have type of traffic_light.");
-      lanelet::autoware::validation::checkPrimitivesType(
-        refers, lanelet::AttributeValueString::TrafficLight, issue_tl, issues);
-
-      const auto & issue_sl = lanelet::validation::Issue(
-        lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString,
-        lanelet::utils::getId(),
-        "Refline of traffic light regulatory element must have type of stop_line.");
-      lanelet::autoware::validation::checkPrimitivesType(
-        ref_lines, lanelet::AttributeValueString::StopLine, issue_sl, issues);
-
-      if (refers.empty()) {
-        issues.emplace_back(
-          lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
-          elem->id(), "Regulatory element of traffic light must have a traffic light(refers).");
-      }
-      // TODO(sgk-000): Check correct behavior if regulatory element has two or more traffic light
-      //  else if (refers.size() != 1) {
-      //   issues.emplace_back(
-      //     lanelet::validation::Severity::Error,
-      //     lanelet::validation::Primitive::RegulatoryElement, elem->id(), "Regulatory element of
-      //     traffic light must have only one traffic light(refers).");
-      // }
-
-      // Report error if regulatory element does not have stop line and this is not a pedestrian
-      // traffic light
-      if (ref_lines.empty() && !isPedestrianTrafficLight(refers)) {
-        issues.emplace_back(
-          lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
-          elem->id(), "Regulatory element of traffic light must have a stop line(ref_line).");
-      }
+    // Report error if regulatory element does not have stop line and this is not a pedestrian
+    // traffic light
+    if (ref_lines.empty() && !isPedestrianTrafficLight(refers)) {
+      issues.emplace_back(
+        lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
+        elem->id(), "Regulatory element of traffic light must have a stop line(ref_line).");
     }
-    return issues;
   }
+  return issues;
+}
 
 }  // namespace validation
 }  // namespace lanelet

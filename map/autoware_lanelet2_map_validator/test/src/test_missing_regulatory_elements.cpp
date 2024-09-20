@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <autoware_lanelet2_extension/regulatory_elements/autoware_traffic_light.hpp>
+#include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>
 #include <autoware_lanelet2_map_validator/validators/crosswalk/missing_regulatory_elements_for_crosswalks.hpp>
 #include <autoware_lanelet2_map_validator/validators/stop_line/missing_regulatory_elements_for_stop_lines.hpp>
 #include <autoware_lanelet2_map_validator/validators/traffic_light/missing_regulatory_elements_for_traffic_lights.hpp>
 
-#include <autoware_lanelet2_extension/regulatory_elements/autoware_traffic_light.hpp>
-#include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>
-
-#include <lanelet2_core/LaneletMap.h>
-
 #include <gtest/gtest.h>
+#include <lanelet2_core/LaneletMap.h>
 
 using lanelet::AttributeMap;
 using lanelet::AttributeName;
@@ -147,8 +145,8 @@ TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
     "mapping.stop_line.missing_regulatory_elements,"
     "mapping.traffic_light.missing_regulatory_elements";
 
-  lanelet::validation::Strings validators = lanelet::validation::availabeChecks(
-    expected_validators_concat);
+  lanelet::validation::Strings validators =
+    lanelet::validation::availabeChecks(expected_validators_concat);
   uint8_t expected_num_validators = 3;
   std::cout << "size: " << validators.size() << std::endl;
   EXPECT_EQ(expected_num_validators, validators.size());
@@ -156,14 +154,12 @@ TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
   std::set<std::string> expected_validators_set = {
     "mapping.crosswalk.missing_regulatory_elements",
     "mapping.stop_line.missing_regulatory_elements",
-    "mapping.traffic_light.missing_regulatory_elements"
-  };
+    "mapping.traffic_light.missing_regulatory_elements"};
 
   std::set<std::string> testing_validators_set = {
     lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator::name(),
     lanelet::validation::MissingRegulatoryElementsForStopLinesValidator::name(),
-    lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator::name()
-  };
+    lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator::name()};
 
   for (const auto & name : testing_validators_set) {
     std::cout << name << std::endl;
@@ -185,7 +181,8 @@ TEST_F(TestSuite, MissingRegulatoryElementOfTrafficLight)  // NOLINT for gtest
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
-  static constexpr const char * expected_message = "No regulatory element refers to this traffic light.";
+  static constexpr const char * expected_message =
+    "No regulatory element refers to this traffic light.";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     EXPECT_EQ(99999, issue.id);
@@ -211,7 +208,8 @@ TEST_F(TestSuite, MissingRegulatoryElementOfCrosswalk)  // NOLINT for gtest
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
-  static constexpr const char * expected_message = "No regulatory element refers to this crosswalk.";
+  static constexpr const char * expected_message =
+    "No regulatory element refers to this crosswalk.";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     EXPECT_EQ(99999, issue.id);
@@ -234,7 +232,8 @@ TEST_F(TestSuite, MissingRegulatoryElementOfStopLine)  // NOLINT for gtest
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
-  static constexpr const char * expected_message = "No regulatory element refers to this stop line.";
+  static constexpr const char * expected_message =
+    "No regulatory element refers to this stop line.";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     EXPECT_EQ(99999, issue.id);

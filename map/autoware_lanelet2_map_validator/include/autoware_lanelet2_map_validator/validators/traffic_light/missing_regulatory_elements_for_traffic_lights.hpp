@@ -25,8 +25,10 @@ namespace validation
 class MissingRegulatoryElementsForTrafficLightsValidator : public lanelet::validation::MapValidator
 {
 public:
-  
-  constexpr static const char * name() { return "mapping.traffic_light.missing_regulatory_elements"; }
+  constexpr static const char * name()
+  {
+    return "mapping.traffic_light.missing_regulatory_elements";
+  }
 
   lanelet::validation::Issues operator()(const lanelet::LaneletMap & map) override;
 
@@ -34,7 +36,7 @@ private:
   lanelet::validation::Issues checkMissingRegulatoryElementsForTrafficLights(
     const lanelet::LaneletMap & map);
 };
-} // namespace validation
-} // namespace lanelet
+}  // namespace validation
+}  // namespace lanelet
 
-#endif // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
+#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_

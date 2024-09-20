@@ -34,42 +34,44 @@ MetaConfig parseCommandLine(int argc, const char * argv[])
 
     ("map_file,m", po::value<std::string>(), "Path to the map to be validated")
 
-    ("requirements_file,r", po::value<std::string>(), 
-     "Path to the yaml file where the list of requirements and validations is written")
+      ("requirements_file,r", po::value<std::string>(),
+       "Path to the yaml file where the list of requirements and validations is written")
 
-    ("output_file_path,o", po::value<std::string>(), 
-     "Path of the yaml file where the list of validation results will be written")
+        ("output_file_path,o", po::value<std::string>(),
+         "Path of the yaml file where the list of validation results will be written")
 
-    ("validator,v", po::value(&validation_config.checksFilter),
-      "Comma separated list of regexes to filter the applicable validators. Will run all "
-      "validators by "
-      "default. Example: "
-      "routing_graph.* to run all checks for the routing graph")
+          ("validator,v", po::value(&validation_config.checksFilter),
+           "Comma separated list of regexes to filter the applicable validators. Will run all "
+           "validators by "
+           "default. Example: "
+           "routing_graph.* to run all checks for the routing graph")
 
-    ("projector,p", po::value(&config.projector_type)->composing(),
-      "Projector used for loading lanelet map. Available projectors are: mgrs, utm, "
-      "transverse_mercator. (default: mgrs)")
+            ("projector,p", po::value(&config.projector_type)->composing(),
+             "Projector used for loading lanelet map. Available projectors are: mgrs, utm, "
+             "transverse_mercator. (default: mgrs)")
 
-    ("location,l",
-      po::value(&validation_config.location)->default_value(validation_config.location),
-      "Location of the map (for instanciating the traffic rules), e.g. de for Germany")
+              ("location,l",
+               po::value(&validation_config.location)->default_value(validation_config.location),
+               "Location of the map (for instanciating the traffic rules), e.g. de for Germany")
 
-    ("participants", po::value(&validation_config.participants)->composing(),
-      "Participants for which the routing graph will be instanciated (default: vehicle)")
+                ("participants", po::value(&validation_config.participants)->composing(),
+                 "Participants for which the routing graph will be instanciated (default: vehicle)")
 
-    ("lat",
-      po::value(&validation_config.origin.lat)
-        ->default_value(validation_config.origin.lat),
-      "latitude coordinate of map origin. This is reguired for the transverse mercator "
-      "and utm projector.")
+                  ("lat",
+                   po::value(&validation_config.origin.lat)
+                     ->default_value(validation_config.origin.lat),
+                   "latitude coordinate of map origin. This is reguired for the transverse "
+                   "mercator "
+                   "and utm projector.")
 
-    ("lon",
-      po::value(&validation_config.origin.lon)
-        ->default_value(validation_config.origin.lon),
-      "longitude coofdinate of map origin. This is reguired for the transverse mercator "
-      "and utm projector.")
+                    ("lon",
+                     po::value(&validation_config.origin.lon)
+                       ->default_value(validation_config.origin.lon),
+                     "longitude coofdinate of map origin. This is reguired for the transverse "
+                     "mercator "
+                     "and utm projector.")
 
-    ("print", "Only print all avalible checker, but dont run them");
+                      ("print", "Only print all avalible checker, but dont run them");
   po::variables_map vm;
   po::positional_options_description pos;
   pos.add("map_file", 1);

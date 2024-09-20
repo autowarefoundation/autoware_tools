@@ -35,7 +35,7 @@ std::unique_ptr<lanelet::Projector> getProjector(const MetaConfig & config)
   } else if (config.projector_type == projector_names::utm) {
     return std::make_unique<lanelet::projection::UtmProjector>(lanelet::Origin{val_config.origin});
   } else {
-    //std::cerr << "Set to default projector: MGRS projector" << std::endl;
+    // std::cerr << "Set to default projector: MGRS projector" << std::endl;
     return std::make_unique<lanelet::projection::MGRSProjector>();
   }
 }

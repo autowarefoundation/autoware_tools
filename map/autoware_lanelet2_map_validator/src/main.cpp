@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "lanelet2_validation/Validation.h"
+
 #include <autoware_lanelet2_map_validator/cli.hpp>
 #include <autoware_lanelet2_map_validator/utils.hpp>
 #include <autoware_lanelet2_map_validator/validation.hpp>
-#include "lanelet2_validation/Validation.h"
 
 #include <yaml-cpp/yaml.h>
+
 #include <fstream>
 #include <iomanip>
 
@@ -30,7 +32,9 @@
 #define NORMAL_RED "\033[31m"
 #define FONT_RESET "\033[0m"
 
-int process_requirements(YAML::Node yaml_config, const lanelet::autoware::validation::MetaConfig& validator_config) {
+int process_requirements(
+  YAML::Node yaml_config, const lanelet::autoware::validation::MetaConfig & validator_config)
+{
   unsigned long warning_count = 0;
   unsigned long error_count = 0;
   lanelet::autoware::validation::MetaConfig temp_validator_config = validator_config;
@@ -41,34 +45,35 @@ int process_requirements(YAML::Node yaml_config, const lanelet::autoware::valida
 
     std::vector<lanelet::validation::DetectedIssues> issues;
     std::map<std::string, bool> temp_validation_results;
-    
+
     for (YAML::Node validator : requirement["validators"]) {
       std::string validator_name = validator["name"].as<std::string>();
       temp_validator_config.command_line_config.validationConfig.checksFilter = validator_name;
-      
-      std::vector<lanelet::validation::DetectedIssues> temp_issues = lanelet::autoware::validation::validateMap(temp_validator_config);
-      
+
+      std::vector<lanelet::validation::DetectedIssues> temp_issues =
+        lanelet::autoware::validation::validateMap(temp_validator_config);
+
       if (temp_issues.empty()) {
-          // Validator passed
-          temp_validation_results[validator_name] = true;
-          validator["passed"] = true;
+        // Validator passed
+        temp_validation_results[validator_name] = true;
+        validator["passed"] = true;
       } else {
-          // Validator failed
-          requirement_passed = false;
-          warning_count += temp_issues[0].warnings().size();
-          error_count += temp_issues[0].errors().size();
-          temp_validation_results[validator_name] = false;
-          validator["passed"] = false;
-          YAML::Node issues_node = YAML::Node(YAML::NodeType::Sequence);
-          for (lanelet::validation::Issue issue : temp_issues[0].issues) {
-            YAML::Node issue_node;
-            issue_node["severity"] = lanelet::validation::toString(issue.severity);
-            issue_node["primitive"] = lanelet::validation::toString(issue.primitive);
-            issue_node["id"] = issue.id;
-            issue_node["message"] = issue.message;
-            issues_node.push_back(issue_node);
-          }
-          validator["issues"] = issues_node;
+        // Validator failed
+        requirement_passed = false;
+        warning_count += temp_issues[0].warnings().size();
+        error_count += temp_issues[0].errors().size();
+        temp_validation_results[validator_name] = false;
+        validator["passed"] = false;
+        YAML::Node issues_node = YAML::Node(YAML::NodeType::Sequence);
+        for (lanelet::validation::Issue issue : temp_issues[0].issues) {
+          YAML::Node issue_node;
+          issue_node["severity"] = lanelet::validation::toString(issue.severity);
+          issue_node["primitive"] = lanelet::validation::toString(issue.primitive);
+          issue_node["id"] = issue.id;
+          issue_node["message"] = issue.message;
+          issues_node.push_back(issue_node);
+        }
+        validator["issues"] = issues_node;
       }
 
       lanelet::autoware::validation::appendIssues(issues, std::move(temp_issues));
@@ -87,27 +92,32 @@ int process_requirements(YAML::Node yaml_config, const lanelet::autoware::valida
     // In order to make "passed" field above then the "validators" field in the output file.
     YAML::Node temp_validators = requirement["validators"];
     requirement.remove("validators");
-    requirement["validators"] = temp_validators; 
+    requirement["validators"] = temp_validators;
 
-    for (const auto &result : temp_validation_results) {
+    for (const auto & result : temp_validation_results) {
       if (result.second) {
-        std::cout << "  - " << result.first << ": " << NORMAL_GREEN << "Passed" << FONT_RESET << std::endl;
+        std::cout << "  - " << result.first << ": " << NORMAL_GREEN << "Passed" << FONT_RESET
+                  << std::endl;
       } else {
-        std::cout << "  - " << result.first << ": " << NORMAL_RED << "Failed" << FONT_RESET << std::endl;
+        std::cout << "  - " << result.first << ": " << NORMAL_RED << "Failed" << FONT_RESET
+                  << std::endl;
       }
     }
     lanelet::validation::printAllIssues(issues);
     std::cout << std::endl;
   }
 
-  if(warning_count + error_count == 0) {
-    std::cout << BOLD_GREEN << "No issues were found from " << FONT_RESET << validator_config.command_line_config.mapFile << std::endl;
+  if (warning_count + error_count == 0) {
+    std::cout << BOLD_GREEN << "No issues were found from " << FONT_RESET
+              << validator_config.command_line_config.mapFile << std::endl;
   } else {
     if (warning_count > 0) {
-      std::cout << BOLD_YELLOW << "Total of " << warning_count << " warnings were found from " << FONT_RESET << validator_config.command_line_config.mapFile << std::endl;
+      std::cout << BOLD_YELLOW << "Total of " << warning_count << " warnings were found from "
+                << FONT_RESET << validator_config.command_line_config.mapFile << std::endl;
     }
     if (error_count > 0) {
-      std::cout << BOLD_RED << "Total of " << error_count << " errors were found from " << FONT_RESET << validator_config.command_line_config.mapFile << std::endl;
+      std::cout << BOLD_RED << "Total of " << error_count << " errors were found from "
+                << FONT_RESET << validator_config.command_line_config.mapFile << std::endl;
     }
   }
 
@@ -123,8 +133,9 @@ int process_requirements(YAML::Node yaml_config, const lanelet::autoware::valida
 
 int main(int argc, char * argv[])
 {
-  lanelet::autoware::validation::MetaConfig config = lanelet::autoware::validation::parseCommandLine(
-    argc, const_cast<const char **>(argv));  // NOLINT
+  lanelet::autoware::validation::MetaConfig config =
+    lanelet::autoware::validation::parseCommandLine(
+      argc, const_cast<const char **>(argv));  // NOLINT
 
   // Print help (Already done in parseCommandLine)
   if (config.command_line_config.help) {
@@ -136,8 +147,8 @@ int main(int argc, char * argv[])
     auto checks =
       lanelet::validation::availabeChecks(config.command_line_config.validationConfig.checksFilter);
     if (checks.empty()) {
-      std::cout << "No checks found matching '" << config.command_line_config.validationConfig.checksFilter
-                << "'\n";
+      std::cout << "No checks found matching '"
+                << config.command_line_config.validationConfig.checksFilter << "'\n";
     } else {
       std::cout << "The following checks are available:\n";
       for (auto & check : checks) {

@@ -18,17 +18,16 @@ namespace lanelet
 {
 namespace validation
 {
-  lanelet::validation::RegisterMapValidator<ValidatorTemplate> reg;
+lanelet::validation::RegisterMapValidator<ValidatorTemplate> reg;
 
-  lanelet::validation::Issues ValidatorTemplate::operator()(
-    const lanelet::LaneletMap & map)
-  {
-    lanelet::validation::Issues issues;
-    
-    // Remove this line and write down how to append issues
-    (void)map;
-    
-    return issues;
-  }
+lanelet::validation::Issues ValidatorTemplate::operator()(const lanelet::LaneletMap & map)
+{
+  lanelet::validation::Issues issues;
+
+  // Remove this line and write down how to append issues
+  (void)map;
+
+  return issues;
 }
-}
+}  // namespace validation
+}  // namespace lanelet
