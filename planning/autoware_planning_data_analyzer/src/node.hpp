@@ -49,6 +49,8 @@ private:
 
   void weight(const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res);
 
+  auto get_route() -> LaneletRoute::ConstSharedPtr;
+
   void update(const std::shared_ptr<BagData> & bag_data, const double dt) const;
 
   void analyze(const std::shared_ptr<BagData> & bag_data) const;
@@ -71,6 +73,7 @@ private:
   rclcpp::Publisher<Float32MultiArrayStamped>::SharedPtr pub_system_metrics_;
   rclcpp::Publisher<Float32MultiArrayStamped>::SharedPtr pub_manual_score_;
   rclcpp::Publisher<Float32MultiArrayStamped>::SharedPtr pub_system_score_;
+  rclcpp::Subscription<LaneletMapBin>::SharedPtr sub_map_;
   rclcpp::Service<SetBool>::SharedPtr srv_play_;
   rclcpp::Service<Trigger>::SharedPtr srv_rewind_;
   rclcpp::Service<Trigger>::SharedPtr srv_weight_;

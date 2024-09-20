@@ -16,6 +16,8 @@
 
 #include "utils.hpp"
 
+#include <autoware_lanelet2_extension/utility/utilities.hpp>
+
 #include <algorithm>
 #include <limits>
 #include <memory>
@@ -33,7 +35,8 @@ std::string TOPIC::ACCELERATION = "/localization/acceleration";            // NO
 std::string TOPIC::OBJECTS = "/perception/object_recognition/objects";     // NOLINT
 std::string TOPIC::TRAJECTORY = "/planning/scenario_planning/trajectory";  // NOLINT
 std::string TOPIC::STEERING = "/vehicle/status/steering_status";           // NOLINT
-                                                                           //
+std::string TOPIC::ROUTE = "/planning/mission_planning/route";             // NOLINT
+
 template <>
 bool Buffer<SteeringReport>::ready() const
 {
@@ -124,7 +127,10 @@ auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> TFMes
 CommonData::CommonData(
   const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<Parameters> & parameters, const std::string & tag)
-: vehicle_info{vehicle_info}, parameters{parameters}, tag{tag}
+: vehicle_info{vehicle_info},
+  route_handler{bag_data->route_handler},
+  parameters{parameters},
+  tag{tag}
 {
   objects_history.reserve(parameters->resample_num);
 
@@ -149,12 +155,14 @@ void CommonData::calculate()
   std::vector<double> minimum_ttc_values;
   std::vector<double> longitudinal_jerk_values;
   std::vector<double> travel_distance_values;
+  std::vector<double> lateral_deviation_values;
 
   for (size_t i = 0; i < parameters->resample_num - 1; i++) {
     lateral_accel_values.push_back(lateral_accel(i));
     longitudinal_jerk_values.push_back(longitudinal_jerk(i));
     minimum_ttc_values.push_back(minimum_ttc(i));
     travel_distance_values.push_back(travel_distance(i));
+    lateral_deviation_values.push_back(lateral_deviation(i));
   }
 
   {
@@ -162,18 +170,21 @@ void CommonData::calculate()
     longitudinal_jerk_values.push_back(0.0);
     minimum_ttc_values.push_back(minimum_ttc(parameters->resample_num - 1));
     travel_distance_values.push_back(travel_distance(parameters->resample_num - 1));
+    lateral_deviation_values.push_back(lateral_deviation(parameters->resample_num - 1));
   }
 
   values.at(static_cast<size_t>(METRIC::LATERAL_ACCEL)) = lateral_accel_values;
   values.at(static_cast<size_t>(METRIC::LONGITUDINAL_JERK)) = longitudinal_jerk_values;
   values.at(static_cast<size_t>(METRIC::MINIMUM_TTC)) = minimum_ttc_values;
   values.at(static_cast<size_t>(METRIC::TRAVEL_DISTANCE)) = travel_distance_values;
+  values.at(static_cast<size_t>(METRIC::LATERAL_DEVIATION)) = lateral_deviation_values;
 
   scores.at(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY)) = lateral_comfortability();
   scores.at(static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY)) =
     longitudinal_comfortability();
   scores.at(static_cast<size_t>(SCORE::EFFICIENCY)) = efficiency();
   scores.at(static_cast<size_t>(SCORE::SAFETY)) = safety();
+  scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) = achievability();
 }
 
 double CommonData::longitudinal_comfortability() const
@@ -259,12 +270,35 @@ double CommonData::safety() const
   return score / parameters->resample_num;
 }
 
-double CommonData::total(const double w0, const double w1, const double w2, const double w3) const
+double CommonData::achievability() const
+{
+  constexpr double TIME_FACTOR = 1.0;
+
+  double score = 0.0;
+
+  const auto min = 0.0;
+  const auto max = 2.0;
+  const auto normalize = [&min, &max](const double value) {
+    return (max - std::clamp(value, min, max)) / (max - min);
+  };
+
+  for (size_t i = 0; i < parameters->resample_num; i++) {
+    score += normalize(
+      std::pow(TIME_FACTOR, i) *
+      std::abs(values.at(static_cast<size_t>(METRIC::LATERAL_DEVIATION)).at(i)));
+  }
+
+  return score / parameters->resample_num;
+}
+
+double CommonData::total(
+  const double w0, const double w1, const double w2, const double w3, const double w4) const
 {
   return w0 * scores.at(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY)) +
          w1 * scores.at(static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY)) +
          w2 * scores.at(static_cast<size_t>(SCORE::EFFICIENCY)) +
-         w3 * scores.at(static_cast<size_t>(SCORE::SAFETY));
+         w3 * scores.at(static_cast<size_t>(SCORE::SAFETY)) +
+         w4 * scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY));
 }
 
 ManualDrivingData::ManualDrivingData(
@@ -347,6 +381,18 @@ double ManualDrivingData::travel_distance(const size_t idx) const
   return distance;
 }
 
+double ManualDrivingData::lateral_deviation(const size_t idx) const
+{
+  lanelet::ConstLanelet nearest{};
+  if (!route_handler->getClosestPreferredLaneletWithinRoute(
+        odometry_history.at(idx)->pose.pose, &nearest)) {
+    return std::numeric_limits<double>::max();
+  }
+  const auto arc_coordinates =
+    lanelet::utils::getArcCoordinates({nearest}, odometry_history.at(idx)->pose.pose);
+  return arc_coordinates.distance;
+}
+
 bool ManualDrivingData::ready() const
 {
   if (objects_history.size() < parameters->resample_num) {
@@ -400,6 +446,18 @@ double TrajectoryData::minimum_ttc(const size_t idx) const
 double TrajectoryData::travel_distance(const size_t idx) const
 {
   return autoware::motion_utils::calcSignedArcLength(points, 0L, idx);
+}
+
+double TrajectoryData::lateral_deviation(const size_t idx) const
+{
+  lanelet::ConstLanelet nearest{};
+  if (!route_handler->getClosestPreferredLaneletWithinRoute(
+        autoware::universe_utils::getPose(points.at(idx)), &nearest)) {
+    return std::numeric_limits<double>::max();
+  }
+  const auto arc_coordinates =
+    lanelet::utils::getArcCoordinates({nearest}, autoware::universe_utils::getPose(points.at(idx)));
+  return arc_coordinates.distance;
 }
 
 bool TrajectoryData::feasible() const

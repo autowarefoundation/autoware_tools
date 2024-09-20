@@ -16,6 +16,7 @@
       lon_comfortability: 1.0
       efficiency: 1.0
       safety: 1.0
+      achievability: 1.0
 
     grid_seach:
       min: 0.1

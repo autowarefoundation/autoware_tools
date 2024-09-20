@@ -37,6 +37,7 @@ enum class METRIC {
   LONGITUDINAL_JERK = 2,
   TRAVEL_DISTANCE = 3,
   MINIMUM_TTC = 4,
+  LATERAL_DEVIATION = 5,
   SIZE
 };
 
@@ -45,6 +46,7 @@ enum class SCORE {
   LONGITUDINAL_COMFORTABILITY = 1,
   EFFICIENCY = 2,
   SAFETY = 3,
+  ACHIEVABILITY = 4,
   SIZE
 };
 
@@ -56,6 +58,7 @@ struct TOPIC
   static std::string OBJECTS;
   static std::string TRAJECTORY;
   static std::string STEERING;
+  static std::string ROUTE;
 };
 
 struct FrenetPoint
@@ -91,14 +94,15 @@ struct Parameters
   double w1{1.0};
   double w2{1.0};
   double w3{1.0};
+  double w4{1.0};
   GridSearchParameters grid_seach{};
   TargetStateParameters target_state{};
 };
 
 struct Result
 {
-  Result(const double w0, const double w1, const double w2, const double w3)
-  : w0{w0}, w1{w1}, w2{w2}, w3{w3}
+  Result(const double w0, const double w1, const double w2, const double w3, const double w4)
+  : w0{w0}, w1{w1}, w2{w2}, w3{w3}, w4{w4}
   {
   }
   double loss{0.0};
@@ -106,6 +110,7 @@ struct Result
   double w1{0.0};
   double w2{0.0};
   double w3{0.0};
+  double w4{0.0};
 };
 
 struct BufferBase
@@ -177,7 +182,8 @@ auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> TFMes
 
 struct BagData
 {
-  explicit BagData(const rcutils_time_point_value_t timestamp) : timestamp{timestamp}
+  explicit BagData(const rcutils_time_point_value_t timestamp)
+  : timestamp{timestamp}, route_handler{std::make_shared<RouteHandler>()}
   {
     buffers.emplace(TOPIC::TF, std::make_shared<Buffer<TFMessage>>());
     buffers.emplace(TOPIC::ODOMETRY, std::make_shared<Buffer<Odometry>>());
@@ -187,9 +193,23 @@ struct BagData
     buffers.emplace(TOPIC::STEERING, std::make_shared<Buffer<SteeringReport>>());
   }
 
+  rcutils_time_point_value_t timestamp;
+
   std::map<std::string, std::shared_ptr<BufferBase>> buffers{};
 
-  rcutils_time_point_value_t timestamp;
+  std::shared_ptr<RouteHandler> route_handler;
+
+  void set_map(const LaneletMapBin::ConstSharedPtr hdmap) { route_handler->setMap(*hdmap); }
+
+  void set_route(const LaneletRoute::ConstSharedPtr route)
+  {
+    route_handler->setRoute(*route);
+    std::cout << "IDs:";
+    for (const auto & lanelet : route_handler->getPreferredLanelets()) {
+      std::cout << lanelet.id() << ",";
+    }
+    std::cout << std::endl;
+  }
 
   void update(const rcutils_time_point_value_t dt)
   {
@@ -227,7 +247,12 @@ struct CommonData
 
   double safety() const;
 
-  double total(const double w0, const double w1, const double w2, const double w3) const;
+  double achievability() const;
+
+  double total(
+    const double w0, const double w1, const double w2, const double w3, const double w4) const;
+
+  auto score() const -> std::vector<double> { return scores; }
 
   virtual double lateral_accel(const size_t idx) const = 0;
 
@@ -236,6 +261,8 @@ struct CommonData
   virtual double minimum_ttc(const size_t idx) const = 0;
 
   virtual double travel_distance(const size_t idx) const = 0;
+
+  virtual double lateral_deviation(const size_t idx) const = 0;
 
   virtual bool feasible() const = 0;
 
@@ -247,11 +274,9 @@ struct CommonData
 
   std::vector<double> scores;
 
-  // std::unordered_map<METRIC, std::vector<double>> values;
-
-  // std::unordered_map<SCORE, double> scores;
-
   vehicle_info_utils::VehicleInfo vehicle_info;
+
+  std::shared_ptr<RouteHandler> route_handler;
 
   std::shared_ptr<Parameters> parameters;
 
@@ -271,6 +296,8 @@ struct ManualDrivingData : CommonData
   double minimum_ttc(const size_t idx) const override;
 
   double travel_distance(const size_t idx) const override;
+
+  double lateral_deviation(const size_t idx) const override;
 
   bool feasible() const override { return true; }
 
@@ -296,6 +323,8 @@ struct TrajectoryData : CommonData
 
   double travel_distance(const size_t idx) const override;
 
+  double lateral_deviation(const size_t idx) const override;
+
   bool feasible() const override;
 
   bool ready() const override;
@@ -309,15 +338,15 @@ struct SamplingTrajectoryData
     const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters);
 
-  auto best(const double w0, const double w1, const double w2, const double w3) const
-    -> std::optional<TrajectoryData>
+  auto best(const double w0, const double w1, const double w2, const double w3, const double w4)
+    const -> std::optional<TrajectoryData>
   {
     auto sort_by_score = data;
 
     std::sort(
       sort_by_score.begin(), sort_by_score.end(),
-      [&w0, &w1, &w2, &w3](const auto & a, const auto & b) {
-        return a.total(w0, w1, w2, w3) > b.total(w0, w1, w2, w3);
+      [&w0, &w1, &w2, &w3, &w4](const auto & a, const auto & b) {
+        return a.total(w0, w1, w2, w3, w4) > b.total(w0, w1, w2, w3, w4);
       });
 
     const auto itr = std::remove_if(
@@ -353,9 +382,10 @@ struct DataSet
   {
   }
 
-  auto loss(const double w0, const double w1, const double w2, const double w3) const -> double
+  auto loss(const double w0, const double w1, const double w2, const double w3, const double w4)
+    const -> double
   {
-    const auto best = sampling.best(w0, w1, w2, w3);
+    const auto best = sampling.best(w0, w1, w2, w3, w4);
     if (!best.has_value()) {
       throw std::logic_error("no found best trajectory.");
     }

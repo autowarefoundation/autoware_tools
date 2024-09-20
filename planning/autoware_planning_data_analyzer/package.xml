@@ -15,6 +15,7 @@
   <buildtool_depend>eigen3_cmake_module</buildtool_depend>
 
   <depend>autoware_frenet_planner</depend>
+  <depend>autoware_lanelet2_extension</depend>
   <depend>autoware_map_msgs</depend>
   <depend>autoware_motion_utils</depend>
   <depend>autoware_path_sampler</depend>
