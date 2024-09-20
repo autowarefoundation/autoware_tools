@@ -118,13 +118,7 @@ void AutowareScreenCapturePanel::on_timer()
     size, CV_8UC3, const_cast<uchar *>(q_image.bits()),
     static_cast<size_t>(q_image.bytesPerLine()));
 
-  const auto q_size = screen->grabWindow(main_window_->winId())
-                        .toImage()
-                        .convertToFormat(QImage::Format_RGB888)
-                        .rgbSwapped()
-                        .size();
-
-  current_movie_size_ = cv::Size(q_size.width(), q_size.height());
+  size_ = size;
 
   if (is_buffering_) {
     buffer_.push_back(image.clone());
@@ -267,11 +261,12 @@ bool AutowareScreenCapturePanel::save_movie(const std::string & file_name)
 
   save(movie_, file_name);
 
-  // writer_.release();
   capture_to_mp4_button_ptr_->setText("waiting for capture");
   capture_to_mp4_button_ptr_->setStyleSheet("background-color: #00FF00;");
 
   is_recording_ = false;
+
+  movie_.clear();
 
   return true;
 }
@@ -298,11 +293,11 @@ void AutowareScreenCapturePanel::save(
 
   writer.open(
     "capture/" + file_name + ros_time_label_->text().toStdString() + ".mp4", fourcc, rate_->value(),
-    current_movie_size_);
+    size_);
 
   for (const auto & frame : images) {
     cv::Mat resized_frame;
-    cv::resize(frame, resized_frame, current_movie_size_);
+    cv::resize(frame, resized_frame, size_);
     writer.write(resized_frame);
   }
 
