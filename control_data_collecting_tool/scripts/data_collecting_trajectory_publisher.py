@@ -24,7 +24,7 @@ from geometry_msgs.msg import PolygonStamped
 import matplotlib.pyplot as plt
 from nav_msgs.msg import Odometry
 import numpy as np
-from numpy import arctan
+from numpy import arctan2
 from numpy import cos
 from numpy import pi
 from numpy import sin
@@ -37,8 +37,8 @@ import seaborn as sns
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 
-COURSE_NAME = "eight_course"
-# COURSE_NAME = "u_shaped_return"
+# COURSE_NAME = "eight_course"
+COURSE_NAME = "u_shaped_return"
 # COURSE_NAME = "straight_line_positive"
 # COURSE_NAME = "straight_line_negative"
 
@@ -72,38 +72,12 @@ def getYaw(orientation_xyzw):
 
 
 def get_eight_course_trajectory_points(
-    long_side_length: float, short_side_length: float, step: float, total_distance: float
+    long_side_length: float,
+    short_side_length: float,
+    step: float,
 ):
     a = short_side_length
     b = long_side_length
-
-    t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
-    x = t_array.copy()
-    y = t_array.copy()
-    yaw = t_array.copy()
-
-    # Boundary points between circular and linear trajectory
-    # _A = [-(b - a) / 2, a / 2]
-    # _B = [(b - a) / 2, a / 2]
-    C = [-(b - a) / 2, -a / 2]
-    D = [(b - a) / 2, -a / 2]
-
-    # _O = [0.0, 0.0]  # origin
-    R = a / 2  # radius of the circle
-    OL = [-(b - a) / 2, 0]  # center of the left circle
-    OR = [(b - a) / 2, 0]  # center of the right circle
-    OB = np.sqrt((b - a) ** 2 + a**2) / 2  # half length of the linear trajectory
-    AD = 2 * OB
-    θB = arctan(a / (b - a))  # Angle that OB makes with respect to x-axis
-    BD = pi * a / 2  # the length of arc BD
-    AC = BD
-    CO = OB
-
-    curve = t_array.copy()
-    parts = ["part" for i in range(len(curve))]
-    achievement_rates = np.zeros(len(curve))
-
-    i_end = t_array.shape[0]
 
     C = [-(b / 2 - (1.0 - np.sqrt(3) / 2) * a), -a / 2]
     D = [(b / 2 - (1.0 - np.sqrt(3) / 2) * a), -a / 2]
@@ -131,6 +105,7 @@ def get_eight_course_trajectory_points(
     curve = t_array.copy()
     achievement_rates = t_array.copy()
     parts = ["part" for _ in range(len(t_array.copy()))]
+    i_end = t_array.shape[0]
 
     for i, t in enumerate(t_array):
         if t > OB + BD + AD + AC + CO:
@@ -208,7 +183,6 @@ def get_straight_line_course_trajectory_points(
     b = long_side_length
 
     total_distance = b
-
     t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
 
     if COURSE_NAME == "straight_line_positive":
@@ -233,15 +207,10 @@ def get_straight_line_course_trajectory_points(
 
 
 def get_u_shaped_return_course_trajectory_points(
-    long_side_length: float, short_side_length: float, step: float, total_distance: float
+    long_side_length: float, short_side_length: float, step: float
 ):
     a = short_side_length
     b = long_side_length
-
-    t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
-    x = t_array.copy()
-    y = t_array.copy()
-    yaw = t_array.copy()
 
     # Boundary points between circular and linear trajectory
     A = [-(b - a) / 2, a / 2]
@@ -742,7 +711,7 @@ class DataCollectingTrajectoryPublisher(Node):
         lb = (l2 + l4) / 2
         if np.abs(la - lb) < 1e-6:
             la += 0.1  # long_side_length must not be equal to short_side_length
-        ld = np.sqrt(la**2 + lb**2)
+        # ld = np.sqrt(la**2 + lb**2)
         rectangle_center_position = np.zeros(2)
         for i in range(4):
             rectangle_center_position[0] += data_collecting_area[i, 0] / 4.0
@@ -780,7 +749,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         long_side_margin = 5
         long_side_margin = 5
-        total_distance = ld * (1 + np.pi) * 2
+        # total_distance = ld * (1 + np.pi) * 2
 
         actual_long_side = max(long_side_length - long_side_margin, 1.1)
         actual_short_side = max(short_side_length - long_side_margin, 1.0)
@@ -793,10 +762,7 @@ class DataCollectingTrajectoryPublisher(Node):
                 self.trajectory_parts,
                 self.trajectory_achievement_rates,
             ) = get_eight_course_trajectory_points(
-                actual_long_side,
-                actual_short_side,
-                self.traj_step,
-                total_distance,
+                actual_long_side, actual_short_side, self.traj_step
             )
 
         elif COURSE_NAME == "straight_line_positive" or COURSE_NAME == "straight_line_negative":
@@ -820,10 +786,7 @@ class DataCollectingTrajectoryPublisher(Node):
                 self.trajectory_parts,
                 self.trajectory_achievement_rates,
             ) = get_u_shaped_return_course_trajectory_points(
-                actual_long_side,
-                actual_short_side,
-                self.traj_step,
-                total_distance,
+                actual_long_side, actual_short_side, self.traj_step
             )
 
         else:
@@ -1014,10 +977,12 @@ class DataCollectingTrajectoryPublisher(Node):
             and self._present_acceleration is not None
             and self.trajectory_position_data is not None
         ):
-            #calculate steer
+            # calculate steer
             angular_z = self._present_kinematic_state.twist.twist.angular.z
             wheel_base = self.get_parameter("wheel_base").get_parameter_value().double_value
-            steer = np.arctan2(wheel_base * angular_z, self._present_kinematic_state.twist.twist.linear.x)
+            steer = arctan2(
+                wheel_base * angular_z, self._present_kinematic_state.twist.twist.linear.x
+            )
 
             # update velocity and acceleration bin if ego vehicle is moving
             if self._present_kinematic_state.twist.twist.linear.x > 1e-3:
