@@ -1,0 +1,15 @@
+COURSE_NAME: "eight_course"
+# COURSE_NAME: "u_shaped_return"
+# COURSE_NAME: "straight_line_positive"
+# COURSE_NAME: "straight_line_negative"
+
+heatmap_param:
+  NUM_BINS_V: 10
+  NUM_BINS_STEER: 10
+  NUM_BINS_A: 10
+  V_MIN: 0.0
+  V_MAX: 11.5
+  STEER_MIN: -1.0
+  STEER_MAX: 1.0
+  A_MIN: -1.0
+  A_MAX: 1.0

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import threading
-
+from ament_index_python.packages import get_package_share_directory
 from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
 from geometry_msgs.msg import AccelWithCovarianceStamped
@@ -36,18 +36,25 @@ from scipy.spatial.transform import Rotation as R
 import seaborn as sns
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
+import yaml
 
-# COURSE_NAME = "eight_course"
-COURSE_NAME = "u_shaped_return"
-# COURSE_NAME = "straight_line_positive"
-# COURSE_NAME = "straight_line_negative"
+package_share_directory = get_package_share_directory("control_data_collecting_tool")
+with open( package_share_directory  + "/config/param.yaml", 'r', encoding='utf-8') as yml:
+    data_collecting_param= yaml.safe_load(yml)
 
-NUM_BINS_V = 10
-NUM_BINS_STEER = 10
-NUM_BINS_A = 10
-V_NUB, V_MAX = 0.0, 11.5
-STEER_MIN, STEER_MAX = -1.0, 1.0
-A_MIN, A_MAX = -1.0, 1.0
+#load course name
+COURSE_NAME = data_collecting_param["COURSE_NAME"]
+
+#load heat map params
+NUM_BINS_V = data_collecting_param["heatmap_param"]["NUM_BINS_V"]
+NUM_BINS_STEER = data_collecting_param["heatmap_param"]["NUM_BINS_STEER"]
+NUM_BINS_A = data_collecting_param["heatmap_param"]["NUM_BINS_A"]
+V_MIN = data_collecting_param["heatmap_param"]["V_MIN"]
+V_MAX = data_collecting_param["heatmap_param"]["V_MAX"]
+STEER_MIN = data_collecting_param["heatmap_param"]["STEER_MIN"]
+STEER_MAX = data_collecting_param["heatmap_param"]["STEER_MAX"]
+A_MIN = data_collecting_param["heatmap_param"]["A_MIN"]
+A_MAX = data_collecting_param["heatmap_param"]["A_MAX"]
 
 
 debug_matplotlib_plot_flag = False
@@ -303,7 +310,7 @@ class DataCollectingTrajectoryPublisher(Node):
         self.num_bins_v = NUM_BINS_V
         self.num_bins_steer = NUM_BINS_STEER
         self.num_bins_a = NUM_BINS_A
-        self.v_min, self.v_max = V_NUB, V_MAX
+        self.v_min, self.v_max = V_MIN, V_MAX
         self.steer_min, self.steer_max = STEER_MIN, STEER_MAX
         self.a_min, self.a_max = A_MIN, A_MAX
 
