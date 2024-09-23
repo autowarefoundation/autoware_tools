@@ -3,13 +3,12 @@ common_parameters:
     wheel_base: 2.79
     acc_kp: 1.0
 
-
 data_collecting_trajectory_publisher:
   ros__parameters:
-    COURSE_NAME: "eight_course"
-    # COURSE_NAME: "u_shaped_return"
-    # COURSE_NAME: "straight_line_positive"
-    # COURSE_NAME: "straight_line_negative"
+    COURSE_NAME: eight_course
+    # COURSE_NAME: u_shaped_return
+    # COURSE_NAME: straight_line_positive
+    # COURSE_NAME: straight_line_negative
 
     NUM_BINS_V: 10
     NUM_BINS_STEER: 10
@@ -31,10 +30,9 @@ data_collecting_trajectory_publisher:
     longitudinal_velocity_noise_min_period: 5.0
     longitudinal_velocity_noise_max_period: 20.0
 
-
 data_collecting_pure_pursuit_trajectory_follower:
   ros__parameters:
-    pure_pursuit_type: "linearized"
+    pure_pursuit_type: linearized
     lookahead_time: 2.0
     min_lookahead: 2.0
     linearized_pure_pursuit_steer_kp_param: 2.0

@@ -14,15 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
 import launch
 from launch import LaunchService
 from launch_ros.actions import Node
-from ament_index_python.packages import get_package_share_directory
-import os
+
 
 def generate_launch_description():
     package_share_directory = get_package_share_directory("control_data_collecting_tool")
-    param_file_path = os.path.join(package_share_directory, 'config', 'param.yaml')
+    param_file_path = os.path.join(package_share_directory, "config", "param.yaml")
     return launch.LaunchDescription(
         [
             Node(
