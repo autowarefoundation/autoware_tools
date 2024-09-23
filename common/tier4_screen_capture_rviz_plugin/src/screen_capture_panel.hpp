@@ -39,6 +39,8 @@
 #include <rviz_rendering/render_window.hpp>
 
 // ros
+#include <tier4_screen_capture_rviz_plugin/srv/capture.hpp>
+
 #include <std_srvs/srv/trigger.hpp>
 
 #include <deque>
@@ -47,7 +49,10 @@
 #include <utility>
 #include <vector>
 
-class QLineEdit;
+namespace rviz_plugins
+{
+
+using tier4_screen_capture_rviz_plugin::srv::Capture;
 
 class AutowareScreenCapturePanel : public rviz_common::Panel
 {
@@ -56,67 +61,69 @@ class AutowareScreenCapturePanel : public rviz_common::Panel
 public:
   explicit AutowareScreenCapturePanel(QWidget * parent = nullptr);
   ~AutowareScreenCapturePanel() override;
-  void update();
+
   void onInitialize() override;
-  void createWallTimer();
-  void onTimer();
-  void captureFrameToBuffer();
-  void saveBufferedVideo();
+
   void save(rviz_common::Config config) const override;
+
   void load(const rviz_common::Config & config) override;
-  void onCaptureVideoTrigger(
-    const std_srvs::srv::Trigger::Request::SharedPtr req,
-    const std_srvs::srv::Trigger::Response::SharedPtr res);
-  void onCaptureVideoWithBufferTrigger(
-    const std_srvs::srv::Trigger::Request::SharedPtr req,
-    const std_srvs::srv::Trigger::Response::SharedPtr res);
-  void onCaptureScreenShotTrigger(
-    const std_srvs::srv::Trigger::Request::SharedPtr req,
-    const std_srvs::srv::Trigger::Response::SharedPtr res);
 
 public Q_SLOTS:
-  void onClickScreenCapture();
-  void onClickVideoCapture(bool use_buffer = false);
-  void onPrefixChanged();
-  void onRateChanged();
+  void on_click_screen_capture();
+
+  void on_click_video_capture();
+
+  void on_prefix_change() {}
+
+  void on_rate_change(const int rate);
 
 private:
+  void create_timer();
+
+  void callback(const Capture::Request::SharedPtr req, const Capture::Response::SharedPtr res);
+
+  bool save_screen_shot(const std::string & file_name);
+
+  bool start_buffering();
+
+  bool start_recording();
+
+  bool save_movie(const std::string & file_name);
+
+  bool save_buffer(const std::string & file_name);
+
+  bool stop_buffering();
+
+  void on_timer();
+
+  void save(const std::deque<cv::Mat> & images, const std::string & file_name);
+
   QLabel * ros_time_label_;
   QPushButton * screen_capture_button_ptr_;
   QPushButton * capture_to_mp4_button_ptr_;
-  QLineEdit * file_name_prefix_;
-  QSpinBox * capture_hz_;
-  QTimer * capture_timer_;
+  QLineEdit * file_prefix_;
+  QSpinBox * rate_;
   QMainWindow * main_window_{nullptr};
-  enum class State { WAITING_FOR_CAPTURE, CAPTURING };
-  State state_;
-  std::string capture_file_name_;
-  bool is_capture_{false};
-  bool is_buffering_{false};
-  cv::VideoWriter writer_;
+
   cv::Size current_movie_size_;
-  std::vector<cv::Mat> image_vec_;
-  std::deque<std::pair<cv::Mat, rclcpp::Time>> frame_buffer_;
+
+  std::deque<cv::Mat> movie_;
+
+  std::deque<cv::Mat> buffer_;
+
+  // std::deque<std::pair<cv::Mat, rclcpp::Time>> frame_buffer_;
   // Size of the frame buffer (number of frames to keep in memory)
   // At 10 Hz capture rate, 100 frames correspond to approximately 10 seconds of video
   const size_t buffer_size_ = 100;
 
-  static std::string stateToString(const State & state)
-  {
-    if (state == State::WAITING_FOR_CAPTURE) {
-      return "waiting for capture";
-    }
-    if (state == State::CAPTURING) {
-      return "capturing";
-    }
-    return "";
-  }
+  bool is_buffering_{false};
+  bool is_recording_{false};
 
-protected:
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr capture_video_srv_;
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr capture_video_with_buffer_srv_;
-  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr capture_screen_shot_srv_;
+  rclcpp::Service<Capture>::SharedPtr srv_;
   rclcpp::Node::SharedPtr raw_node_;
+  rclcpp::TimerBase::SharedPtr timer_;
 };
+
+}  // namespace rviz_plugins
 
 #endif  // SCREEN_CAPTURE_PANEL_HPP_
