@@ -39,22 +39,22 @@ from visualization_msgs.msg import MarkerArray
 import yaml
 
 package_share_directory = get_package_share_directory("control_data_collecting_tool")
-with open( package_share_directory  + "/config/param.yaml", 'r', encoding='utf-8') as yml:
-    data_collecting_param= yaml.safe_load(yml)
+#with open( package_share_directory  + "/config/param.yaml", 'r', encoding='utf-8') as yml:
+    #data_collecting_param= yaml.safe_load(yml)
 
 #load course name
-COURSE_NAME = data_collecting_param["COURSE_NAME"]
+#self.COURSE_NAME = data_collecting_param["self.COURSE_NAME"]
 
 #load heat map params
-NUM_BINS_V = data_collecting_param["heatmap_param"]["NUM_BINS_V"]
-NUM_BINS_STEER = data_collecting_param["heatmap_param"]["NUM_BINS_STEER"]
-NUM_BINS_A = data_collecting_param["heatmap_param"]["NUM_BINS_A"]
-V_MIN = data_collecting_param["heatmap_param"]["V_MIN"]
-V_MAX = data_collecting_param["heatmap_param"]["V_MAX"]
-STEER_MIN = data_collecting_param["heatmap_param"]["STEER_MIN"]
-STEER_MAX = data_collecting_param["heatmap_param"]["STEER_MAX"]
-A_MIN = data_collecting_param["heatmap_param"]["A_MIN"]
-A_MAX = data_collecting_param["heatmap_param"]["A_MAX"]
+#NUM_BINS_V = data_collecting_param["heatmap_param"]["NUM_BINS_V"]
+#NUM_BINS_STEER = data_collecting_param["heatmap_param"]["NUM_BINS_STEER"]
+##NUM_BINS_A = data_collecting_param["heatmap_param"]["NUM_BINS_A"]
+#V_MIN = data_collecting_param["heatmap_param"]["V_MIN"]
+#V_MAX = data_collecting_param["heatmap_param"]["V_MAX"]
+#STEER_MIN = data_collecting_param["heatmap_param"]["STEER_MIN"]
+#STEER_MAX = data_collecting_param["heatmap_param"]["STEER_MAX"]
+#A_MIN = data_collecting_param["heatmap_param"]["A_MIN"]
+#A_MAX = data_collecting_param["heatmap_param"]["A_MAX"]
 
 
 debug_matplotlib_plot_flag = False
@@ -192,13 +192,13 @@ def get_straight_line_course_trajectory_points(
     total_distance = b
     t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
 
-    if COURSE_NAME == "straight_line_positive":
+    if self.COURSE_NAME == "straight_line_positive":
         yaw = np.zeros(len(t_array))
         parts = ["linear_positive" for _ in range(len(t_array.copy()))]
         x = np.linspace(-total_distance / 2, total_distance / 2, len(t_array))
         y = np.zeros(len(t_array))
 
-    elif COURSE_NAME == "straight_line_negative":
+    elif self.COURSE_NAME == "straight_line_negative":
         yaw = pi * np.ones(len(t_array))
         parts = ["linear_negative" for _ in range(len(t_array.copy()))]
         x = np.linspace(total_distance / 2, -total_distance / 2, len(t_array))
@@ -305,45 +305,55 @@ class DataCollectingTrajectoryPublisher(Node):
     def __init__(self):
         super().__init__("data_collecting_trajectory_publisher")
 
-        # velocity and acceleration grid
-        # velocity and steer grid
-        self.num_bins_v = NUM_BINS_V
-        self.num_bins_steer = NUM_BINS_STEER
-        self.num_bins_a = NUM_BINS_A
-        self.v_min, self.v_max = V_MIN, V_MAX
-        self.steer_min, self.steer_max = STEER_MIN, STEER_MAX
-        self.a_min, self.a_max = A_MIN, A_MAX
+        self.declare_parameter(
+            "COURSE_NAME",
+            "eight_course"
+        )
 
-        self.collected_data_counts_of_vel_acc = np.zeros((self.num_bins_v, self.num_bins_a))
-        self.collected_data_counts_of_vel_steer = np.zeros((self.num_bins_v, self.num_bins_steer))
+        self.declare_parameter(
+            "NUM_BINS_V",
+            10
+        )
 
-        self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins_v + 1)
-        self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins_steer + 1)
-        self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins_a + 1)
+        self.declare_parameter(
+            "NUM_BINS_STEER",
+            10
+        )
 
-        self.v_bin_centers = (self.v_bins[:-1] + self.v_bins[1:]) / 2
-        self.steer_bin_centers = (self.steer_bins[:-1] + self.steer_bins[1:]) / 2
-        self.a_bin_centers = (self.a_bins[:-1] + self.a_bins[1:]) / 2
+        self.declare_parameter(
+            "NUM_BINS_A",
+            10
+        )
 
-        self.trajectory_parts = None
-        self.trajectory_achievement_rates = None
+        self.declare_parameter(
+            "V_MIN",
+            -1.0
+        )
 
-        self.prev_part = "left_circle"
+        self.declare_parameter(
+            "V_MAX",
+            1.0
+        )
 
-        self.acc_idx = 0
-        self.vel_idx = 0
+        self.declare_parameter(
+            "STEER_MIN",
+            -1.0
+        )
 
-        self.target_acc_on_line = 0.0
-        self.target_vel_on_line = 0.0
+        self.declare_parameter(
+            "STEER_MAX",
+            1.0
+        )
 
-        self.on_line_vel_flag = True
-        self.deceleration_rate = 0.6
+        self.declare_parameter(
+            "A_MIN",
+            -1.0
+        )
 
-        self.vel_hist = np.zeros(200)
-        self.acc_hist = np.zeros(200)
-
-        self.vel_hist_for_plot = np.zeros(200)
-        self.acc_hist_for_plot = np.zeros(200)
+        self.declare_parameter(
+            "A_MAX",
+            1.0
+        )
 
         self.declare_parameter(
             "wheel_base",
@@ -456,6 +466,50 @@ class DataCollectingTrajectoryPublisher(Node):
             1,
         )
         self.sub_data_collecting_area_
+
+
+        #set course name
+        self.COURSE_NAME = self.get_parameter('COURSE_NAME').value
+
+        # velocity and acceleration grid
+        # velocity and steer grid
+        self.num_bins_v = self.get_parameter('NUM_BINS_V').get_parameter_value().integer_value
+        self.num_bins_steer = self.get_parameter('NUM_BINS_STEER').get_parameter_value().integer_value
+        self.num_bins_a = self.get_parameter('NUM_BINS_A').get_parameter_value().integer_value
+        self.v_min, self.v_max = self.get_parameter('V_MIN').get_parameter_value().double_value, self.get_parameter('V_MAX').get_parameter_value().double_value
+        self.steer_min, self.steer_max = self.get_parameter('STEER_MIN').get_parameter_value().double_value, self.get_parameter('STEER_MAX').get_parameter_value().double_value
+        self.a_min, self.a_max = self.get_parameter('A_MIN').get_parameter_value().double_value, self.get_parameter('A_MAX').get_parameter_value().double_value
+
+        self.collected_data_counts_of_vel_acc = np.zeros((self.num_bins_v, self.num_bins_a))
+        self.collected_data_counts_of_vel_steer = np.zeros((self.num_bins_v, self.num_bins_steer))
+
+        self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins_v + 1)
+        self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins_steer + 1)
+        self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins_a + 1)
+
+        self.v_bin_centers = (self.v_bins[:-1] + self.v_bins[1:]) / 2
+        self.steer_bin_centers = (self.steer_bins[:-1] + self.steer_bins[1:]) / 2
+        self.a_bin_centers = (self.a_bins[:-1] + self.a_bins[1:]) / 2
+
+        self.trajectory_parts = None
+        self.trajectory_achievement_rates = None
+
+        self.prev_part = "left_circle"
+
+        self.acc_idx = 0
+        self.vel_idx = 0
+
+        self.target_acc_on_line = 0.0
+        self.target_vel_on_line = 0.0
+
+        self.on_line_vel_flag = True
+        self.deceleration_rate = 0.6
+
+        self.vel_hist = np.zeros(200)
+        self.acc_hist = np.zeros(200)
+
+        self.vel_hist_for_plot = np.zeros(200)
+        self.acc_hist_for_plot = np.zeros(200)
 
         self.callback_group = ReentrantCallbackGroup()
         self.lock = threading.Lock()
@@ -598,9 +652,9 @@ class DataCollectingTrajectoryPublisher(Node):
             self.target_vel_on_line = self.v_bin_centers[self.vel_idx]
 
             if (
-                COURSE_NAME == "u_shaped_return"
-                or COURSE_NAME == "straight_line_positive"
-                or COURSE_NAME == "straight_line_negative"
+                self.COURSE_NAME == "u_shaped_return"
+                or self.COURSE_NAME == "straight_line_positive"
+                or self.COURSE_NAME == "straight_line_negative"
             ):
                 if self.target_vel_on_line > self.v_max * 3.0 / 4.0:
                     self.deceleration_rate = 0.55 + 0.15
@@ -609,7 +663,7 @@ class DataCollectingTrajectoryPublisher(Node):
                 else:
                     self.deceleration_rate = 0.85 + 0.1
 
-            elif COURSE_NAME == "eight_course":
+            elif self.COURSE_NAME == "eight_course":
                 if self.target_vel_on_line > self.v_max * 3.0 / 4.0:
                     self.deceleration_rate = 0.55
                 elif self.target_vel_on_line > self.v_max / 2.0:
@@ -674,11 +728,11 @@ class DataCollectingTrajectoryPublisher(Node):
 
             # deceleration
             if self.deceleration_rate <= achievement_rate:
-                if COURSE_NAME == "eight_course" or COURSE_NAME == "u_shaped_return":
+                if self.COURSE_NAME == "eight_course" or self.COURSE_NAME == "u_shaped_return":
                     target_vel = np.min([self.v_max / 10.0, max_vel_from_lateral_acc / 2.0])
                 elif (
-                    COURSE_NAME == "straight_line_positive"
-                    or COURSE_NAME == "straight_line_negative"
+                    self.COURSE_NAME == "straight_line_positive"
+                    or self.COURSE_NAME == "straight_line_negative"
                 ):
                     target_vel = 0.0
 
@@ -761,7 +815,7 @@ class DataCollectingTrajectoryPublisher(Node):
         actual_long_side = max(long_side_length - long_side_margin, 1.1)
         actual_short_side = max(short_side_length - long_side_margin, 1.0)
 
-        if COURSE_NAME == "eight_course":
+        if self.COURSE_NAME == "eight_course":
             (
                 trajectory_position_data,
                 trajectory_yaw_data,
@@ -772,7 +826,7 @@ class DataCollectingTrajectoryPublisher(Node):
                 actual_long_side, actual_short_side, self.traj_step
             )
 
-        elif COURSE_NAME == "straight_line_positive" or COURSE_NAME == "straight_line_negative":
+        elif self.COURSE_NAME == "straight_line_positive" or self.COURSE_NAME == "straight_line_negative":
             (
                 trajectory_position_data,
                 trajectory_yaw_data,
@@ -785,7 +839,7 @@ class DataCollectingTrajectoryPublisher(Node):
                 self.traj_step,
             )
 
-        elif COURSE_NAME == "u_shaped_return":
+        elif self.COURSE_NAME == "u_shaped_return":
             (
                 trajectory_position_data,
                 trajectory_yaw_data,

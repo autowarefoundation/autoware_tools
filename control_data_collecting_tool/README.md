@@ -83,17 +83,30 @@ ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --o
 
 ROS 2 params in `/data_collecting_trajectory_publisher` node:
 
-| Name                                     | Type     | Description                                                           | Default value |
-| :--------------------------------------- | :------- | :-------------------------------------------------------------------- | :------------ |
-| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                 | 0.5           |
-| `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]           | 5.0           |
-| `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]               | 0.75          |
-| `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]    | 1.0           |
-| `mov_ave_window`                         | `int`    | Moving average smoothing window size                                  | 50            |
-| `target_longitudinal_velocity`           | `double` | Target longitudinal velocity [m/s]                                    | 6.0           |
-| `longitudinal_velocity_noise_amp`        | `double` | Target longitudinal velocity additional sine noise amplitude [m/s]    | 0.01          |
-| `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s] | 5.0           |
-| `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s] | 20.0          |
+| Name                                     | Type     | Description                                                                                          | Default value |
+| :--------------------------------------- | :------- | :--------------------------------------------------------------------------------------------------- | :------------ |
+| `COURSE_NAME`                            | `string` | Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`]  |`eight_course` |
+| `NUM_BINS_V`                             | `int`    | Number of bins of velocity in heatmap                                                                | 10            |
+| `NUM_BINS_STEER`                         | `int`    | Number of bins of steer in heatmap                                                                   | 10            |
+| `NUM_BINS_ACCELERATION`                  | `int`    | Number of bins of acceleration in heatmap                                                            | 10            |
+| `V_MIN`                                  | `double` | Minimum velocity in heatmap                                                                          | -1.0          |
+| `V_MAX`                                  | `double` | Maximum velocity in heatmap                                                                          | 1.0           |
+| `STEER_MIN`                              | `double` | Minimum steer in heatmap                                                                             | -1.0          |
+| `STEER_MAX`                              | `double` | Maximum steer in heatmap                                                                             | 1.0           |
+| `A_MIN`                                  | `double` | Minimum acceleration in heatmap                                                                      | -1.0          |
+| `A_MAX`                                  | `double` | Maximum acceleration in heatmap                                                                      | 1.0           |
+| `wheel_base`                             | `double` | Wheel base [m]                                                                                       | 2.79          |
+| `acc_kp`                                 | `double` | Accel command proportional gain                                                                      | 1.0           |
+| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                                | 0.5           |
+| `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]                                          | 5.0           |
+| `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                              | 0.75          |
+| `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]                                   | 1.0           |
+| `mov_ave_window`                         | `int`    | Moving average smoothing window size                                                                 | 50            |
+| `target_longitudinal_velocity`           | `double` | Target longitudinal velocity [m/s]                                                                   | 6.0           |
+| `longitudinal_velocity_noise_amp`        | `double` | Target longitudinal velocity additional sine noise amplitude [m/s]                                   | 0.01          |
+| `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s]                                | 5.0           |
+| `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s]                                | 20.0          |
+
 
 ROS 2 params in `/data_collecting_pure_pursuit_trajectory_follower` node:
 
