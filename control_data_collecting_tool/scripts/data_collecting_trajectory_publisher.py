@@ -1014,18 +1014,10 @@ class DataCollectingTrajectoryPublisher(Node):
             and self._present_acceleration is not None
             and self.trajectory_position_data is not None
         ):
-            yaw = getYaw(
-                np.array(
-                    [
-                        self._present_kinematic_state.pose.pose.orientation.x,
-                        self._present_kinematic_state.pose.pose.orientation.y,
-                        self._present_kinematic_state.pose.pose.orientation.z,
-                        self._present_kinematic_state.pose.pose.orientation.w,
-                    ]
-                )
-            )
+            #calculate steer
+            angular_z = self._present_kinematic_state.twist.twist.angular.z
             wheel_base = self.get_parameter("wheel_base").get_parameter_value().double_value
-            steer = np.arctan2(wheel_base * yaw, self._present_kinematic_state.twist.twist.linear.x)
+            steer = np.arctan2(wheel_base * angular_z, self._present_kinematic_state.twist.twist.linear.x)
 
             # update velocity and acceleration bin if ego vehicle is moving
             if self._present_kinematic_state.twist.twist.linear.x > 1e-3:
