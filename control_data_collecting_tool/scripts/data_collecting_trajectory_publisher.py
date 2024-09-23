@@ -307,52 +307,62 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "COURSE_NAME",
-            "eight_course"
+            "eight_course",
+            ParameterDescriptor(description="Course name [eight_course, u_shaped_return, straight_line_positive, straight_line_negative]"),
         )
 
         self.declare_parameter(
             "NUM_BINS_V",
-            10
+            10,
+            ParameterDescriptor(description="Number of bins of velocity in heatmap"),
         )
 
         self.declare_parameter(
             "NUM_BINS_STEER",
-            10
+            10,
+            ParameterDescriptor(description="Number of bins of steer in heatmap"),
         )
 
         self.declare_parameter(
             "NUM_BINS_A",
-            10
+            10,
+            ParameterDescriptor(description="Number of bins of acceleration in heatmap"),
         )
 
         self.declare_parameter(
             "V_MIN",
-            -1.0
+            -1.0,
+            ParameterDescriptor(description="Maximum velocity in heatmap [m/s]"),
         )
 
         self.declare_parameter(
             "V_MAX",
-            1.0
+            1.0,
+            ParameterDescriptor(description="Minimum steer in heatmap [m/s]"),
         )
 
         self.declare_parameter(
             "STEER_MIN",
-            -1.0
+            -1.0,
+            ParameterDescriptor(description="Maximum steer in heatmap [rad]"),
         )
 
         self.declare_parameter(
             "STEER_MAX",
-            1.0
+            1.0,
+            ParameterDescriptor(description="Maximum steer in heatmap [rad]"),
         )
 
         self.declare_parameter(
             "A_MIN",
-            -1.0
+            -1.0,
+            ParameterDescriptor(description="Minimum acceleration in heatmap [m/ss]"),
         )
 
         self.declare_parameter(
             "A_MAX",
-            1.0
+            1.0,
+            ParameterDescriptor(description="Maximum acceleration in heatmap [m/ss]"),
         )
 
         self.declare_parameter(

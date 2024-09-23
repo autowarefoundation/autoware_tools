@@ -79,6 +79,18 @@ This package provides tools for automatically collecting data using pure pursuit
 ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once
 ```
 
+## Change Courses
+You can change the course by selecting `COURSE_NAME` in `config/param.yaml` from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`].
+- `COURSE_NAME: "eight_course"`
+<img src="resource/figure_eight.png" width="480">
+
+- `COURSE_NAME: "u_shaped_return"`
+<img src="resource/u_shaped.png" width="480">
+
+- `COURSE_NAME: "straight_line_positive"` or `COURSE_NAME: "straight_line_negative"`
+( Both "straight_line_positive" and "straight_line_negative" represent straight line courses, but the direction of travel of the course is reversed.)
+<img src="resource/straight_line.png" width="480">
+
 ## Parameter
 
 ROS 2 params in `/data_collecting_trajectory_publisher` node:
@@ -89,12 +101,12 @@ ROS 2 params in `/data_collecting_trajectory_publisher` node:
 | `NUM_BINS_V`                             | `int`    | Number of bins of velocity in heatmap                                                                | 10            |
 | `NUM_BINS_STEER`                         | `int`    | Number of bins of steer in heatmap                                                                   | 10            |
 | `NUM_BINS_ACCELERATION`                  | `int`    | Number of bins of acceleration in heatmap                                                            | 10            |
-| `V_MIN`                                  | `double` | Minimum velocity in heatmap                                                                          | -1.0          |
-| `V_MAX`                                  | `double` | Maximum velocity in heatmap                                                                          | 1.0           |
-| `STEER_MIN`                              | `double` | Minimum steer in heatmap                                                                             | -1.0          |
-| `STEER_MAX`                              | `double` | Maximum steer in heatmap                                                                             | 1.0           |
-| `A_MIN`                                  | `double` | Minimum acceleration in heatmap                                                                      | -1.0          |
-| `A_MAX`                                  | `double` | Maximum acceleration in heatmap                                                                      | 1.0           |
+| `V_MIN`                                  | `double` | Minimum velocity in heatmap [m/s]                                                                    | 0.0           |
+| `V_MAX`                                  | `double` | Maximum velocity in heatmap [m/s]                                                                    | 11.5          |
+| `STEER_MIN`                              | `double` | Minimum steer in heatmap [rad]                                                                       | -1.0          |
+| `STEER_MAX`                              | `double` | Maximum steer in heatmap [rad]                                                                       | 1.0           |
+| `A_MIN`                                  | `double` | Minimum acceleration in heatmap [m/ss]                                                               | -1.0          |
+| `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/ss]                                                               | 1.0           |
 | `wheel_base`                             | `double` | Wheel base [m]                                                                                       | 2.79          |
 | `acc_kp`                                 | `double` | Accel command proportional gain                                                                      | 1.0           |
 | `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                                | 0.5           |
