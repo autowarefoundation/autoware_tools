@@ -17,6 +17,7 @@
 #include "autoware/universe_utils/system/stop_watch.hpp"
 
 #include <autoware/universe_utils/ros/marker_helper.hpp>
+#include <autoware_lanelet2_extension/visualization/visualization.hpp>
 
 namespace autoware::behavior_analyzer
 {
@@ -27,7 +28,8 @@ using autoware::universe_utils::Point2d;
 using autoware::universe_utils::Polygon2d;
 
 BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_options)
-: Node("path_selector_node", node_options)
+: Node("path_selector_node", node_options), route_handler_{std::make_shared<RouteHandler>()}
+
 {
   using namespace std::literals::chrono_literals;
   timer_ = rclcpp::create_timer(
@@ -50,6 +52,10 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   pub_manual_score_ = create_publisher<Float32MultiArrayStamped>("~/manual_score", rclcpp::QoS{1});
   pub_system_score_ = create_publisher<Float32MultiArrayStamped>("~/system_score", rclcpp::QoS{1});
 
+  sub_map_ = create_subscription<LaneletMapBin>(
+    "input/lanelet2_map", rclcpp::QoS{1}.transient_local(),
+    [this](const LaneletMapBin::ConstSharedPtr msg) { route_handler_->setMap(*msg); });
+
   srv_play_ = this->create_service<SetBool>(
     "play",
     std::bind(&BehaviorAnalyzerNode::play, this, std::placeholders::_1, std::placeholders::_2),
@@ -60,24 +66,18 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
     std::bind(&BehaviorAnalyzerNode::rewind, this, std::placeholders::_1, std::placeholders::_2),
     rclcpp::ServicesQoS().get_rmw_qos_profile());
 
+  srv_route_ = this->create_service<Trigger>(
+    "next_route",
+    std::bind(
+      &BehaviorAnalyzerNode::next_route, this, std::placeholders::_1, std::placeholders::_2),
+    rclcpp::ServicesQoS().get_rmw_qos_profile());
+
   srv_weight_ = this->create_service<Trigger>(
     "weight_grid_search",
     std::bind(&BehaviorAnalyzerNode::weight, this, std::placeholders::_1, std::placeholders::_2),
     rclcpp::ServicesQoS().get_rmw_qos_profile());
 
   reader_.open(declare_parameter<std::string>("bag_path"));
-
-  bag_data_ = std::make_shared<BagData>(
-    duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
-
-  // bag_data_->set_route(get_route());
-
-  sub_map_ = create_subscription<LaneletMapBin>(
-    "input/lanelet2_map", rclcpp::QoS{1}.transient_local(),
-    [this](const LaneletMapBin::ConstSharedPtr msg) {
-      bag_data_->set_map(msg);
-      bag_data_->set_route(get_route());
-    });
 
   parameters_ = std::make_shared<Parameters>();
   parameters_->resample_num = declare_parameter<int>("resample_num");
@@ -116,8 +116,6 @@ auto BehaviorAnalyzerNode::get_route() -> LaneletRoute::ConstSharedPtr
     throw std::domain_error("not found route msg.");
   }
 
-  reader_.seek(0);
-
   rclcpp::Serialization<LaneletRoute> serializer;
 
   const auto deserialized_message = std::make_shared<LaneletRoute>();
@@ -129,8 +127,6 @@ auto BehaviorAnalyzerNode::get_route() -> LaneletRoute::ConstSharedPtr
       break;
     }
   }
-
-  reader_.seek(0);
 
   return deserialized_message;
 }
@@ -211,13 +207,19 @@ void BehaviorAnalyzerNode::play(
   const SetBool::Request::SharedPtr req, SetBool::Response::SharedPtr res)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  if (req->data) {
-    timer_->reset();
-    RCLCPP_INFO(get_logger(), "start evaluation.");
-  } else {
+  if (!req->data) {
     timer_->cancel();
-    RCLCPP_INFO(get_logger(), "stop evaluation.");
+    return;
   }
+
+  bag_data_ = std::make_shared<BagData>(
+    duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count(),
+    route_handler_);
+
+  timer_->reset();
+
+  RCLCPP_INFO(get_logger(), "start evaluation.");
+
   res->success = true;
 }
 
@@ -229,8 +231,30 @@ void BehaviorAnalyzerNode::rewind(
 
   bag_data_.reset();
   bag_data_ = std::make_shared<BagData>(
-    duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
+    duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count(),
+    route_handler_);
 
+  res->success = true;
+}
+
+void BehaviorAnalyzerNode::next_route(
+  [[maybe_unused]] const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  route_handler_->setRoute(*get_route());
+
+  MarkerArray msg;
+
+  autoware::universe_utils::appendMarkerArray(
+    lanelet::visualization::laneletsAsTriangleMarkerArray(
+      "preferred_lanes", route_handler_->getPreferredLanelets(),
+      createMarkerColor(0.16, 1.0, 0.69, 0.2)),
+    &msg);
+
+  pub_marker_->publish(msg);
+
+  RCLCPP_INFO(get_logger(), "update route.");
   res->success = true;
 }
 
@@ -244,7 +268,8 @@ void BehaviorAnalyzerNode::weight(
 
   reader_.seek(0);
   const auto bag_data = std::make_shared<BagData>(
-    duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
+    duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count(),
+    route_handler_);
 
   std::vector<Result> weight_grid;
 
@@ -255,7 +280,7 @@ void BehaviorAnalyzerNode::weight(
     for (double w1 = min; w1 < max + 0.1 * resolusion; w1 += resolusion) {
       for (double w2 = min; w2 < max + 0.1 * resolusion; w2 += resolusion) {
         for (double w3 = min; w3 < max + 0.1 * resolusion; w3 += resolusion) {
-          for (double w4 = min; w4 < max + 0.1 * resolusion; w3 += resolusion) {
+          for (double w4 = min; w4 < max + 0.1 * resolusion; w4 += resolusion) {
             weight_grid.emplace_back(w0, w1, w2, w3, w4);
           }
         }
@@ -263,7 +288,7 @@ void BehaviorAnalyzerNode::weight(
     }
   }
 
-  const auto show_best_result = [&weight_grid]() {
+  const auto show_best_result = [this, &weight_grid]() {
     auto sort_by_loss = weight_grid;
     std::sort(sort_by_loss.begin(), sort_by_loss.end(), [](const auto & a, const auto & b) {
       return a.loss < b.loss;
@@ -271,10 +296,17 @@ void BehaviorAnalyzerNode::weight(
 
     const auto best = sort_by_loss.front();
 
-    std::cout << std::fixed;
-    std::cout << std::setprecision(4);
-    std::cout << " [w0]:" << best.w0 << " [w1]:" << best.w1 << " [w2]:" << best.w2
-              << " [w3]:" << best.w3 << " [w4]:" << best.w4 << " [loss]:" << best.loss << std::endl;
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(4);
+    // clang-format off
+    ss << " [w0]:"   << best.w0;
+    ss << " [w1]:"   << best.w1;
+    ss << " [w2]:"   << best.w2;
+    ss << " [w3]:"   << best.w3;
+    ss << " [w4]:"   << best.w4;
+    ss << " [loss]:" << best.loss << std::endl;
+    // clang-format on
+    RCLCPP_INFO_STREAM(get_logger(), ss.str());
   };
 
   autoware::universe_utils::StopWatch<std::chrono::milliseconds> stop_watch;
@@ -325,10 +357,12 @@ void BehaviorAnalyzerNode::weight(
 
       for (auto & t : threads) t.join();
 
-      if (i + 1 > weight_grid.size()) break;
+      if (i + 1 >= weight_grid.size()) break;
 
       i += p->grid_seach.thread_num;
     }
+
+    std::cout << "IDX:" << i << " GRID:" << weight_grid.size() << std::endl;
 
     show_best_result();
   }
@@ -483,17 +517,17 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
       const auto idx = static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY);
       Marker marker = createDefaultMarker(
         "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "lateral_comfortability", i++, Marker::LINE_STRIP,
-        createMarkerScale(0.05, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
+        createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
       if (!trajectory.feasible()) {
         for (const auto & point : trajectory.points) {
           marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.5));
+          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
         }
       } else {
         for (const auto & point : trajectory.points) {
           marker.points.push_back(point.pose.position);
           marker.colors.push_back(createMarkerColor(
-            1.0 - score.at(idx), 0.0, score.at(idx), std::min(0.5, score.at(idx))));
+            1.0 - score.at(idx), score.at(idx), 0.0, std::min(0.5, score.at(idx))));
         }
       }
       msg.markers.push_back(marker);
@@ -504,18 +538,18 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
       const auto idx = static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY);
       Marker marker = createDefaultMarker(
         "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "longitudinal_comfortability", i++,
-        Marker::LINE_STRIP, createMarkerScale(0.05, 0.0, 0.0),
+        Marker::LINE_STRIP, createMarkerScale(0.1, 0.0, 0.0),
         createMarkerColor(1.0, 1.0, 1.0, 0.999));
       if (!trajectory.feasible()) {
         for (const auto & point : trajectory.points) {
           marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.5));
+          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
         }
       } else {
         for (const auto & point : trajectory.points) {
           marker.points.push_back(point.pose.position);
           marker.colors.push_back(createMarkerColor(
-            1.0 - score.at(idx), 0.0, score.at(idx), std::min(0.5, score.at(idx))));
+            1.0 - score.at(idx), score.at(idx), 0.0, std::min(0.5, score.at(idx))));
         }
       }
       msg.markers.push_back(marker);
@@ -526,17 +560,17 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
       const auto idx = static_cast<size_t>(SCORE::EFFICIENCY);
       Marker marker = createDefaultMarker(
         "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "efficiency", i++, Marker::LINE_STRIP,
-        createMarkerScale(0.05, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
+        createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
       if (!trajectory.feasible()) {
         for (const auto & point : trajectory.points) {
           marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.5));
+          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
         }
       } else {
         for (const auto & point : trajectory.points) {
           marker.points.push_back(point.pose.position);
           marker.colors.push_back(createMarkerColor(
-            1.0 - score.at(idx), 0.0, score.at(idx), std::min(0.5, score.at(idx))));
+            1.0 - score.at(idx), score.at(idx), 0.0, std::min(0.5, score.at(idx))));
         }
       }
       msg.markers.push_back(marker);
@@ -547,17 +581,17 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
       const auto idx = static_cast<size_t>(SCORE::SAFETY);
       Marker marker = createDefaultMarker(
         "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "safety", i++, Marker::LINE_STRIP,
-        createMarkerScale(0.05, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
+        createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
       if (!trajectory.feasible()) {
         for (const auto & point : trajectory.points) {
           marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.5));
+          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
         }
       } else {
         for (const auto & point : trajectory.points) {
           marker.points.push_back(point.pose.position);
           marker.colors.push_back(createMarkerColor(
-            1.0 - score.at(idx), 0.0, score.at(idx), std::min(0.5, score.at(idx))));
+            1.0 - score.at(idx), score.at(idx), 0.0, std::min(0.5, score.at(idx))));
         }
       }
       msg.markers.push_back(marker);
@@ -568,17 +602,17 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
       const auto idx = static_cast<size_t>(SCORE::ACHIEVABILITY);
       Marker marker = createDefaultMarker(
         "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "achievability", i++, Marker::LINE_STRIP,
-        createMarkerScale(0.05, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
+        createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
       if (!trajectory.feasible()) {
         for (const auto & point : trajectory.points) {
           marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.5));
+          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
         }
       } else {
         for (const auto & point : trajectory.points) {
           marker.points.push_back(point.pose.position);
           marker.colors.push_back(createMarkerColor(
-            1.0 - score.at(idx), 0.0, score.at(idx), std::min(0.5, score.at(idx))));
+            1.0 - score.at(idx), score.at(idx), 0.0, std::min(0.5, score.at(idx))));
         }
       }
       msg.markers.push_back(marker);
@@ -597,15 +631,12 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
     msg.markers.push_back(marker);
   }
 
-  const auto autoware_trajectory = data_set->sampling.autoware();
-  if (autoware_trajectory.has_value()) {
-    for (const auto & point : autoware_trajectory.value().points) {
-      Marker marker = createDefaultMarker(
-        "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "system", i++, Marker::ARROW,
-        createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 1.0, 0.0, 0.999));
-      marker.pose = point.pose;
-      msg.markers.push_back(marker);
-    }
+  {
+    autoware::universe_utils::appendMarkerArray(
+      lanelet::visualization::laneletsAsTriangleMarkerArray(
+        "preferred_lanes", data_set->route_handler->getPreferredLanelets(),
+        createMarkerColor(0.16, 1.0, 0.69, 0.2)),
+      &msg);
   }
 
   pub_marker_->publish(msg);

@@ -119,6 +119,7 @@ auto convertToTrajectoryPoints(
     p.pose.orientation.z = quat.z();
     p.longitudinal_velocity_mps = trajectory.longitudinal_velocities.at(i);
     p.lateral_velocity_mps = trajectory.lateral_velocities.at(i);
+    p.acceleration_mps2 = trajectory.longitudinal_accelerations.at(i);
     p.front_wheel_angle_rad = vehicle_info.wheel_base_m * trajectory.curvatures.at(i);
     traj_points.push_back(p);
   }

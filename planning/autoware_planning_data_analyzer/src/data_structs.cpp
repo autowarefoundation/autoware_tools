@@ -151,6 +151,14 @@ CommonData::CommonData(
 
 void CommonData::calculate()
 {
+  if (!feasible()) {
+    scores.at(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY)) = 0.0;
+    scores.at(static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY)) = 0.0;
+    scores.at(static_cast<size_t>(SCORE::EFFICIENCY)) = 0.0;
+    scores.at(static_cast<size_t>(SCORE::SAFETY)) = 0.0;
+    scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) = 0.0;
+  }
+
   std::vector<double> lateral_accel_values;
   std::vector<double> minimum_ttc_values;
   std::vector<double> longitudinal_jerk_values;
@@ -187,25 +195,25 @@ void CommonData::calculate()
   scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) = achievability();
 }
 
+void CommonData::normalize(
+  const double min, const double max, const size_t score_type, const bool flip)
+{
+  scores.at(score_type) = flip ? (max - scores.at(score_type)) / (max - min)
+                               : (scores.at(score_type) - min) / (max - min);
+}
+
 double CommonData::longitudinal_comfortability() const
 {
   constexpr double TIME_FACTOR = 0.8;
 
   double score = 0.0;
 
-  const auto min = 0.0;
-  const auto max = 0.5;
-  const auto normalize = [&min, &max](const double value) {
-    return (max - std::clamp(value, min, max)) / (max - min);
-  };
-
   for (size_t i = 0; i < parameters->resample_num; i++) {
-    score += normalize(
-      std::pow(TIME_FACTOR, i) *
-      std::abs(values.at(static_cast<size_t>(METRIC::LONGITUDINAL_JERK)).at(i)));
+    score += std::pow(TIME_FACTOR, i) *
+             std::abs(values.at(static_cast<size_t>(METRIC::LONGITUDINAL_JERK)).at(i));
   }
 
-  return score / parameters->resample_num;
+  return score;
 }
 
 double CommonData::lateral_comfortability() const
@@ -214,19 +222,12 @@ double CommonData::lateral_comfortability() const
 
   double score = 0.0;
 
-  const auto min = 0.0;
-  const auto max = 0.5;
-  const auto normalize = [&min, &max](const double value) {
-    return (max - std::clamp(value, min, max)) / (max - min);
-  };
-
   for (size_t i = 0; i < parameters->resample_num; i++) {
-    score += normalize(
-      std::pow(TIME_FACTOR, i) *
-      std::abs(values.at(static_cast<size_t>(METRIC::LATERAL_ACCEL)).at(i)));
+    score += std::pow(TIME_FACTOR, i) *
+             std::abs(values.at(static_cast<size_t>(METRIC::LATERAL_ACCEL)).at(i));
   }
 
-  return score / parameters->resample_num;
+  return score;
 }
 
 double CommonData::efficiency() const
@@ -235,19 +236,12 @@ double CommonData::efficiency() const
 
   double score = 0.0;
 
-  const auto min = 0.0;
-  const auto max = 20.0;
-  const auto normalize = [&min, &max](const double value) {
-    return std::clamp(value, min, max) / (max - min);
-  };
-
   for (size_t i = 0; i < parameters->resample_num; i++) {
-    score += normalize(
-      std::pow(TIME_FACTOR, i) * values.at(static_cast<size_t>(METRIC::TRAVEL_DISTANCE)).at(i) /
-      0.5);
+    score +=
+      std::pow(TIME_FACTOR, i) * values.at(static_cast<size_t>(METRIC::TRAVEL_DISTANCE)).at(i);
   }
 
-  return score / parameters->resample_num;
+  return score;
 }
 
 double CommonData::safety() const
@@ -256,18 +250,11 @@ double CommonData::safety() const
 
   double score = 0.0;
 
-  const auto min = 0.0;
-  const auto max = 5.0;
-  const auto normalize = [&min, &max](const double value) {
-    return std::clamp(value, min, max) / (max - min);
-  };
-
   for (size_t i = 0; i < parameters->resample_num; i++) {
-    score += normalize(
-      std::pow(TIME_FACTOR, i) * values.at(static_cast<size_t>(METRIC::MINIMUM_TTC)).at(i));
+    score += std::pow(TIME_FACTOR, i) * values.at(static_cast<size_t>(METRIC::MINIMUM_TTC)).at(i);
   }
 
-  return score / parameters->resample_num;
+  return score;
 }
 
 double CommonData::achievability() const
@@ -276,19 +263,12 @@ double CommonData::achievability() const
 
   double score = 0.0;
 
-  const auto min = 0.0;
-  const auto max = 2.0;
-  const auto normalize = [&min, &max](const double value) {
-    return (max - std::clamp(value, min, max)) / (max - min);
-  };
-
   for (size_t i = 0; i < parameters->resample_num; i++) {
-    score += normalize(
-      std::pow(TIME_FACTOR, i) *
-      std::abs(values.at(static_cast<size_t>(METRIC::LATERAL_DEVIATION)).at(i)));
+    score += std::pow(TIME_FACTOR, i) *
+             std::abs(values.at(static_cast<size_t>(METRIC::LATERAL_DEVIATION)).at(i));
   }
 
-  return score / parameters->resample_num;
+  return score;
 }
 
 double CommonData::total(
@@ -462,7 +442,7 @@ double TrajectoryData::lateral_deviation(const size_t idx) const
 
 bool TrajectoryData::feasible() const
 {
-  const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps > -1e-3; };
+  const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps > 1e-3; };
   return std::all_of(points.begin(), points.end(), condition);
 }
 
@@ -503,11 +483,11 @@ SamplingTrajectoryData::SamplingTrajectoryData(
   if (!opt_trajectory) {
     throw std::logic_error("data is not enough.");
   }
-  data.emplace_back(
-    bag_data, vehicle_info, parameters, "autoware",
-    utils::resampling(
-      *opt_trajectory, opt_odometry->pose.pose, parameters->resample_num,
-      parameters->time_resolution));
+  // data.emplace_back(
+  //   bag_data, vehicle_info, parameters, "autoware",
+  //   utils::resampling(
+  //     *opt_trajectory, opt_odometry->pose.pose, parameters->resample_num,
+  //     parameters->time_resolution));
 
   for (const auto & sample : utils::sampling(
          *opt_trajectory, opt_odometry->pose.pose, opt_odometry->twist.twist.linear.x,
@@ -515,10 +495,10 @@ SamplingTrajectoryData::SamplingTrajectoryData(
     data.emplace_back(bag_data, vehicle_info, parameters, "frenet", sample);
   }
 
-  std::vector<TrajectoryPoint> stop_points(parameters->resample_num);
-  for (auto & stop_point : stop_points) {
-    stop_point.pose = opt_odometry->pose.pose;
-  }
-  data.emplace_back(bag_data, vehicle_info, parameters, "stop", stop_points);
+  // std::vector<TrajectoryPoint> stop_points(parameters->resample_num);
+  // for (auto & stop_point : stop_points) {
+  //   stop_point.pose = opt_odometry->pose.pose;
+  // }
+  // data.emplace_back(bag_data, vehicle_info, parameters, "stop", stop_points);
 }
 }  // namespace autoware::behavior_analyzer

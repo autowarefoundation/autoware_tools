@@ -182,8 +182,9 @@ auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> TFMes
 
 struct BagData
 {
-  explicit BagData(const rcutils_time_point_value_t timestamp)
-  : timestamp{timestamp}, route_handler{std::make_shared<RouteHandler>()}
+  explicit BagData(
+    const rcutils_time_point_value_t timestamp, std::shared_ptr<RouteHandler> & route_handler)
+  : timestamp{timestamp}, route_handler{route_handler}
   {
     buffers.emplace(TOPIC::TF, std::make_shared<Buffer<TFMessage>>());
     buffers.emplace(TOPIC::ODOMETRY, std::make_shared<Buffer<Odometry>>());
@@ -198,18 +199,6 @@ struct BagData
   std::map<std::string, std::shared_ptr<BufferBase>> buffers{};
 
   std::shared_ptr<RouteHandler> route_handler;
-
-  void set_map(const LaneletMapBin::ConstSharedPtr hdmap) { route_handler->setMap(*hdmap); }
-
-  void set_route(const LaneletRoute::ConstSharedPtr route)
-  {
-    route_handler->setRoute(*route);
-    std::cout << "IDs:";
-    for (const auto & lanelet : route_handler->getPreferredLanelets()) {
-      std::cout << lanelet.id() << ",";
-    }
-    std::cout << std::endl;
-  }
 
   void update(const rcutils_time_point_value_t dt)
   {
@@ -238,6 +227,9 @@ struct CommonData
     const std::shared_ptr<Parameters> & parameters, const std::string & tag);
 
   void calculate();
+
+  void normalize(
+    const double min, const double max, const size_t score_type, const bool flip = false);
 
   double longitudinal_comfortability() const;
 
@@ -378,8 +370,38 @@ struct DataSet
     const std::shared_ptr<Parameters> & parameters)
   : manual{ManualDrivingData(bag_data, vehicle_info, parameters)},
     sampling{SamplingTrajectoryData(bag_data, vehicle_info, parameters)},
+    route_handler{bag_data->route_handler},
     parameters{parameters}
   {
+    normalize();
+  }
+
+  void normalize()
+  {
+    const auto range = [this](const size_t idx) {
+      const auto min_itr = std::min_element(
+        sampling.data.begin(), sampling.data.end(),
+        [&idx](const auto & a, const auto & b) { return a.scores.at(idx) < b.scores.at(idx); });
+      const auto max_itr = std::max_element(
+        sampling.data.begin(), sampling.data.end(),
+        [&idx](const auto & a, const auto & b) { return a.scores.at(idx) < b.scores.at(idx); });
+
+      return std::make_pair(min_itr->scores.at(idx), max_itr->scores.at(idx));
+    };
+
+    const auto [s0_min, s0_max] = range(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY));
+    const auto [s1_min, s1_max] = range(static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY));
+    const auto [s2_min, s2_max] = range(static_cast<size_t>(SCORE::EFFICIENCY));
+    const auto [s3_min, s3_max] = range(static_cast<size_t>(SCORE::SAFETY));
+    const auto [s4_min, s4_max] = range(static_cast<size_t>(SCORE::ACHIEVABILITY));
+
+    for (auto & data : sampling.data) {
+      data.normalize(s0_min, s0_max, static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY), true);
+      data.normalize(s1_min, s1_max, static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY), true);
+      data.normalize(s2_min, s2_max, static_cast<size_t>(SCORE::EFFICIENCY));
+      data.normalize(s3_min, s3_max, static_cast<size_t>(SCORE::SAFETY));
+      data.normalize(s4_min, s4_max, static_cast<size_t>(SCORE::ACHIEVABILITY), true);
+    }
   }
 
   auto loss(const double w0, const double w1, const double w2, const double w3, const double w4)
@@ -387,7 +409,7 @@ struct DataSet
   {
     const auto best = sampling.best(w0, w1, w2, w3, w4);
     if (!best.has_value()) {
-      throw std::logic_error("no found best trajectory.");
+      return 0.0;
     }
 
     const auto min_size = std::min(manual.odometry_history.size(), best.value().points.size());
@@ -408,6 +430,8 @@ struct DataSet
 
   ManualDrivingData manual;
   SamplingTrajectoryData sampling;
+
+  std::shared_ptr<RouteHandler> route_handler;
 
   std::shared_ptr<Parameters> parameters;
 };

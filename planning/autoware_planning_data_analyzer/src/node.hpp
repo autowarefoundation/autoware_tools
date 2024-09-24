@@ -47,6 +47,8 @@ private:
 
   void rewind(const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res);
 
+  void next_route(const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res);
+
   void weight(const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res);
 
   auto get_route() -> LaneletRoute::ConstSharedPtr;
@@ -76,11 +78,14 @@ private:
   rclcpp::Subscription<LaneletMapBin>::SharedPtr sub_map_;
   rclcpp::Service<SetBool>::SharedPtr srv_play_;
   rclcpp::Service<Trigger>::SharedPtr srv_rewind_;
+  rclcpp::Service<Trigger>::SharedPtr srv_route_;
   rclcpp::Service<Trigger>::SharedPtr srv_weight_;
 
   vehicle_info_utils::VehicleInfo vehicle_info_;
 
   std::shared_ptr<BagData> bag_data_;
+
+  std::shared_ptr<RouteHandler> route_handler_;
 
   std::shared_ptr<Parameters> parameters_;
 

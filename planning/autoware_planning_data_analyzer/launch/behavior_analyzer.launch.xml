@@ -2,9 +2,9 @@
   <arg name="bag_path" description="bagfile path"/>
   <arg name="map_path" description="point cloud and lanelet2 map directory path"/>
 
+  <arg name="use_map_loader" default="false"/>
   <arg name="use_sim_time" default="false" description="use_sim_time"/>
   <arg name="vehicle_model" default="sample_vehicle" description="vehicle model name"/>
-  <arg name="use_map_in_bag" default="false"/>
 
   <arg name="lanelet2_map_loader_param_path" default="$(find-pkg-share autoware_launch)/config/map/lanelet2_map_loader.param.yaml"/>
   <arg name="map_projection_loader_param_path" default="$(find-pkg-share autoware_launch)/config/map/map_projection_loader.param.yaml"/>
@@ -30,18 +30,22 @@
       <remap from="input/lanelet2_map" to="/map/vector_map"/>
     </composable_node>
 
-    <!-- <composable_node pkg="map_loader" plugin="Lanelet2MapLoaderNode" name="lanelet2_map_loader"> -->
-    <!--   <param from="$(var lanelet2_map_loader_param_path)"/> -->
-    <!--   <param name="lanelet2_map_path" value="$(var map_path)/lanelet2_map.osm"/> -->
-    <!--   <remap from="output/lanelet2_map" to="/map/vector_map"/> -->
-    <!-- </composable_node> -->
-
     <composable_node pkg="glog_component" plugin="GlogComponent" name="glog_component" namespace=""/>
   </node_container>
 
-  <!-- <include file="$(find-pkg-share autoware_map_projection_loader)/launch/map_projection_loader.launch.xml"> -->
-  <!--   <arg name="param_path" value="$(var map_projection_loader_param_path)"/> -->
-  <!--   <arg name="map_projector_info_path" value="$(var map_path)/map_projector_info.yaml"/> -->
-  <!--   <arg name="lanelet2_map_path" value="$(var map_path)/lanelet2_map.osm"/> -->
-  <!-- </include> -->
+  <group if="$(var use_map_loader)">
+    <load_composable_node target="behavior_analyzer_container">
+      <composable_node pkg="map_loader" plugin="Lanelet2MapLoaderNode" name="lanelet2_map_loader">
+        <param from="$(var lanelet2_map_loader_param_path)"/>
+        <param name="lanelet2_map_path" value="$(var map_path)/lanelet2_map.osm"/>
+        <remap from="output/lanelet2_map" to="/map/vector_map"/>
+      </composable_node>
+    </load_composable_node>
+
+    <include file="$(find-pkg-share autoware_map_projection_loader)/launch/map_projection_loader.launch.xml">
+      <arg name="param_path" value="$(var map_projection_loader_param_path)"/>
+      <arg name="map_projector_info_path" value="$(var map_path)/map_projector_info.yaml"/>
+      <arg name="lanelet2_map_path" value="$(var map_path)/lanelet2_map.osm"/>
+    </include>
+  </group>
 </launch>
