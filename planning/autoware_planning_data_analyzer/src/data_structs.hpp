@@ -47,6 +47,7 @@ enum class SCORE {
   EFFICIENCY = 2,
   SAFETY = 3,
   ACHIEVABILITY = 4,
+  TOTAL = 5,
   SIZE
 };
 
@@ -373,10 +374,10 @@ struct DataSet
     route_handler{bag_data->route_handler},
     parameters{parameters}
   {
-    normalize();
+    normalize_scores();
   }
 
-  void normalize()
+  void normalize_scores()
   {
     const auto range = [this](const size_t idx) {
       const auto min_itr = std::min_element(
@@ -401,6 +402,14 @@ struct DataSet
       data.normalize(s2_min, s2_max, static_cast<size_t>(SCORE::EFFICIENCY));
       data.normalize(s3_min, s3_max, static_cast<size_t>(SCORE::SAFETY));
       data.normalize(s4_min, s4_max, static_cast<size_t>(SCORE::ACHIEVABILITY), true);
+      data.scores.at(static_cast<size_t>(SCORE::TOTAL)) =
+        data.total(parameters->w0, parameters->w1, parameters->w2, parameters->w3, parameters->w4);
+    }
+
+    const auto [total_min, total_max] = range(static_cast<size_t>(SCORE::TOTAL));
+
+    for (auto & data : sampling.data) {
+      data.normalize(total_min, total_max, static_cast<size_t>(SCORE::TOTAL));
     }
   }
 

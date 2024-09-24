@@ -15,6 +15,7 @@
 #include "node.hpp"
 
 #include "autoware/universe_utils/system/stop_watch.hpp"
+#include "utils.hpp"
 
 #include <autoware/universe_utils/ros/marker_helper.hpp>
 #include <autoware_lanelet2_extension/visualization/visualization.hpp>
@@ -264,6 +265,10 @@ void BehaviorAnalyzerNode::weight(
   std::lock_guard<std::mutex> lock(mutex_);
   RCLCPP_INFO(get_logger(), "start weight grid seach.");
 
+  autoware::universe_utils::StopWatch<std::chrono::milliseconds> stop_watch;
+
+  stop_watch.tic("total_time");
+
   const auto & p = parameters_;
 
   reader_.seek(0);
@@ -309,9 +314,6 @@ void BehaviorAnalyzerNode::weight(
     RCLCPP_INFO_STREAM(get_logger(), ss.str());
   };
 
-  autoware::universe_utils::StopWatch<std::chrono::milliseconds> stop_watch;
-
-  stop_watch.tic("total_time");
   while (reader_.has_next() && rclcpp::ok()) {
     update(bag_data, p->grid_seach.dt);
 
@@ -366,9 +368,9 @@ void BehaviorAnalyzerNode::weight(
 
     show_best_result();
   }
-  std::cout << "process time: " << stop_watch.toc("total_time") << "[ms]" << std::endl;
-
-  RCLCPP_INFO(get_logger(), "finish weight grid seach.");
+  RCLCPP_INFO_STREAM(
+    get_logger(),
+    "finish weight grid search. processing time:" << stop_watch.toc("total_time") << "[ms]");
 
   res->success = true;
 }
@@ -500,135 +502,34 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
 {
   MarkerArray msg;
 
-  size_t i = 0;
-  for (const auto & point : data_set->manual.odometry_history) {
+  for (size_t i = 0; i < data_set->manual.odometry_history.size(); ++i) {
     Marker marker = createDefaultMarker(
-      "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "manual", i++, Marker::ARROW,
+      "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "human", i, Marker::ARROW,
       createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 0.0, 0.0, 0.999));
-    marker.pose = point->pose.pose;
+    marker.pose = data_set->manual.odometry_history.at(i)->pose.pose;
     msg.markers.push_back(marker);
   }
 
-  for (const auto & trajectory : data_set->sampling.data) {
-    const auto score = trajectory.score();
-
-    // lateral_comfortability
-    {
-      const auto idx = static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY);
-      Marker marker = createDefaultMarker(
-        "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "lateral_comfortability", i++, Marker::LINE_STRIP,
-        createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
-      if (!trajectory.feasible()) {
-        for (const auto & point : trajectory.points) {
-          marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
-        }
-      } else {
-        for (const auto & point : trajectory.points) {
-          marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(
-            1.0 - score.at(idx), score.at(idx), 0.0, std::min(0.5, score.at(idx))));
-        }
-      }
-      msg.markers.push_back(marker);
-    }
-
-    // longitudinal_comfortability
-    {
-      const auto idx = static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY);
-      Marker marker = createDefaultMarker(
-        "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "longitudinal_comfortability", i++,
-        Marker::LINE_STRIP, createMarkerScale(0.1, 0.0, 0.0),
-        createMarkerColor(1.0, 1.0, 1.0, 0.999));
-      if (!trajectory.feasible()) {
-        for (const auto & point : trajectory.points) {
-          marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
-        }
-      } else {
-        for (const auto & point : trajectory.points) {
-          marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(
-            1.0 - score.at(idx), score.at(idx), 0.0, std::min(0.5, score.at(idx))));
-        }
-      }
-      msg.markers.push_back(marker);
-    }
-
-    // efficiency
-    {
-      const auto idx = static_cast<size_t>(SCORE::EFFICIENCY);
-      Marker marker = createDefaultMarker(
-        "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "efficiency", i++, Marker::LINE_STRIP,
-        createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
-      if (!trajectory.feasible()) {
-        for (const auto & point : trajectory.points) {
-          marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
-        }
-      } else {
-        for (const auto & point : trajectory.points) {
-          marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(
-            1.0 - score.at(idx), score.at(idx), 0.0, std::min(0.5, score.at(idx))));
-        }
-      }
-      msg.markers.push_back(marker);
-    }
-
-    // safety
-    {
-      const auto idx = static_cast<size_t>(SCORE::SAFETY);
-      Marker marker = createDefaultMarker(
-        "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "safety", i++, Marker::LINE_STRIP,
-        createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
-      if (!trajectory.feasible()) {
-        for (const auto & point : trajectory.points) {
-          marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
-        }
-      } else {
-        for (const auto & point : trajectory.points) {
-          marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(
-            1.0 - score.at(idx), score.at(idx), 0.0, std::min(0.5, score.at(idx))));
-        }
-      }
-      msg.markers.push_back(marker);
-    }
-
-    // achievability
-    {
-      const auto idx = static_cast<size_t>(SCORE::ACHIEVABILITY);
-      Marker marker = createDefaultMarker(
-        "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "achievability", i++, Marker::LINE_STRIP,
-        createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
-      if (!trajectory.feasible()) {
-        for (const auto & point : trajectory.points) {
-          marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
-        }
-      } else {
-        for (const auto & point : trajectory.points) {
-          marker.points.push_back(point.pose.position);
-          marker.colors.push_back(createMarkerColor(
-            1.0 - score.at(idx), score.at(idx), 0.0, std::min(0.5, score.at(idx))));
-        }
-      }
-      msg.markers.push_back(marker);
-    }
-  }
-
-  const auto best_trajectory = data_set->sampling.best(
+  const auto best = data_set->sampling.best(
     parameters_->w0, parameters_->w1, parameters_->w2, parameters_->w3, parameters_->w4);
-  if (best_trajectory.has_value()) {
+  if (best.has_value()) {
     Marker marker = createDefaultMarker(
-      "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "best", i++, Marker::LINE_STRIP,
+      "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "best_score", 0L, Marker::LINE_STRIP,
       createMarkerScale(0.2, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
-    for (const auto & point : best_trajectory.value().points) {
+    for (const auto & point : best.value().points) {
       marker.points.push_back(point.pose.position);
     }
     msg.markers.push_back(marker);
+  }
+
+  for (size_t i = 0; i < data_set->sampling.data.size(); ++i) {
+    const auto data = data_set->sampling.data.at(i);
+    msg.markers.push_back(utils::to_marker(data, SCORE::LATERAL_COMFORTABILITY, i));
+    msg.markers.push_back(utils::to_marker(data, SCORE::LONGITUDINAL_COMFORTABILITY, i));
+    msg.markers.push_back(utils::to_marker(data, SCORE::EFFICIENCY, i));
+    msg.markers.push_back(utils::to_marker(data, SCORE::SAFETY, i));
+    msg.markers.push_back(utils::to_marker(data, SCORE::ACHIEVABILITY, i));
+    msg.markers.push_back(utils::to_marker(data, SCORE::TOTAL, i));
   }
 
   {
