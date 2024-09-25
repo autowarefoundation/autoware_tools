@@ -63,8 +63,6 @@ private:
 
   void visualize(const std::shared_ptr<DataSet> & data_set) const;
 
-  void print(const std::shared_ptr<DataSet> & data_set) const;
-
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_marker_;
   rclcpp::Publisher<Odometry>::SharedPtr pub_odometry_;

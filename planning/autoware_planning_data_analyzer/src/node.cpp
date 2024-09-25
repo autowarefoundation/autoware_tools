@@ -541,30 +541,8 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
   }
 
   pub_marker_->publish(msg);
-}
 
-void BehaviorAnalyzerNode::print(const std::shared_ptr<DataSet> & data_set) const
-{
-  const auto autoware_trajectory = data_set->sampling.autoware();
-  if (!autoware_trajectory.has_value()) {
-    return;
-  }
-
-  const auto & p = parameters_;
-
-  const auto best_trajectory = data_set->sampling.best(p->w0, p->w1, p->w2, p->w3, p->w4);
-  if (!best_trajectory.has_value()) {
-    return;
-  }
-
-  std::cout << "---result---" << std::endl;
-  std::cout << "[HUMAN] SCORE:" << data_set->manual.total(p->w0, p->w1, p->w2, p->w3, p->w4)
-            << std::endl;
-  std::cout << "[AUTOWARE] SCORE:"
-            << autoware_trajectory.value().total(p->w0, p->w1, p->w2, p->w3, p->w4) << std::endl;
-  std::cout << "[SAMPLING] BEST SCORE:"
-            << best_trajectory.value().total(p->w0, p->w1, p->w2, p->w3, p->w4) << "("
-            << best_trajectory.value().tag << ")" << std::endl;
+  data_set->show();
 }
 
 void BehaviorAnalyzerNode::on_timer()

@@ -271,6 +271,11 @@ double CommonData::achievability() const
   return score;
 }
 
+double CommonData::get(const SCORE & score_type) const
+{
+  return scores.at(static_cast<size_t>(score_type));
+}
+
 double CommonData::total(
   const double w0, const double w1, const double w2, const double w3, const double w4) const
 {

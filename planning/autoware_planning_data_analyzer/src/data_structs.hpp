@@ -245,6 +245,8 @@ struct CommonData
   double total(
     const double w0, const double w1, const double w2, const double w3, const double w4) const;
 
+  double get(const SCORE & score_type) const;
+
   auto score() const -> std::vector<double> { return scores; }
 
   virtual double lateral_accel(const size_t idx) const = 0;
@@ -435,6 +437,57 @@ struct DataSet
     }
 
     return mse;
+  }
+
+  void show()
+  {
+    const auto best =
+      sampling.best(parameters->w0, parameters->w1, parameters->w2, parameters->w3, parameters->w4);
+
+    if (!best.has_value()) {
+      return;
+    }
+
+    double s0_ave = 0.0;
+    double s0_dev = 0.0;
+    double s1_ave = 0.0;
+    double s1_dev = 0.0;
+    double s2_ave = 0.0;
+    double s2_dev = 0.0;
+    double s3_ave = 0.0;
+    double s3_dev = 0.0;
+    double s4_ave = 0.0;
+    double s4_dev = 0.0;
+
+    const auto update = [](const double ave, const double dev, const double value, const size_t i) {
+      const auto new_ave = (i * ave + value) / (i + 1);
+      const auto new_dev =
+        (i * (ave * ave + dev * dev) + value * value) / (i + 1) - new_ave * new_ave;
+      return std::make_pair(new_ave, new_dev);
+    };
+
+    for (size_t i = 0; i < sampling.data.size(); i++) {
+      const auto data = sampling.data.at(i);
+      std::tie(s0_ave, s0_dev) = update(s0_ave, s0_dev, data.get(SCORE::LATERAL_COMFORTABILITY), i);
+      std::tie(s1_ave, s1_dev) =
+        update(s1_ave, s1_dev, data.get(SCORE::LONGITUDINAL_COMFORTABILITY), i);
+      std::tie(s2_ave, s2_dev) = update(s2_ave, s2_dev, data.get(SCORE::EFFICIENCY), i);
+      std::tie(s3_ave, s3_dev) = update(s3_ave, s3_dev, data.get(SCORE::SAFETY), i);
+      std::tie(s4_ave, s4_dev) = update(s4_ave, s4_dev, data.get(SCORE::ACHIEVABILITY), i);
+    }
+
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2) << "\n";
+    // clang-format off
+    ss << " tag               :" << best.value().tag << "\n";
+    ss << " lat comfortability:" << best.value().get(SCORE::LATERAL_COMFORTABILITY)       << " mean:" << s0_ave << " std:" << std::sqrt(s0_dev) << "\n"; // NOLINT
+    ss << " lon comfortability:" << best.value().get(SCORE::LONGITUDINAL_COMFORTABILITY)  << " mean:" << s1_ave << " std:" << std::sqrt(s1_dev) << "\n"; // NOLINT
+    ss << " efficiency        :" << best.value().get(SCORE::EFFICIENCY)                   << " mean:" << s2_ave << " std:" << std::sqrt(s2_dev) << "\n"; // NOLINT
+    ss << " safety            :" << best.value().get(SCORE::SAFETY)                       << " mean:" << s3_ave << " std:" << std::sqrt(s3_dev) << "\n"; // NOLINT
+    ss << " achievability     :" << best.value().get(SCORE::ACHIEVABILITY)                << " mean:" << s4_ave << " std:" << std::sqrt(s4_dev) << "\n"; // NOLINT
+    ss << " total             :" << best.value().get(SCORE::TOTAL);
+    // clang-format on
+    RCLCPP_INFO_STREAM(rclcpp::get_logger(__func__), ss.str());
   }
 
   ManualDrivingData manual;
