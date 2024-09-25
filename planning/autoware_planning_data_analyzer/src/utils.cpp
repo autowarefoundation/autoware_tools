@@ -19,8 +19,8 @@
 #include "autoware_frenet_planner/frenet_planner.hpp"
 #include "autoware_path_sampler/prepare_inputs.hpp"
 #include "autoware_path_sampler/utils/trajectory_utils.hpp"
-#include <autoware/universe_utils/ros/marker_helper.hpp>
 
+#include <autoware/universe_utils/ros/marker_helper.hpp>
 #include <magic_enum.hpp>
 
 #include <algorithm>
@@ -109,13 +109,15 @@ double time_to_collision(
 
 auto convertToTrajectoryPoints(
   const autoware::sampler_common::Trajectory & trajectory,
-  const vehicle_info_utils::VehicleInfo & vehicle_info) -> std::vector<TrajectoryPoint>
+  const vehicle_info_utils::VehicleInfo & vehicle_info, const double z)
+  -> std::vector<TrajectoryPoint>
 {
   std::vector<TrajectoryPoint> traj_points;
   for (auto i = 0UL; i < trajectory.points.size(); ++i) {
     TrajectoryPoint p;
     p.pose.position.x = trajectory.points[i].x();
     p.pose.position.y = trajectory.points[i].y();
+    p.pose.position.z = z;
     auto quat = tf2::Quaternion();
     quat.setRPY(0.0, 0.0, trajectory.yaws[i]);
     p.pose.orientation.w = quat.w();
@@ -157,18 +159,23 @@ auto prepareSamplingParameters(
 
   // calculate target lateral positions
   sampling_parameters.resolution = 0.5;
-  const auto max_s = path_spline.lastS();
+  // const auto max_s = std::max(path_spline.lastS(), 5.0);
+  // const auto max_s = path_spline.lastS();
   autoware::frenet_planner::SamplingParameter p;
   p.target_duration = 10.0;
   for (const auto lon_acceleration : parameters.lon_accelerations) {
     p.target_state.longitudinal_acceleration = lon_acceleration;
     p.target_state.longitudinal_velocity =
       initial_state.velocity + lon_acceleration * p.target_duration;
-    p.target_state.position.s = std::min(
-      max_s, path_spline.frenet(initial_state.pose).s +
-               std::max(
-                 0.0, initial_state.velocity * p.target_duration +
-                        0.5 * lon_acceleration * std::pow(p.target_duration, 2.0) - base_length));
+    // p.target_state.position.s = std::min(
+    //   max_s, path_spline.frenet(initial_state.pose).s +
+    //            std::max(
+    //              0.0, initial_state.velocity * p.target_duration +
+    //                     0.5 * lon_acceleration * std::pow(p.target_duration, 2.0) -
+    //                     base_length));
+    p.target_state.position.s =
+      path_spline.frenet(initial_state.pose).s + initial_state.velocity * p.target_duration +
+      0.5 * lon_acceleration * std::pow(p.target_duration, 2.0) - base_length;
     for (const auto lat_position : parameters.lat_positions) {
       p.target_state.position.d = lat_position;
       for (const auto lat_velocity : parameters.lat_velocities) {
@@ -179,7 +186,7 @@ auto prepareSamplingParameters(
         }
       }
     }
-    if (p.target_state.position.s == max_s) break;
+    // if (p.target_state.position.s == max_s) break;
   }
   return sampling_parameters;
 }
@@ -268,7 +275,8 @@ auto sampling(
 
   for (const auto & trajectory : sampling_frenet_trajectories) {
     output.push_back(convertToTrajectoryPoints(
-      trajectory.resampleTimeFromZero(parameters->time_resolution), vehicle_info));
+      trajectory.resampleTimeFromZero(parameters->time_resolution), vehicle_info,
+      p_ego.position.z));
   }
 
   return output;
@@ -282,8 +290,8 @@ auto to_marker(const TrajectoryData & data, const SCORE & score_type, const size
   ss << magic_enum::enum_name(score_type);
 
   Marker marker = createDefaultMarker(
-      "map", rclcpp::Clock{RCL_ROS_TIME}.now(), ss.str(), id, Marker::LINE_STRIP,
-      createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
+    "map", rclcpp::Clock{RCL_ROS_TIME}.now(), ss.str(), id, Marker::LINE_STRIP,
+    createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
 
   if (!data.feasible()) {
     for (const auto & point : data.points) {
@@ -293,8 +301,7 @@ auto to_marker(const TrajectoryData & data, const SCORE & score_type, const size
   } else {
     for (const auto & point : data.points) {
       marker.points.push_back(point.pose.position);
-      marker.colors.push_back(createMarkerColor(
-            1.0 - score, score, 0.0, std::min(0.5, score)));
+      marker.colors.push_back(createMarkerColor(1.0 - score, score, 0.0, std::min(0.5, score)));
     }
   }
 

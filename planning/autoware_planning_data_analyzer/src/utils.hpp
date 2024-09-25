@@ -42,7 +42,8 @@ double time_to_collision(
 
 auto convertToTrajectoryPoints(
   const autoware::sampler_common::Trajectory & trajectory,
-  const vehicle_info_utils::VehicleInfo & vehicle_info) -> std::vector<TrajectoryPoint>;
+  const vehicle_info_utils::VehicleInfo & vehicle_info, const double z)
+  -> std::vector<TrajectoryPoint>;
 
 template <class T>
 auto convertToFrenetPoint(const T & points, const Point & search_point_geom, const size_t seg_idx)

@@ -442,7 +442,7 @@ double TrajectoryData::lateral_deviation(const size_t idx) const
 
 bool TrajectoryData::feasible() const
 {
-  const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps > 1e-3; };
+  const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps >= 0.0; };
   return std::all_of(points.begin(), points.end(), condition);
 }
 
