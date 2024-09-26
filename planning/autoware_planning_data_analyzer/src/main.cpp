@@ -21,7 +21,8 @@
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<autoware::behavior_analyzer::BehaviorAnalyzerNode>(rclcpp::NodeOptions{}));
+  rclcpp::spin(
+    std::make_shared<autoware::behavior_analyzer::BehaviorAnalyzerNode>(rclcpp::NodeOptions{}));
   rclcpp::shutdown();
 
   return 0;

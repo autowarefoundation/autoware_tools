@@ -490,6 +490,16 @@ struct DataSet
     RCLCPP_INFO_STREAM(rclcpp::get_logger(__func__), ss.str());
   }
 
+  auto get(const SCORE & score_type) const -> std::vector<double>
+  {
+    std::vector<double> ret;
+    for (const auto & data : sampling.data) {
+      const auto value = data.get(score_type);
+      if (std::isfinite(value)) ret.push_back(value);
+    }
+    return ret;
+  }
+
   ManualDrivingData manual;
   SamplingTrajectoryData sampling;
 

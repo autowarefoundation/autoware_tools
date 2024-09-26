@@ -44,7 +44,7 @@ public:
 private:
   void on_timer();
 
-  void plot();
+  void plot() const;
 
   void play(const SetBool::Request::SharedPtr req, SetBool::Response::SharedPtr res);
 
@@ -93,16 +93,13 @@ private:
 
   std::shared_ptr<Parameters> parameters_;
 
-  mutable std::vector<double> lat_comfortability{};
-  mutable std::vector<double> lon_comfortability{};
-  mutable std::vector<double> efficiency{};
-  mutable std::vector<double> safety{};
-  mutable std::vector<double> achievability{};
-  mutable std::vector<double> total{};
-
   mutable std::mutex mutex_;
 
+  mutable std::vector<std::vector<double>> buffer_;
+
   mutable rosbag2_cpp::Reader reader_;
+
+  mutable size_t count_;
 };
 }  // namespace autoware::behavior_analyzer
 
