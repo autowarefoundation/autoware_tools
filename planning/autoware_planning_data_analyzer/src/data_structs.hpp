@@ -98,14 +98,17 @@ struct Parameters
   double w2{1.0};
   double w3{1.0};
   double w4{1.0};
+  double w5{1.0};
   GridSearchParameters grid_seach{};
   TargetStateParameters target_state{};
 };
 
 struct Result
 {
-  Result(const double w0, const double w1, const double w2, const double w3, const double w4)
-  : w0{w0}, w1{w1}, w2{w2}, w3{w3}, w4{w4}
+  Result(
+    const double w0, const double w1, const double w2, const double w3, const double w4,
+    const double w5)
+  : w0{w0}, w1{w1}, w2{w2}, w3{w3}, w4{w4}, w5{w5}
   {
   }
   double loss{0.0};
@@ -114,6 +117,7 @@ struct Result
   double w2{0.0};
   double w3{0.0};
   double w4{0.0};
+  double w5{0.0};
 };
 
 struct BufferBase
@@ -247,7 +251,8 @@ struct CommonData
   double consistency() const;
 
   double total(
-    const double w0, const double w1, const double w2, const double w3, const double w4) const;
+    const double w0, const double w1, const double w2, const double w3, const double w4,
+    const double w5) const;
 
   double get(const SCORE & score_type) const;
 
@@ -345,15 +350,16 @@ struct SamplingTrajectoryData
     const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::optional<TrajectoryPoints> & t_best);
 
-  auto best(const double w0, const double w1, const double w2, const double w3, const double w4)
-    const -> std::optional<TrajectoryData>
+  auto best(
+    const double w0, const double w1, const double w2, const double w3, const double w4,
+    const double w5) const -> std::optional<TrajectoryData>
   {
     auto sort_by_score = data;
 
     std::sort(
       sort_by_score.begin(), sort_by_score.end(),
-      [&w0, &w1, &w2, &w3, &w4](const auto & a, const auto & b) {
-        return a.total(w0, w1, w2, w3, w4) > b.total(w0, w1, w2, w3, w4);
+      [&w0, &w1, &w2, &w3, &w4, &w5](const auto & a, const auto & b) {
+        return a.total(w0, w1, w2, w3, w4, w5) > b.total(w0, w1, w2, w3, w4, w5);
       });
 
     const auto itr = std::remove_if(
@@ -418,8 +424,9 @@ struct DataSet
       data.normalize(s3_min, s3_max, static_cast<size_t>(SCORE::SAFETY));
       data.normalize(s4_min, s4_max, static_cast<size_t>(SCORE::ACHIEVABILITY), true);
       data.normalize(s5_min, s5_max, static_cast<size_t>(SCORE::CONSISTENCY), true);
-      data.scores.at(static_cast<size_t>(SCORE::TOTAL)) =
-        data.total(parameters->w0, parameters->w1, parameters->w2, parameters->w3, parameters->w4);
+      data.scores.at(static_cast<size_t>(SCORE::TOTAL)) = data.total(
+        parameters->w0, parameters->w1, parameters->w2, parameters->w3, parameters->w4,
+        parameters->w5);
     }
 
     const auto [total_min, total_max] = range(static_cast<size_t>(SCORE::TOTAL));
@@ -429,10 +436,11 @@ struct DataSet
     }
   }
 
-  auto loss(const double w0, const double w1, const double w2, const double w3, const double w4)
-    const -> double
+  auto loss(
+    const double w0, const double w1, const double w2, const double w3, const double w4,
+    const double w5) const -> double
   {
-    const auto best = sampling.best(w0, w1, w2, w3, w4);
+    const auto best = sampling.best(w0, w1, w2, w3, w4, w5);
     if (!best.has_value()) {
       return 0.0;
     }
@@ -455,8 +463,9 @@ struct DataSet
 
   void show()
   {
-    const auto best =
-      sampling.best(parameters->w0, parameters->w1, parameters->w2, parameters->w3, parameters->w4);
+    const auto best = sampling.best(
+      parameters->w0, parameters->w1, parameters->w2, parameters->w3, parameters->w4,
+      parameters->w5);
 
     if (!best.has_value()) {
       return;

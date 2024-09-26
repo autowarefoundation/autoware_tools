@@ -297,14 +297,15 @@ double CommonData::get(const SCORE & score_type) const
 }
 
 double CommonData::total(
-  const double w0, const double w1, const double w2, const double w3, const double w4) const
+  const double w0, const double w1, const double w2, const double w3, const double w4,
+  const double w5) const
 {
   return w0 * scores.at(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY)) +
          w1 * scores.at(static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY)) +
          w2 * scores.at(static_cast<size_t>(SCORE::EFFICIENCY)) +
          w3 * scores.at(static_cast<size_t>(SCORE::SAFETY)) +
          w4 * scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) +
-         1.0 * scores.at(static_cast<size_t>(SCORE::CONSISTENCY));
+         w5 * scores.at(static_cast<size_t>(SCORE::CONSISTENCY));
 }
 
 ManualDrivingData::ManualDrivingData(

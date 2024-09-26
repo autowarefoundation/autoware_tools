@@ -90,6 +90,7 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   parameters_->w2 = declare_parameter<double>("weight.efficiency");
   parameters_->w3 = declare_parameter<double>("weight.safety");
   parameters_->w4 = declare_parameter<double>("weight.achievability");
+  parameters_->w5 = declare_parameter<double>("weight.consistency");
   parameters_->grid_seach.dt = declare_parameter<double>("grid_seach.dt");
   parameters_->grid_seach.min = declare_parameter<double>("grid_seach.min");
   parameters_->grid_seach.max = declare_parameter<double>("grid_seach.max");
@@ -290,7 +291,9 @@ void BehaviorAnalyzerNode::weight(
       for (double w2 = min; w2 < max + 0.1 * resolusion; w2 += resolusion) {
         for (double w3 = min; w3 < max + 0.1 * resolusion; w3 += resolusion) {
           for (double w4 = min; w4 < max + 0.1 * resolusion; w4 += resolusion) {
-            weight_grid.emplace_back(w0, w1, w2, w3, w4);
+            for (double w5 = min; w5 < max + 0.1 * resolusion; w5 += resolusion) {
+              weight_grid.emplace_back(w0, w1, w2, w3, w4, w5);
+            }
           }
         }
       }
@@ -313,6 +316,7 @@ void BehaviorAnalyzerNode::weight(
     ss << " [w2]:"   << best.w2;
     ss << " [w3]:"   << best.w3;
     ss << " [w4]:"   << best.w4;
+    ss << " [w5]:"   << best.w5;
     ss << " [loss]:" << best.loss << std::endl;
     // clang-format on
     RCLCPP_INFO_STREAM(get_logger(), ss.str());
@@ -335,6 +339,7 @@ void BehaviorAnalyzerNode::weight(
       double w2 = 0.0;
       double w3 = 0.0;
       double w4 = 0.0;
+      double w5 = 0.0;
 
       {
         std::lock_guard<std::mutex> lock(grid_mutex);
@@ -344,9 +349,10 @@ void BehaviorAnalyzerNode::weight(
         w2 = weight_grid.at(idx).w2;
         w3 = weight_grid.at(idx).w3;
         w4 = weight_grid.at(idx).w4;
+        w5 = weight_grid.at(idx).w5;
       }
 
-      const auto loss = data_set->loss(w0, w1, w2, w3, w4);
+      const auto loss = data_set->loss(w0, w1, w2, w3, w4, w5);
 
       {
         std::lock_guard<std::mutex> lock(grid_mutex);
@@ -368,6 +374,13 @@ void BehaviorAnalyzerNode::weight(
       if (i + 1 >= weight_grid.size()) break;
 
       i += p->grid_seach.thread_num;
+    }
+
+    const auto t_best = data_set->sampling.best(p->w0, p->w1, p->w2, p->w3, p->w4, p->w5);
+    if (t_best.has_value()) {
+      best = t_best.value().points;
+    } else {
+      best = std::nullopt;
     }
 
     std::cout << "IDX:" << i << " GRID:" << weight_grid.size() << std::endl;
@@ -517,7 +530,8 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
   }
 
   const auto best = data_set->sampling.best(
-    parameters_->w0, parameters_->w1, parameters_->w2, parameters_->w3, parameters_->w4);
+    parameters_->w0, parameters_->w1, parameters_->w2, parameters_->w3, parameters_->w4,
+    parameters_->w5);
   if (best.has_value()) {
     Marker marker = createDefaultMarker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "best_score", 0L, Marker::LINE_STRIP,
@@ -626,7 +640,7 @@ void BehaviorAnalyzerNode::plot(const std::shared_ptr<DataSet> & data_set) const
   subplot(SCORE::ACHIEVABILITY, 3, 3, 5);
   subplot(SCORE::CONSISTENCY, 3, 3, 6);
   subplot(SCORE::TOTAL, 3, 3, 7);
-  plot_best(data_set->sampling.best(p->w0, p->w1, p->w2, p->w3, p->w4), 3, 3, 8);
+  plot_best(data_set->sampling.best(p->w0, p->w1, p->w2, p->w3, p->w4, p->w5), 3, 3, 8);
   matplotlibcpp::pause(1e-9);
 }
 }  // namespace autoware::behavior_analyzer
