@@ -113,9 +113,9 @@ ROS 2 params in `/data_collecting_trajectory_publisher` node:
 | `acc_kp`                                 | `double` | Accel command proportional gain                                                                     | 1.0            |
 | `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                               | 0.5            |
 | `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]                                         | 5.0            |
-| `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                             | 0.50           |
+| `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                             | 0.75           |
 | `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]                                  | 1.0            |
-| `mov_ave_window`                         | `int`    | Moving average smoothing window size                                                                | 100            |
+| `mov_ave_window`                         | `int`    | Moving average smoothing window size                                                                | 50             |
 | `target_longitudinal_velocity`           | `double` | Target longitudinal velocity [m/s]                                                                  | 6.0            |
 | `longitudinal_velocity_noise_amp`        | `double` | Target longitudinal velocity additional sine noise amplitude [m/s]                                  | 0.01           |
 | `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s]                               | 5.0            |

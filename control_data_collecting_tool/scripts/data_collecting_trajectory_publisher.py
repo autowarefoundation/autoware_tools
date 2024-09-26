@@ -376,7 +376,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "yaw_error_threshold",
-            0.50,
+            0.75,
             ParameterDescriptor(
                 description="Yaw error threshold where applying velocity limit [rad]"
             ),
@@ -392,7 +392,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "mov_ave_window",
-            100,
+            50,
             ParameterDescriptor(description="Moving average smoothing window size"),
         )
 
