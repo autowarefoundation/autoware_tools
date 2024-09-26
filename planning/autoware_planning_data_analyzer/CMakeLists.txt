@@ -4,6 +4,13 @@ project(autoware_planning_data_analyzer)
 find_package(autoware_cmake REQUIRED)
 autoware_package()
 
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-w)
+endif()
+
 # Library target
 add_library(matplotlib_cpp INTERFACE)
 target_include_directories(matplotlib_cpp

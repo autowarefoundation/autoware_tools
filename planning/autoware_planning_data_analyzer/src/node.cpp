@@ -107,7 +107,7 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   parameters_->target_state.lon_accelerations =
     declare_parameter<std::vector<double>>("target_state.longitudinal_accelerations");
 
-  matplotlibcpp::figure_size(1200, 780);
+  matplotlibcpp::figure_size(1200, 1200);
 }
 
 auto BehaviorAnalyzerNode::get_route() -> LaneletRoute::ConstSharedPtr
@@ -546,7 +546,7 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
   };
 
   if (count_ > 50) {
-    plot();
+    plot(data_set);
     clear_buffer(SCORE::LATERAL_COMFORTABILITY);
     clear_buffer(SCORE::LONGITUDINAL_COMFORTABILITY);
     clear_buffer(SCORE::EFFICIENCY);
@@ -584,7 +584,7 @@ void BehaviorAnalyzerNode::on_timer()
   analyze(bag_data_);
 }
 
-void BehaviorAnalyzerNode::plot() const
+void BehaviorAnalyzerNode::plot(const std::shared_ptr<DataSet> & data_set) const
 {
   const auto subplot =
     [this](const auto & score_type, const size_t n_row, const size_t n_col, const size_t num) {
@@ -597,13 +597,26 @@ void BehaviorAnalyzerNode::plot() const
       matplotlibcpp::title(ss.str());
     };
 
+  const auto plot_best =
+    [this](const auto & data, const size_t n_row, const size_t n_col, const size_t num) {
+      matplotlibcpp::subplot(n_row, n_col, num);
+      if (data.has_value()) {
+        matplotlibcpp::bar<double>(data.value().score());
+      }
+      matplotlibcpp::ylim(0.0, 1.0);
+      matplotlibcpp::title("BEST");
+    };
+
+  const auto & p = parameters_;
+
   matplotlibcpp::clf();
-  subplot(SCORE::LATERAL_COMFORTABILITY, 2, 3, 1);
-  subplot(SCORE::LONGITUDINAL_COMFORTABILITY, 2, 3, 2);
-  subplot(SCORE::EFFICIENCY, 2, 3, 3);
-  subplot(SCORE::SAFETY, 2, 3, 4);
-  subplot(SCORE::ACHIEVABILITY, 2, 3, 5);
-  subplot(SCORE::TOTAL, 2, 3, 6);
+  subplot(SCORE::LATERAL_COMFORTABILITY, 3, 3, 1);
+  subplot(SCORE::LONGITUDINAL_COMFORTABILITY, 3, 3, 2);
+  subplot(SCORE::EFFICIENCY, 3, 3, 3);
+  subplot(SCORE::SAFETY, 3, 3, 4);
+  subplot(SCORE::ACHIEVABILITY, 3, 3, 5);
+  subplot(SCORE::TOTAL, 3, 3, 6);
+  plot_best(data_set->sampling.best(p->w0, p->w1, p->w2, p->w3, p->w4), 3, 3, 7);
   matplotlibcpp::pause(1e-9);
 }
 }  // namespace autoware::behavior_analyzer

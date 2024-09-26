@@ -44,8 +44,6 @@ public:
 private:
   void on_timer();
 
-  void plot() const;
-
   void play(const SetBool::Request::SharedPtr req, SetBool::Response::SharedPtr res);
 
   void rewind(const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res);
@@ -65,6 +63,8 @@ private:
   void score(const std::shared_ptr<DataSet> & data_set) const;
 
   void visualize(const std::shared_ptr<DataSet> & data_set) const;
+
+  void plot(const std::shared_ptr<DataSet> & data_set) const;
 
   rclcpp::TimerBase::SharedPtr timer_;
 
