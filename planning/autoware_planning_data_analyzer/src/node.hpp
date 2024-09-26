@@ -16,6 +16,7 @@
 #define NODE_HPP_
 
 #include "data_structs.hpp"
+#include "matplotlibcpp.h"
 #include "rosbag2_cpp/reader.hpp"
 #include "type_alias.hpp"
 
@@ -43,6 +44,8 @@ public:
 private:
   void on_timer();
 
+  void plot();
+
   void play(const SetBool::Request::SharedPtr req, SetBool::Response::SharedPtr res);
 
   void rewind(const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res);
@@ -64,6 +67,9 @@ private:
   void visualize(const std::shared_ptr<DataSet> & data_set) const;
 
   rclcpp::TimerBase::SharedPtr timer_;
+
+  rclcpp::TimerBase::SharedPtr timer_plot_;
+
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_marker_;
   rclcpp::Publisher<Odometry>::SharedPtr pub_odometry_;
   rclcpp::Publisher<PredictedObjects>::SharedPtr pub_objects_;
@@ -86,6 +92,13 @@ private:
   std::shared_ptr<RouteHandler> route_handler_;
 
   std::shared_ptr<Parameters> parameters_;
+
+  mutable std::vector<double> lat_comfortability{};
+  mutable std::vector<double> lon_comfortability{};
+  mutable std::vector<double> efficiency{};
+  mutable std::vector<double> safety{};
+  mutable std::vector<double> achievability{};
+  mutable std::vector<double> total{};
 
   mutable std::mutex mutex_;
 

@@ -30,13 +30,15 @@ using autoware::universe_utils::Polygon2d;
 
 BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_options)
 : Node("path_selector_node", node_options), route_handler_{std::make_shared<RouteHandler>()}
-
 {
   using namespace std::literals::chrono_literals;
   timer_ = rclcpp::create_timer(
     this, get_clock(), 100ms, std::bind(&BehaviorAnalyzerNode::on_timer, this));
 
   timer_->cancel();
+
+  timer_plot_ =
+    rclcpp::create_timer(this, get_clock(), 5000ms, std::bind(&BehaviorAnalyzerNode::plot, this));
 
   vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
 
@@ -105,6 +107,8 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
     declare_parameter<std::vector<double>>("target_state.longitudinal_velocities");
   parameters_->target_state.lon_accelerations =
     declare_parameter<std::vector<double>>("target_state.longitudinal_accelerations");
+
+  matplotlibcpp::figure_size(1200, 780);
 }
 
 auto BehaviorAnalyzerNode::get_route() -> LaneletRoute::ConstSharedPtr
@@ -530,6 +534,24 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
     msg.markers.push_back(utils::to_marker(data, SCORE::SAFETY, i));
     msg.markers.push_back(utils::to_marker(data, SCORE::ACHIEVABILITY, i));
     msg.markers.push_back(utils::to_marker(data, SCORE::TOTAL, i));
+    if (std::isfinite(data.get(SCORE::LATERAL_COMFORTABILITY))) {
+      lat_comfortability.push_back(data.get(SCORE::LATERAL_COMFORTABILITY));
+    }
+    if (std::isfinite(data.get(SCORE::LONGITUDINAL_COMFORTABILITY))) {
+      lon_comfortability.push_back(data.get(SCORE::LONGITUDINAL_COMFORTABILITY));
+    }
+    if (std::isfinite(data.get(SCORE::EFFICIENCY))) {
+      efficiency.push_back(data.get(SCORE::EFFICIENCY));
+    }
+    if (std::isfinite(data.get(SCORE::SAFETY))) {
+      safety.push_back(data.get(SCORE::SAFETY));
+    }
+    if (std::isfinite(data.get(SCORE::ACHIEVABILITY))) {
+      achievability.push_back(data.get(SCORE::ACHIEVABILITY));
+    }
+    if (std::isfinite(data.get(SCORE::TOTAL))) {
+      total.push_back(data.get(SCORE::TOTAL));
+    }
   }
 
   {
@@ -550,6 +572,59 @@ void BehaviorAnalyzerNode::on_timer()
   std::lock_guard<std::mutex> lock(mutex_);
   update(bag_data_, 0.1);
   analyze(bag_data_);
+}
+
+void BehaviorAnalyzerNode::plot()
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  std::vector<double> s0, s1, s2, s3, s4, s5;
+  {
+    s0 = lat_comfortability;
+    s1 = lon_comfortability;
+    s2 = efficiency;
+    s3 = safety;
+    s4 = achievability;
+    s5 = total;
+    lat_comfortability.clear();
+    lon_comfortability.clear();
+    efficiency.clear();
+    safety.clear();
+    achievability.clear();
+    total.clear();
+  }
+
+  matplotlibcpp::clf();
+  matplotlibcpp::subplot(2, 3, 1);
+  matplotlibcpp::hist(s0, 10);
+  matplotlibcpp::xlim(0.0, 1.0);
+  matplotlibcpp::ylim(0.0, 500.0);
+  matplotlibcpp::title("lat_comfortability");
+  matplotlibcpp::subplot(2, 3, 2);
+  matplotlibcpp::hist(s1, 10);
+  matplotlibcpp::xlim(0.0, 1.0);
+  matplotlibcpp::ylim(0.0, 500.0);
+  matplotlibcpp::title("lon_comfortability");
+  matplotlibcpp::subplot(2, 3, 3);
+  matplotlibcpp::hist(s2, 10);
+  matplotlibcpp::xlim(0.0, 1.0);
+  matplotlibcpp::ylim(0.0, 500.0);
+  matplotlibcpp::title("efficiency");
+  matplotlibcpp::subplot(2, 3, 4);
+  matplotlibcpp::hist(s3, 10);
+  matplotlibcpp::xlim(0.0, 1.0);
+  matplotlibcpp::ylim(0.0, 500.0);
+  matplotlibcpp::title("safety");
+  matplotlibcpp::subplot(2, 3, 5);
+  matplotlibcpp::hist(s4, 10);
+  matplotlibcpp::xlim(0.0, 1.0);
+  matplotlibcpp::ylim(0.0, 500.0);
+  matplotlibcpp::title("achievability");
+  matplotlibcpp::subplot(2, 3, 6);
+  matplotlibcpp::hist(s5, 10);
+  matplotlibcpp::xlim(0.0, 1.0);
+  matplotlibcpp::ylim(0.0, 500.0);
+  matplotlibcpp::title("total");
+  matplotlibcpp::pause(0.01);
 }
 }  // namespace autoware::behavior_analyzer
 
