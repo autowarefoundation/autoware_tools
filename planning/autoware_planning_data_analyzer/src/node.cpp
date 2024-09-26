@@ -31,6 +31,7 @@ using autoware::universe_utils::Polygon2d;
 BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_options)
 : Node("path_selector_node", node_options),
   route_handler_{std::make_shared<RouteHandler>()},
+  best_{std::nullopt},
   buffer_{static_cast<size_t>(SCORE::SIZE)}
 {
   using namespace std::literals::chrono_literals;
@@ -317,12 +318,14 @@ void BehaviorAnalyzerNode::weight(
     RCLCPP_INFO_STREAM(get_logger(), ss.str());
   };
 
+  std::optional<TrajectoryPoints> best{std::nullopt};
+
   while (reader_.has_next() && rclcpp::ok()) {
     update(bag_data, p->grid_seach.dt);
 
     if (!bag_data->ready()) break;
 
-    const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, p);
+    const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, p, best);
 
     std::mutex grid_mutex;
 
@@ -382,7 +385,7 @@ void BehaviorAnalyzerNode::analyze(const std::shared_ptr<BagData> & bag_data) co
 {
   if (!bag_data->ready()) return;
 
-  const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, parameters_);
+  const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, parameters_, best_);
 
   const auto opt_tf = std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(TOPIC::TF))
                         ->get(bag_data->timestamp);
@@ -523,6 +526,9 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
       marker.points.push_back(point.pose.position);
     }
     msg.markers.push_back(marker);
+    best_ = best.value().points;
+  } else {
+    best_ = std::nullopt;
   }
 
   for (size_t i = 0; i < data_set->sampling.data.size(); ++i) {
@@ -532,6 +538,7 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
     msg.markers.push_back(utils::to_marker(data, SCORE::EFFICIENCY, i));
     msg.markers.push_back(utils::to_marker(data, SCORE::SAFETY, i));
     msg.markers.push_back(utils::to_marker(data, SCORE::ACHIEVABILITY, i));
+    msg.markers.push_back(utils::to_marker(data, SCORE::CONSISTENCY, i));
     msg.markers.push_back(utils::to_marker(data, SCORE::TOTAL, i));
   }
 
@@ -552,6 +559,7 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
     clear_buffer(SCORE::EFFICIENCY);
     clear_buffer(SCORE::SAFETY);
     clear_buffer(SCORE::ACHIEVABILITY);
+    clear_buffer(SCORE::CONSISTENCY);
     clear_buffer(SCORE::TOTAL);
     count_ = 0;
   } else {
@@ -560,6 +568,7 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) 
     set_buffer(SCORE::EFFICIENCY);
     set_buffer(SCORE::SAFETY);
     set_buffer(SCORE::ACHIEVABILITY);
+    set_buffer(SCORE::CONSISTENCY);
     set_buffer(SCORE::TOTAL);
     count_++;
   }
@@ -615,8 +624,9 @@ void BehaviorAnalyzerNode::plot(const std::shared_ptr<DataSet> & data_set) const
   subplot(SCORE::EFFICIENCY, 3, 3, 3);
   subplot(SCORE::SAFETY, 3, 3, 4);
   subplot(SCORE::ACHIEVABILITY, 3, 3, 5);
-  subplot(SCORE::TOTAL, 3, 3, 6);
-  plot_best(data_set->sampling.best(p->w0, p->w1, p->w2, p->w3, p->w4), 3, 3, 7);
+  subplot(SCORE::CONSISTENCY, 3, 3, 6);
+  subplot(SCORE::TOTAL, 3, 3, 7);
+  plot_best(data_set->sampling.best(p->w0, p->w1, p->w2, p->w3, p->w4), 3, 3, 8);
   matplotlibcpp::pause(1e-9);
 }
 }  // namespace autoware::behavior_analyzer

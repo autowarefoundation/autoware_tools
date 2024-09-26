@@ -29,7 +29,7 @@
     </include>
   </group>
 
-  <node pkg="autoware_planning_data_analyzer" exec="minimal" name="behavior_analyzer">
+  <node pkg="autoware_planning_data_analyzer" exec="minimal" name="behavior_analyzer" output="screen">
     <param name="bag_path" value="$(var bag_path)"/>
     <param from="$(find-pkg-share autoware_planning_data_analyzer)/config/behavior_analyzer.param.yaml"/>
     <remap from="input/lanelet2_map" to="/map/vector_map"/>

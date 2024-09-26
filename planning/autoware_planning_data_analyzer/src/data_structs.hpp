@@ -38,6 +38,7 @@ enum class METRIC {
   TRAVEL_DISTANCE = 3,
   MINIMUM_TTC = 4,
   LATERAL_DEVIATION = 5,
+  TRAJECTORY_DEVIATION = 6,
   SIZE
 };
 
@@ -47,7 +48,8 @@ enum class SCORE {
   EFFICIENCY = 2,
   SAFETY = 3,
   ACHIEVABILITY = 4,
-  TOTAL = 5,
+  CONSISTENCY = 5,
+  TOTAL = 6,
   SIZE
 };
 
@@ -242,6 +244,8 @@ struct CommonData
 
   double achievability() const;
 
+  double consistency() const;
+
   double total(
     const double w0, const double w1, const double w2, const double w3, const double w4) const;
 
@@ -258,6 +262,8 @@ struct CommonData
   virtual double travel_distance(const size_t idx) const = 0;
 
   virtual double lateral_deviation(const size_t idx) const = 0;
+
+  virtual double trajectory_deviation(const size_t idx) const = 0;
 
   virtual bool feasible() const = 0;
 
@@ -294,6 +300,8 @@ struct ManualDrivingData : CommonData
 
   double lateral_deviation(const size_t idx) const override;
 
+  double trajectory_deviation(const size_t idx) const override;
+
   bool feasible() const override { return true; }
 
   bool ready() const override;
@@ -308,7 +316,7 @@ struct TrajectoryData : CommonData
   TrajectoryData(
     const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::string & tag,
-    const std::vector<TrajectoryPoint> & points);
+    const std::vector<TrajectoryPoint> & points, const std::optional<TrajectoryPoints> & t_best);
 
   double lateral_accel(const size_t idx) const override;
 
@@ -320,18 +328,22 @@ struct TrajectoryData : CommonData
 
   double lateral_deviation(const size_t idx) const override;
 
+  double trajectory_deviation(const size_t idx) const override;
+
   bool feasible() const override;
 
   bool ready() const override;
 
   std::vector<TrajectoryPoint> points;
+
+  std::optional<TrajectoryPoints> t_best;
 };
 
 struct SamplingTrajectoryData
 {
   SamplingTrajectoryData(
     const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
-    const std::shared_ptr<Parameters> & parameters);
+    const std::shared_ptr<Parameters> & parameters, const std::optional<TrajectoryPoints> & t_best);
 
   auto best(const double w0, const double w1, const double w2, const double w3, const double w4)
     const -> std::optional<TrajectoryData>
@@ -370,9 +382,9 @@ struct DataSet
 {
   DataSet(
     const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
-    const std::shared_ptr<Parameters> & parameters)
+    const std::shared_ptr<Parameters> & parameters, const std::optional<TrajectoryPoints> & t_best)
   : manual{ManualDrivingData(bag_data, vehicle_info, parameters)},
-    sampling{SamplingTrajectoryData(bag_data, vehicle_info, parameters)},
+    sampling{SamplingTrajectoryData(bag_data, vehicle_info, parameters, t_best)},
     route_handler{bag_data->route_handler},
     parameters{parameters}
   {
@@ -397,6 +409,7 @@ struct DataSet
     const auto [s2_min, s2_max] = range(static_cast<size_t>(SCORE::EFFICIENCY));
     const auto [s3_min, s3_max] = range(static_cast<size_t>(SCORE::SAFETY));
     const auto [s4_min, s4_max] = range(static_cast<size_t>(SCORE::ACHIEVABILITY));
+    const auto [s5_min, s5_max] = range(static_cast<size_t>(SCORE::CONSISTENCY));
 
     for (auto & data : sampling.data) {
       data.normalize(s0_min, s0_max, static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY), true);
@@ -404,6 +417,7 @@ struct DataSet
       data.normalize(s2_min, s2_max, static_cast<size_t>(SCORE::EFFICIENCY));
       data.normalize(s3_min, s3_max, static_cast<size_t>(SCORE::SAFETY));
       data.normalize(s4_min, s4_max, static_cast<size_t>(SCORE::ACHIEVABILITY), true);
+      data.normalize(s5_min, s5_max, static_cast<size_t>(SCORE::CONSISTENCY), true);
       data.scores.at(static_cast<size_t>(SCORE::TOTAL)) =
         data.total(parameters->w0, parameters->w1, parameters->w2, parameters->w3, parameters->w4);
     }
@@ -458,6 +472,8 @@ struct DataSet
     double s3_dev = 0.0;
     double s4_ave = 0.0;
     double s4_dev = 0.0;
+    double s5_ave = 0.0;
+    double s5_dev = 0.0;
 
     const auto update = [](const double ave, const double dev, const double value, const size_t i) {
       const auto new_ave = (i * ave + value) / (i + 1);
@@ -474,6 +490,7 @@ struct DataSet
       std::tie(s2_ave, s2_dev) = update(s2_ave, s2_dev, data.get(SCORE::EFFICIENCY), i);
       std::tie(s3_ave, s3_dev) = update(s3_ave, s3_dev, data.get(SCORE::SAFETY), i);
       std::tie(s4_ave, s4_dev) = update(s4_ave, s4_dev, data.get(SCORE::ACHIEVABILITY), i);
+      std::tie(s5_ave, s5_dev) = update(s5_ave, s5_dev, data.get(SCORE::CONSISTENCY), i);
     }
 
     std::stringstream ss;
@@ -485,6 +502,7 @@ struct DataSet
     ss << " efficiency        :" << best.value().get(SCORE::EFFICIENCY)                   << " mean:" << s2_ave << " std:" << std::sqrt(s2_dev) << "\n"; // NOLINT
     ss << " safety            :" << best.value().get(SCORE::SAFETY)                       << " mean:" << s3_ave << " std:" << std::sqrt(s3_dev) << "\n"; // NOLINT
     ss << " achievability     :" << best.value().get(SCORE::ACHIEVABILITY)                << " mean:" << s4_ave << " std:" << std::sqrt(s4_dev) << "\n"; // NOLINT
+    ss << " consistency       :" << best.value().get(SCORE::CONSISTENCY)                  << " mean:" << s5_ave << " std:" << std::sqrt(s5_dev) << "\n"; // NOLINT
     ss << " total             :" << best.value().get(SCORE::TOTAL);
     // clang-format on
     RCLCPP_INFO_STREAM(rclcpp::get_logger(__func__), ss.str());

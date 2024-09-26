@@ -93,6 +93,8 @@ private:
 
   std::shared_ptr<Parameters> parameters_;
 
+  mutable std::optional<TrajectoryPoints> best_;
+
   mutable std::mutex mutex_;
 
   mutable std::vector<std::vector<double>> buffer_;

@@ -157,6 +157,7 @@ void CommonData::calculate()
     scores.at(static_cast<size_t>(SCORE::EFFICIENCY)) = 0.0;
     scores.at(static_cast<size_t>(SCORE::SAFETY)) = 0.0;
     scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) = 0.0;
+    scores.at(static_cast<size_t>(SCORE::CONSISTENCY)) = 0.0;
   }
 
   std::vector<double> lateral_accel_values;
@@ -164,6 +165,7 @@ void CommonData::calculate()
   std::vector<double> longitudinal_jerk_values;
   std::vector<double> travel_distance_values;
   std::vector<double> lateral_deviation_values;
+  std::vector<double> trajectory_deviation_values;
 
   for (size_t i = 0; i < parameters->resample_num - 1; i++) {
     lateral_accel_values.push_back(lateral_accel(i));
@@ -171,6 +173,7 @@ void CommonData::calculate()
     minimum_ttc_values.push_back(minimum_ttc(i));
     travel_distance_values.push_back(travel_distance(i));
     lateral_deviation_values.push_back(lateral_deviation(i));
+    trajectory_deviation_values.push_back(trajectory_deviation(i));
   }
 
   {
@@ -179,6 +182,7 @@ void CommonData::calculate()
     minimum_ttc_values.push_back(minimum_ttc(parameters->resample_num - 1));
     travel_distance_values.push_back(travel_distance(parameters->resample_num - 1));
     lateral_deviation_values.push_back(lateral_deviation(parameters->resample_num - 1));
+    trajectory_deviation_values.push_back(trajectory_deviation(parameters->resample_num - 1));
   }
 
   values.at(static_cast<size_t>(METRIC::LATERAL_ACCEL)) = lateral_accel_values;
@@ -186,6 +190,7 @@ void CommonData::calculate()
   values.at(static_cast<size_t>(METRIC::MINIMUM_TTC)) = minimum_ttc_values;
   values.at(static_cast<size_t>(METRIC::TRAVEL_DISTANCE)) = travel_distance_values;
   values.at(static_cast<size_t>(METRIC::LATERAL_DEVIATION)) = lateral_deviation_values;
+  values.at(static_cast<size_t>(METRIC::TRAJECTORY_DEVIATION)) = trajectory_deviation_values;
 
   scores.at(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY)) = lateral_comfortability();
   scores.at(static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY)) =
@@ -193,6 +198,7 @@ void CommonData::calculate()
   scores.at(static_cast<size_t>(SCORE::EFFICIENCY)) = efficiency();
   scores.at(static_cast<size_t>(SCORE::SAFETY)) = safety();
   scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) = achievability();
+  scores.at(static_cast<size_t>(SCORE::CONSISTENCY)) = consistency();
 }
 
 void CommonData::normalize(
@@ -271,6 +277,20 @@ double CommonData::achievability() const
   return score;
 }
 
+double CommonData::consistency() const
+{
+  constexpr double TIME_FACTOR = 1.0;
+
+  double score = 0.0;
+
+  for (size_t i = 0; i < parameters->resample_num; i++) {
+    score += std::pow(TIME_FACTOR, i) *
+             std::abs(values.at(static_cast<size_t>(METRIC::TRAJECTORY_DEVIATION)).at(i));
+  }
+
+  return score;
+}
+
 double CommonData::get(const SCORE & score_type) const
 {
   return scores.at(static_cast<size_t>(score_type));
@@ -283,7 +303,8 @@ double CommonData::total(
          w1 * scores.at(static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY)) +
          w2 * scores.at(static_cast<size_t>(SCORE::EFFICIENCY)) +
          w3 * scores.at(static_cast<size_t>(SCORE::SAFETY)) +
-         w4 * scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY));
+         w4 * scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) +
+         1.0 * scores.at(static_cast<size_t>(SCORE::CONSISTENCY));
 }
 
 ManualDrivingData::ManualDrivingData(
@@ -378,6 +399,11 @@ double ManualDrivingData::lateral_deviation(const size_t idx) const
   return arc_coordinates.distance;
 }
 
+double ManualDrivingData::trajectory_deviation([[maybe_unused]] const size_t idx) const
+{
+  return 1.0;
+}
+
 bool ManualDrivingData::ready() const
 {
   if (objects_history.size() < parameters->resample_num) {
@@ -402,8 +428,8 @@ bool ManualDrivingData::ready() const
 TrajectoryData::TrajectoryData(
   const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<Parameters> & parameters, const std::string & tag,
-  const std::vector<TrajectoryPoint> & points)
-: CommonData(bag_data, vehicle_info, parameters, tag), points{points}
+  const std::vector<TrajectoryPoint> & points, const std::optional<TrajectoryPoints> & t_best)
+: CommonData(bag_data, vehicle_info, parameters, tag), points{points}, t_best{t_best}
 {
   calculate();
 }
@@ -445,6 +471,15 @@ double TrajectoryData::lateral_deviation(const size_t idx) const
   return arc_coordinates.distance;
 }
 
+double TrajectoryData::trajectory_deviation(const size_t idx) const
+{
+  if (!t_best.has_value()) return 0.0;
+
+  const auto & p1 = autoware::universe_utils::getPose(points.at(idx));
+  const auto & p2 = t_best.value().at(idx);
+  return autoware::universe_utils::calcSquaredDistance2d(p1, p2);
+}
+
 bool TrajectoryData::feasible() const
 {
   const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps >= 0.0; };
@@ -466,7 +501,7 @@ bool TrajectoryData::ready() const
 
 SamplingTrajectoryData::SamplingTrajectoryData(
   const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<Parameters> & parameters)
+  const std::shared_ptr<Parameters> & parameters, const std::optional<TrajectoryPoints> & t_best)
 {
   const auto opt_odometry = std::dynamic_pointer_cast<Buffer<Odometry>>(
                               bag_data->buffers.at("/localization/kinematic_state"))
@@ -497,7 +532,7 @@ SamplingTrajectoryData::SamplingTrajectoryData(
   for (const auto & sample : utils::sampling(
          *opt_trajectory, opt_odometry->pose.pose, opt_odometry->twist.twist.linear.x,
          opt_accel->accel.accel.linear.x, vehicle_info, parameters)) {
-    data.emplace_back(bag_data, vehicle_info, parameters, "frenet", sample);
+    data.emplace_back(bag_data, vehicle_info, parameters, "frenet", sample, t_best);
   }
 
   // std::vector<TrajectoryPoint> stop_points(parameters->resample_num);

@@ -50,6 +50,8 @@ using autoware_planning_msgs::msg::TrajectoryPoint;
 using autoware_vehicle_msgs::msg::SteeringReport;
 using route_handler::RouteHandler;
 
+using TrajectoryPoints = std::vector<TrajectoryPoint>;
+
 // ros2
 using geometry_msgs::msg::AccelWithCovarianceStamped;
 using geometry_msgs::msg::Point;
