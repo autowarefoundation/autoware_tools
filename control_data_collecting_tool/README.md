@@ -87,11 +87,11 @@ ROS 2 params in `/data_collecting_trajectory_publisher` node:
 | :--------------------------------------- | :------- | :-------------------------------------------------------------------- | :------------ |
 | `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                 | 0.5           |
 | `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]           | 5.0           |
-| `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]               | 0.5           |
-| `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]    | 2.0           |
+| `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]               | 0.75          |
+| `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]    | 1.0           |
 | `mov_ave_window`                         | `int`    | Moving average smoothing window size                                  | 50            |
 | `target_longitudinal_velocity`           | `double` | Target longitudinal velocity [m/s]                                    | 6.0           |
-| `longitudinal_velocity_noise_amp`        | `double` | Target longitudinal velocity additional sine noise amplitude [m/s]    | 0.1           |
+| `longitudinal_velocity_noise_amp`        | `double` | Target longitudinal velocity additional sine noise amplitude [m/s]    | 0.01          |
 | `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s] | 5.0           |
 | `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s] | 20.0          |
 
@@ -101,9 +101,9 @@ ROS 2 params in `/data_collecting_pure_pursuit_trajectory_follower` node:
 | :--------------------------------------- | :------- | :------------------------------------------------------------- | :------------ |
 | `pure_pursuit_type`                      | `string` | Pure pursuit type (`naive` or `linearized` steer control law ) | `linearized`  |
 | `wheel_base`                             | `double` | Wheel base [m]                                                 | 2.79          |
-| `acc_kp`                                 | `double` | Accel command proportional gain                                | 0.5           |
-| `lookahead_time`                         | `double` | Pure pursuit lookahead time [s]                                | 1.5           |
-| `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                      | 3.0           |
+| `acc_kp`                                 | `double` | Accel command proportional gain                                | 1.0           |
+| `lookahead_time`                         | `double` | Pure pursuit lookahead time [s]                                | 2.0           |
+| `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                      | 2.0           |
 | `linearized_pure_pursuit_steer_kp_param` | `double` | Linearized pure pursuit steering P gain parameter              | 2.0           |
 | `linearized_pure_pursuit_steer_kd_param` | `double` | Linearized pure pursuit steering D gain parameter              | 2.0           |
 | `stop_acc`                               | `double` | Accel command for stopping data collecting driving [m/ss]      | -2.0          |

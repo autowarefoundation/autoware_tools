@@ -43,6 +43,8 @@ class MonitorModule:
         foreach(self.struct_callbacks, lambda callback: callback(self.graph))
 
     def on_status(self, msg):
+        if self.graph is None:
+            return
         self.graph.update(msg)
         foreach(self.status_callbacks, lambda callback: callback(self.graph))
 

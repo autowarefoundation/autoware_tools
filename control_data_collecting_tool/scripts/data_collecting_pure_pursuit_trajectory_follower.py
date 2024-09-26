@@ -60,19 +60,19 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         self.declare_parameter(
             "acc_kp",
-            0.5,
+            1.0,
             ParameterDescriptor(description="Pure pursuit accel command proportional gain"),
         )
 
         self.declare_parameter(
             "lookahead_time",
-            1.5,
+            2.0,
             ParameterDescriptor(description="Pure pursuit lookahead length coef [m/(m/s)]"),
         )
 
         self.declare_parameter(
             "min_lookahead",
-            3.0,
+            2.0,
             ParameterDescriptor(description="Pure pursuit lookahead length intercept [m]"),
         )
 
@@ -98,7 +98,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         self.declare_parameter(
             "stop_jerk_lim",
-            1.0,
+            2.0,
             ParameterDescriptor(
                 description="Jerk limit for stopping data collecting driving [m/sss]"
             ),
@@ -107,7 +107,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
         # lim default values are taken from https://github.com/autowarefoundation/autoware.universe/blob/e90d3569bacaf64711072a94511ccdb619a59464/control/autoware_vehicle_cmd_gate/config/vehicle_cmd_gate.param.yaml
         self.declare_parameter(
             "lon_acc_lim",
-            5.0,
+            2.0,
             ParameterDescriptor(description="Longitudinal acceleration limit [m/ss]"),
         )
 
@@ -131,14 +131,14 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         self.declare_parameter(
             "acc_noise_amp",
-            0.05,
+            0.00,
             ParameterDescriptor(description="Accel cmd additional sine noise amplitude [m/ss]"),
         )
 
         self.declare_parameter(
             "acc_noise_min_period",
             5.0,
-            ParameterDescriptor(description="Accel cmd additional sine noise minimum period [s]"),
+            ParameterDescriptor(description="Accel cmd additional sineW noise minimum period [s]"),
         )
 
         self.declare_parameter(
@@ -149,7 +149,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         self.declare_parameter(
             "steer_noise_amp",
-            0.01,
+            0.00,
             ParameterDescriptor(description="Steer cmd additional sine noise amplitude [rad]"),
         )
 

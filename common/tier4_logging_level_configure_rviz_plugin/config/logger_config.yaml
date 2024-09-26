@@ -81,11 +81,11 @@ Planning:
       logger_name: planning.scenario_planning.lane_driving.behavior_planning.behavior_velocity_planner.intersection
 
   motion_obstacle_avoidance:
-    - node_name: /planning/scenario_planning/lane_driving/motion_planning/obstacle_avoidance_planner
-      logger_name: planning.scenario_planning.lane_driving.motion_planning.obstacle_avoidance_planner
-    - node_name: /planning/scenario_planning/lane_driving/motion_planning/obstacle_avoidance_planner
+    - node_name: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer
+      logger_name: planning.scenario_planning.lane_driving.motion_planning.path_optimizer
+    - node_name: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer
       logger_name: autoware_universe_utils
-    - node_name: /planning/scenario_planning/lane_driving/motion_planning/obstacle_avoidance_planner
+    - node_name: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer
       logger_name: autoware_motion_utils
 
   motion_velocity_smoother:
@@ -136,7 +136,7 @@ Common:
       logger_name: autoware_universe_utils
     - node_name: /planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner
       logger_name: autoware_universe_utils
-    - node_name: /planning/scenario_planning/lane_driving/motion_planning/obstacle_avoidance_planner
+    - node_name: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer
       logger_name: autoware_universe_utils
     - node_name: /planning/scenario_planning/lane_driving/motion_planning/path_smoother
       logger_name: autoware_universe_utils

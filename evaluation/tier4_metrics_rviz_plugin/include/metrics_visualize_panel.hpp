@@ -109,10 +109,16 @@ public:
   void updateData(const double time, const DiagnosticStatus & status)
   {
     for (const auto & [key, value] : status.values) {
-      const double data = std::stod(value);
-      labels.at(key)->setText(QString::fromStdString(toString(data)));
-      plots.at(key)->append(time, data);
-      updateMinMax(data);
+      try {
+        const double data = std::stod(value);
+        labels.at(key)->setText(QString::fromStdString(toString(data)));
+        plots.at(key)->append(time, data);
+        updateMinMax(data);
+      } catch (const std::exception & e) {
+        RCLCPP_DEBUG(
+          rclcpp::get_logger(__func__), "%s invalid argument. KEY:%s VALUE:%s", e.what(),
+          key.c_str(), value.c_str());
+      }
     }
 
     {
@@ -209,7 +215,7 @@ private:
 
   // Topics from which metrics are collected
   std::vector<std::string> topics_ = {
-    "/diagnostic/planning_evaluator/metrics", "/diagnostic/perception_online_evaluator/metrics"};
+    "/planning/planning_evaluator/metrics", "/perception/perception_online_evaluator/metrics"};
 
   // Timer and metrics message callback
   void onTimer();

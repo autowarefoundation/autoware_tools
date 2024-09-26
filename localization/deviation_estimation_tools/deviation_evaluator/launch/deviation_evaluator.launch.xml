@@ -51,7 +51,7 @@
   </group>
 
   <group>
-    <include file="$(find-pkg-share imu_corrector)/launch/imu_corrector.launch.xml">
+    <include file="$(find-pkg-share autoware_imu_corrector)/launch/imu_corrector.launch.xml">
       <arg name="input_topic" value="$(var in_imu)"/>
       <arg name="output_topic" value="$(var out_imu)"/>
       <arg name="param_file" value="$(var imu_corrector_param_path)"/>
@@ -67,7 +67,7 @@
   </group>
 
   <group>
-    <include file="$(find-pkg-share gyro_odometer)/launch/gyro_odometer.launch.xml">
+    <include file="$(find-pkg-share autoware_gyro_odometer)/launch/gyro_odometer.launch.xml">
       <arg name="input_imu_topic" value="$(var out_imu)"/>
       <arg name="input_vehicle_twist_with_covariance_topic" value="$(var out_wheel_odometry)"/>
       <arg name="output_twist_with_covariance_topic" value="$(var out_twist_with_covariance)"/>
@@ -76,7 +76,7 @@
 
   <group>
     <push-ros-namespace namespace="dead_reckoning"/>
-    <include file="$(find-pkg-share ekf_localizer)/launch/ekf_localizer.launch.xml">
+    <include file="$(find-pkg-share autoware_ekf_localizer)/launch/ekf_localizer.launch.xml">
       <arg name="input_pose_with_cov_name" value="$(var out_pose_with_covariance_dr)"/>
       <arg name="input_twist_with_cov_name" value="$(var out_twist_with_covariance)"/>
       <arg name="input_initial_pose_name" value="$(var out_init_pose_with_covariance)"/>
@@ -90,7 +90,7 @@
 
   <group>
     <push-ros-namespace namespace="ground_truth"/>
-    <include file="$(find-pkg-share ekf_localizer)/launch/ekf_localizer.launch.xml">
+    <include file="$(find-pkg-share autoware_ekf_localizer)/launch/ekf_localizer.launch.xml">
       <arg name="input_pose_with_cov_name" value="$(var out_pose_with_covariance_gt)"/>
       <arg name="input_twist_with_cov_name" value="$(var out_twist_with_covariance)"/>
       <arg name="input_initial_pose_name" value="$(var out_init_pose_with_covariance)"/>

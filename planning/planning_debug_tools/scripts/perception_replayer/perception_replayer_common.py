@@ -19,9 +19,6 @@ from subprocess import CalledProcessError
 from subprocess import check_output
 import time
 
-from autoware_auto_perception_msgs.msg import (
-    TrafficSignalArray as autoware_auto_perception_msgs_TrafficSignalArray,
-)
 from autoware_perception_msgs.msg import (
     TrafficSignalArray as autoware_perception_msgs_TrafficSignalArray,
 )
@@ -154,22 +151,7 @@ class PerceptionReplayerCommon(Node):
                     assert (
                         type(new_msg).__name__ == "TrafficLightGroupArray"
                     ), f"Unsupported conversion to {type(new_msg).__name__}"
-                    if isinstance(msg, autoware_auto_perception_msgs_TrafficSignalArray):
-                        new_msg.stamp = msg.header.stamp
-                        for traffic_signal in msg.signals:
-                            traffic_light_group = TrafficLightGroup()
-                            traffic_light_group.traffic_light_group_id = (
-                                traffic_signal.map_primitive_id
-                            )
-                            for traffic_light in traffic_signal.lights:
-                                traffic_light_element = TrafficLightElement()
-                                traffic_light_element.color = traffic_light.color
-                                traffic_light_element.shape = traffic_light.shape
-                                traffic_light_element.status = traffic_light.status
-                                traffic_light_element.confidence = traffic_light.confidence
-                                traffic_light_group.elements.append(traffic_light_element)
-                            new_msg.traffic_light_groups.append(traffic_light_group)
-                    elif isinstance(msg, autoware_perception_msgs_TrafficSignalArray):
+                    if isinstance(msg, autoware_perception_msgs_TrafficSignalArray):
                         new_msg.stamp = msg.stamp
                         for traffic_signal in msg.signals:
                             traffic_light_group = TrafficLightGroup()

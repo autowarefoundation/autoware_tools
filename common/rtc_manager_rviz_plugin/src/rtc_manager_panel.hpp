@@ -41,6 +41,7 @@
 #include <tier4_rtc_msgs/msg/cooperate_status.hpp>
 #include <tier4_rtc_msgs/msg/cooperate_status_array.hpp>
 #include <tier4_rtc_msgs/msg/module.hpp>
+#include <tier4_rtc_msgs/msg/state.hpp>
 #include <tier4_rtc_msgs/srv/auto_mode.hpp>
 #include <tier4_rtc_msgs/srv/cooperate_commands.hpp>
 #endif
@@ -53,6 +54,7 @@ using tier4_rtc_msgs::msg::CooperateResponse;
 using tier4_rtc_msgs::msg::CooperateStatus;
 using tier4_rtc_msgs::msg::CooperateStatusArray;
 using tier4_rtc_msgs::msg::Module;
+using tier4_rtc_msgs::msg::State;
 using tier4_rtc_msgs::srv::AutoMode;
 using tier4_rtc_msgs::srv::CooperateCommands;
 using unique_identifier_msgs::msg::UUID;
@@ -123,7 +125,7 @@ private:
   QPushButton * wait_button_ptr_ = {nullptr};
   QLabel * num_rtc_status_ptr_ = {nullptr};
 
-  size_t column_size_ = {7};
+  size_t column_size_ = {8};
   std::string enable_auto_mode_namespace_ = "/planning/enable_auto_mode";
 };
 

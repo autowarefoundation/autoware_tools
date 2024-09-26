@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>autoware_dependency_checker</name>
+  <version>0.1.0</version>
+  <description>The autoware_dependency_checker package</description>
+  <maintainer email="yutaka.kondo@youtalk.jp">Yutaka Kondo</maintainer>
+  <license>Apache License 2.0</license>
+  <author email="richard-v@macnica.co.jp">Vincent Richard</author>
+  <author email="masaki.baba@tier4.jp">Masaki Baba</author>
+
+  <build_depend>ament_cmake</build_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
