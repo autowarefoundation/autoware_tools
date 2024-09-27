@@ -61,30 +61,6 @@ RegulatoryElementsDetailsForCrosswalksValidator::checkRegulatoryElementOfCrosswa
     auto crosswalk_polygons = elem->getParameters<lanelet::ConstPolygon3d>(
       lanelet::autoware::Crosswalk::AutowareRoleNameString::CrosswalkPolygon);
 
-<<<<<<< HEAD
-    const auto & issue_cw = lanelet::validation::Issue(
-      lanelet::validation::Severity::Error, lanelet::validation::Primitive::Lanelet,
-      lanelet::utils::getId(),
-      "Refers of crosswalk regulatory element must have type of crosswalk.");
-    lanelet::autoware::validation::checkPrimitivesType(
-      refers, lanelet::AttributeValueString::Lanelet, lanelet::AttributeValueString::Crosswalk,
-      issue_cw, issues);
-
-    const auto & issue_sl = lanelet::validation::Issue(
-      lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString,
-      lanelet::utils::getId(),
-      "Refline of crosswalk regulatory element must have type of stopline.");
-    lanelet::autoware::validation::checkPrimitivesType(
-      ref_lines, lanelet::AttributeValueString::StopLine, issue_sl, issues);
-
-    const auto & issue_poly = lanelet::validation::Issue(
-      lanelet::validation::Severity::Error, lanelet::validation::Primitive::Polygon,
-      lanelet::utils::getId(),
-      "Crosswalk polygon of crosswalk regulatory element must have type of Crosswalk_polygon.");
-    lanelet::autoware::validation::checkPrimitivesType(
-      crosswalk_polygons, lanelet::autoware::Crosswalk::AutowareRoleNameString::CrosswalkPolygon,
-      issue_poly, issues);
-=======
       // If this is a crosswalk type regulatory element, the "refers" has to be a "crosswalk" subtype lanelet
       const auto & issue_cw = lanelet::validation::Issue(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::Lanelet,
@@ -110,7 +86,6 @@ RegulatoryElementsDetailsForCrosswalksValidator::checkRegulatoryElementOfCrosswa
       lanelet::autoware::validation::checkPrimitivesType(
         crosswalk_polygons, lanelet::autoware::Crosswalk::AutowareRoleNameString::CrosswalkPolygon,
         issue_poly, issues);
->>>>>>> 68f1042 (Wrote detailed README.md)
 
     // Report warning if regulatory element does not have crosswalk polygon
     if (crosswalk_polygons.empty()) {
