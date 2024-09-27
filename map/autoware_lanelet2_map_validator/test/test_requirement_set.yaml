@@ -1,0 +1,13 @@
+version: 0.0.1
+requirements:
+  - id: test-01
+    validators:
+      - name: mapping.crosswalk.missing_regulatory_elements
+      - name: mapping.crosswalk.regulatory_element_details
+  - id: test-02
+    validators:
+      - name: mapping.traffic_light.missing_regulatory_elements
+      - name: mapping.traffic_light.regulatory_element_details
+  - id: test-03
+    validators:
+      - name: mapping.stop_line.missing_regulatory_elements

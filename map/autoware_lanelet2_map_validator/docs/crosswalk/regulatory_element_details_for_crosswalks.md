@@ -9,7 +9,7 @@ mapping.crosswalk.regulatory_element_details
 This validator checks whether the details in the `crosswalk` subtype regulatory elements are valid.
 This validator checks seven types of issues.
 
-All output issues specify the crosswalk "lanelet" as the **primitive**, and the lanelet ID will be specified as the **ID**.
+All output issues specify the crosswalk "regulatory element" as the **primitive**, and the lanelet ID will be specified as the **ID**.
 
 | Message | Severity | Description |
 | ------- | -------- | ----------- |

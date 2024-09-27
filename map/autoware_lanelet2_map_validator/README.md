@@ -65,13 +65,13 @@ requirements:
     - The name list of available validators can be obtained from the `--print` option.
 - The user can write any other field (like `version`) besides `requirements`.
 
-Then, the `autoware_lanelet2_map_validator` will scan through the input yaml file given by the `--requirements_file, -r` option, and output the validation results to the directory given by the `--output_file_path, -o` option.
+Then, the `autoware_lanelet2_map_validator` will scan through the input yaml file given by the `--input_requirements, -i` option, and output the validation results to the directory given by the `--output_directory, -o` option.
 
 ```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --requirements_file ./requirements_set.yaml --output_file_path ./
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --input_requirements autoware_requirements_set.yaml --output_directory ./
 ```
 
-When the `requirements_file` is thown to `autoware_lanelet2_map_validator`, it will output a `lanelet2_validation_results.yaml` file which looks like the following.
+When the `input_requirements` is thown to `autoware_lanelet2_map_validator`, it will output a `lanelet2_validation_results.yaml` file which looks like the following.
 
 ```yaml
 requirements:
@@ -130,9 +130,9 @@ requirements:
         passed: true
 ```
 
-- `lanelet2_validation_results.yaml` inherits the input `requirements_file` and add results to it.
+- `lanelet2_validation_results.yaml` inherits the yaml file of `input_requirements` and add results to it.
 - `autoware_lanelet2_map_validator` adds a boolean `passed` field to each requirement. If all validators of the requirement have been passed, the `passed` field of the requirement will be `true` (`false` if not).
-- The `passed` field is also given to each validator. If the validator found any issues the `passed` field will turn to be `false` (`true` if not), and adds an `issues` field which is a list of issues found. Each issues contains information of `serverity`, `primitive`, `id`, and `message`.
+- The `passed` field is also given to each validator. If the validator found any issues the `passed` field will turn to be `false` (`true` if not), and adds an `issues` field which is a list of issues found. Each issues contains information of `severity`, `primitive`, `id`, and `message`.
 
 ### Available command options
 
@@ -141,8 +141,8 @@ requirements:
 | `-h, --help` | Explains about this tool and show a list of options |
 | `--print` | Only print all avalible checker, but dont run them |
 | `-m, --map_file` | Path to the map to be validated |
-| `-r, --requirements_file` | Path to the yaml file where the list of requirements and validations is written |
-| `-o, --output_file_path` | Path of the yaml file where the list of validation results will be written |
+| `-i, --input_requirements` | Path to the yaml file where the list of requirements and validations is written |
+| `-o, --output_directory` | Directory to save the list of validation results in a yaml format |
 | `-v, --validator` | Comma separated list of regexes to filter the applicable validators. Will run all validators by default. Example: `routing_graph.*` to run all checks for the routing graph |
 | `-p, --projector` | Projector used for loading lanelet map. Available projectors are: mgrs, utm, transverse_mercator. (default: mgrs) |
 | `-l, --location` | Location of the map (for instanciating the traffic rules), e.g. de for Germany |

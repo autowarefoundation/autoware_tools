@@ -9,7 +9,7 @@ mapping.traffic_light.regulatory_element_details
 This validator checks whether the details in the `traffic_light` subtype regulatory elements are valid.
 This validator checks four types of issues.
 
-All output issues specify the traffic_light "linestring" as the **primitive**, and the linestring ID will be specified as the **ID**.
+All output issues specify the traffic_light "regulatory element" as the **primitive**, and the linestring ID will be specified as the **ID**.
 
 | Message | Severity | Description |
 | ------- | -------- | ----------- |
