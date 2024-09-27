@@ -19,6 +19,7 @@
 #include "autoware_path_sampler/prepare_inputs.hpp"
 #include "autoware_path_sampler/utils/trajectory_utils.hpp"
 #include "data_structs.hpp"
+#include "evaluation.hpp"
 #include "type_alias.hpp"
 
 #include <memory>

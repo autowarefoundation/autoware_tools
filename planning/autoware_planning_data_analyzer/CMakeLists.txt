@@ -55,6 +55,8 @@ ament_auto_add_executable(minimal
   src/main.cpp
   src/node.cpp
   src/utils.cpp
+  src/bag_handler.cpp
+  src/evaluation.cpp
   src/data_structs.cpp
   )
 

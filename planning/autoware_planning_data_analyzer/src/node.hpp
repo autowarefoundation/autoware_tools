@@ -15,7 +15,9 @@
 #ifndef NODE_HPP_
 #define NODE_HPP_
 
+#include "bag_handler.hpp"
 #include "data_structs.hpp"
+#include "evaluation.hpp"
 #include "matplotlibcpp.h"
 #include "rosbag2_cpp/reader.hpp"
 #include "type_alias.hpp"
