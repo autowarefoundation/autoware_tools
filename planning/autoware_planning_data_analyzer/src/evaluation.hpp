@@ -34,7 +34,7 @@ public:
     const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<TrajectoryPoints> & previous,
     const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::string & tag,
-    const TrajectoryPoints & points);
+    const std::shared_ptr<TrajectoryPoints> & points);
 
   void calculate();
 
@@ -65,6 +65,8 @@ public:
 
   bool ready() const;
 
+  auto points() const -> std::shared_ptr<TrajectoryPoints> { return points_; }
+
   std::shared_ptr<TrajectoryPoints> previous_;
 
   std::vector<PredictedObjects::SharedPtr> objects_history;
@@ -79,7 +81,7 @@ public:
 
   std::shared_ptr<Parameters> parameters;
 
-  TrajectoryPoints points;
+  std::shared_ptr<TrajectoryPoints> points_;
 
   std::string tag{""};
 };
@@ -96,7 +98,7 @@ public:
 private:
   static auto to_points(
     const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<Parameters> & parameters)
-    -> TrajectoryPoints;
+    -> std::shared_ptr<TrajectoryPoints>;
 };
 
 class TrajectoryData : public DataInterface
@@ -107,7 +109,7 @@ public:
     const std::shared_ptr<TrajectoryPoints> & prev_best_data,
     const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::string & tag,
-    const std::vector<TrajectoryPoint> & points);
+    const std::shared_ptr<TrajectoryPoints> & points);
 };
 
 class Evaluator

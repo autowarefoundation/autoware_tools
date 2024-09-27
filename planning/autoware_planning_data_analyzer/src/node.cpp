@@ -359,7 +359,7 @@ void BehaviorAnalyzerNode::weight(
     if (best_data == nullptr) {
       best = nullptr;
     } else {
-      best = std::make_shared<TrajectoryPoints>(best_data->points);
+      best = best_data->points();
     }
 
     std::cout << "IDX:" << i << " GRID:" << weight_grid.size() << std::endl;
@@ -503,11 +503,11 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<Evaluator> & data_set
 
   const auto ground_truth = data_set->get("ground_truth");
   if (ground_truth != nullptr) {
-    for (size_t i = 0; i < ground_truth->points.size(); ++i) {
+    for (size_t i = 0; i < ground_truth->points()->size(); ++i) {
       Marker marker = createDefaultMarker(
         "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "ground_truth", i, Marker::ARROW,
         createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 0.0, 0.0, 0.999));
-      marker.pose = ground_truth->points.at(i).pose;
+      marker.pose = ground_truth->points()->at(i).pose;
       msg.markers.push_back(marker);
     }
   }
@@ -517,11 +517,11 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<Evaluator> & data_set
     Marker marker = createDefaultMarker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "best_score", 0L, Marker::LINE_STRIP,
       createMarkerScale(0.2, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
-    for (const auto & point : best_data->points) {
+    for (const auto & point : *best_data->points()) {
       marker.points.push_back(point.pose.position);
     }
     msg.markers.push_back(marker);
-    previous_ = std::make_shared<TrajectoryPoints>(best_data->points);
+    previous_ = best_data->points();
   } else {
     previous_ = nullptr;
   }

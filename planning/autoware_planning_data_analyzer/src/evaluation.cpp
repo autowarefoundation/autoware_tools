@@ -35,13 +35,13 @@ DataInterface::DataInterface(
   const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<TrajectoryPoints> & previous,
   const vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<Parameters> & parameters, const std::string & tag,
-  const TrajectoryPoints & points)
+  const std::shared_ptr<TrajectoryPoints> & points)
 : previous_{previous},
   vehicle_info{vehicle_info},
   route_handler{bag_data->route_handler},
   parameters{parameters},
   tag{tag},
-  points{points}
+  points_{points}
 {
   objects_history.reserve(parameters->resample_num);
 
@@ -114,38 +114,38 @@ void DataInterface::calculate()
 
 double DataInterface::lateral_accel(const size_t idx) const
 {
-  const auto radius = vehicle_info.wheel_base_m / std::tan(points.at(idx).front_wheel_angle_rad);
-  const auto speed = points.at(idx).longitudinal_velocity_mps;
+  const auto radius = vehicle_info.wheel_base_m / std::tan(points_->at(idx).front_wheel_angle_rad);
+  const auto speed = points_->at(idx).longitudinal_velocity_mps;
   return speed * speed / radius;
 }
 
 double DataInterface::longitudinal_jerk(const size_t idx) const
 {
-  return (points.at(idx + 1).acceleration_mps2 - points.at(idx).acceleration_mps2) / 0.5;
+  return (points_->at(idx + 1).acceleration_mps2 - points_->at(idx).acceleration_mps2) / 0.5;
 }
 
 double DataInterface::minimum_ttc(const size_t idx) const
 {
-  const auto p_ego = points.at(idx).pose;
-  const auto v_ego = utils::get_velocity_in_world_coordinate(points.at(idx));
+  const auto p_ego = points_->at(idx).pose;
+  const auto v_ego = utils::get_velocity_in_world_coordinate(points_->at(idx));
 
   return utils::time_to_collision(*objects_history.at(idx), p_ego, v_ego);
 }
 
 double DataInterface::travel_distance(const size_t idx) const
 {
-  return autoware::motion_utils::calcSignedArcLength(points, 0L, idx);
+  return autoware::motion_utils::calcSignedArcLength(*points_, 0L, idx);
 }
 
 double DataInterface::lateral_deviation(const size_t idx) const
 {
   lanelet::ConstLanelet nearest{};
   if (!route_handler->getClosestPreferredLaneletWithinRoute(
-        autoware::universe_utils::getPose(points.at(idx)), &nearest)) {
+        autoware::universe_utils::getPose(points_->at(idx)), &nearest)) {
     return std::numeric_limits<double>::max();
   }
-  const auto arc_coordinates =
-    lanelet::utils::getArcCoordinates({nearest}, autoware::universe_utils::getPose(points.at(idx)));
+  const auto arc_coordinates = lanelet::utils::getArcCoordinates(
+    {nearest}, autoware::universe_utils::getPose(points_->at(idx)));
   return arc_coordinates.distance;
 }
 
@@ -153,7 +153,7 @@ double DataInterface::trajectory_deviation(const size_t idx) const
 {
   if (previous_ == nullptr) return 0.0;
 
-  const auto & p1 = autoware::universe_utils::getPose(points.at(idx));
+  const auto & p1 = autoware::universe_utils::getPose(points_->at(idx));
   const auto & p2 = previous_->at(idx);
   return autoware::universe_utils::calcSquaredDistance2d(p1, p2);
 }
@@ -161,7 +161,7 @@ double DataInterface::trajectory_deviation(const size_t idx) const
 bool DataInterface::feasible() const
 {
   const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps >= 0.0; };
-  return std::all_of(points.begin(), points.end(), condition);
+  return std::all_of(points_->begin(), points_->end(), condition);
 }
 
 bool DataInterface::ready() const
@@ -170,7 +170,7 @@ bool DataInterface::ready() const
     return false;
   }
 
-  if (points.size() < parameters->resample_num) {
+  if (points_->size() < parameters->resample_num) {
     return false;
   }
 
@@ -220,7 +220,7 @@ GroundTruth::GroundTruth(
 
 auto GroundTruth::to_points(
   const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<Parameters> & parameters)
-  -> TrajectoryPoints
+  -> std::shared_ptr<TrajectoryPoints>
 {
   TrajectoryPoints points;
 
@@ -264,7 +264,7 @@ auto GroundTruth::to_points(
     points.push_back(point);
   }
 
-  return points;
+  return std::make_shared<TrajectoryPoints>(points);
 }
 
 TrajectoryData::TrajectoryData(
@@ -272,7 +272,7 @@ TrajectoryData::TrajectoryData(
   const std::shared_ptr<TrajectoryPoints> & prev_best_data,
   const vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<Parameters> & parameters, const std::string & tag,
-  const std::vector<TrajectoryPoint> & points)
+  const std::shared_ptr<TrajectoryPoints> & points)
 : DataInterface(bag_data, prev_best_data, vehicle_info, parameters, tag, points)
 {
   calculate();
@@ -307,11 +307,12 @@ Evaluator::Evaluator(
   }
 
   // frenet planner
-  for (const auto & sample : utils::sampling(
+  for (const auto & points : utils::sampling(
          *opt_trajectory, opt_odometry->pose.pose, opt_odometry->twist.twist.linear.x,
          opt_accel->accel.accel.linear.x, vehicle_info, parameters)) {
     const auto ptr = std::make_shared<TrajectoryData>(
-      bag_data, prev_best_data, vehicle_info, parameters, "frenet", sample);
+      bag_data, prev_best_data, vehicle_info, parameters, "frenet",
+      std::make_shared<TrajectoryPoints>(points));
     data_set.push_back(static_cast<std::shared_ptr<DataInterface>>(ptr));
   }
 
@@ -396,12 +397,12 @@ auto Evaluator::loss(const std::vector<double> & weight) const -> double
   }
 
   const auto ground_truth = get("ground_truth");
-  const auto min_size = std::min(ground_truth->points.size(), best_data->points.size());
+  const auto min_size = std::min(ground_truth->points()->size(), best_data->points()->size());
 
   double mse = 0.0;
   for (size_t i = 0; i < min_size; i++) {
-    const auto & p1 = autoware::universe_utils::getPose(ground_truth->points.at(i));
-    const auto & p2 = autoware::universe_utils::getPose(best_data->points.at(i));
+    const auto & p1 = autoware::universe_utils::getPose(ground_truth->points()->at(i));
+    const auto & p2 = autoware::universe_utils::getPose(best_data->points()->at(i));
     mse = (mse * i + autoware::universe_utils::calcSquaredDistance2d(p1, p2)) / (i + 1);
   }
 

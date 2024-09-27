@@ -295,12 +295,12 @@ auto to_marker(
     createMarkerScale(0.1, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
 
   if (!data->feasible()) {
-    for (const auto & point : data->points) {
+    for (const auto & point : *data->points()) {
       marker.points.push_back(point.pose.position);
       marker.colors.push_back(createMarkerColor(0.1, 0.1, 0.1, 0.3));
     }
   } else {
-    for (const auto & point : data->points) {
+    for (const auto & point : *data->points()) {
       marker.points.push_back(point.pose.position);
       marker.colors.push_back(createMarkerColor(1.0 - score, score, 0.0, std::min(0.5, score)));
     }
