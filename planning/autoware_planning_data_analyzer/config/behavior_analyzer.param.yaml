@@ -13,13 +13,7 @@
       longitudinal_accelerations: [-0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4]
       # longitudinal_accelerations: [-0.2, -0.1, 0.0, 0.1, 0.2]
 
-    weight:
-      lat_comfortability: 1.0
-      lon_comfortability: 1.0
-      efficiency: 1.0
-      safety: 1.0
-      achievability: 1.0
-      consistency: 1.0
+    weight: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
     grid_seach:
       min: 0.1

@@ -33,6 +33,8 @@
 #include <std_srvs/srv/trigger.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
+#include <vector>
+
 namespace autoware::behavior_analyzer
 {
 // std

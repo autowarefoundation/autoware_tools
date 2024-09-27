@@ -192,13 +192,13 @@ void CommonData::calculate()
   values.at(static_cast<size_t>(METRIC::LATERAL_DEVIATION)) = lateral_deviation_values;
   values.at(static_cast<size_t>(METRIC::TRAJECTORY_DEVIATION)) = trajectory_deviation_values;
 
-  scores.at(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY)) = lateral_comfortability();
+  scores.at(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY)) = to_1d(METRIC::LATERAL_ACCEL);
   scores.at(static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY)) =
-    longitudinal_comfortability();
-  scores.at(static_cast<size_t>(SCORE::EFFICIENCY)) = efficiency();
-  scores.at(static_cast<size_t>(SCORE::SAFETY)) = safety();
-  scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) = achievability();
-  scores.at(static_cast<size_t>(SCORE::CONSISTENCY)) = consistency();
+    to_1d(METRIC::LONGITUDINAL_JERK);
+  scores.at(static_cast<size_t>(SCORE::EFFICIENCY)) = to_1d(METRIC::TRAVEL_DISTANCE);
+  scores.at(static_cast<size_t>(SCORE::SAFETY)) = to_1d(METRIC::MINIMUM_TTC);
+  scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) = to_1d(METRIC::LATERAL_DEVIATION);
+  scores.at(static_cast<size_t>(SCORE::CONSISTENCY)) = to_1d(METRIC::TRAJECTORY_DEVIATION);
 }
 
 void CommonData::normalize(
@@ -208,84 +208,14 @@ void CommonData::normalize(
                                : (scores.at(score_type) - min) / (max - min);
 }
 
-double CommonData::longitudinal_comfortability() const
+auto CommonData::to_1d(const METRIC & metric_type) const -> double
 {
   constexpr double TIME_FACTOR = 0.8;
 
   double score = 0.0;
 
   for (size_t i = 0; i < parameters->resample_num; i++) {
-    score += std::pow(TIME_FACTOR, i) *
-             std::abs(values.at(static_cast<size_t>(METRIC::LONGITUDINAL_JERK)).at(i));
-  }
-
-  return score;
-}
-
-double CommonData::lateral_comfortability() const
-{
-  constexpr double TIME_FACTOR = 0.8;
-
-  double score = 0.0;
-
-  for (size_t i = 0; i < parameters->resample_num; i++) {
-    score += std::pow(TIME_FACTOR, i) *
-             std::abs(values.at(static_cast<size_t>(METRIC::LATERAL_ACCEL)).at(i));
-  }
-
-  return score;
-}
-
-double CommonData::efficiency() const
-{
-  constexpr double TIME_FACTOR = 0.8;
-
-  double score = 0.0;
-
-  for (size_t i = 0; i < parameters->resample_num; i++) {
-    score +=
-      std::pow(TIME_FACTOR, i) * values.at(static_cast<size_t>(METRIC::TRAVEL_DISTANCE)).at(i);
-  }
-
-  return score;
-}
-
-double CommonData::safety() const
-{
-  constexpr double TIME_FACTOR = 0.8;
-
-  double score = 0.0;
-
-  for (size_t i = 0; i < parameters->resample_num; i++) {
-    score += std::pow(TIME_FACTOR, i) * values.at(static_cast<size_t>(METRIC::MINIMUM_TTC)).at(i);
-  }
-
-  return score;
-}
-
-double CommonData::achievability() const
-{
-  constexpr double TIME_FACTOR = 1.0;
-
-  double score = 0.0;
-
-  for (size_t i = 0; i < parameters->resample_num; i++) {
-    score += std::pow(TIME_FACTOR, i) *
-             std::abs(values.at(static_cast<size_t>(METRIC::LATERAL_DEVIATION)).at(i));
-  }
-
-  return score;
-}
-
-double CommonData::consistency() const
-{
-  constexpr double TIME_FACTOR = 1.0;
-
-  double score = 0.0;
-
-  for (size_t i = 0; i < parameters->resample_num; i++) {
-    score += std::pow(TIME_FACTOR, i) *
-             std::abs(values.at(static_cast<size_t>(METRIC::TRAJECTORY_DEVIATION)).at(i));
+    score += std::pow(TIME_FACTOR, i) * std::abs(values.at(static_cast<size_t>(metric_type)).at(i));
   }
 
   return score;
@@ -296,16 +226,9 @@ double CommonData::get(const SCORE & score_type) const
   return scores.at(static_cast<size_t>(score_type));
 }
 
-double CommonData::total(
-  const double w0, const double w1, const double w2, const double w3, const double w4,
-  const double w5) const
+auto CommonData::total(const std::vector<double> & weight) const -> double
 {
-  return w0 * scores.at(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY)) +
-         w1 * scores.at(static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY)) +
-         w2 * scores.at(static_cast<size_t>(SCORE::EFFICIENCY)) +
-         w3 * scores.at(static_cast<size_t>(SCORE::SAFETY)) +
-         w4 * scores.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) +
-         w5 * scores.at(static_cast<size_t>(SCORE::CONSISTENCY));
+  return std::inner_product(weight.begin(), weight.end(), scores.begin(), 0.0);
 }
 
 ManualDrivingData::ManualDrivingData(
