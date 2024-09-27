@@ -22,9 +22,9 @@ data_collecting_trajectory_publisher:
 
     max_lateral_accel: 0.5
     lateral_error_threshold: 2.0
-    yaw_error_threshold: 0.75
+    yaw_error_threshold: 0.50
     velocity_limit_by_tracking_error: 1.0
-    mov_ave_window: 50
+    mov_ave_window: 100
     target_longitudinal_velocity: 6.0
     longitudinal_velocity_noise_amp: 0.01
     longitudinal_velocity_noise_min_period: 5.0
