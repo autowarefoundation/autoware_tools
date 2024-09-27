@@ -17,6 +17,7 @@
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info_utils.hpp>
+#include <builtin_interfaces/msg/duration.hpp>
 
 #include "autoware_map_msgs/msg/lanelet_map_bin.hpp"
 #include "autoware_perception_msgs/msg/predicted_objects.hpp"
@@ -55,6 +56,7 @@ using route_handler::RouteHandler;
 using TrajectoryPoints = std::vector<TrajectoryPoint>;
 
 // ros2
+using builtin_interfaces::msg::Duration;
 using geometry_msgs::msg::AccelWithCovarianceStamped;
 using geometry_msgs::msg::Point;
 using geometry_msgs::msg::Pose;

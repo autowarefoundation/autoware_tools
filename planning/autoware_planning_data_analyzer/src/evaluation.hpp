@@ -31,8 +31,10 @@ class DataInterface
 {
 public:
   DataInterface(
-    const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
-    const std::shared_ptr<Parameters> & parameters, const std::string & tag);
+    const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<TrajectoryPoints> & previous,
+    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<Parameters> & parameters, const std::string & tag,
+    const TrajectoryPoints & points);
 
   void calculate();
 
@@ -47,45 +49,23 @@ public:
 
   auto score() const -> std::vector<double> { return scores; }
 
-  virtual double lateral_accel(const size_t idx) const
-  {
-    throw std::logic_error(std::string("please override: ") + __func__);
-  }
+  double lateral_accel(const size_t idx) const;
 
-  virtual double longitudinal_jerk(const size_t idx) const
-  {
-    throw std::logic_error(std::string("please override: ") + __func__);
-  }
+  double longitudinal_jerk(const size_t idx) const;
 
-  virtual double minimum_ttc(const size_t idx) const
-  {
-    throw std::logic_error(std::string("please override: ") + __func__);
-  }
+  double minimum_ttc(const size_t idx) const;
 
-  virtual double travel_distance(const size_t idx) const
-  {
-    throw std::logic_error(std::string("please override: ") + __func__);
-  }
+  double travel_distance(const size_t idx) const;
 
-  virtual double lateral_deviation(const size_t idx) const
-  {
-    throw std::logic_error(std::string("please override: ") + __func__);
-  }
+  double lateral_deviation(const size_t idx) const;
 
-  virtual double trajectory_deviation(const size_t idx) const
-  {
-    throw std::logic_error(std::string("please override: ") + __func__);
-  }
+  double trajectory_deviation(const size_t idx) const;
 
-  virtual bool feasible() const
-  {
-    throw std::logic_error(std::string("please override: ") + __func__);
-  }
+  bool feasible() const;
 
-  virtual bool ready() const
-  {
-    throw std::logic_error(std::string("please override: ") + __func__);
-  }
+  bool ready() const;
+
+  std::shared_ptr<TrajectoryPoints> previous_;
 
   std::vector<PredictedObjects::SharedPtr> objects_history;
 
@@ -99,7 +79,7 @@ public:
 
   std::shared_ptr<Parameters> parameters;
 
-  std::vector<TrajectoryPoint> points;
+  TrajectoryPoints points;
 
   std::string tag{""};
 };
@@ -108,100 +88,36 @@ class GroundTruth : public DataInterface
 {
 public:
   GroundTruth(
-    const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<BagData> & bag_data,
+    const std::shared_ptr<TrajectoryPoints> & prev_best_data,
+    const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::string & tag);
 
-  double lateral_accel(const size_t idx) const override;
-
-  double longitudinal_jerk(const size_t idx) const override;
-
-  double minimum_ttc(const size_t idx) const override;
-
-  double travel_distance(const size_t idx) const override;
-
-  double lateral_deviation(const size_t idx) const override;
-
-  double trajectory_deviation(const size_t idx) const override;
-
-  bool feasible() const override { return true; }
-
-  bool ready() const override;
-
-  std::vector<Odometry::SharedPtr> odometry_history;
-  std::vector<AccelWithCovarianceStamped::SharedPtr> accel_history;
-  std::vector<SteeringReport::SharedPtr> steer_history;
+private:
+  static auto to_points(
+    const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<Parameters> & parameters)
+    -> TrajectoryPoints;
 };
 
 class TrajectoryData : public DataInterface
 {
 public:
   TrajectoryData(
-    const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<BagData> & bag_data,
+    const std::shared_ptr<TrajectoryPoints> & prev_best_data,
+    const vehicle_info_utils::VehicleInfo & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::string & tag,
-    const std::vector<TrajectoryPoint> & in_points, const std::optional<TrajectoryPoints> & t_best);
-
-  double lateral_accel(const size_t idx) const override;
-
-  double longitudinal_jerk(const size_t idx) const override;
-
-  double minimum_ttc(const size_t idx) const override;
-
-  double travel_distance(const size_t idx) const override;
-
-  double lateral_deviation(const size_t idx) const override;
-
-  double trajectory_deviation(const size_t idx) const override;
-
-  bool feasible() const override;
-
-  bool ready() const override;
-
-  std::optional<TrajectoryPoints> t_best;
+    const std::vector<TrajectoryPoint> & points);
 };
-
-// struct SamplingTrajectoryData
-// {
-//   SamplingTrajectoryData(
-//     const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo &
-//     vehicle_info, const std::shared_ptr<Parameters> & parameters, const
-//     std::optional<TrajectoryPoints> & t_best);
-
-//   auto best(const std::vector<double> & weight) const -> std::optional<TrajectoryData>
-//   {
-//     auto sort_by_score = data;
-
-//     std::sort(
-//       sort_by_score.begin(), sort_by_score.end(),
-//       [&weight](const auto & a, const auto & b) { return a.total(weight) > b.total(weight); });
-
-//     const auto itr = std::remove_if(
-//       sort_by_score.begin(), sort_by_score.end(), [](const auto & d) { return !d.feasible(); });
-
-//     sort_by_score.erase(itr, sort_by_score.end());
-
-//     if (sort_by_score.empty()) return std::nullopt;
-
-//     return sort_by_score.front();
-//   }
-
-//   auto autoware() const -> std::optional<TrajectoryData>
-//   {
-//     const auto itr = std::find_if(data.begin(), data.end(), [](const auto & trajectory) {
-//       return trajectory.tag == "autoware";
-//     });
-//     if (itr == data.end()) return std::nullopt;
-//     return *itr;
-//   }
-
-//   std::vector<TrajectoryData> data;
-// };
 
 class Evaluator
 {
 public:
   Evaluator(
-    const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
-    const std::shared_ptr<Parameters> & parameters, const std::optional<TrajectoryPoints> & t_best);
+    const std::shared_ptr<BagData> & bag_data,
+    const std::shared_ptr<TrajectoryPoints> & prev_best_data,
+    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<Parameters> & parameters);
 
   void show();
 
@@ -214,10 +130,6 @@ public:
   auto best(const std::vector<double> & weight) const -> std::shared_ptr<DataInterface>;
 
   auto get(const std::string & tag) const -> std::shared_ptr<DataInterface>;
-
-  // ManualDrivingData manual;
-
-  // SamplingTrajectoryData sampling;
 
   std::vector<std::shared_ptr<DataInterface>> data_set;
 

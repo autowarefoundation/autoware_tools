@@ -32,12 +32,16 @@ namespace autoware::behavior_analyzer
 {
 
 DataInterface::DataInterface(
-  const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<Parameters> & parameters, const std::string & tag)
-: vehicle_info{vehicle_info},
+  const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<TrajectoryPoints> & previous,
+  const vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<Parameters> & parameters, const std::string & tag,
+  const TrajectoryPoints & points)
+: previous_{previous},
+  vehicle_info{vehicle_info},
   route_handler{bag_data->route_handler},
   parameters{parameters},
-  tag{tag}
+  tag{tag},
+  points{points}
 {
   objects_history.reserve(parameters->resample_num);
 
@@ -108,6 +112,71 @@ void DataInterface::calculate()
   scores.at(static_cast<size_t>(SCORE::CONSISTENCY)) = to_1d(METRIC::TRAJECTORY_DEVIATION);
 }
 
+double DataInterface::lateral_accel(const size_t idx) const
+{
+  const auto radius = vehicle_info.wheel_base_m / std::tan(points.at(idx).front_wheel_angle_rad);
+  const auto speed = points.at(idx).longitudinal_velocity_mps;
+  return speed * speed / radius;
+}
+
+double DataInterface::longitudinal_jerk(const size_t idx) const
+{
+  return (points.at(idx + 1).acceleration_mps2 - points.at(idx).acceleration_mps2) / 0.5;
+}
+
+double DataInterface::minimum_ttc(const size_t idx) const
+{
+  const auto p_ego = points.at(idx).pose;
+  const auto v_ego = utils::get_velocity_in_world_coordinate(points.at(idx));
+
+  return utils::time_to_collision(*objects_history.at(idx), p_ego, v_ego);
+}
+
+double DataInterface::travel_distance(const size_t idx) const
+{
+  return autoware::motion_utils::calcSignedArcLength(points, 0L, idx);
+}
+
+double DataInterface::lateral_deviation(const size_t idx) const
+{
+  lanelet::ConstLanelet nearest{};
+  if (!route_handler->getClosestPreferredLaneletWithinRoute(
+        autoware::universe_utils::getPose(points.at(idx)), &nearest)) {
+    return std::numeric_limits<double>::max();
+  }
+  const auto arc_coordinates =
+    lanelet::utils::getArcCoordinates({nearest}, autoware::universe_utils::getPose(points.at(idx)));
+  return arc_coordinates.distance;
+}
+
+double DataInterface::trajectory_deviation(const size_t idx) const
+{
+  if (previous_ == nullptr) return 0.0;
+
+  const auto & p1 = autoware::universe_utils::getPose(points.at(idx));
+  const auto & p2 = previous_->at(idx);
+  return autoware::universe_utils::calcSquaredDistance2d(p1, p2);
+}
+
+bool DataInterface::feasible() const
+{
+  const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps >= 0.0; };
+  return std::all_of(points.begin(), points.end(), condition);
+}
+
+bool DataInterface::ready() const
+{
+  if (objects_history.size() < parameters->resample_num) {
+    return false;
+  }
+
+  if (points.size() < parameters->resample_num) {
+    return false;
+  }
+
+  return true;
+}
+
 void DataInterface::normalize(
   const double min, const double max, const size_t score_type, const bool flip)
 {
@@ -139,13 +208,21 @@ auto DataInterface::total(const std::vector<double> & weight) const -> double
 }
 
 GroundTruth::GroundTruth(
-  const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<BagData> & bag_data,
+  const std::shared_ptr<TrajectoryPoints> & prev_best_data,
+  const vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<Parameters> & parameters, const std::string & tag)
-: DataInterface(bag_data, vehicle_info, parameters, tag)
+: DataInterface(
+    bag_data, prev_best_data, vehicle_info, parameters, tag, to_points(bag_data, parameters))
 {
-  odometry_history.reserve(parameters->resample_num);
-  accel_history.reserve(parameters->resample_num);
-  steer_history.reserve(parameters->resample_num);
+  calculate();
+}
+
+auto GroundTruth::to_points(
+  const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<Parameters> & parameters)
+  -> TrajectoryPoints
+{
+  TrajectoryPoints points;
 
   const auto odometry_buffer_ptr = std::dynamic_pointer_cast<Buffer<Odometry>>(
     bag_data->buffers.at("/localization/kinematic_state"));
@@ -161,227 +238,51 @@ GroundTruth::GroundTruth(
     if (!opt_odometry) {
       break;
     }
-    odometry_history.push_back(opt_odometry);
 
     const auto opt_accel =
       acceleration_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->time_resolution * i);
     if (!opt_accel) {
       break;
     }
-    accel_history.push_back(opt_accel);
 
     const auto opt_steer =
       steering_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->time_resolution * i);
     if (!opt_steer) {
       break;
     }
-    steer_history.push_back(opt_steer);
+
+    const auto duration = builtin_interfaces::build<Duration>().sec(0.0).nanosec(0.0);
+    const auto point = autoware_planning_msgs::build<TrajectoryPoint>()
+                         .time_from_start(duration)
+                         .pose(opt_odometry->pose.pose)
+                         .longitudinal_velocity_mps(opt_odometry->twist.twist.linear.x)
+                         .lateral_velocity_mps(0.0)
+                         .acceleration_mps2(opt_accel->accel.accel.linear.x)
+                         .heading_rate_rps(0.0)
+                         .front_wheel_angle_rad(opt_steer->steering_tire_angle)
+                         .rear_wheel_angle_rad(0.0);
+    points.push_back(point);
   }
 
-  calculate();
-}
-
-double GroundTruth::lateral_accel(const size_t idx) const
-{
-  const auto radius =
-    vehicle_info.wheel_base_m / std::tan(steer_history.at(idx)->steering_tire_angle);
-  const auto speed = odometry_history.at(idx)->twist.twist.linear.x;
-  return speed * speed / radius;
-}
-
-double GroundTruth::longitudinal_jerk(const size_t idx) const
-{
-  const double dt = rclcpp::Time(accel_history.at(idx + 1)->header.stamp).nanoseconds() -
-                    rclcpp::Time(accel_history.at(idx)->header.stamp).nanoseconds();
-
-  return 1e9 *
-         (accel_history.at(idx + 1)->accel.accel.linear.x -
-          accel_history.at(idx)->accel.accel.linear.x) /
-         dt;
-}
-
-double GroundTruth::minimum_ttc(const size_t idx) const
-{
-  const auto p_ego = odometry_history.at(idx)->pose.pose;
-  const auto v_ego = utils::get_velocity_in_world_coordinate(*odometry_history.at(idx));
-
-  return utils::time_to_collision(*objects_history.at(idx), p_ego, v_ego);
-}
-
-double GroundTruth::travel_distance(const size_t idx) const
-{
-  double distance = 0.0;
-  for (size_t i = 0L; i < idx; i++) {
-    distance += autoware::universe_utils::calcDistance3d(
-      odometry_history.at(i + 1)->pose.pose, odometry_history.at(i)->pose.pose);
-  }
-  return distance;
-}
-
-double GroundTruth::lateral_deviation(const size_t idx) const
-{
-  lanelet::ConstLanelet nearest{};
-  if (!route_handler->getClosestPreferredLaneletWithinRoute(
-        odometry_history.at(idx)->pose.pose, &nearest)) {
-    return std::numeric_limits<double>::max();
-  }
-  const auto arc_coordinates =
-    lanelet::utils::getArcCoordinates({nearest}, odometry_history.at(idx)->pose.pose);
-  return arc_coordinates.distance;
-}
-
-double GroundTruth::trajectory_deviation([[maybe_unused]] const size_t idx) const
-{
-  return 1.0;
-}
-
-bool GroundTruth::ready() const
-{
-  if (objects_history.size() < parameters->resample_num) {
-    return false;
-  }
-
-  if (odometry_history.size() < parameters->resample_num) {
-    return false;
-  }
-
-  if (accel_history.size() < parameters->resample_num) {
-    return false;
-  }
-
-  if (steer_history.size() < parameters->resample_num) {
-    return false;
-  }
-
-  return true;
+  return points;
 }
 
 TrajectoryData::TrajectoryData(
-  const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<BagData> & bag_data,
+  const std::shared_ptr<TrajectoryPoints> & prev_best_data,
+  const vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<Parameters> & parameters, const std::string & tag,
-  const std::vector<TrajectoryPoint> & in_points, const std::optional<TrajectoryPoints> & t_best)
-: DataInterface(bag_data, vehicle_info, parameters, tag), t_best{t_best}
+  const std::vector<TrajectoryPoint> & points)
+: DataInterface(bag_data, prev_best_data, vehicle_info, parameters, tag, points)
 {
-  points = in_points;
-
   calculate();
 }
 
-double TrajectoryData::lateral_accel(const size_t idx) const
-{
-  const auto radius = vehicle_info.wheel_base_m / std::tan(points.at(idx).front_wheel_angle_rad);
-  const auto speed = points.at(idx).longitudinal_velocity_mps;
-  return speed * speed / radius;
-}
-
-double TrajectoryData::longitudinal_jerk(const size_t idx) const
-{
-  return (points.at(idx + 1).acceleration_mps2 - points.at(idx).acceleration_mps2) / 0.5;
-}
-
-double TrajectoryData::minimum_ttc(const size_t idx) const
-{
-  const auto p_ego = points.at(idx).pose;
-  const auto v_ego = utils::get_velocity_in_world_coordinate(points.at(idx));
-
-  return utils::time_to_collision(*objects_history.at(idx), p_ego, v_ego);
-}
-
-double TrajectoryData::travel_distance(const size_t idx) const
-{
-  return autoware::motion_utils::calcSignedArcLength(points, 0L, idx);
-}
-
-double TrajectoryData::lateral_deviation(const size_t idx) const
-{
-  lanelet::ConstLanelet nearest{};
-  if (!route_handler->getClosestPreferredLaneletWithinRoute(
-        autoware::universe_utils::getPose(points.at(idx)), &nearest)) {
-    return std::numeric_limits<double>::max();
-  }
-  const auto arc_coordinates =
-    lanelet::utils::getArcCoordinates({nearest}, autoware::universe_utils::getPose(points.at(idx)));
-  return arc_coordinates.distance;
-}
-
-double TrajectoryData::trajectory_deviation(const size_t idx) const
-{
-  if (!t_best.has_value()) return 0.0;
-
-  const auto & p1 = autoware::universe_utils::getPose(points.at(idx));
-  const auto & p2 = t_best.value().at(idx);
-  return autoware::universe_utils::calcSquaredDistance2d(p1, p2);
-}
-
-bool TrajectoryData::feasible() const
-{
-  const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps >= 0.0; };
-  return std::all_of(points.begin(), points.end(), condition);
-}
-
-bool TrajectoryData::ready() const
-{
-  if (objects_history.size() < parameters->resample_num) {
-    return false;
-  }
-
-  if (points.size() < parameters->resample_num) {
-    return false;
-  }
-
-  return true;
-}
-
-// SamplingTrajectoryData::SamplingTrajectoryData(
-//   const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo &
-//   vehicle_info, const std::shared_ptr<Parameters> & parameters, const
-//   std::optional<TrajectoryPoints> & t_best)
-// {
-//   const auto opt_odometry = std::dynamic_pointer_cast<Buffer<Odometry>>(
-//                               bag_data->buffers.at("/localization/kinematic_state"))
-//                               ->get(bag_data->timestamp);
-//   if (!opt_odometry) {
-//     throw std::logic_error("data is not enough.");
-//   }
-
-//   const auto opt_accel = std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
-//                            bag_data->buffers.at("/localization/acceleration"))
-//                            ->get(bag_data->timestamp);
-//   if (!opt_accel) {
-//     throw std::logic_error("data is not enough.");
-//   }
-
-//   const auto opt_trajectory = std::dynamic_pointer_cast<Buffer<Trajectory>>(
-//                                 bag_data->buffers.at("/planning/scenario_planning/trajectory"))
-//                                 ->get(bag_data->timestamp);
-//   if (!opt_trajectory) {
-//     throw std::logic_error("data is not enough.");
-//   }
-//   // data.emplace_back(
-//   //   bag_data, vehicle_info, parameters, "autoware",
-//   //   utils::resampling(
-//   //     *opt_trajectory, opt_odometry->pose.pose, parameters->resample_num,
-//   //     parameters->time_resolution));
-
-//   for (const auto & sample : utils::sampling(
-//          *opt_trajectory, opt_odometry->pose.pose, opt_odometry->twist.twist.linear.x,
-//          opt_accel->accel.accel.linear.x, vehicle_info, parameters)) {
-//     data.emplace_back(bag_data, vehicle_info, parameters, "frenet", sample, t_best);
-//   }
-
-//   // std::vector<TrajectoryPoint> stop_points(parameters->resample_num);
-//   // for (auto & stop_point : stop_points) {
-//   //   stop_point.pose = opt_odometry->pose.pose;
-//   // }
-//   // data.emplace_back(bag_data, vehicle_info, parameters, "stop", stop_points);
-// }
-
 Evaluator::Evaluator(
-  const std::shared_ptr<BagData> & bag_data, const vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<Parameters> & parameters, const std::optional<TrajectoryPoints> & t_best)
-// : manual{ManualDrivingData(bag_data, vehicle_info, parameters)},
-// sampling{SamplingTrajectoryData(bag_data, vehicle_info, parameters, t_best)},
-// route_handler{bag_data->route_handler},
+  const std::shared_ptr<BagData> & bag_data,
+  const std::shared_ptr<TrajectoryPoints> & prev_best_data,
+  const vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<Parameters> & parameters)
 : parameters{parameters}
 {
   const auto opt_odometry = std::dynamic_pointer_cast<Buffer<Odometry>>(
@@ -410,14 +311,14 @@ Evaluator::Evaluator(
          *opt_trajectory, opt_odometry->pose.pose, opt_odometry->twist.twist.linear.x,
          opt_accel->accel.accel.linear.x, vehicle_info, parameters)) {
     const auto ptr = std::make_shared<TrajectoryData>(
-      bag_data, vehicle_info, parameters, "frenet", sample, t_best);
+      bag_data, prev_best_data, vehicle_info, parameters, "frenet", sample);
     data_set.push_back(static_cast<std::shared_ptr<DataInterface>>(ptr));
   }
 
   // actual behavior
   {
-    const auto ptr =
-      std::make_shared<GroundTruth>(bag_data, vehicle_info, parameters, "ground_truth");
+    const auto ptr = std::make_shared<GroundTruth>(
+      bag_data, prev_best_data, vehicle_info, parameters, "ground_truth");
     data_set.push_back(static_cast<std::shared_ptr<DataInterface>>(ptr));
   }
 
@@ -490,7 +391,7 @@ auto Evaluator::best(const std::vector<double> & weight) const -> std::shared_pt
 auto Evaluator::loss(const std::vector<double> & weight) const -> double
 {
   const auto best_data = best(weight);
-  if (best_data != nullptr) {
+  if (best_data == nullptr) {
     return 0.0;
   }
 
@@ -515,7 +416,7 @@ void Evaluator::show()
 {
   const auto best_data = best(parameters->weight);
 
-  if (best_data != nullptr) {
+  if (best_data == nullptr) {
     return;
   }
 

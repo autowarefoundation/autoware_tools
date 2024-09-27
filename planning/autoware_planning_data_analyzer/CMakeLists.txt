@@ -40,16 +40,20 @@ install(
   EXPORT install_targets
 )
 
-# ament_auto_add_library(${PROJECT_NAME} SHARED
-#   src/node.cpp
-#   src/utils.cpp
-#   src/data_structs.cpp
-# )
+ament_auto_add_library(${PROJECT_NAME} SHARED
+  src/node.cpp
+  src/utils.cpp
+  src/bag_handler.cpp
+  src/evaluation.cpp
+  src/data_structs.cpp
+)
 
-# rclcpp_components_register_node(${PROJECT_NAME}
-#   PLUGIN "autoware::behavior_analyzer::BehaviorAnalyzerNode"
-#   EXECUTABLE ${PROJECT_NAME}_node
-# )
+target_link_libraries(${PROJECT_NAME} matplotlib_cpp)
+
+rclcpp_components_register_node(${PROJECT_NAME}
+  PLUGIN "autoware::behavior_analyzer::BehaviorAnalyzerNode"
+  EXECUTABLE ${PROJECT_NAME}_node
+)
 
 ament_auto_add_executable(minimal
   src/main.cpp

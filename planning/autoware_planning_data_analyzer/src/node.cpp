@@ -31,7 +31,7 @@ using autoware::universe_utils::Polygon2d;
 BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_options)
 : Node("path_selector_node", node_options),
   route_handler_{std::make_shared<RouteHandler>()},
-  best_{std::nullopt},
+  previous_{nullptr},
   buffer_{static_cast<size_t>(SCORE::SIZE)}
 {
   using namespace std::literals::chrono_literals;
@@ -104,7 +104,7 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   parameters_->target_state.lon_accelerations =
     declare_parameter<std::vector<double>>("target_state.longitudinal_accelerations");
 
-  matplotlibcpp::figure_size(1200, 1200);
+  // matplotlibcpp::figure_size(1200, 1200);
 }
 
 auto BehaviorAnalyzerNode::get_route() -> LaneletRoute::ConstSharedPtr
@@ -312,14 +312,14 @@ void BehaviorAnalyzerNode::weight(
     RCLCPP_INFO_STREAM(get_logger(), ss.str());
   };
 
-  std::optional<TrajectoryPoints> best{std::nullopt};
+  std::shared_ptr<TrajectoryPoints> best{nullptr};
 
   while (reader_.has_next() && rclcpp::ok()) {
     update(bag_data, p->grid_seach.dt);
 
     if (!bag_data->ready()) break;
 
-    const auto data_set = std::make_shared<Evaluator>(bag_data, vehicle_info_, p, best);
+    const auto data_set = std::make_shared<Evaluator>(bag_data, best, vehicle_info_, p);
 
     std::mutex grid_mutex;
 
@@ -355,11 +355,11 @@ void BehaviorAnalyzerNode::weight(
       i += p->grid_seach.thread_num;
     }
 
-    const auto t_best = data_set->best(p->weight);
-    if (t_best != nullptr) {
-      best = t_best->points;
+    const auto best_data = data_set->best(p->weight);
+    if (best_data == nullptr) {
+      best = nullptr;
     } else {
-      best = std::nullopt;
+      best = std::make_shared<TrajectoryPoints>(best_data->points);
     }
 
     std::cout << "IDX:" << i << " GRID:" << weight_grid.size() << std::endl;
@@ -377,7 +377,8 @@ void BehaviorAnalyzerNode::analyze(const std::shared_ptr<BagData> & bag_data) co
 {
   if (!bag_data->ready()) return;
 
-  const auto data_set = std::make_shared<Evaluator>(bag_data, vehicle_info_, parameters_, best_);
+  const auto data_set =
+    std::make_shared<Evaluator>(bag_data, previous_, vehicle_info_, parameters_);
 
   const auto opt_tf = std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(TOPIC::TF))
                         ->get(bag_data->timestamp);
@@ -511,18 +512,18 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<Evaluator> & data_set
     }
   }
 
-  const auto best = data_set->best(parameters_->weight);
-  if (best != nullptr) {
+  const auto best_data = data_set->best(parameters_->weight);
+  if (best_data != nullptr) {
     Marker marker = createDefaultMarker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "best_score", 0L, Marker::LINE_STRIP,
       createMarkerScale(0.2, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
-    for (const auto & point : best->points) {
+    for (const auto & point : best_data->points) {
       marker.points.push_back(point.pose.position);
     }
     msg.markers.push_back(marker);
-    best_ = best->points;
+    previous_ = std::make_shared<TrajectoryPoints>(best_data->points);
   } else {
-    best_ = std::nullopt;
+    previous_ = nullptr;
   }
 
   for (size_t i = 0; i < data_set->data_set.size(); ++i) {
@@ -547,7 +548,7 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<Evaluator> & data_set
   };
 
   if (count_ > 50) {
-    plot(data_set);
+    // plot(data_set);
     clear_buffer(SCORE::LATERAL_COMFORTABILITY);
     clear_buffer(SCORE::LONGITUDINAL_COMFORTABILITY);
     clear_buffer(SCORE::EFFICIENCY);
@@ -570,7 +571,7 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<Evaluator> & data_set
   {
     autoware::universe_utils::appendMarkerArray(
       lanelet::visualization::laneletsAsTriangleMarkerArray(
-        "preferred_lanes", data_set->route_handler->getPreferredLanelets(),
+        "preferred_lanes", route_handler_->getPreferredLanelets(),
         createMarkerColor(0.16, 1.0, 0.69, 0.2)),
       &msg);
   }

@@ -95,7 +95,7 @@ private:
 
   std::shared_ptr<Parameters> parameters_;
 
-  mutable std::optional<TrajectoryPoints> best_;
+  mutable std::shared_ptr<TrajectoryPoints> previous_;
 
   mutable std::mutex mutex_;
 
