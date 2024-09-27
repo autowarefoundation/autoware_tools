@@ -804,7 +804,8 @@ Visualization Manager:
                     Alpha: 0.999
                     Color: 119; 11; 32
                   Name: PredictedObjects
-                  Namespaces: {}
+                  Namespaces:
+                    path: false
                   PEDESTRIAN:
                     Alpha: 0.999
                     Color: 255; 192; 203
