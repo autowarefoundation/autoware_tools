@@ -1,60 +1,229 @@
 # autoware_lanelet2_map_validator
 
 `autoware_lanelet2_map_validator` is a tool to validate Lanelet2 maps to ensure that Autoware can work properly with it.
+This validation tool is an extension of [lanelet2_validation](https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation) so that Autoware specific rules can be applied.
 
-The requirements for lanelet2 maps are described in [Vector Map creation requirement specifications (in Autoware Documentation)](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/).
+**Note that this validator is still on construction that there are only a few rules and a template to define those rules.**
 
-| ID       | Requirements                                            |
-| -------- | ------------------------------------------------------- |
-| vm-01-01 | Lanelet basics                                          |
-| vm-01-02 | Allowance for lane changes                              |
-| vm-01-03 | Linestring sharing                                      |
-| vm-01-04 | Sharing of the centerline of lanes for opposing traffic |
-| vm-01-05 | Lane geometry                                           |
-| vm-01-06 | Line position (1)                                       |
-| vm-01-07 | Line position (2)                                       |
-| vm-01-08 | Line position (3)                                       |
-| vm-01-09 | Speed limits                                            |
-| vm-01-10 | Centerline                                              |
-| vm-01-11 | Centerline connection (1)                               |
-| vm-01-12 | Centerline connection (2)                               |
-| vm-01-13 | Roads with no centerline (1)                            |
-| vm-01-14 | Roads with no centerline (2)                            |
-| vm-01-15 | Road shoulder                                           |
-| vm-01-16 | Road shoulder Linestring sharing                        |
-| vm-01-17 | Side strip                                              |
-| vm-01-18 | Side strip Linestring sharing                           |
-| vm-01-19 | Walkway                                                 |
-| vm-02-01 | Stop line alignment                                     |
-| vm-02-02 | Stop sign                                               |
-| vm-03-01 | Intersection criteria                                   |
-| vm-03-02 | Lanelet's turn direction and virtual                    |
-| vm-03-03 | Lanelet width in the intersection                       |
-| vm-03-04 | Lanelet creation in the intersection                    |
-| vm-03-05 | Lanelet division in the intersection                    |
-| vm-03-06 | Guide lines in the intersection                         |
-| vm-03-07 | Multiple lanelets in the intersection                   |
-| vm-03-08 | Intersection Area range                                 |
-| vm-03-09 | Range of Lanelet in the intersection                    |
-| vm-03-10 | Right of way (with signal)                              |
-| vm-03-11 | Right of way (without signal)                           |
-| vm-03-12 | Right of way supplements                                |
-| vm-03-13 | Merging from private area, sidewalk                     |
-| vm-03-14 | Road marking                                            |
-| vm-03-15 | Exclusive bicycle lane                                  |
-| vm-04-01 | Traffic light basics                                    |
-| vm-04-02 | Traffic light position and size                         |
-| vm-04-03 | Traffic light lamps                                     |
-| vm-05-01 | Crosswalks across the road                              |
-| vm-05-02 | Crosswalks with pedestrian signals                      |
-| vm-05-03 | Deceleration for safety at crosswalks                   |
-| vm-05-04 | Fences                                                  |
-| vm-06-01 | Buffer Zone                                             |
-| vm-06-02 | No parking signs                                        |
-| vm-06-03 | No stopping signs                                       |
-| vm-06-04 | No stopping sections                                    |
-| vm-06-05 | Detection area                                          |
-| vm-07-01 | Vector Map creation range                               |
-| vm-07-02 | Range of detecting pedestrians who enter the road       |
-| vm-07-03 | Guardrails, guard pipes, fences                         |
-| vm-07-04 | Ellipsoidal height                                      |
+The official Autoware requirements for lanelet2 maps are described in [Vector Map creation requirement specifications (in Autoware Documentation)](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/).
+
+## How to use
+
+Basically, you can use the following command to execute `autoware_lanelet2_map_validator`. However, note that `autoware_lanelet2_map_validator` is a ROS/rclcpp free tool, so you can just run the built executable whatever way.
+
+```bash
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator
+```
+
+### Run ALL validators
+
+You can use `autoware_lanelet2_map_validator` with the following command. This will run all validators including the default built-in validators in the [lanelet2_validation](https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation).
+
+```bash
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm
+```
+
+### Run a specific validator
+
+`autoware_lanelet2_map_validator` consists of multiple small validators in order to realize complex requirements with a combination of them.
+If you want to call a few validators, you can select them with the `--validator, -v` option.
+
+```bash
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm --validator mapping.traffic_light.missing_regulatory_elements
+```
+
+You can get a list of available validators with the `--print, -p` option.
+
+```bash
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --print
+```
+
+### Run with a requirement set
+
+You can run `autoware_lanelet2_map_validator` with a yaml file input that follows the structure like this
+
+```yaml
+requirements:
+  - id: vm-01-01
+    validators:
+      - name: mapping.crosswalk.missing_regulatory_elements
+      - name: mapping.crosswalk.regulatory_element_details
+  - id: vm-01-02
+    validators:
+      - name: mapping.traffic_light.missing_regulatory_elements
+      - name: mapping.traffic_light.regulatory_element_details
+  - id: vm-01-03
+    validators:
+      - name: mapping.stop_line.missing_regulatory_elements
+```
+
+- MUST have a single `requirements` field.
+- The `requirements` field MUST be a list of requirements. A requirement MUST have
+  - `id` : The id of the requirement.
+  - `validators` : A list of validators that structures the requirement.
+    - A validator MUST be given with its name on the `name` field.
+    - The name list of available validators can be obtained from the `--print` option.
+- The user can write any other field (like `version`) besides `requirements`.
+
+Then, the `autoware_lanelet2_map_validator` will scan through the input yaml file given by the `--requirements_file, -r` option, and output the validation results to the directory given by the `--output_file_path, -o` option.
+
+```bash
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --requirements_file ./requirements_set.yaml --output_file_path ./
+```
+
+When the `requirements_file` is thown to `autoware_lanelet2_map_validator`, it will output a `lanelet2_validation_results.yaml` file which looks like the following.
+
+```yaml
+requirements:
+  - id: vm-01-01
+    passed: false
+    validators:
+      - name: mapping.crosswalk.missing_regulatory_elements
+        passed: false
+        issues:
+          - severity: Error
+            primitive: lanelet
+            id: 163
+            message: No regulatory element refers to this crosswalk.
+          - severity: Error
+            primitive: lanelet
+            id: 164
+            message: No regulatory element refers to this crosswalk.
+          - severity: Error
+            primitive: lanelet
+            id: 165
+            message: No regulatory element refers to this crosswalk.
+          - severity: Error
+            primitive: lanelet
+            id: 166
+            message: No regulatory element refers to this crosswalk.
+      - name: mapping.crosswalk.regulatory_element_details
+        passed: true
+  - id: vm-01-02
+    passed: false
+    validators:
+      - name: mapping.traffic_light.missing_regulatory_elements
+        passed: true
+      - name: mapping.traffic_light.regulatory_element_details
+        passed: false
+        issues:
+          - severity: Error
+            primitive: regulatory element
+            id: 9896
+            message: Regulatory element of traffic light must have a stop line(ref_line).
+          - severity: Error
+            primitive: regulatory element
+            id: 9918
+            message: Regulatory element of traffic light must have a stop line(ref_line).
+          - severity: Error
+            primitive: regulatory element
+            id: 9838
+            message: Regulatory element of traffic light must have a stop line(ref_line).
+          - severity: Error
+            primitive: regulatory element
+            id: 9874
+            message: Regulatory element of traffic light must have a stop line(ref_line).
+  - id: vm-01-03
+    passed: true
+    validators:
+      - name: mapping.stop_line.missing_regulatory_elements
+        passed: true
+```
+
+- `lanelet2_validation_results.yaml` inherits the input `requirements_file` and add results to it.
+- `autoware_lanelet2_map_validator` adds a boolean `passed` field to each requirement. If all validators of the requirement have been passed, the `passed` field of the requirement will be `true` (`false` if not).
+- The `passed` field is also given to each validator. If the validator found any issues the `passed` field will turn to be `false` (`true` if not), and adds an `issues` field which is a list of issues found. Each issues contains information of `serverity`, `primitive`, `id`, and `message`.
+
+### Available command options
+
+| option | description |
+| ------ | ----------- |
+| `-h, --help` | Explains about this tool and show a list of options |
+| `--print` | Only print all avalible checker, but dont run them |
+| `-m, --map_file` | Path to the map to be validated |
+| `-r, --requirements_file` | Path to the yaml file where the list of requirements and validations is written |
+| `-o, --output_file_path` | Path of the yaml file where the list of validation results will be written |
+| `-v, --validator` | Comma separated list of regexes to filter the applicable validators. Will run all validators by default. Example: `routing_graph.*` to run all checks for the routing graph |
+| `-p, --projector` | Projector used for loading lanelet map. Available projectors are: mgrs, utm, transverse_mercator. (default: mgrs) |
+| `-l, --location` | Location of the map (for instanciating the traffic rules), e.g. de for Germany |
+| `--participants` | Participants for which the routing graph will be instanciated (default: vehicle) |
+| `--lat` | latitude coordinate of map origin. This is required for the transverse mercator and utm projector. |
+| `--lon` | longitude coofdinate of map origin. This is required for the transverse mercator and utm projector. |
+
+### Available validators
+
+Since there will be hundreds of validators in the future, the documents for each validators should categorized in the docs file.
+The directory structure should be the same to that of the `src/lib/validators` directory.
+
+#### Stop Line
+
+- [mapping.stop_line.missing_regulatory_elements](./docs/stop_line/missing_regulatory_elements_for_stop_lines.md)
+
+#### Traffic Light
+
+- [mapping.traffic_light.missing_regulatory_elements](./docs/traffic_light/missing_regulatory_elements_for_traffic_lights.md)
+- [mapping.traffic_light.regulatory_element_details](./docs/traffic_light/regulatory_element_details_for_traffic_lights.md)
+
+#### Crosswalk
+
+- [mapping.crosswalk.missing_regulatory_elements](./docs/crosswalk/missing_regulatory_elements_for_crosswalk.md)
+- [mapping.crosswalk.regulatory_element_details](./docs/crosswalk/regulatory_element_details_for_crosswalks.md)
+
+## Relationship between requirements and validators
+
+The Validators column will be blank if it hasn't be implemented.
+
+| ID       | Requirements                                            | Validators |
+| -------- | ------------------------------------------------------- | ---------- |
+| vm-01-01 | Lanelet basics                                          |            |
+| vm-01-02 | Allowance for lane changes                              |            |
+| vm-01-03 | Linestring sharing                                      |            |
+| vm-01-04 | Sharing of the centerline of lanes for opposing traffic |            |
+| vm-01-05 | Lane geometry                                           |            |
+| vm-01-06 | Line position (1)                                       |            |
+| vm-01-07 | Line position (2)                                       |            |
+| vm-01-08 | Line position (3)                                       |            |
+| vm-01-09 | Speed limits                                            |            |
+| vm-01-10 | Centerline                                              |            |
+| vm-01-11 | Centerline connection (1)                               |            |
+| vm-01-12 | Centerline connection (2)                               |            |
+| vm-01-13 | Roads with no centerline (1)                            |            |
+| vm-01-14 | Roads with no centerline (2)                            |            |
+| vm-01-15 | Road shoulder                                           |            |
+| vm-01-16 | Road shoulder Linestring sharing                        |            |
+| vm-01-17 | Side strip                                              |            |
+| vm-01-18 | Side strip Linestring sharing                           |            |
+| vm-01-19 | Walkway                                                 |            |
+| vm-02-01 | Stop line alignment                                     |            |
+| vm-02-02 | Stop sign                                               |            |
+| vm-03-01 | Intersection criteria                                   |            |
+| vm-03-02 | Lanelet's turn direction and virtual                    |            |
+| vm-03-03 | Lanelet width in the intersection                       |            |
+| vm-03-04 | Lanelet creation in the intersection                    |            |
+| vm-03-05 | Lanelet division in the intersection                    |            |
+| vm-03-06 | Guide lines in the intersection                         |            |
+| vm-03-07 | Multiple lanelets in the intersection                   |            |
+| vm-03-08 | Intersection Area range                                 |            |
+| vm-03-09 | Range of Lanelet in the intersection                    |            |
+| vm-03-10 | Right of way (with signal)                              |            |
+| vm-03-11 | Right of way (without signal)                           |            |
+| vm-03-12 | Right of way supplements                                |            |
+| vm-03-13 | Merging from private area, sidewalk                     |            |
+| vm-03-14 | Road marking                                            |            |
+| vm-03-15 | Exclusive bicycle lane                                  |            |
+| vm-04-01 | Traffic light basics                                    | [mapping.traffic_light.missing_regulatory_elements](./docs/traffic_light/missing_regulatory_elements_for_traffic_lights.md), [mapping.traffic_light.regulatory_element_details](./docs/traffic_light/regulatory_element_details_for_traffic_lights.md) (Undone) |
+| vm-04-02 | Traffic light position and size                         |            |
+| vm-04-03 | Traffic light lamps                                     |            |
+| vm-05-01 | Crosswalks across the road                              | [mapping.crosswalk.missing_regulatory_elements](./docs/crosswalk/missing_regulatory_elements_for_crosswalk.md), [mapping.crosswalk.regulatory_element_details](./docs/crosswalk/regulatory_element_details_for_crosswalks.md) |
+| vm-05-02 | Crosswalks with pedestrian signals                      |            |
+| vm-05-03 | Deceleration for safety at crosswalks                   |            |
+| vm-05-04 | Fences                                                  |            |
+| vm-06-01 | Buffer Zone                                             |            |
+| vm-06-02 | No parking signs                                        |            |
+| vm-06-03 | No stopping signs                                       |            |
+| vm-06-04 | No stopping sections                                    |            |
+| vm-06-05 | Detection area                                          |            |
+| vm-07-01 | Vector Map creation range                               |            |
+| vm-07-02 | Range of detecting pedestrians who enter the road       |            |
+| vm-07-03 | Guardrails, guard pipes, fences                         |            |
+| vm-07-04 | Ellipsoidal height                                      |            |
