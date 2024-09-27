@@ -65,7 +65,8 @@ auto sampling(
   const vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<Parameters> & parameters) -> std::vector<std::vector<TrajectoryPoint>>;
 
-auto to_marker(const TrajectoryData & data, const SCORE & score_type, const size_t id) -> Marker;
+auto to_marker(
+  const std::shared_ptr<DataInterface> & data, const SCORE & score_type, const size_t id) -> Marker;
 
 }  // namespace autoware::behavior_analyzer::utils
 

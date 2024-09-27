@@ -319,7 +319,7 @@ void BehaviorAnalyzerNode::weight(
 
     if (!bag_data->ready()) break;
 
-    const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, p, best);
+    const auto data_set = std::make_shared<Evaluator>(bag_data, vehicle_info_, p, best);
 
     std::mutex grid_mutex;
 
@@ -355,9 +355,9 @@ void BehaviorAnalyzerNode::weight(
       i += p->grid_seach.thread_num;
     }
 
-    const auto t_best = data_set->sampling.best(p->weight);
-    if (t_best.has_value()) {
-      best = t_best.value().points;
+    const auto t_best = data_set->best(p->weight);
+    if (t_best != nullptr) {
+      best = t_best->points;
     } else {
       best = std::nullopt;
     }
@@ -377,7 +377,7 @@ void BehaviorAnalyzerNode::analyze(const std::shared_ptr<BagData> & bag_data) co
 {
   if (!bag_data->ready()) return;
 
-  const auto data_set = std::make_shared<DataSet>(bag_data, vehicle_info_, parameters_, best_);
+  const auto data_set = std::make_shared<Evaluator>(bag_data, vehicle_info_, parameters_, best_);
 
   const auto opt_tf = std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(TOPIC::TF))
                         ->get(bag_data->timestamp);
@@ -406,124 +406,127 @@ void BehaviorAnalyzerNode::analyze(const std::shared_ptr<BagData> & bag_data) co
   visualize(data_set);
 }
 
-void BehaviorAnalyzerNode::metrics(const std::shared_ptr<DataSet> & data_set) const
+void BehaviorAnalyzerNode::metrics(const std::shared_ptr<Evaluator> & data_set) const
 {
-  {
-    Float32MultiArrayStamped msg{};
+  // {
+  //   Float32MultiArrayStamped msg{};
 
-    msg.stamp = now();
-    msg.data.resize(static_cast<size_t>(METRIC::SIZE) * parameters_->resample_num);
+  //   msg.stamp = now();
+  //   msg.data.resize(static_cast<size_t>(METRIC::SIZE) * parameters_->resample_num);
 
-    const auto set_metrics = [&msg, this](const auto & data, const auto metric_type) {
-      const auto offset = static_cast<size_t>(metric_type) * parameters_->resample_num;
-      const auto metric = data.values.at(static_cast<size_t>(metric_type));
-      std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
-    };
+  //   const auto set_metrics = [&msg, this](const auto & data, const auto metric_type) {
+  //     const auto offset = static_cast<size_t>(metric_type) * parameters_->resample_num;
+  //     const auto metric = data.values.at(static_cast<size_t>(metric_type));
+  //     std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
+  //   };
 
-    set_metrics(data_set->manual, METRIC::LATERAL_ACCEL);
-    set_metrics(data_set->manual, METRIC::LONGITUDINAL_JERK);
-    set_metrics(data_set->manual, METRIC::TRAVEL_DISTANCE);
-    set_metrics(data_set->manual, METRIC::MINIMUM_TTC);
-    set_metrics(data_set->manual, METRIC::LATERAL_DEVIATION);
+  //   set_metrics(data_set->manual, METRIC::LATERAL_ACCEL);
+  //   set_metrics(data_set->manual, METRIC::LONGITUDINAL_JERK);
+  //   set_metrics(data_set->manual, METRIC::TRAVEL_DISTANCE);
+  //   set_metrics(data_set->manual, METRIC::MINIMUM_TTC);
+  //   set_metrics(data_set->manual, METRIC::LATERAL_DEVIATION);
 
-    pub_manual_metrics_->publish(msg);
-  }
+  //   pub_manual_metrics_->publish(msg);
+  // }
 
-  const auto autoware_trajectory = data_set->sampling.autoware();
-  if (autoware_trajectory.has_value()) {
-    Float32MultiArrayStamped msg{};
+  // const auto autoware_trajectory = data_set->sampling.autoware();
+  // if (autoware_trajectory.has_value()) {
+  //   Float32MultiArrayStamped msg{};
 
-    msg.stamp = now();
-    msg.data.resize(static_cast<size_t>(METRIC::SIZE) * parameters_->resample_num);
+  //   msg.stamp = now();
+  //   msg.data.resize(static_cast<size_t>(METRIC::SIZE) * parameters_->resample_num);
 
-    const auto set_metrics = [&msg, this](const auto & data, const auto metric_type) {
-      const auto offset = static_cast<size_t>(metric_type) * parameters_->resample_num;
-      const auto metric = data.values.at(static_cast<size_t>(metric_type));
-      std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
-    };
+  //   const auto set_metrics = [&msg, this](const auto & data, const auto metric_type) {
+  //     const auto offset = static_cast<size_t>(metric_type) * parameters_->resample_num;
+  //     const auto metric = data.values.at(static_cast<size_t>(metric_type));
+  //     std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
+  //   };
 
-    set_metrics(autoware_trajectory.value(), METRIC::LATERAL_ACCEL);
-    set_metrics(autoware_trajectory.value(), METRIC::LONGITUDINAL_JERK);
-    set_metrics(autoware_trajectory.value(), METRIC::TRAVEL_DISTANCE);
-    set_metrics(autoware_trajectory.value(), METRIC::MINIMUM_TTC);
-    set_metrics(autoware_trajectory.value(), METRIC::LATERAL_DEVIATION);
+  //   set_metrics(autoware_trajectory.value(), METRIC::LATERAL_ACCEL);
+  //   set_metrics(autoware_trajectory.value(), METRIC::LONGITUDINAL_JERK);
+  //   set_metrics(autoware_trajectory.value(), METRIC::TRAVEL_DISTANCE);
+  //   set_metrics(autoware_trajectory.value(), METRIC::MINIMUM_TTC);
+  //   set_metrics(autoware_trajectory.value(), METRIC::LATERAL_DEVIATION);
 
-    pub_system_metrics_->publish(msg);
-  }
+  //   pub_system_metrics_->publish(msg);
+  // }
 }
 
-void BehaviorAnalyzerNode::score(const std::shared_ptr<DataSet> & data_set) const
+void BehaviorAnalyzerNode::score(const std::shared_ptr<Evaluator> & data_set) const
 {
-  {
-    Float32MultiArrayStamped msg{};
+  // {
+  //   Float32MultiArrayStamped msg{};
 
-    msg.stamp = now();
-    msg.data.resize(static_cast<size_t>(SCORE::SIZE));
+  //   msg.stamp = now();
+  //   msg.data.resize(static_cast<size_t>(SCORE::SIZE));
 
-    const auto set_reward = [&msg](const auto & data, const auto score_type) {
-      msg.data.at(static_cast<size_t>(static_cast<size_t>(score_type))) =
-        static_cast<float>(data.scores.at(static_cast<size_t>(score_type)));
-    };
+  //   const auto set_reward = [&msg](const auto & data, const auto score_type) {
+  //     msg.data.at(static_cast<size_t>(static_cast<size_t>(score_type))) =
+  //       static_cast<float>(data.scores.at(static_cast<size_t>(score_type)));
+  //   };
 
-    set_reward(data_set->manual, SCORE::LONGITUDINAL_COMFORTABILITY);
-    set_reward(data_set->manual, SCORE::LATERAL_COMFORTABILITY);
-    set_reward(data_set->manual, SCORE::EFFICIENCY);
-    set_reward(data_set->manual, SCORE::SAFETY);
-    set_reward(data_set->manual, SCORE::ACHIEVABILITY);
+  //   set_reward(data_set->manual, SCORE::LONGITUDINAL_COMFORTABILITY);
+  //   set_reward(data_set->manual, SCORE::LATERAL_COMFORTABILITY);
+  //   set_reward(data_set->manual, SCORE::EFFICIENCY);
+  //   set_reward(data_set->manual, SCORE::SAFETY);
+  //   set_reward(data_set->manual, SCORE::ACHIEVABILITY);
 
-    pub_manual_score_->publish(msg);
-  }
+  //   pub_manual_score_->publish(msg);
+  // }
 
-  const auto autoware_trajectory = data_set->sampling.autoware();
-  if (autoware_trajectory.has_value()) {
-    Float32MultiArrayStamped msg{};
+  // const auto autoware_trajectory = data_set->sampling.autoware();
+  // if (autoware_trajectory.has_value()) {
+  //   Float32MultiArrayStamped msg{};
 
-    msg.stamp = now();
-    msg.data.resize(static_cast<size_t>(SCORE::SIZE));
+  //   msg.stamp = now();
+  //   msg.data.resize(static_cast<size_t>(SCORE::SIZE));
 
-    const auto set_reward = [&msg](const auto & data, const auto score_type) {
-      msg.data.at(static_cast<size_t>(static_cast<size_t>(score_type))) =
-        static_cast<float>(data.scores.at(static_cast<size_t>(score_type)));
-    };
+  //   const auto set_reward = [&msg](const auto & data, const auto score_type) {
+  //     msg.data.at(static_cast<size_t>(static_cast<size_t>(score_type))) =
+  //       static_cast<float>(data.scores.at(static_cast<size_t>(score_type)));
+  //   };
 
-    set_reward(autoware_trajectory.value(), SCORE::LONGITUDINAL_COMFORTABILITY);
-    set_reward(autoware_trajectory.value(), SCORE::LATERAL_COMFORTABILITY);
-    set_reward(autoware_trajectory.value(), SCORE::EFFICIENCY);
-    set_reward(autoware_trajectory.value(), SCORE::SAFETY);
-    set_reward(autoware_trajectory.value(), SCORE::ACHIEVABILITY);
+  //   set_reward(autoware_trajectory.value(), SCORE::LONGITUDINAL_COMFORTABILITY);
+  //   set_reward(autoware_trajectory.value(), SCORE::LATERAL_COMFORTABILITY);
+  //   set_reward(autoware_trajectory.value(), SCORE::EFFICIENCY);
+  //   set_reward(autoware_trajectory.value(), SCORE::SAFETY);
+  //   set_reward(autoware_trajectory.value(), SCORE::ACHIEVABILITY);
 
-    pub_system_score_->publish(msg);
-  }
+  //   pub_system_score_->publish(msg);
+  // }
 }
 
-void BehaviorAnalyzerNode::visualize(const std::shared_ptr<DataSet> & data_set) const
+void BehaviorAnalyzerNode::visualize(const std::shared_ptr<Evaluator> & data_set) const
 {
   MarkerArray msg;
 
-  for (size_t i = 0; i < data_set->manual.odometry_history.size(); ++i) {
-    Marker marker = createDefaultMarker(
-      "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "human", i, Marker::ARROW,
-      createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 0.0, 0.0, 0.999));
-    marker.pose = data_set->manual.odometry_history.at(i)->pose.pose;
-    msg.markers.push_back(marker);
+  const auto ground_truth = data_set->get("ground_truth");
+  if (ground_truth != nullptr) {
+    for (size_t i = 0; i < ground_truth->points.size(); ++i) {
+      Marker marker = createDefaultMarker(
+        "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "ground_truth", i, Marker::ARROW,
+        createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 0.0, 0.0, 0.999));
+      marker.pose = ground_truth->points.at(i).pose;
+      msg.markers.push_back(marker);
+    }
   }
 
-  const auto best = data_set->sampling.best(parameters_->weight);
-  if (best.has_value()) {
+  const auto best = data_set->best(parameters_->weight);
+  if (best != nullptr) {
     Marker marker = createDefaultMarker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "best_score", 0L, Marker::LINE_STRIP,
       createMarkerScale(0.2, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
-    for (const auto & point : best.value().points) {
+    for (const auto & point : best->points) {
       marker.points.push_back(point.pose.position);
     }
     msg.markers.push_back(marker);
-    best_ = best.value().points;
+    best_ = best->points;
   } else {
     best_ = std::nullopt;
   }
 
-  for (size_t i = 0; i < data_set->sampling.data.size(); ++i) {
-    const auto data = data_set->sampling.data.at(i);
+  for (size_t i = 0; i < data_set->data_set.size(); ++i) {
+    const auto data = data_set->data_set.at(i);
     msg.markers.push_back(utils::to_marker(data, SCORE::LATERAL_COMFORTABILITY, i));
     msg.markers.push_back(utils::to_marker(data, SCORE::LONGITUDINAL_COMFORTABILITY, i));
     msg.markers.push_back(utils::to_marker(data, SCORE::EFFICIENCY, i));
@@ -584,7 +587,7 @@ void BehaviorAnalyzerNode::on_timer()
   analyze(bag_data_);
 }
 
-void BehaviorAnalyzerNode::plot(const std::shared_ptr<DataSet> & data_set) const
+void BehaviorAnalyzerNode::plot(const std::shared_ptr<Evaluator> & data_set) const
 {
   const auto subplot =
     [this](const auto & score_type, const size_t n_row, const size_t n_col, const size_t num) {
@@ -600,8 +603,8 @@ void BehaviorAnalyzerNode::plot(const std::shared_ptr<DataSet> & data_set) const
   const auto plot_best =
     [this](const auto & data, const size_t n_row, const size_t n_col, const size_t num) {
       matplotlibcpp::subplot(n_row, n_col, num);
-      if (data.has_value()) {
-        matplotlibcpp::bar<double>(data.value().score());
+      if (data != nullptr) {
+        matplotlibcpp::bar<double>(data->score());
       }
       matplotlibcpp::ylim(0.0, 1.0);
       matplotlibcpp::title("BEST");
@@ -617,7 +620,7 @@ void BehaviorAnalyzerNode::plot(const std::shared_ptr<DataSet> & data_set) const
   subplot(SCORE::ACHIEVABILITY, 3, 3, 5);
   subplot(SCORE::CONSISTENCY, 3, 3, 6);
   subplot(SCORE::TOTAL, 3, 3, 7);
-  plot_best(data_set->sampling.best(p->weight), 3, 3, 8);
+  plot_best(data_set->best(p->weight), 3, 3, 8);
   matplotlibcpp::pause(1e-9);
 }
 }  // namespace autoware::behavior_analyzer

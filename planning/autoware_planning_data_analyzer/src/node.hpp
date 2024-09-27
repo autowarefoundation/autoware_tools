@@ -60,13 +60,13 @@ private:
 
   void analyze(const std::shared_ptr<BagData> & bag_data) const;
 
-  void metrics(const std::shared_ptr<DataSet> & data_set) const;
+  void metrics(const std::shared_ptr<Evaluator> & data_set) const;
 
-  void score(const std::shared_ptr<DataSet> & data_set) const;
+  void score(const std::shared_ptr<Evaluator> & data_set) const;
 
-  void visualize(const std::shared_ptr<DataSet> & data_set) const;
+  void visualize(const std::shared_ptr<Evaluator> & data_set) const;
 
-  void plot(const std::shared_ptr<DataSet> & data_set) const;
+  void plot(const std::shared_ptr<Evaluator> & data_set) const;
 
   rclcpp::TimerBase::SharedPtr timer_;
 
