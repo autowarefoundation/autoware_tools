@@ -15,9 +15,9 @@
 #ifndef STOP_ACCEL_EVALUATOR__STOP_ACCEL_EVALUATOR_NODE_HPP_
 #define STOP_ACCEL_EVALUATOR__STOP_ACCEL_EVALUATOR_NODE_HPP_
 
+#include "autoware/signal_processing/lowpass_filter_1d.hpp"
 #include "autoware/universe_utils/ros/self_pose_listener.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "signal_processing/lowpass_filter_1d.hpp"
 
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
@@ -64,8 +64,8 @@ private:
   int stop_valid_imu_accel_num_;
 
   double current_acc_{0.0};
-  std::shared_ptr<LowpassFilter1d> lpf_acc_{nullptr};
-  std::shared_ptr<LowpassFilter1d> lpf_pitch_{nullptr};
+  std::shared_ptr<autoware::signal_processing::LowpassFilter1d> lpf_acc_{nullptr};
+  std::shared_ptr<autoware::signal_processing::LowpassFilter1d> lpf_pitch_{nullptr};
 
   SelfPoseListener self_pose_listener_{this};
 
