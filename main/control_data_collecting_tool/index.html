@@ -2536,6 +2536,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#change-courses" class="md-nav__link">
+    Change Courses
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#parameter" class="md-nav__link">
     Parameter
   </a>
@@ -2642,6 +2649,21 @@ You cannot change the data collecting area while driving.</p>
 </ol>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>/data_collecting_stop_request<span class="w"> </span>std_msgs/msg/Bool<span class="w"> </span><span class="s2">"data: false"</span><span class="w"> </span>--once
 </code></pre></div>
+<h2 id="change-courses">Change Courses<a class="headerlink" href="#change-courses" title="Permanent link">#</a></h2>
+<p>You can change the course by selecting <code>COURSE_NAME</code> in <code>config/param.yaml</code> from [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>].</p>
+<ul>
+<li><code>COURSE_NAME: eight_course</code>
+  <img src="resource/figure_eight.png" width="480"></li>
+</ul>
+<ul>
+<li><code>COURSE_NAME: u_shaped_return</code>
+  <img src="resource/u_shaped.png" width="480"></li>
+</ul>
+<ul>
+<li><code>COURSE_NAME: straight_line_positive</code> or <code>COURSE_NAME: straight_line_negative</code>
+  ( Both "straight_line_positive" and "straight_line_negative" represent straight line courses, but the direction of travel of the course is reversed.)
+  <img src="resource/straight_line.png" width="480"></li>
+</ul>
 <h2 id="parameter">Parameter<a class="headerlink" href="#parameter" title="Permanent link">#</a></h2>
 <p>ROS 2 params in <code>/data_collecting_trajectory_publisher</code> node:</p>
 <table>
@@ -2654,6 +2676,78 @@ You cannot change the data collecting area while driving.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td align="left"><code>COURSE_NAME</code></td>
+<td align="left"><code>string</code></td>
+<td align="left">Course name [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>]</td>
+<td align="left"><code>eight_course</code></td>
+</tr>
+<tr>
+<td align="left"><code>NUM_BINS_V</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Number of bins of velocity in heatmap</td>
+<td align="left">10</td>
+</tr>
+<tr>
+<td align="left"><code>NUM_BINS_STEER</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Number of bins of steer in heatmap</td>
+<td align="left">10</td>
+</tr>
+<tr>
+<td align="left"><code>NUM_BINS_ACCELERATION</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Number of bins of acceleration in heatmap</td>
+<td align="left">10</td>
+</tr>
+<tr>
+<td align="left"><code>V_MIN</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Minimum velocity in heatmap [m/s]</td>
+<td align="left">0.0</td>
+</tr>
+<tr>
+<td align="left"><code>V_MAX</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Maximum velocity in heatmap [m/s]</td>
+<td align="left">11.5</td>
+</tr>
+<tr>
+<td align="left"><code>STEER_MIN</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Minimum steer in heatmap [rad]</td>
+<td align="left">-1.0</td>
+</tr>
+<tr>
+<td align="left"><code>STEER_MAX</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Maximum steer in heatmap [rad]</td>
+<td align="left">1.0</td>
+</tr>
+<tr>
+<td align="left"><code>A_MIN</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Minimum acceleration in heatmap [m/ss]</td>
+<td align="left">-1.0</td>
+</tr>
+<tr>
+<td align="left"><code>A_MAX</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Maximum acceleration in heatmap [m/ss]</td>
+<td align="left">1.0</td>
+</tr>
+<tr>
+<td align="left"><code>wheel_base</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Wheel base [m]</td>
+<td align="left">2.79</td>
+</tr>
+<tr>
+<td align="left"><code>acc_kp</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Accel command proportional gain</td>
+<td align="left">1.0</td>
+</tr>
 <tr>
 <td align="left"><code>max_lateral_accel</code></td>
 <td align="left"><code>double</code></td>
@@ -2670,7 +2764,7 @@ You cannot change the data collecting area while driving.</p>
 <td align="left"><code>yaw_error_threshold</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Yaw error threshold where applying velocity limit [rad]</td>
-<td align="left">0.75</td>
+<td align="left">0.50</td>
 </tr>
 <tr>
 <td align="left"><code>velocity_limit_by_tracking_error</code></td>
@@ -2682,7 +2776,7 @@ You cannot change the data collecting area while driving.</p>
 <td align="left"><code>mov_ave_window</code></td>
 <td align="left"><code>int</code></td>
 <td align="left">Moving average smoothing window size</td>
-<td align="left">50</td>
+<td align="left">100</td>
 </tr>
 <tr>
 <td align="left"><code>target_longitudinal_velocity</code></td>
