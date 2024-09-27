@@ -4,12 +4,14 @@
     time_resolution: 0.5
 
     target_state:
-      lateral_positions: [-4.5, -2.5, 0.0, 2.5, 4.0]
+      lateral_positions: [-4.5, -3.5, -2.5, -1.0, 0.0, 1.0, 2.5, 3.5, 4.0]
+      # lateral_positions: [-4.5, -2.5, 0.0, 2.5, 4.0]
       lateral_velocities: [0.0]
       lateral_accelerations: [0.0]
       longitudinal_positions: [0.0]
       longitudinal_velocities: [0.0]
-      longitudinal_accelerations: [-0.2, -0.1, 0.0, 0.1, 0.2]
+      longitudinal_accelerations: [-0.4, -0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4]
+      # longitudinal_accelerations: [-0.2, -0.1, 0.0, 0.1, 0.2]
 
     weight:
       lat_comfortability: 1.0
