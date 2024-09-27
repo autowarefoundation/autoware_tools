@@ -9,9 +9,9 @@ mapping.stop_line.missing_regulatory_elements
 This validator checks whether each `stop_line` type linestring has a relavant regulatory element.
 The issue specifies the stop_line "linestring" as the **primitive**, and the lanelet ID will be specified as the **ID**.
 
-| Message | Severity | Description |
-| ------- | -------- | ----------- |
-| "No regulatory element refers to this stop line." | Error | There is a `stop_line` type linestring that hasn't been referred to any regulatory element. |
+| Message                                           | Severity | Description                                                                                 |
+| ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| "No regulatory element refers to this stop line." | Error    | There is a `stop_line` type linestring that hasn't been referred to any regulatory element. |
 
 ## Related source codes
 

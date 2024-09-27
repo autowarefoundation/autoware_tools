@@ -136,19 +136,19 @@ requirements:
 
 ### Available command options
 
-| option | description |
-| ------ | ----------- |
-| `-h, --help` | Explains about this tool and show a list of options |
-| `--print` | Only print all avalible checker, but dont run them |
-| `-m, --map_file` | Path to the map to be validated |
-| `-i, --input_requirements` | Path to the yaml file where the list of requirements and validations is written |
-| `-o, --output_directory` | Directory to save the list of validation results in a yaml format |
-| `-v, --validator` | Comma separated list of regexes to filter the applicable validators. Will run all validators by default. Example: `routing_graph.*` to run all checks for the routing graph |
-| `-p, --projector` | Projector used for loading lanelet map. Available projectors are: mgrs, utm, transverse_mercator. (default: mgrs) |
-| `-l, --location` | Location of the map (for instanciating the traffic rules), e.g. de for Germany |
-| `--participants` | Participants for which the routing graph will be instanciated (default: vehicle) |
-| `--lat` | latitude coordinate of map origin. This is required for the transverse mercator and utm projector. |
-| `--lon` | longitude coofdinate of map origin. This is required for the transverse mercator and utm projector. |
+| option                     | description                                                                                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-h, --help`               | Explains about this tool and show a list of options                                                                                                                         |
+| `--print`                  | Only print all avalible checker, but dont run them                                                                                                                          |
+| `-m, --map_file`           | Path to the map to be validated                                                                                                                                             |
+| `-i, --input_requirements` | Path to the yaml file where the list of requirements and validations is written                                                                                             |
+| `-o, --output_directory`   | Directory to save the list of validation results in a yaml format                                                                                                           |
+| `-v, --validator`          | Comma separated list of regexes to filter the applicable validators. Will run all validators by default. Example: `routing_graph.*` to run all checks for the routing graph |
+| `-p, --projector`          | Projector used for loading lanelet map. Available projectors are: mgrs, utm, transverse_mercator. (default: mgrs)                                                           |
+| `-l, --location`           | Location of the map (for instanciating the traffic rules), e.g. de for Germany                                                                                              |
+| `--participants`           | Participants for which the routing graph will be instanciated (default: vehicle)                                                                                            |
+| `--lat`                    | latitude coordinate of map origin. This is required for the transverse mercator and utm projector.                                                                          |
+| `--lon`                    | longitude coofdinate of map origin. This is required for the transverse mercator and utm projector.                                                                         |
 
 ### Available validators
 
@@ -173,57 +173,57 @@ The directory structure should be the same to that of the `src/lib/validators` d
 
 The Validators column will be blank if it hasn't be implemented.
 
-| ID       | Requirements                                            | Validators |
-| -------- | ------------------------------------------------------- | ---------- |
-| vm-01-01 | Lanelet basics                                          |            |
-| vm-01-02 | Allowance for lane changes                              |            |
-| vm-01-03 | Linestring sharing                                      |            |
-| vm-01-04 | Sharing of the centerline of lanes for opposing traffic |            |
-| vm-01-05 | Lane geometry                                           |            |
-| vm-01-06 | Line position (1)                                       |            |
-| vm-01-07 | Line position (2)                                       |            |
-| vm-01-08 | Line position (3)                                       |            |
-| vm-01-09 | Speed limits                                            |            |
-| vm-01-10 | Centerline                                              |            |
-| vm-01-11 | Centerline connection (1)                               |            |
-| vm-01-12 | Centerline connection (2)                               |            |
-| vm-01-13 | Roads with no centerline (1)                            |            |
-| vm-01-14 | Roads with no centerline (2)                            |            |
-| vm-01-15 | Road shoulder                                           |            |
-| vm-01-16 | Road shoulder Linestring sharing                        |            |
-| vm-01-17 | Side strip                                              |            |
-| vm-01-18 | Side strip Linestring sharing                           |            |
-| vm-01-19 | Walkway                                                 |            |
-| vm-02-01 | Stop line alignment                                     |            |
-| vm-02-02 | Stop sign                                               |            |
-| vm-03-01 | Intersection criteria                                   |            |
-| vm-03-02 | Lanelet's turn direction and virtual                    |            |
-| vm-03-03 | Lanelet width in the intersection                       |            |
-| vm-03-04 | Lanelet creation in the intersection                    |            |
-| vm-03-05 | Lanelet division in the intersection                    |            |
-| vm-03-06 | Guide lines in the intersection                         |            |
-| vm-03-07 | Multiple lanelets in the intersection                   |            |
-| vm-03-08 | Intersection Area range                                 |            |
-| vm-03-09 | Range of Lanelet in the intersection                    |            |
-| vm-03-10 | Right of way (with signal)                              |            |
-| vm-03-11 | Right of way (without signal)                           |            |
-| vm-03-12 | Right of way supplements                                |            |
-| vm-03-13 | Merging from private area, sidewalk                     |            |
-| vm-03-14 | Road marking                                            |            |
-| vm-03-15 | Exclusive bicycle lane                                  |            |
+| ID       | Requirements                                            | Validators                                                                                                                                                                                                                                                      |
+| -------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| vm-01-01 | Lanelet basics                                          |                                                                                                                                                                                                                                                                 |
+| vm-01-02 | Allowance for lane changes                              |                                                                                                                                                                                                                                                                 |
+| vm-01-03 | Linestring sharing                                      |                                                                                                                                                                                                                                                                 |
+| vm-01-04 | Sharing of the centerline of lanes for opposing traffic |                                                                                                                                                                                                                                                                 |
+| vm-01-05 | Lane geometry                                           |                                                                                                                                                                                                                                                                 |
+| vm-01-06 | Line position (1)                                       |                                                                                                                                                                                                                                                                 |
+| vm-01-07 | Line position (2)                                       |                                                                                                                                                                                                                                                                 |
+| vm-01-08 | Line position (3)                                       |                                                                                                                                                                                                                                                                 |
+| vm-01-09 | Speed limits                                            |                                                                                                                                                                                                                                                                 |
+| vm-01-10 | Centerline                                              |                                                                                                                                                                                                                                                                 |
+| vm-01-11 | Centerline connection (1)                               |                                                                                                                                                                                                                                                                 |
+| vm-01-12 | Centerline connection (2)                               |                                                                                                                                                                                                                                                                 |
+| vm-01-13 | Roads with no centerline (1)                            |                                                                                                                                                                                                                                                                 |
+| vm-01-14 | Roads with no centerline (2)                            |                                                                                                                                                                                                                                                                 |
+| vm-01-15 | Road shoulder                                           |                                                                                                                                                                                                                                                                 |
+| vm-01-16 | Road shoulder Linestring sharing                        |                                                                                                                                                                                                                                                                 |
+| vm-01-17 | Side strip                                              |                                                                                                                                                                                                                                                                 |
+| vm-01-18 | Side strip Linestring sharing                           |                                                                                                                                                                                                                                                                 |
+| vm-01-19 | Walkway                                                 |                                                                                                                                                                                                                                                                 |
+| vm-02-01 | Stop line alignment                                     |                                                                                                                                                                                                                                                                 |
+| vm-02-02 | Stop sign                                               |                                                                                                                                                                                                                                                                 |
+| vm-03-01 | Intersection criteria                                   |                                                                                                                                                                                                                                                                 |
+| vm-03-02 | Lanelet's turn direction and virtual                    |                                                                                                                                                                                                                                                                 |
+| vm-03-03 | Lanelet width in the intersection                       |                                                                                                                                                                                                                                                                 |
+| vm-03-04 | Lanelet creation in the intersection                    |                                                                                                                                                                                                                                                                 |
+| vm-03-05 | Lanelet division in the intersection                    |                                                                                                                                                                                                                                                                 |
+| vm-03-06 | Guide lines in the intersection                         |                                                                                                                                                                                                                                                                 |
+| vm-03-07 | Multiple lanelets in the intersection                   |                                                                                                                                                                                                                                                                 |
+| vm-03-08 | Intersection Area range                                 |                                                                                                                                                                                                                                                                 |
+| vm-03-09 | Range of Lanelet in the intersection                    |                                                                                                                                                                                                                                                                 |
+| vm-03-10 | Right of way (with signal)                              |                                                                                                                                                                                                                                                                 |
+| vm-03-11 | Right of way (without signal)                           |                                                                                                                                                                                                                                                                 |
+| vm-03-12 | Right of way supplements                                |                                                                                                                                                                                                                                                                 |
+| vm-03-13 | Merging from private area, sidewalk                     |                                                                                                                                                                                                                                                                 |
+| vm-03-14 | Road marking                                            |                                                                                                                                                                                                                                                                 |
+| vm-03-15 | Exclusive bicycle lane                                  |                                                                                                                                                                                                                                                                 |
 | vm-04-01 | Traffic light basics                                    | [mapping.traffic_light.missing_regulatory_elements](./docs/traffic_light/missing_regulatory_elements_for_traffic_lights.md), [mapping.traffic_light.regulatory_element_details](./docs/traffic_light/regulatory_element_details_for_traffic_lights.md) (Undone) |
-| vm-04-02 | Traffic light position and size                         |            |
-| vm-04-03 | Traffic light lamps                                     |            |
-| vm-05-01 | Crosswalks across the road                              | [mapping.crosswalk.missing_regulatory_elements](./docs/crosswalk/missing_regulatory_elements_for_crosswalk.md), [mapping.crosswalk.regulatory_element_details](./docs/crosswalk/regulatory_element_details_for_crosswalks.md) |
-| vm-05-02 | Crosswalks with pedestrian signals                      |            |
-| vm-05-03 | Deceleration for safety at crosswalks                   |            |
-| vm-05-04 | Fences                                                  |            |
-| vm-06-01 | Buffer Zone                                             |            |
-| vm-06-02 | No parking signs                                        |            |
-| vm-06-03 | No stopping signs                                       |            |
-| vm-06-04 | No stopping sections                                    |            |
-| vm-06-05 | Detection area                                          |            |
-| vm-07-01 | Vector Map creation range                               |            |
-| vm-07-02 | Range of detecting pedestrians who enter the road       |            |
-| vm-07-03 | Guardrails, guard pipes, fences                         |            |
-| vm-07-04 | Ellipsoidal height                                      |            |
+| vm-04-02 | Traffic light position and size                         |                                                                                                                                                                                                                                                                 |
+| vm-04-03 | Traffic light lamps                                     |                                                                                                                                                                                                                                                                 |
+| vm-05-01 | Crosswalks across the road                              | [mapping.crosswalk.missing_regulatory_elements](./docs/crosswalk/missing_regulatory_elements_for_crosswalk.md), [mapping.crosswalk.regulatory_element_details](./docs/crosswalk/regulatory_element_details_for_crosswalks.md)                                   |
+| vm-05-02 | Crosswalks with pedestrian signals                      |                                                                                                                                                                                                                                                                 |
+| vm-05-03 | Deceleration for safety at crosswalks                   |                                                                                                                                                                                                                                                                 |
+| vm-05-04 | Fences                                                  |                                                                                                                                                                                                                                                                 |
+| vm-06-01 | Buffer Zone                                             |                                                                                                                                                                                                                                                                 |
+| vm-06-02 | No parking signs                                        |                                                                                                                                                                                                                                                                 |
+| vm-06-03 | No stopping signs                                       |                                                                                                                                                                                                                                                                 |
+| vm-06-04 | No stopping sections                                    |                                                                                                                                                                                                                                                                 |
+| vm-06-05 | Detection area                                          |                                                                                                                                                                                                                                                                 |
+| vm-07-01 | Vector Map creation range                               |                                                                                                                                                                                                                                                                 |
+| vm-07-02 | Range of detecting pedestrians who enter the road       |                                                                                                                                                                                                                                                                 |
+| vm-07-03 | Guardrails, guard pipes, fences                         |                                                                                                                                                                                                                                                                 |
+| vm-07-04 | Ellipsoidal height                                      |                                                                                                                                                                                                                                                                 |
