@@ -167,7 +167,6 @@ def get_eight_course_trajectory_points(
 def get_straight_line_course_trajectory_points(
     long_side_length: float, short_side_length: float, step: float, COURSE_NAME
 ):
-    # a = short_side_length
     b = long_side_length
 
     total_distance = b
@@ -206,7 +205,6 @@ def get_u_shaped_return_course_trajectory_points(
     C = [-(b - a) / 2, -a / 2]
     D = [(b - a) / 2, -a / 2]
 
-    # _O = [0.0, 0.0]  # origin
     R = a / 2  # radius of the circle
     OL = [-(b - a) / 2, 0]  # center of the left circle
     OR = [(b - a) / 2, 0]  # center of the right circle
@@ -774,8 +772,8 @@ class DataCollectingTrajectoryPublisher(Node):
         la = (l1 + l3) / 2
         lb = (l2 + l4) / 2
         if np.abs(la - lb) < 1e-6:
-            la += 0.1  # long_side_length must not be equal to short_side_length
-        # ld = np.sqrt(la**2 + lb**2)
+            la += 0.1  # long_side_length must not be equal to short_side_length7
+
         rectangle_center_position = np.zeros(2)
         for i in range(4):
             rectangle_center_position[0] += data_collecting_area[i, 0] / 4.0
@@ -813,7 +811,6 @@ class DataCollectingTrajectoryPublisher(Node):
 
         long_side_margin = 5
         long_side_margin = 5
-        # total_distance = ld * (1 + np.pi) * 2
 
         actual_long_side = max(long_side_length - long_side_margin, 1.1)
         actual_short_side = max(short_side_length - long_side_margin, 1.0)
