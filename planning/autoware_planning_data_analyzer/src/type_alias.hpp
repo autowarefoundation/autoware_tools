@@ -52,6 +52,7 @@ using autoware_planning_msgs::msg::Trajectory;
 using autoware_planning_msgs::msg::TrajectoryPoint;
 using autoware_vehicle_msgs::msg::SteeringReport;
 using route_handler::RouteHandler;
+using vehicle_info_utils::VehicleInfo;
 
 using TrajectoryPoints = std::vector<TrajectoryPoint>;
 

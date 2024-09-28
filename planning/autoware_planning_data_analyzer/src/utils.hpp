@@ -18,7 +18,6 @@
 #include "autoware_frenet_planner/frenet_planner.hpp"
 #include "autoware_path_sampler/prepare_inputs.hpp"
 #include "autoware_path_sampler/utils/trajectory_utils.hpp"
-#include "data_structs.hpp"
 #include "evaluation.hpp"
 #include "type_alias.hpp"
 
@@ -43,7 +42,7 @@ double time_to_collision(
 
 auto convertToTrajectoryPoints(
   const autoware::sampler_common::Trajectory & trajectory,
-  const vehicle_info_utils::VehicleInfo & vehicle_info, const double z)
+  const std::shared_ptr<VehicleInfo> & vehicle_info, const double z)
   -> std::vector<TrajectoryPoint>;
 
 template <class T>
@@ -62,8 +61,8 @@ auto resampling(
 
 auto sampling(
   const Trajectory & trajectory, const Pose & p_ego, const double v_ego, const double a_ego,
-  const vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<Parameters> & parameters) -> std::vector<std::vector<TrajectoryPoint>>;
+  const std::shared_ptr<VehicleInfo> & vehicle_info, const std::shared_ptr<Parameters> & parameters)
+  -> std::vector<std::vector<TrajectoryPoint>>;
 
 auto to_marker(
   const std::shared_ptr<DataInterface> & data, const SCORE & score_type, const size_t id) -> Marker;

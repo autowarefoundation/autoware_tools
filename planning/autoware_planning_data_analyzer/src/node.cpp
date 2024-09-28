@@ -40,7 +40,8 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
 
   timer_->cancel();
 
-  vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
+  vehicle_info_ = std::make_shared<VehicleInfo>(
+    autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo());
 
   pub_marker_ = create_publisher<MarkerArray>("~/marker", 1);
   pub_odometry_ = create_publisher<Odometry>(TOPIC::ODOMETRY, rclcpp::QoS(1));
@@ -526,47 +527,46 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<Evaluator> & data_set
     previous_ = nullptr;
   }
 
-  for (size_t i = 0; i < data_set->data_set.size(); ++i) {
-    const auto data = data_set->data_set.at(i);
-    msg.markers.push_back(utils::to_marker(data, SCORE::LATERAL_COMFORTABILITY, i));
-    msg.markers.push_back(utils::to_marker(data, SCORE::LONGITUDINAL_COMFORTABILITY, i));
-    msg.markers.push_back(utils::to_marker(data, SCORE::EFFICIENCY, i));
-    msg.markers.push_back(utils::to_marker(data, SCORE::SAFETY, i));
-    msg.markers.push_back(utils::to_marker(data, SCORE::ACHIEVABILITY, i));
-    msg.markers.push_back(utils::to_marker(data, SCORE::CONSISTENCY, i));
-    msg.markers.push_back(utils::to_marker(data, SCORE::TOTAL, i));
+  const auto results = data_set->results();
+  for (size_t i = 0; i < results.size(); ++i) {
+    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::LATERAL_COMFORTABILITY, i));
+    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::LONGITUDINAL_COMFORTABILITY, i));
+    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::EFFICIENCY, i));
+    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::SAFETY, i));
+    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::ACHIEVABILITY, i));
+    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::CONSISTENCY, i));
   }
 
-  const auto set_buffer = [this, &data_set](const auto & score_type) {
-    auto & old_score = buffer_.at(static_cast<size_t>(score_type));
-    auto new_score = data_set->get(score_type);
-    old_score.insert(old_score.end(), new_score.begin(), new_score.end());
-  };
+  // const auto set_buffer = [this, &data_set](const auto & score_type) {
+  //   auto & old_score = buffer_.at(static_cast<size_t>(score_type));
+  //   auto new_score = data_set->get(score_type);
+  //   old_score.insert(old_score.end(), new_score.begin(), new_score.end());
+  // };
 
-  const auto clear_buffer = [this](const auto & score_type) {
-    buffer_.at(static_cast<size_t>(score_type)).clear();
-  };
+  // const auto clear_buffer = [this](const auto & score_type) {
+  //   buffer_.at(static_cast<size_t>(score_type)).clear();
+  // };
 
-  if (count_ > 50) {
-    // plot(data_set);
-    clear_buffer(SCORE::LATERAL_COMFORTABILITY);
-    clear_buffer(SCORE::LONGITUDINAL_COMFORTABILITY);
-    clear_buffer(SCORE::EFFICIENCY);
-    clear_buffer(SCORE::SAFETY);
-    clear_buffer(SCORE::ACHIEVABILITY);
-    clear_buffer(SCORE::CONSISTENCY);
-    clear_buffer(SCORE::TOTAL);
-    count_ = 0;
-  } else {
-    set_buffer(SCORE::LATERAL_COMFORTABILITY);
-    set_buffer(SCORE::LONGITUDINAL_COMFORTABILITY);
-    set_buffer(SCORE::EFFICIENCY);
-    set_buffer(SCORE::SAFETY);
-    set_buffer(SCORE::ACHIEVABILITY);
-    set_buffer(SCORE::CONSISTENCY);
-    set_buffer(SCORE::TOTAL);
-    count_++;
-  }
+  // if (count_ > 50) {
+  //   // plot(data_set);
+  //   clear_buffer(SCORE::LATERAL_COMFORTABILITY);
+  //   clear_buffer(SCORE::LONGITUDINAL_COMFORTABILITY);
+  //   clear_buffer(SCORE::EFFICIENCY);
+  //   clear_buffer(SCORE::SAFETY);
+  //   clear_buffer(SCORE::ACHIEVABILITY);
+  //   clear_buffer(SCORE::CONSISTENCY);
+  //   // clear_buffer(SCORE::TOTAL);
+  //   count_ = 0;
+  // } else {
+  //   set_buffer(SCORE::LATERAL_COMFORTABILITY);
+  //   set_buffer(SCORE::LONGITUDINAL_COMFORTABILITY);
+  //   set_buffer(SCORE::EFFICIENCY);
+  //   set_buffer(SCORE::SAFETY);
+  //   set_buffer(SCORE::ACHIEVABILITY);
+  //   set_buffer(SCORE::CONSISTENCY);
+  //   // set_buffer(SCORE::TOTAL);
+  //   count_++;
+  // }
 
   {
     autoware::universe_utils::appendMarkerArray(
@@ -588,42 +588,42 @@ void BehaviorAnalyzerNode::on_timer()
   analyze(bag_data_);
 }
 
-void BehaviorAnalyzerNode::plot(const std::shared_ptr<Evaluator> & data_set) const
-{
-  const auto subplot =
-    [this](const auto & score_type, const size_t n_row, const size_t n_col, const size_t num) {
-      matplotlibcpp::subplot(n_row, n_col, num);
-      matplotlibcpp::hist(buffer_.at(static_cast<size_t>(score_type)), 10);
-      matplotlibcpp::xlim(0.0, 1.0);
-      matplotlibcpp::ylim(0.0, 500.0);
-      std::stringstream ss;
-      ss << magic_enum::enum_name(score_type);
-      matplotlibcpp::title(ss.str());
-    };
+// void BehaviorAnalyzerNode::plot(const std::shared_ptr<Evaluator> & data_set) const
+// {
+//   const auto subplot =
+//     [this](const auto & score_type, const size_t n_row, const size_t n_col, const size_t num) {
+//       matplotlibcpp::subplot(n_row, n_col, num);
+//       matplotlibcpp::hist(buffer_.at(static_cast<size_t>(score_type)), 10);
+//       matplotlibcpp::xlim(0.0, 1.0);
+//       matplotlibcpp::ylim(0.0, 500.0);
+//       std::stringstream ss;
+//       ss << magic_enum::enum_name(score_type);
+//       matplotlibcpp::title(ss.str());
+//     };
 
-  const auto plot_best =
-    [this](const auto & data, const size_t n_row, const size_t n_col, const size_t num) {
-      matplotlibcpp::subplot(n_row, n_col, num);
-      if (data != nullptr) {
-        matplotlibcpp::bar<double>(data->score());
-      }
-      matplotlibcpp::ylim(0.0, 1.0);
-      matplotlibcpp::title("BEST");
-    };
+//   const auto plot_best =
+//     [this](const auto & data, const size_t n_row, const size_t n_col, const size_t num) {
+//       matplotlibcpp::subplot(n_row, n_col, num);
+//       if (data != nullptr) {
+//         matplotlibcpp::bar<double>(data->score());
+//       }
+//       matplotlibcpp::ylim(0.0, 1.0);
+//       matplotlibcpp::title("BEST");
+//     };
 
-  const auto & p = parameters_;
+//   const auto & p = parameters_;
 
-  matplotlibcpp::clf();
-  subplot(SCORE::LATERAL_COMFORTABILITY, 3, 3, 1);
-  subplot(SCORE::LONGITUDINAL_COMFORTABILITY, 3, 3, 2);
-  subplot(SCORE::EFFICIENCY, 3, 3, 3);
-  subplot(SCORE::SAFETY, 3, 3, 4);
-  subplot(SCORE::ACHIEVABILITY, 3, 3, 5);
-  subplot(SCORE::CONSISTENCY, 3, 3, 6);
-  subplot(SCORE::TOTAL, 3, 3, 7);
-  plot_best(data_set->best(p->weight), 3, 3, 8);
-  matplotlibcpp::pause(1e-9);
-}
+//   matplotlibcpp::clf();
+//   subplot(SCORE::LATERAL_COMFORTABILITY, 3, 3, 1);
+//   subplot(SCORE::LONGITUDINAL_COMFORTABILITY, 3, 3, 2);
+//   subplot(SCORE::EFFICIENCY, 3, 3, 3);
+//   subplot(SCORE::SAFETY, 3, 3, 4);
+//   subplot(SCORE::ACHIEVABILITY, 3, 3, 5);
+//   subplot(SCORE::CONSISTENCY, 3, 3, 6);
+//   // subplot(SCORE::TOTAL, 3, 3, 7);
+//   // plot_best(data_set->best(), 3, 3, 8);
+//   matplotlibcpp::pause(1e-9);
+// }
 }  // namespace autoware::behavior_analyzer
 
 #include <rclcpp_components/register_node_macro.hpp>

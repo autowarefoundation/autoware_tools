@@ -109,8 +109,7 @@ double time_to_collision(
 
 auto convertToTrajectoryPoints(
   const autoware::sampler_common::Trajectory & trajectory,
-  const vehicle_info_utils::VehicleInfo & vehicle_info, const double z)
-  -> std::vector<TrajectoryPoint>
+  const std::shared_ptr<VehicleInfo> & vehicle_info, const double z) -> std::vector<TrajectoryPoint>
 {
   std::vector<TrajectoryPoint> traj_points;
   for (auto i = 0UL; i < trajectory.points.size(); ++i) {
@@ -127,7 +126,7 @@ auto convertToTrajectoryPoints(
     p.longitudinal_velocity_mps = trajectory.longitudinal_velocities.at(i);
     p.lateral_velocity_mps = trajectory.lateral_velocities.at(i);
     p.acceleration_mps2 = trajectory.longitudinal_accelerations.at(i);
-    p.front_wheel_angle_rad = vehicle_info.wheel_base_m * trajectory.curvatures.at(i);
+    p.front_wheel_angle_rad = vehicle_info->wheel_base_m * trajectory.curvatures.at(i);
     traj_points.push_back(p);
   }
   return traj_points;
@@ -221,8 +220,8 @@ auto resampling(
 
 auto sampling(
   const Trajectory & trajectory, const Pose & p_ego, const double v_ego, const double a_ego,
-  const vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<Parameters> & parameters) -> std::vector<std::vector<TrajectoryPoint>>
+  const std::shared_ptr<VehicleInfo> & vehicle_info, const std::shared_ptr<Parameters> & parameters)
+  -> std::vector<std::vector<TrajectoryPoint>>
 {
   const auto reference_trajectory =
     autoware::path_sampler::preparePathSpline(trajectory.points, true);
@@ -285,8 +284,10 @@ auto sampling(
 auto to_marker(
   const std::shared_ptr<DataInterface> & data, const SCORE & score_type, const size_t id) -> Marker
 {
+  if (data == nullptr) return {};
+
   const auto idx = static_cast<size_t>(score_type);
-  const auto score = data->score().at(idx);
+  const auto score = data->scores().at(idx);
   std::stringstream ss;
   ss << magic_enum::enum_name(score_type);
 

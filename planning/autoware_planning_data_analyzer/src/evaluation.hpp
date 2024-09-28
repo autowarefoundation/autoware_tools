@@ -32,58 +32,66 @@ class DataInterface
 public:
   DataInterface(
     const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<TrajectoryPoints> & previous,
-    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<VehicleInfo> & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::string & tag,
     const std::shared_ptr<TrajectoryPoints> & points);
-
-  void calculate();
 
   void normalize(
     const double min, const double max, const size_t score_type, const bool flip = false);
 
-  auto to_1d(const METRIC & metric_type) const -> double;
+  void weighting(const std::vector<double> & weight);
 
-  auto total(const std::vector<double> & weight) const -> double;
-
-  double get(const SCORE & score_type) const;
-
-  auto score() const -> std::vector<double> { return scores; }
-
-  double lateral_accel(const size_t idx) const;
-
-  double longitudinal_jerk(const size_t idx) const;
-
-  double minimum_ttc(const size_t idx) const;
-
-  double travel_distance(const size_t idx) const;
-
-  double lateral_deviation(const size_t idx) const;
-
-  double trajectory_deviation(const size_t idx) const;
+  auto total() const -> double { return total_; };
 
   bool feasible() const;
 
   bool ready() const;
 
+  auto score(const SCORE & score_type) const -> double;
+
+  auto scores() const -> std::vector<double> { return scores_; }
+
   auto points() const -> std::shared_ptr<TrajectoryPoints> { return points_; }
 
-  std::shared_ptr<TrajectoryPoints> previous_;
+  auto tag() const -> std::string { return tag_; }
+
+protected:
+  void evaluate();
+
+private:
+  auto lateral_accel(const size_t idx) const -> double;
+
+  auto longitudinal_jerk(const size_t idx) const -> double;
+
+  auto minimum_ttc(const size_t idx) const -> double;
+
+  auto travel_distance(const size_t idx) const -> double;
+
+  auto lateral_deviation(const size_t idx) const -> double;
+
+  auto trajectory_deviation(const size_t idx) const -> double;
+
+  auto compress(const METRIC & metric_type) const -> double;
 
   std::vector<PredictedObjects::SharedPtr> objects_history;
 
-  std::vector<std::vector<double>> values;
+  std::vector<std::vector<double>> values_;
 
-  std::vector<double> scores;
+  std::vector<double> scores_;
 
-  vehicle_info_utils::VehicleInfo vehicle_info;
-
-  std::shared_ptr<RouteHandler> route_handler;
-
-  std::shared_ptr<Parameters> parameters;
+  std::shared_ptr<TrajectoryPoints> previous_;
 
   std::shared_ptr<TrajectoryPoints> points_;
 
-  std::string tag{""};
+  std::shared_ptr<VehicleInfo> vehicle_info_;
+
+  std::shared_ptr<RouteHandler> route_handler_;
+
+  std::shared_ptr<Parameters> parameters_;
+
+  std::string tag_;
+
+  double total_;
 };
 
 class GroundTruth : public DataInterface
@@ -92,7 +100,7 @@ public:
   GroundTruth(
     const std::shared_ptr<BagData> & bag_data,
     const std::shared_ptr<TrajectoryPoints> & prev_best_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<VehicleInfo> & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::string & tag);
 
 private:
@@ -107,7 +115,7 @@ public:
   TrajectoryData(
     const std::shared_ptr<BagData> & bag_data,
     const std::shared_ptr<TrajectoryPoints> & prev_best_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<VehicleInfo> & vehicle_info,
     const std::shared_ptr<Parameters> & parameters, const std::string & tag,
     const std::shared_ptr<TrajectoryPoints> & points);
 };
@@ -118,26 +126,29 @@ public:
   Evaluator(
     const std::shared_ptr<BagData> & bag_data,
     const std::shared_ptr<TrajectoryPoints> & prev_best_data,
-    const vehicle_info_utils::VehicleInfo & vehicle_info,
+    const std::shared_ptr<VehicleInfo> & vehicle_info,
     const std::shared_ptr<Parameters> & parameters);
 
-  void show();
+  void show() const;
 
-  void normalize_scores();
+  auto results() const -> std::vector<std::shared_ptr<DataInterface>> { return results_; }
 
-  auto loss(const std::vector<double> & weight) const -> double;
+  auto best(const std::vector<double> & weight) -> std::shared_ptr<DataInterface>;
 
-  auto get(const SCORE & score_type) const -> std::vector<double>;
-
-  auto best(const std::vector<double> & weight) const -> std::shared_ptr<DataInterface>;
+  auto loss(const std::vector<double> & weight) -> double;
 
   auto get(const std::string & tag) const -> std::shared_ptr<DataInterface>;
 
-  std::vector<std::shared_ptr<DataInterface>> data_set;
+private:
+  void normalize();
 
-  std::shared_ptr<RouteHandler> route_handler;
+  void weighting(const std::vector<double> & weight);
 
-  std::shared_ptr<Parameters> parameters;
+  auto best() const -> std::shared_ptr<DataInterface>;
+
+  std::vector<std::shared_ptr<DataInterface>> results_;
+
+  std::shared_ptr<Parameters> parameters_;
 };
 
 }  // namespace autoware::behavior_analyzer

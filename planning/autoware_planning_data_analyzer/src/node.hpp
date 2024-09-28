@@ -16,7 +16,6 @@
 #define NODE_HPP_
 
 #include "bag_handler.hpp"
-#include "data_structs.hpp"
 #include "evaluation.hpp"
 #include "matplotlibcpp.h"
 #include "rosbag2_cpp/reader.hpp"
@@ -87,7 +86,7 @@ private:
   rclcpp::Service<Trigger>::SharedPtr srv_route_;
   rclcpp::Service<Trigger>::SharedPtr srv_weight_;
 
-  vehicle_info_utils::VehicleInfo vehicle_info_;
+  std::shared_ptr<VehicleInfo> vehicle_info_;
 
   std::shared_ptr<BagData> bag_data_;
 
