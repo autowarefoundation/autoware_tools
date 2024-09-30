@@ -12,15 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-<<<<<<< HEAD:map/autoware_lanelet2_map_validator/include/autoware_lanelet2_map_validator/validators/traffic_light/missing_regulatory_elements_for_traffic_lights.hpp
-#ifndef VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
-MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
-#define VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
-MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
-=======
 #ifndef VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
 #define VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
->>>>>>> 0fe0b37 (Changed the entire structure.):map/autoware_lanelet2_map_validator/src/validators/traffic_light/missing_regulatory_elements_for_traffic_lights.hpp
 
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
@@ -46,9 +39,4 @@ private:
 }  // namespace validation
 }  // namespace lanelet
 
-<<<<<<< HEAD:map/autoware_lanelet2_map_validator/include/autoware_lanelet2_map_validator/validators/traffic_light/missing_regulatory_elements_for_traffic_lights.hpp
-#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
-        // MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
-=======
 #endif  // VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
->>>>>>> 0fe0b37 (Changed the entire structure.):map/autoware_lanelet2_map_validator/src/validators/traffic_light/missing_regulatory_elements_for_traffic_lights.hpp

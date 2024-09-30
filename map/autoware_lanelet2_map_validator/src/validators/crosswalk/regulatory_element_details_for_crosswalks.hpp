@@ -12,15 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-<<<<<<< HEAD:map/autoware_lanelet2_map_validator/include/autoware_lanelet2_map_validator/validators/crosswalk/regulatory_element_details_for_crosswalks.hpp
-#ifndef VALIDATORS__CROSSWALK__REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
-REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
-#define VALIDATORS__CROSSWALK__REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
-REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
-=======
 #ifndef VALIDATORS__CROSSWALK__REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
 #define VALIDATORS__CROSSWALK__REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
->>>>>>> 0fe0b37 (Changed the entire structure.):map/autoware_lanelet2_map_validator/src/validators/crosswalk/regulatory_element_details_for_crosswalks.hpp
 
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
@@ -43,9 +36,4 @@ private:
 }  // namespace validation
 }  // namespace lanelet
 
-<<<<<<< HEAD:map/autoware_lanelet2_map_validator/include/autoware_lanelet2_map_validator/validators/crosswalk/regulatory_element_details_for_crosswalks.hpp
-#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
-        // REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
-=======
 #endif  // VALIDATORS__CROSSWALK__REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
->>>>>>> 0fe0b37 (Changed the entire structure.):map/autoware_lanelet2_map_validator/src/validators/crosswalk/regulatory_element_details_for_crosswalks.hpp
