@@ -52,7 +52,7 @@ MetaConfig parseCommandLine(int argc, const char * argv[])
 
               ("location,l",
                po::value(&validation_config.location)->default_value(validation_config.location),
-               "Location of the map (for instanciating the traffic rules), e.g. de for Germany")
+               "Location of the map (for instantiating the traffic rules), e.g. de for Germany")
 
                 ("participants", po::value(&validation_config.participants)->composing(),
                  "Participants for which the routing graph will be instanciated (default: vehicle)")
@@ -60,18 +60,18 @@ MetaConfig parseCommandLine(int argc, const char * argv[])
                   ("lat",
                    po::value(&validation_config.origin.lat)
                      ->default_value(validation_config.origin.lat),
-                   "latitude coordinate of map origin. This is reguired for the transverse "
+                   "latitude coordinate of map origin. This is required for the transverse "
                    "mercator "
                    "and utm projector.")
 
                     ("lon",
                      po::value(&validation_config.origin.lon)
                        ->default_value(validation_config.origin.lon),
-                     "longitude coofdinate of map origin. This is reguired for the transverse "
+                     "longitude coordinate of map origin. This is required for the transverse "
                      "mercator "
                      "and utm projector.")
 
-                      ("print", "Only print all avalible checker, but dont run them");
+                      ("print", "Print all available checker without running them");
   po::variables_map vm;
   po::positional_options_description pos;
   pos.add("map_file", 1);

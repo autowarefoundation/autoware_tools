@@ -6,7 +6,7 @@ mapping.traffic_light.missing_regulatory_elements
 
 ## Feature
 
-This validator checks whether each `traffic_light` type linestring has a relavant regulatory element.
+This validator checks whether each `traffic_light` type linestring has a relevant regulatory element.
 The output issue specifies the traffic_light "linestring" as the **primitive**, and the linestring ID will be specified as the **ID**.
 
 | Message                                               | Severity | Description                                                                                     |

@@ -144,7 +144,7 @@ TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
     "mapping.traffic_light.regulatory_element_details";
 
   lanelet::validation::Strings validators =
-    lanelet::validation::availabeChecks(expected_validators_concat);
+    lanelet::validation::availabeChecks(expected_validators_concat); // cspell:disable-line
   uint8_t expected_num_validators = 2;
   std::cout << "size: " << validators.size() << std::endl;
   EXPECT_EQ(expected_num_validators, validators.size());
@@ -164,7 +164,7 @@ TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
   }
 }
 
-TEST_F(TestSuite, RegulatoryElementofTrafficLightWithoutTrafficLight)  // NOLINT for gtest
+TEST_F(TestSuite, RegulatoryElementOfTrafficLightWithoutTrafficLight)  // NOLINT for gtest
 {
   // Check regulatory element of traffic light without traffic light
 
@@ -205,7 +205,7 @@ TEST_F(TestSuite, RegulatoryElementofTrafficLightWithoutTrafficLight)  // NOLINT
   }
 }
 
-TEST_F(TestSuite, RegulatoryElementofTrafficLightWithoutStopLine)  // NOLINT for gtest
+TEST_F(TestSuite, RegulatoryElementOfTrafficLightWithoutStopLine)  // NOLINT for gtest
 {
   // Check regulatory element of traffic light without stop line
 
@@ -226,7 +226,7 @@ TEST_F(TestSuite, RegulatoryElementofTrafficLightWithoutStopLine)  // NOLINT for
 
   uint8_t expected_num_issues = 2;
   static constexpr const char * expected_message1 =
-    "Refline of traffic light regulatory element must have type of stop_line.";
+    "ref_line of traffic light regulatory element must have type of stop_line.";
   static constexpr const char * expected_message2 =
     "Regulatory element of traffic light must have a stop line(ref_line).";
   EXPECT_EQ(expected_num_issues, issues.size());

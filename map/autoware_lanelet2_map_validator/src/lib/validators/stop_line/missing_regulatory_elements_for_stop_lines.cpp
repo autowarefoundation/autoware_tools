@@ -57,7 +57,7 @@ MissingRegulatoryElementsForStopLinesValidator::checkMissingRegulatoryElementsFo
                 ranges::views::transform([](auto && ls) { return ls.id(); }) |
                 ranges::views::unique;
 
-  // Filter regulatory elements whose refline type is stop line
+  // Filter regulatory elements whose ref_line type is stop line
   auto reg_elem_sl = map.regulatoryElementLayer | ranges::views::filter([](auto && elem) {
                        const auto & params = elem->getParameters();
                        return params.find(lanelet::RoleNameString::RefLine) != params.end();

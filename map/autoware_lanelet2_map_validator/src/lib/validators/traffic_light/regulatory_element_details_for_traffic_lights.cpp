@@ -80,7 +80,7 @@ RegulatoryElementsDetailsForTrafficLightsValidator::checkRegulatoryElementOfTraf
     const auto & issue_sl = lanelet::validation::Issue(
       lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString,
       lanelet::utils::getId(),
-      "Refline of traffic light regulatory element must have type of stop_line.");
+      "ref_line of traffic light regulatory element must have type of stop_line.");
     lanelet::autoware::validation::checkPrimitivesType(
       ref_lines, lanelet::AttributeValueString::StopLine, issue_sl, issues);
 

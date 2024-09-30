@@ -71,7 +71,7 @@ Then, the `autoware_lanelet2_map_validator` will scan through the input yaml fil
 ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --input_requirements autoware_requirements_set.yaml --output_directory ./
 ```
 
-When the `input_requirements` is thown to `autoware_lanelet2_map_validator`, it will output a `lanelet2_validation_results.yaml` file which looks like the following.
+When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it will output a `lanelet2_validation_results.yaml` file which looks like the following.
 
 ```yaml
 requirements:
@@ -139,16 +139,16 @@ requirements:
 | option                     | description                                                                                                                                                                 |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `-h, --help`               | Explains about this tool and show a list of options                                                                                                                         |
-| `--print`                  | Only print all avalible checker, but dont run them                                                                                                                          |
+| `--print`                  | Print all available checker without running them                                                                                                                            |
 | `-m, --map_file`           | Path to the map to be validated                                                                                                                                             |
 | `-i, --input_requirements` | Path to the yaml file where the list of requirements and validations is written                                                                                             |
 | `-o, --output_directory`   | Directory to save the list of validation results in a yaml format                                                                                                           |
-| `-v, --validator`          | Comma separated list of regexes to filter the applicable validators. Will run all validators by default. Example: `routing_graph.*` to run all checks for the routing graph |
+| `-v, --validator`          | Comma separated list of regexes to filter the applicable validators. Will run all validators by default. Example: `mapping.*` to run all checks for the mapping |
 | `-p, --projector`          | Projector used for loading lanelet map. Available projectors are: mgrs, utm, transverse_mercator. (default: mgrs)                                                           |
-| `-l, --location`           | Location of the map (for instanciating the traffic rules), e.g. de for Germany                                                                                              |
+| `-l, --location`           | Location of the map (for instantiating the traffic rules), e.g. de for Germany                                                                                              |
 | `--participants`           | Participants for which the routing graph will be instanciated (default: vehicle)                                                                                            |
 | `--lat`                    | latitude coordinate of map origin. This is required for the transverse mercator and utm projector.                                                                          |
-| `--lon`                    | longitude coofdinate of map origin. This is required for the transverse mercator and utm projector.                                                                         |
+| `--lon`                    | longitude coordinate of map origin. This is required for the transverse mercator and utm projector.                                                                         |
 
 ### Available validators
 

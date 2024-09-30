@@ -146,7 +146,7 @@ TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
     "mapping.traffic_light.missing_regulatory_elements";
 
   lanelet::validation::Strings validators =
-    lanelet::validation::availabeChecks(expected_validators_concat);
+    lanelet::validation::availabeChecks(expected_validators_concat); // cspell:disable-line
   uint8_t expected_num_validators = 3;
   std::cout << "size: " << validators.size() << std::endl;
   EXPECT_EQ(expected_num_validators, validators.size());

@@ -76,7 +76,7 @@ RegulatoryElementsDetailsForCrosswalksValidator::checkRegulatoryElementOfCrosswa
     const auto & issue_sl = lanelet::validation::Issue(
       lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString,
       lanelet::utils::getId(),
-      "Refline of crosswalk regulatory element must have type of stopline.");
+      "ref_line of crosswalk regulatory element must have type of stopline.");
     lanelet::autoware::validation::checkPrimitivesType(
       ref_lines, lanelet::AttributeValueString::StopLine, issue_sl, issues);
 

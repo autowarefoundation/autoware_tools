@@ -123,8 +123,8 @@ int process_requirements(
 
   if (!validator_config.output_file_path.empty()) {
     std::string file_name = validator_config.output_file_path + "/lanelet2_validation_results.yaml";
-    std::ofstream fout(file_name);
-    fout << yaml_config;
+    std::ofstream output_file(file_name);
+    output_file << yaml_config;
     std::cout << "Results are output to " << file_name << std::endl;
   }
 
@@ -145,7 +145,7 @@ int main(int argc, char * argv[])
   // Print available validators
   if (config.command_line_config.print) {
     auto checks =
-      lanelet::validation::availabeChecks(config.command_line_config.validationConfig.checksFilter);
+      lanelet::validation::availabeChecks(config.command_line_config.validationConfig.checksFilter); // cspell:disable-line
     if (checks.empty()) {
       std::cout << "No checks found matching '"
                 << config.command_line_config.validationConfig.checksFilter << "'\n";

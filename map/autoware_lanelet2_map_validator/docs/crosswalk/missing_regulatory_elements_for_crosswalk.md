@@ -6,7 +6,7 @@ mapping.crosswalk.missing_regulatory_elements
 
 ## Feature
 
-This validator checks whether each `crosswalk` subtype lanelet has a relavant regulatory element.
+This validator checks whether each `crosswalk` subtype lanelet has a relevant regulatory element.
 The issue specifies the crosswalk "lanelet" as the **primitive**, and the lanelet ID will be specified as the **ID**.
 
 | Message                                           | Severity | Description                                                                                 |
