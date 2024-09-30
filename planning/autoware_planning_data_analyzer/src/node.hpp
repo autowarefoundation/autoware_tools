@@ -93,7 +93,8 @@ private:
 
   std::shared_ptr<EvaluatorParameters> evaluator_parameters_;
 
-  std::shared_ptr<SelectorParameters> selector_parameters_;
+  std::shared_ptr<trajectory_selector::trajectory_evaluator::SelectorParameters>
+    selector_parameters_;
 
   mutable std::shared_ptr<TrajectoryPoints> previous_;
 

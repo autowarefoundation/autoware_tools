@@ -32,7 +32,7 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
 : Node("path_selector_node", node_options),
   route_handler_{std::make_shared<RouteHandler>()},
   previous_{nullptr},
-  buffer_{static_cast<size_t>(SCORE::SIZE)}
+  buffer_{static_cast<size_t>(trajectory_selector::trajectory_evaluator::SCORE::SIZE)}
 {
   using namespace std::literals::chrono_literals;
   timer_ =
@@ -104,7 +104,9 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   evaluator_parameters_->target_state.lon_accelerations =
     declare_parameter<std::vector<double>>("target_state.longitudinal_accelerations");
 
-  selector_parameters_ = std::make_shared<SelectorParameters>(evaluator_parameters_->resample_num);
+  selector_parameters_ =
+    std::make_shared<trajectory_selector::trajectory_evaluator::SelectorParameters>(
+      evaluator_parameters_->resample_num);
   selector_parameters_->time_decay_weight.at(0) =
     declare_parameter<std::vector<double>>("time_decay_weight.s0");
   selector_parameters_->time_decay_weight.at(1) =
@@ -333,7 +335,8 @@ void BehaviorAnalyzerNode::weight(
 
     // TODO: set time_decay_weight
     const auto update = [&weight_grid, &grid_mutex](const auto & bag_evaluator, const auto idx) {
-      const auto selector_parameters = std::make_shared<SelectorParameters>(20);
+      const auto selector_parameters =
+        std::make_shared<trajectory_selector::trajectory_evaluator::SelectorParameters>(20);
       {
         std::lock_guard<std::mutex> lock(grid_mutex);
         if (idx + 1 > weight_grid.size()) return;
@@ -533,12 +536,19 @@ void BehaviorAnalyzerNode::visualize(const std::shared_ptr<BagEvaluator> & bag_e
 
   const auto results = bag_evaluator->results();
   for (size_t i = 0; i < results.size(); ++i) {
-    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::LATERAL_COMFORTABILITY, i));
-    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::LONGITUDINAL_COMFORTABILITY, i));
-    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::EFFICIENCY, i));
-    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::SAFETY, i));
-    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::ACHIEVABILITY, i));
-    msg.markers.push_back(utils::to_marker(results.at(i), SCORE::CONSISTENCY, i));
+    msg.markers.push_back(utils::to_marker(
+      results.at(i), trajectory_selector::trajectory_evaluator::SCORE::LATERAL_COMFORTABILITY, i));
+    msg.markers.push_back(utils::to_marker(
+      results.at(i), trajectory_selector::trajectory_evaluator::SCORE::LONGITUDINAL_COMFORTABILITY,
+      i));
+    msg.markers.push_back(utils::to_marker(
+      results.at(i), trajectory_selector::trajectory_evaluator::SCORE::EFFICIENCY, i));
+    msg.markers.push_back(
+      utils::to_marker(results.at(i), trajectory_selector::trajectory_evaluator::SCORE::SAFETY, i));
+    msg.markers.push_back(utils::to_marker(
+      results.at(i), trajectory_selector::trajectory_evaluator::SCORE::ACHIEVABILITY, i));
+    msg.markers.push_back(utils::to_marker(
+      results.at(i), trajectory_selector::trajectory_evaluator::SCORE::CONSISTENCY, i));
   }
 
   {

@@ -26,11 +26,6 @@
 
 namespace autoware::behavior_analyzer::utils
 {
-
-auto time_to_collision(
-  const std::shared_ptr<TrajectoryPoints> & points,
-  const std::shared_ptr<PredictedObjects> & objects, const size_t idx) -> double;
-
 auto convertToTrajectoryPoints(
   const autoware::sampler_common::Trajectory & trajectory,
   const std::shared_ptr<VehicleInfo> & vehicle_info, const double z)
@@ -58,8 +53,8 @@ auto sampling(
   -> std::vector<std::vector<TrajectoryPoint>>;
 
 auto to_marker(
-  const std::shared_ptr<DataInterface> & data, const SCORE & score_type, const size_t id) -> Marker;
-
+  const std::shared_ptr<trajectory_selector::trajectory_evaluator::DataInterface> & data,
+  const trajectory_selector::trajectory_evaluator::SCORE & score_type, const size_t id) -> Marker;
 }  // namespace autoware::behavior_analyzer::utils
 
 #endif  // UTILS_HPP_
