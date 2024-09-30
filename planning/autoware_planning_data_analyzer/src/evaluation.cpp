@@ -32,117 +32,99 @@ namespace autoware::behavior_analyzer
 {
 
 DataInterface::DataInterface(
-  const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<TrajectoryPoints> & previous,
-  const std::shared_ptr<VehicleInfo> & vehicle_info, const std::shared_ptr<Parameters> & parameters,
-  const std::string & tag, const std::shared_ptr<TrajectoryPoints> & points)
-: previous_{previous},
+  const std::shared_ptr<CoreData> & core_data, const std::shared_ptr<RouteHandler> & route_handler,
+  const std::shared_ptr<VehicleInfo> & vehicle_info)
+: core_data_{core_data},
+  route_handler_{route_handler},
   vehicle_info_{vehicle_info},
-  route_handler_{bag_data->route_handler},
-  parameters_{parameters},
-  tag_{tag},
-  points_{points},
-  values_{static_cast<size_t>(METRIC::SIZE), std::vector<double>(parameters->resample_num, 0.0)},
-  scores_{static_cast<size_t>(SCORE::SIZE)}
+  metrics_(static_cast<size_t>(METRIC::SIZE), std::vector<double>(core_data->points->size(), 0.0)),
+  scores_(static_cast<size_t>(SCORE::SIZE), 0.0)
 {
-  objects_history.reserve(parameters_->resample_num);
-
-  const auto objects_buffer_ptr =
-    std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(TOPIC::OBJECTS));
-  for (size_t i = 0; i < parameters_->resample_num; i++) {
-    const auto opt_objects =
-      objects_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters_->time_resolution * i);
-    if (!opt_objects) {
-      break;
-    }
-    objects_history.push_back(opt_objects);
-  }
+  evaluate();
 }
 
 void DataInterface::evaluate()
 {
-  for (size_t i = 0; i < parameters_->resample_num; i++) {
-    values_.at(static_cast<size_t>(METRIC::LATERAL_ACCEL)).at(i) = lateral_accel(i);
-    values_.at(static_cast<size_t>(METRIC::LONGITUDINAL_JERK)).at(i) = longitudinal_jerk(i);
-    values_.at(static_cast<size_t>(METRIC::MINIMUM_TTC)).at(i) = minimum_ttc(i);
-    values_.at(static_cast<size_t>(METRIC::TRAVEL_DISTANCE)).at(i) = travel_distance(i);
-    values_.at(static_cast<size_t>(METRIC::LATERAL_DEVIATION)).at(i) = lateral_deviation(i);
-    values_.at(static_cast<size_t>(METRIC::TRAJECTORY_DEVIATION)).at(i) = trajectory_deviation(i);
+  for (size_t i = 0; i < core_data_->points->size(); i++) {
+    metrics_.at(static_cast<size_t>(METRIC::LATERAL_ACCEL)).at(i) = lateral_accel(i);
+    metrics_.at(static_cast<size_t>(METRIC::LONGITUDINAL_JERK)).at(i) = longitudinal_jerk(i);
+    metrics_.at(static_cast<size_t>(METRIC::MINIMUM_TTC)).at(i) = minimum_ttc(i);
+    metrics_.at(static_cast<size_t>(METRIC::TRAVEL_DISTANCE)).at(i) = travel_distance(i);
+    metrics_.at(static_cast<size_t>(METRIC::LATERAL_DEVIATION)).at(i) = lateral_deviation(i);
+    metrics_.at(static_cast<size_t>(METRIC::TRAJECTORY_DEVIATION)).at(i) = trajectory_deviation(i);
   }
+}
 
-  scores_.at(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY)) = compress(METRIC::LATERAL_ACCEL);
+void DataInterface::compress(const std::vector<std::vector<double>> & weight)
+{
+  scores_.at(static_cast<size_t>(SCORE::LATERAL_COMFORTABILITY)) =
+    compress(weight, METRIC::LATERAL_ACCEL);
   scores_.at(static_cast<size_t>(SCORE::LONGITUDINAL_COMFORTABILITY)) =
-    compress(METRIC::LONGITUDINAL_JERK);
-  scores_.at(static_cast<size_t>(SCORE::EFFICIENCY)) = compress(METRIC::TRAVEL_DISTANCE);
-  scores_.at(static_cast<size_t>(SCORE::SAFETY)) = compress(METRIC::MINIMUM_TTC);
-  scores_.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) = compress(METRIC::LATERAL_DEVIATION);
-  scores_.at(static_cast<size_t>(SCORE::CONSISTENCY)) = compress(METRIC::TRAJECTORY_DEVIATION);
+    compress(weight, METRIC::LONGITUDINAL_JERK);
+  scores_.at(static_cast<size_t>(SCORE::EFFICIENCY)) = compress(weight, METRIC::TRAVEL_DISTANCE);
+  scores_.at(static_cast<size_t>(SCORE::SAFETY)) = compress(weight, METRIC::MINIMUM_TTC);
+  scores_.at(static_cast<size_t>(SCORE::ACHIEVABILITY)) =
+    compress(weight, METRIC::LATERAL_DEVIATION);
+  scores_.at(static_cast<size_t>(SCORE::CONSISTENCY)) =
+    compress(weight, METRIC::TRAJECTORY_DEVIATION);
 }
 
 double DataInterface::lateral_accel(const size_t idx) const
 {
   const auto radius =
-    vehicle_info_->wheel_base_m / std::tan(points_->at(idx).front_wheel_angle_rad);
-  const auto speed = points_->at(idx).longitudinal_velocity_mps;
-  return speed * speed / radius;
+    vehicle_info_->wheel_base_m / std::tan(core_data_->points->at(idx).front_wheel_angle_rad);
+  const auto speed = core_data_->points->at(idx).longitudinal_velocity_mps;
+  return std::abs(speed * speed / radius);
 }
 
 double DataInterface::longitudinal_jerk(const size_t idx) const
 {
-  if (idx + 1 == points_->size()) return 0.0;
-  return (points_->at(idx + 1).acceleration_mps2 - points_->at(idx).acceleration_mps2) / 0.5;
+  if (idx + 2 > core_data_->points->size()) return 0.0;
+
+  const auto jerk = (core_data_->points->at(idx + 1).acceleration_mps2 -
+                     core_data_->points->at(idx).acceleration_mps2) /
+                    0.5;
+  return std::abs(jerk);
 }
 
 double DataInterface::minimum_ttc(const size_t idx) const
 {
-  const auto p_ego = points_->at(idx).pose;
-  const auto v_ego = utils::get_velocity_in_world_coordinate(points_->at(idx));
-
-  return utils::time_to_collision(*objects_history.at(idx), p_ego, v_ego);
+  // TODO: linear interpolation
+  return utils::time_to_collision(core_data_->points, core_data_->objects, idx);
 }
 
 double DataInterface::travel_distance(const size_t idx) const
 {
-  return autoware::motion_utils::calcSignedArcLength(*points_, 0L, idx);
+  return autoware::motion_utils::calcSignedArcLength(*core_data_->points, 0L, idx);
 }
 
 double DataInterface::lateral_deviation(const size_t idx) const
 {
   lanelet::ConstLanelet nearest{};
   if (!route_handler_->getClosestPreferredLaneletWithinRoute(
-        autoware::universe_utils::getPose(points_->at(idx)), &nearest)) {
+        autoware::universe_utils::getPose(core_data_->points->at(idx)), &nearest)) {
     return std::numeric_limits<double>::max();
   }
   const auto arc_coordinates = lanelet::utils::getArcCoordinates(
-    {nearest}, autoware::universe_utils::getPose(points_->at(idx)));
-  return arc_coordinates.distance;
+    {nearest}, autoware::universe_utils::getPose(core_data_->points->at(idx)));
+  return std::abs(arc_coordinates.distance);
 }
 
 double DataInterface::trajectory_deviation(const size_t idx) const
 {
-  if (previous_ == nullptr) return 0.0;
+  if (core_data_->previous_points == nullptr) return 0.0;
 
-  const auto & p1 = autoware::universe_utils::getPose(points_->at(idx));
-  const auto & p2 = previous_->at(idx);
+  if (idx + 1 > core_data_->previous_points->size()) return 0.0;
+
+  const auto & p1 = autoware::universe_utils::getPose(core_data_->points->at(idx));
+  const auto & p2 = autoware::universe_utils::getPose(core_data_->previous_points->at(idx));
   return autoware::universe_utils::calcSquaredDistance2d(p1, p2);
 }
 
 bool DataInterface::feasible() const
 {
   const auto condition = [](const auto & p) { return p.longitudinal_velocity_mps >= 0.0; };
-  return std::all_of(points_->begin(), points_->end(), condition);
-}
-
-bool DataInterface::ready() const
-{
-  if (objects_history.size() < parameters_->resample_num) {
-    return false;
-  }
-
-  if (points_->size() < parameters_->resample_num) {
-    return false;
-  }
-
-  return true;
+  return std::all_of(core_data_->points->begin(), core_data_->points->end(), condition);
 }
 
 void DataInterface::normalize(
@@ -152,18 +134,12 @@ void DataInterface::normalize(
                                 : (scores_.at(score_type) - min) / (max - min);
 }
 
-auto DataInterface::compress(const METRIC & metric_type) const -> double
+auto DataInterface::compress(
+  const std::vector<std::vector<double>> & weight, const METRIC & metric_type) const -> double
 {
-  constexpr double TIME_FACTOR = 0.8;
-
-  double score = 0.0;
-
-  for (size_t i = 0; i < parameters_->resample_num; i++) {
-    score +=
-      std::pow(TIME_FACTOR, i) * std::abs(values_.at(static_cast<size_t>(metric_type)).at(i));
-  }
-
-  return score;
+  const auto w = weight.at(static_cast<size_t>(metric_type));
+  const auto metric = metrics_.at(static_cast<size_t>(metric_type));
+  return std::inner_product(w.begin(), w.end(), metric.begin(), 0.0);
 }
 
 auto DataInterface::score(const SCORE & score_type) const -> double
@@ -174,123 +150,6 @@ auto DataInterface::score(const SCORE & score_type) const -> double
 void DataInterface::weighting(const std::vector<double> & weight)
 {
   total_ = std::inner_product(weight.begin(), weight.end(), scores_.begin(), 0.0);
-}
-
-GroundTruth::GroundTruth(
-  const std::shared_ptr<BagData> & bag_data,
-  const std::shared_ptr<TrajectoryPoints> & prev_best_data,
-  const std::shared_ptr<VehicleInfo> & vehicle_info, const std::shared_ptr<Parameters> & parameters,
-  const std::string & tag)
-: DataInterface(
-    bag_data, prev_best_data, vehicle_info, parameters, tag, to_points(bag_data, parameters))
-{
-  evaluate();
-}
-
-auto GroundTruth::to_points(
-  const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<Parameters> & parameters)
-  -> std::shared_ptr<TrajectoryPoints>
-{
-  TrajectoryPoints points;
-
-  const auto odometry_buffer_ptr = std::dynamic_pointer_cast<Buffer<Odometry>>(
-    bag_data->buffers.at("/localization/kinematic_state"));
-  const auto acceleration_buffer_ptr =
-    std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
-      bag_data->buffers.at("/localization/acceleration"));
-  const auto steering_buffer_ptr = std::dynamic_pointer_cast<Buffer<SteeringReport>>(
-    bag_data->buffers.at("/vehicle/status/steering_status"));
-
-  for (size_t i = 0; i < parameters->resample_num; i++) {
-    const auto opt_odometry =
-      odometry_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->time_resolution * i);
-    if (!opt_odometry) {
-      break;
-    }
-
-    const auto opt_accel =
-      acceleration_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->time_resolution * i);
-    if (!opt_accel) {
-      break;
-    }
-
-    const auto opt_steer =
-      steering_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->time_resolution * i);
-    if (!opt_steer) {
-      break;
-    }
-
-    const auto duration = builtin_interfaces::build<Duration>().sec(0.0).nanosec(0.0);
-    const auto point = autoware_planning_msgs::build<TrajectoryPoint>()
-                         .time_from_start(duration)
-                         .pose(opt_odometry->pose.pose)
-                         .longitudinal_velocity_mps(opt_odometry->twist.twist.linear.x)
-                         .lateral_velocity_mps(0.0)
-                         .acceleration_mps2(opt_accel->accel.accel.linear.x)
-                         .heading_rate_rps(0.0)
-                         .front_wheel_angle_rad(opt_steer->steering_tire_angle)
-                         .rear_wheel_angle_rad(0.0);
-    points.push_back(point);
-  }
-
-  return std::make_shared<TrajectoryPoints>(points);
-}
-
-TrajectoryData::TrajectoryData(
-  const std::shared_ptr<BagData> & bag_data,
-  const std::shared_ptr<TrajectoryPoints> & prev_best_data,
-  const std::shared_ptr<VehicleInfo> & vehicle_info, const std::shared_ptr<Parameters> & parameters,
-  const std::string & tag, const std::shared_ptr<TrajectoryPoints> & points)
-: DataInterface(bag_data, prev_best_data, vehicle_info, parameters, tag, points)
-{
-  evaluate();
-}
-
-Evaluator::Evaluator(
-  const std::shared_ptr<BagData> & bag_data,
-  const std::shared_ptr<TrajectoryPoints> & prev_best_data,
-  const std::shared_ptr<VehicleInfo> & vehicle_info, const std::shared_ptr<Parameters> & parameters)
-: results_{}, parameters_{parameters}
-{
-  const auto opt_odometry = std::dynamic_pointer_cast<Buffer<Odometry>>(
-                              bag_data->buffers.at("/localization/kinematic_state"))
-                              ->get(bag_data->timestamp);
-  if (!opt_odometry) {
-    throw std::logic_error("data is not enough.");
-  }
-
-  const auto opt_accel = std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
-                           bag_data->buffers.at("/localization/acceleration"))
-                           ->get(bag_data->timestamp);
-  if (!opt_accel) {
-    throw std::logic_error("data is not enough.");
-  }
-
-  const auto opt_trajectory = std::dynamic_pointer_cast<Buffer<Trajectory>>(
-                                bag_data->buffers.at("/planning/scenario_planning/trajectory"))
-                                ->get(bag_data->timestamp);
-  if (!opt_trajectory) {
-    throw std::logic_error("data is not enough.");
-  }
-
-  // frenet planner
-  for (const auto & points : utils::sampling(
-         *opt_trajectory, opt_odometry->pose.pose, opt_odometry->twist.twist.linear.x,
-         opt_accel->accel.accel.linear.x, vehicle_info, parameters_)) {
-    const auto ptr = std::make_shared<TrajectoryData>(
-      bag_data, prev_best_data, vehicle_info, parameters_, "frenet",
-      std::make_shared<TrajectoryPoints>(points));
-    results_.push_back(static_cast<std::shared_ptr<DataInterface>>(ptr));
-  }
-
-  // actual behavior
-  {
-    const auto ptr = std::make_shared<GroundTruth>(
-      bag_data, prev_best_data, vehicle_info, parameters_, "ground_truth");
-    results_.push_back(static_cast<std::shared_ptr<DataInterface>>(ptr));
-  }
-
-  normalize();
 }
 
 void Evaluator::normalize()
@@ -323,6 +182,20 @@ void Evaluator::normalize()
   }
 }
 
+void Evaluator::pruning()
+{
+  const auto itr =
+    std::remove_if(results_.begin(), results_.end(), [](const auto & d) { return !d->feasible(); });
+
+  results_.erase(itr, results_.end());
+}
+
+void Evaluator::compress(const std::vector<std::vector<double>> & weight)
+{
+  std::for_each(
+    results_.begin(), results_.end(), [&weight](auto & data) { data->compress(weight); });
+}
+
 void Evaluator::weighting(const std::vector<double> & weight)
 {
   std::for_each(
@@ -331,11 +204,6 @@ void Evaluator::weighting(const std::vector<double> & weight)
   std::sort(results_.begin(), results_.end(), [](const auto & a, const auto & b) {
     return a->total() > b->total();
   });
-
-  const auto itr =
-    std::remove_if(results_.begin(), results_.end(), [](const auto & d) { return !d->feasible(); });
-
-  results_.erase(itr, results_.end());
 }
 
 auto Evaluator::get(const std::string & tag) const -> std::shared_ptr<DataInterface>
@@ -346,9 +214,22 @@ auto Evaluator::get(const std::string & tag) const -> std::shared_ptr<DataInterf
   return itr != results_.end() ? *itr : nullptr;
 }
 
-auto Evaluator::best(const std::vector<double> & weight) -> std::shared_ptr<DataInterface>
+void Evaluator::add(const std::shared_ptr<CoreData> & core_data)
 {
-  weighting(weight);
+  const auto ptr = std::make_shared<DataInterface>(core_data, route_handler_, vehicle_info_);
+  results_.push_back(ptr);
+}
+
+auto Evaluator::best(const std::shared_ptr<SelectorParameters> & parameters)
+  -> std::shared_ptr<DataInterface>
+{
+  pruning();
+
+  compress(parameters->time_decay_weight);
+
+  normalize();
+
+  weighting(parameters->score_weight);
 
   return best();
 }
@@ -362,13 +243,195 @@ auto Evaluator::best() const -> std::shared_ptr<DataInterface>
   return results_.front();
 }
 
-auto Evaluator::loss(const std::vector<double> & weight) -> double
+auto Evaluator::statistics(const SCORE & score_type) const -> std::pair<double, double>
 {
-  weighting(weight);
+  double ave = 0.0;
+  double dev = 0.0;
 
+  const auto update = [](const double ave, const double dev, const double value, const size_t i) {
+    const auto new_ave = (i * ave + value) / (i + 1);
+    const auto new_dev =
+      (i * (ave * ave + dev * dev) + value * value) / (i + 1) - new_ave * new_ave;
+    return std::make_pair(new_ave, new_dev);
+  };
+
+  for (size_t i = 0; i < results_.size(); i++) {
+    std::tie(ave, dev) = update(ave, dev, results_.at(i)->score(score_type), i);
+  }
+
+  return std::make_pair(ave, dev);
+}
+
+void Evaluator::show() const
+{
   const auto best_data = best();
+
   if (best_data == nullptr) {
-    return 0.0;
+    return;
+  }
+
+  const auto s0 = statistics(SCORE::LATERAL_COMFORTABILITY);
+  const auto s1 = statistics(SCORE::LONGITUDINAL_COMFORTABILITY);
+  const auto s2 = statistics(SCORE::EFFICIENCY);
+  const auto s3 = statistics(SCORE::SAFETY);
+  const auto s4 = statistics(SCORE::ACHIEVABILITY);
+  const auto s5 = statistics(SCORE::CONSISTENCY);
+
+  std::stringstream ss;
+  ss << std::fixed << std::setprecision(2) << "\n";
+  // clang-format off
+  ss << " tag               :" << best_data->tag()                                      << "\n";
+  ss << " lat comfortability:" << best_data->score(SCORE::LATERAL_COMFORTABILITY)       << " mean:" << s0.first << " std:" << std::sqrt(s0.second) << "\n"; // NOLINT
+  ss << " lon comfortability:" << best_data->score(SCORE::LONGITUDINAL_COMFORTABILITY)  << " mean:" << s1.first << " std:" << std::sqrt(s1.second) << "\n"; // NOLINT
+  ss << " efficiency        :" << best_data->score(SCORE::EFFICIENCY)                   << " mean:" << s2.first << " std:" << std::sqrt(s2.second) << "\n"; // NOLINT
+  ss << " safety            :" << best_data->score(SCORE::SAFETY)                       << " mean:" << s3.first << " std:" << std::sqrt(s3.second) << "\n"; // NOLINT
+  ss << " achievability     :" << best_data->score(SCORE::ACHIEVABILITY)                << " mean:" << s4.first << " std:" << std::sqrt(s4.second) << "\n"; // NOLINT
+  ss << " consistency       :" << best_data->score(SCORE::CONSISTENCY)                  << " mean:" << s5.first << " std:" << std::sqrt(s5.second) << "\n"; // NOLINT
+  ss << " total             :" << best_data->total();
+  // clang-format on
+  RCLCPP_INFO_STREAM(rclcpp::get_logger(__func__), ss.str());
+}
+
+BagEvaluator::BagEvaluator(
+  const std::shared_ptr<BagData> & bag_data,
+  const std::shared_ptr<TrajectoryPoints> & previous_points,
+  const std::shared_ptr<RouteHandler> & route_handler,
+  const std::shared_ptr<VehicleInfo> & vehicle_info,
+  const std::shared_ptr<EvaluatorParameters> & evaluator_parameters)
+: Evaluator{route_handler, vehicle_info}
+{
+  const auto odometry_buffer_ptr =
+    std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY));
+
+  const auto acceleration_buffer_ptr =
+    std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
+      bag_data->buffers.at(TOPIC::ACCELERATION));
+
+  const auto steering_buffer_ptr =
+    std::dynamic_pointer_cast<Buffer<SteeringReport>>(bag_data->buffers.at(TOPIC::STEERING));
+
+  const auto objects_buffer_ptr =
+    std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(TOPIC::OBJECTS));
+
+  const auto current_objects = objects_buffer_ptr->get(bag_data->timestamp);
+
+  // remove predicted_paths.
+  std::for_each(
+    current_objects->objects.begin(), current_objects->objects.end(), [](auto & object) {
+      object.kinematics.predicted_paths.clear();
+      object.kinematics.predicted_paths.push_back(PredictedPath{});
+    });
+
+  // overwrite predicted_paths by future data.
+  for (size_t i = 0; i < evaluator_parameters->resample_num; i++) {
+    const auto objects_ptr = objects_buffer_ptr->get(
+      bag_data->timestamp + 1e9 * evaluator_parameters->time_resolution * i);
+    if (!objects_ptr) {
+      break;
+    }
+
+    for (const auto & a : objects_ptr->objects) {
+      const auto itr = std::find_if(
+        current_objects->objects.begin(), current_objects->objects.end(),
+        [&a](const auto & b) { return a.object_id == b.object_id; });
+      if (itr == current_objects->objects.end()) continue;
+
+      itr->kinematics.predicted_paths.at(0).path.push_back(
+        a.kinematics.initial_pose_with_covariance.pose);
+    }
+  }
+
+  // actual behavior
+  TrajectoryPoints points;
+  {
+    for (size_t i = 0; i < evaluator_parameters->resample_num; i++) {
+      const auto odometry_ptr = odometry_buffer_ptr->get(
+        bag_data->timestamp + 1e9 * evaluator_parameters->time_resolution * i);
+      if (!odometry_ptr) {
+        break;
+      }
+
+      const auto accel_ptr = acceleration_buffer_ptr->get(
+        bag_data->timestamp + 1e9 * evaluator_parameters->time_resolution * i);
+      if (!accel_ptr) {
+        break;
+      }
+
+      const auto opt_steer = steering_buffer_ptr->get(
+        bag_data->timestamp + 1e9 * evaluator_parameters->time_resolution * i);
+      if (!opt_steer) {
+        break;
+      }
+
+      const auto duration = builtin_interfaces::build<Duration>().sec(0.0).nanosec(0.0);
+      const auto point = autoware_planning_msgs::build<TrajectoryPoint>()
+                           .time_from_start(duration)
+                           .pose(odometry_ptr->pose.pose)
+                           .longitudinal_velocity_mps(odometry_ptr->twist.twist.linear.x)
+                           .lateral_velocity_mps(0.0)
+                           .acceleration_mps2(accel_ptr->accel.accel.linear.x)
+                           .heading_rate_rps(0.0)
+                           .front_wheel_angle_rad(opt_steer->steering_tire_angle)
+                           .rear_wheel_angle_rad(0.0);
+      points.push_back(point);
+    }
+
+    {
+      const auto core_data = std::make_shared<CoreData>(
+        std::make_shared<TrajectoryPoints>(points), previous_points, current_objects,
+        "ground_truth");
+
+      add(core_data);
+    }
+  }
+
+  // frenet planner (data augmentation)
+  {
+    const auto odometry_ptr =
+      std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY))
+        ->get(bag_data->timestamp);
+    if (!odometry_ptr) {
+      throw std::logic_error("data is not enough.");
+    }
+
+    const auto accel_ptr = std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
+                             bag_data->buffers.at(TOPIC::ACCELERATION))
+                             ->get(bag_data->timestamp);
+    if (!accel_ptr) {
+      throw std::logic_error("data is not enough.");
+    }
+
+    const auto trajectory_ptr =
+      std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(TOPIC::TRAJECTORY))
+        ->get(bag_data->timestamp);
+    if (!trajectory_ptr) {
+      throw std::logic_error("data is not enough.");
+    }
+
+    for (const auto & points : utils::sampling(
+           *trajectory_ptr, odometry_ptr->pose.pose, odometry_ptr->twist.twist.linear.x,
+           accel_ptr->accel.accel.linear.x, vehicle_info, evaluator_parameters)) {
+      const auto core_data = std::make_shared<CoreData>(
+        std::make_shared<TrajectoryPoints>(points), previous_points, current_objects, "candidates");
+
+      add(core_data);
+    }
+  }
+}
+
+auto BagEvaluator::loss(const std::shared_ptr<SelectorParameters> & parameters)
+  -> std::pair<double, std::shared_ptr<TrajectoryPoints>>
+{
+  // pruning();
+
+  // normalize();
+
+  // weighting(weight);
+
+  const auto best_data = best(parameters);
+
+  if (best_data == nullptr) {
+    return std::make_pair(0.0, nullptr);
   }
 
   const auto ground_truth = get("ground_truth");
@@ -385,61 +448,6 @@ auto Evaluator::loss(const std::vector<double> & weight) -> double
     throw std::logic_error("loss value is invalid.");
   }
 
-  return mse;
-}
-
-void Evaluator::show() const
-{
-  const auto best_data = best();
-
-  if (best_data == nullptr) {
-    return;
-  }
-
-  double s0_ave = 0.0;
-  double s0_dev = 0.0;
-  double s1_ave = 0.0;
-  double s1_dev = 0.0;
-  double s2_ave = 0.0;
-  double s2_dev = 0.0;
-  double s3_ave = 0.0;
-  double s3_dev = 0.0;
-  double s4_ave = 0.0;
-  double s4_dev = 0.0;
-  double s5_ave = 0.0;
-  double s5_dev = 0.0;
-
-  const auto update = [](const double ave, const double dev, const double value, const size_t i) {
-    const auto new_ave = (i * ave + value) / (i + 1);
-    const auto new_dev =
-      (i * (ave * ave + dev * dev) + value * value) / (i + 1) - new_ave * new_ave;
-    return std::make_pair(new_ave, new_dev);
-  };
-
-  for (size_t i = 0; i < results_.size(); i++) {
-    const auto data = results_.at(i);
-    std::tie(s0_ave, s0_dev) =
-      update(s0_ave, s0_dev, data->score(SCORE::LATERAL_COMFORTABILITY), i);
-    std::tie(s1_ave, s1_dev) =
-      update(s1_ave, s1_dev, data->score(SCORE::LONGITUDINAL_COMFORTABILITY), i);
-    std::tie(s2_ave, s2_dev) = update(s2_ave, s2_dev, data->score(SCORE::EFFICIENCY), i);
-    std::tie(s3_ave, s3_dev) = update(s3_ave, s3_dev, data->score(SCORE::SAFETY), i);
-    std::tie(s4_ave, s4_dev) = update(s4_ave, s4_dev, data->score(SCORE::ACHIEVABILITY), i);
-    std::tie(s5_ave, s5_dev) = update(s5_ave, s5_dev, data->score(SCORE::CONSISTENCY), i);
-  }
-
-  std::stringstream ss;
-  ss << std::fixed << std::setprecision(2) << "\n";
-  // clang-format off
-  ss << " tag               :" << best_data->tag() << "\n";
-  ss << " lat comfortability:" << best_data->score(SCORE::LATERAL_COMFORTABILITY)       << " mean:" << s0_ave << " std:" << std::sqrt(s0_dev) << "\n"; // NOLINT
-  ss << " lon comfortability:" << best_data->score(SCORE::LONGITUDINAL_COMFORTABILITY)  << " mean:" << s1_ave << " std:" << std::sqrt(s1_dev) << "\n"; // NOLINT
-  ss << " efficiency        :" << best_data->score(SCORE::EFFICIENCY)                   << " mean:" << s2_ave << " std:" << std::sqrt(s2_dev) << "\n"; // NOLINT
-  ss << " safety            :" << best_data->score(SCORE::SAFETY)                       << " mean:" << s3_ave << " std:" << std::sqrt(s3_dev) << "\n"; // NOLINT
-  ss << " achievability     :" << best_data->score(SCORE::ACHIEVABILITY)                << " mean:" << s4_ave << " std:" << std::sqrt(s4_dev) << "\n"; // NOLINT
-  ss << " consistency       :" << best_data->score(SCORE::CONSISTENCY)                  << " mean:" << s5_ave << " std:" << std::sqrt(s5_dev) << "\n"; // NOLINT
-  ss << " total             :" << best_data->total();
-  // clang-format on
-  RCLCPP_INFO_STREAM(rclcpp::get_logger(__func__), ss.str());
+  return std::make_pair(mse, best_data->points());
 }
 }  // namespace autoware::behavior_analyzer

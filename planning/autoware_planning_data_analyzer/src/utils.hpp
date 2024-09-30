@@ -27,18 +27,9 @@
 namespace autoware::behavior_analyzer::utils
 {
 
-Point vector2point(const geometry_msgs::msg::Vector3 & v);
-
-tf2::Vector3 from_msg(const Point & p);
-
-tf2::Vector3 get_velocity_in_world_coordinate(const PredictedObjectKinematics & kinematics);
-
-tf2::Vector3 get_velocity_in_world_coordinate(const Odometry & odometry);
-
-tf2::Vector3 get_velocity_in_world_coordinate(const TrajectoryPoint & point);
-
-double time_to_collision(
-  const PredictedObjects & objects, const Pose & p_ego, const tf2::Vector3 & v_ego);
+auto time_to_collision(
+  const std::shared_ptr<TrajectoryPoints> & points,
+  const std::shared_ptr<PredictedObjects> & objects, const size_t idx) -> double;
 
 auto convertToTrajectoryPoints(
   const autoware::sampler_common::Trajectory & trajectory,
@@ -52,7 +43,8 @@ auto convertToFrenetPoint(const T & points, const Point & search_point_geom, con
 auto prepareSamplingParameters(
   const autoware::sampler_common::Configuration & initial_state, const double base_length,
   const autoware::sampler_common::transform::Spline2D & path_spline,
-  [[maybe_unused]] const double trajectory_length, const TargetStateParameters & parameters)
+  [[maybe_unused]] const double trajectory_length,
+  const std::shared_ptr<TargetStateParameters> & parameters)
   -> autoware::frenet_planner::SamplingParameters;
 
 auto resampling(
@@ -61,7 +53,8 @@ auto resampling(
 
 auto sampling(
   const Trajectory & trajectory, const Pose & p_ego, const double v_ego, const double a_ego,
-  const std::shared_ptr<VehicleInfo> & vehicle_info, const std::shared_ptr<Parameters> & parameters)
+  const std::shared_ptr<VehicleInfo> & vehicle_info,
+  const std::shared_ptr<EvaluatorParameters> & parameters)
   -> std::vector<std::vector<TrajectoryPoint>>;
 
 auto to_marker(

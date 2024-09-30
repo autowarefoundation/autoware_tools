@@ -17,7 +17,6 @@
 
 #include "bag_handler.hpp"
 #include "evaluation.hpp"
-#include "matplotlibcpp.h"
 #include "rosbag2_cpp/reader.hpp"
 #include "type_alias.hpp"
 
@@ -59,13 +58,13 @@ private:
 
   void analyze(const std::shared_ptr<BagData> & bag_data) const;
 
-  void metrics(const std::shared_ptr<Evaluator> & data_set) const;
+  // void metrics(const std::shared_ptr<BagEvaluator> & bag_evaluator) const;
 
-  void score(const std::shared_ptr<Evaluator> & data_set) const;
+  // void score(const std::shared_ptr<BagEvaluator> & bag_evaluator) const;
 
-  void visualize(const std::shared_ptr<Evaluator> & data_set) const;
+  void visualize(const std::shared_ptr<BagEvaluator> & bag_evaluator) const;
 
-  void plot(const std::shared_ptr<Evaluator> & data_set) const;
+  void plot(const std::shared_ptr<BagEvaluator> & bag_evaluator) const;
 
   rclcpp::TimerBase::SharedPtr timer_;
 
@@ -92,7 +91,9 @@ private:
 
   std::shared_ptr<RouteHandler> route_handler_;
 
-  std::shared_ptr<Parameters> parameters_;
+  std::shared_ptr<EvaluatorParameters> evaluator_parameters_;
+
+  std::shared_ptr<SelectorParameters> selector_parameters_;
 
   mutable std::shared_ptr<TrajectoryPoints> previous_;
 

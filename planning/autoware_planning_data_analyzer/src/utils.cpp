@@ -76,17 +76,29 @@ tf2::Vector3 get_velocity_in_world_coordinate(const TrajectoryPoint & point)
   return from_msg(v_world) - from_msg(pose.position);
 }
 
-double time_to_collision(
-  const PredictedObjects & objects, const Pose & p_ego, const tf2::Vector3 & v_ego)
+auto time_to_collision(
+  const std::shared_ptr<TrajectoryPoints> & points,
+  const std::shared_ptr<PredictedObjects> & objects, const size_t idx) -> double
 {
-  if (objects.objects.empty()) {
+  if (objects->objects.empty()) {
     return std::numeric_limits<double>::max();
   }
 
-  std::vector<double> time_to_collisions(objects.objects.size());
+  const auto p_ego = points->at(idx).pose;
+  const auto v_ego = utils::get_velocity_in_world_coordinate(points->at(idx));
 
-  for (const auto & object : objects.objects) {
-    const auto p_object = object.kinematics.initial_pose_with_covariance.pose;
+  std::vector<double> time_to_collisions(objects->objects.size());
+
+  for (const auto & object : objects->objects) {
+    const auto max_confidence_path = std::max_element(
+      object.kinematics.predicted_paths.begin(), object.kinematics.predicted_paths.end(),
+      [](const auto & a, const auto & b) { return a.confidence < b.confidence; });
+
+    if (max_confidence_path == object.kinematics.predicted_paths.end()) continue;
+
+    if (max_confidence_path->path.size() < idx + 1) continue;
+
+    const auto & p_object = max_confidence_path->path.at(idx);
     const auto v_ego2object =
       autoware::universe_utils::point2tfVector(p_ego.position, p_object.position);
 
@@ -151,7 +163,8 @@ auto convertToFrenetPoint(const T & points, const Point & search_point_geom, con
 auto prepareSamplingParameters(
   const autoware::sampler_common::Configuration & initial_state, const double base_length,
   const autoware::sampler_common::transform::Spline2D & path_spline,
-  [[maybe_unused]] const double trajectory_length, const TargetStateParameters & parameters)
+  [[maybe_unused]] const double trajectory_length,
+  const std::shared_ptr<TargetStateParameters> & parameters)
   -> autoware::frenet_planner::SamplingParameters
 {
   autoware::frenet_planner::SamplingParameters sampling_parameters;
@@ -162,7 +175,7 @@ auto prepareSamplingParameters(
   // const auto max_s = path_spline.lastS();
   autoware::frenet_planner::SamplingParameter p;
   p.target_duration = 10.0;
-  for (const auto lon_acceleration : parameters.lon_accelerations) {
+  for (const auto lon_acceleration : parameters->lon_accelerations) {
     p.target_state.longitudinal_acceleration = lon_acceleration;
     p.target_state.longitudinal_velocity =
       initial_state.velocity + lon_acceleration * p.target_duration;
@@ -175,11 +188,11 @@ auto prepareSamplingParameters(
     p.target_state.position.s =
       path_spline.frenet(initial_state.pose).s + initial_state.velocity * p.target_duration +
       0.5 * lon_acceleration * std::pow(p.target_duration, 2.0) - base_length;
-    for (const auto lat_position : parameters.lat_positions) {
+    for (const auto lat_position : parameters->lat_positions) {
       p.target_state.position.d = lat_position;
-      for (const auto lat_velocity : parameters.lat_velocities) {
+      for (const auto lat_velocity : parameters->lat_velocities) {
         p.target_state.lateral_velocity = lat_velocity;
-        for (const auto lat_acceleration : parameters.lat_accelerations) {
+        for (const auto lat_acceleration : parameters->lat_accelerations) {
           p.target_state.lateral_acceleration = lat_acceleration;
           sampling_parameters.parameters.push_back(p);
         }
@@ -220,7 +233,8 @@ auto resampling(
 
 auto sampling(
   const Trajectory & trajectory, const Pose & p_ego, const double v_ego, const double a_ego,
-  const std::shared_ptr<VehicleInfo> & vehicle_info, const std::shared_ptr<Parameters> & parameters)
+  const std::shared_ptr<VehicleInfo> & vehicle_info,
+  const std::shared_ptr<EvaluatorParameters> & parameters)
   -> std::vector<std::vector<TrajectoryPoint>>
 {
   const auto reference_trajectory =
@@ -238,7 +252,8 @@ auto sampling(
 
   const auto trajectory_length = autoware::motion_utils::calcArcLength(trajectory.points);
   const auto sampling_parameters = prepareSamplingParameters(
-    current_state, 0.0, reference_trajectory, trajectory_length, parameters->target_state);
+    current_state, 0.0, reference_trajectory, trajectory_length,
+    std::make_shared<TargetStateParameters>(parameters->target_state));
 
   autoware::frenet_planner::FrenetState initial_frenet_state;
   initial_frenet_state.position = reference_trajectory.frenet(current_state.pose);
@@ -284,7 +299,7 @@ auto sampling(
 auto to_marker(
   const std::shared_ptr<DataInterface> & data, const SCORE & score_type, const size_t id) -> Marker
 {
-  if (data == nullptr) return {};
+  if (data == nullptr) return Marker{};
 
   const auto idx = static_cast<size_t>(score_type);
   const auto score = data->scores().at(idx);

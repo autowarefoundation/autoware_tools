@@ -93,9 +93,7 @@ auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> TFMes
 
 struct BagData
 {
-  explicit BagData(
-    const rcutils_time_point_value_t timestamp, std::shared_ptr<RouteHandler> & route_handler)
-  : timestamp{timestamp}, route_handler{route_handler}
+  explicit BagData(const rcutils_time_point_value_t timestamp) : timestamp{timestamp}
   {
     buffers.emplace(TOPIC::TF, std::make_shared<Buffer<TFMessage>>());
     buffers.emplace(TOPIC::ODOMETRY, std::make_shared<Buffer<Odometry>>());
@@ -108,8 +106,6 @@ struct BagData
   rcutils_time_point_value_t timestamp;
 
   std::map<std::string, std::shared_ptr<BufferBase>> buffers{};
-
-  std::shared_ptr<RouteHandler> route_handler;
 
   void update(const rcutils_time_point_value_t dt)
   {
