@@ -1284,6 +1284,53 @@ class DataCollectingTrajectoryPublisher(Node):
 
             marker_array.markers.append(marker_traj2)
 
+            # [6-2c] add arrow
+            marker_arrow = Marker()
+            marker_arrow.type = marker_arrow.ARROW
+            marker_arrow.id = 2
+            marker_arrow.header.frame_id = "map"
+
+            marker_arrow.action = marker_arrow.ADD
+
+            marker_arrow.scale.x = 0.5
+            marker_arrow.scale.y = 2.5
+            marker_arrow.scale.z = 0.0
+
+            marker_arrow.color.a = 1.0
+            marker_arrow.color.r = 1.0
+            marker_arrow.color.g = 0.0
+            marker_arrow.color.b = 1.0
+
+            marker_arrow.lifetime.nanosec = 500000000
+            marker_arrow.frame_locked = True
+
+            tangent_vec = np.array(
+                [
+                    tmp_traj.points[1].pose.position.x - tmp_traj.points[0].pose.position.x,
+                    tmp_traj.points[1].pose.position.y - tmp_traj.points[0].pose.position.y,
+                ]
+            )
+
+            marker_arrow.points = []
+
+            start_marker_point = Point()
+            start_marker_point.x = tmp_traj.points[0].pose.position.x
+            start_marker_point.y = tmp_traj.points[0].pose.position.y
+            start_marker_point.z = 0.0
+            marker_arrow.points.append(start_marker_point)
+
+            end_marker_point = Point()
+            end_marker_point.x = tmp_traj.points[0].pose.position.x + 5.0 * tangent_vec[
+                0
+            ] / np.linalg.norm(tangent_vec)
+            end_marker_point.y = tmp_traj.points[0].pose.position.y + 5.0 * tangent_vec[
+                1
+            ] / np.linalg.norm(tangent_vec)
+            end_marker_point.z = 0.0
+            marker_arrow.points.append(end_marker_point)
+
+            marker_array.markers.append(marker_arrow)
+
             self.data_collecting_trajectory_marker_array_pub_.publish(marker_array)
 
             if debug_matplotlib_plot_flag:
