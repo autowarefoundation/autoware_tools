@@ -55,7 +55,7 @@ MetaConfig parseCommandLine(int argc, const char * argv[])
                "Location of the map (for instantiating the traffic rules), e.g. de for Germany")
 
                 ("participants", po::value(&validation_config.participants)->composing(),
-                 "Participants for which the routing graph will be instanciated (default: vehicle)")
+                 "Participants for which the routing graph will be instantiated (default: vehicle)")
 
                   ("lat",
                    po::value(&validation_config.origin.lat)
