@@ -35,8 +35,8 @@
 int process_requirements(
   YAML::Node yaml_config, const lanelet::autoware::validation::MetaConfig & validator_config)
 {
-  unsigned long warning_count = 0;
-  unsigned long error_count = 0;
+  uint64_t warning_count = 0;
+  uint64_t error_count = 0;
   lanelet::autoware::validation::MetaConfig temp_validator_config = validator_config;
 
   for (YAML::Node requirement : yaml_config["requirements"]) {
