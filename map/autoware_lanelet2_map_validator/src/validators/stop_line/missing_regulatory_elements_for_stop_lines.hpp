@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+<<<<<<< HEAD:map/autoware_lanelet2_map_validator/include/autoware_lanelet2_map_validator/validators/stop_line/missing_regulatory_elements_for_stop_lines.hpp
 #ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_
 MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_
 #define AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_
 MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_
+=======
+#ifndef VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_
+#define VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_
+>>>>>>> 0fe0b37 (Changed the entire structure.):map/autoware_lanelet2_map_validator/src/validators/stop_line/missing_regulatory_elements_for_stop_lines.hpp
 
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
@@ -38,5 +43,9 @@ private:
 }  // namespace validation
 }  // namespace lanelet
 
+<<<<<<< HEAD:map/autoware_lanelet2_map_validator/include/autoware_lanelet2_map_validator/validators/stop_line/missing_regulatory_elements_for_stop_lines.hpp
 #endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_
         // MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_
+=======
+#endif  // VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_
+>>>>>>> 0fe0b37 (Changed the entire structure.):map/autoware_lanelet2_map_validator/src/validators/stop_line/missing_regulatory_elements_for_stop_lines.hpp

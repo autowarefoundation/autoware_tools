@@ -12,15 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__CLI_HPP_
-#define AUTOWARE_LANELET2_MAP_VALIDATOR__CLI_HPP_
+#ifndef LIB__VALIDATION_HPP_
+#define LIB__VALIDATION_HPP_
 
-#include <boost/program_options.hpp>
+#include "lib/cli.hpp"
+#include "lib/utils.hpp"
 
+#include <lanelet2_io/Io.h>
+#include <lanelet2_projection/UTM.h>
 #include <lanelet2_validation/Cli.h>
+#include <lanelet2_validation/Validation.h>
 
-#include <iostream>
-#include <string>
+#include <memory>
+#include <regex>
+#include <vector>
+
+namespace
+{
+namespace projector_names
+{
+constexpr const char * mgrs = "mgrs";
+constexpr const char * transverse_mercator = "transverse_mercator";
+constexpr const char * utm = "utm";
+}  // namespace projector_names
+}  // namespace
 
 namespace lanelet
 {
@@ -28,18 +43,10 @@ namespace autoware
 {
 namespace validation
 {
-struct MetaConfig
-{
-  lanelet::validation::CommandLineConfig command_line_config;
-  std::string projector_type;
-  std::string requirements_file;
-  std::string output_file_path;
-};
-
-MetaConfig parseCommandLine(int argc, const char * argv[]);
-
+std::unique_ptr<lanelet::Projector> getProjector(const MetaConfig & config);
+std::vector<lanelet::validation::DetectedIssues> validateMap(const MetaConfig & config);
 }  // namespace validation
 }  // namespace autoware
 }  // namespace lanelet
 
-#endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__CLI_HPP_
+#endif  // LIB__VALIDATION_HPP_

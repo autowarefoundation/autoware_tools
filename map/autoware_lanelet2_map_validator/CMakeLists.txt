@@ -8,10 +8,10 @@ ament_auto_find_build_dependencies()
 find_package(yaml-cpp REQUIRED)
 
 include_directories(
-  include
+  src
 )
 
-file(GLOB_RECURSE autoware_lanelet2_map_validator_lib_src src/lib/*.cpp)
+file(GLOB_RECURSE autoware_lanelet2_map_validator_lib_src src/*.cpp)
 ament_auto_add_library(autoware_lanelet2_map_validator_lib SHARED
   ${autoware_lanelet2_map_validator_lib_src}
 )
@@ -32,6 +32,7 @@ if(BUILD_TESTING)
     target_link_libraries(
       ${VALIDATION_NAME}_test
       autoware_lanelet2_map_validator_lib
+      yaml-cpp
     )
   endfunction()
 

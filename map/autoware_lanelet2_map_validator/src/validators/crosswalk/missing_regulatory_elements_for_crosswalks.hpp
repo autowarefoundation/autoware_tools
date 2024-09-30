@@ -12,10 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+<<<<<<< HEAD:map/autoware_lanelet2_map_validator/include/autoware_lanelet2_map_validator/validators/crosswalk/missing_regulatory_elements_for_crosswalks.hpp
 #ifndef AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
 MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
 #define AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
 MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
+=======
+#ifndef VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
+#define VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
+>>>>>>> 0fe0b37 (Changed the entire structure.):map/autoware_lanelet2_map_validator/src/validators/crosswalk/missing_regulatory_elements_for_crosswalks.hpp
 
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
@@ -38,5 +43,9 @@ private:
 }  // namespace validation
 }  // namespace lanelet
 
+<<<<<<< HEAD:map/autoware_lanelet2_map_validator/include/autoware_lanelet2_map_validator/validators/crosswalk/missing_regulatory_elements_for_crosswalks.hpp
 #endif  // AUTOWARE_LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
         // MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
+=======
+#endif  // VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_
+>>>>>>> 0fe0b37 (Changed the entire structure.):map/autoware_lanelet2_map_validator/src/validators/crosswalk/missing_regulatory_elements_for_crosswalks.hpp

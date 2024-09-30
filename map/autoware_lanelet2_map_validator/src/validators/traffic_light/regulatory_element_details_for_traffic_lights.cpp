@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <autoware_lanelet2_map_validator/utils.hpp>
-#include <autoware_lanelet2_map_validator/validators/traffic_light/regulatory_element_details_for_traffic_lights.hpp>
+#include "validators/traffic_light/regulatory_element_details_for_traffic_lights.hpp"
+
+#include "lib/utils.hpp"
+
 #include <range/v3/view/filter.hpp>
 
 #include <lanelet2_core/LaneletMap.h>

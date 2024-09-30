@@ -13,10 +13,9 @@
 // limitations under the License.
 
 #include "lanelet2_validation/Validation.h"
-
-#include <autoware_lanelet2_map_validator/cli.hpp>
-#include <autoware_lanelet2_map_validator/utils.hpp>
-#include <autoware_lanelet2_map_validator/validation.hpp>
+#include "lib/cli.hpp"
+#include "lib/utils.hpp"
+#include "lib/validation.hpp"
 
 #include <yaml-cpp/yaml.h>
 
