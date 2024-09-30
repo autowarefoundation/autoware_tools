@@ -144,8 +144,8 @@ int main(int argc, char * argv[])
 
   // Print available validators
   if (config.command_line_config.print) {
-    auto checks =
-      lanelet::validation::availabeChecks(config.command_line_config.validationConfig.checksFilter); // cspell:disable-line
+    auto checks = lanelet::validation::availabeChecks(
+      config.command_line_config.validationConfig.checksFilter);  // cspell:disable-line
     if (checks.empty()) {
       std::cout << "No checks found matching '"
                 << config.command_line_config.validationConfig.checksFilter << "'\n";
