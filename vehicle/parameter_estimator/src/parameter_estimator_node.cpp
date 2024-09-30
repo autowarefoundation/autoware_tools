@@ -122,7 +122,8 @@ void ParameterEstimatorNode::timerCallback()
   {
     VehicleData v = {};
     v.velocity = vehicle_twist_ptr_->twist.linear.x;
-    v.angular_velocity = -imu_ptr_->angular_velocity.z;
+    //v.angular_velocity = -imu_ptr_->angular_velocity.z;
+    v.angular_velocity = imu_ptr_->angular_velocity.z;
     if (select_steer_offset_estimator || select_wheel_base_estimator) {
       v.steer = steer_ptr_->data;
     }

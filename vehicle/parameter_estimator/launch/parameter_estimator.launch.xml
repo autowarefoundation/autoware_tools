@@ -27,7 +27,7 @@
     <param name="select_wheel_base_estimator" value="$(var select_wheel_base_estimator)"/>
     <param name="use_auto_mode" value="$(var use_auto_mode)"/>
     <remap from="input/imu_twist" to="$(var imu_twist)"/>
-    <remap from="input/vehicle_twist" to="/vehicle/status/twist"/>
+    <remap from="input/vehicle_twist" to="/calibration/vehicle/twist_status"/>
     <remap from="input/control_mode" to="/vehicle/status/control_mode"/>
     <remap from="input/handle_status" to="/calibration/vehicle/handle_status"/>
     <remap from="input/steer" to="/calibration/vehicle/steering_angle_status"/>
