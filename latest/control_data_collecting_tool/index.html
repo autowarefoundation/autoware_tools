@@ -2930,6 +2930,85 @@ You cannot change the data collecting area while driving.</p>
 <td align="left">20.0</td>
 </tr>
 </tbody>
+</table>
+<p>ROS 2 params in <code>/data_collecting_plotter</code> node:</p>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>COURSE_NAME</code></td>
+<td align="left"><code>string</code></td>
+<td align="left">Course name [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>]</td>
+<td align="left"><code>eight_course</code></td>
+</tr>
+<tr>
+<td align="left"><code>NUM_BINS_V</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Number of bins of velocity in heatmap</td>
+<td align="left">10</td>
+</tr>
+<tr>
+<td align="left"><code>NUM_BINS_STEER</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Number of bins of steer in heatmap</td>
+<td align="left">10</td>
+</tr>
+<tr>
+<td align="left"><code>NUM_BINS_ACCELERATION</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Number of bins of acceleration in heatmap</td>
+<td align="left">10</td>
+</tr>
+<tr>
+<td align="left"><code>V_MIN</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Minimum velocity in heatmap [m/s]</td>
+<td align="left">0.0</td>
+</tr>
+<tr>
+<td align="left"><code>V_MAX</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Maximum velocity in heatmap [m/s]</td>
+<td align="left">11.5</td>
+</tr>
+<tr>
+<td align="left"><code>STEER_MIN</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Minimum steer in heatmap [rad]</td>
+<td align="left">-1.0</td>
+</tr>
+<tr>
+<td align="left"><code>STEER_MAX</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Maximum steer in heatmap [rad]</td>
+<td align="left">1.0</td>
+</tr>
+<tr>
+<td align="left"><code>A_MIN</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Minimum acceleration in heatmap [m/ss]</td>
+<td align="left">-1.0</td>
+</tr>
+<tr>
+<td align="left"><code>A_MAX</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Maximum acceleration in heatmap [m/ss]</td>
+<td align="left">1.0</td>
+</tr>
+<tr>
+<td align="left"><code>wheel_base</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Wheel base [m]</td>
+<td align="left">2.79</td>
+</tr>
+</tbody>
 </table></div>
 
 
