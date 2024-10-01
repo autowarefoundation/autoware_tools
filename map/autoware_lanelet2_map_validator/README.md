@@ -1,7 +1,8 @@
 # autoware_lanelet2_map_validator
 
 `autoware_lanelet2_map_validator` is a tool to validate Lanelet2 maps to ensure that Autoware can work properly with it.
-This validation tool is an extension of [lanelet2_validation](https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation) so that Autoware specific rules can be applied.
+
+This validation tool is an extension of [lanelet2_validation](https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation) so that Autoware specific rules can be applied. As you can see from the codes in the `src/validators` directory, the group of validators belong to this tool inherits the [lanelet::validation::MapValidator class](https://github.com/fzi-forschungszentrum-informatik/Lanelet2/blob/master/lanelet2_validation/include/lanelet2_validation/BasicValidator.h#L17) from the original `lanelet2_validation`. Therefore, we believe that reading the source code of the `lanelet2_validation` will help you understand this tool better.
 
 **Note that this validator is still on construction that there are only a few rules and a template to define those rules.**
 
@@ -44,15 +45,15 @@ You can run `autoware_lanelet2_map_validator` with a yaml file input that follow
 
 ```yaml
 requirements:
-  - id: vm-01-01
+  - id: example-01-01
     validators:
       - name: mapping.crosswalk.missing_regulatory_elements
       - name: mapping.crosswalk.regulatory_element_details
-  - id: vm-01-02
+  - id: example-01-02
     validators:
       - name: mapping.traffic_light.missing_regulatory_elements
       - name: mapping.traffic_light.regulatory_element_details
-  - id: vm-01-03
+  - id: example-01-03
     validators:
       - name: mapping.stop_line.missing_regulatory_elements
 ```
@@ -75,7 +76,7 @@ When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it
 
 ```yaml
 requirements:
-  - id: vm-01-01
+  - id: example-01-01
     passed: false
     validators:
       - name: mapping.crosswalk.missing_regulatory_elements
@@ -99,7 +100,7 @@ requirements:
             message: No regulatory element refers to this crosswalk.
       - name: mapping.crosswalk.regulatory_element_details
         passed: true
-  - id: vm-01-02
+  - id: exanple-01-02
     passed: false
     validators:
       - name: mapping.traffic_light.missing_regulatory_elements
@@ -123,7 +124,7 @@ requirements:
             primitive: regulatory element
             id: 9874
             message: Regulatory element of traffic light must have a stop line(ref_line).
-  - id: vm-01-03
+  - id: example-01-03
     passed: true
     validators:
       - name: mapping.stop_line.missing_regulatory_elements
@@ -171,6 +172,7 @@ The directory structure should be the same to that of the `src/lib/validators` d
 
 ## Relationship between requirements and validators
 
+This is a table describing the correspondence between the validators that each requirement consists of.
 The Validators column will be blank if it hasn't be implemented.
 
 | ID       | Requirements                                            | Validators                                                                                                                                                                                                                                                      |
