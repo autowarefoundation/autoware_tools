@@ -2889,8 +2889,8 @@
 
 
 <div><h1 id="autoware_lanelet2_map_validator">autoware_lanelet2_map_validator<a class="headerlink" href="#autoware_lanelet2_map_validator" title="Permanent link">#</a></h1>
-<p><code>autoware_lanelet2_map_validator</code> is a tool to validate Lanelet2 maps to ensure that Autoware can work properly with it.
-This validation tool is an extension of <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation">lanelet2_validation</a> so that Autoware specific rules can be applied.</p>
+<p><code>autoware_lanelet2_map_validator</code> is a tool to validate Lanelet2 maps to ensure that Autoware can work properly with it.</p>
+<p>This validation tool is an extension of <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation">lanelet2_validation</a> so that Autoware specific rules can be applied. As you can see from the codes in the <code>src/validators</code> directory, the group of validators belong to this tool inherits the <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2/blob/master/lanelet2_validation/include/lanelet2_validation/BasicValidator.h#L17">lanelet::validation::MapValidator class</a> from the original <code>lanelet2_validation</code>. Therefore, we believe that reading the source code of the <code>lanelet2_validation</code> will help you understand this tool better.</p>
 <p><strong>Note that this validator is still on construction that there are only a few rules and a template to define those rules.</strong></p>
 <p>The official Autoware requirements for lanelet2 maps are described in <a href="https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/">Vector Map creation requirement specifications (in Autoware Documentation)</a>.</p>
 <h2 id="how-to-use">How to use<a class="headerlink" href="#how-to-use" title="Permanent link">#</a></h2>
@@ -2912,15 +2912,15 @@ If you want to call a few validators, you can select them with the <code>--valid
 <h3 id="run-with-a-requirement-set">Run with a requirement set<a class="headerlink" href="#run-with-a-requirement-set" title="Permanent link">#</a></h3>
 <p>You can run <code>autoware_lanelet2_map_validator</code> with a yaml file input that follows the structure like this</p>
 <div class="highlight"><pre><span></span><code><span class="nt">requirements</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vm-01-01</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-01</span>
 <span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.crosswalk.missing_regulatory_elements</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.crosswalk.regulatory_element_details</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vm-01-02</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-02</span>
 <span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.traffic_light.missing_regulatory_elements</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.traffic_light.regulatory_element_details</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vm-01-03</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-03</span>
 <span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.stop_line.missing_regulatory_elements</span>
 </code></pre></div>
@@ -2942,7 +2942,7 @@ If you want to call a few validators, you can select them with the <code>--valid
 </code></pre></div>
 <p>When the <code>input_requirements</code> is thrown to <code>autoware_lanelet2_map_validator</code>, it will output a <code>lanelet2_validation_results.yaml</code> file which looks like the following.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">requirements</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vm-01-01</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-01</span>
 <span class="w">    </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.crosswalk.missing_regulatory_elements</span>
@@ -2966,7 +2966,7 @@ If you want to call a few validators, you can select them with the <code>--valid
 <span class="w">            </span><span class="nt">message</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">No regulatory element refers to this crosswalk.</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.crosswalk.regulatory_element_details</span>
 <span class="w">        </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vm-01-02</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">exanple-01-02</span>
 <span class="w">    </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
 <span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.traffic_light.missing_regulatory_elements</span>
@@ -2990,7 +2990,7 @@ If you want to call a few validators, you can select them with the <code>--valid
 <span class="w">            </span><span class="nt">primitive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">regulatory element</span>
 <span class="w">            </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9874</span>
 <span class="w">            </span><span class="nt">message</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Regulatory element of traffic light must have a stop line(ref_line).</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">vm-01-03</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-03</span>
 <span class="w">    </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.stop_line.missing_regulatory_elements</span>
@@ -3074,7 +3074,8 @@ The directory structure should be the same to that of the <code>src/lib/validato
 <li><a href="docs/crosswalk/regulatory_element_details_for_crosswalks/">mapping.crosswalk.regulatory_element_details</a></li>
 </ul>
 <h2 id="relationship-between-requirements-and-validators">Relationship between requirements and validators<a class="headerlink" href="#relationship-between-requirements-and-validators" title="Permanent link">#</a></h2>
-<p>The Validators column will be blank if it hasn't be implemented.</p>
+<p>This is a table describing the correspondence between the validators that each requirement consists of.
+The Validators column will be blank if it hasn't be implemented.</p>
 <table>
 <thead>
 <tr>
