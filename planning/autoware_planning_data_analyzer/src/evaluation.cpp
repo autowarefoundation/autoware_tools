@@ -18,6 +18,7 @@
 #include "data_structs.hpp"
 #include "utils.hpp"
 
+#include <autoware/universe_utils/ros/marker_helper.hpp>
 #include <autoware_lanelet2_extension/utility/utilities.hpp>
 
 #include <algorithm>
@@ -30,139 +31,6 @@
 
 namespace autoware::behavior_analyzer
 {
-BagEvaluator::BagEvaluator(
-  const std::shared_ptr<BagData> & bag_data,
-  // const std::shared_ptr<TrajectoryPoints> & previous_points,
-  const std::shared_ptr<RouteHandler> & route_handler,
-  const std::shared_ptr<VehicleInfo> & vehicle_info,
-  const std::shared_ptr<DataAugmentParameters> & parameters)
-: autoware::trajectory_selector::trajectory_evaluator::Evaluator{route_handler, vehicle_info},
-  objects_{objects(bag_data, parameters)},
-  ground_truth_{ground_truth(bag_data, parameters)},
-  augment_data_{augment_data(bag_data, vehicle_info, parameters)}
-{
-  // const auto odometry_buffer_ptr =
-  //   std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY));
-
-  // const auto acceleration_buffer_ptr =
-  //   std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
-  //     bag_data->buffers.at(TOPIC::ACCELERATION));
-
-  // const auto steering_buffer_ptr =
-  //   std::dynamic_pointer_cast<Buffer<SteeringReport>>(bag_data->buffers.at(TOPIC::STEERING));
-
-  // const auto objects_buffer_ptr =
-  //   std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(TOPIC::OBJECTS));
-
-  // const auto current_objects = objects_buffer_ptr->get(bag_data->timestamp);
-
-  // // remove predicted_paths.
-  // std::for_each(
-  //   current_objects->objects.begin(), current_objects->objects.end(), [](auto & object) {
-  //     object.kinematics.predicted_paths.clear();
-  //     object.kinematics.predicted_paths.push_back(PredictedPath{});
-  //   });
-
-  // // overwrite predicted_paths by future data.
-  // for (size_t i = 0; i < parameters->sample_num; i++) {
-  //   const auto objects_ptr = objects_buffer_ptr->get(
-  //     bag_data->timestamp + 1e9 * parameters->time_step * i);
-  //   if (!objects_ptr) {
-  //     break;
-  //   }
-
-  //   for (const auto & a : objects_ptr->objects) {
-  //     const auto itr = std::find_if(
-  //       current_objects->objects.begin(), current_objects->objects.end(),
-  //       [&a](const auto & b) { return a.object_id == b.object_id; });
-  //     if (itr == current_objects->objects.end()) continue;
-
-  //     itr->kinematics.predicted_paths.at(0).path.push_back(
-  //       a.kinematics.initial_pose_with_covariance.pose);
-  //   }
-  // }
-
-  // // actual behavior
-  // TrajectoryPoints points;
-  // {
-  //   for (size_t i = 0; i < parameters->sample_num; i++) {
-  //     const auto odometry_ptr = odometry_buffer_ptr->get(
-  //       bag_data->timestamp + 1e9 * parameters->time_step * i);
-  //     if (!odometry_ptr) {
-  //       break;
-  //     }
-
-  //     const auto accel_ptr = acceleration_buffer_ptr->get(
-  //       bag_data->timestamp + 1e9 * parameters->time_step * i);
-  //     if (!accel_ptr) {
-  //       break;
-  //     }
-
-  //     const auto opt_steer = steering_buffer_ptr->get(
-  //       bag_data->timestamp + 1e9 * parameters->time_step * i);
-  //     if (!opt_steer) {
-  //       break;
-  //     }
-
-  //     const auto duration = builtin_interfaces::build<Duration>().sec(0.0).nanosec(0.0);
-  //     const auto point = autoware_planning_msgs::build<TrajectoryPoint>()
-  //                          .time_from_start(duration)
-  //                          .pose(odometry_ptr->pose.pose)
-  //                          .longitudinal_velocity_mps(odometry_ptr->twist.twist.linear.x)
-  //                          .lateral_velocity_mps(0.0)
-  //                          .acceleration_mps2(accel_ptr->accel.accel.linear.x)
-  //                          .heading_rate_rps(0.0)
-  //                          .front_wheel_angle_rad(opt_steer->steering_tire_angle)
-  //                          .rear_wheel_angle_rad(0.0);
-  //     points.push_back(point);
-  //   }
-
-  //   {
-  //     const auto core_data =
-  //     std::make_shared<trajectory_selector::trajectory_evaluator::CoreData>(
-  //       std::make_shared<TrajectoryPoints>(points), previous_points, current_objects,
-  //       "ground_truth");
-
-  //     add(core_data);
-  //   }
-  // }
-
-  // // frenet planner (data augmentation)
-  // {
-  //   const auto odometry_ptr =
-  //     std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY))
-  //       ->get(bag_data->timestamp);
-  //   if (!odometry_ptr) {
-  //     throw std::logic_error("data is not enough.");
-  //   }
-
-  //   const auto accel_ptr = std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
-  //                            bag_data->buffers.at(TOPIC::ACCELERATION))
-  //                            ->get(bag_data->timestamp);
-  //   if (!accel_ptr) {
-  //     throw std::logic_error("data is not enough.");
-  //   }
-
-  //   const auto trajectory_ptr =
-  //     std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(TOPIC::TRAJECTORY))
-  //       ->get(bag_data->timestamp);
-  //   if (!trajectory_ptr) {
-  //     throw std::logic_error("data is not enough.");
-  //   }
-
-  //   for (const auto & points : utils::sampling(
-  //          *trajectory_ptr, odometry_ptr->pose.pose, odometry_ptr->twist.twist.linear.x,
-  //          accel_ptr->accel.accel.linear.x, vehicle_info, parameters)) {
-  //     const auto core_data =
-  //     std::make_shared<trajectory_selector::trajectory_evaluator::CoreData>(
-  //       std::make_shared<TrajectoryPoints>(points), previous_points, current_objects,
-  //       "candidates");
-
-  //     add(core_data);
-  //   }
-  // }
-}
-
 auto BagEvaluator::objects(
   const std::shared_ptr<BagData> & bag_data,
   const std::shared_ptr<DataAugmentParameters> & parameters) const
@@ -282,7 +150,7 @@ auto BagEvaluator::augment_data(
     throw std::logic_error("data is not enough.");
   }
 
-  for (const auto & points : utils::sampling(
+  for (const auto & points : utils::augment(
          *trajectory_ptr, odometry_ptr->pose.pose, odometry_ptr->twist.twist.linear.x,
          accel_ptr->accel.accel.linear.x, vehicle_info, parameters)) {
     augment_data.push_back(std::make_shared<TrajectoryPoints>(points));
@@ -295,14 +163,14 @@ void BagEvaluator::setup(const std::shared_ptr<TrajectoryPoints> & previous_poin
 {
   {
     const auto core_data = std::make_shared<trajectory_selector::trajectory_evaluator::CoreData>(
-      ground_truth_, previous_points, objects_, "ground_truth");
+      ground_truth_, previous_points, objects_, odometry_, "ground_truth");
 
     add(core_data);
   }
 
   for (const auto & points : augment_data_) {
     const auto core_data = std::make_shared<trajectory_selector::trajectory_evaluator::CoreData>(
-      points, previous_points, objects_, "candidates");
+      points, previous_points, objects_, odometry_, "candidates");
 
     add(core_data);
   }
@@ -312,7 +180,7 @@ auto BagEvaluator::loss(
   const std::shared_ptr<trajectory_selector::trajectory_evaluator::EvaluatorParameters> &
     parameters) -> std::pair<double, std::shared_ptr<TrajectoryPoints>>
 {
-  const auto best_data = best(parameters);
+  const auto best_data = best(parameters, "ground_truth");
 
   if (best_data == nullptr) {
     return std::make_pair(0.0, nullptr);
@@ -333,5 +201,47 @@ auto BagEvaluator::loss(
   }
 
   return std::make_pair(mse, best_data->points());
+}
+
+auto BagEvaluator::marker() const -> std::shared_ptr<MarkerArray>
+{
+  using autoware::universe_utils::createDefaultMarker;
+  using autoware::universe_utils::createMarkerColor;
+  using autoware::universe_utils::createMarkerScale;
+
+  MarkerArray msg;
+
+  const auto ground_truth = get("ground_truth");
+  if (ground_truth != nullptr) {
+    for (size_t i = 0; i < ground_truth->points()->size(); ++i) {
+      Marker marker = createDefaultMarker(
+        "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "ground_truth", i, Marker::ARROW,
+        createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 0.0, 0.0, 0.999));
+      marker.pose = ground_truth->points()->at(i).pose;
+      msg.markers.push_back(marker);
+    }
+  }
+
+  const auto best_data = best();
+  if (best_data != nullptr) {
+    Marker marker = createDefaultMarker(
+      "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "best_score", 0L, Marker::LINE_STRIP,
+      createMarkerScale(0.2, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
+    for (const auto & point : *best_data->points()) {
+      marker.points.push_back(point.pose.position);
+    }
+    msg.markers.push_back(marker);
+  }
+
+  for (size_t i = 0; i < results().size(); ++i) {
+    msg.markers.push_back(utils::to_marker(results().at(i), SCORE::LATERAL_COMFORTABILITY, i));
+    msg.markers.push_back(utils::to_marker(results().at(i), SCORE::LONGITUDINAL_COMFORTABILITY, i));
+    msg.markers.push_back(utils::to_marker(results().at(i), SCORE::EFFICIENCY, i));
+    msg.markers.push_back(utils::to_marker(results().at(i), SCORE::SAFETY, i));
+    msg.markers.push_back(utils::to_marker(results().at(i), SCORE::ACHIEVABILITY, i));
+    msg.markers.push_back(utils::to_marker(results().at(i), SCORE::CONSISTENCY, i));
+  }
+
+  return std::make_shared<MarkerArray>(msg);
 }
 }  // namespace autoware::behavior_analyzer

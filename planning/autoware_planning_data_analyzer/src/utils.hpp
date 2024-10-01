@@ -26,11 +26,11 @@
 
 namespace autoware::behavior_analyzer::utils
 {
-auto resampling(
+auto sampling(
   const Trajectory & trajectory, const Pose & p_ego, const size_t resample_num,
   const double time_resolution) -> std::vector<TrajectoryPoint>;
 
-auto sampling(
+auto augment(
   const Trajectory & trajectory, const Pose & p_ego, const double v_ego, const double a_ego,
   const std::shared_ptr<VehicleInfo> & vehicle_info,
   const std::shared_ptr<DataAugmentParameters> & parameters)

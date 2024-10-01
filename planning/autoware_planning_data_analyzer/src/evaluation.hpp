@@ -32,16 +32,30 @@ class BagEvaluator : public trajectory_selector::trajectory_evaluator::Evaluator
 {
 public:
   BagEvaluator(
-    const std::shared_ptr<BagData> & bag_data,
-    // const std::shared_ptr<TrajectoryPoints> & previous_points,
-    const std::shared_ptr<RouteHandler> & route_handler,
+    const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<RouteHandler> & route_handler,
     const std::shared_ptr<VehicleInfo> & vehicle_info,
-    const std::shared_ptr<DataAugmentParameters> & parameters);
+    const std::shared_ptr<DataAugmentParameters> & parameters)
+  : autoware::trajectory_selector::trajectory_evaluator::Evaluator{route_handler, vehicle_info},
+    tf_{std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(TOPIC::TF))
+          ->get(bag_data->timestamp)},
+    odometry_{std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY))
+                ->get(bag_data->timestamp)},
+    objects_{objects(bag_data, parameters)},
+    ground_truth_{ground_truth(bag_data, parameters)},
+    augment_data_{augment_data(bag_data, vehicle_info, parameters)}
+  {
+  }
 
   void setup(const std::shared_ptr<TrajectoryPoints> & previous_points);
 
   auto loss(const std::shared_ptr<trajectory_selector::trajectory_evaluator::EvaluatorParameters> &
               parameters) -> std::pair<double, std::shared_ptr<TrajectoryPoints>>;
+
+  auto tf() const -> std::shared_ptr<TFMessage> { return tf_; };
+
+  auto objects() const -> std::shared_ptr<PredictedObjects> { return objects_; }
+
+  auto marker() const -> std::shared_ptr<MarkerArray>;
 
 private:
   auto objects(
@@ -58,6 +72,10 @@ private:
     const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<VehicleInfo> & vehicle_info,
     const std::shared_ptr<DataAugmentParameters> & parameters) const
     -> std::vector<std::shared_ptr<TrajectoryPoints>>;
+
+  std::shared_ptr<TFMessage> tf_;
+
+  std::shared_ptr<Odometry> odometry_;
 
   std::shared_ptr<PredictedObjects> objects_;
 

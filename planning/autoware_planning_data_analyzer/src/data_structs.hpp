@@ -17,6 +17,7 @@
 
 #include "type_alias.hpp"
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -33,12 +34,6 @@ struct TOPIC
   static std::string ROUTE;
 };
 
-// struct FrenetPoint
-// {
-//   double length{0.0};    // longitudinal
-//   double distance{0.0};  // lateral
-// };
-
 struct TargetStateParameters
 {
   std::vector<double> lat_positions{};
@@ -48,15 +43,6 @@ struct TargetStateParameters
   std::vector<double> lon_velocities{};
   std::vector<double> lon_accelerations{};
 };
-
-// struct GridSearchParameters
-// {
-//   double min{0.0};
-//   double max{1.0};
-//   double resolusion{0.01};
-//   double dt{1.0};
-//   size_t thread_num{4};
-// };
 
 struct DataAugmentParameters
 {

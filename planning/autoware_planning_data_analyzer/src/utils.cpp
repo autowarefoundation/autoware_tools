@@ -128,7 +128,7 @@ auto prepareSamplingParameters(
   return sampling_parameters;
 }
 
-auto resampling(
+auto sampling(
   const Trajectory & trajectory, const Pose & p_ego, const size_t sample_num,
   const double resolution) -> std::vector<TrajectoryPoint>
 {
@@ -155,7 +155,7 @@ auto resampling(
   return output;
 }
 
-auto sampling(
+auto augment(
   const Trajectory & trajectory, const Pose & p_ego, const double v_ego, const double a_ego,
   const std::shared_ptr<VehicleInfo> & vehicle_info,
   const std::shared_ptr<DataAugmentParameters> & parameters)

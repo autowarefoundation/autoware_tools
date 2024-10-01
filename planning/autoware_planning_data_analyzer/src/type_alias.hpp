@@ -16,6 +16,7 @@
 #define TYPE_ALIAS_HPP_
 
 #include <autoware/route_handler/route_handler.hpp>
+#include <autoware/trajectory_evaluator/data_structs.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info_utils.hpp>
 #include <builtin_interfaces/msg/duration.hpp>
 
@@ -44,6 +45,8 @@ using std::chrono::nanoseconds;
 using std::chrono::seconds;
 
 // autoware
+using autoware::trajectory_selector::trajectory_evaluator::METRIC;
+using autoware::trajectory_selector::trajectory_evaluator::SCORE;
 using autoware_map_msgs::msg::LaneletMapBin;
 using autoware_perception_msgs::msg::PredictedObjectKinematics;
 using autoware_perception_msgs::msg::PredictedObjects;

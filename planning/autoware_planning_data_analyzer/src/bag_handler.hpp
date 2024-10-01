@@ -18,6 +18,8 @@
 #include "data_structs.hpp"
 #include "type_alias.hpp"
 
+#include <map>
+#include <memory>
 #include <string>
 #include <vector>
 

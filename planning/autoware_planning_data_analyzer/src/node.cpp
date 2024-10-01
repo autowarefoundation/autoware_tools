@@ -32,30 +32,14 @@ using autoware::universe_utils::Polygon2d;
 BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_options)
 : Node("path_selector_node", node_options),
   route_handler_{std::make_shared<RouteHandler>()},
-  previous_points_{nullptr},
-  buffer_{static_cast<size_t>(trajectory_selector::trajectory_evaluator::SCORE::SIZE)}
+  vehicle_info_{std::make_shared<VehicleInfo>(
+    autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo())}
 {
-  // using namespace std::literals::chrono_literals;
-  // timer_ =
-  //   rclcpp::create_timer(this, get_clock(), 20ms, std::bind(&BehaviorAnalyzerNode::on_timer, this));
-
-  // timer_->cancel();
-
-  vehicle_info_ = std::make_shared<VehicleInfo>(
-    autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo());
-
   pub_marker_ = create_publisher<MarkerArray>("~/marker", 1);
-  pub_odometry_ = create_publisher<Odometry>(TOPIC::ODOMETRY, rclcpp::QoS(1));
-  pub_objects_ = create_publisher<PredictedObjects>(TOPIC::OBJECTS, rclcpp::QoS(1));
-  pub_trajectory_ = create_publisher<Trajectory>(TOPIC::TRAJECTORY, rclcpp::QoS(1));
-  pub_tf_ = create_publisher<TFMessage>(TOPIC::TF, rclcpp::QoS(1));
 
-  pub_manual_metrics_ =
-    create_publisher<Float32MultiArrayStamped>("~/manual_metrics", rclcpp::QoS{1});
-  pub_system_metrics_ =
-    create_publisher<Float32MultiArrayStamped>("~/system_metrics", rclcpp::QoS{1});
-  pub_manual_score_ = create_publisher<Float32MultiArrayStamped>("~/manual_score", rclcpp::QoS{1});
-  pub_system_score_ = create_publisher<Float32MultiArrayStamped>("~/system_score", rclcpp::QoS{1});
+  pub_objects_ = create_publisher<PredictedObjects>(TOPIC::OBJECTS, rclcpp::QoS(1));
+
+  pub_tf_ = create_publisher<TFMessage>(TOPIC::TF, rclcpp::QoS(1));
 
   sub_map_ = create_subscription<LaneletMapBin>(
     "input/lanelet2_map", rclcpp::QoS{1}.transient_local(),
@@ -219,15 +203,10 @@ void BehaviorAnalyzerNode::play(
   [[maybe_unused]] const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  // if (!req->data) {
-  //   timer_->cancel();
-  //   return;
-  // }
 
   const auto bag_data = std::make_shared<BagData>(
     duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
 
-  //   timer_->reset();
   const auto time_step =
     autoware::universe_utils::getOrDeclareParameter<double>(*this, "play.time_step");
 
@@ -247,27 +226,30 @@ void BehaviorAnalyzerNode::play(
 
     previous_points = best_data == nullptr ? nullptr : best_data->points();
 
-    bag_evaluator->show();
+    pub_tf_->publish(*bag_evaluator->tf());
 
-    // std::this_thread::sleep_for(std::chrono::duration<double>(time_step));
+    pub_objects_->publish(*bag_evaluator->objects());
+
+    pub_marker_->publish(*bag_evaluator->marker());
+
+    bag_evaluator->show();
   }
 
-  RCLCPP_INFO(get_logger(), "finish.");
-
   res->success = true;
+
+  RCLCPP_INFO(get_logger(), "finish.");
 }
 
 void BehaviorAnalyzerNode::rewind(
   [[maybe_unused]] const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res)
 {
   std::lock_guard<std::mutex> lock(mutex_);
+
   reader_.seek(0);
 
-  bag_data_.reset();
-  bag_data_ = std::make_shared<BagData>(
-    duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
-
   res->success = true;
+
+  RCLCPP_INFO(get_logger(), "rewind rosbag.");
 }
 
 void BehaviorAnalyzerNode::next_route(
@@ -287,8 +269,9 @@ void BehaviorAnalyzerNode::next_route(
 
   pub_marker_->publish(msg);
 
-  RCLCPP_INFO(get_logger(), "update route.");
   res->success = true;
+
+  RCLCPP_INFO(get_logger(), "update route.");
 }
 
 void BehaviorAnalyzerNode::weight(
@@ -305,22 +288,12 @@ void BehaviorAnalyzerNode::weight(
   const auto bag_data = std::make_shared<BagData>(
     duration_cast<nanoseconds>(reader_.get_metadata().starting_time.time_since_epoch()).count());
 
-  // auto parameters = std::make_shared<GridSearchParameters>();
-  // parameters->grid_seach.dt = declare_parameter<double>("grid_seach.dt");
-  // parameters->grid_seach.min = declare_parameter<double>("grid_seach.min");
-  // parameters->grid_seach.max = declare_parameter<double>("grid_seach.max");
-  // parameters->grid_seach.resolution = declare_parameter<double>("grid_seach.resolution");
-  // parameters->grid_seach.thread_num = declare_parameter<int>("grid_seach.thread_num");
-
   std::vector<Result> weight_grid;
 
-  // double resolution = evaluator_parameters_->grid_seach.resolution;
-  // double min = evaluator_parameters_->grid_seach.min;
-  // double max = evaluator_parameters_->grid_seach.max;
-  double resolution =
-    autoware::universe_utils::getOrDeclareParameter<double>(*this, "grid_seach.resolution");
-  double min = autoware::universe_utils::getOrDeclareParameter<double>(*this, "grid_seach.min");
-  double max = autoware::universe_utils::getOrDeclareParameter<double>(*this, "grid_seach.max");
+  const auto resolution =
+    autoware::universe_utils::getOrDeclareParameter<double>(*this, "grid_seach.grid_step");
+  const auto min = autoware::universe_utils::getOrDeclareParameter<double>(*this, "grid_seach.min");
+  const auto max = autoware::universe_utils::getOrDeclareParameter<double>(*this, "grid_seach.max");
   for (double w0 = min; w0 < max + 0.1 * resolution; w0 += resolution) {
     for (double w1 = min; w1 < max + 0.1 * resolution; w1 += resolution) {
       for (double w2 = min; w2 < max + 0.1 * resolution; w2 += resolution) {
@@ -352,25 +325,24 @@ void BehaviorAnalyzerNode::weight(
     RCLCPP_INFO_STREAM(get_logger(), ss.str());
   };
 
-  size_t thread_num =
+  const size_t thread_num =
     autoware::universe_utils::getOrDeclareParameter<int>(*this, "grid_seach.thread_num");
-  double time_step =
+  const auto time_step =
     autoware::universe_utils::getOrDeclareParameter<double>(*this, "grid_seach.time_step");
 
   // start grid search
   while (reader_.has_next() && rclcpp::ok()) {
+    stop_watch.tic("one_step");
     update(bag_data, time_step);
 
     if (!bag_data->ready()) break;
 
-    // TODO: use previous points
     const auto bag_evaluator = std::make_shared<BagEvaluator>(
       bag_data, route_handler_, vehicle_info_, data_augument_parameters_);
 
     std::mutex g_mutex;
     std::mutex e_mutex;
 
-    // TODO: set time_decay_weight
     const auto update = [&bag_evaluator, &weight_grid, &g_mutex, &e_mutex](const auto idx) {
       const auto selector_parameters =
         std::make_shared<trajectory_selector::trajectory_evaluator::EvaluatorParameters>(20);
@@ -383,7 +355,7 @@ void BehaviorAnalyzerNode::weight(
         if (idx + 1 > weight_grid.size()) return;
         selector_parameters->score_weight = weight_grid.at(idx).weight;
         selector_parameters->time_decay_weight = std::vector<std::vector<double>>(
-          static_cast<size_t>(trajectory_selector::trajectory_evaluator::METRIC::SIZE),
+          static_cast<size_t>(METRIC::SIZE),
           {1.0, 0.8, 0.64, 0.51, 0.41, 0.33, 0.26, 0.21, 0.17, 0.13});
         previous_points = weight_grid.at(idx).previous_points;
       }
@@ -418,209 +390,19 @@ void BehaviorAnalyzerNode::weight(
       i += thread_num;
     }
 
-    std::cout << "IDX:" << i << " GRID:" << weight_grid.size() << std::endl;
-
     show_best_result();
+
+    RCLCPP_INFO_STREAM(
+      get_logger(), "it took " << stop_watch.toc("one_step") << "[ms] to search grid for "
+                               << time_step << "[s] bag.");
   }
+
+  res->success = true;
+
   RCLCPP_INFO_STREAM(
     get_logger(),
     "finish weight grid search. processing time:" << stop_watch.toc("total_time") << "[ms]");
-
-  res->success = true;
 }
-
-void BehaviorAnalyzerNode::analyze(const std::shared_ptr<BagData> & bag_data) const
-{
-  if (!bag_data->ready()) return;
-
-  const auto bag_evaluator = std::make_shared<BagEvaluator>(
-    bag_data, route_handler_, vehicle_info_, data_augument_parameters_);
-
-  bag_evaluator->setup(previous_points_);
-
-  const auto opt_tf = std::dynamic_pointer_cast<Buffer<TFMessage>>(bag_data->buffers.at(TOPIC::TF))
-                        ->get(bag_data->timestamp);
-  if (opt_tf) {
-    pub_tf_->publish(*opt_tf);
-  }
-
-  const auto opt_objects =
-    std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(TOPIC::OBJECTS))
-      ->get(bag_data->timestamp);
-  if (opt_objects) {
-    pub_objects_->publish(*opt_objects);
-  }
-
-  const auto opt_trajectory =
-    std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(TOPIC::TRAJECTORY))
-      ->get(bag_data->timestamp);
-  if (opt_trajectory) {
-    pub_trajectory_->publish(*opt_trajectory);
-  }
-
-  // metrics(bag_evaluator);
-
-  // score(bag_evaluator);
-
-  visualize(bag_evaluator);
-}
-
-// void BehaviorAnalyzerNode::metrics(const std::shared_ptr<BagEvaluator> & bag_evaluator) const
-// {
-//   {
-//     Float32MultiArrayStamped msg{};
-
-//     msg.stamp = now();
-//     msg.data.resize(static_cast<size_t>(METRIC::SIZE) * parameters_->resample_num);
-
-//     const auto set_metrics = [&msg, this](const auto & data, const auto metric_type) {
-//       const auto offset = static_cast<size_t>(metric_type) * parameters_->resample_num;
-//       const auto metric = data.values.at(static_cast<size_t>(metric_type));
-//       std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
-//     };
-
-//     set_metrics(bag_evaluator->manual, METRIC::LATERAL_ACCEL);
-//     set_metrics(bag_evaluator->manual, METRIC::LONGITUDINAL_JERK);
-//     set_metrics(bag_evaluator->manual, METRIC::TRAVEL_DISTANCE);
-//     set_metrics(bag_evaluator->manual, METRIC::MINIMUM_TTC);
-//     set_metrics(bag_evaluator->manual, METRIC::LATERAL_DEVIATION);
-
-//     pub_manual_metrics_->publish(msg);
-//   }
-
-//   const auto autoware_trajectory = bag_evaluator->sampling.autoware();
-//   if (autoware_trajectory.has_value()) {
-//     Float32MultiArrayStamped msg{};
-
-//     msg.stamp = now();
-//     msg.data.resize(static_cast<size_t>(METRIC::SIZE) * parameters_->resample_num);
-
-//     const auto set_metrics = [&msg, this](const auto & data, const auto metric_type) {
-//       const auto offset = static_cast<size_t>(metric_type) * parameters_->resample_num;
-//       const auto metric = data.values.at(static_cast<size_t>(metric_type));
-//       std::copy(metric.begin(), metric.end(), msg.data.begin() + offset);
-//     };
-
-//     set_metrics(autoware_trajectory.value(), METRIC::LATERAL_ACCEL);
-//     set_metrics(autoware_trajectory.value(), METRIC::LONGITUDINAL_JERK);
-//     set_metrics(autoware_trajectory.value(), METRIC::TRAVEL_DISTANCE);
-//     set_metrics(autoware_trajectory.value(), METRIC::MINIMUM_TTC);
-//     set_metrics(autoware_trajectory.value(), METRIC::LATERAL_DEVIATION);
-
-//     pub_system_metrics_->publish(msg);
-//   }
-// }
-
-// void BehaviorAnalyzerNode::score(const std::shared_ptr<BagEvaluator> & bag_evaluator) const
-// {
-//   {
-//     Float32MultiArrayStamped msg{};
-
-//     msg.stamp = now();
-//     msg.data.resize(static_cast<size_t>(SCORE::SIZE));
-
-//     const auto set_reward = [&msg](const auto & data, const auto score_type) {
-//       msg.data.at(static_cast<size_t>(static_cast<size_t>(score_type))) =
-//         static_cast<float>(data.scores.at(static_cast<size_t>(score_type)));
-//     };
-
-//     set_reward(bag_evaluator->manual, SCORE::LONGITUDINAL_COMFORTABILITY);
-//     set_reward(bag_evaluator->manual, SCORE::LATERAL_COMFORTABILITY);
-//     set_reward(bag_evaluator->manual, SCORE::EFFICIENCY);
-//     set_reward(bag_evaluator->manual, SCORE::SAFETY);
-//     set_reward(bag_evaluator->manual, SCORE::ACHIEVABILITY);
-
-//     pub_manual_score_->publish(msg);
-//   }
-
-//   const auto autoware_trajectory = bag_evaluator->sampling.autoware();
-//   if (autoware_trajectory.has_value()) {
-//     Float32MultiArrayStamped msg{};
-
-//     msg.stamp = now();
-//     msg.data.resize(static_cast<size_t>(SCORE::SIZE));
-
-//     const auto set_reward = [&msg](const auto & data, const auto score_type) {
-//       msg.data.at(static_cast<size_t>(static_cast<size_t>(score_type))) =
-//         static_cast<float>(data.scores.at(static_cast<size_t>(score_type)));
-//     };
-
-//     set_reward(autoware_trajectory.value(), SCORE::LONGITUDINAL_COMFORTABILITY);
-//     set_reward(autoware_trajectory.value(), SCORE::LATERAL_COMFORTABILITY);
-//     set_reward(autoware_trajectory.value(), SCORE::EFFICIENCY);
-//     set_reward(autoware_trajectory.value(), SCORE::SAFETY);
-//     set_reward(autoware_trajectory.value(), SCORE::ACHIEVABILITY);
-
-//     pub_system_score_->publish(msg);
-//   }
-// }
-
-void BehaviorAnalyzerNode::visualize(const std::shared_ptr<BagEvaluator> & bag_evaluator) const
-{
-  MarkerArray msg;
-
-  const auto ground_truth = bag_evaluator->get("ground_truth");
-  if (ground_truth != nullptr) {
-    for (size_t i = 0; i < ground_truth->points()->size(); ++i) {
-      Marker marker = createDefaultMarker(
-        "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "ground_truth", i, Marker::ARROW,
-        createMarkerScale(0.7, 0.3, 0.3), createMarkerColor(1.0, 0.0, 0.0, 0.999));
-      marker.pose = ground_truth->points()->at(i).pose;
-      msg.markers.push_back(marker);
-    }
-  }
-
-  const auto best_data = bag_evaluator->best(evaluator_parameters_);
-
-  if (best_data != nullptr) {
-    Marker marker = createDefaultMarker(
-      "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "best_score", 0L, Marker::LINE_STRIP,
-      createMarkerScale(0.2, 0.0, 0.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
-    for (const auto & point : *best_data->points()) {
-      marker.points.push_back(point.pose.position);
-    }
-    msg.markers.push_back(marker);
-    previous_points_ = best_data->points();
-  } else {
-    previous_points_ = nullptr;
-  }
-
-  const auto results = bag_evaluator->results();
-  for (size_t i = 0; i < results.size(); ++i) {
-    msg.markers.push_back(utils::to_marker(
-      results.at(i), trajectory_selector::trajectory_evaluator::SCORE::LATERAL_COMFORTABILITY, i));
-    msg.markers.push_back(utils::to_marker(
-      results.at(i), trajectory_selector::trajectory_evaluator::SCORE::LONGITUDINAL_COMFORTABILITY,
-      i));
-    msg.markers.push_back(utils::to_marker(
-      results.at(i), trajectory_selector::trajectory_evaluator::SCORE::EFFICIENCY, i));
-    msg.markers.push_back(
-      utils::to_marker(results.at(i), trajectory_selector::trajectory_evaluator::SCORE::SAFETY, i));
-    msg.markers.push_back(utils::to_marker(
-      results.at(i), trajectory_selector::trajectory_evaluator::SCORE::ACHIEVABILITY, i));
-    msg.markers.push_back(utils::to_marker(
-      results.at(i), trajectory_selector::trajectory_evaluator::SCORE::CONSISTENCY, i));
-  }
-
-  {
-    autoware::universe_utils::appendMarkerArray(
-      lanelet::visualization::laneletsAsTriangleMarkerArray(
-        "preferred_lanes", route_handler_->getPreferredLanelets(),
-        createMarkerColor(0.16, 1.0, 0.69, 0.2)),
-      &msg);
-  }
-
-  pub_marker_->publish(msg);
-
-  bag_evaluator->show();
-}
-
-// void BehaviorAnalyzerNode::on_timer()
-// {
-//   std::lock_guard<std::mutex> lock(mutex_);
-//   update(bag_data_, 0.1);
-//   analyze(bag_data_);
-// }
 }  // namespace autoware::behavior_analyzer
 
 #include <rclcpp_components/register_node_macro.hpp>
