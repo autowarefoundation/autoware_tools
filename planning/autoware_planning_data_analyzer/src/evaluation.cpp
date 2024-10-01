@@ -32,22 +32,142 @@ namespace autoware::behavior_analyzer
 {
 BagEvaluator::BagEvaluator(
   const std::shared_ptr<BagData> & bag_data,
-  const std::shared_ptr<TrajectoryPoints> & previous_points,
+  // const std::shared_ptr<TrajectoryPoints> & previous_points,
   const std::shared_ptr<RouteHandler> & route_handler,
   const std::shared_ptr<VehicleInfo> & vehicle_info,
-  const std::shared_ptr<EvaluatorParameters> & evaluator_parameters)
-: autoware::trajectory_selector::trajectory_evaluator::Evaluator{route_handler, vehicle_info}
+  const std::shared_ptr<DataAugmentParameters> & parameters)
+: autoware::trajectory_selector::trajectory_evaluator::Evaluator{route_handler, vehicle_info},
+  objects_{objects(bag_data, parameters)},
+  ground_truth_{ground_truth(bag_data, parameters)},
+  augment_data_{augment_data(bag_data, vehicle_info, parameters)}
 {
-  const auto odometry_buffer_ptr =
-    std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY));
+  // const auto odometry_buffer_ptr =
+  //   std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY));
 
-  const auto acceleration_buffer_ptr =
-    std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
-      bag_data->buffers.at(TOPIC::ACCELERATION));
+  // const auto acceleration_buffer_ptr =
+  //   std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
+  //     bag_data->buffers.at(TOPIC::ACCELERATION));
 
-  const auto steering_buffer_ptr =
-    std::dynamic_pointer_cast<Buffer<SteeringReport>>(bag_data->buffers.at(TOPIC::STEERING));
+  // const auto steering_buffer_ptr =
+  //   std::dynamic_pointer_cast<Buffer<SteeringReport>>(bag_data->buffers.at(TOPIC::STEERING));
 
+  // const auto objects_buffer_ptr =
+  //   std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(TOPIC::OBJECTS));
+
+  // const auto current_objects = objects_buffer_ptr->get(bag_data->timestamp);
+
+  // // remove predicted_paths.
+  // std::for_each(
+  //   current_objects->objects.begin(), current_objects->objects.end(), [](auto & object) {
+  //     object.kinematics.predicted_paths.clear();
+  //     object.kinematics.predicted_paths.push_back(PredictedPath{});
+  //   });
+
+  // // overwrite predicted_paths by future data.
+  // for (size_t i = 0; i < parameters->sample_num; i++) {
+  //   const auto objects_ptr = objects_buffer_ptr->get(
+  //     bag_data->timestamp + 1e9 * parameters->time_step * i);
+  //   if (!objects_ptr) {
+  //     break;
+  //   }
+
+  //   for (const auto & a : objects_ptr->objects) {
+  //     const auto itr = std::find_if(
+  //       current_objects->objects.begin(), current_objects->objects.end(),
+  //       [&a](const auto & b) { return a.object_id == b.object_id; });
+  //     if (itr == current_objects->objects.end()) continue;
+
+  //     itr->kinematics.predicted_paths.at(0).path.push_back(
+  //       a.kinematics.initial_pose_with_covariance.pose);
+  //   }
+  // }
+
+  // // actual behavior
+  // TrajectoryPoints points;
+  // {
+  //   for (size_t i = 0; i < parameters->sample_num; i++) {
+  //     const auto odometry_ptr = odometry_buffer_ptr->get(
+  //       bag_data->timestamp + 1e9 * parameters->time_step * i);
+  //     if (!odometry_ptr) {
+  //       break;
+  //     }
+
+  //     const auto accel_ptr = acceleration_buffer_ptr->get(
+  //       bag_data->timestamp + 1e9 * parameters->time_step * i);
+  //     if (!accel_ptr) {
+  //       break;
+  //     }
+
+  //     const auto opt_steer = steering_buffer_ptr->get(
+  //       bag_data->timestamp + 1e9 * parameters->time_step * i);
+  //     if (!opt_steer) {
+  //       break;
+  //     }
+
+  //     const auto duration = builtin_interfaces::build<Duration>().sec(0.0).nanosec(0.0);
+  //     const auto point = autoware_planning_msgs::build<TrajectoryPoint>()
+  //                          .time_from_start(duration)
+  //                          .pose(odometry_ptr->pose.pose)
+  //                          .longitudinal_velocity_mps(odometry_ptr->twist.twist.linear.x)
+  //                          .lateral_velocity_mps(0.0)
+  //                          .acceleration_mps2(accel_ptr->accel.accel.linear.x)
+  //                          .heading_rate_rps(0.0)
+  //                          .front_wheel_angle_rad(opt_steer->steering_tire_angle)
+  //                          .rear_wheel_angle_rad(0.0);
+  //     points.push_back(point);
+  //   }
+
+  //   {
+  //     const auto core_data =
+  //     std::make_shared<trajectory_selector::trajectory_evaluator::CoreData>(
+  //       std::make_shared<TrajectoryPoints>(points), previous_points, current_objects,
+  //       "ground_truth");
+
+  //     add(core_data);
+  //   }
+  // }
+
+  // // frenet planner (data augmentation)
+  // {
+  //   const auto odometry_ptr =
+  //     std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY))
+  //       ->get(bag_data->timestamp);
+  //   if (!odometry_ptr) {
+  //     throw std::logic_error("data is not enough.");
+  //   }
+
+  //   const auto accel_ptr = std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
+  //                            bag_data->buffers.at(TOPIC::ACCELERATION))
+  //                            ->get(bag_data->timestamp);
+  //   if (!accel_ptr) {
+  //     throw std::logic_error("data is not enough.");
+  //   }
+
+  //   const auto trajectory_ptr =
+  //     std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(TOPIC::TRAJECTORY))
+  //       ->get(bag_data->timestamp);
+  //   if (!trajectory_ptr) {
+  //     throw std::logic_error("data is not enough.");
+  //   }
+
+  //   for (const auto & points : utils::sampling(
+  //          *trajectory_ptr, odometry_ptr->pose.pose, odometry_ptr->twist.twist.linear.x,
+  //          accel_ptr->accel.accel.linear.x, vehicle_info, parameters)) {
+  //     const auto core_data =
+  //     std::make_shared<trajectory_selector::trajectory_evaluator::CoreData>(
+  //       std::make_shared<TrajectoryPoints>(points), previous_points, current_objects,
+  //       "candidates");
+
+  //     add(core_data);
+  //   }
+  // }
+}
+
+auto BagEvaluator::objects(
+  const std::shared_ptr<BagData> & bag_data,
+  const std::shared_ptr<DataAugmentParameters> & parameters) const
+  -> std::shared_ptr<PredictedObjects>
+{
   const auto objects_buffer_ptr =
     std::dynamic_pointer_cast<Buffer<PredictedObjects>>(bag_data->buffers.at(TOPIC::OBJECTS));
 
@@ -61,9 +181,9 @@ BagEvaluator::BagEvaluator(
     });
 
   // overwrite predicted_paths by future data.
-  for (size_t i = 0; i < evaluator_parameters->resample_num; i++) {
-    const auto objects_ptr = objects_buffer_ptr->get(
-      bag_data->timestamp + 1e9 * evaluator_parameters->time_resolution * i);
+  for (size_t i = 0; i < parameters->sample_num; i++) {
+    const auto objects_ptr =
+      objects_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->resolution * i);
     if (!objects_ptr) {
       break;
     }
@@ -79,87 +199,118 @@ BagEvaluator::BagEvaluator(
     }
   }
 
-  // actual behavior
+  return current_objects;
+}
+
+auto BagEvaluator::ground_truth(
+  const std::shared_ptr<BagData> & bag_data,
+  const std::shared_ptr<DataAugmentParameters> & parameters) const
+  -> std::shared_ptr<TrajectoryPoints>
+{
   TrajectoryPoints points;
-  {
-    for (size_t i = 0; i < evaluator_parameters->resample_num; i++) {
-      const auto odometry_ptr = odometry_buffer_ptr->get(
-        bag_data->timestamp + 1e9 * evaluator_parameters->time_resolution * i);
-      if (!odometry_ptr) {
-        break;
-      }
 
-      const auto accel_ptr = acceleration_buffer_ptr->get(
-        bag_data->timestamp + 1e9 * evaluator_parameters->time_resolution * i);
-      if (!accel_ptr) {
-        break;
-      }
+  const auto odometry_buffer_ptr =
+    std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY));
 
-      const auto opt_steer = steering_buffer_ptr->get(
-        bag_data->timestamp + 1e9 * evaluator_parameters->time_resolution * i);
-      if (!opt_steer) {
-        break;
-      }
+  const auto acceleration_buffer_ptr =
+    std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
+      bag_data->buffers.at(TOPIC::ACCELERATION));
 
-      const auto duration = builtin_interfaces::build<Duration>().sec(0.0).nanosec(0.0);
-      const auto point = autoware_planning_msgs::build<TrajectoryPoint>()
-                           .time_from_start(duration)
-                           .pose(odometry_ptr->pose.pose)
-                           .longitudinal_velocity_mps(odometry_ptr->twist.twist.linear.x)
-                           .lateral_velocity_mps(0.0)
-                           .acceleration_mps2(accel_ptr->accel.accel.linear.x)
-                           .heading_rate_rps(0.0)
-                           .front_wheel_angle_rad(opt_steer->steering_tire_angle)
-                           .rear_wheel_angle_rad(0.0);
-      points.push_back(point);
-    }
+  const auto steering_buffer_ptr =
+    std::dynamic_pointer_cast<Buffer<SteeringReport>>(bag_data->buffers.at(TOPIC::STEERING));
 
-    {
-      const auto core_data = std::make_shared<trajectory_selector::trajectory_evaluator::CoreData>(
-        std::make_shared<TrajectoryPoints>(points), previous_points, current_objects,
-        "ground_truth");
-
-      add(core_data);
-    }
-  }
-
-  // frenet planner (data augmentation)
-  {
+  for (size_t i = 0; i < parameters->sample_num; i++) {
     const auto odometry_ptr =
-      std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY))
-        ->get(bag_data->timestamp);
+      odometry_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->resolution * i);
     if (!odometry_ptr) {
       throw std::logic_error("data is not enough.");
     }
 
-    const auto accel_ptr = std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
-                             bag_data->buffers.at(TOPIC::ACCELERATION))
-                             ->get(bag_data->timestamp);
+    const auto accel_ptr =
+      acceleration_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->resolution * i);
     if (!accel_ptr) {
       throw std::logic_error("data is not enough.");
     }
 
-    const auto trajectory_ptr =
-      std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(TOPIC::TRAJECTORY))
-        ->get(bag_data->timestamp);
-    if (!trajectory_ptr) {
+    const auto opt_steer =
+      steering_buffer_ptr->get(bag_data->timestamp + 1e9 * parameters->resolution * i);
+    if (!opt_steer) {
       throw std::logic_error("data is not enough.");
     }
 
-    for (const auto & points : utils::sampling(
-           *trajectory_ptr, odometry_ptr->pose.pose, odometry_ptr->twist.twist.linear.x,
-           accel_ptr->accel.accel.linear.x, vehicle_info, evaluator_parameters)) {
-      const auto core_data = std::make_shared<trajectory_selector::trajectory_evaluator::CoreData>(
-        std::make_shared<TrajectoryPoints>(points), previous_points, current_objects, "candidates");
+    const auto duration = builtin_interfaces::build<Duration>().sec(0.0).nanosec(0.0);
+    const auto point = autoware_planning_msgs::build<TrajectoryPoint>()
+                         .time_from_start(duration)
+                         .pose(odometry_ptr->pose.pose)
+                         .longitudinal_velocity_mps(odometry_ptr->twist.twist.linear.x)
+                         .lateral_velocity_mps(0.0)
+                         .acceleration_mps2(accel_ptr->accel.accel.linear.x)
+                         .heading_rate_rps(0.0)
+                         .front_wheel_angle_rad(opt_steer->steering_tire_angle)
+                         .rear_wheel_angle_rad(0.0);
+    points.push_back(point);
+  }
 
-      add(core_data);
-    }
+  return std::make_shared<TrajectoryPoints>(points);
+}
+
+auto BagEvaluator::augment_data(
+  const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<VehicleInfo> & vehicle_info,
+  const std::shared_ptr<DataAugmentParameters> & parameters) const
+  -> std::vector<std::shared_ptr<TrajectoryPoints>>
+{
+  std::vector<std::shared_ptr<TrajectoryPoints>> augment_data;
+
+  const auto odometry_ptr =
+    std::dynamic_pointer_cast<Buffer<Odometry>>(bag_data->buffers.at(TOPIC::ODOMETRY))
+      ->get(bag_data->timestamp);
+  if (!odometry_ptr) {
+    throw std::logic_error("data is not enough.");
+  }
+
+  const auto accel_ptr = std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(
+                           bag_data->buffers.at(TOPIC::ACCELERATION))
+                           ->get(bag_data->timestamp);
+  if (!accel_ptr) {
+    throw std::logic_error("data is not enough.");
+  }
+
+  const auto trajectory_ptr =
+    std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at(TOPIC::TRAJECTORY))
+      ->get(bag_data->timestamp);
+  if (!trajectory_ptr) {
+    throw std::logic_error("data is not enough.");
+  }
+
+  for (const auto & points : utils::sampling(
+         *trajectory_ptr, odometry_ptr->pose.pose, odometry_ptr->twist.twist.linear.x,
+         accel_ptr->accel.accel.linear.x, vehicle_info, parameters)) {
+    augment_data.push_back(std::make_shared<TrajectoryPoints>(points));
+  }
+
+  return augment_data;
+}
+
+void BagEvaluator::setup(const std::shared_ptr<TrajectoryPoints> & previous_points)
+{
+  {
+    const auto core_data = std::make_shared<trajectory_selector::trajectory_evaluator::CoreData>(
+      ground_truth_, previous_points, objects_, "ground_truth");
+
+    add(core_data);
+  }
+
+  for (const auto & points : augment_data_) {
+    const auto core_data = std::make_shared<trajectory_selector::trajectory_evaluator::CoreData>(
+      points, previous_points, objects_, "candidates");
+
+    add(core_data);
   }
 }
 
 auto BagEvaluator::loss(
-  const std::shared_ptr<trajectory_selector::trajectory_evaluator::SelectorParameters> & parameters)
-  -> std::pair<double, std::shared_ptr<TrajectoryPoints>>
+  const std::shared_ptr<trajectory_selector::trajectory_evaluator::EvaluatorParameters> &
+    parameters) -> std::pair<double, std::shared_ptr<TrajectoryPoints>>
 {
   const auto best_data = best(parameters);
 

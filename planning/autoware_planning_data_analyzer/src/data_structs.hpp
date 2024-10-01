@@ -33,11 +33,11 @@ struct TOPIC
   static std::string ROUTE;
 };
 
-struct FrenetPoint
-{
-  double length{0.0};    // longitudinal
-  double distance{0.0};  // lateral
-};
+// struct FrenetPoint
+// {
+//   double length{0.0};    // longitudinal
+//   double distance{0.0};  // lateral
+// };
 
 struct TargetStateParameters
 {
@@ -49,20 +49,21 @@ struct TargetStateParameters
   std::vector<double> lon_accelerations{};
 };
 
-struct GridSearchParameters
-{
-  double min{0.0};
-  double max{1.0};
-  double resolusion{0.01};
-  double dt{1.0};
-  size_t thread_num{4};
-};
+// struct GridSearchParameters
+// {
+//   double min{0.0};
+//   double max{1.0};
+//   double resolusion{0.01};
+//   double dt{1.0};
+//   size_t thread_num{4};
+// };
 
-struct EvaluatorParameters
+struct DataAugmentParameters
 {
-  size_t resample_num{20};
-  double time_resolution{0.5};
-  GridSearchParameters grid_seach{};
+  size_t sample_num{20};
+
+  double resolution{0.5};
+
   TargetStateParameters target_state{};
 };
 

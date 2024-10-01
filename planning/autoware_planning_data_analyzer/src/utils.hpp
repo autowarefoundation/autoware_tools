@@ -26,22 +26,6 @@
 
 namespace autoware::behavior_analyzer::utils
 {
-auto convertToTrajectoryPoints(
-  const autoware::sampler_common::Trajectory & trajectory,
-  const std::shared_ptr<VehicleInfo> & vehicle_info, const double z)
-  -> std::vector<TrajectoryPoint>;
-
-template <class T>
-auto convertToFrenetPoint(const T & points, const Point & search_point_geom, const size_t seg_idx)
-  -> FrenetPoint;
-
-auto prepareSamplingParameters(
-  const autoware::sampler_common::Configuration & initial_state, const double base_length,
-  const autoware::sampler_common::transform::Spline2D & path_spline,
-  [[maybe_unused]] const double trajectory_length,
-  const std::shared_ptr<TargetStateParameters> & parameters)
-  -> autoware::frenet_planner::SamplingParameters;
-
 auto resampling(
   const Trajectory & trajectory, const Pose & p_ego, const size_t resample_num,
   const double time_resolution) -> std::vector<TrajectoryPoint>;
@@ -49,7 +33,7 @@ auto resampling(
 auto sampling(
   const Trajectory & trajectory, const Pose & p_ego, const double v_ego, const double a_ego,
   const std::shared_ptr<VehicleInfo> & vehicle_info,
-  const std::shared_ptr<EvaluatorParameters> & parameters)
+  const std::shared_ptr<DataAugmentParameters> & parameters)
   -> std::vector<std::vector<TrajectoryPoint>>;
 
 auto to_marker(

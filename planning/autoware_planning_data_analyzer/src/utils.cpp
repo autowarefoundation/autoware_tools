@@ -38,6 +38,12 @@ using autoware::universe_utils::createDefaultMarker;
 using autoware::universe_utils::createMarkerColor;
 using autoware::universe_utils::createMarkerScale;
 
+struct FrenetPoint
+{
+  double length{0.0};    // longitudinal
+  double distance{0.0};  // lateral
+};
+
 auto convertToTrajectoryPoints(
   const autoware::sampler_common::Trajectory & trajectory,
   const std::shared_ptr<VehicleInfo> & vehicle_info, const double z) -> std::vector<TrajectoryPoint>
@@ -123,8 +129,8 @@ auto prepareSamplingParameters(
 }
 
 auto resampling(
-  const Trajectory & trajectory, const Pose & p_ego, const size_t resample_num,
-  const double time_resolution) -> std::vector<TrajectoryPoint>
+  const Trajectory & trajectory, const Pose & p_ego, const size_t sample_num,
+  const double resolution) -> std::vector<TrajectoryPoint>
 {
   const auto ego_seg_idx = autoware::motion_utils::findFirstNearestSegmentIndexWithSoftConstraints(
     trajectory.points, p_ego, 10.0, M_PI_2);
@@ -134,7 +140,7 @@ auto resampling(
     convertToFrenetPoint(trajectory.points, p_ego.position, ego_seg_idx);
 
   double length = 0.0;
-  for (size_t i = 0; i < resample_num; i++) {
+  for (size_t i = 0; i < sample_num; i++) {
     const auto pose = autoware::motion_utils::calcInterpolatedPose(
       trajectory.points, vehicle_pose_frenet.length + length);
     const auto p_trajectory = autoware::motion_utils::calcInterpolatedPoint(trajectory, pose);
@@ -143,8 +149,7 @@ auto resampling(
     const auto pred_accel = p_trajectory.acceleration_mps2;
     const auto pred_velocity = p_trajectory.longitudinal_velocity_mps;
 
-    length +=
-      pred_velocity * time_resolution + 0.5 * pred_accel * time_resolution * time_resolution;
+    length += pred_velocity * resolution + 0.5 * pred_accel * resolution * resolution;
   }
 
   return output;
@@ -153,7 +158,7 @@ auto resampling(
 auto sampling(
   const Trajectory & trajectory, const Pose & p_ego, const double v_ego, const double a_ego,
   const std::shared_ptr<VehicleInfo> & vehicle_info,
-  const std::shared_ptr<EvaluatorParameters> & parameters)
+  const std::shared_ptr<DataAugmentParameters> & parameters)
   -> std::vector<std::vector<TrajectoryPoint>>
 {
   const auto reference_trajectory =
@@ -208,8 +213,7 @@ auto sampling(
 
   for (const auto & trajectory : sampling_frenet_trajectories) {
     output.push_back(convertToTrajectoryPoints(
-      trajectory.resampleTimeFromZero(parameters->time_resolution), vehicle_info,
-      p_ego.position.z));
+      trajectory.resampleTimeFromZero(parameters->resolution), vehicle_info, p_ego.position.z));
   }
 
   return output;

@@ -33,13 +33,37 @@ class BagEvaluator : public trajectory_selector::trajectory_evaluator::Evaluator
 public:
   BagEvaluator(
     const std::shared_ptr<BagData> & bag_data,
-    const std::shared_ptr<TrajectoryPoints> & previous_points,
+    // const std::shared_ptr<TrajectoryPoints> & previous_points,
     const std::shared_ptr<RouteHandler> & route_handler,
     const std::shared_ptr<VehicleInfo> & vehicle_info,
-    const std::shared_ptr<EvaluatorParameters> & evaluator_parameters);
+    const std::shared_ptr<DataAugmentParameters> & parameters);
 
-  auto loss(const std::shared_ptr<trajectory_selector::trajectory_evaluator::SelectorParameters> &
+  void setup(const std::shared_ptr<TrajectoryPoints> & previous_points);
+
+  auto loss(const std::shared_ptr<trajectory_selector::trajectory_evaluator::EvaluatorParameters> &
               parameters) -> std::pair<double, std::shared_ptr<TrajectoryPoints>>;
+
+private:
+  auto objects(
+    const std::shared_ptr<BagData> & bag_data,
+    const std::shared_ptr<DataAugmentParameters> & parameters) const
+    -> std::shared_ptr<PredictedObjects>;
+
+  auto ground_truth(
+    const std::shared_ptr<BagData> & bag_data,
+    const std::shared_ptr<DataAugmentParameters> & parameters) const
+    -> std::shared_ptr<TrajectoryPoints>;
+
+  auto augment_data(
+    const std::shared_ptr<BagData> & bag_data, const std::shared_ptr<VehicleInfo> & vehicle_info,
+    const std::shared_ptr<DataAugmentParameters> & parameters) const
+    -> std::vector<std::shared_ptr<TrajectoryPoints>>;
+
+  std::shared_ptr<PredictedObjects> objects_;
+
+  std::shared_ptr<TrajectoryPoints> ground_truth_;
+
+  std::vector<std::shared_ptr<TrajectoryPoints>> augment_data_;
 };
 }  // namespace autoware::behavior_analyzer
 

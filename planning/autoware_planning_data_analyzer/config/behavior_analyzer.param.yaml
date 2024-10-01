@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
-    resample_num: 20
-    time_resolution: 0.5
+    sample_num: 20
+    resolution: 0.5
 
     target_state:
       lateral_positions: [-4.5, -3.5, -2.5, -1.0, 0.0, 1.0, 2.5, 3.5, 4.0]
@@ -23,8 +23,12 @@
       s5: [1.0, 0.8, 0.64, 0.51, 0.41, 0.33, 0.26, 0.21, 0.17, 0.13]
 
     grid_seach:
+      time_step: 0.5
       min: 0.1
       max: 1.0
       resolusion: 0.2
-      dt: 1.0
       thread_num: 8
+
+    play:
+      time_step: 0.02
+
