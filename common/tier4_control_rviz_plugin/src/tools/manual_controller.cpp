@@ -129,6 +129,7 @@ void ManualController::update()
   }
   GearCommand gear_cmd;
   {
+    gear_cmd.stamp = raw_node_->get_clock()->now();
     const double eps = 0.001;
     if (control_cmd.longitudinal.velocity > eps && current_velocity > -eps) {
       gear_cmd.command = GearCommand::DRIVE;
