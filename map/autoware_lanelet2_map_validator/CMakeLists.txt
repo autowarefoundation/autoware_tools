@@ -5,7 +5,7 @@ find_package(autoware_cmake REQUIRED)
 autoware_package()
 
 ament_auto_find_build_dependencies()
-find_package(yaml-cpp REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 include_directories(
   src
@@ -20,7 +20,7 @@ ament_auto_add_executable(autoware_lanelet2_map_validator src/main.cpp)
 add_dependencies(autoware_lanelet2_map_validator autoware_lanelet2_map_validator_lib)
 target_link_libraries(autoware_lanelet2_map_validator
   autoware_lanelet2_map_validator_lib
-  yaml-cpp
+  nlohmann_json
 )
 
 if(BUILD_TESTING)
@@ -32,7 +32,7 @@ if(BUILD_TESTING)
     target_link_libraries(
       ${VALIDATION_NAME}_test
       autoware_lanelet2_map_validator_lib
-      yaml-cpp
+      nlohmann_json
     )
   endfunction()
 

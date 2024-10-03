@@ -17,10 +17,13 @@
 #include "lib/utils.hpp"
 #include "lib/validation.hpp"
 
-#include <yaml-cpp/yaml.h>
+#include <nlohmann/json.hpp>
 
 #include <fstream>
 #include <iomanip>
+
+// Use nlohmann::json for JSON hndling
+using json = nlohmann::json;
 
 // ANSI color codes for console output
 #define BOLD_ONLY "\033[1m"
@@ -32,21 +35,21 @@
 #define FONT_RESET "\033[0m"
 
 int process_requirements(
-  YAML::Node yaml_config, const lanelet::autoware::validation::MetaConfig & validator_config)
+  json json_config, const lanelet::autoware::validation::MetaConfig & validator_config)
 {
   uint64_t warning_count = 0;
   uint64_t error_count = 0;
   lanelet::autoware::validation::MetaConfig temp_validator_config = validator_config;
 
-  for (YAML::Node requirement : yaml_config["requirements"]) {
-    std::string id = requirement["id"].as<std::string>();
+  for (auto & requirement : json_config["requirements"]) {
+    std::string id = requirement["id"];
     bool requirement_passed = true;
 
     std::vector<lanelet::validation::DetectedIssues> issues;
     std::map<std::string, bool> temp_validation_results;
 
-    for (YAML::Node validator : requirement["validators"]) {
-      std::string validator_name = validator["name"].as<std::string>();
+    for (auto & validator : requirement["validators"]) {
+      std::string validator_name = validator["name"];
       temp_validator_config.command_line_config.validationConfig.checksFilter = validator_name;
 
       std::vector<lanelet::validation::DetectedIssues> temp_issues =
@@ -63,16 +66,17 @@ int process_requirements(
         error_count += temp_issues[0].errors().size();
         temp_validation_results[validator_name] = false;
         validator["passed"] = false;
-        YAML::Node issues_node = YAML::Node(YAML::NodeType::Sequence);
-        for (lanelet::validation::Issue issue : temp_issues[0].issues) {
-          YAML::Node issue_node;
-          issue_node["severity"] = lanelet::validation::toString(issue.severity);
-          issue_node["primitive"] = lanelet::validation::toString(issue.primitive);
-          issue_node["id"] = issue.id;
-          issue_node["message"] = issue.message;
-          issues_node.push_back(issue_node);
+
+        json issues_json;
+        for (const auto & issue : temp_issues[0].issues) {
+          json issue_json;
+          issue_json["severity"] = lanelet::validation::toString(issue.severity);
+          issue_json["primitive"] = lanelet::validation::toString(issue.primitive);
+          issue_json["id"] = issue.id;
+          issue_json["message"] = issue.message;
+          issues_json.push_back(issue_json);
         }
-        validator["issues"] = issues_node;
+        validator["issues"] = issues_json;
       }
 
       lanelet::autoware::validation::appendIssues(issues, std::move(temp_issues));
@@ -87,11 +91,6 @@ int process_requirements(
       requirement["passed"] = false;
       std::cout << BOLD_RED << "Failed" << FONT_RESET << std::endl;
     }
-
-    // In order to make "passed" field above then the "validators" field in the output file.
-    YAML::Node temp_validators = requirement["validators"];
-    requirement.remove("validators");
-    requirement["validators"] = temp_validators;
 
     for (const auto & result : temp_validation_results) {
       if (result.second) {
@@ -121,9 +120,9 @@ int process_requirements(
   }
 
   if (!validator_config.output_file_path.empty()) {
-    std::string file_name = validator_config.output_file_path + "/lanelet2_validation_results.yaml";
+    std::string file_name = validator_config.output_file_path + "/lanelet2_validation_results.json";
     std::ofstream output_file(file_name);
-    output_file << yaml_config;
+    output_file << std::setw(4) << json_config;
     std::cout << "Results are output to " << file_name << std::endl;
   }
 
@@ -132,22 +131,22 @@ int process_requirements(
 
 int main(int argc, char * argv[])
 {
-  lanelet::autoware::validation::MetaConfig config =
+  lanelet::autoware::validation::MetaConfig meta_config =
     lanelet::autoware::validation::parseCommandLine(
       argc, const_cast<const char **>(argv));  // NOLINT
 
   // Print help (Already done in parseCommandLine)
-  if (config.command_line_config.help) {
+  if (meta_config.command_line_config.help) {
     return 0;
   }
 
   // Print available validators
-  if (config.command_line_config.print) {
+  if (meta_config.command_line_config.print) {
     auto checks = lanelet::validation::availabeChecks(  // cspell:disable-line
-      config.command_line_config.validationConfig.checksFilter);
+      meta_config.command_line_config.validationConfig.checksFilter);
     if (checks.empty()) {
       std::cout << "No checks found matching '"
-                << config.command_line_config.validationConfig.checksFilter << "'\n";
+                << meta_config.command_line_config.validationConfig.checksFilter << "'\n";
     } else {
       std::cout << "The following checks are available:\n";
       for (auto & check : checks) {
@@ -158,17 +157,19 @@ int main(int argc, char * argv[])
   }
 
   // Check whether the map_file is specified
-  if (config.command_line_config.mapFile.empty()) {
+  if (meta_config.command_line_config.mapFile.empty()) {
     std::cout << "No map file specified" << std::endl;
     return 1;
   }
 
   // Validation start
-  if (!config.requirements_file.empty()) {
-    YAML::Node yaml_config = YAML::LoadFile(config.requirements_file);
-    return process_requirements(yaml_config, config);
+  if (!meta_config.requirements_file.empty()) {
+    std::ifstream input_file(meta_config.requirements_file);
+    json json_config;
+    input_file >> json_config;
+    return process_requirements(json_config, meta_config);
   } else {
-    auto issues = lanelet::autoware::validation::validateMap(config);
+    auto issues = lanelet::autoware::validation::validateMap(meta_config);
     lanelet::validation::printAllIssues(issues);
     return static_cast<int>(!issues.empty());
   }

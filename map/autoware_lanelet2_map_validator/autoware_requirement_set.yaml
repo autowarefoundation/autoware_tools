@@ -1,9 +1,0 @@
-requirements:
-  - id: vm-04-01
-    validators:
-      - name: mapping.crosswalk.missing_regulatory_elements
-      - name: mapping.crosswalk.regulatory_element_details
-  - id: vm-05-01
-    validators:
-      - name: mapping.traffic_light.missing_regulatory_elements
-      - name: mapping.traffic_light.regulatory_element_details

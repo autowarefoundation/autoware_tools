@@ -12,7 +12,7 @@ The official Autoware requirements for lanelet2 maps are described in [Vector Ma
 
 The `autoware_lanelet2_map_validator` is designed to validate `.osm` map files by using and extending the [lanelet2_validation](https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation) package for Autoware.
 
-`autoware_lanelet2_map_validator` takes the lanelet2 map (.osm file) and requirement set (yaml file, optional) as the input, and output validation results to the console.
+`autoware_lanelet2_map_validator` takes the lanelet2 map (.osm file) and requirement set (JSON file, optional) as the input, and output validation results to the console.
 
 If a requirement set is given, `autoware_lanelet2_map_validator` also outputs validation results reflecting the input requirement set.
 See ["Run with a requirement set"](#run-with-a-requirement-set) for further information, ["Input file"](#input-file) to understand the input format, and ["Output file"](#output-file) to understand the output format.
@@ -53,37 +53,58 @@ ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --print
 ### Run with a requirement set
 
 `autoware_lanelet2_map_validator` can manage to run a group of validators by a list of validator names.
-`autoware_lanelet2_map_validator` will scan through the input yaml file given by the `--input_requirements, -i` option, and output the validation results to the directory given by the `--output_directory, -o` option.
-The output filename will be `lanelet2_validation_results.yaml`.
+`autoware_lanelet2_map_validator` will scan through the input JSON file given by the `--input_requirements, -i` option, and output the validation results to the directory given by the `--output_directory, -o` option.
+The output filename will be `lanelet2_validation_results.json`.
 
 ```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --input_requirements autoware_requirements_set.yaml --output_directory ./
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --input_requirements autoware_requirements_set.json --output_directory ./
 ```
 
 #### Input file
 
-The yaml file input should follow the structure like this
+The JSON file input should follow the structure like this example.
 
-```yaml
-# input example
-version: 0.1.0 # Not required. You can add any field if the "requirements" field is set correctly.
-requirements: # Required.
-  - id: example-01-01 # Users have to set ids to a group of validators. The id name is arbitrary.
-    validators: # List up validator names that consists of the requirement.
-      - name: mapping.crosswalk.missing_regulatory_elements
-      - name: mapping.crosswalk.regulatory_element_details
-  - id: example-01-02
-    validators:
-      - name: mapping.traffic_light.missing_regulatory_elements
-      - name: mapping.traffic_light.regulatory_element_details
-  - id: example-01-03
-    validators:
-      - name: mapping.stop_line.missing_regulatory_elements
+```json
+{
+  "version": "0.1.0",
+  "requirements": [
+    {
+      "id": "example-01-01",
+      "validators": [
+        {
+          "name": "mapping.crosswalk.missing_regulatory_elements"
+        },
+        {
+          "name": "mapping.crosswalk.regulatory_element_details"
+        }
+      ]
+    },
+    {
+      "id": "example-01-02",
+      "validators": [
+        {
+          "name": "mapping.traffic_light.missing_regulatory_elements"
+        },
+        {
+          "name": "mapping.traffic_light.regulatory_element_details"
+        }
+      ]
+    },
+    {
+      "id": "example-01-03",
+      "validators": [
+        {
+          "name": "mapping.stop_line.missing_regulatory_elements"
+        }
+      ]
+    }
+  ]
+}
 ```
 
 - MUST have a single `requirements` field.
 - The `requirements` field MUST be a list of requirements. A requirement MUST have
-  - `id` : The id of the requirement.
+  - `id` : The id of the requirement. Its name is arbitrary.
   - `validators` : A list of validators that structures the requirement.
     - A validator MUST be given with its name on the `name` field.
     - The name list of available validators can be obtained from the `--print` option.
@@ -91,68 +112,108 @@ requirements: # Required.
 
 #### Output file
 
-When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it will output a `lanelet2_validation_results.yaml` file which looks like the following.
+When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it will output a `lanelet2_validation_results.json` file which looks like the following example.
 
-```yaml
-# output example
-version: 0.1.0 # non-required fields in the input file will remain still
-requirements:
-  - id: example-01-01
-    passed: false # True if all validators within the id have passed.
-    validators:
-      - name: mapping.crosswalk.missing_regulatory_elements
-        passed: false # True if this single validator have passed
-        issues: # If there are issues, they will be list up here
-          - severity: Error
-            primitive: lanelet
-            id: 163
-            message: No regulatory element refers to this crosswalk.
-          - severity: Error
-            primitive: lanelet
-            id: 164
-            message: No regulatory element refers to this crosswalk.
-          - severity: Error
-            primitive: lanelet
-            id: 165
-            message: No regulatory element refers to this crosswalk.
-          - severity: Error
-            primitive: lanelet
-            id: 166
-            message: No regulatory element refers to this crosswalk.
-      - name: mapping.crosswalk.regulatory_element_details
-        passed: true # If the validation have passed, no issues appear
-  - id: example-01-02
-    passed: false
-    validators:
-      - name: mapping.traffic_light.missing_regulatory_elements
-        passed: true
-      - name: mapping.traffic_light.regulatory_element_details
-        passed: false
-        issues:
-          - severity: Error
-            primitive: regulatory element
-            id: 9896
-            message: Regulatory element of traffic light must have a stop line(ref_line).
-          - severity: Error
-            primitive: regulatory element
-            id: 9918
-            message: Regulatory element of traffic light must have a stop line(ref_line).
-          - severity: Error
-            primitive: regulatory element
-            id: 9838
-            message: Regulatory element of traffic light must have a stop line(ref_line).
-          - severity: Error
-            primitive: regulatory element
-            id: 9874
-            message: Regulatory element of traffic light must have a stop line(ref_line).
-  - id: example-01-03
-    passed: true
-    validators:
-      - name: mapping.stop_line.missing_regulatory_elements
-        passed: true
+```json
+{
+  "requirements": [
+    {
+      "id": "example-01-01",
+      "passed": false,
+      "validators": [
+        {
+          "issues": [
+            {
+              "id": 163,
+              "message": "No regulatory element refers to this crosswalk.",
+              "primitive": "lanelet",
+              "severity": "Error"
+            },
+            {
+              "id": 164,
+              "message": "No regulatory element refers to this crosswalk.",
+              "primitive": "lanelet",
+              "severity": "Error"
+            },
+            {
+              "id": 165,
+              "message": "No regulatory element refers to this crosswalk.",
+              "primitive": "lanelet",
+              "severity": "Error"
+            },
+            {
+              "id": 166,
+              "message": "No regulatory element refers to this crosswalk.",
+              "primitive": "lanelet",
+              "severity": "Error"
+            }
+          ],
+          "name": "mapping.crosswalk.missing_regulatory_elements",
+          "passed": false
+        },
+        {
+          "name": "mapping.crosswalk.regulatory_element_details",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "example-01-02",
+      "passed": false,
+      "validators": [
+        {
+          "name": "mapping.traffic_light.missing_regulatory_elements",
+          "passed": true
+        },
+        {
+          "issues": [
+            {
+              "id": 9896,
+              "message": "Regulatory element of traffic light must have a stop line(ref_line).",
+              "primitive": "regulatory element",
+              "severity": "Error"
+            },
+            {
+              "id": 9918,
+              "message": "Regulatory element of traffic light must have a stop line(ref_line).",
+              "primitive": "regulatory element",
+              "severity": "Error"
+            },
+            {
+              "id": 9838,
+              "message": "Regulatory element of traffic light must have a stop line(ref_line).",
+              "primitive": "regulatory element",
+              "severity": "Error"
+            },
+            {
+              "id": 9874,
+              "message": "Regulatory element of traffic light must have a stop line(ref_line).",
+              "primitive": "regulatory element",
+              "severity": "Error"
+            }
+          ],
+          "name": "mapping.traffic_light.regulatory_element_details",
+          "passed": false
+        }
+      ]
+    },
+    {
+      "id": "example-01-03",
+      "passed": true,
+      "validators": [
+        {
+          "name": "mapping.stop_line.missing_regulatory_elements",
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "version": "0.1.0"
+}
 ```
 
-- `lanelet2_validation_results.yaml` inherits the yaml file of `input_requirements` and add results to it.
+- `lanelet2_validation_results.json` inherits the JSON file of `input_requirements` and add results to it.
+  - So non-required fields (line `version`) remains in the output.
 - `autoware_lanelet2_map_validator` adds a boolean `passed` field to each requirement. If all validators of the requirement have been passed, the `passed` field of the requirement will be `true` (`false` if not).
 - The `passed` field is also given to each validator. If the validator found any issues the `passed` field will turn to be `false` (`true` if not), and adds an `issues` field which is a list of issues found. Each issues contains information of `severity`, `primitive`, `id`, and `message`.
 
@@ -163,8 +224,8 @@ requirements:
 | `-h, --help`               | Explains about this tool and show a list of options                                                                                                             |
 | `--print`                  | Print all available checker without running them                                                                                                                |
 | `-m, --map_file`           | Path to the map to be validated                                                                                                                                 |
-| `-i, --input_requirements` | Path to the yaml file where the list of requirements and validations is written                                                                                 |
-| `-o, --output_directory`   | Directory to save the list of validation results in a yaml format                                                                                               |
+| `-i, --input_requirements` | Path to the JSON file where the list of requirements and validations is written                                                                                 |
+| `-o, --output_directory`   | Directory to save the list of validation results in a JSON format                                                                                               |
 | `-v, --validator`          | Comma separated list of regexes to filter the applicable validators. Will run all validators by default. Example: `mapping.*` to run all checks for the mapping |
 | `-p, --projector`          | Projector used for loading lanelet map. Available projectors are: mgrs, utm, transverse_mercator. (default: mgrs)                                               |
 | `-l, --location`           | Location of the map (for instantiating the traffic rules), e.g. de for Germany                                                                                  |
