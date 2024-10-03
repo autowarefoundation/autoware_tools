@@ -8,6 +8,17 @@ This validation tool is an extension of [lanelet2_validation](https://github.com
 
 The official Autoware requirements for lanelet2 maps are described in [Vector Map creation requirement specifications (in Autoware Documentation)](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/).
 
+## Design concept
+
+The `autoware_lanelet2_map_validator` is designed to validate `.osm` map files by using and extending the [lanelet2_validation](https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation) package for Autoware.
+
+`autoware_lanelet2_map_validator` takes the lanelet2 map (.osm file) and requirement set (yaml file, optional) as the input, and output validation results to the console.
+
+If a requirement set is given, `autoware_lanelet2_map_validator` also outputs validation results reflecting the input requirement set.
+See ["Run with a requirement set"](#run-with-a-requirement-set) for further information, ["Input file"](#input-file) to understand the input format, and ["Output file"](#output-file) to understand the output format.
+
+![autoware_lanelet2_map_validator_architecture](./media/autoware_lanelet2_map_validator_architecture.drawio.svg)
+
 ## How to use
 
 Basically, you can use the following command to execute `autoware_lanelet2_map_validator`. However, note that `autoware_lanelet2_map_validator` is a ROS/rclcpp free tool, so you can just run the built executable whatever way.
@@ -41,12 +52,24 @@ ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --print
 
 ### Run with a requirement set
 
-You can run `autoware_lanelet2_map_validator` with a yaml file input that follows the structure like this
+`autoware_lanelet2_map_validator` can manage to run a group of validators by a list of validator names.
+`autoware_lanelet2_map_validator` will scan through the input yaml file given by the `--input_requirements, -i` option, and output the validation results to the directory given by the `--output_directory, -o` option.
+The output filename will be `lanelet2_validation_results.yaml`.
+
+```bash
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --input_requirements autoware_requirements_set.yaml --output_directory ./
+```
+
+#### Input file
+
+The yaml file input should follow the structure like this
 
 ```yaml
-requirements:
-  - id: example-01-01
-    validators:
+# input example
+version: 0.1.0 # Not required. You can add any field if the "requirements" field is set correctly.
+requirements: # Required.
+  - id: example-01-01 # Users have to set ids to a group of validators. The id name is arbitrary.
+    validators: # List up validator names that consists of the requirement.
       - name: mapping.crosswalk.missing_regulatory_elements
       - name: mapping.crosswalk.regulatory_element_details
   - id: example-01-02
@@ -66,22 +89,20 @@ requirements:
     - The name list of available validators can be obtained from the `--print` option.
 - The user can write any other field (like `version`) besides `requirements`.
 
-Then, the `autoware_lanelet2_map_validator` will scan through the input yaml file given by the `--input_requirements, -i` option, and output the validation results to the directory given by the `--output_directory, -o` option.
-
-```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --input_requirements autoware_requirements_set.yaml --output_directory ./
-```
+#### Output file
 
 When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it will output a `lanelet2_validation_results.yaml` file which looks like the following.
 
 ```yaml
+# output example
+version: 0.1.0 # non-required fields in the input file will remain still
 requirements:
   - id: example-01-01
-    passed: false
+    passed: false # True if all validators within the id have passed.
     validators:
       - name: mapping.crosswalk.missing_regulatory_elements
-        passed: false
-        issues:
+        passed: false # True if this single validator have passed
+        issues: # If there are issues, they will be list up here
           - severity: Error
             primitive: lanelet
             id: 163
@@ -99,8 +120,8 @@ requirements:
             id: 166
             message: No regulatory element refers to this crosswalk.
       - name: mapping.crosswalk.regulatory_element_details
-        passed: true
-  - id: exanple-01-02
+        passed: true # If the validation have passed, no issues appear
+  - id: example-01-02
     passed: false
     validators:
       - name: mapping.traffic_light.missing_regulatory_elements
