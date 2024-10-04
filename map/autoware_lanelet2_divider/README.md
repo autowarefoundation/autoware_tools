@@ -3,6 +3,7 @@
 This is a lanelet2 tile generator tool for Autoware dynamic lanelet2 map loading feature.
 
 Working principal of this tool is sequentally:
+
 - Take the inputs from the user
 - Generate square grids according to the input MGRS grid
 - Filter generated square grids with the input lanelet2_map.osm
@@ -74,6 +75,7 @@ runs an **extract** operation and divides the input lanelet2_map.osm file.
 This file contains the geographical visualization for generated data. This is not used in Autoware or somewhere else.
 It is generating only for debugging the output files. [QGIS](https://qgis.org/en/site/) can be used for opening this
 file. You need to see the visualizations of generated grids, filtered grids and input lanelet2 map.
+
 <p align='center'>
     <img src="docs/img_ytu_layers.png" alt="img_ytu_layers" width="60%"/>
 </p>
@@ -87,7 +89,7 @@ file. You need to see the visualizations of generated grids, filtered grids and 
 Additional to `colcon build`, you have to follow individual installation steps for the tools that are used in this
 project.
 
-### Poetry:
+### Poetry
 
 ```bash
 pip install poetry
@@ -95,7 +97,7 @@ pip install poetry
 
 ### Osmium Tool
 
-https://github.com/osmcode/osmium-tool?tab=readme-ov-file#building
+<https://github.com/osmcode/osmium-tool?tab=readme-ov-file#building>
 
 ```bash
 cd <path-to-libraries>
@@ -125,18 +127,21 @@ ros2 run autoware_lanelet2_divider lanelet2_divider --ros-args --params-file ins
 ```
 
 ## Example Data
+
 ### Yildiz Technical University Original Lanelet2 Map
+
 This is an original lanelet2 map file that contains stop lines, speed bumps or other regulatory elements:
-https://drive.google.com/drive/folders/1VFN0zidAHzIuQCnznVaFzefqqdRS_X5l?usp=drive_link
+<https://drive.google.com/drive/folders/1VFN0zidAHzIuQCnznVaFzefqqdRS_X5l?usp=drive_link>
 
 <p align='center'>
     <img src="docs/img_ytu_original.png" alt="img_ytu_original" width="60%"/>
 </p>
 
 ### Yildiz Technical University Extended Lanelet2 Map (Synthetic)
+
 This is the extended version of the original lanelet2 map file. We extended it to 80 kilometers by hand.
 Still it contains all the regulatory elements:
-https://drive.google.com/drive/folders/1CRBYp19_NXzHXxL9JkO_ffbhGARoRaAV?usp=drive_link
+<https://drive.google.com/drive/folders/1CRBYp19_NXzHXxL9JkO_ffbhGARoRaAV?usp=drive_link>
 
 <p align='center'>
     <img src="docs/img_ytu_extended.png" alt="img_ytu_extended"/>
@@ -145,7 +150,7 @@ https://drive.google.com/drive/folders/1CRBYp19_NXzHXxL9JkO_ffbhGARoRaAV?usp=dri
 ## Params
 
 | Param              | Description                                             |
-|--------------------|---------------------------------------------------------|
+| ------------------ | ------------------------------------------------------- |
 | mgrs_grid          | The 100 kilometer MGRS grid that the lanelet2 map is in |
 | grid_edge_size     | Wanted edge length in meters for map-tiles to generate  |
 | input_lanelet2_map | Full path of the lanelet2_map to divide                 |

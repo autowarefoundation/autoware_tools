@@ -1,18 +1,19 @@
+import json
+import os
+import sys
+import time
 from typing import List
+
+from autoware_lanelet2_divider.debug import Debug
+from autoware_lanelet2_divider.debug import DebugMessageType
+import lanelet2
+from lanelet2.projection import UtmProjector
+import mgrs
 from osgeo import gdal
 from osgeo import ogr
 from tqdm import tqdm
-import lanelet2
-from lanelet2.projection import UtmProjector
-import sys
-import mgrs
 import utm
 import yaml
-import json
-import time
-import os
-
-from autoware_lanelet2_divider.debug import Debug, DebugMessageType
 
 
 def create_grid_layer(grid_edge_size, layer_grids, mgrs_grid) -> None:
@@ -20,7 +21,9 @@ def create_grid_layer(grid_edge_size, layer_grids, mgrs_grid) -> None:
     zone, northp, origin_y, origin_x = mgrs_object.MGRSToUTM(mgrs_grid)
 
     grid_count = 100000 / grid_edge_size
-    for i in tqdm(range(int(grid_count)), desc=Debug.get_log("Creating grid layer", DebugMessageType.INFO)):
+    for i in tqdm(
+        range(int(grid_count)), desc=Debug.get_log("Creating grid layer", DebugMessageType.INFO)
+    ):
         for j in range(int(grid_count)):
             feature_grid = ogr.Feature(layer_grids.GetLayerDefn())
             linear_ring = ogr.Geometry(ogr.wkbLinearRing)
@@ -63,18 +66,17 @@ def generate_lanelet2_layer(mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, la
         linestring = ogr.Geometry(ogr.wkbLineString)
         for node in lanelet_linestring:
             node_lat, node_lon = utm.to_latlon(origin_x + node.x, origin_y + node.y, zone, northp)
-            linestring.AddPoint_2D( node_lon, node_lat)
+            linestring.AddPoint_2D(node_lon, node_lat)
         lanelet2_whole_mls.AddGeometry(linestring)
-    feature_lanelet2 = ogr.Feature( layer_lanelet2_whole.GetLayerDefn())
+    feature_lanelet2 = ogr.Feature(layer_lanelet2_whole.GetLayerDefn())
     feature_lanelet2.SetGeometry(lanelet2_whole_mls)
     if layer_lanelet2_whole.CreateFeature(feature_lanelet2) != 0:
         print("Failed to create feature in shapefile.\n")
-        sys.exit( 1 )
+        sys.exit(1)
     feature_lanelet2.Destroy()
 
 
 def generate_yaml_dict(layer_filtered_grids, grid_edge_size, mgrs_grid) -> dict:
-
     mgrs_object = mgrs.MGRS()
     zone, northp, origin_x, origin_y = mgrs_object.MGRSToUTM(mgrs_grid)
 
@@ -92,7 +94,7 @@ def generate_yaml_dict(layer_filtered_grids, grid_edge_size, mgrs_grid) -> dict:
         yaml_data = {
             "x_resolution": float(grid_edge_size),
             "y_resolution": float(grid_edge_size),
-            file_id: [round(float(x - origin_x), 2), round(float(y - origin_y), 2)]
+            file_id: [round(float(x - origin_x), 2), round(float(y - origin_y), 2)],
         }
         metadata_yaml.update(yaml_data)
     return metadata_yaml
@@ -115,13 +117,13 @@ def generate_config_json(layer_filtered_grids, extract_dir) -> str:
             "description": "optional description",
             "output": str(filtered_grid.GetFID()) + ".osm",
             "output_format": "osm",
-            "polygon": polygon_outer
+            "polygon": polygon_outer,
         }
         extracts.append(extract_element)
 
     config_json_ = {
         "directory": os.path.join(extract_dir, "lanelet2_map.osm"),
-        "extracts": extracts
+        "extracts": extracts,
     }
 
     return json.dumps(config_json_, indent=2)
@@ -137,7 +139,9 @@ def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) 
         print("%s driver not available.\n" % driverName)
         sys.exit(1)
 
-    ds_grids = drv.Create(os.path.join(extract_dir, "output_layers.gpkg"), 0, 0, 0, gdal.GDT_Unknown)
+    ds_grids = drv.Create(
+        os.path.join(extract_dir, "output_layers.gpkg"), 0, 0, 0, gdal.GDT_Unknown
+    )
     if ds_grids is None:
         print("Creation of output file failed.\n")
         sys.exit(1)
@@ -161,14 +165,17 @@ def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) 
 
     # Create Grid Layer
     # --------------------------------------------------------------------------------
-    Debug.log("Creating " + str(grid_edge_size) + " meters grid layer along the " + mgrs_grid + ".",
-              DebugMessageType.INFO)
+    Debug.log(
+        "Creating " + str(grid_edge_size) + " meters grid layer along the " + mgrs_grid + ".",
+        DebugMessageType.INFO,
+    )
     start = time.time()
     create_grid_layer(grid_edge_size, layer_grids, mgrs_grid)
     end = time.time()
     formatted = "{:.1f}".format(end - start)
-    Debug.log("Grid layer created. Lasted " + str(formatted) + " seconds.", DebugMessageType.SUCCESS)
-
+    Debug.log(
+        "Grid layer created. Lasted " + str(formatted) + " seconds.", DebugMessageType.SUCCESS
+    )
 
     # Make a multilinestring in order to use in filtering
     # --------------------------------------------------------------------------------
@@ -202,7 +209,10 @@ def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) 
 
     metadata_yaml = generate_yaml_dict(layer_filtered_grids, grid_edge_size, mgrs_grid)
 
-    with open(os.path.join(extract_dir, "lanelet2_map_metadata.yaml"), 'w', ) as f:
+    with open(
+        os.path.join(extract_dir, "lanelet2_map_metadata.yaml"),
+        "w",
+    ) as f:
         yaml.dump(metadata_yaml, f, default_flow_style=None, sort_keys=False)
 
     # Create config.json for Osmium Extract
@@ -215,7 +225,7 @@ def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) 
 
     if total_feature_count > 500:
         fid_list = []
-        for i in range(1, total_feature_count+1):
+        for i in range(1, total_feature_count + 1):
             fid_list.append(i)  # add fid into fid_list
             if ((i % 500) == 0) or (i == total_feature_count):
                 dup_layer_grids = layer_filtered_grids

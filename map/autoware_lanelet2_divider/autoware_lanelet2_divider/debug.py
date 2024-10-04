@@ -1,5 +1,5 @@
-from enum import Enum
 from datetime import datetime
+from enum import Enum
 
 
 class DebugMessageType(Enum):
@@ -14,7 +14,9 @@ class Debug:
         current_time = datetime.now().strftime("%H:%M:%S")
         color = message_type.value["color"]
         reset_color = "\033[0m"  # Reset color to default
-        formatted_message = f"[{current_time} - {color}{message_type.value['value']}{reset_color}] {message}"
+        formatted_message = (
+            f"[{current_time} - {color}{message_type.value['value']}{reset_color}] {message}"
+        )
         print(formatted_message)
 
     @classmethod
@@ -22,5 +24,7 @@ class Debug:
         current_time = datetime.now().strftime("%H:%M:%S")
         color = message_type.value["color"]
         reset_color = "\033[0m"  # Reset color to default
-        formatted_message = f"[{current_time} - {color}{message_type.value['value']}{reset_color}] {message}"
+        formatted_message = (
+            f"[{current_time} - {color}{message_type.value['value']}{reset_color}] {message}"
+        )
         return formatted_message
