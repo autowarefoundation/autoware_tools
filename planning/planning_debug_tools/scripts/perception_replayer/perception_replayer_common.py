@@ -119,9 +119,11 @@ class PerceptionReplayerCommon(Node):
         objects_topic = (
             "/perception/object_recognition/detection/objects"
             if self.args.detected_object
-            else "/perception/object_recognition/tracking/objects"
-            if self.args.tracked_object
-            else "/perception/object_recognition/objects"
+            else (
+                "/perception/object_recognition/tracking/objects"
+                if self.args.tracked_object
+                else "/perception/object_recognition/objects"
+            )
         )
         ego_odom_topic = "/localization/kinematic_state"
         traffic_signals_topic = "/perception/traffic_light_recognition/traffic_signals"
