@@ -64,6 +64,7 @@ private:
   bool select_gear_ratio_estimator;
   bool select_steer_offset_estimator;
   bool select_wheel_base_estimator;
+  bool invert_imu_z;
 
   double auto_mode_duration_ = 0;
   double last_manual_time_ = 0;
