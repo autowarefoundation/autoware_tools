@@ -144,3 +144,19 @@ ROS 2 params in `/data_collecting_pure_pursuit_trajectory_follower` node:
 | `steer_noise_amp`                        | `double` | Steer command additional sine noise amplitude [rad]            | 0.01          |
 | `steer_noise_max_period`                 | `double` | Steer command additional sine noise maximum period [s]         | 5.0           |
 | `steer_noise_min_period`                 | `double` | Steer command additional sine noise minimum period [s]         | 20.0          |
+
+ROS 2 params in `/data_collecting_plotter` node:
+
+| Name                    | Type     | Description                                                                                         | Default value  |
+| :---------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
+| `COURSE_NAME`           | `string` | Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`] | `eight_course` |
+| `NUM_BINS_V`            | `int`    | Number of bins of velocity in heatmap                                                               | 10             |
+| `NUM_BINS_STEER`        | `int`    | Number of bins of steer in heatmap                                                                  | 10             |
+| `NUM_BINS_ACCELERATION` | `int`    | Number of bins of acceleration in heatmap                                                           | 10             |
+| `V_MIN`                 | `double` | Minimum velocity in heatmap [m/s]                                                                   | 0.0            |
+| `V_MAX`                 | `double` | Maximum velocity in heatmap [m/s]                                                                   | 11.5           |
+| `STEER_MIN`             | `double` | Minimum steer in heatmap [rad]                                                                      | -1.0           |
+| `STEER_MAX`             | `double` | Maximum steer in heatmap [rad]                                                                      | 1.0            |
+| `A_MIN`                 | `double` | Minimum acceleration in heatmap [m/ss]                                                              | -1.0           |
+| `A_MAX`                 | `double` | Maximum acceleration in heatmap [m/ss]                                                              | 1.0            |
+| `wheel_base`            | `double` | Wheel base [m]                                                                                      | 2.79           |
