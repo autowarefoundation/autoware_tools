@@ -38,8 +38,7 @@ CalibrationAdapterNode::CalibrationAdapterNode()
     create_publisher<Float32Stamped>("~/output/acceleration_status", durable_qos);
   pub_acceleration_cmd_ =
     create_publisher<Float32Stamped>("~/output/acceleration_cmd", durable_qos);
-  pub_vehicle_twist_ =
-    create_publisher<TwistStamped>("~/output/vehicle_twist", durable_qos);
+  pub_vehicle_twist_ = create_publisher<TwistStamped>("~/output/vehicle_twist", durable_qos);
 
   sub_control_cmd_ = create_subscription<ControlCommandStamped>(
     "~/input/control_cmd", queue_size,
