@@ -44,7 +44,7 @@ CalibrationAdapterNode::CalibrationAdapterNode()
   sub_control_cmd_ = create_subscription<ControlCommandStamped>(
     "~/input/control_cmd", queue_size,
     std::bind(&CalibrationAdapterNode::callbackControlCmd, this, _1));
-  sub_twist_ = create_subscription<VelocityReport>(
+  sub_twist_ = create_subscription<Velocity>(
     "~/input/twist_status", queue_size,
     std::bind(&CalibrationAdapterNode::callbackTwistStatus, this, _1));
 }
@@ -103,7 +103,7 @@ void CalibrationAdapterNode::callbackControlCmd(const ControlCommandStamped::Con
   pub_acceleration_cmd_->publish(accel_msg);
 }
 
-void CalibrationAdapterNode::callbackTwistStatus(const VelocityReport::ConstSharedPtr msg)
+void CalibrationAdapterNode::callbackTwistStatus(const Velocity::ConstSharedPtr msg)
 {
   TwistStamped twist;
   twist.header = msg->header;

@@ -30,7 +30,7 @@
 
 class CalibrationAdapterNode : public CalibrationAdapterNodeBase
 {
-  using VelocityReport = autoware_vehicle_msgs::msg::VelocityReport;
+  using Velocity = autoware_vehicle_msgs::msg::VelocityReport;
   using ControlCommandStamped = autoware_control_msgs::msg::Control;
   using TwistStamped = geometry_msgs::msg::TwistStamped;
 
@@ -48,7 +48,7 @@ private:
   rclcpp::Publisher<Float32Stamped>::SharedPtr pub_steering_angle_cmd_;
   rclcpp::Publisher<TwistStamped>::SharedPtr pub_vehicle_twist_;
   rclcpp::Subscription<ControlCommandStamped>::SharedPtr sub_control_cmd_;
-  rclcpp::Subscription<VelocityReport>::SharedPtr sub_twist_;
+  rclcpp::Subscription<Velocity>::SharedPtr sub_twist_;
   template <class T>
   T getNearestTimeDataFromVec(
     const T base_data, const double back_time, const std::vector<T> & vec);
@@ -57,7 +57,7 @@ private:
   template <class T>
   void pushDataToVec(const T data, const std::size_t max_size, std::vector<T> * vec);
   void callbackControlCmd(const ControlCommandStamped::ConstSharedPtr msg);
-  void callbackTwistStatus(const VelocityReport::ConstSharedPtr msg);
+  void callbackTwistStatus(const Velocity::ConstSharedPtr msg);
 };
 
 #endif  // CALIBRATION_ADAPTER__CALIBRATION_ADAPTER_NODE_HPP_

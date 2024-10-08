@@ -41,6 +41,7 @@ ParameterEstimatorNode::ParameterEstimatorNode(const rclcpp::NodeOptions & node_
   select_steer_offset_estimator =
     this->declare_parameter<bool>("select_steer_offset_estimator", true);
   select_wheel_base_estimator = this->declare_parameter<bool>("select_wheel_base_estimator", true);
+  invert_imu_z = this->declare_parameter<bool>("invert_imu_z", true);
   params_.valid_max_steer_rad = this->declare_parameter<double>("valid_max_steer_rad", 0.05);
   params_.valid_min_velocity = this->declare_parameter<double>("valid_min_velocity", 0.5);
   params_.valid_min_angular_velocity =
@@ -122,8 +123,7 @@ void ParameterEstimatorNode::timerCallback()
   {
     VehicleData v = {};
     v.velocity = vehicle_twist_ptr_->twist.linear.x;
-    //v.angular_velocity = -imu_ptr_->angular_velocity.z;
-    v.angular_velocity = imu_ptr_->angular_velocity.z;
+    v.angular_velocity = imu_ptr_->angular_velocity.z * (invert_imu_z ? -1 : 1);
     if (select_steer_offset_estimator || select_wheel_base_estimator) {
       v.steer = steer_ptr_->data;
     }

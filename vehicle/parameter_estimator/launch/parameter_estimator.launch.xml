@@ -4,6 +4,7 @@
   <arg name="select_gear_ratio_estimator" default="true" description="Select gear ratio estimator"/>
   <arg name="select_steer_offset_estimator" default="true" description="Select steer offset estimator"/>
   <arg name="select_wheel_base_estimator" default="true" description="Select wheel base estimator"/>
+  <arg name="invert_imu_z" default="true" description="Invert z-angular velocity from imu"/>
 
   <!-- get wheel base from vehicle info -->
   <include file="$(find-pkg-share global_parameter_loader)/launch/global_params.launch.py">
@@ -26,6 +27,7 @@
     <param name="select_steer_offset_estimator" value="$(var select_steer_offset_estimator)"/>
     <param name="select_wheel_base_estimator" value="$(var select_wheel_base_estimator)"/>
     <param name="use_auto_mode" value="$(var use_auto_mode)"/>
+    <param name="invert_imu_z" value="$(var invert_imu_z)"/>
     <remap from="input/imu_twist" to="$(var imu_twist)"/>
     <remap from="input/vehicle_twist" to="/calibration/vehicle/twist_status"/>
     <remap from="input/control_mode" to="/vehicle/status/control_mode"/>
