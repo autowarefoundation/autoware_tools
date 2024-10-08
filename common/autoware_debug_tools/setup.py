@@ -25,7 +25,8 @@ setup(
             "processing_time_plotter = autoware_debug_tools.system_performance_plotter.processing_time_plotter:main",
             "cpu_usage_plotter = autoware_debug_tools.system_performance_plotter.cpu_usage_plotter:main",
             "memory_usage_plotter = autoware_debug_tools.system_performance_plotter.memory_usage_plotter:main",
-            "topic_connection_checker = autoware_debug_tools.topic_connection_checker.node:main",
+            "topic_connection_checker = autoware_debug_tools.topic_connection_checker.topic_connection_checker_node:main",
+            "topic_localizer = autoware_debug_tools.topic_connection_checker.localize_topic:main",
         ],
     },
 )
