@@ -18,7 +18,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Capture.srv"
   DEPENDENCIES
   std_msgs
-  ADD_LINTER_TESTS
 )
 
 ament_auto_add_library(${PROJECT_NAME}_lib SHARED
