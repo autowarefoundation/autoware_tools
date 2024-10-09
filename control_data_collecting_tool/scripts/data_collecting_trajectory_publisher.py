@@ -92,30 +92,16 @@ def get_eight_course_trajectory_points(
     parts = ["part" for _ in range(len(t_array.copy()))]
     i_end = t_array.shape[0]
 
-    amp = -1.0 * 0.0
-    hz = 2.0
-
-    def kappa_sin(A, C, x):
-        A = abs(A)
-        C = abs(C)
-        return A * C * C * abs(sin(C * x)) / (1 + A * A * C * C * cos(C * x) * cos(C * x)) ** 1.5
-
     for i, t in enumerate(t_array):
         if t > OB + BD + AD + AC + CO:
             i_end = i
             break
 
         if 0 <= t and t <= OB:
-            xy = np.array([0.0, -amp * np.sin(2 * hz * np.pi * t / OB - np.pi)])
-            theta = np.arctan2(
-                -amp * 2 * hz * np.pi / OB * np.cos(2 * hz * np.pi * t / OB - np.pi), 1.0
-            )
-            rot = np.array([[np.cos(θB), -np.sin(θB)], [np.sin(θB), np.cos(θB)]])
-            xy = rot @ xy
-            x[i] = (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t / OB + xy[0]
-            y[i] = a * t / (2 * OB) + xy[1]
-            yaw[i] = θB + theta
-            curve[i] = 1e-10 + kappa_sin(amp, 2 * hz * np.pi / OB, t)
+            x[i] = (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t / OB
+            y[i] = a * t / (2 * OB)
+            yaw[i] = θB
+            curve[i] = 1e-10
             parts[i] = "linear_positive"
             achievement_rates[i] = t / (2 * OB) + 0.5
 
@@ -131,21 +117,10 @@ def get_eight_course_trajectory_points(
 
         if OB + BD <= t and t <= OB + BD + AD:
             t2 = t - (OB + BD)
-
-            xy = np.array([0.0, -amp * np.sin(2 * hz * np.pi * t2 / OB)])
-            theta = np.arctan2(-amp * 2 * hz * np.pi / OB * np.cos(2 * hz * np.pi * t2 / OB), 1.0)
-            rot = np.array(
-                [
-                    [np.cos(np.pi - θB), -np.sin(np.pi - θB)],
-                    [np.sin(np.pi - θB), np.cos(np.pi - θB)],
-                ]
-            )
-            xy = rot @ xy
-            x[i] = D[0] - (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t2 / OB + xy[0]
-            y[i] = D[1] + a * t2 / (2 * OB) + xy[1]
-            yaw[i] = np.pi - θB + theta
-            curve[i] = 1e-10 + kappa_sin(amp, 2 * hz * np.pi / OB, t2)
-
+            x[i] = D[0] - (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t2 / OB
+            y[i] = D[1] + a * t2 / (2 * OB)
+            yaw[i] = np.pi - θB
+            curve[i] = 1e-10
             parts[i] = "linear_negative"
             achievement_rates[i] = t2 / (2 * OB)
 
@@ -156,23 +131,15 @@ def get_eight_course_trajectory_points(
             y[i] = OL[1] - R * np.sin(-np.pi / 6 + t3_rad)
             yaw[i] = np.pi + t3_rad
             curve[i] = 1 / R
-
             parts[i] = "left_circle"
             achievement_rates[i] = t3 / BD
 
         if OB + BD + AD + AC <= t and t <= OB + BD + AD + AC + CO:
             t4 = t - (OB + BD + AD + AC)
-
-            xy = np.array([0.0, amp * np.sin(2 * hz * np.pi * t4 / CO)])
-            theta = np.arctan2(amp * 2 * hz * np.pi / CO * np.cos(2 * hz * np.pi * t4), 1.0)
-            rot = np.array([[np.cos(θB), -np.sin(θB)], [np.sin(θB), np.cos(θB)]])
-            xy = rot @ xy
-
-            x[i] = C[0] + (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t4 / OB + xy[0]
-            y[i] = C[1] + a * t4 / (2 * OB) + xy[1]
-            yaw[i] = θB + theta
-            curve[i] = 1e-10 + kappa_sin(amp, 2 * hz * np.pi / OB, t4)
-
+            x[i] = C[0] + (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t4 / OB
+            y[i] = C[1] + a * t4 / (2 * OB)
+            yaw[i] = θB
+            curve[i] = 1e-10
             parts[i] = "linear_positive"
             achievement_rates[i] = t4 / (2 * OB)
 
