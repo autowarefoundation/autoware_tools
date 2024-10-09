@@ -1,7 +1,7 @@
 site_name: Autoware Universe Documentation
-site_url: https://autowarefoundation.github.io/autoware_tools
-repo_url: https://github.com/autowarefoundation/autoware_tools
-edit_uri: https://github.com/autowarefoundation/autoware_tools/edit/main/
+site_url: https://autowarefoundation.github.io/autoware.universe
+repo_url: https://github.com/autowarefoundation/autoware.universe
+edit_uri: https://github.com/autowarefoundation/autoware.universe/edit/main/
 docs_dir: .
 copyright: Copyright &copy; 2023 The Autoware Foundation
 
