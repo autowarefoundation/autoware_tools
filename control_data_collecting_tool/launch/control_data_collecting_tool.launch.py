@@ -45,6 +45,17 @@ def generate_launch_description():
                 name="data_collecting_plotter",
                 parameters=[param_file_path],
             ),
+            Node(
+                package="control_data_collecting_tool",
+                executable="data_collecting_rosbag_record.py",
+                name="data_collecting_rosbag_record",
+            ),
+            Node(
+                package="control_data_collecting_tool",
+                executable="data_collecting_data_counter.py",
+                name="data_collecting_data_counter",
+                parameters=[param_file_path],
+            ),
         ]
     )
 
