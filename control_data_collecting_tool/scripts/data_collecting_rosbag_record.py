@@ -17,7 +17,6 @@
 from datetime import datetime
 from functools import partial
 import os
-import yaml
 
 from ament_index_python.packages import get_package_share_directory
 import rclpy
@@ -28,6 +27,7 @@ from rosbag2_py import SequentialWriter
 from rosbag2_py import StorageOptions
 from rosbag2_py._storage import TopicMetadata
 from rosidl_runtime_py.utilities import get_message
+import yaml
 
 
 class DataCollectingRosbagRecord(Node):
@@ -35,9 +35,9 @@ class DataCollectingRosbagRecord(Node):
         super().__init__("data_collecting_rosbag_record")
         package_share_directory = get_package_share_directory("control_data_collecting_tool")
         topic_file_path = os.path.join(package_share_directory, "config", "topics.yaml")
-        with open(topic_file_path, 'r') as file:
+        with open(topic_file_path, "r") as file:
             topic_data = yaml.safe_load(file)
-        self.topics = topic_data['topics']
+        self.topics = topic_data["topics"]
         self.writer = SequentialWriter()
         self.subscribed = False
         self.start_record = False
@@ -115,7 +115,7 @@ class DataCollectingRosbagRecord(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    
+
     data_collecting_rosbag_record = DataCollectingRosbagRecord()
     rclpy.spin(data_collecting_rosbag_record)
     data_collecting_rosbag_record.destroy_node()

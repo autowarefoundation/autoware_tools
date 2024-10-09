@@ -15,14 +15,12 @@
 # limitations under the License.
 
 
-from rclpy.node import Node
-from rcl_interfaces.msg import ParameterDescriptor
-from nav_msgs.msg import Odometry
-
 from geometry_msgs.msg import AccelWithCovarianceStamped
 from nav_msgs.msg import Odometry
-
 import numpy as np
+from rcl_interfaces.msg import ParameterDescriptor
+from rclpy.node import Node
+
 
 class DataCollectingBaseNode(Node):
     def __init__(self, node_name):
@@ -106,10 +104,10 @@ class DataCollectingBaseNode(Node):
         self._present_kinematic_state = None
         self._present_acceleration = None
 
-        '''
+        """
         velocity and acceleration grid
         velocity and steer grid
-        '''
+        """
         self.num_bins_v = self.get_parameter("NUM_BINS_V").get_parameter_value().integer_value
         self.num_bins_steer = (
             self.get_parameter("NUM_BINS_STEER").get_parameter_value().integer_value
@@ -128,8 +126,12 @@ class DataCollectingBaseNode(Node):
             self.get_parameter("A_MAX").get_parameter_value().double_value,
         )
 
-        self.collected_data_counts_of_vel_acc = np.zeros((self.num_bins_v, self.num_bins_a), dtype=np.int32)
-        self.collected_data_counts_of_vel_steer = np.zeros((self.num_bins_v, self.num_bins_steer), dtype=np.int32)
+        self.collected_data_counts_of_vel_acc = np.zeros(
+            (self.num_bins_v, self.num_bins_a), dtype=np.int32
+        )
+        self.collected_data_counts_of_vel_steer = np.zeros(
+            (self.num_bins_v, self.num_bins_steer), dtype=np.int32
+        )
 
         self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins_v + 1)
         self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins_steer + 1)

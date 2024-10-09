@@ -58,13 +58,7 @@ This package provides tools for automatically collecting data using pure pursuit
    > [!NOTE]
    > You cannot change the data collecting area while driving.
 
-7. start recording rosbag data. For example, run the following command:
-
-   ```bash
-   ros2 bag record /localization/kinematic_state /localization/acceleration /vehicle/status/steering_status /sensing/imu/imu_data /system/operation_mode/state /vehicle/status/control_mode /external/selected/control_cmd /external/selected/gear_cmd /data_collecting_trajectory
-   ```
-
-8. Click the `LOCAL` button on `OperationMode` in `AutowareStatePanel`.
+7. Click the `LOCAL` button on `OperationMode` in `AutowareStatePanel`.
 
    <img src="resource/push_LOCAL.png" width="480">
 
@@ -72,7 +66,7 @@ This package provides tools for automatically collecting data using pure pursuit
 
    <img src="resource/demo.gif" width="480">
 
-9. If you want to stop data collecting automatic driving, run the following command
+8. If you want to stop data collecting automatic driving, run the following command
 
    ```bash
    ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: true" --once
@@ -81,11 +75,11 @@ This package provides tools for automatically collecting data using pure pursuit
    > [!NOTE]
    > When the car crosses the green boundary line, a similar stopping procedure will be automatically triggered.
 
-10. If you want to restart data collecting automatic driving, run the following command
+9. If you want to restart data collecting automatic driving, run the following command
 
-    ```bash
-    ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once
-    ```
+   ```bash
+   ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once
+   ```
 
 ## Change Courses
 
