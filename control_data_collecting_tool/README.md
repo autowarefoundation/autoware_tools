@@ -37,6 +37,7 @@ This package provides tools for automatically collecting data using pure pursuit
      The topics will be saved in rosbag2 format in the directory where the above command is executed.
 
    - The data from `/localization/kinematic_state` and `/localization/acceleration` located in the directory (rosbag2 format) where the command is executed will be automatically loaded and reflected in the data count for these topics.
+     (If `LOAD_ROSBAG2_FILES` in `config/param.yaml` is set to `false`, the data is noe loaded.)
 
 5. Add visualization in rviz:
 
@@ -101,6 +102,7 @@ ROS 2 params which are common in all nodes:
 
 | Name                                     | Type     | Description                                                                                         | Default value  |
 | :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
+| `LOAD_ROSBAG2_FILES`                     | `bool`   | Flag that determines whether to load rosbag2 data or not                                            | True           |
 | `COURSE_NAME`                            | `string` | Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`] | `eight_course` |
 | `NUM_BINS_V`                             | `int`    | Number of bins of velocity in heatmap                                                               | 10             |
 | `NUM_BINS_STEER`                         | `int`    | Number of bins of steer in heatmap                                                                  | 10             |

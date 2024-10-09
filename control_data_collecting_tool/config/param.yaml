@@ -1,5 +1,7 @@
 /**:
   ros__parameters:
+    LOAD_ROSBAG2_FILES: true
+
     COURSE_NAME: eight_course
     # COURSE_NAME: u_shaped_return
     # COURSE_NAME: straight_line_positive

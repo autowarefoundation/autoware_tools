@@ -20,6 +20,7 @@ import os
 from data_collecting_base_node import DataCollectingBaseNode
 import numpy as np
 from numpy import arctan2
+from rcl_interfaces.msg import ParameterDescriptor
 import rclpy
 import rosbag_play
 from std_msgs.msg import Float32MultiArray
@@ -81,8 +82,20 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             Float32MultiArray, "/control_data_collecting_tools/acc_hist", 10
         )
 
-        rosbag2_dir_list = [d for d in os.listdir("./") if os.path.isdir(os.path.join("./", d))]
-        self.load_rosbag_data(rosbag2_dir_list)
+        self.declare_parameter(
+            "LOAD_ROSBAG2_FILES",
+            True,
+            ParameterDescriptor(
+                description="Flag that determines whether to load rosbag2 data or not"
+            ),
+        )
+
+        load_rosbag2_files = (
+            self.get_parameter("LOAD_ROSBAG2_FILES").get_parameter_value().bool_value
+        )
+        if load_rosbag2_files:
+            rosbag2_dir_list = [d for d in os.listdir("./") if os.path.isdir(os.path.join("./", d))]
+            self.load_rosbag_data(rosbag2_dir_list)
 
     def load_rosbag_data(self, rosbag2_dir_list):
         for rosbag2_dir in rosbag2_dir_list:
