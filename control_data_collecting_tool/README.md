@@ -73,11 +73,14 @@ This package provides tools for automatically collecting data using pure pursuit
    ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: true" --once
    ```
 
+   > [!NOTE]
+   > When the car crosses the green boundary line, a similar stopping procedure will be automatically triggered.
+
 10. If you want to restart data collecting automatic driving, run the following command
 
-```bash
-ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once
-```
+    ```bash
+    ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once
+    ```
 
 ## Change Courses
 

@@ -31,6 +31,7 @@ import rclpy
 from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
 import seaborn as sns
+from std_msgs.msg import Bool
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 
@@ -52,6 +53,10 @@ def smooth_bounding(upper: np.ndarray, threshold: np.ndarray, x: np.ndarray):
 
 def getYaw(orientation_xyzw):
     return R.from_quat(orientation_xyzw.reshape(-1, 4)).as_euler("xyz")[:, 2]
+
+
+def computeTriangleArea(A, B, C):
+    return 0.5 * abs(np.cross(B - A, C - A))
 
 
 def get_eight_course_trajectory_points(
@@ -442,6 +447,12 @@ class DataCollectingTrajectoryPublisher(Node):
             AccelWithCovarianceStamped,
             "/localization/acceleration",
             self.onAcceleration,
+            1,
+        )
+
+        self.pub_stop_request_ = self.create_publisher(
+            Bool,
+            "/data_collecting_stop_request",
             1,
         )
 
@@ -974,6 +985,40 @@ class DataCollectingTrajectoryPublisher(Node):
         self.axs[3].set_xlabel("Velocity bins")
         self.axs[3].set_ylabel("Steer bins")
 
+    def checkInDateCollectingArea(self, current_pos):
+        data_collecting_area = np.array(
+            [
+                np.array(
+                    [
+                        self._data_collecting_area_polygon.polygon.points[i].x,
+                        self._data_collecting_area_polygon.polygon.points[i].y,
+                        self._data_collecting_area_polygon.polygon.points[i].z,
+                    ]
+                )
+                for i in range(4)
+            ]
+        )
+
+        A, B, C, D = (
+            data_collecting_area[0][0:2],
+            data_collecting_area[1][0:2],
+            data_collecting_area[2][0:2],
+            data_collecting_area[3][0:2],
+        )
+        P = current_pos[0:2]
+
+        area_ABCD = computeTriangleArea(A, B, C) + computeTriangleArea(C, D, A)
+
+        area_PAB = computeTriangleArea(P, A, B)
+        area_PBC = computeTriangleArea(P, B, C)
+        area_PCD = computeTriangleArea(P, C, D)
+        area_PDA = computeTriangleArea(P, D, A)
+
+        if area_PAB + area_PBC + area_PCD + area_PDA > area_ABCD * 1.001:
+            return False
+        else:
+            return True
+
     def timer_callback_traj(self):
         if (
             self._present_kinematic_state is not None
@@ -1332,6 +1377,12 @@ class DataCollectingTrajectoryPublisher(Node):
             marker_array.markers.append(marker_arrow)
 
             self.data_collecting_trajectory_marker_array_pub_.publish(marker_array)
+
+            # [6-3] stop request
+            if not self.checkInDateCollectingArea(present_position):
+                msg = Bool()
+                msg.data = True
+                self.pub_stop_request_.publish(msg)
 
             if debug_matplotlib_plot_flag:
                 self.axs[0].cla()
