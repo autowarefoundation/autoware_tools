@@ -16,22 +16,19 @@
 
 from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
-from geometry_msgs.msg import AccelWithCovarianceStamped
+from data_collecting_base_node import DataCollectingBaseNode
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import PolygonStamped
 import matplotlib.pyplot as plt
-from nav_msgs.msg import Odometry
 import numpy as np
-from numpy import arctan2
 from numpy import cos
 from numpy import pi
 from numpy import sin
 from rcl_interfaces.msg import ParameterDescriptor
 import rclpy
-from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
-import seaborn as sns
 from std_msgs.msg import Bool
+from std_msgs.msg import Int32MultiArray
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 
@@ -95,17 +92,30 @@ def get_eight_course_trajectory_points(
     parts = ["part" for _ in range(len(t_array.copy()))]
     i_end = t_array.shape[0]
 
+    amp = -1.0 * 0.0
+    hz = 2.0
+
+    def kappa_sin(A, C, x):
+        A = abs(A)
+        C = abs(C)
+        return A * C * C * abs(sin(C * x)) / (1 + A * A * C * C * cos(C * x) * cos(C * x)) ** 1.5
+
     for i, t in enumerate(t_array):
         if t > OB + BD + AD + AC + CO:
             i_end = i
             break
 
         if 0 <= t and t <= OB:
-            print(t)
-            x[i] = (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t / OB
-            y[i] = a * t / (2 * OB)
-            yaw[i] = θB
-            curve[i] = 1e-10
+            xy = np.array([0.0, -amp * np.sin(2 * hz * np.pi * t / OB - np.pi)])
+            theta = np.arctan2(
+                -amp * 2 * hz * np.pi / OB * np.cos(2 * hz * np.pi * t / OB - np.pi), 1.0
+            )
+            rot = np.array([[np.cos(θB), -np.sin(θB)], [np.sin(θB), np.cos(θB)]])
+            xy = rot @ xy
+            x[i] = (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t / OB + xy[0]
+            y[i] = a * t / (2 * OB) + xy[1]
+            yaw[i] = θB + theta
+            curve[i] = 1e-10 + kappa_sin(amp, 2 * hz * np.pi / OB, t)
             parts[i] = "linear_positive"
             achievement_rates[i] = t / (2 * OB) + 0.5
 
@@ -121,10 +131,20 @@ def get_eight_course_trajectory_points(
 
         if OB + BD <= t and t <= OB + BD + AD:
             t2 = t - (OB + BD)
-            x[i] = D[0] - (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t2 / OB
-            y[i] = D[1] + a * t2 / (2 * OB)
-            yaw[i] = np.pi - θB
-            curve[i] = 1e-10
+
+            xy = np.array([0.0, -amp * np.sin(2 * hz * np.pi * t2 / OB)])
+            theta = np.arctan2(-amp * 2 * hz * np.pi / OB * np.cos(2 * hz * np.pi * t2 / OB), 1.0)
+            rot = np.array(
+                [
+                    [np.cos(np.pi - θB), -np.sin(np.pi - θB)],
+                    [np.sin(np.pi - θB), np.cos(np.pi - θB)],
+                ]
+            )
+            xy = rot @ xy
+            x[i] = D[0] - (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t2 / OB + xy[0]
+            y[i] = D[1] + a * t2 / (2 * OB) + xy[1]
+            yaw[i] = np.pi - θB + theta
+            curve[i] = 1e-10 + kappa_sin(amp, 2 * hz * np.pi / OB, t2)
 
             parts[i] = "linear_negative"
             achievement_rates[i] = t2 / (2 * OB)
@@ -142,10 +162,16 @@ def get_eight_course_trajectory_points(
 
         if OB + BD + AD + AC <= t and t <= OB + BD + AD + AC + CO:
             t4 = t - (OB + BD + AD + AC)
-            x[i] = C[0] + (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t4 / OB
-            y[i] = C[1] + a * t4 / (2 * OB)
-            yaw[i] = θB
-            curve[i] = 1e-10
+
+            xy = np.array([0.0, amp * np.sin(2 * hz * np.pi * t4 / CO)])
+            theta = np.arctan2(amp * 2 * hz * np.pi / CO * np.cos(2 * hz * np.pi * t4), 1.0)
+            rot = np.array([[np.cos(θB), -np.sin(θB)], [np.sin(θB), np.cos(θB)]])
+            xy = rot @ xy
+
+            x[i] = C[0] + (b / 2 - (1.0 - np.sqrt(3) / 2) * a) * t4 / OB + xy[0]
+            y[i] = C[1] + a * t4 / (2 * OB) + xy[1]
+            yaw[i] = θB + theta
+            curve[i] = 1e-10 + kappa_sin(amp, 2 * hz * np.pi / OB, t4)
 
             parts[i] = "linear_positive"
             achievement_rates[i] = t4 / (2 * OB)
@@ -280,7 +306,7 @@ def get_u_shaped_return_course_trajectory_points(
         return np.array([x, y]).T, yaw, curve[:i_end], parts, achievement_rates
 
 
-class DataCollectingTrajectoryPublisher(Node):
+class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
     def __init__(self):
         super().__init__("data_collecting_trajectory_publisher")
 
@@ -290,66 +316,6 @@ class DataCollectingTrajectoryPublisher(Node):
             ParameterDescriptor(
                 description="Course name [eight_course, u_shaped_return, straight_line_positive, straight_line_negative]"
             ),
-        )
-
-        self.declare_parameter(
-            "NUM_BINS_V",
-            10,
-            ParameterDescriptor(description="Number of bins of velocity in heatmap"),
-        )
-
-        self.declare_parameter(
-            "NUM_BINS_STEER",
-            10,
-            ParameterDescriptor(description="Number of bins of steer in heatmap"),
-        )
-
-        self.declare_parameter(
-            "NUM_BINS_A",
-            10,
-            ParameterDescriptor(description="Number of bins of acceleration in heatmap"),
-        )
-
-        self.declare_parameter(
-            "V_MIN",
-            -1.0,
-            ParameterDescriptor(description="Maximum velocity in heatmap [m/s]"),
-        )
-
-        self.declare_parameter(
-            "V_MAX",
-            1.0,
-            ParameterDescriptor(description="Minimum steer in heatmap [m/s]"),
-        )
-
-        self.declare_parameter(
-            "STEER_MIN",
-            -1.0,
-            ParameterDescriptor(description="Maximum steer in heatmap [rad]"),
-        )
-
-        self.declare_parameter(
-            "STEER_MAX",
-            1.0,
-            ParameterDescriptor(description="Maximum steer in heatmap [rad]"),
-        )
-
-        self.declare_parameter(
-            "A_MIN",
-            -1.0,
-            ParameterDescriptor(description="Minimum acceleration in heatmap [m/ss]"),
-        )
-
-        self.declare_parameter(
-            "A_MAX",
-            1.0,
-            ParameterDescriptor(description="Maximum acceleration in heatmap [m/ss]"),
-        )
-
-        self.declare_parameter(
-            "wheel_base",
-            2.79,  # sample_vehicle_launch/sample_vehicle_description/config/vehicle_info.param.yaml
-            ParameterDescriptor(description="Wheel base [m]"),
         )
 
         self.declare_parameter(
@@ -390,7 +356,7 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.declare_parameter(
             "mov_ave_window",
-            100,
+            50,
             ParameterDescriptor(description="Moving average smoothing window size"),
         )
 
@@ -424,6 +390,30 @@ class DataCollectingTrajectoryPublisher(Node):
             ),
         )
 
+        self.declare_parameter(
+            "COLLECTING_DATA_V_MIN",
+            0.0,
+            ParameterDescriptor(description="Minimum velocity for data collection [m/s]"),
+        )
+
+        self.declare_parameter(
+            "COLLECTING_DATA_V_MAX",
+            11.5,
+            ParameterDescriptor(description="Maximum velocity for data collection [m/s]"),
+        )
+
+        self.declare_parameter(
+            "COLLECTING_DATA_A_MIN",
+            -1.0,
+            ParameterDescriptor(description="Minimum velocity for data collection [m/ss]"),
+        )
+
+        self.declare_parameter(
+            "COLLECTING_DATA_A_MAX",
+            1.0,
+            ParameterDescriptor(description="Maximum velocity for data collection [m/ss]"),
+        )
+
         self.trajectory_for_collecting_data_pub_ = self.create_publisher(
             Trajectory,
             "/data_collecting_trajectory",
@@ -433,20 +423,6 @@ class DataCollectingTrajectoryPublisher(Node):
         self.data_collecting_trajectory_marker_array_pub_ = self.create_publisher(
             MarkerArray,
             "/data_collecting_trajectory_marker_array",
-            1,
-        )
-
-        self.sub_odometry_ = self.create_subscription(
-            Odometry,
-            "/localization/kinematic_state",
-            self.onOdometry,
-            1,
-        )
-
-        self.sub_acceleration_ = self.create_subscription(
-            AccelWithCovarianceStamped,
-            "/localization/acceleration",
-            self.onAcceleration,
             1,
         )
 
@@ -467,37 +443,6 @@ class DataCollectingTrajectoryPublisher(Node):
         # set course name
         self.COURSE_NAME = self.get_parameter("COURSE_NAME").value
 
-        # velocity and acceleration grid
-        # velocity and steer grid
-        self.num_bins_v = self.get_parameter("NUM_BINS_V").get_parameter_value().integer_value
-        self.num_bins_steer = (
-            self.get_parameter("NUM_BINS_STEER").get_parameter_value().integer_value
-        )
-        self.num_bins_a = self.get_parameter("NUM_BINS_A").get_parameter_value().integer_value
-        self.v_min, self.v_max = (
-            self.get_parameter("V_MIN").get_parameter_value().double_value,
-            self.get_parameter("V_MAX").get_parameter_value().double_value,
-        )
-        self.steer_min, self.steer_max = (
-            self.get_parameter("STEER_MIN").get_parameter_value().double_value,
-            self.get_parameter("STEER_MAX").get_parameter_value().double_value,
-        )
-        self.a_min, self.a_max = (
-            self.get_parameter("A_MIN").get_parameter_value().double_value,
-            self.get_parameter("A_MAX").get_parameter_value().double_value,
-        )
-
-        self.collected_data_counts_of_vel_acc = np.zeros((self.num_bins_v, self.num_bins_a))
-        self.collected_data_counts_of_vel_steer = np.zeros((self.num_bins_v, self.num_bins_steer))
-
-        self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins_v + 1)
-        self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins_steer + 1)
-        self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins_a + 1)
-
-        self.v_bin_centers = (self.v_bins[:-1] + self.v_bins[1:]) / 2
-        self.steer_bin_centers = (self.steer_bins[:-1] + self.steer_bins[1:]) / 2
-        self.a_bin_centers = (self.a_bins[:-1] + self.a_bins[1:]) / 2
-
         self.trajectory_parts = None
         self.trajectory_achievement_rates = None
 
@@ -511,9 +456,6 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.on_line_vel_flag = True
         self.deceleration_rate = 0.6
-
-        self.vel_hist = np.zeros(200)
-        self.acc_hist = np.zeros(200)
 
         self.timer_period_callback = 0.03  # 30ms
         self.traj_step = 0.1
@@ -538,14 +480,53 @@ class DataCollectingTrajectoryPublisher(Node):
         )
 
         self.one_round_progress_rate = None
-
         self.vel_noise_list = []
 
-    def onOdometry(self, msg):
-        self._present_kinematic_state = msg
+        collecting_data_min_v, collecting_data_max_v = (
+            self.get_parameter("COLLECTING_DATA_V_MIN").get_parameter_value().double_value,
+            self.get_parameter("COLLECTING_DATA_V_MAX").get_parameter_value().double_value,
+        )
 
-    def onAcceleration(self, msg):
-        self._present_acceleration = msg
+        collecting_data_min_a, collecting_data_max_a = (
+            self.get_parameter("COLLECTING_DATA_A_MIN").get_parameter_value().double_value,
+            self.get_parameter("COLLECTING_DATA_A_MAX").get_parameter_value().double_value,
+        )
+
+        self.collectig_data_min_n_v = max([np.digitize(collecting_data_min_v, self.v_bins) - 1, 0])
+        self.collectig_data_max_n_v = (
+            min([np.digitize(collecting_data_max_v, self.v_bins) - 1, self.num_bins_v - 1]) + 1
+        )
+
+        self.collectig_data_min_n_a = max([np.digitize(collecting_data_min_a, self.v_bins) - 1, 0])
+        self.collectig_data_max_n_a = (
+            min([np.digitize(collecting_data_max_a, self.v_bins) - 1, self.num_bins_a - 1]) + 1
+        )
+
+        self.collected_data_counts_of_vel_acc_subscriber_ = self.create_subscription(
+            Int32MultiArray,
+            "/control_data_collecting_tools/collected_data_counts_of_vel_acc",
+            self.subscribe_collected_data_counts_of_vel_acc,
+            10,
+        )
+        self.collected_data_counts_of_vel_acc_subscriber_
+
+        self.collected_data_counts_of_vel_steer_subscriber_ = self.create_subscription(
+            Int32MultiArray,
+            "/control_data_collecting_tools/collected_data_counts_of_vel_steer",
+            self.subscribe_collected_data_counts_of_vel_steer,
+            10,
+        )
+        self.collected_data_counts_of_vel_steer_subscriber_
+
+    def subscribe_collected_data_counts_of_vel_acc(self, msg):
+        rows = msg.layout.dim[0].size
+        cols = msg.layout.dim[1].size
+        self.collected_data_counts_of_vel_acc = np.array(msg.data).reshape((rows, cols))
+
+    def subscribe_collected_data_counts_of_vel_steer(self, msg):
+        rows = msg.layout.dim[0].size
+        cols = msg.layout.dim[1].size
+        self.collected_data_counts_of_vel_steer = np.array(msg.data).reshape((rows, cols))
 
     def onDataCollectingArea(self, msg):
         self._data_collecting_area_polygon = msg
@@ -557,16 +538,10 @@ class DataCollectingTrajectoryPublisher(Node):
         ]  # "left_circle", "right_circle", "linear_positive", "linear_negative"
         achievement_rate = self.trajectory_achievement_rates[nearestIndex]
         current_vel = self._present_kinematic_state.twist.twist.linear.x
-        current_acc = self._present_acceleration.accel.accel.linear.x
 
         acc_kp_of_pure_pursuit = self.get_parameter("acc_kp").get_parameter_value().double_value
         N_V = self.num_bins_v
         N_A = self.num_bins_a
-
-        self.acc_hist[:-1] = 1.0 * self.acc_hist[1:]
-        self.acc_hist[-1] = current_acc
-        self.vel_hist[:-1] = 1.0 * self.vel_hist[1:]
-        self.vel_hist[-1] = current_vel
 
         max_lateral_accel = (
             self.get_parameter("max_lateral_accel").get_parameter_value().double_value
@@ -607,8 +582,8 @@ class DataCollectingTrajectoryPublisher(Node):
                 (-1 + N_V, -3 + N_A),
             ]
 
-            for i in range(0, N_V):
-                for j in range(0, N_A):
+            for i in range(self.collectig_data_min_n_v, self.collectig_data_max_n_v):
+                for j in range(self.collectig_data_min_n_a, self.collectig_data_max_n_a):
                     if (i, j) not in exclude_idx_list:
                         if (
                             min_num_data - min_data_num_margin
@@ -634,11 +609,11 @@ class DataCollectingTrajectoryPublisher(Node):
                 or self.COURSE_NAME == "straight_line_negative"
             ):
                 if self.target_vel_on_line > self.v_max * 3.0 / 4.0:
-                    self.deceleration_rate = 0.55 + 0.15
+                    self.deceleration_rate = 0.55 + 0.10
                 elif self.target_vel_on_line > self.v_max / 2.0:
-                    self.deceleration_rate = 0.65 + 0.25
+                    self.deceleration_rate = 0.65 + 0.10
                 else:
-                    self.deceleration_rate = 0.85 + 0.1
+                    self.deceleration_rate = 0.85 + 0.10
 
             elif self.COURSE_NAME == "eight_course":
                 if self.target_vel_on_line > self.v_max * 3.0 / 4.0:
@@ -926,65 +901,6 @@ class DataCollectingTrajectoryPublisher(Node):
 
         self.get_logger().info("update nominal target trajectory")
 
-    def count_observations(self, v, a, steer):
-        v_bin = np.digitize(v, self.v_bins) - 1
-        steer_bin = np.digitize(steer, self.steer_bins) - 1
-        a_bin = np.digitize(a, self.a_bins) - 1
-
-        if 0 <= v_bin < self.num_bins_v and 0 <= a_bin < self.num_bins_a:
-            self.collected_data_counts_of_vel_acc[v_bin, a_bin] += 1
-
-        if 0 <= v_bin < self.num_bins_v and 0 <= steer_bin < self.num_bins_steer:
-            self.collected_data_counts_of_vel_steer[v_bin, steer_bin] += 1
-
-    def plot_data_collection_grid(self):
-        self.axs[1].cla()
-        self.axs[1].scatter(self.acc_hist, self.vel_hist)
-        self.axs[1].plot(self.acc_hist, self.vel_hist)
-        self.axs[1].set_xlim([-2.0, 2.0])
-        self.axs[1].set_ylim([0.0, self.v_max + 1.0])
-        self.axs[1].set_xlabel("Acceleration")
-        self.axs[1].set_ylabel("Velocity")
-
-        # update collected acceleration and velocity grid
-        for collection in self.axs[2].collections:
-            if collection.colorbar is not None:
-                collection.colorbar.remove()
-        self.axs[2].cla()
-
-        self.heatmap = sns.heatmap(
-            self.collected_data_counts_of_vel_acc.T,
-            annot=True,
-            cmap="coolwarm",
-            xticklabels=np.round(self.v_bin_centers, 2),
-            yticklabels=np.round(self.a_bin_centers, 2),
-            ax=self.axs[2],
-            linewidths=0.1,
-            linecolor="gray",
-        )
-
-        self.axs[2].set_xlabel("Velocity bins")
-        self.axs[2].set_ylabel("Acceleration bins")
-
-        for collection in self.axs[3].collections:
-            if collection.colorbar is not None:
-                collection.colorbar.remove()
-        self.axs[3].cla()
-
-        self.heatmap = sns.heatmap(
-            self.collected_data_counts_of_vel_steer.T,
-            annot=True,
-            cmap="coolwarm",
-            xticklabels=np.round(self.v_bin_centers, 2),
-            yticklabels=np.round(self.steer_bin_centers, 2),
-            ax=self.axs[3],
-            linewidths=0.1,
-            linecolor="gray",
-        )
-
-        self.axs[3].set_xlabel("Velocity bins")
-        self.axs[3].set_ylabel("Steer bins")
-
     def checkInDateCollectingArea(self, current_pos):
         data_collecting_area = np.array(
             [
@@ -1025,21 +941,6 @@ class DataCollectingTrajectoryPublisher(Node):
             and self._present_acceleration is not None
             and self.trajectory_position_data is not None
         ):
-            # calculate steer
-            angular_z = self._present_kinematic_state.twist.twist.angular.z
-            wheel_base = self.get_parameter("wheel_base").get_parameter_value().double_value
-            steer = arctan2(
-                wheel_base * angular_z, self._present_kinematic_state.twist.twist.linear.x
-            )
-
-            # update velocity and acceleration bin if ego vehicle is moving
-            if self._present_kinematic_state.twist.twist.linear.x > 1e-3:
-                self.count_observations(
-                    self._present_kinematic_state.twist.twist.linear.x,
-                    self._present_acceleration.accel.accel.linear.x,
-                    steer,
-                )
-
             # [0] update nominal target trajectory if changing related ros2 params
             target_longitudinal_velocity = (
                 self.get_parameter("target_longitudinal_velocity")
@@ -1054,7 +955,7 @@ class DataCollectingTrajectoryPublisher(Node):
                 > 1e-6
                 or window != self.current_window
             ):
-                True  # self.updateNominalTargetTrajectory()
+                self.updateNominalTargetTrajectory()
 
             # [1] receive observation from topic
             present_position = np.array(
@@ -1079,7 +980,12 @@ class DataCollectingTrajectoryPublisher(Node):
                     self._present_kinematic_state.twist.twist.linear.z,
                 ]
             )
-            present_yaw = getYaw(present_orientation)
+
+            if np.linalg.norm(present_orientation) < 1e-6:
+                present_yaw = self.previous_yaw
+            else:
+                present_yaw = getYaw(present_orientation)
+                self.previous_yaw = present_yaw
 
             # [2] get whole trajectory data
             trajectory_position_data = self.trajectory_position_data.copy()
@@ -1438,8 +1344,6 @@ class DataCollectingTrajectoryPublisher(Node):
                 self.axs[0].set_xlabel("future timestamp [s]")
                 self.axs[0].set_ylabel("longitudinal_velocity [m/s]")
                 self.axs[0].legend(fontsize=8)
-
-                self.plot_data_collection_grid()
 
                 self.fig.canvas.draw()
                 plt.pause(0.01)

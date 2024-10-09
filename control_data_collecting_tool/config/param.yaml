@@ -1,18 +1,4 @@
-data_collecting_plotter:
-  ros__parameters:
-    NUM_BINS_V: 10
-    NUM_BINS_STEER: 10
-    NUM_BINS_A: 10
-    V_MIN: 0.0
-    V_MAX: 11.5
-    STEER_MIN: -1.0
-    STEER_MAX: 1.0
-    A_MIN: -1.0
-    A_MAX: 1.0
-
-    wheel_base: 2.79
-
-data_collecting_trajectory_publisher:
+/**:
   ros__parameters:
     COURSE_NAME: eight_course
     # COURSE_NAME: u_shaped_return
@@ -29,8 +15,11 @@ data_collecting_trajectory_publisher:
     A_MIN: -1.0
     A_MAX: 1.0
 
-    wheel_base: 2.79
-    acc_kp: 1.0
+    COLLECTING_DATA_V_MIN: 0.0
+    COLLECTING_DATA_V_MAX: 11.5
+    COLLECTING_DATA_A_MIN: -1.0
+    COLLECTING_DATA_A_MAX: 1.0
+
     max_lateral_accel: 0.5
     lateral_error_threshold: 2.0
     yaw_error_threshold: 0.50
@@ -41,9 +30,8 @@ data_collecting_trajectory_publisher:
     longitudinal_velocity_noise_min_period: 5.0
     longitudinal_velocity_noise_max_period: 20.0
 
-data_collecting_pure_pursuit_trajectory_follower:
-  ros__parameters:
     pure_pursuit_type: linearized
+    # pure_pursuit_type: naive
     wheel_base: 2.79
     acc_kp: 1.0
     lookahead_time: 2.0
