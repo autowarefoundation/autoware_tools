@@ -2902,7 +2902,7 @@
 <p>The official Autoware requirements for lanelet2 maps are described in <a href="https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/">Vector Map creation requirement specifications (in Autoware Documentation)</a>.</p>
 <h2 id="design-concept">Design concept<a class="headerlink" href="#design-concept" title="Permanent link">#</a></h2>
 <p>The <code>autoware_lanelet2_map_validator</code> is designed to validate <code>.osm</code> map files by using and extending the <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation">lanelet2_validation</a> package for Autoware.</p>
-<p><code>autoware_lanelet2_map_validator</code> takes the lanelet2 map (.osm file) and requirement set (yaml file, optional) as the input, and output validation results to the console.</p>
+<p><code>autoware_lanelet2_map_validator</code> takes the lanelet2 map (.osm file) and requirement set (JSON file, optional) as the input, and output validation results to the console.</p>
 <p>If a requirement set is given, <code>autoware_lanelet2_map_validator</code> also outputs validation results reflecting the input requirement set.
 See <a href="#run-with-a-requirement-set">"Run with a requirement set"</a> for further information, <a href="#input-file">"Input file"</a> to understand the input format, and <a href="#output-file">"Output file"</a> to understand the output format.</p>
 <p><img alt="autoware_lanelet2_map_validator_architecture" src="media/autoware_lanelet2_map_validator_architecture.drawio.svg"></p>
@@ -2924,31 +2924,52 @@ If you want to call a few validators, you can select them with the <code>--valid
 </code></pre></div>
 <h3 id="run-with-a-requirement-set">Run with a requirement set<a class="headerlink" href="#run-with-a-requirement-set" title="Permanent link">#</a></h3>
 <p><code>autoware_lanelet2_map_validator</code> can manage to run a group of validators by a list of validator names.
-<code>autoware_lanelet2_map_validator</code> will scan through the input yaml file given by the <code>--input_requirements, -i</code> option, and output the validation results to the directory given by the <code>--output_directory, -o</code> option.
-The output filename will be <code>lanelet2_validation_results.yaml</code>.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--input_requirements<span class="w"> </span>autoware_requirements_set.yaml<span class="w"> </span>--output_directory<span class="w"> </span>./
+<code>autoware_lanelet2_map_validator</code> will scan through the input JSON file given by the <code>--input_requirements, -i</code> option, and output the validation results to the directory given by the <code>--output_directory, -o</code> option.
+The output filename will be <code>lanelet2_validation_results.json</code>.</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--input_requirements<span class="w"> </span>autoware_requirements_set.json<span class="w"> </span>--output_directory<span class="w"> </span>./
 </code></pre></div>
 <h4 id="input-file">Input file<a class="headerlink" href="#input-file" title="Permanent link">#</a></h4>
-<p>The yaml file input should follow the structure like this</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># input example</span>
-<span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1.0</span><span class="w"> </span><span class="c1"># Not required. You can add any field if the "requirements" field is set correctly.</span>
-<span class="nt">requirements</span><span class="p">:</span><span class="w"> </span><span class="c1"># Required.</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-01</span><span class="w"> </span><span class="c1"># Users have to set ids to a group of validators. The id name is arbitrary.</span>
-<span class="w">    </span><span class="nt">validators</span><span class="p">:</span><span class="w"> </span><span class="c1"># List up validator names that consists of the requirement.</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.crosswalk.missing_regulatory_elements</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.crosswalk.regulatory_element_details</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-02</span>
-<span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.traffic_light.missing_regulatory_elements</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.traffic_light.regulatory_element_details</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-03</span>
-<span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.stop_line.missing_regulatory_elements</span>
+<p>The JSON file input should follow the structure like this example.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.1.0"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"requirements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-01"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.missing_regulatory_elements"</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.regulatory_element_details"</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-02"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.missing_regulatory_elements"</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.regulatory_element_details"</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-03"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.stop_line.missing_regulatory_elements"</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
 </code></pre></div>
 <ul>
 <li>MUST have a single <code>requirements</code> field.</li>
 <li>The <code>requirements</code> field MUST be a list of requirements. A requirement MUST have<ul>
-<li><code>id</code> : The id of the requirement.</li>
+<li><code>id</code> : The id of the requirement. Its name is arbitrary.</li>
 <li><code>validators</code> : A list of validators that structures the requirement.<ul>
 <li>A validator MUST be given with its name on the <code>name</code> field.</li>
 <li>The name list of available validators can be obtained from the <code>--print</code> option.</li>
@@ -2959,66 +2980,108 @@ The output filename will be <code>lanelet2_validation_results.yaml</code>.</p>
 <li>The user can write any other field (like <code>version</code>) besides <code>requirements</code>.</li>
 </ul>
 <h4 id="output-file">Output file<a class="headerlink" href="#output-file" title="Permanent link">#</a></h4>
-<p>When the <code>input_requirements</code> is thrown to <code>autoware_lanelet2_map_validator</code>, it will output a <code>lanelet2_validation_results.yaml</code> file which looks like the following.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># output example</span>
-<span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1.0</span><span class="w"> </span><span class="c1"># non-required fields in the input file will remain still</span>
-<span class="nt">requirements</span><span class="p">:</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-01</span>
-<span class="w">    </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># True if all validators within the id have passed.</span>
-<span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.crosswalk.missing_regulatory_elements</span>
-<span class="w">        </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w"> </span><span class="c1"># True if this single validator have passed</span>
-<span class="w">        </span><span class="nt">issues</span><span class="p">:</span><span class="w"> </span><span class="c1"># If there are issues, they will be list up here</span>
-<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Error</span>
-<span class="w">            </span><span class="nt">primitive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lanelet</span>
-<span class="w">            </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">163</span>
-<span class="w">            </span><span class="nt">message</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">No regulatory element refers to this crosswalk.</span>
-<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Error</span>
-<span class="w">            </span><span class="nt">primitive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lanelet</span>
-<span class="w">            </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">164</span>
-<span class="w">            </span><span class="nt">message</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">No regulatory element refers to this crosswalk.</span>
-<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Error</span>
-<span class="w">            </span><span class="nt">primitive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lanelet</span>
-<span class="w">            </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">165</span>
-<span class="w">            </span><span class="nt">message</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">No regulatory element refers to this crosswalk.</span>
-<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Error</span>
-<span class="w">            </span><span class="nt">primitive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lanelet</span>
-<span class="w">            </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">166</span>
-<span class="w">            </span><span class="nt">message</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">No regulatory element refers to this crosswalk.</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.crosswalk.regulatory_element_details</span>
-<span class="w">        </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w"> </span><span class="c1"># If the validation have passed, no issues appear</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-02</span>
-<span class="w">    </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.traffic_light.missing_regulatory_elements</span>
-<span class="w">        </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.traffic_light.regulatory_element_details</span>
-<span class="w">        </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="w">        </span><span class="nt">issues</span><span class="p">:</span>
-<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Error</span>
-<span class="w">            </span><span class="nt">primitive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">regulatory element</span>
-<span class="w">            </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9896</span>
-<span class="w">            </span><span class="nt">message</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Regulatory element of traffic light must have a stop line(ref_line).</span>
-<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Error</span>
-<span class="w">            </span><span class="nt">primitive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">regulatory element</span>
-<span class="w">            </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9918</span>
-<span class="w">            </span><span class="nt">message</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Regulatory element of traffic light must have a stop line(ref_line).</span>
-<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Error</span>
-<span class="w">            </span><span class="nt">primitive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">regulatory element</span>
-<span class="w">            </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9838</span>
-<span class="w">            </span><span class="nt">message</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Regulatory element of traffic light must have a stop line(ref_line).</span>
-<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">severity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Error</span>
-<span class="w">            </span><span class="nt">primitive</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">regulatory element</span>
-<span class="w">            </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9874</span>
-<span class="w">            </span><span class="nt">message</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Regulatory element of traffic light must have a stop line(ref_line).</span>
-<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">example-01-03</span>
-<span class="w">    </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">    </span><span class="nt">validators</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">mapping.stop_line.missing_regulatory_elements</span>
-<span class="w">        </span><span class="nt">passed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<p>When the <code>input_requirements</code> is thrown to <code>autoware_lanelet2_map_validator</code>, it will output a <code>lanelet2_validation_results.json</code> file which looks like the following example.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"requirements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-01"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"issues"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">163</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"No regulatory element refers to this crosswalk."</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lanelet"</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">164</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"No regulatory element refers to this crosswalk."</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lanelet"</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">165</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"No regulatory element refers to this crosswalk."</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lanelet"</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">166</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"No regulatory element refers to this crosswalk."</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lanelet"</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.missing_regulatory_elements"</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.regulatory_element_details"</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-02"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.missing_regulatory_elements"</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"issues"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">9896</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Regulatory element of traffic light must have a stop line(ref_line)."</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"regulatory element"</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">9918</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Regulatory element of traffic light must have a stop line(ref_line)."</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"regulatory element"</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">9838</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Regulatory element of traffic light must have a stop line(ref_line)."</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"regulatory element"</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">9874</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Regulatory element of traffic light must have a stop line(ref_line)."</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"regulatory element"</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">          </span><span class="p">],</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.regulatory_element_details"</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-03"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.stop_line.missing_regulatory_elements"</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.1.0"</span>
+<span class="p">}</span>
 </code></pre></div>
 <ul>
-<li><code>lanelet2_validation_results.yaml</code> inherits the yaml file of <code>input_requirements</code> and add results to it.</li>
+<li><code>lanelet2_validation_results.json</code> inherits the JSON file of <code>input_requirements</code> and add results to it.<ul>
+<li>So non-required fields (line <code>version</code>) remains in the output.</li>
+</ul>
+</li>
 <li><code>autoware_lanelet2_map_validator</code> adds a boolean <code>passed</code> field to each requirement. If all validators of the requirement have been passed, the <code>passed</code> field of the requirement will be <code>true</code> (<code>false</code> if not).</li>
 <li>The <code>passed</code> field is also given to each validator. If the validator found any issues the <code>passed</code> field will turn to be <code>false</code> (<code>true</code> if not), and adds an <code>issues</code> field which is a list of issues found. Each issues contains information of <code>severity</code>, <code>primitive</code>, <code>id</code>, and <code>message</code>.</li>
 </ul>
@@ -3045,11 +3108,11 @@ The output filename will be <code>lanelet2_validation_results.yaml</code>.</p>
 </tr>
 <tr>
 <td><code>-i, --input_requirements</code></td>
-<td>Path to the yaml file where the list of requirements and validations is written</td>
+<td>Path to the JSON file where the list of requirements and validations is written</td>
 </tr>
 <tr>
 <td><code>-o, --output_directory</code></td>
-<td>Directory to save the list of validation results in a yaml format</td>
+<td>Directory to save the list of validation results in a JSON format</td>
 </tr>
 <tr>
 <td><code>-v, --validator</code></td>
