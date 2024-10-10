@@ -22,7 +22,7 @@
 #include <fstream>
 #include <iomanip>
 
-// Use nlohmann::json for JSON hndling
+// Use nlohmann::json for JSON handling
 using json = nlohmann::json;
 
 // ANSI color codes for console output
