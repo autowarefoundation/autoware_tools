@@ -39,6 +39,12 @@ def generate_launch_description():
                 name="data_collecting_trajectory_publisher",
                 parameters=[param_file_path],
             ),
+            Node(
+                package="control_data_collecting_tool",
+                executable="data_collecting_plotter.py",
+                name="data_collecting_plotter",
+                parameters=[param_file_path],
+            ),
         ]
     )
 

@@ -1,7 +1,16 @@
-common_parameters:
+data_collecting_plotter:
   ros__parameters:
+    NUM_BINS_V: 10
+    NUM_BINS_STEER: 10
+    NUM_BINS_A: 10
+    V_MIN: 0.0
+    V_MAX: 11.5
+    STEER_MIN: -1.0
+    STEER_MAX: 1.0
+    A_MIN: -1.0
+    A_MAX: 1.0
+
     wheel_base: 2.79
-    acc_kp: 1.0
 
 data_collecting_trajectory_publisher:
   ros__parameters:
@@ -20,6 +29,8 @@ data_collecting_trajectory_publisher:
     A_MIN: -1.0
     A_MAX: 1.0
 
+    wheel_base: 2.79
+    acc_kp: 1.0
     max_lateral_accel: 0.5
     lateral_error_threshold: 2.0
     yaw_error_threshold: 0.50
@@ -33,6 +44,8 @@ data_collecting_trajectory_publisher:
 data_collecting_pure_pursuit_trajectory_follower:
   ros__parameters:
     pure_pursuit_type: linearized
+    wheel_base: 2.79
+    acc_kp: 1.0
     lookahead_time: 2.0
     min_lookahead: 2.0
     linearized_pure_pursuit_steer_kp_param: 2.0
