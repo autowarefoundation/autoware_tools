@@ -19,6 +19,7 @@ from functools import partial
 import os
 
 from ament_index_python.packages import get_package_share_directory
+from autoware_adapi_v1_msgs.msg import OperationModeState
 import rclpy
 from rclpy.node import Node
 from rclpy.serialization import serialize_message
@@ -30,25 +31,17 @@ from rosidl_runtime_py.utilities import get_message
 import yaml
 
 
-class DataCollectingRosbagRecord(Node):
-    def __init__(self):
-        super().__init__("data_collecting_rosbag_record")
-        package_share_directory = get_package_share_directory("control_data_collecting_tool")
-        topic_file_path = os.path.join(package_share_directory, "config", "topics.yaml")
-        with open(topic_file_path, "r") as file:
-            topic_data = yaml.safe_load(file)
-        self.topics = topic_data["topics"]
-        self.writer = SequentialWriter()
-        self.subscribed = False
-        self.start_record = False
+class MessageWriter:
+    def __init__(self, topics, node):
+        self.topics = topics
+        self.node = node
+        self.message_writer = None
+        self.message_sbuscribers_ = []
 
-        self.timer_period_callback = 1.0
-        self.timer_callback = self.create_timer(
-            self.timer_period_callback,
-            self.record_message,
-        )
+    def create_writer(self):
+        self.message_writer = SequentialWriter()
 
-    def subscription(self):
+    def subscribe_messages(self):
         topic_type_list = []
         unsubscribed_topic = []
 
@@ -59,7 +52,7 @@ class DataCollectingRosbagRecord(Node):
                 unsubscribed_topic.append(topic_name)
 
         if len(unsubscribed_topic) > 0:
-            self.get_logger().info(f"Failed to get type for topic: {unsubscribed_topic}")
+            self.node.get_logger().info(f"Failed to get type for topic: {unsubscribed_topic}")
             return
 
         now = datetime.now()
@@ -70,47 +63,92 @@ class DataCollectingRosbagRecord(Node):
             input_serialization_format="cdr", output_serialization_format="cdr"
         )
         try:
-            self.writer.open(storage_options, converter_options)
+            self.message_writer.open(storage_options, converter_options)
         except Exception as e:
-            self.get_logger().error(f"Failed to open bag: {e}")
+            self.node.get_logger().error(f"Failed to open bag: {e}")
             return
 
         for topic_name, topic_type in zip(self.topics, topic_type_list):
-            self.get_logger().info(f"Recording topic: {topic_name} of type: {topic_type}")
+            self.node.get_logger().info(f"Recording topic: {topic_name} of type: {topic_type}")
             topic_metadata = TopicMetadata(
                 name=topic_name, type=topic_type, serialization_format="cdr"
             )
-            self.writer.create_topic(topic_metadata)
-        self.subscribed = True
+            self.message_writer.create_topic(topic_metadata)
 
     def get_topic_type(self, topic_name):
-        topic_names_and_types = self.get_topic_names_and_types()
+        topic_names_and_types = self.node.get_topic_names_and_types()
         for name, types in topic_names_and_types:
             if name == topic_name:
                 return types[0]
         return None
 
-    def record_message(self):
-        if not self.subscribed:
-            self.subscription()
-        else:
-            if not self.start_record:
-                for topic_name in self.topics:
-                    topic_type = self.get_topic_type(topic_name)
-                    if topic_type:
-                        msg_module = get_message(topic_type)
-                        self.create_subscription(
-                            msg_module, topic_name, partial(self.write_message, topic_name), 10
-                        )
-                self.start_record = True
+    def start_record(self):
+        for topic_name in self.topics:
+            topic_type = self.get_topic_type(topic_name)
+            if topic_type:
+                msg_module = get_message(topic_type)
+                sbuscriber_ = self.node.create_subscription(
+                    msg_module, topic_name, partial(self.callback_write_message, topic_name), 10
+                )
+                self.message_sbuscribers_.append(sbuscriber_)
 
-    def write_message(self, topic_name, message):
+    def stop_record(self):
+        for sbuscriber_ in self.message_sbuscribers_:
+            self.node.destroy_subscription(sbuscriber_)
+        del self.message_writer
+
+    def callback_write_message(self, topic_name, message):
         try:
             serialized_message = serialize_message(message)
             current_time = rclpy.clock.Clock().now()
-            self.writer.write(topic_name, serialized_message, current_time.nanoseconds)
+            self.message_writer.write(topic_name, serialized_message, current_time.nanoseconds)
         except Exception as e:
-            self.get_logger().error(f"Failed to write message: {e}")
+            self.node.get_logger().error(f"Failed to write message: {e}")
+
+
+class DataCollectingRosbagRecord(Node):
+    def __init__(self):
+        super().__init__("data_collecting_rosbag_record")
+        package_share_directory = get_package_share_directory("control_data_collecting_tool")
+        topic_file_path = os.path.join(package_share_directory, "config", "topics.yaml")
+        with open(topic_file_path, "r") as file:
+            topic_data = yaml.safe_load(file)
+        self.topics = topic_data["topics"]
+        self.writer = MessageWriter(self.topics, self)
+        self.subscribed = False
+        self.recording = False
+
+        self.present_operation_mode_ = None
+        self.operation_mode_subscriber_ = self.create_subscription(
+            OperationModeState,
+            "/system/operation_mode/state",
+            self.subscribe_operation_mode,
+            10,
+        )
+
+        self.timer_period_callback = 1.0
+        self.timer_callback = self.create_timer(
+            self.timer_period_callback,
+            self.record_message,
+        )
+
+    def subscribe_operation_mode(self, msg):
+        self.present_operation_mode_ = msg.mode
+
+    def record_message(self):
+        if self.present_operation_mode_ == 3 and not self.subscribed and not self.recording:
+            self.writer.create_writer()
+            self.writer.subscribe_messages()
+            self.subscribed = True
+
+        if self.present_operation_mode_ == 3 and self.subscribed and not self.recording:
+            self.writer.start_record()
+            self.recording = True
+
+        if self.present_operation_mode_ != 3 and self.subscribed and self.recording:
+            self.writer.stop_record()
+            self.subscribed = False
+            self.recording = False
 
 
 def main(args=None):
