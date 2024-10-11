@@ -24,7 +24,7 @@ class db3SingleTopic:
     def __init__(self, db3_file, topic_id):
         self.conn = sqlite3.connect(db3_file)
         self.c = self.conn.cursor()
-        self.c.execute("SELECT * from messages WHERE topic_id = ?",(topic_id,))
+        self.c.execute("SELECT * from messages WHERE topic_id = ?", (topic_id,))
         self.is_open = True
 
     def __del__(self):
@@ -81,7 +81,7 @@ class db3Reader:
 
         # Successfully loaded the target topic
         return True
-    
+
     # Fetch a deserialized single message for the specified topic
     def read_msg(self, target_topic_name):
         msg = None

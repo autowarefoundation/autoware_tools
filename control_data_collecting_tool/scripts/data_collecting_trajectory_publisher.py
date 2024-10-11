@@ -272,6 +272,7 @@ def get_u_shaped_return_course_trajectory_points(
     else:
         return np.array([x, y]).T, yaw, curve[:i_end], parts, achievement_rates
 
+
 # inherits from DataCollectingBaseNode
 class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
     def __init__(self):

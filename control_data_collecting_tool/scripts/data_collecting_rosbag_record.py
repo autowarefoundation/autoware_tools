@@ -40,7 +40,7 @@ class MessageWriter:
 
     def create_writer(self):
         self.message_writer = SequentialWriter()
-    
+
     def subscribe_topics(self):
         topic_type_list = []
         unsubscribed_topic = []
@@ -73,7 +73,7 @@ class MessageWriter:
         except Exception as e:
             self.node.get_logger().error(f"Failed to open bag: {e}")
             return
-        
+
         # Create topics in the rosbag for recording
         for topic_name, topic_type in zip(self.topics, topic_type_list):
             self.node.get_logger().info(f"Recording topic: {topic_name} of type: {topic_type}")
@@ -116,6 +116,7 @@ class MessageWriter:
             self.node.destroy_subscription(sbuscriber_)
         del self.message_writer
 
+
 class DataCollectingRosbagRecord(Node):
     def __init__(self):
         super().__init__("data_collecting_rosbag_record")
@@ -146,7 +147,6 @@ class DataCollectingRosbagRecord(Node):
         self.present_operation_mode_ = msg.mode
 
     def record_message(self):
-
         # Start subscribing to topics and recording if the operation mode is 3
         if self.present_operation_mode_ == 3 and not self.subscribed and not self.recording:
             self.writer.create_writer()
