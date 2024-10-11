@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+from autoware_adapi_v1_msgs.msg import OperationModeState
 from geometry_msgs.msg import AccelWithCovarianceStamped
 from nav_msgs.msg import Odometry
 import numpy as np
@@ -101,8 +101,16 @@ class DataCollectingBaseNode(Node):
             1,
         )
 
+        self.operation_mode_subscriber_ = self.create_subscription(
+            OperationModeState,
+            "/system/operation_mode/state",
+            self.subscribe_operation_mode,
+            10,
+        )
+
         self._present_kinematic_state = None
         self._present_acceleration = None
+        self.present_operation_mode_ = None
 
         """
         velocity and acceleration grid
@@ -146,3 +154,6 @@ class DataCollectingBaseNode(Node):
 
     def onAcceleration(self, msg):
         self._present_acceleration = msg
+
+    def subscribe_operation_mode(self, msg):
+        self.present_peration_mode_ = msg.mode

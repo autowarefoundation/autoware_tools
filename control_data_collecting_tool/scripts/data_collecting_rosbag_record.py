@@ -40,21 +40,25 @@ class MessageWriter:
 
     def create_writer(self):
         self.message_writer = SequentialWriter()
-
-    def subscribe_messages(self):
+    
+    def subscribe_topics(self):
         topic_type_list = []
         unsubscribed_topic = []
 
+        # Get topic types from the list of topics and store them
         for topic_name in self.topics:
             topic_type = self.get_topic_type(topic_name)
             topic_type_list.append(topic_type)
             if topic_type is None:
+                # If a topic type is not found, mark it as unsubscribed
                 unsubscribed_topic.append(topic_name)
 
+        # If some topics are not found, log a message and skip the subscription
         if len(unsubscribed_topic) > 0:
             self.node.get_logger().info(f"Failed to get type for topic: {unsubscribed_topic}")
             return
 
+        # Generate a unique directory and filename based on the current time for the rosbag file
         now = datetime.now()
         formatted_time = now.strftime("%Y_%m_%d-%H_%M_%S")
         bag_dir = f"./rosbag2_{formatted_time}"
@@ -62,12 +66,15 @@ class MessageWriter:
         converter_options = ConverterOptions(
             input_serialization_format="cdr", output_serialization_format="cdr"
         )
+
+        # Open the rosbag for writing
         try:
             self.message_writer.open(storage_options, converter_options)
         except Exception as e:
             self.node.get_logger().error(f"Failed to open bag: {e}")
             return
-
+        
+        # Create topics in the rosbag for recording
         for topic_name, topic_type in zip(self.topics, topic_type_list):
             self.node.get_logger().info(f"Recording topic: {topic_name} of type: {topic_type}")
             topic_metadata = TopicMetadata(
@@ -76,6 +83,7 @@ class MessageWriter:
             self.message_writer.create_topic(topic_metadata)
 
     def get_topic_type(self, topic_name):
+        # Get the list of topics and their types from the ROS node
         topic_names_and_types = self.node.get_topic_names_and_types()
         for name, types in topic_names_and_types:
             if name == topic_name:
@@ -83,6 +91,7 @@ class MessageWriter:
         return None
 
     def start_record(self):
+        # Subscribe to the topics and start recording messages
         for topic_name in self.topics:
             topic_type = self.get_topic_type(topic_name)
             if topic_type:
@@ -92,11 +101,7 @@ class MessageWriter:
                 )
                 self.message_sbuscribers_.append(sbuscriber_)
 
-    def stop_record(self):
-        for sbuscriber_ in self.message_sbuscribers_:
-            self.node.destroy_subscription(sbuscriber_)
-        del self.message_writer
-
+    # call back function called in start recording
     def callback_write_message(self, topic_name, message):
         try:
             serialized_message = serialize_message(message)
@@ -105,6 +110,11 @@ class MessageWriter:
         except Exception as e:
             self.node.get_logger().error(f"Failed to write message: {e}")
 
+    def stop_record(self):
+        # Stop recording by destroying the subscriptions and deleting the writer
+        for sbuscriber_ in self.message_sbuscribers_:
+            self.node.destroy_subscription(sbuscriber_)
+        del self.message_writer
 
 class DataCollectingRosbagRecord(Node):
     def __init__(self):
@@ -136,15 +146,19 @@ class DataCollectingRosbagRecord(Node):
         self.present_operation_mode_ = msg.mode
 
     def record_message(self):
+
+        # Start subscribing to topics and recording if the operation mode is 3
         if self.present_operation_mode_ == 3 and not self.subscribed and not self.recording:
             self.writer.create_writer()
-            self.writer.subscribe_messages()
+            self.writer.subscribe_topics()
             self.subscribed = True
 
+        # Start recording if topics are subscribed and the operation mode is 3
         if self.present_operation_mode_ == 3 and self.subscribed and not self.recording:
             self.writer.start_record()
             self.recording = True
 
+        # Stop recording if the operation mode changes from 3
         if self.present_operation_mode_ != 3 and self.subscribed and self.recording:
             self.writer.stop_record()
             self.subscribed = False
