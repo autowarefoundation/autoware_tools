@@ -147,7 +147,7 @@ class DataCollectingRosbagRecord(Node):
         self.present_operation_mode_ = msg.mode
 
     def record_message(self):
-        # Start subscribing to topics and recording if the operation mode is 3
+        # Start subscribing to topics and recording if the operation mode is 3(LOCAL)
         if self.present_operation_mode_ == 3 and not self.subscribed and not self.recording:
             self.writer.create_writer()
             self.writer.subscribe_topics()
