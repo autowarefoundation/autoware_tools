@@ -18,7 +18,7 @@
   <depend>lanelet2_routing</depend>
   <depend>lanelet2_traffic_rules</depend>
   <depend>lanelet2_validation</depend>
-  <depend>nlohmann_json</depend>
+  <depend>nlohmann-json-dev</depend>
 
   <test_depend>ament_cmake_ros</test_depend>
 
