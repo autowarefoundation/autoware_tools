@@ -59,7 +59,7 @@
   </group>
 
   <group>
-    <include file="$(find-pkg-share vehicle_velocity_converter)/launch/vehicle_velocity_converter.launch.xml">
+    <include file="$(find-pkg-share autoware_vehicle_velocity_converter)/launch/vehicle_velocity_converter.launch.xml">
       <arg name="input_vehicle_velocity_topic" value="$(var in_wheel_odometry)"/>
       <arg name="output_twist_with_covariance" value="$(var out_wheel_odometry)"/>
       <arg name="config_file" value="$(var vehicle_velocity_converter_param_path)"/>
