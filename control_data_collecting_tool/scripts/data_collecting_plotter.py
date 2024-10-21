@@ -37,37 +37,37 @@ class DataCollectingPlotter(DataCollectingBaseNode):
         self.fig, self.axs = plt.subplots(3, 1, figsize=(12, 20))
         plt.ion()
 
-        self.collected_data_counts_of_vel_acc_subscriber_ = self.create_subscription(
+        self.collected_data_counts_of_vel_acc_subscription_ = self.create_subscription(
             Int32MultiArray,
             "/control_data_collecting_tools/collected_data_counts_of_vel_acc",
             self.subscribe_collected_data_counts_of_vel_acc,
             10,
         )
-        self.collected_data_counts_of_vel_acc_subscriber_
+        self.collected_data_counts_of_vel_acc_subscription_
 
-        self.collected_data_counts_of_vel_steer_subscriber_ = self.create_subscription(
+        self.collected_data_counts_of_vel_steer_subscription_ = self.create_subscription(
             Int32MultiArray,
             "/control_data_collecting_tools/collected_data_counts_of_vel_steer",
             self.subscribe_collected_data_counts_of_vel_steer,
             10,
         )
-        self.collected_data_counts_of_vel_steer_subscriber_
+        self.collected_data_counts_of_vel_steer_subscription_
 
-        self.acc_hist_subscriber_ = self.create_subscription(
+        self.acc_hist_subscription_ = self.create_subscription(
             Float32MultiArray,
             "/control_data_collecting_tools/acc_hist",
             self.subscribe_acc_hist,
             10,
         )
-        self.acc_hist_subscriber_
+        self.acc_hist_subscription_
 
-        self.vel_hist_subscriber_ = self.create_subscription(
+        self.vel_hist_subscription_ = self.create_subscription(
             Float32MultiArray,
             "/control_data_collecting_tools/vel_hist",
             self.subscribe_vel_hist,
             10,
         )
-        self.vel_hist_subscriber_
+        self.vel_hist_subscription_
 
         self.acc_hist = [0.0] * 200
         self.vel_hist = [0.0] * 200

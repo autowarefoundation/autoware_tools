@@ -141,7 +141,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
 
                 # A while loop for counting data points
                 while True:
-                    # interpolate acceleratioin if necessary
+                    # interpolate acceleration if necessary
                     while current_time > current_acc_time:
                         previous_acc = acceleration.accel.accel.linear.x
                         acceleration = db3reader.read_msg("/localization/acceleration")
@@ -217,7 +217,11 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
 
     # call back for counting data points
     def timer_callback_counter(self):
-        if self._present_kinematic_state is not None and self._present_acceleration is not None:
+        if (
+            self._present_kinematic_state is not None
+            and self._present_acceleration is not None
+            and self.present_operation_mode_ == 3
+        ):
             # calculate steer
             angular_z = self._present_kinematic_state.twist.twist.angular.z
             wheel_base = self.get_parameter("wheel_base").get_parameter_value().double_value

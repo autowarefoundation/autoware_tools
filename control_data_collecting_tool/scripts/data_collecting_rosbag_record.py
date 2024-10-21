@@ -36,7 +36,7 @@ class MessageWriter:
         self.topics = topics
         self.node = node
         self.message_writer = None
-        self.message_sbuscribers_ = []
+        self.message_subscriptions_ = []
 
     def create_writer(self):
         self.message_writer = SequentialWriter()
@@ -96,10 +96,11 @@ class MessageWriter:
             topic_type = self.get_topic_type(topic_name)
             if topic_type:
                 msg_module = get_message(topic_type)
-                sbuscriber_ = self.node.create_subscription(
+                subscription_ = self.node.create_subscription(
                     msg_module, topic_name, partial(self.callback_write_message, topic_name), 10
                 )
-                self.message_sbuscribers_.append(sbuscriber_)
+                self.message_subscriptions_.append(subscription_)
+        self.nodeget_logger().info("start recording rosbag")
 
     # call back function called in start recording
     def callback_write_message(self, topic_name, message):
@@ -112,9 +113,10 @@ class MessageWriter:
 
     def stop_record(self):
         # Stop recording by destroying the subscriptions and deleting the writer
-        for sbuscriber_ in self.message_sbuscribers_:
-            self.node.destroy_subscription(sbuscriber_)
+        for subscription_ in self.message_subscriptions_:
+            self.node.destroy_subscription(subscription_)
         del self.message_writer
+        self.get_logger().info("stop recording rosbag")
 
 
 class DataCollectingRosbagRecord(Node):
@@ -130,12 +132,13 @@ class DataCollectingRosbagRecord(Node):
         self.recording = False
 
         self.present_operation_mode_ = None
-        self.operation_mode_subscriber_ = self.create_subscription(
+        self.operation_mode_subscription_ = self.create_subscription(
             OperationModeState,
             "/system/operation_mode/state",
             self.subscribe_operation_mode,
             10,
         )
+        self.operation_mode_subscription_
 
         self.timer_period_callback = 1.0
         self.timer_callback = self.create_timer(

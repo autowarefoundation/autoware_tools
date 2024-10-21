@@ -470,21 +470,21 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             min([np.digitize(collecting_data_max_a, self.v_bins) - 1, self.num_bins_a - 1]) + 1
         )
 
-        self.collected_data_counts_of_vel_acc_subscriber_ = self.create_subscription(
+        self.collected_data_counts_of_vel_acc_subscribption_ = self.create_subscription(
             Int32MultiArray,
             "/control_data_collecting_tools/collected_data_counts_of_vel_acc",
             self.subscribe_collected_data_counts_of_vel_acc,
             10,
         )
-        self.collected_data_counts_of_vel_acc_subscriber_
+        self.collected_data_counts_of_vel_acc_subscribption_
 
-        self.collected_data_counts_of_vel_steer_subscriber_ = self.create_subscription(
+        self.collected_data_counts_of_vel_steer_subscribption_ = self.create_subscription(
             Int32MultiArray,
             "/control_data_collecting_tools/collected_data_counts_of_vel_steer",
             self.subscribe_collected_data_counts_of_vel_steer,
             10,
         )
-        self.collected_data_counts_of_vel_steer_subscriber_
+        self.collected_data_counts_of_vel_steer_subscribption_
 
     def subscribe_collected_data_counts_of_vel_acc(self, msg):
         rows = msg.layout.dim[0].size

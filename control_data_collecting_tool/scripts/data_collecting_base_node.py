@@ -101,12 +101,13 @@ class DataCollectingBaseNode(Node):
             1,
         )
 
-        self.operation_mode_subscriber_ = self.create_subscription(
+        self.operation_mode_subscription_ = self.create_subscription(
             OperationModeState,
             "/system/operation_mode/state",
             self.subscribe_operation_mode,
             10,
         )
+        self.operation_mode_subscription_
 
         self._present_kinematic_state = None
         self._present_acceleration = None
@@ -156,4 +157,4 @@ class DataCollectingBaseNode(Node):
         self._present_acceleration = msg
 
     def subscribe_operation_mode(self, msg):
-        self.present_peration_mode_ = msg.mode
+        self.present_operation_mode_ = msg.mode
