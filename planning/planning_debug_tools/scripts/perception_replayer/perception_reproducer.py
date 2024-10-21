@@ -54,9 +54,9 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         self.perv_objects_msg, self.prev_traffic_signals_msg = self.find_topics_by_timestamp(
             pose_timestamp
         )
-        self.memorized_original_objects_msg = (
-            self.memorized_noised_objects_msg
-        ) = self.perv_objects_msg
+        self.memorized_original_objects_msg = self.memorized_noised_objects_msg = (
+            self.perv_objects_msg
+        )
 
         # start main timer callback
 
