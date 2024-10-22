@@ -44,7 +44,14 @@ def get_system_usage(pid, system_usages, interval):
         )
         if component == "":
             component = "others"
+
         elements = process_name.split("__node:=", 1)
+
+        # If `process_name`` can be split by "__node:=", get the container name from the second element.
+        # Otherwise, get the container name from the file name in the first element.
+        # An example of `process_name` is as follows:
+        # `/path/to/autoware/install/topic_state_monitor/lib/topic_state_monitor/topic_state_monitor_node
+        #     --ros-args -r __node:=topic_state_monitor_scenario_planning_trajectory -r __ns:=/system ...`
         if len(elements) < 2:
             container = process_name.split(" ")[0].split("/")[-1]
             if container.startswith("autoware_"):
