@@ -25,7 +25,7 @@ class TopicConnectionChecker(Node):
 
         # List of important topics to check; only add topics that are known to be important
         # we will also listen to diagnostic messages to find out topics that create problems
-        self.important_topics = set("/control/command/control_cmd")
+        self.important_topics = set()
 
         self.ignore_topics = [
             "/rosout",

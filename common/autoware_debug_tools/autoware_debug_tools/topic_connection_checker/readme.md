@@ -51,7 +51,10 @@ The identified problematic topics can then be used as input for the Topic Locali
 When launching from the `autoware/pilot-auto` directory, use the following command:
 
 ```bash
-ros2 run autoware_debug_tools topic_localizer --topics $TOPIC1,$TOPIC2
+ros2 run autoware_debug_tools topic_localizer . $TOPIC1,$TOPIC2
+
+## If we launch from a different directory
+ros2 run autoware_debug_tools topic_localizer $AUTOWARE_DIRECTORY $TOPIC1,$TOPIC2
 ```
 
 Replace `$TOPIC1,$TOPIC2` with the actual topic names you want to localize, separated by commas.

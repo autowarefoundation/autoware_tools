@@ -63,7 +63,7 @@ def parse_node_tag(node_tag: ET.Element, base_namespace: str, context: dict, loc
                     continue
                 # print(path, child.get("from"))
                 local_parameters["__param_files"].append(path)
-                if path == "":
+                if path == "" or not os.path.exists(path):
                     print("-----Node Parameter not Found------")
                     print(f"----package: {pkg}-----")
                     print(f"----exec: {executable}-----")
