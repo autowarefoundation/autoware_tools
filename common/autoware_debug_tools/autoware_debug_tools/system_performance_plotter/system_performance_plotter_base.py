@@ -196,7 +196,11 @@ def create_common_argment(ymax=None):
         "-s", "--save-result", default=False, action="store_true", help="whether to save result"
     )
     parser.add_argument(
-        "-p", "--skip_plt_show", default=False, action="store_true", help="whether to skip plt.show()"
+        "-p",
+        "--skip_plt_show",
+        default=False,
+        action="store_true",
+        help="whether to skip plt.show()",
     )
 
     args = parser.parse_args()
