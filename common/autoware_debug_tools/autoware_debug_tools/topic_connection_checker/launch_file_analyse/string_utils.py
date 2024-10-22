@@ -27,6 +27,7 @@ def find_package(package_name) -> str:
             ] = f"/opt/ros/humble/share/{package_name}"  # use this for temporal solution;
         return BASE_PROJECT_MAPPING[package_name]
 
+
 def find_cmake_projects(root_dir):
     for dirpath, _, filenames in os.walk(root_dir):
         if "CMakeLists.txt" in filenames:

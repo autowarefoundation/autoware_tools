@@ -1,7 +1,12 @@
-from autoware_debug_tools.topic_connection_checker.launch_file_analyse.launch_xml_parser import parse_xml
-from autoware_debug_tools.topic_connection_checker.launch_file_analyse.string_utils import find_cmake_projects
-from autoware_debug_tools.topic_connection_checker.launch_file_analyse.launch_tree import find_unset_parameters
-
+from autoware_debug_tools.topic_connection_checker.launch_file_analyse.launch_tree import (
+    find_unset_parameters,
+)
+from autoware_debug_tools.topic_connection_checker.launch_file_analyse.launch_xml_parser import (
+    parse_xml,
+)
+from autoware_debug_tools.topic_connection_checker.launch_file_analyse.string_utils import (
+    find_cmake_projects,
+)
 
 
 def launch_file_analyse_main(launch_file, context={}, src_dir=None):
@@ -17,6 +22,7 @@ def launch_file_analyse_main(launch_file, context={}, src_dir=None):
             print(unset_parameter)
         raise Exception(f"Some parameters are not set; {unset_parameters}")
     return context
+
 
 if __name__ == "__main__":
     import argparse

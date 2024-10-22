@@ -64,6 +64,7 @@ Replace `$TOPIC1,$TOPIC2` with the actual topic names you want to localize, sepa
 The Topic Localizer employs a two-step approach to find the source of problematic topics:
 
 1. Direct Search:
+
    - Scans all HPP/CPP and launch.py files for code snippets containing the exact names of the target topics.
 
 2. Launch System Analysis:

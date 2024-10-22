@@ -2,11 +2,18 @@ from copy import deepcopy
 import os
 from typing import Optional
 import xml.etree.ElementTree as ET
-import yaml
 
 from autoware_debug_tools.topic_connection_checker.launch_file_analyse.launch_tree import LaunchTree
-from autoware_debug_tools.topic_connection_checker.launch_file_analyse.string_utils import analyze_string, find_linked_path
-from autoware_debug_tools.topic_connection_checker.launch_file_analyse.string_utils import FLAG_CHECKING_SYSTEM_PROJECTS
+from autoware_debug_tools.topic_connection_checker.launch_file_analyse.string_utils import (
+    FLAG_CHECKING_SYSTEM_PROJECTS,
+)
+from autoware_debug_tools.topic_connection_checker.launch_file_analyse.string_utils import (
+    analyze_string,
+)
+from autoware_debug_tools.topic_connection_checker.launch_file_analyse.string_utils import (
+    find_linked_path,
+)
+import yaml
 
 
 def read_ros_yaml(file_path: str) -> dict:
@@ -152,10 +159,6 @@ def parse_composable_node(
     context["__tree__"].add_child(
         context["__current_launch_name_"], f"{pkg}/{executable}", **local_parameters
     )
-
-
-
-
 
 
 def check_if_run(tag: ET.Element, base_name: dict, context: dict, local_context: dict):

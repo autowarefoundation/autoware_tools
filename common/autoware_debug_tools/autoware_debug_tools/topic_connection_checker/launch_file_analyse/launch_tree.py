@@ -1,6 +1,7 @@
 import json
 from typing import List
 
+
 class LaunchTreeNode:
     """Each node in the launch tree is a LaunchTreeNode. It represents a launch file or a ros node."""
 
