@@ -44,13 +44,25 @@ def get_system_usage(pid, system_usages, interval):
         )
         if component == "":
             component = "others"
-        container = process_name.split("__node:=", 1)[1].split(" ")[0]
-        system_usages[pid] = {
-            "component": component,
-            "container": container,
-            "cpu_usage": cpu_usage,
-            "memory_usage": memory_usage,
-        }
+        elements = process_name.split("__node:=", 1)
+        if len(elements) < 2:
+            container = process_name.split(" ")[0].split("/")[-1]
+            if container.startswith("autoware_"):
+                container = container.split("_", 1)[1]
+            system_usages[pid] = {
+                "component": component,
+                "container": container,
+                "cpu_usage": cpu_usage,
+                "memory_usage": memory_usage,
+            }
+        else:
+            container = elements[1].split(" ")[0]
+            system_usages[pid] = {
+                "component": component,
+                "container": container,
+                "cpu_usage": cpu_usage,
+                "memory_usage": memory_usage,
+            }
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, IndexError):
         pass
 
@@ -128,7 +140,7 @@ def main(args=None):
     system_usages = {}
     while True:
         # create thread to calculate cpu usage of each process since it takes time
-        process_name_keyword = "__node:="
+        process_name_keyword = "--ros-args"
         threads = []
         for proc in psutil.process_iter(["pid", "name", "cpu_percent", "cmdline"]):
             try:
