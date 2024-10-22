@@ -30,6 +30,11 @@ class TopicConnectionChecker(Node):
         self.ignore_topics = [
             "/rosout",
             "/parameter_events",
+            "/diagnostics",
+        ]
+
+        self.ignore_nodes = [
+            "rviz2"
         ]
 
         self.topic_data = {}
@@ -167,7 +172,7 @@ class TopicConnectionChecker(Node):
             publishers_info = self.get_publishers_info_by_topic(topic)
             with self.lock:
                 self.topic_data[topic]["publishers"] = [
-                    (p.node_name, p.node_namespace) for p in publishers_info
+                    (p.node_name, p.node_namespace) for p in publishers_info if p.node_name not in self.ignore_nodes
                 ]
 
         self.check_completed.set()

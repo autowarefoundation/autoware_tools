@@ -37,6 +37,8 @@ def search_topics_in_directory(
         for file in files:
             if file.endswith((".cpp", ".hpp", ".h", "launch.py")):
                 file_path = os.path.join(root, file)
+                if os.path.islink(file_path):
+                    continue
                 file_results = find_topics_in_file(file_path, topics)
                 if file_results:
                     results[file_path] = file_results
