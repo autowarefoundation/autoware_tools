@@ -33,9 +33,7 @@ class TopicConnectionChecker(Node):
             "/diagnostics",
         ]
 
-        self.ignore_nodes = [
-            "rviz2"
-        ]
+        self.ignore_nodes = ["rviz2"]
 
         self.topic_data = {}
         self.lock = threading.Lock()
@@ -172,7 +170,9 @@ class TopicConnectionChecker(Node):
             publishers_info = self.get_publishers_info_by_topic(topic)
             with self.lock:
                 self.topic_data[topic]["publishers"] = [
-                    (p.node_name, p.node_namespace) for p in publishers_info if p.node_name not in self.ignore_nodes
+                    (p.node_name, p.node_namespace)
+                    for p in publishers_info
+                    if p.node_name not in self.ignore_nodes
                 ]
 
         self.check_completed.set()
