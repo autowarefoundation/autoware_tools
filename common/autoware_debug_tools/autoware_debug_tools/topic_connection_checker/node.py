@@ -7,6 +7,8 @@ from rclpy.executors import MultiThreadedExecutor
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy, QoSHistoryPolicy
 import threading
 import importlib
+from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
+import time
 
 class TopicConnectionChecker(Node):
     def __init__(self):
@@ -16,7 +18,7 @@ class TopicConnectionChecker(Node):
         self.callback_group = ReentrantCallbackGroup()
         
         # List of important topics to check
-        self.important_topics = [
+        self.important_topics = set([
             '/control/command/control_cmd',
             '/control/trajectory_follower/control_cmd',
             '/control/shift_decider/gear_cmd',
@@ -29,7 +31,8 @@ class TopicConnectionChecker(Node):
             '/perception/object_recognition/objects',
 
             # Add more important topics here
-        ]
+        ])
+        self.important_topics = set()
 
         self.ignore_topics = [
             "/rosout",
@@ -40,10 +43,24 @@ class TopicConnectionChecker(Node):
         self.lock = threading.Lock()
         self.check_completed = threading.Event()
         self.topics_to_check_next_round = set()
+        self.problematic_topics_without_publishers = set()
         self.checked_topics = set()  # New set to keep track of checked topics
         self.reported_topics = set()  # New set to keep track of reported topics
 
         self.timer = None  # Timer object
+
+        self.diag_sub = self.create_subscription(
+            DiagnosticArray,
+            '/diagnostics',
+            self.diagnostic_callback,
+            QoSProfile(depth=10, reliability=QoSReliabilityPolicy.BEST_EFFORT),
+            callback_group=self.callback_group
+        )
+        self.start_time = time.time()
+        self.diagnostic_collectted = False
+
+        # New: Dictionary to store problematic topics from diagnostics
+        self.diagnostic_problematic_topics = {}
 
         # Default QoS profile (used if unable to determine publisher's QoS)
         self.default_qos_profile = QoSProfile(
@@ -52,6 +69,34 @@ class TopicConnectionChecker(Node):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
+
+    def diagnostic_callback(self, msg:DiagnosticArray):
+        passed_time = time.time() - self.start_time
+        if passed_time > 3:
+            self.destroy_subscription(self.diag_sub)
+            self.diagnostic_collectted = True
+            self.get_logger().info("Diagnostic data collected")
+            print(self.important_topics)
+            return
+        for status in msg.status:
+            isinstance(status, DiagnosticStatus)
+            if status.hardware_id == "topic_state_monitor":
+                status_is_ok = True
+                for key_value in status.values:
+                    key = key_value.key
+                    value = key_value.value
+                    if key == "topic":
+                        topic_name = value
+                    if key == "status":
+                        if value != "OK":
+                            status_is_ok = False
+                
+                if not status_is_ok:
+                    # print(topic_name, status_is_ok)
+                    if topic_name not in self.important_topics:
+                        self.important_topics.add(topic_name)
+                        self.get_logger().warn(f"Diagnostic reports stuck topic: {topic_name}")
+                        # self.analyze_topic_connections(topic_name)
 
     def check_topics(self):
         self.check_completed.clear()
@@ -158,11 +203,14 @@ class TopicConnectionChecker(Node):
                 self.get_logger().warn(f"Topic {topic} has unexpected state")
             
 
-        for topic in stuck_topics:
+        all_stuck_topics = set(stuck_topics + list(self.diagnostic_problematic_topics.keys()))
+        for topic in all_stuck_topics:
             self.analyze_topic_connections(topic)
 
         if self.topics_to_check_next_round:
-            self.get_logger().info(f"Topics to check in the next round: {self.topics_to_check_next_round}")
+            self.get_logger().info(
+                f"Topics to check in the next round: {self.topics_to_check_next_round}"
+            )
             self.important_topics = list(self.topics_to_check_next_round)
             self.topics_to_check_next_round.clear()
             self.check_topics()  # Start another round of checks
@@ -179,6 +227,7 @@ class TopicConnectionChecker(Node):
                     continue
                 publishers_info = self.get_publishers_info_by_topic(topic)
                 if len(publishers_info) == 0:
+                    self.problematic_topics_without_publishers.add(topic)
                     self.get_logger().error(f"  Node {node_name} is subscribing to topic {topic} but there are no publishers")
                 elif len(publishers_info) > 2:
                     # topics with multiple publishers are usually debuggers or loggers and are not a problem
@@ -201,6 +250,7 @@ def main(args=None):
     thread.start()
     
     try:
+        time.sleep(3) # Wait for diagnostic data to be collected
         checker.check_topics()
     except KeyboardInterrupt:
         pass
