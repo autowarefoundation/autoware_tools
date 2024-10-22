@@ -1,12 +1,17 @@
-## Total Structure
-"""
-String Utils -> Launch Tree -> Launch Node Utils -> Launch Analyzer
-"""
+# Total Structure
+"""String Utils -> Launch Tree -> Launch Node Utils -> Launch Analyzer."""
 
-#### String Utils
+# String Utils
 
+from copy import deepcopy
+import json
 import os
 import re
+from typing import List
+from typing import Optional
+import xml.etree.ElementTree as ET
+
+import yaml
 
 patterns = {
     "var": r"\$\((var) ([^\)]+)\)",
@@ -18,18 +23,20 @@ patterns = {
 BASE_PROJECT_MAPPING = {}
 FLAG_CHECKING_SYSTEM_PROJECTS = False
 
+
 def find_package(package_name) -> str:
-    """
-    Return the share directory of the given package.
-    """
+    """Return the share directory of the given package."""
     if package_name in BASE_PROJECT_MAPPING:
         return BASE_PROJECT_MAPPING[package_name]
     else:
         if FLAG_CHECKING_SYSTEM_PROJECTS:
             from ament_index_python.packages import get_package_share_directory
+
             BASE_PROJECT_MAPPING[package_name] = get_package_share_directory(package_name)
         else:
-            BASE_PROJECT_MAPPING[package_name] = f"/opt/ros/humble/share/{package_name}" # use this for temporal solution;
+            BASE_PROJECT_MAPPING[
+                package_name
+            ] = f"/opt/ros/humble/share/{package_name}"  # use this for temporal solution;
         return BASE_PROJECT_MAPPING[package_name]
 
 
@@ -135,10 +142,7 @@ def find_linked_path(path: str) -> str:
         return path
 
 
-#### Launch Tree
-
-import json
-from typing import List
+# Launch Tree
 
 
 class LaunchTreeNode:
@@ -153,11 +157,11 @@ class LaunchTreeNode:
         self.children.append(child)
 
     def jsonify(self):
-        return dict(
-            name=self.name,
-            children=[child.jsonify() for child in self.children],
-            parameters=self.parameters,
-        )
+        return {
+            "name": self.name,
+            "children": [child.jsonify() for child in self.children],
+            "parameters": self.parameters,
+        }
 
 
 class LaunchTree:
@@ -222,11 +226,7 @@ def find_unset_parameters(tree: LaunchTree):
     return unset_parameters
 
 
-#### Launch Node Utils
-
-import xml.etree.ElementTree as ET
-
-import yaml
+# Launch Node Utils
 
 
 def read_ros_yaml(file_path: str) -> dict:
@@ -239,11 +239,34 @@ def read_ros_yaml(file_path: str) -> dict:
     return data
 
 
-def parse_node_tag(
-    node_tag: ET.Element, base_namespace: str, context: dict, local_context: dict
-):
-    pkg = analyze_string(node_tag.get("pkg"), context, local_context, base_namespace)
-    exec = analyze_string(node_tag.get("exec"), context, local_context, base_namespace)
+def include_ros_yaml(file_path: str) -> dict:
+    """Read and return the contents of a YAML file."""
+    with open(file_path, "r") as file:
+        # Using safe_load() to avoid potential security risks
+        data = yaml.safe_load(file)
+
+    data = data["launch"]
+    parameters = {}
+    for argument_dict in data:
+        name = argument_dict["arg"]["name"]
+        default = argument_dict["arg"]["default"]
+        parameters[name] = default
+    return parameters
+
+
+def parse_node_tag(node_tag: ET.Element, base_namespace: str, context: dict, local_context: dict):
+    try:
+        pkg = analyze_string(node_tag.get("pkg"), context, local_context, base_namespace)
+        executable = analyze_string(node_tag.get("exec"), context, local_context, base_namespace)
+    except Exception as e:
+        print(f"Error in parsing node tag: {e}")
+        print(
+            node_tag.get("pkg"),
+            node_tag.get("exec"),
+            base_namespace,
+            context["__current_launch_name_"],
+        )
+        raise Exception(f"Error in parsing node tag: {e}")
     local_parameters = {}
     local_parameters["__param_files"] = []
     # print(context, base_namespace)
@@ -254,9 +277,7 @@ def parse_node_tag(
                     child.get("value"), context, local_context, base_namespace
                 )
             if child.get("from") is not None:
-                path = analyze_string(
-                    child.get("from"), context, local_context, base_namespace
-                )
+                path = analyze_string(child.get("from"), context, local_context, base_namespace)
                 path = find_linked_path(path)
                 if path.endswith("_empty.param.yaml"):
                     continue
@@ -265,7 +286,7 @@ def parse_node_tag(
                 if path == "":
                     print("-----Node Parameter not Found------")
                     print(f"----package: {pkg}-----")
-                    print(f"----exec: {exec}-----")
+                    print(f"----exec: {executable}-----")
                     print(f"----parameter string: {child.get('from')}-----")
                 else:
                     data = read_ros_yaml(path)
@@ -276,19 +297,84 @@ def parse_node_tag(
                             )
                         else:
                             local_parameters[key] = data[key]
+        if child.tag == "remap":
+            from_topic = analyze_string(child.get("from"), context, local_context, base_namespace)
+            to_topic = analyze_string(child.get("to"), context, local_context, base_namespace)
+            if "__remapping__" not in local_parameters:
+                local_parameters["__remapping__"] = {}
+            local_parameters["__remapping__"][from_topic] = to_topic
+
     context["__tree__"].add_child(
-        context["__current_launch_name_"], f"{pkg}/{exec}", **local_parameters
+        context["__current_launch_name_"], f"{pkg}/{executable}", **local_parameters
     )
 
 
-#### Launch Analyzer
+def parse_load_composable_node(
+    load_composable_node_tag: ET.Element, base_namespace: str, context: dict, local_context: dict
+):
+    container_target = load_composable_node_tag.get("target")
+    local_parameters = local_context.copy()
+    local_parameters["__container_target__"] = container_target
+    for child in load_composable_node_tag:
+        process_tag(
+            child,
+            base_namespace,
+            context,
+            local_parameters,
+        )
+    return context
 
-import os
-import xml.etree.ElementTree as ET
-from copy import deepcopy
-from typing import Any, Dict, List, Optional
 
-import os
+def parse_composable_node(
+    composable_node_tag: ET.Element, base_namespace: str, context: dict, local_context: dict
+):
+    pkg = analyze_string(composable_node_tag.get("pkg"), context, local_context, base_namespace)
+    executable = analyze_string(
+        composable_node_tag.get("plugin"), context, local_context, base_namespace
+    )
+    local_parameters = {}
+    local_parameters["__param_files"] = []
+    # print(context, base_namespace)
+    for child in composable_node_tag:
+        if child.tag == "param":
+            if child.get("name") is not None:
+                local_parameters[child.get("name")] = analyze_string(
+                    child.get("value"), context, local_context, base_namespace
+                )
+            if child.get("from") is not None:
+                path = analyze_string(child.get("from"), context, local_context, base_namespace)
+                path = find_linked_path(path)
+                if path.endswith("_empty.param.yaml"):
+                    continue
+                # print(path, child.get("from"))
+                local_parameters["__param_files"].append(path)
+                if path == "":
+                    print("-----Node Parameter not Found------")
+                    print(f"----package: {pkg}-----")
+                    print(f"----exec: {executable}-----")
+                    print(f"----parameter string: {child.get('from')}-----")
+                else:
+                    data = read_ros_yaml(path)
+                    for key in data:
+                        if isinstance(data[key], str) and data[key].startswith("$(var "):
+                            local_parameters[key] = analyze_string(
+                                data[key], context, local_context, base_namespace
+                            )
+                        else:
+                            local_parameters[key] = data[key]
+        if child.tag == "remap":
+            from_topic = analyze_string(child.get("from"), context, local_context, base_namespace)
+            to_topic = analyze_string(child.get("to"), context, local_context, base_namespace)
+            if "__remapping__" not in local_parameters:
+                local_parameters["__remapping__"] = {}
+            local_parameters["__remapping__"][from_topic] = to_topic
+
+    context["__tree__"].add_child(
+        context["__current_launch_name_"], f"{pkg}/{executable}", **local_parameters
+    )
+
+
+# Launch Analyzer
 
 
 def find_cmake_projects(root_dir):
@@ -312,9 +398,7 @@ def check_if_run(tag: ET.Element, base_name: dict, context: dict, local_context:
         if not if_value:
             return False
     if tag.get("unless"):
-        unless_value = analyze_string(
-            tag.get("unless"), context, local_context, base_name
-        )
+        unless_value = analyze_string(tag.get("unless"), context, local_context, base_name)
         unless_value = unless_value.lower() == "true"
         if unless_value:
             return False
@@ -322,7 +406,7 @@ def check_if_run(tag: ET.Element, base_name: dict, context: dict, local_context:
 
 
 def copy_context(context: dict):
-    new_context = dict()
+    new_context = {}
     for key in context:
         new_context[key] = context[key]
     return new_context
@@ -346,26 +430,31 @@ def process_include_tag(
     if group_base_namespace is None:
         group_base_namespace = base_namespace
     included_file = include_tag.get("file")
-    included_file = analyze_string(
-        included_file, context, local_context, base_namespace
-    )
+    included_file = analyze_string(included_file, context, local_context, base_namespace)
     included_file = find_linked_path(included_file)
+
+    if included_file.endswith(".yaml"):
+        # this is a yaml file for parameters
+        data = include_ros_yaml(included_file)
+        for key in data:
+            if key not in context:
+                context[key] = data[key]
+        return context
+
     temp_context = copy_context(context)
-    argument_dict = dict()
+    argument_dict = {}
     for child in include_tag:
         if child.tag == "arg":
-            value = analyze_string(
-                child.get("value"), temp_context, local_context, base_namespace
-            )
+            value = analyze_string(child.get("value"), temp_context, local_context, base_namespace)
             name = analyze_string(
                 child.get("name"),
                 temp_context,
                 local_context,
                 base_namespace,
             )
-            temp_context[name] = (
-                value  # temp_context is used to pass arguments to the included file and updated on the fly for each argument
-            )
+            temp_context[
+                name
+            ] = value  # temp_context is used to pass arguments to the included file and updated on the fly for each argument
     for key in argument_dict:
         temp_context[key] = argument_dict[key]
     if included_file:
@@ -410,9 +499,7 @@ def parse_argument_tag(
     return context
 
 
-def parse_let_tag(
-    let_tag: ET.Element, base_namespace: str, context: dict, local_context: dict
-):
+def parse_let_tag(let_tag: ET.Element, base_namespace: str, context: dict, local_context: dict):
     argument_name = let_tag.get("name")
     if let_tag.get("value"):
         local_context[argument_name] = analyze_string(
@@ -436,9 +523,7 @@ def parse_group_tag(
         if child.tag == "push-ros-namespace":
             if child.get("namespace").strip() == "/":
                 continue
-            group_base_namespace = (
-                f"{base_namespace}/{child.get('namespace').strip('/')}"
-            )
+            group_base_namespace = f"{base_namespace}/{child.get('namespace').strip('/')}"
             # print(f"Setting ROS namespace to {group_base_namespace} inside group")
 
     # find all other children
@@ -480,11 +565,15 @@ def process_tag(
         )
     elif tag.tag == "node":
         context = parse_node_tag(tag, base_namespace, context, local_context)
+    elif tag.tag == "load_composable_node":
+        context = parse_load_composable_node(tag, base_namespace, context, local_context)
+    elif tag.tag == "composable_node":
+        context = parse_composable_node(tag, base_namespace, context, local_context)
     return context
 
 
 def parse_xml(file_path: str, namespace: str = "", context: dict = {}):
-    """Recursively parse XML files, handling <include> tags. For each file, the namespace should be the same"""
+    """Recursively parse XML files, handling <include> tags. For each file, the namespace should be the same."""
     full_path = os.path.join(file_path)
     context["__current_launch_file__"] = full_path
     context["__current_launch_name_"] = os.path.basename(full_path)
@@ -496,7 +585,7 @@ def parse_xml(file_path: str, namespace: str = "", context: dict = {}):
     root = tree.getroot()
 
     # Process each node in the XML
-    local_context = dict()
+    local_context = {}
     for tag in root:
         process_tag(tag, namespace, context, local_context)
     return context
@@ -506,8 +595,8 @@ def launch_file_analyse_main(launch_file, context={}, src_dir=None):
     if src_dir:
         find_cmake_projects(src_dir)
     context = parse_xml(launch_file, context=context)
-    with open("output.json", "w") as f:
-       f.write(str(context["__tree__"]))
+    # with open("output.json", "w") as f:
+    #     f.write(str(context["__tree__"]))
     # print unused parameters
     unset_parameters = find_unset_parameters(context["__tree__"])
     if len(unset_parameters) > 0:
@@ -519,12 +608,13 @@ def launch_file_analyse_main(launch_file, context={}, src_dir=None):
 
 if __name__ == "__main__":
     import argparse
+
     args = argparse.ArgumentParser()
     args.add_argument("--src_dir", type=str, default="src")
     args.add_argument("--launch_file", type=str, required=True)
-    args.add_argument('--flag_check_system_file', action='store_true')
+    args.add_argument("--flag_check_system_file", action="store_true")
     # context dictionary
-    args.add_argument('--context', '--parameters', nargs='+', help='Key=value pairs')
+    args.add_argument("--context", "--parameters", nargs="+", help="Key=value pairs")
 
     args = args.parse_args()
     src_dir = args.src_dir
@@ -532,8 +622,7 @@ if __name__ == "__main__":
     FLAG_CHECKING_SYSTEM_PROJECTS = args.flag_check_system_file
     context = {}
     for param in args.context:
-        key, value = param.split('=')
+        key, value = param.split("=")
         context[key] = value
-
 
     launch_file_analyse_main(launch_file, context=context, src_dir=src_dir)

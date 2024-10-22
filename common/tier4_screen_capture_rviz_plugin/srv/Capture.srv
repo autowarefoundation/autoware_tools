@@ -1,0 +1,13 @@
+uint8 SCREEN_SHOT = 0
+uint8 START_BUFFERING = 1
+uint8 STOP_BUFFERING = 2
+uint8 RECORD = 3
+uint8 SAVE = 4
+uint8 SAVE_BUFFER = 5
+
+uint8 action
+string file_name
+
+---
+
+bool success
