@@ -221,6 +221,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             self._present_kinematic_state is not None
             and self._present_acceleration is not None
             and self.present_operation_mode_ == 3
+            and self._present_control_mode_ == 1 
         ):
             # calculate steer
             angular_z = self._present_kinematic_state.twist.twist.angular.z

@@ -20,6 +20,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from autoware_adapi_v1_msgs.msg import OperationModeState
+from autoware_vehicle_msgs.msg import ControlModeReport
 import rclpy
 from rclpy.node import Node
 from rclpy.serialization import serialize_message
@@ -100,7 +101,7 @@ class MessageWriter:
                     msg_module, topic_name, partial(self.callback_write_message, topic_name), 10
                 )
                 self.message_subscriptions_.append(subscription_)
-        self.nodeget_logger().info("start recording rosbag")
+        self.node.get_logger().info("start recording rosbag")
 
     # call back function called in start recording
     def callback_write_message(self, topic_name, message):
@@ -116,7 +117,7 @@ class MessageWriter:
         for subscription_ in self.message_subscriptions_:
             self.node.destroy_subscription(subscription_)
         del self.message_writer
-        self.get_logger().info("stop recording rosbag")
+        self.node.get_logger().info("stop recording rosbag")
 
 
 class DataCollectingRosbagRecord(Node):
@@ -138,7 +139,14 @@ class DataCollectingRosbagRecord(Node):
             self.subscribe_operation_mode,
             10,
         )
-        self.operation_mode_subscription_
+        
+        self._present_control_mode_ = None
+        self.control_mode_subscription_ = self.create_subscription(
+            ControlModeReport,
+            "/vehicle/status/control_mode",
+            self.subscribe_control_mode,
+            10,
+        )
 
         self.timer_period_callback = 1.0
         self.timer_callback = self.create_timer(
@@ -149,20 +157,23 @@ class DataCollectingRosbagRecord(Node):
     def subscribe_operation_mode(self, msg):
         self.present_operation_mode_ = msg.mode
 
+    def subscribe_control_mode(self, msg):
+        self._present_control_mode_ = msg.mode
+
     def record_message(self):
-        # Start subscribing to topics and recording if the operation mode is 3(LOCAL)
-        if self.present_operation_mode_ == 3 and not self.subscribed and not self.recording:
+        # Start subscribing to topics and recording if the operation mode is 3(LOCAL) and control mode is 1(AUTONOMOUS)
+        if self.present_operation_mode_ == 3 and self._present_control_mode_ == 1 and not self.subscribed and not self.recording:
             self.writer.create_writer()
             self.writer.subscribe_topics()
             self.subscribed = True
 
-        # Start recording if topics are subscribed and the operation mode is 3
-        if self.present_operation_mode_ == 3 and self.subscribed and not self.recording:
+        # Start recording if topics are subscribed and the operation mode is 3(LOCAL)
+        if self.present_operation_mode_ == 3 and self._present_control_mode_ == 1 and self.subscribed and not self.recording:
             self.writer.start_record()
             self.recording = True
 
-        # Stop recording if the operation mode changes from 3
-        if self.present_operation_mode_ != 3 and self.subscribed and self.recording:
+        # Stop recording if the operation mode changes from 3(LOCAL) 
+        if (self.present_operation_mode_ != 3 or self._present_control_mode_ != 1) and self.subscribed and self.recording:
             self.writer.stop_record()
             self.subscribed = False
             self.recording = False

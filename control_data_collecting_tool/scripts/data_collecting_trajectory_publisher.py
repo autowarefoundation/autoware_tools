@@ -470,21 +470,21 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             min([np.digitize(collecting_data_max_a, self.v_bins) - 1, self.num_bins_a - 1]) + 1
         )
 
-        self.collected_data_counts_of_vel_acc_subscribption_ = self.create_subscription(
+        self.collected_data_counts_of_vel_acc_subscription_ = self.create_subscription(
             Int32MultiArray,
             "/control_data_collecting_tools/collected_data_counts_of_vel_acc",
             self.subscribe_collected_data_counts_of_vel_acc,
             10,
         )
-        self.collected_data_counts_of_vel_acc_subscribption_
+        self.collected_data_counts_of_vel_acc_subscription_
 
-        self.collected_data_counts_of_vel_steer_subscribption_ = self.create_subscription(
+        self.collected_data_counts_of_vel_steer_subscription_ = self.create_subscription(
             Int32MultiArray,
             "/control_data_collecting_tools/collected_data_counts_of_vel_steer",
             self.subscribe_collected_data_counts_of_vel_steer,
             10,
         )
-        self.collected_data_counts_of_vel_steer_subscribption_
+        self.collected_data_counts_of_vel_steer_subscription_
 
     def subscribe_collected_data_counts_of_vel_acc(self, msg):
         rows = msg.layout.dim[0].size
@@ -1251,7 +1251,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             marker_array.markers.append(marker_arrow)
 
             self.data_collecting_trajectory_marker_array_pub_.publish(marker_array)
-
             # [6-3] stop request
             if not self.checkInDateCollectingArea(present_position):
                 msg = Bool()
