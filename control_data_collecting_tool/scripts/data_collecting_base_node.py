@@ -15,8 +15,8 @@
 # limitations under the License.
 
 from autoware_adapi_v1_msgs.msg import OperationModeState
-from geometry_msgs.msg import AccelWithCovarianceStamped
 from autoware_vehicle_msgs.msg import ControlModeReport
+from geometry_msgs.msg import AccelWithCovarianceStamped
 from nav_msgs.msg import Odometry
 import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
@@ -169,4 +169,3 @@ class DataCollectingBaseNode(Node):
 
     def subscribe_control_mode(self, msg):
         self._present_control_mode_ = msg.mode
-        

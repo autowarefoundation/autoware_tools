@@ -139,7 +139,7 @@ class DataCollectingRosbagRecord(Node):
             self.subscribe_operation_mode,
             10,
         )
-        
+
         self._present_control_mode_ = None
         self.control_mode_subscription_ = self.create_subscription(
             ControlModeReport,
@@ -162,18 +162,32 @@ class DataCollectingRosbagRecord(Node):
 
     def record_message(self):
         # Start subscribing to topics and recording if the operation mode is 3(LOCAL) and control mode is 1(AUTONOMOUS)
-        if self.present_operation_mode_ == 3 and self._present_control_mode_ == 1 and not self.subscribed and not self.recording:
+        if (
+            self.present_operation_mode_ == 3
+            and self._present_control_mode_ == 1
+            and not self.subscribed
+            and not self.recording
+        ):
             self.writer.create_writer()
             self.writer.subscribe_topics()
             self.subscribed = True
 
         # Start recording if topics are subscribed and the operation mode is 3(LOCAL)
-        if self.present_operation_mode_ == 3 and self._present_control_mode_ == 1 and self.subscribed and not self.recording:
+        if (
+            self.present_operation_mode_ == 3
+            and self._present_control_mode_ == 1
+            and self.subscribed
+            and not self.recording
+        ):
             self.writer.start_record()
             self.recording = True
 
-        # Stop recording if the operation mode changes from 3(LOCAL) 
-        if (self.present_operation_mode_ != 3 or self._present_control_mode_ != 1) and self.subscribed and self.recording:
+        # Stop recording if the operation mode changes from 3(LOCAL)
+        if (
+            (self.present_operation_mode_ != 3 or self._present_control_mode_ != 1)
+            and self.subscribed
+            and self.recording
+        ):
             self.writer.stop_record()
             self.subscribed = False
             self.recording = False
