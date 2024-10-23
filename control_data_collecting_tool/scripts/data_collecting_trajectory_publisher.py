@@ -460,13 +460,13 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             self.get_parameter("COLLECTING_DATA_A_MAX").get_parameter_value().double_value,
         )
 
-        self.collectig_data_min_n_v = max([np.digitize(collecting_data_min_v, self.v_bins) - 1, 0])
-        self.collectig_data_max_n_v = (
+        self.collecting_data_min_n_v = max([np.digitize(collecting_data_min_v, self.v_bins) - 1, 0])
+        self.collecting_data_max_n_v = (
             min([np.digitize(collecting_data_max_v, self.v_bins) - 1, self.num_bins_v - 1]) + 1
         )
 
-        self.collectig_data_min_n_a = max([np.digitize(collecting_data_min_a, self.v_bins) - 1, 0])
-        self.collectig_data_max_n_a = (
+        self.collecting_data_min_n_a = max([np.digitize(collecting_data_min_a, self.v_bins) - 1, 0])
+        self.collecting_data_max_n_a = (
             min([np.digitize(collecting_data_max_a, self.v_bins) - 1, self.num_bins_a - 1]) + 1
         )
 
@@ -550,8 +550,8 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 (-1 + N_V, -3 + N_A),
             ]
 
-            for i in range(self.collectig_data_min_n_v, self.collectig_data_max_n_v):
-                for j in range(self.collectig_data_min_n_a, self.collectig_data_max_n_a):
+            for i in range(self.collecting_data_min_n_v, self.collecting_data_max_n_v):
+                for j in range(self.collecting_data_min_n_a, self.collecting_data_max_n_a):
                     if (i, j) not in exclude_idx_list:
                         if (
                             min_num_data - min_data_num_margin
