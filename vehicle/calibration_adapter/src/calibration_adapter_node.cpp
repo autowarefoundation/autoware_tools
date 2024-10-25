@@ -38,6 +38,7 @@ CalibrationAdapterNode::CalibrationAdapterNode()
     create_publisher<Float32Stamped>("~/output/acceleration_status", durable_qos);
   pub_acceleration_cmd_ =
     create_publisher<Float32Stamped>("~/output/acceleration_cmd", durable_qos);
+  pub_vehicle_twist_ = create_publisher<TwistStamped>("~/output/vehicle_twist", durable_qos);
 
   sub_control_cmd_ = create_subscription<ControlCommandStamped>(
     "~/input/control_cmd", queue_size,
@@ -106,6 +107,9 @@ void CalibrationAdapterNode::callbackTwistStatus(const Velocity::ConstSharedPtr 
   TwistStamped twist;
   twist.header = msg->header;
   twist.twist.linear.x = msg->longitudinal_velocity;
+  twist.twist.linear.y = msg->lateral_velocity;
+  twist.twist.angular.z = msg->heading_rate;
+  pub_vehicle_twist_->publish(twist);
   if (!twist_vec_.empty()) {
     const auto past_msg = getNearestTimeDataFromVec(twist, dif_twist_time_, twist_vec_);
     const double dt =
