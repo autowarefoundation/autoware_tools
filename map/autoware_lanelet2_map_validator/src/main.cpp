@@ -19,6 +19,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 
@@ -120,10 +121,11 @@ int process_requirements(
   }
 
   if (!validator_config.output_file_path.empty()) {
-    std::string file_name = validator_config.output_file_path + "/lanelet2_validation_results.json";
-    std::ofstream output_file(file_name);
+    std::filesystem::path file_directory = validator_config.output_file_path;
+    std::filesystem::path file_path = file_directory / "lanelet2_validation_results.json";
+    std::ofstream output_file(file_path);
     output_file << std::setw(4) << json_config;
-    std::cout << "Results are output to " << file_name << std::endl;
+    std::cout << "Results are output to " << file_path << std::endl;
   }
 
   return (warning_count + error_count == 0) ? 0 : 1;

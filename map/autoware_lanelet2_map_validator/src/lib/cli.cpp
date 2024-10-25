@@ -29,8 +29,8 @@ MetaConfig parseCommandLine(int argc, const char * argv[])
   auto & validation_config = config.command_line_config.validationConfig;
   po::options_description desc(
     "Runs a set of validators on a map. Think of it like a linter. The following checks are "
-    "available:");
-  desc.add_options()("help,h", "this help message")
+    "available");
+  desc.add_options()("help,h", "This help message")
 
     ("map_file,m", po::value<std::string>(), "Path to the map to be validated")
 
@@ -60,14 +60,14 @@ MetaConfig parseCommandLine(int argc, const char * argv[])
                   ("lat",
                    po::value(&validation_config.origin.lat)
                      ->default_value(validation_config.origin.lat),
-                   "latitude coordinate of map origin. This is required for the transverse "
+                   "Latitude coordinate of map origin. This is required for the transverse "
                    "mercator "
                    "and utm projector.")
 
                     ("lon",
                      po::value(&validation_config.origin.lon)
                        ->default_value(validation_config.origin.lon),
-                     "longitude coordinate of map origin. This is required for the transverse "
+                     "Longitude coordinate of map origin. This is required for the transverse "
                      "mercator "
                      "and utm projector.")
 
