@@ -35,7 +35,7 @@ using json = nlohmann::json;
 #define NORMAL_RED "\033[31m"
 #define FONT_RESET "\033[0m"
 
-int process_requirements(
+void process_requirements(
   json json_config, const lanelet::autoware::validation::MetaConfig & validator_config)
 {
   uint64_t warning_count = 0;
@@ -121,14 +121,15 @@ int process_requirements(
   }
 
   if (!validator_config.output_file_path.empty()) {
+    if (!std::filesystem::exists(validator_config.output_file_path)) {
+      throw std::runtime_error("Output path doesn't exist!");
+    }
     std::filesystem::path file_directory = validator_config.output_file_path;
     std::filesystem::path file_path = file_directory / "lanelet2_validation_results.json";
     std::ofstream output_file(file_path);
     output_file << std::setw(4) << json_config;
     std::cout << "Results are output to " << file_path << std::endl;
   }
-
-  return (warning_count + error_count == 0) ? 0 : 1;
 }
 
 int main(int argc, char * argv[])
@@ -147,32 +148,39 @@ int main(int argc, char * argv[])
     auto checks = lanelet::validation::availabeChecks(  // cspell:disable-line
       meta_config.command_line_config.validationConfig.checksFilter);
     if (checks.empty()) {
-      std::cout << "No checks found matching '"
-                << meta_config.command_line_config.validationConfig.checksFilter << "'\n";
+      std::cout << "No checks found matching to '"
+                << meta_config.command_line_config.validationConfig.checksFilter << "'"
+                << std::endl;
     } else {
-      std::cout << "The following checks are available:\n";
+      std::cout << "The following checks are available:" << std::endl;
       for (auto & check : checks) {
-        std::cout << check << '\n';
+        std::cout << check << std::endl;
       }
     }
     return 0;
   }
 
-  // Check whether the map_file is specified
-  if (meta_config.command_line_config.mapFile.empty()) {
-    std::cout << "No map file specified" << std::endl;
+  // Validation start
+  try {
+    if (meta_config.command_line_config.mapFile.empty()) {
+      throw std::runtime_error("No map file specified!");
+    } else if (!std::filesystem::exists(meta_config.command_line_config.mapFile)) {
+      throw std::runtime_error("Map file doesn't exist!");
+    }
+
+    if (!meta_config.requirements_file.empty()) {
+      std::ifstream input_file(meta_config.requirements_file);
+      json json_config;
+      input_file >> json_config;
+      process_requirements(json_config, meta_config);
+    } else {
+      auto issues = lanelet::autoware::validation::validateMap(meta_config);
+      lanelet::validation::printAllIssues(issues);
+    }
+  } catch (const std::exception & e) {
+    std::cout << e.what() << std::endl;
     return 1;
   }
 
-  // Validation start
-  if (!meta_config.requirements_file.empty()) {
-    std::ifstream input_file(meta_config.requirements_file);
-    json json_config;
-    input_file >> json_config;
-    return process_requirements(json_config, meta_config);
-  } else {
-    auto issues = lanelet::autoware::validation::validateMap(meta_config);
-    lanelet::validation::printAllIssues(issues);
-    return static_cast<int>(!issues.empty());
-  }
+  return 0;
 }
