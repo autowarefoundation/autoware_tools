@@ -48,23 +48,6 @@ std::vector<lanelet::validation::DetectedIssues> validateMap(const MetaConfig & 
   const auto & cm_config = config.command_line_config;
   const auto & val_config = config.command_line_config.validationConfig;
 
-  const auto & parse_filter = [](const std::string & str) {
-    std::vector<std::regex> regexes;
-    std::stringstream ss(str);
-
-    while (ss.good()) {
-      std::string substr;
-      getline(ss, substr, ',');
-      if (substr.empty()) {
-        continue;
-      }
-      regexes.emplace_back(substr, std::regex::basic | std::regex::icase);
-    }
-    return regexes;
-  };
-
-  auto checks = parse_filter(val_config.checksFilter);
-
   std::vector<lanelet::validation::DetectedIssues> issues;
   lanelet::LaneletMapPtr map;
   lanelet::validation::Strings errors;
