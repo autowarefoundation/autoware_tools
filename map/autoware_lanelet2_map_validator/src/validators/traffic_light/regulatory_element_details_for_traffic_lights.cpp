@@ -14,7 +14,7 @@
 
 #include "validators/traffic_light/regulatory_element_details_for_traffic_lights.hpp"
 
-#include "lib/utils.hpp"
+#include "common/utils.hpp"
 
 #include <range/v3/view/filter.hpp>
 

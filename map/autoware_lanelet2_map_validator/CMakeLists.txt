@@ -11,7 +11,10 @@ include_directories(
   src
 )
 
-file(GLOB_RECURSE autoware_lanelet2_map_validator_lib_src src/*.cpp)
+file(GLOB_RECURSE autoware_lanelet2_map_validator_lib_src
+  src/common/*.cpp
+  src/validators/*.cpp
+)
 ament_auto_add_library(autoware_lanelet2_map_validator_lib SHARED
   ${autoware_lanelet2_map_validator_lib_src}
 )

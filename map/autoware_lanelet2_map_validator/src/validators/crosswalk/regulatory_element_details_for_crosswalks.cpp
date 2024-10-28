@@ -14,7 +14,7 @@
 
 #include "validators/crosswalk/regulatory_element_details_for_crosswalks.hpp"
 
-#include "lib/utils.hpp"
+#include "common/utils.hpp"
 
 #include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>
 #include <range/v3/view/filter.hpp>

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef LIB__CLI_HPP_
-#define LIB__CLI_HPP_
+#ifndef COMMON__CLI_HPP_
+#define COMMON__CLI_HPP_
 
 #include <boost/program_options.hpp>
 
@@ -42,4 +42,4 @@ MetaConfig parseCommandLine(int argc, const char * argv[]);
 }  // namespace autoware
 }  // namespace lanelet
 
-#endif  // LIB__CLI_HPP_
+#endif  // COMMON__CLI_HPP_

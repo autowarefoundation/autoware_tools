@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "lib/cli.hpp"
+#include "common/cli.hpp"
 
 namespace po = boost::program_options;
 

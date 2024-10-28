@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef LIB__VALIDATION_HPP_
-#define LIB__VALIDATION_HPP_
+#ifndef COMMON__VALIDATION_HPP_
+#define COMMON__VALIDATION_HPP_
 
-#include "lib/cli.hpp"
-#include "lib/utils.hpp"
+#include "common/cli.hpp"
+#include "common/utils.hpp"
 
 #include <lanelet2_io/Io.h>
 #include <lanelet2_projection/UTM.h>
@@ -49,4 +49,4 @@ std::vector<lanelet::validation::DetectedIssues> validateMap(const MetaConfig & 
 }  // namespace autoware
 }  // namespace lanelet
 
-#endif  // LIB__VALIDATION_HPP_
+#endif  // COMMON__VALIDATION_HPP_

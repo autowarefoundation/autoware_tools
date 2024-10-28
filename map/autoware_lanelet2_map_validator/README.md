@@ -236,7 +236,7 @@ When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it
 ### Available validators
 
 Since there will be hundreds of validators in the future, the documents for each validator should categorized in the docs file.
-The directory structure should be the same to that of the `src/lib/validators` directory.
+The directory structure should be the same to that of the `src/validators` directory.
 
 #### Stop Line
 

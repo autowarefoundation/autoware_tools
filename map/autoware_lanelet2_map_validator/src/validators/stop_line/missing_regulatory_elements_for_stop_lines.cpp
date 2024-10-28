@@ -14,7 +14,7 @@
 
 #include "validators/stop_line/missing_regulatory_elements_for_stop_lines.hpp"
 
-#include "lib/utils.hpp"
+#include "common/utils.hpp"
 
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/transform.hpp>

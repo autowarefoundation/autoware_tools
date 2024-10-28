@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "common/cli.hpp"
+#include "common/utils.hpp"
+#include "common/validation.hpp"
 #include "lanelet2_validation/Validation.h"
-#include "lib/cli.hpp"
-#include "lib/utils.hpp"
-#include "lib/validation.hpp"
 
 #include <nlohmann/json.hpp>
 

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef LIB__UTILS_HPP_
-#define LIB__UTILS_HPP_
+#ifndef COMMON__UTILS_HPP_
+#define COMMON__UTILS_HPP_
 
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
@@ -82,4 +82,4 @@ void checkPrimitivesType(
 }  // namespace autoware
 }  // namespace lanelet
 
-#endif  // LIB__UTILS_HPP_
+#endif  // COMMON__UTILS_HPP_
