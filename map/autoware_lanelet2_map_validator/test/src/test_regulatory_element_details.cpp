@@ -257,7 +257,7 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutPolygon)  // NOLINT for gte
     LineString3d(getId(), {Point3d(getId(), 3.0, 1.0, 0.1), Point3d(getId(), 3.0, 2.0, 0.1)}),
     cw_attr);
 
-  // Crosswalk regulatory element without cross walk polygon. It refers to the polygon without cross
+  // Crosswalk regulatory element without crosswalk polygon. It refers to the polygon without cross
   // walk polygon attribute.
   RegulatoryElementPtr reg_elem = Crosswalk::make(
     99999, cw_re_attr, cw_no_poly, Polygon3d(99998),
@@ -274,7 +274,7 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutPolygon)  // NOLINT for gte
   static constexpr const char * expected_message1 =
     "Crosswalk polygon of crosswalk regulatory element must have type of Crosswalk_polygon.";
   static constexpr const char * expected_message2 =
-    "Regulatory element of cross walk is nice to have crosswalk_polygon.";
+    "Regulatory element of crosswalk is nice to have crosswalk_polygon.";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     if (issue.id == 99998) {
@@ -314,7 +314,7 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutStopline)  // NOLINT for gt
 
   uint8_t expected_num_issues = 1;
   static constexpr const char * expected_message =
-    "Regulatory element of cross walk does not have stop line(ref_line).";
+    "Regulatory element of crosswalk does not have stop line(ref_line).";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     EXPECT_EQ(expected_message, issue.message);
@@ -350,7 +350,7 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutCrosswalk)  // NOLINT for g
   static constexpr const char * expected_message1 =
     "Refers of crosswalk regulatory element must have type of crosswalk.";
   static constexpr const char * expected_message2 =
-    "Regulatory element of cross walk must have lanelet of crosswalk(refers).";
+    "Regulatory element of crosswalk must have lanelet of crosswalk(refers).";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     if (issue.id == 99998) {

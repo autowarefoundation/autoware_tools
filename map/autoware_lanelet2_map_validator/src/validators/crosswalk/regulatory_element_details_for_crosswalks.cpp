@@ -96,30 +96,30 @@ RegulatoryElementsDetailsForCrosswalksValidator::checkRegulatoryElementOfCrosswa
     if (crosswalk_polygons.empty()) {
       issues.emplace_back(
         lanelet::validation::Severity::Warning, lanelet::validation::Primitive::RegulatoryElement,
-        elem->id(), "Regulatory element of cross walk is nice to have crosswalk_polygon.");
+        elem->id(), "Regulatory element of crosswalk is nice to have crosswalk_polygon.");
     } else if (crosswalk_polygons.size() > 1) {  // Report error if regulatory element has two or
                                                  // more crosswalk polygon
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
-        elem->id(), "Regulatory element of cross walk must have only one crosswalk_polygon.");
+        elem->id(), "Regulatory element of crosswalk must have only one crosswalk_polygon.");
     }
     // Report Info if regulatory element does not have stop line
     if (ref_lines.empty()) {
       issues.emplace_back(
         lanelet::validation::Severity::Info, lanelet::validation::Primitive::RegulatoryElement,
-        elem->id(), "Regulatory element of cross walk does not have stop line(ref_line).");
+        elem->id(), "Regulatory element of crosswalk does not have stop line(ref_line).");
     }
     // Report error if regulatory element does not have lanelet of crosswalk
     if (refers.empty()) {
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
-        elem->id(), "Regulatory element of cross walk must have lanelet of crosswalk(refers).");
+        elem->id(), "Regulatory element of crosswalk must have lanelet of crosswalk(refers).");
     } else if (refers.size() > 1) {  // Report error if regulatory element has two or more lanelet
                                      // of crosswalk
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
         elem->id(),
-        "Regulatory element of cross walk must have only one lanelet of crosswalk(refers).");
+        "Regulatory element of crosswalk must have only one lanelet of crosswalk(refers).");
     }
   }
   return issues;

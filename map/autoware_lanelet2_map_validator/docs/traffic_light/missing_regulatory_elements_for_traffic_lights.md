@@ -8,7 +8,8 @@ mapping.traffic_light.missing_regulatory_elements
 
 This validator checks whether each `traffic_light` type linestring has a relevant regulatory element.
 Required information for traffic lights is written in the [Autoware documentation](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/category_traffic_light/#vm-04-01-traffic-light-basics).
-The output issue specifies the traffic_light "linestring" as the **primitive**, and the linestring ID will be specified as the **ID**.
+
+The output issue marks "linestring" as the **primitive**, and the linestring ID is written together as **ID**.
 
 | Message                                               | Severity | Description                                                                                     | Approach                                                                           |
 | ----------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |

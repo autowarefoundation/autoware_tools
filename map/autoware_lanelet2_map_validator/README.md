@@ -215,7 +215,7 @@ When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it
 - `lanelet2_validation_results.json` inherits the JSON file of `input_requirements` and add results to it.
   - So non-required fields (line `version`) remains in the output.
 - `autoware_lanelet2_map_validator` adds a boolean `passed` field to each requirement. If all validators of the requirement have been passed, the `passed` field of the requirement will be `true` (`false` if not).
-- The `passed` field is also given to each validator. If the validator found any issues the `passed` field will turn to be `false` (`true` if not), and adds an `issues` field which is a list of issues found. Each issues contains information of `severity`, `primitive`, `id`, and `message`.
+- The `passed` field is also given to each validator. If the validator found any issues the `passed` field will turn to be `false` (`true` if not), and adds an `issues` field which is a list of issues found. Each issue contains information of `severity`, `primitive`, `id`, and `message`.
 
 ### Available command options
 
@@ -235,7 +235,7 @@ When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it
 
 ### Available validators
 
-Since there will be hundreds of validators in the future, the documents for each validators should categorized in the docs file.
+Since there will be hundreds of validators in the future, the documents for each validator should categorized in the docs file.
 The directory structure should be the same to that of the `src/lib/validators` directory.
 
 #### Stop Line
@@ -255,7 +255,7 @@ The directory structure should be the same to that of the `src/lib/validators` d
 ## Relationship between requirements and validators
 
 This is a table describing the correspondence between the validators that each requirement consists of.
-The Validators column will be blank if it hasn't be implemented.
+The "Validators" column will be blank if it hasn't be implemented.
 
 | ID       | Requirements                                            | Validators                                                                                                                                                                                                                                                      |
 | -------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

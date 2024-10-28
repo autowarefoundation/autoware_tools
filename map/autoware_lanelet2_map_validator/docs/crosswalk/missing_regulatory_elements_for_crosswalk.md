@@ -8,7 +8,8 @@ mapping.crosswalk.missing_regulatory_elements
 
 This validator checks whether each `crosswalk` subtype lanelet has a relevant regulatory element.
 Required information for a crosswalk is written in the [Autoware documentation](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/category_crosswalk/#vm-05-01-crosswalks-across-the-road).
-The issue specifies the crosswalk "lanelet" as the **primitive**, and the lanelet ID will be specified as the **ID**.
+
+The output issue marks "lanelet" as the **primitive**, and the lanelet ID is written together as **ID**.
 
 | Message                                           | Severity | Description                                                                                 | Approach                                                                            |
 | ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
