@@ -178,8 +178,8 @@ TEST_F(TestSuite, MissingRegulatoryElementOfTrafficLight)  // NOLINT for gtest
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({tl_no_reg_elem});
   addTestMap(test_map_ptr);
 
-  lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator checker_;
-  const auto & issues = checker_(*test_map_ptr);
+  lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator checker;
+  const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
   static constexpr const char * expected_message =
@@ -206,7 +206,7 @@ TEST_F(TestSuite, MissingRegulatoryElementOfCrosswalk)  // NOLINT for gtest
   addTestMap(test_map_ptr);
 
   lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
-  const auto & issues = checker_(*test_map_ptr);
+  const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
   static constexpr const char * expected_message =
@@ -229,8 +229,8 @@ TEST_F(TestSuite, MissingRegulatoryElementOfStopLine)  // NOLINT for gtest
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({sl_no_reg_elem});
   addTestMap(test_map_ptr);
 
-  lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker_;
-  const auto & issues = checker_(*test_map_ptr);
+  lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
+  const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
   static constexpr const char * expected_message =
