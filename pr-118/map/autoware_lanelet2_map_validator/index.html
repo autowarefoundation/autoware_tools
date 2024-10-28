@@ -3083,7 +3083,7 @@ The output filename will be <code>lanelet2_validation_results.json</code>.</p>
 </ul>
 </li>
 <li><code>autoware_lanelet2_map_validator</code> adds a boolean <code>passed</code> field to each requirement. If all validators of the requirement have been passed, the <code>passed</code> field of the requirement will be <code>true</code> (<code>false</code> if not).</li>
-<li>The <code>passed</code> field is also given to each validator. If the validator found any issues the <code>passed</code> field will turn to be <code>false</code> (<code>true</code> if not), and adds an <code>issues</code> field which is a list of issues found. Each issues contains information of <code>severity</code>, <code>primitive</code>, <code>id</code>, and <code>message</code>.</li>
+<li>The <code>passed</code> field is also given to each validator. If the validator found any issues the <code>passed</code> field will turn to be <code>false</code> (<code>true</code> if not), and adds an <code>issues</code> field which is a list of issues found. Each issue contains information of <code>severity</code>, <code>primitive</code>, <code>id</code>, and <code>message</code>.</li>
 </ul>
 <h3 id="available-command-options">Available command options<a class="headerlink" href="#available-command-options" title="Permanent link">#</a></h3>
 <table>
@@ -3141,7 +3141,7 @@ The output filename will be <code>lanelet2_validation_results.json</code>.</p>
 </tbody>
 </table>
 <h3 id="available-validators">Available validators<a class="headerlink" href="#available-validators" title="Permanent link">#</a></h3>
-<p>Since there will be hundreds of validators in the future, the documents for each validators should categorized in the docs file.
+<p>Since there will be hundreds of validators in the future, the documents for each validator should categorized in the docs file.
 The directory structure should be the same to that of the <code>src/lib/validators</code> directory.</p>
 <h4 id="stop-line">Stop Line<a class="headerlink" href="#stop-line" title="Permanent link">#</a></h4>
 <ul>
@@ -3159,7 +3159,7 @@ The directory structure should be the same to that of the <code>src/lib/validato
 </ul>
 <h2 id="relationship-between-requirements-and-validators">Relationship between requirements and validators<a class="headerlink" href="#relationship-between-requirements-and-validators" title="Permanent link">#</a></h2>
 <p>This is a table describing the correspondence between the validators that each requirement consists of.
-The Validators column will be blank if it hasn't be implemented.</p>
+The "Validators" column will be blank if it hasn't be implemented.</p>
 <table>
 <thead>
 <tr>
