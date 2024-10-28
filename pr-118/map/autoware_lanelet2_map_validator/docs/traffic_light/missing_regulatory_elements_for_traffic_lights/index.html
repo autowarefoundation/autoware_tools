@@ -2914,6 +2914,7 @@
 <p>mapping.traffic_light.missing_regulatory_elements</p>
 <h2 id="feature">Feature<a class="headerlink" href="#feature" title="Permanent link">#</a></h2>
 <p>This validator checks whether each <code>traffic_light</code> type linestring has a relevant regulatory element.
+Required information for traffic lights is written in the <a href="https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/category_traffic_light/#vm-04-01-traffic-light-basics">Autoware documentation</a>.
 The output issue specifies the traffic_light "linestring" as the <strong>primitive</strong>, and the linestring ID will be specified as the <strong>ID</strong>.</p>
 <table>
 <thead>
@@ -2921,6 +2922,7 @@ The output issue specifies the traffic_light "linestring" as the <strong>primiti
 <th>Message</th>
 <th>Severity</th>
 <th>Description</th>
+<th>Approach</th>
 </tr>
 </thead>
 <tbody>
@@ -2928,6 +2930,7 @@ The output issue specifies the traffic_light "linestring" as the <strong>primiti
 <td>"No regulatory element refers to this traffic light."</td>
 <td>Error</td>
 <td>There is a <code>traffic_light</code> type linestring that hasn't been referred to any regulatory element.</td>
+<td>Create a <code>traffic_light</code> subtype regualtroy element that refers to this linestring</td>
 </tr>
 </tbody>
 </table>

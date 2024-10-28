@@ -2914,6 +2914,7 @@
 <p>mapping.crosswalk.missing_regulatory_elements</p>
 <h2 id="feature">Feature<a class="headerlink" href="#feature" title="Permanent link">#</a></h2>
 <p>This validator checks whether each <code>crosswalk</code> subtype lanelet has a relevant regulatory element.
+Required information for a crosswalk is written in the <a href="https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/category_crosswalk/#vm-05-01-crosswalks-across-the-road">Autoware documentation</a>.
 The issue specifies the crosswalk "lanelet" as the <strong>primitive</strong>, and the lanelet ID will be specified as the <strong>ID</strong>.</p>
 <table>
 <thead>
@@ -2921,6 +2922,7 @@ The issue specifies the crosswalk "lanelet" as the <strong>primitive</strong>, a
 <th>Message</th>
 <th>Severity</th>
 <th>Description</th>
+<th>Approach</th>
 </tr>
 </thead>
 <tbody>
@@ -2928,6 +2930,7 @@ The issue specifies the crosswalk "lanelet" as the <strong>primitive</strong>, a
 <td>"No regulatory element refers to this crosswalk."</td>
 <td>Error</td>
 <td>There is a <code>crosswalk</code> subtype lanelet that hasn't been referred to any regulatory element.</td>
+<td>Create a <code>crosswalk</code> subtype regulatory element and refer to the crosswalk lanelet.</td>
 </tr>
 </tbody>
 </table>

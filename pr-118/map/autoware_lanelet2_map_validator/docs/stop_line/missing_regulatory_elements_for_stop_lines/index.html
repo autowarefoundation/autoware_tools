@@ -2914,6 +2914,7 @@
 <p>mapping.stop_line.missing_regulatory_elements</p>
 <h2 id="feature">Feature<a class="headerlink" href="#feature" title="Permanent link">#</a></h2>
 <p>This validator checks whether each <code>stop_line</code> type linestring has a relevant regulatory element.
+Required information for a stop line is written in the <a href="https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/category_stop_line/#vm-02-02-stop-sign">Autoware documentation</a>.
 The issue specifies the stop_line "linestring" as the <strong>primitive</strong>, and the lanelet ID will be specified as the <strong>ID</strong>.</p>
 <table>
 <thead>
@@ -2921,6 +2922,7 @@ The issue specifies the stop_line "linestring" as the <strong>primitive</strong>
 <th>Message</th>
 <th>Severity</th>
 <th>Description</th>
+<th>Approach</th>
 </tr>
 </thead>
 <tbody>
@@ -2928,6 +2930,7 @@ The issue specifies the stop_line "linestring" as the <strong>primitive</strong>
 <td>"No regulatory element refers to this stop line."</td>
 <td>Error</td>
 <td>There is a <code>stop_line</code> type linestring that hasn't been referred to any regulatory element.</td>
+<td>Create a regulatory element that refers to this stop line.</td>
 </tr>
 </tbody>
 </table>
