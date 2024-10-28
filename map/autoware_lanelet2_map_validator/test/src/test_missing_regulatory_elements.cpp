@@ -205,7 +205,7 @@ TEST_F(TestSuite, MissingRegulatoryElementOfCrosswalk)  // NOLINT for gtest
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({cw_no_reg_elem});
   addTestMap(test_map_ptr);
 
-  lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker_;
+  lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
   const auto & issues = checker_(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
