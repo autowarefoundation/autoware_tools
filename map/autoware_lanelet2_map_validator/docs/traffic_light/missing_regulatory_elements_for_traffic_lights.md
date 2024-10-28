@@ -12,7 +12,7 @@ The output issue specifies the traffic_light "linestring" as the **primitive**, 
 
 | Message                                               | Severity | Description                                                                                     | Approach                                                                           |
 | ----------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| "No regulatory element refers to this traffic light." | Error    | There is a `traffic_light` type linestring that hasn't been referred to any regulatory element. | Create a `traffic_light` subtype regualtroy element that refers to this linestring |
+| "No regulatory element refers to this traffic light." | Error    | There is a `traffic_light` type linestring that hasn't been referred to any regulatory element. | Create a `traffic_light` subtype regulatory element that refers to this linestring |
 
 ## Related source codes
 
