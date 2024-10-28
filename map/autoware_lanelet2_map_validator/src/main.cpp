@@ -121,8 +121,8 @@ void process_requirements(
   }
 
   if (!validator_config.output_file_path.empty()) {
-    if (!std::filesystem::exists(validator_config.output_file_path)) {
-      throw std::runtime_error("Output path doesn't exist!");
+    if (!std::filesystem::is_directory(validator_config.output_file_path)) {
+      throw std::runtime_error("Output path doesn't exist or is not a directory!");
     }
     std::filesystem::path file_directory = validator_config.output_file_path;
     std::filesystem::path file_path = file_directory / "lanelet2_validation_results.json";
@@ -164,8 +164,8 @@ int main(int argc, char * argv[])
   try {
     if (meta_config.command_line_config.mapFile.empty()) {
       throw std::runtime_error("No map file specified!");
-    } else if (!std::filesystem::exists(meta_config.command_line_config.mapFile)) {
-      throw std::runtime_error("Map file doesn't exist!");
+    } else if (!std::filesystem::is_regular_file(meta_config.command_line_config.mapFile)) {
+      throw std::runtime_error("Map file doesn't exist or is not a file!");
     }
 
     if (!meta_config.requirements_file.empty()) {

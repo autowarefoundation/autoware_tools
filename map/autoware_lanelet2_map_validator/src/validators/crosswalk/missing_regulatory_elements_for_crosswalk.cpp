@@ -49,22 +49,13 @@ MissingRegulatoryElementsForCrosswalksValidator::checkMissingRegulatoryElementsF
 
   // Get all lanelets whose type is crosswalk
   std::set<lanelet::Id> cw_ids;
-  std::set<lanelet::Id> tl_elem_with_cw_;
+
   for (const auto & ll : map.laneletLayer) {
     const auto & attrs = ll.attributes();
     const auto & it = attrs.find(lanelet::AttributeName::Subtype);
     // Check if this lanelet is crosswalk
     if (it != attrs.end() && it->second == lanelet::AttributeValueString::Crosswalk) {
       cw_ids.insert(ll.id());
-
-      // Check if crosswalk has reg elem of traffic light
-      for (const auto & elem : ll.regulatoryElements()) {
-        const auto & attrs = elem->attributes();
-        const auto & it = attrs.find(lanelet::AttributeName::Subtype);
-        if (it != attrs.end() && it->second == lanelet::AttributeValueString::TrafficLight) {
-          tl_elem_with_cw_.insert(elem->id());
-        }
-      }
     }
   }
 
