@@ -132,6 +132,9 @@ def generate_config_json(layer_filtered_grids, extract_dir) -> str:
 def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) -> list[str]:
     # Create gpkg dataset and layers
     # --------------------------------------------------------------------------------
+    Debug.log("Create output directory if not exist.", DebugMessageType.INFO)
+    os.makedirs(extract_dir, exist_ok=True)
+    
     Debug.log("Creating GDAL driver and GPKG layers.", DebugMessageType.INFO)
     driverName = "GPKG"
     drv = gdal.GetDriverByName(driverName)
