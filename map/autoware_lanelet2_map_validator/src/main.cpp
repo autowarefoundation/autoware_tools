@@ -122,7 +122,7 @@ void process_requirements(
 
   if (!validator_config.output_file_path.empty()) {
     if (!std::filesystem::is_directory(validator_config.output_file_path)) {
-      throw std::runtime_error("Output path doesn't exist or is not a directory!");
+      throw std::invalid_argument("Output path doesn't exist or is not a directory!");
     }
     std::filesystem::path file_directory = validator_config.output_file_path;
     std::filesystem::path file_path = file_directory / "lanelet2_validation_results.json";
@@ -161,25 +161,23 @@ int main(int argc, char * argv[])
   }
 
   // Validation start
-  try {
-    if (meta_config.command_line_config.mapFile.empty()) {
-      throw std::runtime_error("No map file specified!");
-    } else if (!std::filesystem::is_regular_file(meta_config.command_line_config.mapFile)) {
-      throw std::runtime_error("Map file doesn't exist or is not a file!");
-    }
+  if (meta_config.command_line_config.mapFile.empty()) {
+    throw std::invalid_argument("No map file specified!");
+  } else if (!std::filesystem::is_regular_file(meta_config.command_line_config.mapFile)) {
+    throw std::invalid_argument("Map file doesn't exist or is not a file!");
+  }
 
-    if (!meta_config.requirements_file.empty()) {
-      std::ifstream input_file(meta_config.requirements_file);
-      json json_config;
-      input_file >> json_config;
-      process_requirements(json_config, meta_config);
-    } else {
-      auto issues = lanelet::autoware::validation::validateMap(meta_config);
-      lanelet::validation::printAllIssues(issues);
+  if (!meta_config.requirements_file.empty()) {
+    if (!std::filesystem::is_regular_file(meta_config.requirements_file)) {
+      throw std::invalid_argument("Input file doesn't exist or is not a file!");
     }
-  } catch (const std::exception & e) {
-    std::cout << e.what() << std::endl;
-    return 1;
+    std::ifstream input_file(meta_config.requirements_file);
+    json json_config;
+    input_file >> json_config;
+    process_requirements(json_config, meta_config);
+  } else {
+    auto issues = lanelet::autoware::validation::validateMap(meta_config);
+    lanelet::validation::printAllIssues(issues);
   }
 
   return 0;
