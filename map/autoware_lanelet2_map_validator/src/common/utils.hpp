@@ -1,4 +1,4 @@
-// Copyright 2023 Autoware Foundation
+// Copyright 2024 Autoware Foundation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,11 +45,10 @@ void checkPrimitivesType(
     if (it == attrs.end() || it->second != expected_type) {
       issues.emplace_back(issue.severity, issue.primitive, item.id(), issue.message);
       const auto new_it = in_vec.erase(iter);
-      if (new_it != in_vec.end()) {
-        iter = new_it;
-      } else {
+      if (new_it == in_vec.end()) {
         break;
       }
+      iter = new_it;
     }
   }
 }
@@ -69,11 +68,10 @@ void checkPrimitivesType(
       it_sub->second != expected_subtype) {
       issues.emplace_back(issue.severity, issue.primitive, item.id(), issue.message);
       const auto new_it = in_vec.erase(iter);
-      if (new_it != in_vec.end()) {
-        iter = new_it;
-      } else {
+      if (new_it == in_vec.end()) {
         break;
       }
+      iter = new_it;
     }
   }
 }

@@ -37,10 +37,8 @@ std::unique_ptr<lanelet::Projector> getProjector(const MetaConfig & config)
       lanelet::Origin{val_config.origin});
   } else if (config.projector_type == projector_names::utm) {
     return std::make_unique<lanelet::projection::UtmProjector>(lanelet::Origin{val_config.origin});
-  } else {
-    // std::cerr << "Set to default projector: MGRS projector" << std::endl;
-    return std::make_unique<lanelet::projection::MGRSProjector>();
   }
+  return std::make_unique<lanelet::projection::MGRSProjector>();
 }
 
 std::vector<lanelet::validation::DetectedIssues> validateMap(const MetaConfig & config)
@@ -55,14 +53,12 @@ std::vector<lanelet::validation::DetectedIssues> validateMap(const MetaConfig & 
     const auto & projector = getProjector(config);
     map = lanelet::load(cm_config.mapFile, *projector, &errors);
     if (!errors.empty()) {
-      std::cout << "!errors.empty()" << std::endl;
       issues.emplace_back("general", utils::transform(errors, [](auto & error) {
                             return lanelet::validation::Issue(
                               lanelet::validation::Severity::Error, error);
                           }));
     }
   } catch (lanelet::LaneletError & err) {
-    std::cout << "catch" << std::endl;
     issues.emplace_back("general", utils::transform(errors, [](auto & error) {
                           return lanelet::validation::Issue(
                             lanelet::validation::Severity::Error, error);
