@@ -76,7 +76,6 @@ class SteeringAndLateralDeviationMonitor(Node):
         self.vehicle_steering_angle = msg.steering_tire_angle
         self.update_steering_diff()
         self.update_max_values()
-        self.display_values()
 
     def metrics_callback(self, msg):
         for status in msg.status:
@@ -85,7 +84,6 @@ class SteeringAndLateralDeviationMonitor(Node):
                     if value.key == "metric_value":
                         self.lateral_deviation = float(value.value)
                         self.update_max_values()
-                        self.display_values()
                         break
 
     def update_steering_diff(self):
