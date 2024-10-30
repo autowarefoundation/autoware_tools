@@ -97,8 +97,6 @@ def sort_osm_file(input_osm_file_path: str) -> str:
     """
     sorted_osm_file_path = input_osm_file_path.replace(".osm", "_sorted.osm")
     command = f"osmium sort {input_osm_file_path} -o {sorted_osm_file_path}"
-    subprocess.run(
-        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
-    )
+    subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     return sorted_osm_file_path
