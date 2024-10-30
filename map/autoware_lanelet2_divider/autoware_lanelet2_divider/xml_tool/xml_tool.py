@@ -79,8 +79,7 @@ def complete_missing_elements(
         )
 
         for relation in divided_relation_list:
-            relation_refs = [member for member in relation.iter("member")]
-            for r in relation_refs:
+            for r in [member for member in relation.iter("member")]:
                 if r.attrib["type"] == "way":
                     if r.attrib["ref"] not in [
                         way.attrib["id"] for way in divided_way_list
@@ -110,8 +109,7 @@ def complete_missing_elements(
 
         # Iterate on divided map's ways and find missing nodes
         for way in divided_way_list:
-            nd = [nd.attrib["ref"] for nd in way.iter("nd")]
-            for n in nd:
+            for n in [nd.attrib["ref"] for nd in way.iter("nd")]:
                 if n not in [node.attrib["id"] for node in divided_node_list]:
                     # find the node in the whole map and add it to the divided map
                     for node in node_list:
