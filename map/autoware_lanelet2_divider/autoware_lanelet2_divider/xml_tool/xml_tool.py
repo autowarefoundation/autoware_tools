@@ -147,13 +147,9 @@ def complete_missing_version_tag(input_osm_file_path: str):
     whole_map_xml = ET.parse(input_osm_file_path)
     whole_map_root = whole_map_xml.getroot()
 
-    add_version = False
-    for root_element in whole_map_root.attrib:
-        if root_element != "version":
-            add_version = True
-        else:
-            add_version = False
-            break
+    add_version = any(
+        root_element != "version" for root_element in whole_map_root.attrib
+    )
 
     if add_version:
         whole_map_root.set("version", "0.6")
