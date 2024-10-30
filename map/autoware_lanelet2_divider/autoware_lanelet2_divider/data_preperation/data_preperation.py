@@ -2,7 +2,6 @@ import json
 import os
 import sys
 import time
-from typing import List
 
 from autoware_lanelet2_divider.debug import Debug
 from autoware_lanelet2_divider.debug import DebugMessageType
@@ -18,7 +17,7 @@ import yaml
 
 def create_grid_layer(grid_edge_size, layer_grids, mgrs_grid) -> None:
     """
-    Creates a grid layer of polygons in the specified GDAL layer.
+    Create a grid layer of polygons in the specified GDAL layer.
 
     Parameters:
         grid_edge_size (float): The size of each grid cell.
@@ -68,7 +67,7 @@ def create_grid_layer(grid_edge_size, layer_grids, mgrs_grid) -> None:
 
 def generate_lanelet2_layer(mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, layer_lanelet2_whole):
     """
-    Generates a Lanelet2 layer from the given Lanelet2 map path and adds it to the specified GDAL layer.
+    Generate a Lanelet2 layer from the given Lanelet2 map path and adds it to the specified GDAL layer.
 
     Parameters:
         mgrs_grid (str): The MGRS grid string used for location projection.
@@ -102,7 +101,7 @@ def generate_lanelet2_layer(mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, la
 
 def generate_yaml_dict(layer_filtered_grids, grid_edge_size, mgrs_grid) -> dict:
     """
-    Generates a YAML-compatible dictionary from the filtered grid layer.
+    Generate a YAML-compatible dictionary from the filtered grid layer.
 
     Parameters:
         layer_filtered_grids (ogr.Feature): The layer containing filtered grid features.
@@ -137,7 +136,7 @@ def generate_yaml_dict(layer_filtered_grids, grid_edge_size, mgrs_grid) -> dict:
 
 def generate_config_json(layer_filtered_grids, extract_dir) -> str:
     """
-    Generates a configuration JSON string for Osmium Extract from the filtered grid layer.
+    Generate a configuration JSON string for Osmium Extract from the filtered grid layer.
 
     Parameters:
         layer_filtered_grids (ogr.Feature): The layer containing filtered grid features.
@@ -178,7 +177,7 @@ def data_preparation(
     mgrs_grid: str, grid_edge_size: int, lanelet2_map_path: str, extract_dir: str
 ) -> list[str]:
     """
-    Prepares the data by creating grid layers, generating Lanelet2 layers, and producing metadata files.
+    Prepare the data by creating grid layers, generating Lanelet2 layers, and producing metadata files.
 
     Parameters:
         mgrs_grid (str): The MGRS grid string used for location projection.

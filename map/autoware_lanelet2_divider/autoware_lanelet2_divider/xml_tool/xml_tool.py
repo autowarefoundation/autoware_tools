@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 def select_tags(root, node_list, way_list, relation_list) -> None:
     """
-    Populates lists for 'node', 'way', and 'relation' XML elements found in the given root element.
+    Populate lists for 'node', 'way', and 'relation' XML elements found in the given root element.
 
     Parameters:
         root (ElementTree): The root XML element to parse.
@@ -33,7 +33,7 @@ def select_tags(root, node_list, way_list, relation_list) -> None:
 
 def complete_missing_elements(input_osm_file_path: str, input_extracted_osm_folder: str) -> bool:
     """
-    Completes missing elements (nodes, ways, relations) in the divided OSM files by checking against the whole map.
+    Complete missing elements (nodes, ways, relations) in the divided OSM files by checking against the whole map.
 
     Parameters:
         input_osm_file_path (str): Path to the whole map OSM file.
@@ -71,7 +71,7 @@ def complete_missing_elements(input_osm_file_path: str, input_extracted_osm_fold
         select_tags(divided_map_root, divided_node_list, divided_way_list, divided_relation_list)
 
         for relation in divided_relation_list:
-            for r in [member for member in relation.iter("member")]:
+            for r in relation.iter("member"):
                 if r.attrib["type"] == "way":
                     if r.attrib["ref"] not in [way.attrib["id"] for way in divided_way_list]:
                         for way in way_list:
@@ -117,7 +117,7 @@ def complete_missing_elements(input_osm_file_path: str, input_extracted_osm_fold
 
 def complete_missing_version_tag(input_osm_file_path: str):
     """
-    Adds missing version attributes to the root and its child elements in an OSM file, if needed.
+    Add missing version attributes to the root and its child elements in an OSM file, if needed.
 
     Parameters:
         input_osm_file_path (str): Path to the OSM file to update with version tags.

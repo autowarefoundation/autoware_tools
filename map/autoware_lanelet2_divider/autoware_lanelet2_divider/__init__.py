@@ -5,11 +5,3 @@ try:
     __version__ = importlib_metadata.version(__package__ or __name__)
 except importlib_metadata.PackageNotFoundError:
     __version__ = "development"
-
-import autoware_lanelet2_divider.data_preperation.data_preperation as data_preparation
-from autoware_lanelet2_divider.debug import Debug
-from autoware_lanelet2_divider.debug import DebugMessageType
-import autoware_lanelet2_divider.osmium_tool.osmium_tool as osmium_tool
-import autoware_lanelet2_divider.xml_tool.xml_tool as xml_tool
-
-from .autoware_lanelet2_divider import AutowareLanlet2Divider

@@ -32,7 +32,7 @@ class Debug:
     @classmethod
     def log(cls, message, message_type=DebugMessageType.INFO):
         """
-        Logs a message to the console with a timestamp and message type.
+        Log a message to the console with a timestamp and message type.
 
         Parameters:
             message (str): The message to log.
@@ -52,7 +52,7 @@ class Debug:
     @classmethod
     def get_log(cls, message, message_type=DebugMessageType.INFO):
         """
-        Returns a formatted log message string without printing it.
+        Return a formatted log message string without printing it.
 
         Parameters:
             message (str): The message to format.

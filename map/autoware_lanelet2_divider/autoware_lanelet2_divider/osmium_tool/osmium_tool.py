@@ -43,7 +43,7 @@ def extract_osm_file(
     args: str = "-v -s complete_ways -S types=any",
 ) -> bool:
     """
-    Extracts a specified .osm file using the osmium tool, with given arguments and configurations.
+    Extract a specified .osm file using the osmium tool, with given arguments and configurations.
 
     Parameters:
         input_osm_file_path (str): Path to the input .osm file.
@@ -85,7 +85,8 @@ def extract_osm_file(
 
 def sort_osm_file(input_osm_file_path: str) -> str:
     """
-    Sorts a specified .osm file using the osmium tool to handle out-of-order Way or Relation IDs.
+    Sort a specified .osm file using the osmium tool to handle out-of-order Way or Relation IDs.
+
     It stores the sorted .osm file in the same directory as the input file with "_sorted.osm" appended to the filename.
 
     Parameters:
@@ -96,7 +97,7 @@ def sort_osm_file(input_osm_file_path: str) -> str:
     """
     sorted_osm_file_path = input_osm_file_path.replace(".osm", "_sorted.osm")
     command = f"osmium sort {input_osm_file_path} -o {sorted_osm_file_path}"
-    result = subprocess.run(
+    subprocess.run(
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
 
