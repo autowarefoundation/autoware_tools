@@ -293,12 +293,13 @@ def data_preparation(
     config_files = []
     config_name_counter = 1
     total_feature_count = layer_filtered_grids.GetFeatureCount()
+    maximum_feature_count = 500
 
-    if total_feature_count > 500:
+    if total_feature_count > maximum_feature_count:
         fid_list = []
         for i in range(1, total_feature_count + 1):
             fid_list.append(i)  # add fid into fid_list
-            if ((i % 500) == 0) or (i == total_feature_count):
+            if ((i % maximum_feature_count) == 0) or (i == total_feature_count):
                 dup_layer_grids = layer_filtered_grids
                 dup_layer_grids.SetAttributeFilter("FID IN {}".format(tuple(fid_list)))
 
