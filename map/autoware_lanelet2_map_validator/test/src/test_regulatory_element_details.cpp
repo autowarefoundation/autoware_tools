@@ -182,8 +182,8 @@ TEST_F(TestSuite, RegulatoryElementOfTrafficLightWithoutTrafficLight)  // NOLINT
   test_map_ptr->add(tl_reg_elem_no_tl);
   addTestMap(test_map_ptr);
 
-  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker_;
-  const auto & issues = checker_(*test_map_ptr);
+  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 2;
   static constexpr const char * expected_message1 =
@@ -222,8 +222,8 @@ TEST_F(TestSuite, RegulatoryElementOfTrafficLightWithoutStopLine)  // NOLINT for
   test_map_ptr->add(tl_reg_elem_no_sl);
   addTestMap(test_map_ptr);
 
-  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker_;
-  const auto & issues = checker_(*test_map_ptr);
+  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 2;
   static constexpr const char * expected_message1 =
@@ -267,8 +267,8 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutPolygon)  // NOLINT for gte
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({cw_no_poly});
   addTestMap(test_map_ptr);
 
-  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker_;
-  const auto & issues = checker_(*test_map_ptr);
+  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 2;
   static constexpr const char * expected_message1 =
@@ -309,8 +309,8 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutStopline)  // NOLINT for gt
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({cw_no_sl});
   addTestMap(test_map_ptr);
 
-  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker_;
-  const auto & issues = checker_(*test_map_ptr);
+  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
   static constexpr const char * expected_message =
@@ -343,8 +343,8 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutCrosswalk)  // NOLINT for g
   addTestMap(test_map_ptr);
   test_map_ptr->add(reg_elem);
 
-  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker_;
-  const auto & issues = checker_(*test_map_ptr);
+  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 2;
   static constexpr const char * expected_message1 =
