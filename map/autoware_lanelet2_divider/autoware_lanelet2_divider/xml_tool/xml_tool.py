@@ -7,6 +7,18 @@ from tqdm import tqdm
 
 
 def select_tags(root, node_list, way_list, relation_list) -> None:
+    """
+    Populates lists for 'node', 'way', and 'relation' XML elements found in the given root element.
+
+    Parameters:
+        root (ElementTree): The root XML element to parse.
+        node_list (list): List to store 'node' elements.
+        way_list (list): List to store 'way' elements.
+        relation_list (list): List to store 'relation' elements.
+
+    Returns:
+        None
+    """
     node_list.clear()
     way_list.clear()
     relation_list.clear()
@@ -21,9 +33,22 @@ def select_tags(root, node_list, way_list, relation_list) -> None:
             pass
 
 
-def complete_missing_elements(input_osm_file_path: str, input_extracted_osm_folder: str) -> bool:
+def complete_missing_elements(
+    input_osm_file_path: str, input_extracted_osm_folder: str
+) -> bool:
+    """
+    Completes missing elements (nodes, ways, relations) in the divided OSM files by checking against the whole map.
+
+    Parameters:
+        input_osm_file_path (str): Path to the whole map OSM file.
+        input_extracted_osm_folder (str): Directory containing divided OSM files.
+
+    Returns:
+        bool: True if the process completes successfully.
+    """
     Debug.log(
-        f"Completing missing elements in osm file: {input_osm_file_path}", DebugMessageType.INFO
+        f"Completing missing elements in osm file: {input_osm_file_path}",
+        DebugMessageType.INFO,
     )
 
     whole_map_xml = ET.parse(input_osm_file_path)
@@ -35,10 +60,14 @@ def complete_missing_elements(input_osm_file_path: str, input_extracted_osm_fold
 
     select_tags(whole_map_root, node_list, way_list, relation_list)
 
-    osm_files = [f for f in os.listdir(input_extracted_osm_folder) if f.endswith(".osm")]
+    osm_files = [
+        f for f in os.listdir(input_extracted_osm_folder) if f.endswith(".osm")
+    ]
     for osm_file in tqdm(
         osm_files,
-        desc=Debug.get_log("Completing missing elements in osm file", DebugMessageType.INFO),
+        desc=Debug.get_log(
+            "Completing missing elements in osm file", DebugMessageType.INFO
+        ),
     ):
         divided_map_xml = ET.parse(input_extracted_osm_folder + "/" + osm_file)
         divided_map_root = divided_map_xml.getroot()
@@ -47,13 +76,17 @@ def complete_missing_elements(input_osm_file_path: str, input_extracted_osm_fold
         divided_way_list = []
         divided_relation_list = []
 
-        select_tags(divided_map_root, divided_node_list, divided_way_list, divided_relation_list)
+        select_tags(
+            divided_map_root, divided_node_list, divided_way_list, divided_relation_list
+        )
 
         for relation in divided_relation_list:
             relation_refs = [member for member in relation.iter("member")]
             for r in relation_refs:
                 if r.attrib["type"] == "way":
-                    if r.attrib["ref"] not in [way.attrib["id"] for way in divided_way_list]:
+                    if r.attrib["ref"] not in [
+                        way.attrib["id"] for way in divided_way_list
+                    ]:
                         for way in way_list:
                             if way.attrib["id"] == r.attrib["ref"]:
                                 divided_map_root.append(way)
@@ -64,7 +97,9 @@ def complete_missing_elements(input_osm_file_path: str, input_extracted_osm_fold
                             divided_relation_list,
                         )
                 elif r.attrib["type"] == "relation":
-                    if r.attrib["ref"] not in [rela.attrib["id"] for rela in divided_relation_list]:
+                    if r.attrib["ref"] not in [
+                        rela.attrib["id"] for rela in divided_relation_list
+                    ]:
                         for rel in relation_list:
                             if rel.attrib["id"] == r.attrib["ref"]:
                                 divided_map_root.append(rel)
@@ -85,7 +120,10 @@ def complete_missing_elements(input_osm_file_path: str, input_extracted_osm_fold
                         if node.attrib["id"] == n:
                             divided_map_root.append(node)
                     select_tags(
-                        divided_map_root, divided_node_list, divided_way_list, divided_relation_list
+                        divided_map_root,
+                        divided_node_list,
+                        divided_way_list,
+                        divided_relation_list,
                     )
 
         divided_map_xml.write(input_extracted_osm_folder + "/" + osm_file)
@@ -94,8 +132,18 @@ def complete_missing_elements(input_osm_file_path: str, input_extracted_osm_fold
 
 
 def complete_missing_version_tag(input_osm_file_path: str):
+    """
+    Adds missing version attributes to the root and its child elements in an OSM file, if needed.
+
+    Parameters:
+        input_osm_file_path (str): Path to the OSM file to update with version tags.
+
+    Returns:
+        None
+    """
     Debug.log(
-        f"Completing missing version tags in osm file: {input_osm_file_path}", DebugMessageType.INFO
+        f"Completing missing version tags in osm file: {input_osm_file_path}",
+        DebugMessageType.INFO,
     )
 
     whole_map_xml = ET.parse(input_osm_file_path)

@@ -17,12 +17,24 @@ import yaml
 
 
 def create_grid_layer(grid_edge_size, layer_grids, mgrs_grid) -> None:
+    """
+    Creates a grid layer of polygons in the specified GDAL layer.
+
+    Parameters:
+        grid_edge_size (float): The size of each grid cell.
+        layer_grids (ogr.Layer): The layer in which to create the grid polygons.
+        mgrs_grid (str): The MGRS grid string used for location projection.
+
+    Returns:
+        None
+    """
     mgrs_object = mgrs.MGRS()
     zone, northp, origin_y, origin_x = mgrs_object.MGRSToUTM(mgrs_grid)
 
     grid_count = 100000 / grid_edge_size
     for i in tqdm(
-        range(int(grid_count)), desc=Debug.get_log("Creating grid layer", DebugMessageType.INFO)
+        range(int(grid_count)),
+        desc=Debug.get_log("Creating grid layer", DebugMessageType.INFO),
     ):
         for j in range(int(grid_count)):
             feature_grid = ogr.Feature(layer_grids.GetLayerDefn())
@@ -54,7 +66,21 @@ def create_grid_layer(grid_edge_size, layer_grids, mgrs_grid) -> None:
             feature_grid.Destroy()
 
 
-def generate_lanelet2_layer(mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, layer_lanelet2_whole):
+def generate_lanelet2_layer(
+    mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, layer_lanelet2_whole
+):
+    """
+    Generates a Lanelet2 layer from the given Lanelet2 map path and adds it to the specified GDAL layer.
+
+    Parameters:
+        mgrs_grid (str): The MGRS grid string used for location projection.
+        lanelet2_map_path (str): The file path to the Lanelet2 map.
+        lanelet2_whole_mls (ogr.Geometry): The MultiLineString geometry to which lanelet geometries will be added.
+        layer_lanelet2_whole (ogr.Layer): The layer to which the Lanelet2 features will be added.
+
+    Returns:
+        None
+    """
     mgrs_object = mgrs.MGRS()
     zone, northp, origin_x, origin_y = mgrs_object.MGRSToUTM(mgrs_grid)
     origin_lat, origin_lon = utm.to_latlon(origin_x, origin_y, zone, northp)
@@ -65,7 +91,9 @@ def generate_lanelet2_layer(mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, la
     for lanelet_linestring in lanelet2_map.lineStringLayer:
         linestring = ogr.Geometry(ogr.wkbLineString)
         for node in lanelet_linestring:
-            node_lat, node_lon = utm.to_latlon(origin_x + node.x, origin_y + node.y, zone, northp)
+            node_lat, node_lon = utm.to_latlon(
+                origin_x + node.x, origin_y + node.y, zone, northp
+            )
             linestring.AddPoint_2D(node_lon, node_lat)
         lanelet2_whole_mls.AddGeometry(linestring)
     feature_lanelet2 = ogr.Feature(layer_lanelet2_whole.GetLayerDefn())
@@ -77,6 +105,17 @@ def generate_lanelet2_layer(mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, la
 
 
 def generate_yaml_dict(layer_filtered_grids, grid_edge_size, mgrs_grid) -> dict:
+    """
+    Generates a YAML-compatible dictionary from the filtered grid layer.
+
+    Parameters:
+        layer_filtered_grids (ogr.Feature): The layer containing filtered grid features.
+        grid_edge_size (float): The size of each grid cell.
+        mgrs_grid (str): The MGRS grid string used for location projection.
+
+    Returns:
+        dict: A dictionary containing grid metadata for YAML output.
+    """
     mgrs_object = mgrs.MGRS()
     zone, northp, origin_x, origin_y = mgrs_object.MGRSToUTM(mgrs_grid)
 
@@ -101,6 +140,16 @@ def generate_yaml_dict(layer_filtered_grids, grid_edge_size, mgrs_grid) -> dict:
 
 
 def generate_config_json(layer_filtered_grids, extract_dir) -> str:
+    """
+    Generates a configuration JSON string for Osmium Extract from the filtered grid layer.
+
+    Parameters:
+        layer_filtered_grids (ogr.Feature): The layer containing filtered grid features.
+        extract_dir (str): The directory where the output files will be saved.
+
+    Returns:
+        str: A JSON string containing the configuration for Osmium Extract.
+    """
     extracts = []
     for filtered_grid in layer_filtered_grids:
         polygon_inner = []
@@ -129,12 +178,25 @@ def generate_config_json(layer_filtered_grids, extract_dir) -> str:
     return json.dumps(config_json_, indent=2)
 
 
-def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) -> list[str]:
+def data_preparation(
+    mgrs_grid: str, grid_edge_size: int, lanelet2_map_path: str, extract_dir: str
+) -> list[str]:
+    """
+    Prepares the data by creating grid layers, generating Lanelet2 layers, and producing metadata files.
+
+    Parameters:
+        mgrs_grid (str): The MGRS grid string used for location projection.
+        grid_edge_size (int): The size of each grid cell.
+        lanelet2_map_path (str): The file path to the Lanelet2 map.
+        extract_dir (str): The directory where the output files will be saved.
+
+    Returns:
+        list[str]: A list of paths to the generated configuration JSON files.
+    """
     # Create gpkg dataset and layers
-    # --------------------------------------------------------------------------------
     Debug.log("Create output directory if not exist.", DebugMessageType.INFO)
     os.makedirs(extract_dir, exist_ok=True)
-    
+
     Debug.log("Creating GDAL driver and GPKG layers.", DebugMessageType.INFO)
     driverName = "GPKG"
     drv = gdal.GetDriverByName(driverName)
@@ -154,22 +216,26 @@ def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) 
         print("Layer creation failed.\n")
         sys.exit(1)
 
-    layer_lanelet2_whole = ds_grids.CreateLayer("lanelet2_whole", None, ogr.wkbMultiLineString)
+    layer_lanelet2_whole = ds_grids.CreateLayer(
+        "lanelet2_whole", None, ogr.wkbMultiLineString
+    )
     if layer_lanelet2_whole is None:
         print("Layer creation failed layer_lanelet2_whole.\n")
         sys.exit(1)
 
     # Create new layer for filtered grids
-    # --------------------------------------------------------------------------------
     layer_filtered_grids = ds_grids.CreateLayer("filtered_grids", None, ogr.wkbPolygon)
     if layer_filtered_grids is None:
         print("Layer creation failed.\n")
         sys.exit(1)
 
     # Create Grid Layer
-    # --------------------------------------------------------------------------------
     Debug.log(
-        "Creating " + str(grid_edge_size) + " meters grid layer along the " + mgrs_grid + ".",
+        "Creating "
+        + str(grid_edge_size)
+        + " meters grid layer along the "
+        + mgrs_grid
+        + ".",
         DebugMessageType.INFO,
     )
     start = time.time()
@@ -177,24 +243,25 @@ def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) 
     end = time.time()
     formatted = "{:.1f}".format(end - start)
     Debug.log(
-        "Grid layer created. Lasted " + str(formatted) + " seconds.", DebugMessageType.SUCCESS
+        "Grid layer created. Lasted " + str(formatted) + " seconds.",
+        DebugMessageType.SUCCESS,
     )
 
     # Make a multilinestring in order to use in filtering
-    # --------------------------------------------------------------------------------
     lanelet2_whole_mls = ogr.Geometry(ogr.wkbMultiLineString)
 
     # Generate the lanelet2_map linestring layer with gpkg for filtering
-    # --------------------------------------------------------------------------------
-    generate_lanelet2_layer(mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, layer_lanelet2_whole)
+    generate_lanelet2_layer(
+        mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, layer_lanelet2_whole
+    )
 
     # Filter and destroy feature
-    # --------------------------------------------------------------------------------
-    Debug.log("Filtering the grid layer with input lanelet2 map.", DebugMessageType.INFO)
+    Debug.log(
+        "Filtering the grid layer with input lanelet2 map.", DebugMessageType.INFO
+    )
     layer_grids.SetSpatialFilter(lanelet2_whole_mls)
 
     # Set filtered grid layer
-    # --------------------------------------------------------------------------------
     for grid in layer_grids:
         geometry_grid = grid.GetGeometryRef()
 
@@ -207,8 +274,10 @@ def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) 
         filtered_feature_grid.Destroy()
 
     # Create yaml data and write to file
-    # --------------------------------------------------------------------------------
-    Debug.log("Generating metadata.yaml for Dynamic Lanelet2 Map Loading.", DebugMessageType.INFO)
+    Debug.log(
+        "Generating metadata.yaml for Dynamic Lanelet2 Map Loading.",
+        DebugMessageType.INFO,
+    )
 
     metadata_yaml = generate_yaml_dict(layer_filtered_grids, grid_edge_size, mgrs_grid)
 
@@ -219,7 +288,6 @@ def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) 
         yaml.dump(metadata_yaml, f, default_flow_style=None, sort_keys=False)
 
     # Create config.json for Osmium Extract
-    # --------------------------------------------------------------------------------
     Debug.log("Generating config.json for Osmium Extract.", DebugMessageType.INFO)
 
     config_files = []
@@ -236,7 +304,9 @@ def data_preparation(mgrs_grid, grid_edge_size, lanelet2_map_path, extract_dir) 
 
                 config_json = generate_config_json(dup_layer_grids, extract_dir)
                 config_json_name = "config" + str(config_name_counter) + ".json"
-                with open(os.path.join(extract_dir, config_json_name), "w") as write_file:
+                with open(
+                    os.path.join(extract_dir, config_json_name), "w"
+                ) as write_file:
                     write_file.write(config_json)
                     config_files.append(os.path.join(extract_dir, config_json_name))
                 config_name_counter += 1
