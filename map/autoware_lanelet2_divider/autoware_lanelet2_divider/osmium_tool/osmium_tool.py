@@ -4,7 +4,6 @@ import subprocess
 from autoware_lanelet2_divider.debug import Debug
 from autoware_lanelet2_divider.debug import DebugMessageType
 
-
 # Error handler dictionary for osmium tool
 # Key: Error message
 # Value: List of functions to handle the error
@@ -61,19 +60,13 @@ def extract_osm_file(
     )
 
     if result.returncode == 0:
-        Debug.log(
-            f"Extracted osm file: {input_osm_file_path}", DebugMessageType.SUCCESS
-        )
+        Debug.log(f"Extracted osm file: {input_osm_file_path}", DebugMessageType.SUCCESS)
         return True
 
     for error_message, (error_log, info_log, action) in ERROR_HANDLERS.items():
         if any(error in result.stderr for error in error_message.split(" / ")):
-            error_log(
-                input_osm_file_path, input_config_file_path, output_dir
-            )  # Log the error
-            info_log(
-                input_osm_file_path, input_config_file_path, output_dir
-            )  # Log the action
+            error_log(input_osm_file_path, input_config_file_path, output_dir)  # Log the error
+            info_log(input_osm_file_path, input_config_file_path, output_dir)  # Log the action
             action_output = action(
                 input_osm_file_path, input_config_file_path, output_dir
             )  # Execute the action

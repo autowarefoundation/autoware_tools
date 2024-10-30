@@ -66,9 +66,7 @@ def create_grid_layer(grid_edge_size, layer_grids, mgrs_grid) -> None:
             feature_grid.Destroy()
 
 
-def generate_lanelet2_layer(
-    mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, layer_lanelet2_whole
-):
+def generate_lanelet2_layer(mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, layer_lanelet2_whole):
     """
     Generates a Lanelet2 layer from the given Lanelet2 map path and adds it to the specified GDAL layer.
 
@@ -91,9 +89,7 @@ def generate_lanelet2_layer(
     for lanelet_linestring in lanelet2_map.lineStringLayer:
         linestring = ogr.Geometry(ogr.wkbLineString)
         for node in lanelet_linestring:
-            node_lat, node_lon = utm.to_latlon(
-                origin_x + node.x, origin_y + node.y, zone, northp
-            )
+            node_lat, node_lon = utm.to_latlon(origin_x + node.x, origin_y + node.y, zone, northp)
             linestring.AddPoint_2D(node_lon, node_lat)
         lanelet2_whole_mls.AddGeometry(linestring)
     feature_lanelet2 = ogr.Feature(layer_lanelet2_whole.GetLayerDefn())
@@ -216,9 +212,7 @@ def data_preparation(
         Debug.log("Layer creation failed.", DebugMessageType.ERROR)
         sys.exit(1)
 
-    layer_lanelet2_whole = ds_grids.CreateLayer(
-        "lanelet2_whole", None, ogr.wkbMultiLineString
-    )
+    layer_lanelet2_whole = ds_grids.CreateLayer("lanelet2_whole", None, ogr.wkbMultiLineString)
     if layer_lanelet2_whole is None:
         Debug.log("Layer creation failed layer_lanelet2_whole.", DebugMessageType.ERROR)
         sys.exit(1)
@@ -231,11 +225,7 @@ def data_preparation(
 
     # Create Grid Layer
     Debug.log(
-        "Creating "
-        + str(grid_edge_size)
-        + " meters grid layer along the "
-        + mgrs_grid
-        + ".",
+        "Creating " + str(grid_edge_size) + " meters grid layer along the " + mgrs_grid + ".",
         DebugMessageType.INFO,
     )
     start = time.time()
@@ -251,14 +241,10 @@ def data_preparation(
     lanelet2_whole_mls = ogr.Geometry(ogr.wkbMultiLineString)
 
     # Generate the lanelet2_map linestring layer with gpkg for filtering
-    generate_lanelet2_layer(
-        mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, layer_lanelet2_whole
-    )
+    generate_lanelet2_layer(mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, layer_lanelet2_whole)
 
     # Filter and destroy feature
-    Debug.log(
-        "Filtering the grid layer with input lanelet2 map.", DebugMessageType.INFO
-    )
+    Debug.log("Filtering the grid layer with input lanelet2 map.", DebugMessageType.INFO)
     layer_grids.SetSpatialFilter(lanelet2_whole_mls)
 
     # Set filtered grid layer
@@ -305,9 +291,7 @@ def data_preparation(
 
                 config_json = generate_config_json(dup_layer_grids, extract_dir)
                 config_json_name = "config" + str(config_name_counter) + ".json"
-                with open(
-                    os.path.join(extract_dir, config_json_name), "w"
-                ) as write_file:
+                with open(os.path.join(extract_dir, config_json_name), "w") as write_file:
                     write_file.write(config_json)
                     config_files.append(os.path.join(extract_dir, config_json_name))
                 config_name_counter += 1
