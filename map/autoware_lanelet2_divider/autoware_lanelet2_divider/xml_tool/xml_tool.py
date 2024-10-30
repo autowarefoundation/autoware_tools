@@ -29,8 +29,6 @@ def select_tags(root, node_list, way_list, relation_list) -> None:
             way_list.append(child)
         elif child.tag == "relation":
             relation_list.append(child)
-        else:
-            pass
 
 
 def complete_missing_elements(
