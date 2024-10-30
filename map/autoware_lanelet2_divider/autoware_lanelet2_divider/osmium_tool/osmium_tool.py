@@ -5,6 +5,38 @@ from autoware_lanelet2_divider.debug import Debug
 from autoware_lanelet2_divider.debug import DebugMessageType
 
 
+# Error handler dictionary for osmium tool
+# Key: Error message
+# Value: List of functions to handle the error
+#   - First function: Function to log the error
+#   - Second function: Function to log the action
+#   - Third function: Function to execute the action
+ERROR_HANDLERS = {
+    "Output directory is missing or not accessible": [
+        lambda input_osm_file_path, input_config_file_path, output_dir: Debug.log(
+            f"Cannot extracted osm file: {input_osm_file_path}, Output directory is missing or not accessible",
+            DebugMessageType.ERROR,
+        ),
+        lambda input_osm_file_path, input_config_file_path, output_dir: f"Creating output directory: {output_dir}",
+        lambda input_osm_file_path, input_config_file_path, output_dir: os.makedirs(
+            output_dir, exist_ok=True
+        ),
+    ],
+    "Way IDs out of order / Relation IDs out of order": [
+        lambda input_osm_file_path, input_config_file_path, output_dir: Debug.log(
+            f"Cannot extracted osm file: {input_osm_file_path}, Way IDs out of order",
+            DebugMessageType.ERROR,
+        ),
+        lambda input_osm_file_path, input_config_file_path, output_dir: Debug.log(
+            f"Sorting osm file: {input_osm_file_path}", DebugMessageType.INFO
+        ),
+        lambda input_osm_file_path, input_config_file_path, output_dir: sort_osm_file(
+            input_osm_file_path
+        ),
+    ],
+}
+
+
 def extract_osm_file(
     input_osm_file_path: str,
     input_config_file_path: str,
@@ -21,41 +53,29 @@ def extract_osm_file(
             f"Extracted osm file: {input_osm_file_path}", DebugMessageType.SUCCESS
         )
         return True
-    
-    if "Output directory is missing or not accessible" in result.stderr:
-        Debug.log(
-            f"Cannot extracted osm file: {input_osm_file_path}, Output directory is missing or not accessible",
-            DebugMessageType.ERROR,
-        )
-        Debug.log(f"Creating output directory: {output_dir}", DebugMessageType.INFO)
-        os.mkdir(output_dir)
-        extract_osm_file(input_osm_file_path, input_config_file_path, output_dir)
-        return True
-    elif "Way IDs out of order" in result.stderr:
-        Debug.log(
-            f"Cannot extracted osm file: {input_osm_file_path}, Way IDs out of order",
-            DebugMessageType.ERROR,
-        )
-        Debug.log(f"Sorting osm file: {input_osm_file_path}", DebugMessageType.INFO)
-        sorted_osm_file = sort_osm_file(input_osm_file_path)
-        extract_osm_file(sorted_osm_file, input_config_file_path, output_dir)
-        return True
-    elif "Relation IDs out of order" in result.stderr:
-        Debug.log(
-            f"Cannot extracted osm file: {input_osm_file_path}, Way IDs out of order",
-            DebugMessageType.ERROR,
-        )
-        Debug.log(f"Sorting osm file: {input_osm_file_path}", DebugMessageType.INFO)
-        sorted_osm_file = sort_osm_file(input_osm_file_path)
-        extract_osm_file(sorted_osm_file, input_config_file_path, output_dir)
-        return True
-    else:
-        Debug.log(
-            f"Cannot extracted osm file: {input_osm_file_path}, {result.stderr}",
-            DebugMessageType.ERROR,
-        )
-        print(result.stderr)
-        return False
+
+    for error_message, (error_log, info_log, action) in ERROR_HANDLERS.items():
+        if any(error in result.stderr for error in error_message.split(" / ")):
+            error_log(
+                input_osm_file_path, input_config_file_path, output_dir
+            )  # Log the error
+            info_log(
+                input_osm_file_path, input_config_file_path, output_dir
+            )  # Log the action
+            action_output = action(
+                input_osm_file_path, input_config_file_path, output_dir
+            )  # Execute the action
+            return extract_osm_file(
+                action_output if action_output is not None else input_osm_file_path,
+                input_config_file_path,
+                output_dir,
+            )
+
+    Debug.log(
+        f"Cannot extracted osm file: {input_osm_file_path}, {result.stderr}",
+        DebugMessageType.ERROR,
+    )
+    return False
 
 
 def sort_osm_file(input_osm_file_path: str) -> str:
