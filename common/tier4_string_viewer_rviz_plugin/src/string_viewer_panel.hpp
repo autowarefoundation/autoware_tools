@@ -40,6 +40,10 @@ public:
 
   void onInitialize() override;
 
+  void save(rviz_common::Config config) const override;
+
+  void load(const rviz_common::Config & config) override;
+
 private Q_SLOTS:
   void on_topic_name(const QString & topic);
 
@@ -51,6 +55,8 @@ private:
   QLabel * contents_;
 
   QComboBox * topic_list_;
+
+  QString default_topic_;
 
   rclcpp::Node::SharedPtr raw_node_;
 
