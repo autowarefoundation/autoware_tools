@@ -2,7 +2,7 @@
 
 This is a lanelet2 tile generator tool for Autoware dynamic lanelet2 map loading feature.
 
-Working principal of this tool is sequentally:
+Working principal of this tool is sequentially:
 
 - Take the inputs from the user
 - Generate square grids according to the input MGRS grid
@@ -45,7 +45,7 @@ MGRS grid and filtering them.
 
 ### Grid Edge Size
 
-This determines the vertice length of the generated map tiles. Map tiles are generated with squares and the edges of
+This determines the vertex length of the generated map tiles. Map tiles are generated with squares and the edges of
 those squares are determined by the user's input.
 
 ### Input Lanelet2 Map Path
@@ -62,7 +62,7 @@ It contains all the generated lanelet2 maps.
 ### lanelet2_map_metadata.yaml
 
 This metadata file holds the origin points of all the generated lanelet2 map files inside the `lanelet2_map.osm`
-folder. Origin point of each lanelet2 map is the coordinates of the left bottom vertice of the corresponding
+folder. Origin point of each lanelet2 map is the coordinates of the left bottom vertex of the corresponding
 square created with `mgrs_grid` and `grid_edge_size` parameters.
 
 ### config.json Files
