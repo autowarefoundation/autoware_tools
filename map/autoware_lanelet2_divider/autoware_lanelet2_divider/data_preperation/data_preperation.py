@@ -60,7 +60,7 @@ def create_grid_layer(grid_edge_size, layer_grids, mgrs_grid) -> None:
             polygon.AddGeometry(linear_ring)
             feature_grid.SetGeometry(polygon)
             if layer_grids.CreateFeature(feature_grid) != 0:
-                print("Failed to create feature in shapefile.\n")
+                Debug.log("Failed to create feature in shapefile.", DebugMessageType.ERROR)
                 sys.exit(1)
 
             feature_grid.Destroy()
@@ -99,7 +99,7 @@ def generate_lanelet2_layer(
     feature_lanelet2 = ogr.Feature(layer_lanelet2_whole.GetLayerDefn())
     feature_lanelet2.SetGeometry(lanelet2_whole_mls)
     if layer_lanelet2_whole.CreateFeature(feature_lanelet2) != 0:
-        print("Failed to create feature in shapefile.\n")
+        Debug.log("Failed to create feature in shapefile.", DebugMessageType.ERROR)
         sys.exit(1)
     feature_lanelet2.Destroy()
 
@@ -201,32 +201,32 @@ def data_preparation(
     driverName = "GPKG"
     drv = gdal.GetDriverByName(driverName)
     if drv is None:
-        print("%s driver not available.\n" % driverName)
+        Debug.log("%s driver not available.\n" % driverName, DebugMessageType.ERROR)
         sys.exit(1)
 
     ds_grids = drv.Create(
         os.path.join(extract_dir, "output_layers.gpkg"), 0, 0, 0, gdal.GDT_Unknown
     )
     if ds_grids is None:
-        print("Creation of output file failed.\n")
+        Debug.log("Creation of output file failed.", DebugMessageType.ERROR)
         sys.exit(1)
 
     layer_grids = ds_grids.CreateLayer("grids", None, ogr.wkbPolygon)
     if layer_grids is None:
-        print("Layer creation failed.\n")
+        Debug.log("Layer creation failed.", DebugMessageType.ERROR)
         sys.exit(1)
 
     layer_lanelet2_whole = ds_grids.CreateLayer(
         "lanelet2_whole", None, ogr.wkbMultiLineString
     )
     if layer_lanelet2_whole is None:
-        print("Layer creation failed layer_lanelet2_whole.\n")
+        Debug.log("Layer creation failed layer_lanelet2_whole.", DebugMessageType.ERROR)
         sys.exit(1)
 
     # Create new layer for filtered grids
     layer_filtered_grids = ds_grids.CreateLayer("filtered_grids", None, ogr.wkbPolygon)
     if layer_filtered_grids is None:
-        print("Layer creation failed.\n")
+        Debug.log("Layer creation failed.", DebugMessageType.ERROR)
         sys.exit(1)
 
     # Create Grid Layer
@@ -268,7 +268,7 @@ def data_preparation(
         filtered_feature_grid = ogr.Feature(layer_filtered_grids.GetLayerDefn())
         filtered_feature_grid.SetGeometry(geometry_grid)
         if layer_filtered_grids.CreateFeature(filtered_feature_grid) != 0:
-            print("Failed to create feature in shapefile.\n")
+            Debug.log("Failed to create feature in shapefile.", DebugMessageType.ERROR)
             sys.exit(1)
 
         filtered_feature_grid.Destroy()
