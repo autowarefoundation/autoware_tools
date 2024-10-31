@@ -5,6 +5,7 @@
   <version>0.1.0</version>
   <description>Validation tool for lanelet2 maps especially for Autoware usage</description>
   <maintainer email="taiki.yamada@tier4.jp">Taiki Yamada</maintainer>
+  <maintainer email="mamoru.sobue@tier4.jp">Mamoru Sobue</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
