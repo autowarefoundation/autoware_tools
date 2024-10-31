@@ -49,6 +49,8 @@ void StringViewerPanel::onInitialize()
 
 void StringViewerPanel::on_topic_name(const QString & topic)
 {
+  if (topic.isEmpty()) return;
+
   contents_->clear();
   sub_string_.reset();
   sub_string_ = raw_node_->create_subscription<StringStamped>(
@@ -67,7 +69,16 @@ void StringViewerPanel::on_timer()
   const auto std_message_type = rosidl_generator_traits::name<StringStamped>();
   const auto published_topics = raw_node_->get_topic_names_and_types();
 
-  if (published_topics.size() == topic_num_) return;
+  const size_t current_num = std::count_if(
+    published_topics.begin(), published_topics.end(), [&std_message_type](const auto & topic) {
+      return std::any_of(
+        topic.second.begin(), topic.second.end(),
+        [&std_message_type](const auto & type) { return type == std_message_type; });
+    });
+
+  if (current_num == topic_num_) return;
+
+  topic_list_->clear();
 
   for (const auto & topic : published_topics) {
     // Only add topics whose type matches.
@@ -78,7 +89,25 @@ void StringViewerPanel::on_timer()
     }
   }
 
-  topic_num_ = published_topics.size();
+  // TODO(satoshi-ota): find better way to use default topic name.
+  if (!default_topic_.isEmpty()) {
+    topic_list_->setCurrentIndex(topic_list_->findText(default_topic_));
+    on_topic_name(default_topic_);
+  }
+
+  topic_num_ = current_num;
+}
+
+void StringViewerPanel::save(rviz_common::Config config) const
+{
+  Panel::save(config);
+  config.mapSetValue("topic", topic_list_->currentText());
+}
+
+void StringViewerPanel::load(const rviz_common::Config & config)
+{
+  Panel::load(config);
+  config.mapGetString("topic", &default_topic_);
 }
 }  // namespace tier4_string_viewer_rviz_plugin
 
