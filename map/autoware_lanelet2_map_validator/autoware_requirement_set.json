@@ -1,6 +1,14 @@
 {
   "requirements": [
     {
+      "id": "vm-02-02",
+      "validators": [
+        {
+          "name": "mapping.stop_line.missing_regulatory_elements"
+        }
+      ]
+    },
+    {
       "id": "vm-04-01",
       "validators": [
         {
