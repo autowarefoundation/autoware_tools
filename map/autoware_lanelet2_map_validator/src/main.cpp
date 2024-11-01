@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "lanelet2_map_validator/cli.hpp"
+#include "lanelet2_map_validator/configuration.hpp"
 #include "lanelet2_map_validator/map_loader.hpp"
 #include "lanelet2_map_validator/utils.hpp"
 #include "lanelet2_map_validator/validation.hpp"
