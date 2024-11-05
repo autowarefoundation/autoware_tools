@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef VALIDATORS__CROSSWALK__REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
-#define VALIDATORS__CROSSWALK__REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
+#ifndef LANELET2_MAP_VALIDATOR__VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_  // NOLINT
+#define LANELET2_MAP_VALIDATOR__VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_  // NOLINT
 
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
@@ -22,18 +22,20 @@ namespace lanelet
 {
 namespace validation
 {
-class RegulatoryElementsDetailsForCrosswalksValidator : public lanelet::validation::MapValidator
+class MissingRegulatoryElementsForStopLinesValidator : public lanelet::validation::MapValidator
 {
 public:
-  // Write the validator's name here
-  constexpr static const char * name() { return "mapping.crosswalk.regulatory_element_details"; }
+  constexpr static const char * name() { return "mapping.stop_line.missing_regulatory_elements"; }
 
   lanelet::validation::Issues operator()(const lanelet::LaneletMap & map) override;
 
 private:
-  lanelet::validation::Issues checkRegulatoryElementOfCrosswalks(const lanelet::LaneletMap & map);
+  lanelet::validation::Issues checkMissingRegulatoryElementsForStopLines(
+    const lanelet::LaneletMap & map);
 };
 }  // namespace validation
 }  // namespace lanelet
 
-#endif  // VALIDATORS__CROSSWALK__REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_
+// clang-format off
+#endif  // LANELET2_MAP_VALIDATOR__VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_  // NOLINT
+// clang-format on

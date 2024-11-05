@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "common/cli.hpp"
-#include "common/utils.hpp"
-#include "common/validation.hpp"
-#include "lanelet2_validation/Validation.h"
+#include "lanelet2_map_validator/cli.hpp"
+#include "lanelet2_map_validator/utils.hpp"
+#include "lanelet2_map_validator/validation.hpp"
 
 #include <nlohmann/json.hpp>
+
+#include <lanelet2_validation/Validation.h>
 
 #include <filesystem>
 #include <fstream>
@@ -54,7 +55,9 @@ void process_requirements(
       temp_validator_config.command_line_config.validationConfig.checksFilter = validator_name;
 
       std::vector<lanelet::validation::DetectedIssues> temp_issues =
-        lanelet::autoware::validation::validateMap(temp_validator_config);
+        lanelet::autoware::validation::validateMap(
+          validator_config.projector_type, validator_config.command_line_config.mapFile,
+          validator_config.command_line_config.validationConfig);
 
       if (temp_issues.empty()) {
         // Validator passed
@@ -176,7 +179,9 @@ int main(int argc, char * argv[])
     input_file >> json_config;
     process_requirements(json_config, meta_config);
   } else {
-    auto issues = lanelet::autoware::validation::validateMap(meta_config);
+    auto issues = lanelet::autoware::validation::validateMap(
+      meta_config.projector_type, meta_config.command_line_config.mapFile,
+      meta_config.command_line_config.validationConfig);
     lanelet::validation::printAllIssues(issues);
   }
 

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "common/utils.hpp"
-#include "validators/crosswalk/missing_regulatory_elements_for_crosswalks.hpp"
+#include "lanelet2_map_validator/utils.hpp"
+#include "lanelet2_map_validator/validators/crosswalk/missing_regulatory_elements_for_crosswalks.hpp"
 
 #include <range/v3/view/filter.hpp>
 

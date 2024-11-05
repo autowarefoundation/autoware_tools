@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "validators/crosswalk/regulatory_element_details_for_crosswalks.hpp"
+#include "lanelet2_map_validator/validators/crosswalk/regulatory_element_details_for_crosswalks.hpp"
 
-#include "common/utils.hpp"
+#include "lanelet2_map_validator/utils.hpp"
 
 #include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>
 #include <range/v3/view/filter.hpp>

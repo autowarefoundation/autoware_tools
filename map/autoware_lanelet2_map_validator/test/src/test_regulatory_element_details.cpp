@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "validators/crosswalk/regulatory_element_details_for_crosswalks.hpp"
-#include "validators/traffic_light/regulatory_element_details_for_traffic_lights.hpp"
+#include "lanelet2_map_validator/validators/crosswalk/regulatory_element_details_for_crosswalks.hpp"
+#include "lanelet2_map_validator/validators/traffic_light/regulatory_element_details_for_traffic_lights.hpp"
 
 #include <autoware_lanelet2_extension/regulatory_elements/autoware_traffic_light.hpp>
 #include <autoware_lanelet2_extension/regulatory_elements/crosswalk.hpp>

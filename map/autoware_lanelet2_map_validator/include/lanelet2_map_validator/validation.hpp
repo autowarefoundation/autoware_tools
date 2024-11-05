@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef COMMON__VALIDATION_HPP_
-#define COMMON__VALIDATION_HPP_
+#ifndef LANELET2_MAP_VALIDATOR__VALIDATION_HPP_
+#define LANELET2_MAP_VALIDATOR__VALIDATION_HPP_
 
-#include "common/cli.hpp"
-#include "common/utils.hpp"
+#include "lanelet2_map_validator/cli.hpp"
+#include "lanelet2_map_validator/utils.hpp"
 
 #include <lanelet2_io/Io.h>
 #include <lanelet2_projection/UTM.h>
@@ -25,6 +25,7 @@
 
 #include <memory>
 #include <regex>
+#include <string>
 #include <vector>
 
 namespace
@@ -43,10 +44,13 @@ namespace autoware
 {
 namespace validation
 {
-std::unique_ptr<lanelet::Projector> getProjector(const MetaConfig & config);
-std::vector<lanelet::validation::DetectedIssues> validateMap(const MetaConfig & config);
+std::unique_ptr<lanelet::Projector> getProjector(
+  const std::string & projector_type, const lanelet::GPSPoint & origin);
+std::vector<lanelet::validation::DetectedIssues> validateMap(
+  const std::string & projector_type, const std::string & map_file,
+  const lanelet::validation::ValidationConfig & val_config);
 }  // namespace validation
 }  // namespace autoware
 }  // namespace lanelet
 
-#endif  // COMMON__VALIDATION_HPP_
+#endif  // LANELET2_MAP_VALIDATOR__VALIDATION_HPP_

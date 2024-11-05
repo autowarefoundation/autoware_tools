@@ -8,7 +8,7 @@ ament_auto_find_build_dependencies()
 find_package(nlohmann_json REQUIRED)
 
 include_directories(
-  src
+  include
 )
 
 file(GLOB_RECURSE autoware_lanelet2_map_validator_lib_src
@@ -32,6 +32,7 @@ if(BUILD_TESTING)
       ${VALIDATION_NAME}_test
       test/src/test_${VALIDATION_NAME}.cpp
     )
+    target_include_directories(${VALIDATION_NAME}_test PUBLIC include)
     target_link_libraries(
       ${VALIDATION_NAME}_test
       autoware_lanelet2_map_validator_lib

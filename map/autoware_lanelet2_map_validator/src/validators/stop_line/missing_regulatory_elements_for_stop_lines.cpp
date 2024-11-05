@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "validators/stop_line/missing_regulatory_elements_for_stop_lines.hpp"
+#include "lanelet2_map_validator/validators/stop_line/missing_regulatory_elements_for_stop_lines.hpp"
 
-#include "common/utils.hpp"
+#include "lanelet2_map_validator/utils.hpp"
 
 #include <range/v3/view/filter.hpp>
 #include <range/v3/view/transform.hpp>

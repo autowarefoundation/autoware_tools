@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef COMMON__CLI_HPP_
-#define COMMON__CLI_HPP_
+#ifndef LANELET2_MAP_VALIDATOR__CLI_HPP_
+#define LANELET2_MAP_VALIDATOR__CLI_HPP_
 
 #include <boost/program_options.hpp>
 
@@ -42,4 +42,4 @@ MetaConfig parseCommandLine(int argc, const char * argv[]);
 }  // namespace autoware
 }  // namespace lanelet
 
-#endif  // COMMON__CLI_HPP_
+#endif  // LANELET2_MAP_VALIDATOR__CLI_HPP_
