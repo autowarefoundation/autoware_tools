@@ -63,7 +63,8 @@ MissingRegulatoryElementsForStopLinesValidator::checkMissingRegulatoryElementsFo
   // Filter regulatory elements whose ref_line type is stop line
   auto reg_elem_sl = map.regulatoryElementLayer | ranges::views::filter([](auto && elem) {
                        const auto & params = elem->getParameters();
-                       return params.find(lanelet::RoleNameString::RefLine) != params.end();
+                       return (params.find(lanelet::RoleNameString::RefLine) != params.end()) ||
+                              (params.find(lanelet::RoleNameString::Refers) != params.end());
                      });
 
   // Get all line strings of stop line referred by regulatory elements
@@ -71,11 +72,20 @@ MissingRegulatoryElementsForStopLinesValidator::checkMissingRegulatoryElementsFo
   for (const auto & elem : reg_elem_sl) {
     const auto & ref_lines =
       elem->getParameters<lanelet::ConstLineString3d>(lanelet::RoleName::RefLine);
+    const auto & refers =
+      elem->getParameters<lanelet::ConstLineString3d>(lanelet::RoleName::Refers);
     for (const auto & ref_line : ref_lines) {
       const auto & attrs = ref_line.attributes();
       const auto & it = attrs.find(lanelet::AttributeName::Type);
       if (it != attrs.end() && it->second == lanelet::AttributeValueString::StopLine) {
         sl_ids_reg_elem.insert(ref_line.id());
+      }
+    }
+    for (const auto & ref : refers) {
+      const auto & attrs = ref.attributes();
+      const auto & it = attrs.find(lanelet::AttributeName::Type);
+      if (it != attrs.end() && it->second == lanelet::AttributeValueString::StopLine) {
+        sl_ids_reg_elem.insert(ref.id());
       }
     }
   }
