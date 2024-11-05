@@ -18,7 +18,10 @@ namespace lanelet
 {
 namespace validation
 {
+namespace
+{
 lanelet::validation::RegisterMapValidator<ValidatorTemplate> reg;
+}
 
 lanelet::validation::Issues ValidatorTemplate::operator()(const lanelet::LaneletMap & map)
 {
