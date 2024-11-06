@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from tier4_debug_msgs.msg import Float64Stamped
+from tier4_debug_msgs.msg import Float64Stamped, ProcessingTimeTree
 
 from .system_performance_plotter_base import PREDEFINED_COMPONENT_NAMES
 from .system_performance_plotter_base import SystemPerformancePlotterBase
@@ -28,17 +28,29 @@ class ProcessingTimePlotter(SystemPerformancePlotterBase):
                     return False
         return True
 
-    def update_metrics_func(self, topic_name, data, date_time):
-        if not isinstance(data, Float64Stamped):
-            return
+    def update_metrics_func(self, topic_name, data, date_time, parse_processing_time_tree=False):
+        if isinstance(data, Float64Stamped):
+            if topic_name not in self.stamp_and_metrics:
+                self.stamp_and_metrics[topic_name] = []
+                self.max_metrics[topic_name] = 0.0
 
-        if topic_name not in self.stamp_and_metrics:
-            self.stamp_and_metrics[topic_name] = []
-            self.max_metrics[topic_name] = 0.0
+            processing_time_ms = data.data
+            self.stamp_and_metrics[topic_name].append([date_time, processing_time_ms])
+            self.max_metrics[topic_name] = max(self.max_metrics[topic_name], processing_time_ms)
+        elif isinstance(data, ProcessingTimeTree) and parse_processing_time_tree:
+            for node in data.nodes:
+                curr_name = topic_name + ":" + node.name
+                if curr_name not in self.stamp_and_metrics:
+                    self.stamp_and_metrics[curr_name] = []
+                    self.max_metrics[curr_name] = 0.0
 
-        processing_time_ms = data.data
-        self.stamp_and_metrics[topic_name].append([date_time, processing_time_ms])
-        self.max_metrics[topic_name] = max(self.max_metrics[topic_name], processing_time_ms)
+                processing_time_ms = node.processing_time
+                self.stamp_and_metrics[curr_name].append(
+                    [date_time, processing_time_ms]
+                )
+                self.max_metrics[curr_name] = max(
+                    self.max_metrics[curr_name], processing_time_ms
+                )
 
 
 def main():

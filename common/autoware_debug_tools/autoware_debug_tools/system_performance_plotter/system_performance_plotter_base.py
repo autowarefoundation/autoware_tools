@@ -43,6 +43,10 @@ class SystemPerformancePlotterBase:
         self.stamp_and_metrics = {}
         self.max_metrics = {}
 
+        self.additional_args = {}
+        if args.plot_function_level_processing_time:
+            self.additional_args["parse_processing_time_tree"] = True
+
     def run(self):
         # read data from rosbag
         reader = create_reader(self.input_bag_dir)
@@ -60,7 +64,7 @@ class SystemPerformancePlotterBase:
             time_stamp = stamp * to_nanosec
             date_time = datetime.fromtimestamp(time_stamp)
 
-            self.update_metrics_func(topic_name, data, date_time)
+            self.update_metrics_func(topic_name, data, date_time, **self.additional_args)
 
         # sort stamp_and_metrics by alphabetical order
         self.stamp_and_metrics = dict(sorted(self.stamp_and_metrics.items(), key=lambda x: x[0]))
@@ -201,6 +205,13 @@ def create_common_argment(ymax=None):
         default=False,
         action="store_true",
         help="whether to skip plt.show()",
+    )
+    parser.add_argument(
+        "-f",
+        "--plot_function_level_processing_time",
+        default=False,
+        action="store_true",
+        help="whether to plot function level processing time",
     )
 
     args = parser.parse_args()
