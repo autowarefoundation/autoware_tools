@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "common/cli.hpp"
-#include "common/utils.hpp"
-#include "common/validation.hpp"
-#include "lanelet2_validation/Validation.h"
+#include "lanelet2_map_validator/cli.hpp"
+#include "lanelet2_map_validator/utils.hpp"
+#include "lanelet2_map_validator/validation.hpp"
 
 #include <nlohmann/json.hpp>
+
+#include <lanelet2_validation/Validation.h>
 
 #include <filesystem>
 #include <fstream>
@@ -35,12 +36,19 @@ using json = nlohmann::json;
 #define NORMAL_RED "\033[31m"
 #define FONT_RESET "\033[0m"
 
+lanelet::validation::ValidationConfig replace_validator(
+  const lanelet::validation::ValidationConfig & input, const std::string & validator_name)
+{
+  auto temp = input;
+  temp.checksFilter = validator_name;
+  return temp;
+}
+
 void process_requirements(
   json json_config, const lanelet::autoware::validation::MetaConfig & validator_config)
 {
   uint64_t warning_count = 0;
   uint64_t error_count = 0;
-  lanelet::autoware::validation::MetaConfig temp_validator_config = validator_config;
 
   for (auto & requirement : json_config["requirements"]) {
     std::string id = requirement["id"];
@@ -50,11 +58,12 @@ void process_requirements(
     std::map<std::string, bool> temp_validation_results;
 
     for (auto & validator : requirement["validators"]) {
-      std::string validator_name = validator["name"];
-      temp_validator_config.command_line_config.validationConfig.checksFilter = validator_name;
+      const std::string validator_name = validator["name"];
 
       std::vector<lanelet::validation::DetectedIssues> temp_issues =
-        lanelet::autoware::validation::validateMap(temp_validator_config);
+        lanelet::autoware::validation::validateMap(
+          validator_config.projector_type, validator_config.command_line_config.mapFile,
+          replace_validator(validator_config.command_line_config.validationConfig, validator_name));
 
       if (temp_issues.empty()) {
         // Validator passed
@@ -176,7 +185,9 @@ int main(int argc, char * argv[])
     input_file >> json_config;
     process_requirements(json_config, meta_config);
   } else {
-    auto issues = lanelet::autoware::validation::validateMap(meta_config);
+    auto issues = lanelet::autoware::validation::validateMap(
+      meta_config.projector_type, meta_config.command_line_config.mapFile,
+      meta_config.command_line_config.validationConfig);
     lanelet::validation::printAllIssues(issues);
   }
 

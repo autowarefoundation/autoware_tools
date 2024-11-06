@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
-#define VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
+#ifndef LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_  // NOLINT
+#define LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_  // NOLINT
 
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
@@ -22,21 +22,20 @@ namespace lanelet
 {
 namespace validation
 {
-class MissingRegulatoryElementsForTrafficLightsValidator : public lanelet::validation::MapValidator
+class MissingRegulatoryElementsForCrosswalksValidator : public lanelet::validation::MapValidator
 {
 public:
-  constexpr static const char * name()
-  {
-    return "mapping.traffic_light.missing_regulatory_elements";
-  }
+  constexpr static const char * name() { return "mapping.crosswalk.missing_regulatory_elements"; }
 
   lanelet::validation::Issues operator()(const lanelet::LaneletMap & map) override;
 
 private:
-  lanelet::validation::Issues checkMissingRegulatoryElementsForTrafficLights(
+  lanelet::validation::Issues checkMissingRegulatoryElementsForCrosswalks(
     const lanelet::LaneletMap & map);
 };
 }  // namespace validation
 }  // namespace lanelet
 
-#endif  // VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_
+// clang-format off
+#endif  // LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__MISSING_REGULATORY_ELEMENTS_FOR_CROSSWALKS_HPP_  // NOLINT
+// clang-format on

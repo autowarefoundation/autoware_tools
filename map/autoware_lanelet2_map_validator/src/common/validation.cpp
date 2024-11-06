@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "common/validation.hpp"
+#include "lanelet2_map_validator/validation.hpp"
 
 #include <autoware_lanelet2_extension/projection/mgrs_projector.hpp>
 #include <autoware_lanelet2_extension/projection/transverse_mercator_projector.hpp>
@@ -27,31 +27,42 @@ namespace autoware
 namespace validation
 {
 
-std::unique_ptr<lanelet::Projector> getProjector(const MetaConfig & config)
+std::unique_ptr<lanelet::Projector> getProjector(
+  const std::string & projector_type, const lanelet::GPSPoint & origin)
+
 {
-  const auto & val_config = config.command_line_config.validationConfig;
-  if (config.projector_type == projector_names::mgrs) {
+  if (projector_type == projector_names::mgrs) {
     return std::make_unique<lanelet::projection::MGRSProjector>();
-  } else if (config.projector_type == projector_names::transverse_mercator) {
-    return std::make_unique<lanelet::projection::TransverseMercatorProjector>(
-      lanelet::Origin{val_config.origin});
-  } else if (config.projector_type == projector_names::utm) {
-    return std::make_unique<lanelet::projection::UtmProjector>(lanelet::Origin{val_config.origin});
   }
-  return std::make_unique<lanelet::projection::MGRSProjector>();
+  if (projector_type == projector_names::transverse_mercator) {
+    return std::make_unique<lanelet::projection::TransverseMercatorProjector>(
+      lanelet::Origin{origin});
+  }
+  if (projector_type == projector_names::utm) {
+    return std::make_unique<lanelet::projection::UtmProjector>(lanelet::Origin{origin});
+  }
+  return nullptr;
 }
 
-std::vector<lanelet::validation::DetectedIssues> validateMap(const MetaConfig & config)
+std::vector<lanelet::validation::DetectedIssues> validateMap(
+  const std::string & projector_type, const std::string & map_file,
+  const lanelet::validation::ValidationConfig & val_config)
 {
-  const auto & cm_config = config.command_line_config;
-  const auto & val_config = config.command_line_config.validationConfig;
-
   std::vector<lanelet::validation::DetectedIssues> issues;
-  lanelet::LaneletMapPtr map;
+  lanelet::LaneletMapPtr map{nullptr};
   lanelet::validation::Strings errors;
   try {
-    const auto & projector = getProjector(config);
-    map = lanelet::load(cm_config.mapFile, *projector, &errors);
+    const auto projector = getProjector(projector_type, val_config.origin);
+    if (!projector) {
+      errors.push_back("No valid map projection type specified!");
+    } else {
+      map = lanelet::load(map_file, *projector, &errors);
+    }
+    if (map) {
+      appendIssues(issues, lanelet::validation::validateMap(*map, val_config));
+    } else {
+      errors.push_back("Failed to load map!");
+    }
     if (!errors.empty()) {
       issues.emplace_back("general", utils::transform(errors, [](auto & error) {
                             return lanelet::validation::Issue(
@@ -65,7 +76,6 @@ std::vector<lanelet::validation::DetectedIssues> validateMap(const MetaConfig & 
                         }));
   }
 
-  appendIssues(issues, lanelet::validation::validateMap(*map, val_config));
   return issues;
 }
 
