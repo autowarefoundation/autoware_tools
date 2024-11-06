@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from tier4_debug_msgs.msg import Float64Stamped, ProcessingTimeTree
+from tier4_debug_msgs.msg import Float64Stamped
+from tier4_debug_msgs.msg import ProcessingTimeTree
 
 from .system_performance_plotter_base import PREDEFINED_COMPONENT_NAMES
 from .system_performance_plotter_base import SystemPerformancePlotterBase
@@ -45,12 +46,8 @@ class ProcessingTimePlotter(SystemPerformancePlotterBase):
                     self.max_metrics[curr_name] = 0.0
 
                 processing_time_ms = node.processing_time
-                self.stamp_and_metrics[curr_name].append(
-                    [date_time, processing_time_ms]
-                )
-                self.max_metrics[curr_name] = max(
-                    self.max_metrics[curr_name], processing_time_ms
-                )
+                self.stamp_and_metrics[curr_name].append([date_time, processing_time_ms])
+                self.max_metrics[curr_name] = max(self.max_metrics[curr_name], processing_time_ms)
 
 
 def main():
