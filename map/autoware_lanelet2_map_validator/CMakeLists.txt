@@ -7,20 +7,24 @@ autoware_package()
 ament_auto_find_build_dependencies()
 find_package(nlohmann_json REQUIRED)
 
-include_directories(
-  include
-)
-
 file(GLOB_RECURSE autoware_lanelet2_map_validator_lib_src
   src/common/*.cpp
   src/validators/*.cpp
 )
+
 ament_auto_add_library(autoware_lanelet2_map_validator_lib SHARED
   ${autoware_lanelet2_map_validator_lib_src}
 )
 
-ament_auto_add_executable(autoware_lanelet2_map_validator src/main.cpp)
-add_dependencies(autoware_lanelet2_map_validator autoware_lanelet2_map_validator_lib)
+target_include_directories(
+  autoware_lanelet2_map_validator_lib PUBLIC
+  src/include
+)
+
+ament_auto_add_executable(autoware_lanelet2_map_validator
+  src/main.cpp
+)
+
 target_link_libraries(autoware_lanelet2_map_validator
   autoware_lanelet2_map_validator_lib
   nlohmann_json
@@ -32,7 +36,6 @@ if(BUILD_TESTING)
       ${VALIDATION_NAME}_test
       test/src/test_${VALIDATION_NAME}.cpp
     )
-    target_include_directories(${VALIDATION_NAME}_test PUBLIC include)
     target_link_libraries(
       ${VALIDATION_NAME}_test
       autoware_lanelet2_map_validator_lib
