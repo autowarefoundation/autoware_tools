@@ -30,15 +30,14 @@ namespace validation
 std::unique_ptr<lanelet::Projector> getProjector(
   const std::string & projector_type, const lanelet::GPSPoint & origin)
 {
-  if (projector_type == projector_names::mgrs) {
-    return std::make_unique<lanelet::projection::MGRSProjector>();
-  } else if (projector_type == projector_names::transverse_mercator) {
+  if (projector_type == projector_names::transverse_mercator) {
     return std::make_unique<lanelet::projection::TransverseMercatorProjector>(
       lanelet::Origin{origin});
-  } else if (projector_type == projector_names::utm) {
+  }
+  if (projector_type == projector_names::utm) {
     return std::make_unique<lanelet::projection::UtmProjector>(lanelet::Origin{origin});
   }
-  return nullptr;
+  return std::make_unique<lanelet::projection::MGRSProjector>();
 }
 
 std::vector<lanelet::validation::DetectedIssues> validateMap(

@@ -36,12 +36,19 @@ using json = nlohmann::json;
 #define NORMAL_RED "\033[31m"
 #define FONT_RESET "\033[0m"
 
+lanelet::validation::ValidationConfig replace_validator(
+  const lanelet::validation::ValidationConfig & input, const std::string & validator_name)
+{
+  auto temp = input;
+  temp.checksFilter = validator_name;
+  return temp;
+}
+
 void process_requirements(
   json json_config, const lanelet::autoware::validation::MetaConfig & validator_config)
 {
   uint64_t warning_count = 0;
   uint64_t error_count = 0;
-  lanelet::autoware::validation::MetaConfig temp_validator_config = validator_config;
 
   for (auto & requirement : json_config["requirements"]) {
     std::string id = requirement["id"];
@@ -51,13 +58,12 @@ void process_requirements(
     std::map<std::string, bool> temp_validation_results;
 
     for (auto & validator : requirement["validators"]) {
-      std::string validator_name = validator["name"];
-      temp_validator_config.command_line_config.validationConfig.checksFilter = validator_name;
+      const std::string validator_name = validator["name"];
 
       std::vector<lanelet::validation::DetectedIssues> temp_issues =
         lanelet::autoware::validation::validateMap(
           validator_config.projector_type, validator_config.command_line_config.mapFile,
-          validator_config.command_line_config.validationConfig);
+          replace_validator(validator_config.command_line_config.validationConfig, validator_name));
 
       if (temp_issues.empty()) {
         // Validator passed
