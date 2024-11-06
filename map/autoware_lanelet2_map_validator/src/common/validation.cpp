@@ -29,7 +29,11 @@ namespace validation
 
 std::unique_ptr<lanelet::Projector> getProjector(
   const std::string & projector_type, const lanelet::GPSPoint & origin)
+
 {
+  if (projector_type == projector_names::mgrs) {
+    return std::make_unique<lanelet::projection::MGRSProjector>();
+  }
   if (projector_type == projector_names::transverse_mercator) {
     return std::make_unique<lanelet::projection::TransverseMercatorProjector>(
       lanelet::Origin{origin});
@@ -37,7 +41,7 @@ std::unique_ptr<lanelet::Projector> getProjector(
   if (projector_type == projector_names::utm) {
     return std::make_unique<lanelet::projection::UtmProjector>(lanelet::Origin{origin});
   }
-  return std::make_unique<lanelet::projection::MGRSProjector>();
+  return nullptr;
 }
 
 std::vector<lanelet::validation::DetectedIssues> validateMap(
@@ -45,11 +49,20 @@ std::vector<lanelet::validation::DetectedIssues> validateMap(
   const lanelet::validation::ValidationConfig & val_config)
 {
   std::vector<lanelet::validation::DetectedIssues> issues;
-  lanelet::LaneletMapPtr map;
+  lanelet::LaneletMapPtr map{nullptr};
   lanelet::validation::Strings errors;
   try {
-    const auto & projector = getProjector(projector_type, val_config.origin);
-    map = lanelet::load(map_file, *projector, &errors);
+    const auto projector = getProjector(projector_type, val_config.origin);
+    if (!projector) {
+      errors.push_back("No valid map projection type specified!");
+    } else {
+      map = lanelet::load(map_file, *projector, &errors);
+    }
+    if (map) {
+      appendIssues(issues, lanelet::validation::validateMap(*map, val_config));
+    } else {
+      errors.push_back("Failed to load map!");
+    }
     if (!errors.empty()) {
       issues.emplace_back("general", utils::transform(errors, [](auto & error) {
                             return lanelet::validation::Issue(
@@ -63,7 +76,6 @@ std::vector<lanelet::validation::DetectedIssues> validateMap(
                         }));
   }
 
-  appendIssues(issues, lanelet::validation::validateMap(*map, val_config));
   return issues;
 }
 
