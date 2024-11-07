@@ -68,32 +68,35 @@ TEST_F(JsonProcessingTest, ParseValidatorsWithValidInput)
   EXPECT_FALSE(validators["parsing.valid_input.with_prerequisites1"]
                  .prereq_with_forgive_warnings["parsing.valid_input.no_prerequisites2"]);
 }
-/*
+
 TEST_F(JsonProcessingTest, CreateValidationQueueNoCycles)
 {
   Validators validators = {
-    {"validator1", ValidatorInfo{.prerequisites = {}}},
-    {"validator2", ValidatorInfo{.prerequisites = {"validator1"}}},
-  };
-
+    {"validator1", {{}, ValidatorInfo::Severity::NONE}},
+    {"validator2", {{{"validator1", true}}, ValidatorInfo::Severity::NONE}},
+    {"validator3", {{{"validator2", true}}, ValidatorInfo::Severity::NONE}}};
   auto [queue, remaining] = create_validation_queue(validators);
-  EXPECT_EQ(queue.size(), 2);
+  EXPECT_EQ(queue.size(), 3);
   EXPECT_TRUE(remaining.empty());
 }
 
 TEST_F(JsonProcessingTest, CreateValidationQueueWithCycles)
 {
   Validators validators = {
-    {"validator1", ValidatorInfo{.prerequisites = {"validator2"}}},
-    {"validator2", ValidatorInfo{.prerequisites = {"validator1"}}},
-  };
+    {"validator1", {{{"validator3", true}}, ValidatorInfo::Severity::NONE}},
+    {"validator2", {{{"validator1", true}}, ValidatorInfo::Severity::NONE}},
+    {"validator3", {{{"validator2", true}}, ValidatorInfo::Severity::NONE}},
+    {"validator4", {{}, ValidatorInfo::Severity::NONE}}};
 
   auto [queue, remaining] = create_validation_queue(validators);
-  EXPECT_EQ(queue.size(), 0);  // Expect empty queue because of a cycle
-  EXPECT_EQ(remaining.size(), 2);
+  EXPECT_EQ(queue.size(), 1);  // Expect empty queue because of a cycle
+  EXPECT_EQ(remaining.size(), 3);
   EXPECT_EQ(remaining["validator1"].max_severity, ValidatorInfo::Severity::ERROR);
+  EXPECT_EQ(remaining["validator2"].max_severity, ValidatorInfo::Severity::ERROR);
+  EXPECT_EQ(remaining["validator3"].max_severity, ValidatorInfo::Severity::ERROR);
+  EXPECT_EQ(remaining["validator4"].max_severity, ValidatorInfo::Severity::NONE);
 }
-
+/*
 TEST_F(JsonProcessingTest, CheckPrerequisiteCompletionSuccess)
 {
   Validators validators = {
