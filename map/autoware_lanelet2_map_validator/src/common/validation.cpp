@@ -222,13 +222,12 @@ std::vector<lanelet::validation::DetectedIssues> descript_unused_validators_to_j
 }
 
 std::vector<lanelet::validation::DetectedIssues> check_prerequisite_completion(
-  json & json_data, const Validators & validators, const std::string target_validator_name)
+  const Validators & validators, const std::string target_validator_name)
 {
   lanelet::validation::Issues issues;
   std::vector<lanelet::validation::DetectedIssues> detected_issues;
 
   ValidatorInfo current_validator_info = validators.at(target_validator_name);
-  json & validator_json = find_validator_block(json_data, target_validator_name);
 
   bool prerequisite_complete = true;
   for (const auto & [prereq, forgive_warnings] :
@@ -243,17 +242,6 @@ std::vector<lanelet::validation::DetectedIssues> check_prerequisite_completion(
   }
 
   if (!prerequisite_complete) {
-    validator_json["passed"] = false;
-    json issues_json;
-    json issue_json;
-    issue_json["severity"] = lanelet::validation::toString(lanelet::validation::Severity::Error);
-    issue_json["primitive"] =
-      lanelet::validation::toString(lanelet::validation::Primitive::Primitive);
-    issue_json["id"] = 0;
-    issue_json["message"] = "Prerequisites didn't pass";
-    issues_json.push_back(issue_json);
-    validator_json["issues"] = issues_json;
-
     lanelet::validation::Issue issue;
     issue.severity = lanelet::validation::Severity::Error;
     issue.primitive = lanelet::validation::Primitive::Primitive;
@@ -359,18 +347,20 @@ void process_requirements(json json_data, const MetaConfig & validator_config)
     std::string validator_name = validation_queue.front();
     validation_queue.pop();
 
-    // Check prerequisites are OK
-    std::vector<lanelet::validation::DetectedIssues> prerequisite_failure_issues =
-      check_prerequisite_completion(json_data, validators, validator_name);
-    appendIssues(issues, std::move(prerequisite_failure_issues));
-    if (prerequisite_failure_issues.size() > 0) {
-      continue;
-    }
+    std::vector<lanelet::validation::DetectedIssues> temp_issues;
 
-    // Validate map
-    std::vector<lanelet::validation::DetectedIssues> temp_issues = validateMap(
-      validator_config.projector_type, validator_config.command_line_config.mapFile,
-      replace_validator(validator_config.command_line_config.validationConfig, validator_name));
+    // Check prerequisites are OK
+    appendIssues(temp_issues, check_prerequisite_completion(validators, validator_name));
+
+    if (temp_issues.size() == 0) {
+      // Validate map
+      appendIssues(
+        temp_issues,
+        validateMap(
+          validator_config.projector_type, validator_config.command_line_config.mapFile,
+          replace_validator(
+            validator_config.command_line_config.validationConfig, validator_name)));
+    }
 
     // Add validation results to the json data
     json & validator_json = find_validator_block(json_data, validator_name);

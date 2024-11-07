@@ -81,7 +81,7 @@ std::vector<lanelet::validation::DetectedIssues> descript_unused_validators_to_j
   json & json_data, const Validators & unused_validators);
 
 std::vector<lanelet::validation::DetectedIssues> check_prerequisite_completion(
-  json & json_data, const Validators & validators, const std::string target_validator_name);
+  const Validators & validators, const std::string target_validator_name);
 
 void summarize_validator_results(json & json_data);
 
