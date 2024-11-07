@@ -24,6 +24,7 @@
 #include <map>
 #include <queue>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 
@@ -106,9 +107,9 @@ Validators parse_validators(const json & json_data)
 
       if (validator.contains("prerequisites")) {
         for (const auto & prereq : validator["prerequisites"]) {
-          info.prerequisites.push_back(prereq["name"]);
+          info.prereq_with_forgive_warnings[prereq["name"]] = false;
           if (prereq.contains("forgive_warnings")) {
-            info.forgive_warnings[prereq["name"]] = prereq["forgive_warnings"];
+            info.prereq_with_forgive_warnings[prereq["name"]] = prereq["forgive_warnings"];
           }
         }
       }
@@ -118,22 +119,20 @@ Validators parse_validators(const json & json_data)
   return validators;
 }
 
-std::pair<std::vector<std::string>, Validators> create_validation_queue(
+std::tuple<std::queue<std::string>, Validators> create_validation_queue(
   const Validators & validators)
 {
   std::unordered_map<std::string, std::vector<std::string>> graph;  // Graph of dependencies
-  std::unordered_map<std::string, int>
-    indegree;  // Indegree (number of prerequisites) for each validator
-  std::vector<std::string> validation_queue;
+  std::unordered_map<std::string, int> indegree;  // Indegree (number of prerequisites)
+  std::queue<std::string> validation_queue;
   Validators remaining_validators;  // Validators left unprocessed
 
   // Build the graph and initialize indegree
-  for (const auto & v : validators) {
-    std::string name = v.first;
-    indegree[name] = 0;              // Initialize indegree
-    remaining_validators.insert(v);  // Throw all validators to remaining_validators first
+  for (const auto & [name, info] : validators) {
+    indegree[name] = 0;                 // Initialize indegree
+    remaining_validators[name] = info;  // Throw all validators to remaining_validators first
 
-    for (const auto & prereq : v.second.prerequisites) {
+    for (const auto & [prereq, forgive_warnings] : info.prereq_with_forgive_warnings) {
       graph[prereq].push_back(name);  // prereq -> validator (prereq points to validator)
       indegree[name]++;               // Increment the indegree of the validator
     }
@@ -144,7 +143,7 @@ std::pair<std::vector<std::string>, Validators> create_validation_queue(
   for (const auto & [name, count] : indegree) {
     if (count == 0) {
       q.push(name);
-      remaining_validators.erase(name);  // Remove from unprocessed set
+      remaining_validators.erase(name);
     }
   }
 
@@ -154,14 +153,14 @@ std::pair<std::vector<std::string>, Validators> create_validation_queue(
     q.pop();
 
     // Add the current validator to the execution queue
-    validation_queue.push_back(current_validator_name);
+    validation_queue.push(current_validator_name);
 
     // For each dependent validator, reduce indegree and add to the queue if indegree becomes 0
     for (const auto & neighbor : graph[current_validator_name]) {
       indegree[neighbor]--;
       if (indegree[neighbor] == 0) {
         q.push(neighbor);
-        remaining_validators.erase(neighbor);  // Remove from unprocessed set
+        remaining_validators.erase(neighbor);
       }
     }
   }
@@ -183,8 +182,10 @@ json & find_validator_block(json & json_data, const std::string & validator_name
       }
     }
   }
-  throw std::runtime_error(
-    "Validator block not found");  // Handle case where validator is not found
+
+  // Handle case where validator is not found
+  std::string msg = "Validator block " + validator_name + " not found";
+  throw std::runtime_error(msg);
 }
 
 std::vector<lanelet::validation::DetectedIssues> descript_unused_validators_to_json(
@@ -230,11 +231,12 @@ std::vector<lanelet::validation::DetectedIssues> check_prerequisite_completion(
   json & validator_json = find_validator_block(json_data, target_validator_name);
 
   bool prerequisite_complete = true;
-  for (const auto & prereq : current_validator_info.prerequisites) {
+  for (const auto & [prereq, forgive_warnings] :
+       current_validator_info.prereq_with_forgive_warnings) {
     if (
       validators.at(prereq).max_severity == ValidatorInfo::Severity::ERROR ||
       (validators.at(prereq).max_severity == ValidatorInfo::Severity::WARNING &&
-       !current_validator_info.forgive_warnings.at(prereq))) {
+       !forgive_warnings)) {
       prerequisite_complete = false;
       break;
     }
@@ -353,7 +355,10 @@ void process_requirements(json json_data, const MetaConfig & validator_config)
   appendIssues(issues, std::move(unused_validator_issues));
 
   // Main validation process
-  for (const auto & validator_name : validation_queue) {
+  while (!validation_queue.empty()) {
+    std::string validator_name = validation_queue.front();
+    validation_queue.pop();
+
     // Check prerequisites are OK
     std::vector<lanelet::validation::DetectedIssues> prerequisite_failure_issues =
       check_prerequisite_completion(json_data, validators, validator_name);

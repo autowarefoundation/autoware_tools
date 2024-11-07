@@ -26,8 +26,10 @@
 #include <lanelet2_validation/Validation.h>
 
 #include <memory>
+#include <queue>
 #include <regex>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -54,8 +56,7 @@ struct ValidatorInfo
 {
   enum class Severity { ERROR, WARNING, INFO, NONE };
 
-  std::vector<std::string> prerequisites;
-  std::unordered_map<std::string, bool> forgive_warnings;
+  std::unordered_map<std::string, bool> prereq_with_forgive_warnings;
   Severity max_severity = Severity::NONE;
 };
 
@@ -70,7 +71,7 @@ std::vector<lanelet::validation::DetectedIssues> validateMap(
 
 Validators parse_validators(const json & json_data);
 
-std::pair<std::vector<std::string>, Validators> create_validation_queue(
+std::tuple<std::queue<std::string>, Validators> create_validation_queue(
   const Validators & validators);
 
 // Function to find a validator block by name
