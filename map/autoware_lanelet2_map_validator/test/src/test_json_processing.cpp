@@ -96,45 +96,27 @@ TEST_F(JsonProcessingTest, CreateValidationQueueWithCycles)
   EXPECT_EQ(remaining["validator3"].max_severity, ValidatorInfo::Severity::ERROR);
   EXPECT_EQ(remaining["validator4"].max_severity, ValidatorInfo::Severity::NONE);
 }
-/*
+
 TEST_F(JsonProcessingTest, CheckPrerequisiteCompletionSuccess)
 {
   Validators validators = {
-    {"validator1",
-     ValidatorInfo{.prerequisites = {}, .max_severity = ValidatorInfo::Severity::INFO}},
-    {"validator2", ValidatorInfo{.prerequisites = {"validator1"}}},
-  };
+    {"validator1", {{}, ValidatorInfo::Severity::INFO}},
+    {"validator2", {{{"validator1", true}}, ValidatorInfo::Severity::NONE}}};
 
-  sample_input_data = R"({
-        "requirements": [{
-            "id": "1",
-            "validators": [{"name": "validator2"}]
-        }]
-    })"_json;
-
-  auto issues = check_prerequisite_completion(sample_input_data, validators, "validator2");
-  EXPECT_TRUE(issues.empty());
+  auto issues = check_prerequisite_completion(validators, "validator2");
+  EXPECT_EQ(issues.size(), 0);
 }
 
 TEST_F(JsonProcessingTest, CheckPrerequisiteCompletionFailure)
 {
   Validators validators = {
-    {"validator1",
-     ValidatorInfo{.prerequisites = {}, .max_severity = ValidatorInfo::Severity::ERROR}},
-    {"validator2", ValidatorInfo{.prerequisites = {"validator1"}}},
-  };
+    {"validator1", {{}, ValidatorInfo::Severity::ERROR}},
+    {"validator2", {{{"validator1", true}}, ValidatorInfo::Severity::NONE}}};
 
-  sample_input_data = R"({
-        "requirements": [{
-            "id": "1",
-            "validators": [{"name": "validator2"}]
-        }]
-    })"_json;
-
-  auto issues = check_prerequisite_completion(sample_input_data, validators, "validator2");
-  EXPECT_FALSE(issues.empty());
+  auto issues = check_prerequisite_completion(validators, "validator2");
+  EXPECT_EQ(issues.size(), 1);
 }
-
+/*
 TEST_F(JsonProcessingTest, DescriptUnusedValidatorsToJson)
 {
   Validators unused_validators = {
