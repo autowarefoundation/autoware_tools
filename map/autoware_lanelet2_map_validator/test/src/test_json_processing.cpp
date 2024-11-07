@@ -37,14 +37,16 @@ namespace validation
 class JsonProcessingTest : public ::testing::Test
 {
 protected:
-  void SetUp() override
+  json load_json_file(std::string file_name)
   {
     std::string package_share_directory =
       ament_index_cpp::get_package_share_directory("autoware_lanelet2_map_validator");
-    std::ifstream file(package_share_directory + "/data/test_input.json");
-    ASSERT_TRUE(file.is_open()) << "Failed to open test JSON file.";
+    std::ifstream file(package_share_directory + "/data/" + file_name);
+    EXPECT_TRUE(file.is_open()) << "Failed to open test JSON file.";
 
-    file >> sample_input_data;
+    json json_data;
+    file >> json_data;
+    return json_data;
   }
   json sample_input_data;
   json sample_output_data;
@@ -52,6 +54,7 @@ protected:
 
 TEST_F(JsonProcessingTest, ParseValidatorsWithValidInput)
 {
+  sample_input_data = load_json_file("test_input.json");
   Validators validators = parse_validators(sample_input_data);
   ASSERT_EQ(validators.size(), 3);
   ASSERT_TRUE(validators.find("parsing.valid_input.no_prerequisites1") != validators.end());
@@ -119,9 +122,10 @@ TEST_F(JsonProcessingTest, CheckPrerequisiteCompletionFailure)
 /*
 TEST_F(JsonProcessingTest, DescriptUnusedValidatorsToJson)
 {
-  Validators unused_validators = {
-    {"validator1",
-     ValidatorInfo{.prerequisites = {}, .max_severity = ValidatorInfo::Severity::ERROR}},
+  Validators error_validators = {
+    {"validator1", {{{"validator3", true}}, ValidatorInfo::Severity::ERROR}},
+    {"validator2", {{{"validator1", true}}, ValidatorInfo::Severity::ERROR}},
+    {"validator3", {{{"validator2", true}}, ValidatorInfo::Severity::ERROR}}
   };
 
   sample_input_data = R"({
@@ -131,7 +135,7 @@ TEST_F(JsonProcessingTest, DescriptUnusedValidatorsToJson)
         }]
     })"_json;
 
-  auto detected_issues = descript_unused_validators_to_json(sample_input_data, unused_validators);
+  auto detected_issues = descript_unused_validators_to_json(sample_input_data, error_validators);
   EXPECT_EQ(detected_issues.size(), 1);
   EXPECT_EQ(detected_issues[0].issues.size(), 1);
   EXPECT_EQ(detected_issues[0].issues[0].severity, lanelet::validation::Severity::Error);
