@@ -21,16 +21,32 @@ target_include_directories(
   src/include
 )
 
+ament_target_dependencies(autoware_lanelet2_map_validator_lib nlohmann_json)
+
 ament_auto_add_executable(autoware_lanelet2_map_validator
   src/main.cpp
 )
 
 target_link_libraries(autoware_lanelet2_map_validator
   autoware_lanelet2_map_validator_lib
-  nlohmann_json
 )
 
 if(BUILD_TESTING)
+  find_package(ament_index_cpp REQUIRED)
+
+  # test for json processing
+  ament_add_ros_isolated_gtest(
+    json_processing_test
+    test/src/test_json_processing.cpp
+  )
+
+  target_link_libraries(
+    json_processing_test
+    autoware_lanelet2_map_validator_lib
+    ament_index_cpp::ament_index_cpp
+  )
+
+  # test for general lanelet2 map validators
   function(add_validation_test VALIDATION_NAME)
     ament_add_ros_isolated_gtest(
       ${VALIDATION_NAME}_test
@@ -39,7 +55,6 @@ if(BUILD_TESTING)
     target_link_libraries(
       ${VALIDATION_NAME}_test
       autoware_lanelet2_map_validator_lib
-      nlohmann_json
     )
   endfunction()
 
@@ -47,4 +62,7 @@ if(BUILD_TESTING)
   add_validation_test(regulatory_element_details)
 endif()
 
-ament_auto_package()
+ament_auto_package(
+  INSTALL_TO_SHARE
+  test/data
+)
