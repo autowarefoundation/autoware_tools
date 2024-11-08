@@ -118,7 +118,7 @@ TEST_F(JsonProcessingTest, CheckPrerequisiteCompletionFailure)
   EXPECT_EQ(issues.size(), 1);
 }
 
-TEST_F(JsonProcessingTest, DescriptUnusedValidatorsToJson)
+TEST_F(JsonProcessingTest, DescribeUnusedValidatorsToJson)
 {
   Validators error_validators = {
     {"validator1", {{{"validator3", true}}, ValidatorInfo::Severity::ERROR}},
