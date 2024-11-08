@@ -190,7 +190,7 @@ json & find_validator_block(json & json_data, const std::string & validator_name
   throw std::runtime_error(msg);
 }
 
-std::vector<lanelet::validation::DetectedIssues> descript_unused_validators_to_json(
+std::vector<lanelet::validation::DetectedIssues> describe_unused_validators_to_json(
   json & json_data, const Validators & unused_validators)
 {
   lanelet::validation::Issues issues;
@@ -340,9 +340,11 @@ void process_requirements(json json_data, const MetaConfig & validator_config)
   auto [validation_queue, remaining_validators] = create_validation_queue(validators);
 
   // Note validators that cannot be run from the start
-  std::vector<lanelet::validation::DetectedIssues> unused_validator_issues =
-    descript_unused_validators_to_json(json_data, remaining_validators);
-  appendIssues(issues, std::move(unused_validator_issues));
+  if (auto unused_validator_issues =
+        describe_unused_validators_to_json(json_data, remaining_validators);
+      !unused_validator_issues.empty()) {
+    appendIssues(issues, std::move(unused_validator_issues));
+  }
 
   // Main validation process
   while (!validation_queue.empty()) {

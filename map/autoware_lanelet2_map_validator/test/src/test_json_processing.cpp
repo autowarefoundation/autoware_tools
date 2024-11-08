@@ -125,11 +125,11 @@ TEST_F(JsonProcessingTest, DescriptUnusedValidatorsToJson)
     {"validator2", {{{"validator1", true}}, ValidatorInfo::Severity::ERROR}},
     {"validator3", {{{"validator2", true}}, ValidatorInfo::Severity::ERROR}}};
 
-  json sample_input_data = load_json_file("test_descript_unused_validators_input.json");
-  json answer_output_data = load_json_file("test_descript_unused_validators_output.json");
+  json sample_input_data = load_json_file("test_describe_unused_validators_input.json");
+  json answer_output_data = load_json_file("test_describe_unused_validators_output.json");
 
   // Check issues
-  auto detected_issues = descript_unused_validators_to_json(sample_input_data, error_validators);
+  auto detected_issues = describe_unused_validators_to_json(sample_input_data, error_validators);
   EXPECT_EQ(detected_issues.size(), 1);
   EXPECT_EQ(detected_issues[0].issues.size(), 3);
   EXPECT_EQ(detected_issues[0].checkName, "invalid_prerequisites");

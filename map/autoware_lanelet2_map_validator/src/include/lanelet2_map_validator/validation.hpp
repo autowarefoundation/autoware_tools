@@ -77,7 +77,7 @@ std::tuple<std::queue<std::string>, Validators> create_validation_queue(
 // Function to find a validator block by name
 json & find_validator_block(json & json_data, const std::string & validator_name);
 
-std::vector<lanelet::validation::DetectedIssues> descript_unused_validators_to_json(
+std::vector<lanelet::validation::DetectedIssues> describe_unused_validators_to_json(
   json & json_data, const Validators & unused_validators);
 
 std::vector<lanelet::validation::DetectedIssues> check_prerequisite_completion(
