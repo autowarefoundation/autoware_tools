@@ -124,8 +124,8 @@ The JSON file input should follow the structure like this example.
   - `validators` : A list of validators that structures the requirement.
     - A validator MUST be given with its name on the `name` field.
     - The name list of available validators can be obtained from the `--print` option.
-    - You can add a list of `prerequisites` to each validator. Then, the validator will only be run when the prequisites pass the validation.
-    - In the `prerequisites` field, you can add `forgive_warnings: true` in order to run the validator even if the prequisites output warning issues. (Error issues from prerequisites will still skip the validation.). Note that NOT writing the `forgive_warnings` field and writing `forgive_warnings: false` means the same.
+    - You can add a list of `prerequisites` to each validator. Then, the validator will only be run when the prerequisites pass the validation.
+    - In the `prerequisites` field, you can add `forgive_warnings: true` in order to run the validator even if the prerequisites output warning issues. (Error issues from prerequisites will still skip the validation.). Note that NOT writing the `forgive_warnings` field and writing `forgive_warnings: false` means the same.
 - The user can write any other field (like `version`) besides `requirements`.
 
 #### Output file

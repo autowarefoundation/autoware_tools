@@ -37,6 +37,8 @@
 #define NORMAL_RED "\033[31m"
 #define FONT_RESET "\033[0m"
 
+// cSpell:words indegree Indegree
+
 namespace lanelet
 {
 namespace autoware
