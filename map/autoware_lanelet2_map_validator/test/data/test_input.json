@@ -1,7 +1,7 @@
 {
   "requirements": [
     {
-      "id": "test-01",
+      "id": "test-parsing-01",
       "validators": [
         {
           "name": "parsing.valid_input.no_prerequisites1"
@@ -12,7 +12,7 @@
       ]
     },
     {
-      "id": "test-02",
+      "id": "test-parsing-02",
       "validators": [
         {
           "name": "parsing.valid_input.with_prerequisites1",

@@ -48,13 +48,11 @@ protected:
     file >> json_data;
     return json_data;
   }
-  json sample_input_data;
-  json sample_output_data;
 };
 
 TEST_F(JsonProcessingTest, ParseValidatorsWithValidInput)
 {
-  sample_input_data = load_json_file("test_input.json");
+  json sample_input_data = load_json_file("test_input.json");
   Validators validators = parse_validators(sample_input_data);
   ASSERT_EQ(validators.size(), 3);
   ASSERT_TRUE(validators.find("parsing.valid_input.no_prerequisites1") != validators.end());
@@ -119,69 +117,45 @@ TEST_F(JsonProcessingTest, CheckPrerequisiteCompletionFailure)
   auto issues = check_prerequisite_completion(validators, "validator2");
   EXPECT_EQ(issues.size(), 1);
 }
-/*
+
 TEST_F(JsonProcessingTest, DescriptUnusedValidatorsToJson)
 {
   Validators error_validators = {
     {"validator1", {{{"validator3", true}}, ValidatorInfo::Severity::ERROR}},
     {"validator2", {{{"validator1", true}}, ValidatorInfo::Severity::ERROR}},
-    {"validator3", {{{"validator2", true}}, ValidatorInfo::Severity::ERROR}}
-  };
+    {"validator3", {{{"validator2", true}}, ValidatorInfo::Severity::ERROR}}};
 
-  sample_input_data = R"({
-        "requirements": [{
-            "id": "1",
-            "validators": [{"name": "validator1"}]
-        }]
-    })"_json;
+  json sample_input_data = load_json_file("test_descript_unused_validators_input.json");
+  json answer_output_data = load_json_file("test_descript_unused_validators_output.json");
 
+  // Check issues
   auto detected_issues = descript_unused_validators_to_json(sample_input_data, error_validators);
   EXPECT_EQ(detected_issues.size(), 1);
-  EXPECT_EQ(detected_issues[0].issues.size(), 1);
+  EXPECT_EQ(detected_issues[0].issues.size(), 3);
+  EXPECT_EQ(detected_issues[0].checkName, "invalid_prerequisites");
   EXPECT_EQ(detected_issues[0].issues[0].severity, lanelet::validation::Severity::Error);
+  EXPECT_EQ(detected_issues[0].issues[1].severity, lanelet::validation::Severity::Error);
+  EXPECT_EQ(detected_issues[0].issues[2].severity, lanelet::validation::Severity::Error);
 
-  // Check json_data too,
+  // Check json_data
+  EXPECT_EQ(sample_input_data, answer_output_data);
 }
 
-TEST_F(JsonProcessingTest, SummarizeValidatorResultsAllPassed)
+TEST_F(JsonProcessingTest, SummarizeValidatorResults)
 {
-  sample_input_data = R"({
-        "requirements": [{
-            "id": "1",
-            "validators": [{"name": "validator1", "passed": true}]
-        }]
-    })"_json;
+  json sample_input_data = load_json_file("test_summarize_validator_results_input.json");
+  json answer_output_data = load_json_file("test_summarize_validator_results_output.json");
 
   testing::internal::CaptureStdout();
   summarize_validator_results(sample_input_data);
-  std::string output = testing::internal::GetCapturedStdout();
-  EXPECT_NE(output.find("Passed"), std::string::npos);
-}
+  EXPECT_EQ(sample_input_data, answer_output_data);
 
-TEST_F(JsonProcessingTest, SummarizeValidatorResultsWithWarningsAndErrors)
-{
-  sample_input_data = R"({
-        "requirements": [{
-            "id": "1",
-            "validators": [{
-                "name": "validator1",
-                "passed": false,
-                "issues": [
-                    {"severity": "Error", "message": "Test error"},
-                    {"severity": "Warning", "message": "Test warning"}
-                ]
-            }]
-        }]
-    })"_json;
-
-  testing::internal::CaptureStdout();
-  summarize_validator_results(sample_input_data);
   std::string output = testing::internal::GetCapturedStdout();
-  EXPECT_NE(output.find("Failed"), std::string::npos);
-  EXPECT_NE(output.find("errors were found"), std::string::npos);
-  EXPECT_NE(output.find("warnings were found"), std::string::npos);
+  EXPECT_NE(output.find("[success-requirement] \033[1;32mPassed"), std::string::npos);
+  EXPECT_NE(output.find("[failure-requirement] \033[1;31mFailed"), std::string::npos);
+  EXPECT_NE(output.find("Total of 1 errors were found"), std::string::npos);
+  EXPECT_EQ(output.find("warnings were found"), std::string::npos);
 }
-*/
 }  // namespace validation
 }  // namespace autoware
 }  // namespace lanelet
