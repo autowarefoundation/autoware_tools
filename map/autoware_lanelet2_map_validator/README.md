@@ -32,7 +32,7 @@ ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator
 You can use `autoware_lanelet2_map_validator` with the following command. This will run all validators including the default built-in validators in the [lanelet2_validation](https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation).
 
 ```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm --projection mgrs
 ```
 
 ### Run a specific validator
@@ -41,10 +41,11 @@ ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_f
 If you want to call a few validators, you can select them with the `--validator, -v` option.
 
 ```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm --validator mapping.traffic_light.missing_regulatory_elements
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm --projection mgrs --validator mapping.traffic_light.missing_regulatory_elements
 ```
 
-You can get a list of available validators with the `--print, -p` option.
+You can get a list of available validators with the `--print` option.
+(`-p` is for `--projection`)
 
 ```bash
 ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --print
@@ -57,7 +58,13 @@ ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --print
 The output filename will be `lanelet2_validation_results.json`.
 
 ```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --input_requirements autoware_requirements_set.json --output_directory ./
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm --projection mgrs --input_requirements autoware_requirements_set.json --output_directory ./
+```
+
+(Short version)
+
+```bash
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator -m path/to_your/lanelet2_map.osm -p mgrs -i autoware_requirements_set.json -o ./
 ```
 
 #### Input file
@@ -66,35 +73,44 @@ The JSON file input should follow the structure like this example.
 
 ```json
 {
-  "version": "0.1.0",
   "requirements": [
     {
-      "id": "example-01-01",
+      "id": "vm-02-02",
+      "validators": [
+        {
+          "name": "mapping.stop_line.missing_regulatory_elements"
+        }
+      ]
+    },
+    {
+      "id": "vm-04-01",
       "validators": [
         {
           "name": "mapping.crosswalk.missing_regulatory_elements"
         },
         {
-          "name": "mapping.crosswalk.regulatory_element_details"
+          "name": "mapping.crosswalk.regulatory_element_details",
+          "prerequisites": [
+            {
+              "name": "mapping.crosswalk.missing_regulatory_elements"
+            }
+          ]
         }
       ]
     },
     {
-      "id": "example-01-02",
+      "id": "vm-05-01",
       "validators": [
         {
           "name": "mapping.traffic_light.missing_regulatory_elements"
         },
         {
-          "name": "mapping.traffic_light.regulatory_element_details"
-        }
-      ]
-    },
-    {
-      "id": "example-01-03",
-      "validators": [
-        {
-          "name": "mapping.stop_line.missing_regulatory_elements"
+          "name": "mapping.traffic_light.regulatory_element_details",
+          "prerequisites": [
+            {
+              "name": "mapping.traffic_light.missing_regulatory_elements"
+            }
+          ]
         }
       ]
     }
@@ -108,6 +124,8 @@ The JSON file input should follow the structure like this example.
   - `validators` : A list of validators that structures the requirement.
     - A validator MUST be given with its name on the `name` field.
     - The name list of available validators can be obtained from the `--print` option.
+    - You can add a list of `prerequisites` to each validator. Then, the validator will only be run when the prerequisites pass the validation.
+    - In the `prerequisites` field, you can add `forgive_warnings: true` in order to run the validator even if the prerequisites output warning issues. (Error issues from prerequisites will still skip the validation.). Note that NOT writing the `forgive_warnings` field and writing `forgive_warnings: false` means the same.
 - The user can write any other field (like `version`) besides `requirements`.
 
 #### Output file
@@ -118,7 +136,17 @@ When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it
 {
   "requirements": [
     {
-      "id": "example-01-01",
+      "id": "vm-02-02",
+      "passed": true,
+      "validators": [
+        {
+          "name": "mapping.stop_line.missing_regulatory_elements",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "vm-04-01",
       "passed": false,
       "validators": [
         {
@@ -152,13 +180,26 @@ When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it
           "passed": false
         },
         {
+          "issues": [
+            {
+              "id": 0,
+              "message": "Prerequisites didn't pass",
+              "primitive": "primitive",
+              "severity": "Error"
+            }
+          ],
           "name": "mapping.crosswalk.regulatory_element_details",
-          "passed": true
+          "passed": false,
+          "prerequisites": [
+            {
+              "name": "mapping.crosswalk.missing_regulatory_elements"
+            }
+          ]
         }
       ]
     },
     {
-      "id": "example-01-02",
+      "id": "vm-05-01",
       "passed": false,
       "validators": [
         {
@@ -193,27 +234,21 @@ When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it
             }
           ],
           "name": "mapping.traffic_light.regulatory_element_details",
-          "passed": false
-        }
-      ]
-    },
-    {
-      "id": "example-01-03",
-      "passed": true,
-      "validators": [
-        {
-          "name": "mapping.stop_line.missing_regulatory_elements",
-          "passed": true
+          "passed": false,
+          "prerequisites": [
+            {
+              "name": "mapping.traffic_light.missing_regulatory_elements"
+            }
+          ]
         }
       ]
     }
-  ],
-  "version": "0.1.0"
+  ]
 }
 ```
 
 - `lanelet2_validation_results.json` inherits the JSON file of `input_requirements` and add results to it.
-  - So non-required fields (line `version`) remains in the output.
+  - So additional input information not related to this validator also remains in the output.
 - `autoware_lanelet2_map_validator` adds a boolean `passed` field to each requirement. If all validators of the requirement have been passed, the `passed` field of the requirement will be `true` (`false` if not).
 - The `passed` field is also given to each validator. If the validator found any issues the `passed` field will turn to be `false` (`true` if not), and adds an `issues` field which is a list of issues found. Each issue contains information of `severity`, `primitive`, `id`, and `message`.
 
@@ -227,7 +262,7 @@ When the `input_requirements` is thrown to `autoware_lanelet2_map_validator`, it
 | `-i, --input_requirements` | Path to the JSON file where the list of requirements and validations is written                                                                                 |
 | `-o, --output_directory`   | Directory to save the list of validation results in a JSON format                                                                                               |
 | `-v, --validator`          | Comma separated list of regexes to filter the applicable validators. Will run all validators by default. Example: `mapping.*` to run all checks for the mapping |
-| `-p, --projector`          | Projector used for loading lanelet map. Available projectors are: mgrs, utm, transverse_mercator. (default: mgrs)                                               |
+| `-p, --projector`          | Projector used for loading lanelet map. Available projectors are: `mgrs`, `utm`, and `transverse_mercator`.                                                     |
 | `-l, --location`           | Location of the map (for instantiating the traffic rules), e.g. de for Germany                                                                                  |
 | `--participants`           | Participants for which the routing graph will be instantiated (default: vehicle)                                                                                |
 | `--lat`                    | latitude coordinate of map origin. This is required for the transverse mercator and utm projector.                                                              |

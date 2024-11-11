@@ -15,7 +15,12 @@
           "name": "mapping.crosswalk.missing_regulatory_elements"
         },
         {
-          "name": "mapping.crosswalk.regulatory_element_details"
+          "name": "mapping.crosswalk.regulatory_element_details",
+          "prerequisites": [
+            {
+              "name": "mapping.crosswalk.missing_regulatory_elements"
+            }
+          ]
         }
       ]
     },
@@ -26,7 +31,12 @@
           "name": "mapping.traffic_light.missing_regulatory_elements"
         },
         {
-          "name": "mapping.traffic_light.regulatory_element_details"
+          "name": "mapping.traffic_light.regulatory_element_details",
+          "prerequisites": [
+            {
+              "name": "mapping.traffic_light.missing_regulatory_elements"
+            }
+          ]
         }
       ]
     }
