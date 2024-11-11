@@ -3062,54 +3062,67 @@ See <a href="#run-with-a-requirement-set">"Run with a requirement set"</a> for f
 </code></pre></div>
 <h3 id="run-all-validators">Run ALL validators<a class="headerlink" href="#run-all-validators" title="Permanent link">#</a></h3>
 <p>You can use <code>autoware_lanelet2_map_validator</code> with the following command. This will run all validators including the default built-in validators in the <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation">lanelet2_validation</a>.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--map_file<span class="w"> </span>path/to_your/lanelet2_map.osm
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--map_file<span class="w"> </span>path/to_your/lanelet2_map.osm<span class="w"> </span>--projection<span class="w"> </span>mgrs
 </code></pre></div>
 <h3 id="run-a-specific-validator">Run a specific validator<a class="headerlink" href="#run-a-specific-validator" title="Permanent link">#</a></h3>
 <p><code>autoware_lanelet2_map_validator</code> consists of multiple small validators in order to realize complex requirements with a combination of them.
 If you want to call a few validators, you can select them with the <code>--validator, -v</code> option.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--map_file<span class="w"> </span>path/to_your/lanelet2_map.osm<span class="w"> </span>--validator<span class="w"> </span>mapping.traffic_light.missing_regulatory_elements
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--map_file<span class="w"> </span>path/to_your/lanelet2_map.osm<span class="w"> </span>--projection<span class="w"> </span>mgrs<span class="w"> </span>--validator<span class="w"> </span>mapping.traffic_light.missing_regulatory_elements
 </code></pre></div>
-<p>You can get a list of available validators with the <code>--print, -p</code> option.</p>
+<p>You can get a list of available validators with the <code>--print</code> option.
+(<code>-p</code> is for <code>--projection</code>)</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--print
 </code></pre></div>
 <h3 id="run-with-a-requirement-set">Run with a requirement set<a class="headerlink" href="#run-with-a-requirement-set" title="Permanent link">#</a></h3>
 <p><code>autoware_lanelet2_map_validator</code> can manage to run a group of validators by a list of validator names.
 <code>autoware_lanelet2_map_validator</code> will scan through the input JSON file given by the <code>--input_requirements, -i</code> option, and output the validation results to the directory given by the <code>--output_directory, -o</code> option.
 The output filename will be <code>lanelet2_validation_results.json</code>.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--input_requirements<span class="w"> </span>autoware_requirements_set.json<span class="w"> </span>--output_directory<span class="w"> </span>./
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--map_file<span class="w"> </span>path/to_your/lanelet2_map.osm<span class="w"> </span>--projection<span class="w"> </span>mgrs<span class="w"> </span>--input_requirements<span class="w"> </span>autoware_requirements_set.json<span class="w"> </span>--output_directory<span class="w"> </span>./
+</code></pre></div>
+<p>(Short version)</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>-m<span class="w"> </span>path/to_your/lanelet2_map.osm<span class="w"> </span>-p<span class="w"> </span>mgrs<span class="w"> </span>-i<span class="w"> </span>autoware_requirements_set.json<span class="w"> </span>-o<span class="w"> </span>./
 </code></pre></div>
 <h4 id="input-file">Input file<a class="headerlink" href="#input-file" title="Permanent link">#</a></h4>
 <p>The JSON file input should follow the structure like this example.</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.1.0"</span><span class="p">,</span>
 <span class="w">  </span><span class="nt">"requirements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-01"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-02-02"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.stop_line.missing_regulatory_elements"</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-04-01"</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.missing_regulatory_elements"</span>
 <span class="w">        </span><span class="p">},</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.regulatory_element_details"</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.regulatory_element_details"</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"prerequisites"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.missing_regulatory_elements"</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">          </span><span class="p">]</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">      </span><span class="p">]</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-02"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-05-01"</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span>
 <span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.missing_regulatory_elements"</span>
 <span class="w">        </span><span class="p">},</span>
 <span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.regulatory_element_details"</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-03"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.stop_line.missing_regulatory_elements"</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.regulatory_element_details"</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"prerequisites"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.missing_regulatory_elements"</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">          </span><span class="p">]</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">      </span><span class="p">]</span>
 <span class="w">    </span><span class="p">}</span>
@@ -3123,6 +3136,8 @@ The output filename will be <code>lanelet2_validation_results.json</code>.</p>
 <li><code>validators</code> : A list of validators that structures the requirement.<ul>
 <li>A validator MUST be given with its name on the <code>name</code> field.</li>
 <li>The name list of available validators can be obtained from the <code>--print</code> option.</li>
+<li>You can add a list of <code>prerequisites</code> to each validator. Then, the validator will only be run when the prerequisites pass the validation.</li>
+<li>In the <code>prerequisites</code> field, you can add <code>forgive_warnings: true</code> in order to run the validator even if the prerequisites output warning issues. (Error issues from prerequisites will still skip the validation.). Note that NOT writing the <code>forgive_warnings</code> field and writing <code>forgive_warnings: false</code> means the same.</li>
 </ul>
 </li>
 </ul>
@@ -3134,7 +3149,17 @@ The output filename will be <code>lanelet2_validation_results.json</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
 <span class="w">  </span><span class="nt">"requirements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-01"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-02-02"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.stop_line.missing_regulatory_elements"</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">      </span><span class="p">]</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-04-01"</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span>
@@ -3168,13 +3193,26 @@ The output filename will be <code>lanelet2_validation_results.json</code>.</p>
 <span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 <span class="w">        </span><span class="p">},</span>
 <span class="w">        </span><span class="p">{</span>
+<span class="w">          </span><span class="nt">"issues"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Prerequisites didn't pass"</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"primitive"</span><span class="p">,</span>
+<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">          </span><span class="p">],</span>
 <span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.regulatory_element_details"</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"prerequisites"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.missing_regulatory_elements"</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">          </span><span class="p">]</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">      </span><span class="p">]</span>
 <span class="w">    </span><span class="p">},</span>
 <span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-02"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-05-01"</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
 <span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">        </span><span class="p">{</span>
@@ -3209,27 +3247,21 @@ The output filename will be <code>lanelet2_validation_results.json</code>.</p>
 <span class="w">            </span><span class="p">}</span>
 <span class="w">          </span><span class="p">],</span>
 <span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.regulatory_element_details"</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-01-03"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.stop_line.missing_regulatory_elements"</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">          </span><span class="nt">"prerequisites"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">              </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.missing_regulatory_elements"</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">          </span><span class="p">]</span>
 <span class="w">        </span><span class="p">}</span>
 <span class="w">      </span><span class="p">]</span>
 <span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">],</span>
-<span class="w">  </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"0.1.0"</span>
+<span class="w">  </span><span class="p">]</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
 <li><code>lanelet2_validation_results.json</code> inherits the JSON file of <code>input_requirements</code> and add results to it.<ul>
-<li>So non-required fields (line <code>version</code>) remains in the output.</li>
+<li>So additional input information not related to this validator also remains in the output.</li>
 </ul>
 </li>
 <li><code>autoware_lanelet2_map_validator</code> adds a boolean <code>passed</code> field to each requirement. If all validators of the requirement have been passed, the <code>passed</code> field of the requirement will be <code>true</code> (<code>false</code> if not).</li>
@@ -3270,7 +3302,7 @@ The output filename will be <code>lanelet2_validation_results.json</code>.</p>
 </tr>
 <tr>
 <td><code>-p, --projector</code></td>
-<td>Projector used for loading lanelet map. Available projectors are: mgrs, utm, transverse_mercator. (default: mgrs)</td>
+<td>Projector used for loading lanelet map. Available projectors are: <code>mgrs</code>, <code>utm</code>, and <code>transverse_mercator</code>.</td>
 </tr>
 <tr>
 <td><code>-l, --location</code></td>
