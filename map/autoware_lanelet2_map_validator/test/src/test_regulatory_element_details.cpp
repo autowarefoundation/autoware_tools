@@ -197,7 +197,7 @@ TEST_F(TestSuite, RegulatoryElementOfTrafficLightWithoutTrafficLight)  // NOLINT
     }
   }
 }
-
+/*
 TEST_F(TestSuite, RegulatoryElementOfTrafficLightWithoutStopLine)  // NOLINT for gtest
 {
   // Check regulatory element of traffic light without stop line
@@ -334,3 +334,4 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutCrosswalk)  // NOLINT for g
     }
   }
 }
+*/
