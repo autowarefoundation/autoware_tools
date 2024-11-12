@@ -95,7 +95,6 @@ std::vector<lanelet::validation::DetectedIssues> validateMap(
                         }));
   }
 
-  appendIssues(issues, lanelet::validation::validateMap(*map, val_config));
   return issues;
 }
 
