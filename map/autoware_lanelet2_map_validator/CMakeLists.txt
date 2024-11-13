@@ -61,9 +61,8 @@ if(BUILD_TESTING)
   add_validation_test(missing_regulatory_elements_for_stop_lines)
   add_validation_test(missing_regulatory_elements_for_crosswalks)
   add_validation_test(missing_regulatory_elements_for_traffic_lights)
-  add_validation_test(regulatory_elements_details_for_traffic_lights)
   add_validation_test(regulatory_elements_details_for_crosswalks)
-  add_validation_test(regulatory_element_details)
+  add_validation_test(regulatory_elements_details_for_traffic_lights)
 endif()
 
 ament_auto_package(
