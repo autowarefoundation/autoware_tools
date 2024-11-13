@@ -62,6 +62,7 @@ if(BUILD_TESTING)
   add_validation_test(missing_regulatory_elements_for_crosswalks)
   add_validation_test(missing_regulatory_elements_for_traffic_lights)
   add_validation_test(regulatory_elements_details_for_traffic_lights)
+  add_validation_test(regulatory_elements_details_for_crosswalks)
   add_validation_test(regulatory_element_details)
 endif()
 

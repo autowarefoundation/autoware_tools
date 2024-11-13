@@ -38,7 +38,7 @@ TEST_F(TestMissingRegulatoryElementsForCrosswalks, ValidatorAvailability)  // NO
 
 TEST_F(TestMissingRegulatoryElementsForCrosswalks, MissingRegulatoryElement)  // NOLINT for gtest
 {
-  load_target_map("crosswalk_without_regulatory_elements.osm");
+  load_target_map("crosswalk/crosswalk_without_regulatory_elements.osm");
 
   lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
   const auto & issues = checker(*map);
@@ -52,7 +52,7 @@ TEST_F(TestMissingRegulatoryElementsForCrosswalks, MissingRegulatoryElement)  //
 
 TEST_F(TestMissingRegulatoryElementsForCrosswalks, RegulatoryElementExists)  // NOLINT for gtest
 {
-  load_target_map("crosswalk_with_regulatory_elements.osm");
+  load_target_map("crosswalk/crosswalk_with_regulatory_element.osm");
 
   lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
   const auto & issues = checker(*map);

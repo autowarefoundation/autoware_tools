@@ -38,7 +38,7 @@ TEST_F(TestMissingRegulatoryElementsForTrafficLight, ValidatorAvailability)  // 
 
 TEST_F(TestMissingRegulatoryElementsForTrafficLight, MissingRegulatoryElement)  // NOLINT for gtest
 {
-  load_target_map("traffic_light_without_regulatory_element.osm");
+  load_target_map("traffic_light/traffic_light_without_regulatory_element.osm");
 
   lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator checker;
   const auto & issues = checker(*map);
@@ -52,7 +52,7 @@ TEST_F(TestMissingRegulatoryElementsForTrafficLight, MissingRegulatoryElement)  
 
 TEST_F(TestMissingRegulatoryElementsForTrafficLight, RegulatoryElementExists)  // NOLINT for gtest
 {
-  load_target_map("traffic_light_with_regulatory_element.osm");
+  load_target_map("traffic_light/traffic_light_with_regulatory_element.osm");
 
   lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator checker;
   const auto & issues = checker(*map);

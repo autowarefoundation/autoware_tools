@@ -38,7 +38,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, ValidatorAvailability)  // NOL
 
 TEST_F(TestMissingRegulatoryElementsForStopLines, MissingRegulatoryElement)  // NOLINT for gtest
 {
-  load_target_map("stop_line_without_regulatory_elements.osm");
+  load_target_map("stop_line/stop_line_without_regulatory_elements.osm");
 
   lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
   const auto & issues = checker(*map);
@@ -52,7 +52,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, MissingRegulatoryElement)  // 
 
 TEST_F(TestMissingRegulatoryElementsForStopLines, TrafficSignRegulatoryElement)  // NOLINT for gtest
 {
-  load_target_map("stop_line_with_traffic_sign.osm");
+  load_target_map("stop_line/stop_line_with_traffic_sign.osm");
 
   lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
   const auto & issues = checker(*map);
@@ -62,7 +62,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, TrafficSignRegulatoryElement) 
 
 TEST_F(TestMissingRegulatoryElementsForStopLines, RoadMarkingRegulatoryElement)  // NOLINT for gtest
 {
-  load_target_map("stop_line_with_road_marking.osm");
+  load_target_map("stop_line/stop_line_with_road_marking.osm");
 
   lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
   const auto & issues = checker(*map);

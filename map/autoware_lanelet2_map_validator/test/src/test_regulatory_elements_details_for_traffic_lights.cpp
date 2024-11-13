@@ -38,7 +38,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, ValidatorAvailability)  // 
 
 TEST_F(TestRegulatoryElementDetailsForTrafficLights, WrongRefersType)  // NOLINT for gtest
 {
-  load_target_map("traffic_light_with_wrong_refers_type.osm");
+  load_target_map("traffic_light/traffic_light_with_wrong_refers_type.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map);
@@ -54,7 +54,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, WrongRefersType)  // NOLINT
 
 TEST_F(TestRegulatoryElementDetailsForTrafficLights, WrongRefLineType)  // NOLINT for gtest
 {
-  load_target_map("traffic_light_with_wrong_ref_line_type.osm");
+  load_target_map("traffic_light/traffic_light_with_wrong_ref_line_type.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map);
@@ -69,7 +69,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, WrongRefLineType)  // NOLIN
 
 TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefers)  // NOLINT for gtest
 {
-  load_target_map("traffic_light_regulatory_element_without_refers.osm");
+  load_target_map("traffic_light/traffic_light_regulatory_element_without_refers.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map);
@@ -84,7 +84,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefers)  // NOLINT f
 
 TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefLine)  // NOLINT for gtest
 {
-  load_target_map("traffic_light_regulatory_element_without_refers.osm");
+  load_target_map("traffic_light/traffic_light_regulatory_element_without_refers.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map);
@@ -99,7 +99,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefLine)  // NOLINT 
 
 TEST_F(TestRegulatoryElementDetailsForTrafficLights, CorrectDetails)  // NOLINT for gtest
 {
-  load_target_map("traffic_light_with_regulatory_element.osm");
+  load_target_map("traffic_light/traffic_light_with_regulatory_element.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map);
