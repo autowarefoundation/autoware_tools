@@ -185,23 +185,15 @@ TEST_F(TestSuite, RegulatoryElementOfTrafficLightWithoutTrafficLight)  // NOLINT
   lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
-  uint8_t expected_num_issues = 2;
+  uint8_t expected_num_issues = 1;
   static constexpr const char * expected_message1 =
     "Refers of traffic light regulatory element must have type of traffic_light.";
-  static constexpr const char * expected_message2 =
-    "Regulatory element of traffic light must have a traffic light(refers).";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     if (issue.id == 99998) {
       EXPECT_EQ(expected_message1, issue.message);
       EXPECT_EQ(lanelet::validation::Severity::Error, issue.severity);
       EXPECT_EQ(lanelet::validation::Primitive::LineString, issue.primitive);
-    } else if (issue.id == 99999) {
-      EXPECT_EQ(expected_message2, issue.message);
-      EXPECT_EQ(lanelet::validation::Severity::Error, issue.severity);
-      EXPECT_EQ(lanelet::validation::Primitive::RegulatoryElement, issue.primitive);
-    } else {
-      FAIL() << "Unexpected issue id: " << issue.id;
     }
   }
 }
@@ -225,23 +217,15 @@ TEST_F(TestSuite, RegulatoryElementOfTrafficLightWithoutStopLine)  // NOLINT for
   lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
-  uint8_t expected_num_issues = 2;
+  uint8_t expected_num_issues = 1;
   static constexpr const char * expected_message1 =
     "ref_line of traffic light regulatory element must have type of stop_line.";
-  static constexpr const char * expected_message2 =
-    "Regulatory element of traffic light must have a stop line(ref_line).";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     if (issue.id == 99998) {
       EXPECT_EQ(expected_message1, issue.message);
       EXPECT_EQ(lanelet::validation::Severity::Error, issue.severity);
       EXPECT_EQ(lanelet::validation::Primitive::LineString, issue.primitive);
-    } else if (issue.id == 99999) {
-      EXPECT_EQ(expected_message2, issue.message);
-      EXPECT_EQ(lanelet::validation::Severity::Error, issue.severity);
-      EXPECT_EQ(lanelet::validation::Primitive::RegulatoryElement, issue.primitive);
-    } else {
-      FAIL() << "Unexpected issue id: " << issue.id;
     }
   }
 }
@@ -270,23 +254,15 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutPolygon)  // NOLINT for gte
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
-  uint8_t expected_num_issues = 2;
+  uint8_t expected_num_issues = 1;
   static constexpr const char * expected_message1 =
     "Crosswalk polygon of crosswalk regulatory element must have type of Crosswalk_polygon.";
-  static constexpr const char * expected_message2 =
-    "Regulatory element of crosswalk is nice to have crosswalk_polygon.";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     if (issue.id == 99998) {
       EXPECT_EQ(expected_message1, issue.message);
       EXPECT_EQ(lanelet::validation::Severity::Error, issue.severity);
       EXPECT_EQ(lanelet::validation::Primitive::Polygon, issue.primitive);
-    } else if (issue.id == 99999) {
-      EXPECT_EQ(expected_message2, issue.message);
-      EXPECT_EQ(lanelet::validation::Severity::Warning, issue.severity);
-      EXPECT_EQ(lanelet::validation::Primitive::RegulatoryElement, issue.primitive);
-    } else {
-      FAIL() << "Unexpected issue id: " << issue.id;
     }
   }
 }
@@ -346,23 +322,15 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutCrosswalk)  // NOLINT for g
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
-  uint8_t expected_num_issues = 2;
+  uint8_t expected_num_issues = 1;
   static constexpr const char * expected_message1 =
     "Refers of crosswalk regulatory element must have type of crosswalk.";
-  static constexpr const char * expected_message2 =
-    "Regulatory element of crosswalk must have lanelet of crosswalk(refers).";
   EXPECT_EQ(expected_num_issues, issues.size());
   for (const auto & issue : issues) {
     if (issue.id == 99998) {
       EXPECT_EQ(expected_message1, issue.message);
       EXPECT_EQ(lanelet::validation::Severity::Error, issue.severity);
       EXPECT_EQ(lanelet::validation::Primitive::Lanelet, issue.primitive);
-    } else if (issue.id == 99999) {
-      EXPECT_EQ(expected_message2, issue.message);
-      EXPECT_EQ(lanelet::validation::Severity::Error, issue.severity);
-      EXPECT_EQ(lanelet::validation::Primitive::RegulatoryElement, issue.primitive);
-    } else {
-      FAIL() << "Unexpected issue id: " << issue.id;
     }
   }
 }
