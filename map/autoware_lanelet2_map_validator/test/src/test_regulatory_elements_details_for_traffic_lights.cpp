@@ -71,23 +71,35 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefers)  // NOLINT f
 {
   load_target_map("traffic_light/traffic_light_regulatory_element_without_refers.osm");
 
-  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
-  const auto & issues = checker(*map);
+  // traffic_light-type regulatory elements that has no refers will not be loaded from the start
+  // and should be mentioned in the loading_errors
 
-  EXPECT_EQ(issues.size(), 1);
-  EXPECT_EQ(issues[0].id, 1025);
-  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
-  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
-  EXPECT_EQ(
-    issues[0].message, "Regulatory element of traffic light must have a traffic light(refers).");
+  bool found_error_on_loading = false;
+  int target_primitive_id = 1025;
+  std::string target_message =
+    "Error parsing primitive " + std::to_string(target_primitive_id) +
+    ": Creating a regulatory element of type traffic_light failed: No traffic light defined!";
+
+  for (const auto & error : loading_errors) {
+    if (error.find(target_message) != std::string::npos) {
+      found_error_on_loading = true;
+      break;
+    }
+  }
+
+  EXPECT_TRUE(found_error_on_loading);
 }
 
 TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefLine)  // NOLINT for gtest
 {
-  load_target_map("traffic_light/traffic_light_regulatory_element_without_refers.osm");
+  load_target_map("traffic_light/traffic_light_regulatory_element_without_ref_line.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map);
+
+  for (const auto & error : loading_errors) {
+    std::cout << error << std::endl;
+  }
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 1025);

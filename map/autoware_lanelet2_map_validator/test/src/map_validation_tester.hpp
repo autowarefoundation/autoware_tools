@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 class MapValidationTester : public ::testing::Test
 {
@@ -30,16 +31,17 @@ protected:
   void load_target_map(std::string file_name)
   {
     const auto projector = std::make_unique<lanelet::projection::MGRSProjector>();
-    lanelet::validation::Strings errors;
 
     std::string package_share_directory =
       ament_index_cpp::get_package_share_directory("autoware_lanelet2_map_validator");
 
-    map = lanelet::load(package_share_directory + "/data/map/" + file_name, *projector, &errors);
+    map = lanelet::load(
+      package_share_directory + "/data/map/" + file_name, *projector, &loading_errors);
 
     EXPECT_NE(map, nullptr);
   }
   lanelet::LaneletMapPtr map{nullptr};
+  std::vector<std::string> loading_errors;
 };
 
 #endif  // MAP_VALIDATION_TESTER_HPP_
