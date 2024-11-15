@@ -59,3 +59,13 @@ TEST_F(TestMissingRegulatoryElementsForCrosswalks, RegulatoryElementExists)  // 
 
   EXPECT_EQ(issues.size(), 0);
 }
+
+TEST_F(TestMissingRegulatoryElementsForCrosswalks, SampleMap)  // NOLINT for gtest
+{
+  load_target_map("sample_map.osm");
+
+  lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
+  const auto & issues = checker(*map);
+
+  EXPECT_EQ(issues.size(), 0);
+}

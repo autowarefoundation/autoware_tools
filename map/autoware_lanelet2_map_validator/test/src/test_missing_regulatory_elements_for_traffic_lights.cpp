@@ -18,12 +18,12 @@
 #include <gtest/gtest.h>
 #include <lanelet2_core/LaneletMap.h>
 
-class TestMissingRegulatoryElementsForTrafficLight : public MapValidationTester
+class TestMissingRegulatoryElementsForTrafficLights : public MapValidationTester
 {
 private:
 };
 
-TEST_F(TestMissingRegulatoryElementsForTrafficLight, ValidatorAvailability)  // NOLINT for gtest
+TEST_F(TestMissingRegulatoryElementsForTrafficLights, ValidatorAvailability)  // NOLINT for gtest
 {
   std::string expected_validator_name =
     lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator::name();
@@ -36,7 +36,7 @@ TEST_F(TestMissingRegulatoryElementsForTrafficLight, ValidatorAvailability)  // 
   EXPECT_EQ(expected_validator_name, validators[0]);
 }
 
-TEST_F(TestMissingRegulatoryElementsForTrafficLight, MissingRegulatoryElement)  // NOLINT for gtest
+TEST_F(TestMissingRegulatoryElementsForTrafficLights, MissingRegulatoryElement)  // NOLINT for gtest
 {
   load_target_map("traffic_light/traffic_light_without_regulatory_element.osm");
 
@@ -50,9 +50,19 @@ TEST_F(TestMissingRegulatoryElementsForTrafficLight, MissingRegulatoryElement)  
   EXPECT_EQ(issues[0].message, "No regulatory element refers to this traffic light.");
 }
 
-TEST_F(TestMissingRegulatoryElementsForTrafficLight, RegulatoryElementExists)  // NOLINT for gtest
+TEST_F(TestMissingRegulatoryElementsForTrafficLights, RegulatoryElementExists)  // NOLINT for gtest
 {
   load_target_map("traffic_light/traffic_light_with_regulatory_element.osm");
+
+  lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator checker;
+  const auto & issues = checker(*map);
+
+  EXPECT_EQ(issues.size(), 0);
+}
+
+TEST_F(TestMissingRegulatoryElementsForTrafficLights, SampleMap)  // NOLINT for gtest
+{
+  load_target_map("sample_map.osm");
 
   lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator checker;
   const auto & issues = checker(*map);
