@@ -7,7 +7,7 @@
   <arg name="map_projection_loader_param_path" default="$(find-pkg-share autoware_launch)/config/map/map_projection_loader.param.yaml"/>
 
   <node_container pkg="rclcpp_components" exec="component_container" name="map_container" namespace="" output="screen">
-    <composable_node pkg="map_loader" plugin="Lanelet2MapLoaderNode" name="lanelet2_map_loader">
+    <composable_node pkg="autoware_map_loader" plugin="autoware::map_loader::Lanelet2MapLoaderNode" name="lanelet2_map_loader">
       <param from="$(var lanelet2_map_loader_param_path)"/>
       <param name="lanelet2_map_path" value="$(var map_path)/lanelet2_map.osm"/>
       <remap from="output/lanelet2_map" to="/map/vector_map"/>
