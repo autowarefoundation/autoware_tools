@@ -17,15 +17,18 @@
 import argparse
 from collections import deque
 import pickle
+import time
 
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import numpy as np
 from perception_replayer_common import PerceptionReplayerCommon
 import rclpy
+from utils import LocalizationInitializer
 from utils import RoutePointsClient
 from utils import StopWatch
 from utils import create_empty_pointcloud
-from utils import get_last_pose
+from utils import get_goal_pose
+from utils import get_initial_pose
 from utils import translate_objects_coordinate
 
 
@@ -321,9 +324,16 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    last_pose = get_last_pose(args.bag)
-    print(f"Last pose: {last_pose}")
+    initial_pose = get_initial_pose(args.bag)
+    last_pose = get_goal_pose(args.bag)
+    print(f"Initial pose: {initial_pose}")
+    # print(f"Last pose: {last_pose}")
     rclpy.init()
+    client1 = LocalizationInitializer()
+    future1 = client1.send_initial_pose(initial_pose)
+    rclpy.spin_until_future_complete(client1, future1)
+    # sleep for 1 second to make sure the initial pose is set
+    time.sleep(1)
     client = RoutePointsClient()
     future = client.send_request(last_pose)
     rclpy.spin_until_future_complete(client, future)

@@ -19,8 +19,11 @@ import time
 
 from autoware_adapi_v1_msgs.srv import SetRoutePoints
 from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseWithCovariance
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from geometry_msgs.msg import Quaternion
 import numpy as np
+from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from rclpy.serialization import deserialize_message
 import rosbag2_py
@@ -33,6 +36,7 @@ from sensor_msgs.msg import PointField
 from std_msgs.msg import Header
 from tf_transformations import euler_from_quaternion
 from tf_transformations import quaternion_from_euler
+from tier4_localization_msgs.srv import InitializeLocalization
 
 
 def get_starting_time(uri: str):
@@ -164,7 +168,46 @@ def is_close_pose(p0, p1, eps, thresh):
         return False
 
 
-def get_last_pose(input_path, interval=[0.1, 10000.0]):
+def get_initial_pose(input_path, interval=[0.1, 10000.0]):
+    reader = create_reader(str(input_path))
+    type_map = {}
+    for topic_type in reader.get_all_topics_and_types():
+        type_map[topic_type.name] = topic_type.type
+    initial_pose = Pose()
+    pose_list = []
+    is_initial_pose = True
+    prev_trans = None
+    # read topic and fix timestamp if lidar, and write
+    while reader.has_next():
+        (topic, data, stamp) = reader.read_next()
+        if topic == "/tf":
+            msg_type = get_message(type_map[topic])
+            msg = deserialize_message(data, msg_type)
+            for transform in msg.transforms:
+                if transform.child_frame_id != "base_link":
+                    continue
+                trans = transform.transform.translation
+                rot = transform.transform.rotation
+                if is_initial_pose:
+                    is_initial_pose = False
+                    prev_trans = trans
+                elif is_close_pose(prev_trans, trans, interval[0], interval[1]):
+                    # print("too close or too far")
+                    continue
+                pose_list.append(np.r_[trans.x, trans.y, trans.z, rot.x, rot.y, rot.z, rot.w])
+                prev_trans = trans
+    initial_pose.position.x = pose_list[0][0]
+    initial_pose.position.y = pose_list[0][1]
+    initial_pose.position.z = pose_list[0][2]
+    initial_pose.orientation.x = pose_list[0][3]
+    initial_pose.orientation.y = pose_list[0][4]
+    initial_pose.orientation.z = pose_list[0][5]
+    initial_pose.orientation.w = pose_list[0][6]
+
+    return initial_pose
+
+
+def get_goal_pose(input_path, interval=[0.1, 10000.0]):
     reader = create_reader(str(input_path))
     type_map = {}
     for topic_type in reader.get_all_topics_and_types():
@@ -227,6 +270,93 @@ class StopWatch:
 
         # Reset the starting time for the name
         del self.start_times[name]
+
+
+class LocalizationInitializer(Node):
+    def __init__(self):
+        super().__init__("localization_initializer")
+
+        self.callback_group = ReentrantCallbackGroup()
+
+        self.client = self.create_client(
+            InitializeLocalization,  # PoseWithCovarianceStampedSrvから変更
+            "/localization/initialize",
+            callback_group=self.callback_group,
+        )
+
+        while not self.client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("Waiting for /localization/initialize service...")
+
+    def create_initial_pose(self, pose: Pose) -> PoseWithCovarianceStamped:
+        stamped = PoseWithCovarianceStamped()
+        stamped.header.frame_id = "map"
+        stamped.header.stamp = self.get_clock().now().to_msg()
+
+        # PoseWithCovarianceの設定
+        pose_with_cov = PoseWithCovariance()
+        pose_with_cov.pose = pose
+
+        # 共分散行列をnumpy arrayとして設定
+        covariance = np.array(
+            [
+                0.25,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.25,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.06853891909122467,
+            ],
+            dtype=np.float64,
+        )
+
+        pose_with_cov.covariance = covariance.tolist()
+
+        stamped.pose = pose_with_cov
+        return stamped
+
+    def send_initial_pose(self, pose: Pose):
+        request = InitializeLocalization.Request()
+
+        # 初期ポーズの作成と設定
+        pose_with_cov_stamped = self.create_initial_pose(pose)
+
+        # リクエストの設定
+        request.pose_with_covariance = [pose_with_cov_stamped]
+        request.method = 1
+
+        # リクエストを送信
+        self.get_logger().info("Sending initial pose request...")
+        return self.client.call_async(request)
 
 
 class RoutePointsClient(Node):
