@@ -18,6 +18,7 @@ import math
 import time
 
 from autoware_adapi_v1_msgs.srv import SetRoutePoints
+from geometry_msgs.msg import Point
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseWithCovariance
 from geometry_msgs.msg import PoseWithCovarianceStamped
@@ -145,216 +146,105 @@ def translate_objects_coordinate(ego_pose, log_ego_pose, objects_msg):
 
 
 def create_reader(bag_dir: str) -> SequentialReader:
-    storage_options = StorageOptions(
-        uri=bag_dir,
-        storage_id="sqlite3",
-    )
+    storage_options = StorageOptions(uri=bag_dir, storage_id="sqlite3")
     converter_options = ConverterOptions(
-        input_serialization_format="cdr",
-        output_serialization_format="cdr",
+        input_serialization_format="cdr", output_serialization_format="cdr"
     )
-
     reader = SequentialReader()
     reader.open(storage_options, converter_options)
     return reader
 
 
-# too close & outlier pose filter
-def is_close_pose(p0, p1, eps, thresh):
-    dist = ((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2 + (p0.z - p1.z) ** 2) ** 0.5
-    if dist < eps or thresh < dist:
-        return True
-    else:
-        return False
+def is_close_pose(p0, p1, min_dist, max_dist) -> bool:
+    dist = np.linalg.norm([p0.x - p1.x, p0.y - p1.y, p0.z - p1.z])
+    return dist < min_dist or dist > max_dist
 
 
-def get_initial_pose(input_path, interval=[0.1, 10000.0]):
-    reader = create_reader(str(input_path))
-    type_map = {}
-    for topic_type in reader.get_all_topics_and_types():
-        type_map[topic_type.name] = topic_type.type
-    initial_pose = Pose()
+def get_pose_from_bag(input_path: str, position="first", interval=(0.1, 10000.0)) -> Pose:
+    reader = create_reader(input_path)
+    type_map = {
+        topic_type.name: topic_type.type for topic_type in reader.get_all_topics_and_types()
+    }
     pose_list = []
-    is_initial_pose = True
+    is_first_pose = True
     prev_trans = None
-    # read topic and fix timestamp if lidar, and write
+
     while reader.has_next():
-        (topic, data, stamp) = reader.read_next()
+        topic, data, _ = reader.read_next()
         if topic == "/tf":
             msg_type = get_message(type_map[topic])
             msg = deserialize_message(data, msg_type)
             for transform in msg.transforms:
                 if transform.child_frame_id != "base_link":
                     continue
-                trans = transform.transform.translation
-                rot = transform.transform.rotation
-                if is_initial_pose:
-                    is_initial_pose = False
+                trans = transform.transform.translation  # This is a Vector3
+                rot = transform.transform.rotation  # This is a Quaternion
+                if is_first_pose:
+                    is_first_pose = False
                     prev_trans = trans
                 elif is_close_pose(prev_trans, trans, interval[0], interval[1]):
-                    # print("too close or too far")
                     continue
-                pose_list.append(np.r_[trans.x, trans.y, trans.z, rot.x, rot.y, rot.z, rot.w])
+                pose_list.append((trans, rot))
                 prev_trans = trans
-    initial_pose.position.x = pose_list[0][0]
-    initial_pose.position.y = pose_list[0][1]
-    initial_pose.position.z = pose_list[0][2]
-    initial_pose.orientation.x = pose_list[0][3]
-    initial_pose.orientation.y = pose_list[0][4]
-    initial_pose.orientation.z = pose_list[0][5]
-    initial_pose.orientation.w = pose_list[0][6]
 
-    return initial_pose
+    if not pose_list:
+        raise ValueError("No valid poses found in the bag file.")
 
-
-def get_goal_pose(input_path, interval=[0.1, 10000.0]):
-    reader = create_reader(str(input_path))
-    type_map = {}
-    for topic_type in reader.get_all_topics_and_types():
-        type_map[topic_type.name] = topic_type.type
-    last_pose = Pose()
-    pose_list = []
-    is_initial_pose = True
-    prev_trans = None
-    # read topic and fix timestamp if lidar, and write
-    while reader.has_next():
-        (topic, data, stamp) = reader.read_next()
-        if topic == "/tf":
-            msg_type = get_message(type_map[topic])
-            msg = deserialize_message(data, msg_type)
-            for transform in msg.transforms:
-                if transform.child_frame_id != "base_link":
-                    continue
-                trans = transform.transform.translation
-                rot = transform.transform.rotation
-                if is_initial_pose:
-                    is_initial_pose = False
-                    prev_trans = trans
-                elif is_close_pose(prev_trans, trans, interval[0], interval[1]):
-                    # print("too close or too far")
-                    continue
-                pose_list.append(np.r_[trans.x, trans.y, trans.z, rot.x, rot.y, rot.z, rot.w])
-                prev_trans = trans
-    last_pose.position.x = pose_list[-1][0]
-    last_pose.position.y = pose_list[-1][1]
-    last_pose.position.z = pose_list[-1][2]
-    last_pose.orientation.x = pose_list[-1][3]
-    last_pose.orientation.y = pose_list[-1][4]
-    last_pose.orientation.z = pose_list[-1][5]
-    last_pose.orientation.w = pose_list[-1][6]
-
-    return last_pose
+    selected_trans, selected_rot = pose_list[0] if position == "first" else pose_list[-1]
+    pose = Pose()
+    # Convert Vector3 to Point
+    pose.position = Point(x=selected_trans.x, y=selected_trans.y, z=selected_trans.z)
+    pose.orientation = selected_rot  # This is already a Quaternion
+    return pose
 
 
 class StopWatch:
-    def __init__(self, verbose):
-        # A dictionary to store the starting times
+    def __init__(self, verbose: bool = True):
         self.start_times = {}
         self.verbose = verbose
 
-    def tic(self, name):
-        """Store the current time with the given name."""
+    def tic(self, name: str):
+        """Start timing under the given name."""
         self.start_times[name] = time.perf_counter()
 
-    def toc(self, name):
-        """Print the elapsed time since the last call to tic() with the same name."""
+    def toc(self, name: str):
+        """Stop timing and print the elapsed time."""
         if name not in self.start_times:
-            print(f"No start time found for {name}!")
+            print(f"No start time found for '{name}'!")
             return
-
-        elapsed_time = (
-            time.perf_counter() - self.start_times[name]
-        ) * 1000  # Convert to milliseconds
+        elapsed_time = (time.perf_counter() - self.start_times[name]) * 1000  # in milliseconds
         if self.verbose:
-            print(f"Time for {name}: {elapsed_time:.2f} ms")
-
-        # Reset the starting time for the name
+            print(f"Time for '{name}': {elapsed_time:.2f} ms")
         del self.start_times[name]
 
 
 class LocalizationInitializer(Node):
     def __init__(self):
         super().__init__("localization_initializer")
-
         self.callback_group = ReentrantCallbackGroup()
-
         self.client = self.create_client(
-            InitializeLocalization,  # PoseWithCovarianceStampedSrvから変更
+            InitializeLocalization,
             "/localization/initialize",
             callback_group=self.callback_group,
         )
-
         while not self.client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("Waiting for /localization/initialize service...")
+            self.get_logger().info("Waiting for '/localization/initialize' service...")
 
     def create_initial_pose(self, pose: Pose) -> PoseWithCovarianceStamped:
-        stamped = PoseWithCovarianceStamped()
-        stamped.header.frame_id = "map"
-        stamped.header.stamp = self.get_clock().now().to_msg()
-
-        # PoseWithCovarianceの設定
+        pose_with_cov_stamped = PoseWithCovarianceStamped()
+        pose_with_cov_stamped.header.frame_id = "map"
+        pose_with_cov_stamped.header.stamp = self.get_clock().now().to_msg()
         pose_with_cov = PoseWithCovariance()
         pose_with_cov.pose = pose
-
-        # 共分散行列をnumpy arrayとして設定
-        covariance = np.array(
-            [
-                0.25,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.25,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                0.06853891909122467,
-            ],
-            dtype=np.float64,
-        )
-
-        pose_with_cov.covariance = covariance.tolist()
-
-        stamped.pose = pose_with_cov
-        return stamped
+        covariance = np.identity(6) * 0.01  # Create a 6x6 identity matrix scaled by 0.01
+        pose_with_cov.covariance = covariance.flatten().tolist()
+        pose_with_cov_stamped.pose = pose_with_cov
+        return pose_with_cov_stamped
 
     def send_initial_pose(self, pose: Pose):
         request = InitializeLocalization.Request()
-
-        # 初期ポーズの作成と設定
-        pose_with_cov_stamped = self.create_initial_pose(pose)
-
-        # リクエストの設定
-        request.pose_with_covariance = [pose_with_cov_stamped]
+        request.pose_with_covariance = [self.create_initial_pose(pose)]
         request.method = 1
-
-        # リクエストを送信
         self.get_logger().info("Sending initial pose request...")
         return self.client.call_async(request)
 
@@ -363,23 +253,15 @@ class RoutePointsClient(Node):
     def __init__(self):
         super().__init__("route_points_client")
         self.client = self.create_client(SetRoutePoints, "/api/routing/set_route_points")
-
-        # サービスが利用可能になるまで待機
         while not self.client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("サービスが利用可能になるのを待っています...")
+            self.get_logger().info("Waiting for '/api/routing/set_route_points' service...")
 
-    def send_request(self, goal_pose):
+    def send_request(self, goal_pose: Pose):
         request = SetRoutePoints.Request()
-
-        # ヘッダーの設定
         request.header = Header()
         request.header.stamp = self.get_clock().now().to_msg()
         request.header.frame_id = "map"
-
         request.goal = goal_pose
-        # waypointsは空のリストのまま
         request.waypoints = []
-
-        # リクエストを送信
-        future = self.client.call_async(request)
-        return future
+        self.get_logger().info("Sending route points request...")
+        return self.client.call_async(request)
