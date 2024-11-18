@@ -19,21 +19,14 @@
 #include <lanelet2_validation/ValidatorFactory.h>
 
 #include <string>
-#include <type_traits>
 #include <vector>
 
 namespace lanelet::autoware::validation
 {
-template <typename Container, typename T>
-auto appendIssues(std::vector<T> & to, Container && from) ->
-  typename std::enable_if_t<std::is_same_v<T, typename std::decay_t<Container>::value_type>, void>
+template <typename T>
+void appendIssues(std::vector<T> & to, std::vector<T> && from)
 {
-  if constexpr (std::is_rvalue_reference<decltype(from)>::value) {
-    to.insert(to.end(), std::make_move_iterator(from.begin()), std::make_move_iterator(from.end()));
-  }
-  if constexpr (std::is_lvalue_reference<decltype(from)>::value) {
-    to.insert(to.end(), from.begin(), from.end());
-  }
+  to.insert(to.end(), std::make_move_iterator(from.begin()), std::make_move_iterator(from.end()));
 }
 
 template <typename T>
@@ -80,10 +73,5 @@ void checkPrimitivesType(
 }
 
 }  // namespace lanelet::autoware::validation
-
-std::string snake_to_upper_camel(const std::string & snake_case);
-std::string issue_code(const std::string & name, const int number);
-std::string append_issue_code_prefix(
-  const std::string & name, const int number, const std::string & message);
 
 #endif  // LANELET2_MAP_VALIDATOR__UTILS_HPP_
