@@ -23,6 +23,7 @@ import numpy as np
 from perception_replayer_common import PerceptionReplayerCommon
 import rclpy
 from utils import StopWatch
+from utils import bag2pose
 from utils import create_empty_pointcloud
 from utils import translate_objects_coordinate
 
@@ -319,6 +320,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    pose_array = bag2pose(args.bag)
+    initial_pose = pose_array[0]
+    last_pose = pose_array[-1]
+    print(f"Initial pose: {initial_pose}")
+    print(f"Last pose: {last_pose}")
     rclpy.init()
     node = PerceptionReproducer(args)
 

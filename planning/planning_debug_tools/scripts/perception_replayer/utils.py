@@ -19,7 +19,12 @@ import time
 
 from geometry_msgs.msg import Quaternion
 import numpy as np
+from rclpy.serialization import deserialize_message
 import rosbag2_py
+from rosbag2_py import ConverterOptions
+from rosbag2_py import SequentialReader
+from rosbag2_py import StorageOptions
+from rosidl_runtime_py.utilities import get_message
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs.msg import PointField
 from tf_transformations import euler_from_quaternion
@@ -129,6 +134,62 @@ def translate_objects_coordinate(ego_pose, log_ego_pose, objects_msg):
         object_pose.position.x = object_pos_vec[0]
         object_pose.position.y = object_pos_vec[1]
         object_pose.orientation = get_quaternion_from_yaw(log_object_yaw + log_ego_yaw - ego_yaw)
+
+
+def create_reader(bag_dir: str) -> SequentialReader:
+    storage_options = StorageOptions(
+        uri=bag_dir,
+        storage_id="sqlite3",
+    )
+    converter_options = ConverterOptions(
+        input_serialization_format="cdr",
+        output_serialization_format="cdr",
+    )
+
+    reader = SequentialReader()
+    reader.open(storage_options, converter_options)
+    return reader
+
+
+# too close & outlier pose filter
+def is_close_pose(p0, p1, eps, thresh):
+    dist = ((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2 + (p0.z - p1.z) ** 2) ** 0.5
+    if dist < eps or thresh < dist:
+        return True
+    else:
+        return False
+
+
+def bag2pose(input_path, interval=[0.1, 10000.0]):
+    reader = create_reader(str(input_path))
+    type_map = {}
+    for topic_type in reader.get_all_topics_and_types():
+        type_map[topic_type.name] = topic_type.type
+
+    pose_list = []
+    is_initial_pose = True
+    prev_trans = None
+    # read topic and fix timestamp if lidar, and write
+    while reader.has_next():
+        (topic, data, stamp) = reader.read_next()
+        if topic == "/tf":
+            msg_type = get_message(type_map[topic])
+            msg = deserialize_message(data, msg_type)
+            for transform in msg.transforms:
+                if transform.child_frame_id != "base_link":
+                    continue
+                trans = transform.transform.translation
+                rot = transform.transform.rotation
+                if is_initial_pose:
+                    is_initial_pose = False
+                    prev_trans = trans
+                elif is_close_pose(prev_trans, trans, interval[0], interval[1]):
+                    # print("too close or too far")
+                    continue
+                pose_list.append(np.r_[trans.x, trans.y, trans.z, rot.x, rot.y, rot.z, rot.w])
+                prev_trans = trans
+
+    return np.array(pose_list)
 
 
 class StopWatch:
