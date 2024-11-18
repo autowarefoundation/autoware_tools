@@ -5288,7 +5288,7 @@
     <nd ref="10262"/>
     <nd ref="10263"/>
     <nd ref="10264"/>
-    <tag k="type" v="crosswalk_polygon"/>
+    <tag k="type" v="detection_area"/>
     <tag k="area" v="yes"/>
   </way>
   <way id="10274">
