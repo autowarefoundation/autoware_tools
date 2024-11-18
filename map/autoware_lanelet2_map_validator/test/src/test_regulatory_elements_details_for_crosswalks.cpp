@@ -41,7 +41,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, WrongRefersType)  // NOLINT f
   load_target_map("crosswalk/crosswalk_with_wrong_refers_type.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 18);
@@ -56,7 +56,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, WrongRefLineType)  // NOLINT 
   load_target_map("crosswalk/crosswalk_with_wrong_ref_line_type.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 27);
@@ -71,7 +71,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, WrongPolygonType)  // NOLINT 
   load_target_map("crosswalk/crosswalk_with_wrong_polygon_type.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 24);
@@ -79,7 +79,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, WrongPolygonType)  // NOLINT 
   EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::Polygon);
   EXPECT_EQ(
     issues[0].message,
-    "Crosswalk polygon of crosswalk regulatory element must have type of Crosswalk_polygon.");
+    "Crosswalk polygon of crosswalk regulatory element must have type of crosswalk_polygon.");
 }
 
 TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MissingPolygon)  // NOLINT for gtest
@@ -87,7 +87,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MissingPolygon)  // NOLINT fo
   load_target_map("crosswalk/crosswalk_without_polygon.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 31);
@@ -102,7 +102,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MultiplePolygon)  // NOLINT f
   load_target_map("crosswalk/crosswalk_with_multiple_polygons.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 31);
@@ -117,7 +117,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MissingRefLine)  // NOLINT fo
   load_target_map("crosswalk/crosswalk_without_stop_line.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 31);
@@ -132,7 +132,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MissingRefers)  // NOLINT for
   load_target_map("crosswalk/crosswalk_regulatory_element_without_refers.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 31);
@@ -147,7 +147,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MultipleRefers)  // NOLINT fo
   load_target_map("crosswalk/crosswalk_regulatory_element_with_multiple_refers.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 31);
@@ -163,7 +163,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, CorrectDetails)  // NOLINT fo
   load_target_map("crosswalk/crosswalk_with_regulatory_element.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
 }
@@ -173,7 +173,7 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, SampleMap)  // NOLINT for gte
   load_target_map("sample_map.osm");
 
   lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   uint64_t errors_and_warnings_count = 0;
 

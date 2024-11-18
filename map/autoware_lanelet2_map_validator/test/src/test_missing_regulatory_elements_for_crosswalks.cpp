@@ -41,7 +41,7 @@ TEST_F(TestMissingRegulatoryElementsForCrosswalks, MissingRegulatoryElement)  //
   load_target_map("crosswalk/crosswalk_without_regulatory_elements.osm");
 
   lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 18);
@@ -55,7 +55,7 @@ TEST_F(TestMissingRegulatoryElementsForCrosswalks, RegulatoryElementExists)  // 
   load_target_map("crosswalk/crosswalk_with_regulatory_element.osm");
 
   lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
 }
@@ -65,7 +65,7 @@ TEST_F(TestMissingRegulatoryElementsForCrosswalks, SampleMap)  // NOLINT for gte
   load_target_map("sample_map.osm");
 
   lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
 }

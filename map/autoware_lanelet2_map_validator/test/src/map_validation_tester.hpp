@@ -35,14 +35,14 @@ protected:
     std::string package_share_directory =
       ament_index_cpp::get_package_share_directory("autoware_lanelet2_map_validator");
 
-    map = lanelet::load(
-      package_share_directory + "/data/map/" + file_name, *projector, &loading_errors);
+    map_ = lanelet::load(
+      package_share_directory + "/data/map/" + file_name, *projector, &loading_errors_);
 
-    EXPECT_NE(map, nullptr);
+    EXPECT_NE(map_, nullptr);
   }
 
-  lanelet::LaneletMapPtr map{nullptr};
-  std::vector<std::string> loading_errors;
+  lanelet::LaneletMapPtr map_{nullptr};
+  std::vector<std::string> loading_errors_;
 };
 
 #endif  // MAP_VALIDATION_TESTER_HPP_

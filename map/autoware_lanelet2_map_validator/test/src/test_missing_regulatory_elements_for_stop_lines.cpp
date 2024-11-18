@@ -41,7 +41,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, MissingRegulatoryElement)  // 
   load_target_map("stop_line/stop_line_without_regulatory_elements.osm");
 
   lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
   EXPECT_EQ(issues[0].id, 2156);
@@ -55,7 +55,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, TrafficSignRegulatoryElement) 
   load_target_map("stop_line/stop_line_with_traffic_sign.osm");
 
   lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
 }
@@ -65,7 +65,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, RoadMarkingRegulatoryElement) 
   load_target_map("stop_line/stop_line_with_road_marking.osm");
 
   lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
 }
@@ -75,7 +75,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, SampleMap)  // NOLINT for gtes
   load_target_map("sample_map.osm");
 
   lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
-  const auto & issues = checker(*map);
+  const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
 }
