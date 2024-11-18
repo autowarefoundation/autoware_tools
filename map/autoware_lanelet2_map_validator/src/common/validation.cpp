@@ -39,11 +39,7 @@
 
 // cSpell:words indegree Indegree
 
-namespace lanelet
-{
-namespace autoware
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 
 std::unique_ptr<lanelet::Projector> getProjector(
@@ -416,6 +412,4 @@ void process_requirements(json json_data, const MetaConfig & validator_config)
   }
 }
 
-}  // namespace validation
-}  // namespace autoware
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation

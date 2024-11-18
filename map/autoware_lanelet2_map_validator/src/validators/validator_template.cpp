@@ -14,9 +14,7 @@
 
 #include "validator_template.hpp"
 
-namespace lanelet
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 namespace
 {
@@ -32,5 +30,4 @@ lanelet::validation::Issues ValidatorTemplate::operator()(const lanelet::Lanelet
 
   return issues;
 }
-}  // namespace validation
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation

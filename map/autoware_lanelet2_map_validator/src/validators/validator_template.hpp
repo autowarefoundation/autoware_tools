@@ -18,9 +18,7 @@
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
 
-namespace lanelet
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 class ValidatorTemplate : public lanelet::validation::MapValidator
 {
@@ -32,7 +30,6 @@ public:
 
 private:
 };
-}  // namespace validation
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation
 
 #endif  // VALIDATORS__VALIDATOR_TEMPLATE_HPP_

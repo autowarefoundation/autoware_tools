@@ -21,9 +21,7 @@
 
 #include <set>
 
-namespace lanelet
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 namespace
 {
@@ -91,5 +89,4 @@ MissingRegulatoryElementsForCrosswalksValidator::checkMissingRegulatoryElementsF
 
   return issues;
 }
-}  // namespace validation
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation

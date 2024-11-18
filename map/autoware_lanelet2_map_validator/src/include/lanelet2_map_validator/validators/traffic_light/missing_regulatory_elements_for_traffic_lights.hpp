@@ -18,9 +18,7 @@
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
 
-namespace lanelet
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 class MissingRegulatoryElementsForTrafficLightsValidator : public lanelet::validation::MapValidator
 {
@@ -36,8 +34,7 @@ private:
   lanelet::validation::Issues checkMissingRegulatoryElementsForTrafficLights(
     const lanelet::LaneletMap & map);
 };
-}  // namespace validation
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation
 
 // clang-format off
 #endif  // LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHT__MISSING_REGULATORY_ELEMENTS_FOR_TRAFFIC_LIGHTS_HPP_  // NOLINT

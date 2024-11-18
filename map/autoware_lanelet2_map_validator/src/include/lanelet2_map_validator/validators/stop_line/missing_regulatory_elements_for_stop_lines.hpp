@@ -18,9 +18,7 @@
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
 
-namespace lanelet
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 class MissingRegulatoryElementsForStopLinesValidator : public lanelet::validation::MapValidator
 {
@@ -33,8 +31,7 @@ private:
   lanelet::validation::Issues checkMissingRegulatoryElementsForStopLines(
     const lanelet::LaneletMap & map);
 };
-}  // namespace validation
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation
 
 // clang-format off
 #endif  // LANELET2_MAP_VALIDATOR__VALIDATORS__STOP_LINE__MISSING_REGULATORY_ELEMENTS_FOR_STOP_LINES_HPP_  // NOLINT
