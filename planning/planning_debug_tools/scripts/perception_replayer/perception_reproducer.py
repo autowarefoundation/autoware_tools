@@ -22,9 +22,10 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 import numpy as np
 from perception_replayer_common import PerceptionReplayerCommon
 import rclpy
+from utils import RoutePointsClient
 from utils import StopWatch
-from utils import bag2pose
 from utils import create_empty_pointcloud
+from utils import get_last_pose
 from utils import translate_objects_coordinate
 
 
@@ -320,12 +321,17 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    pose_array = bag2pose(args.bag)
-    initial_pose = pose_array[0]
-    last_pose = pose_array[-1]
-    print(f"Initial pose: {initial_pose}")
+    last_pose = get_last_pose(args.bag)
     print(f"Last pose: {last_pose}")
     rclpy.init()
+    client = RoutePointsClient()
+    future = client.send_request(last_pose)
+    rclpy.spin_until_future_complete(client, future)
+    if future.result() is not None:
+        print("Successfully set route points")
+    else:
+        print("Failed to set route points")
+
     node = PerceptionReproducer(args)
 
     try:

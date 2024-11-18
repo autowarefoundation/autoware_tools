@@ -17,8 +17,11 @@
 import math
 import time
 
+from autoware_adapi_v1_msgs.srv import SetRoutePoints
+from geometry_msgs.msg import Pose
 from geometry_msgs.msg import Quaternion
 import numpy as np
+from rclpy.node import Node
 from rclpy.serialization import deserialize_message
 import rosbag2_py
 from rosbag2_py import ConverterOptions
@@ -27,6 +30,7 @@ from rosbag2_py import StorageOptions
 from rosidl_runtime_py.utilities import get_message
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs.msg import PointField
+from std_msgs.msg import Header
 from tf_transformations import euler_from_quaternion
 from tf_transformations import quaternion_from_euler
 
@@ -160,12 +164,12 @@ def is_close_pose(p0, p1, eps, thresh):
         return False
 
 
-def bag2pose(input_path, interval=[0.1, 10000.0]):
+def get_last_pose(input_path, interval=[0.1, 10000.0]):
     reader = create_reader(str(input_path))
     type_map = {}
     for topic_type in reader.get_all_topics_and_types():
         type_map[topic_type.name] = topic_type.type
-
+    last_pose = Pose()
     pose_list = []
     is_initial_pose = True
     prev_trans = None
@@ -188,8 +192,15 @@ def bag2pose(input_path, interval=[0.1, 10000.0]):
                     continue
                 pose_list.append(np.r_[trans.x, trans.y, trans.z, rot.x, rot.y, rot.z, rot.w])
                 prev_trans = trans
+    last_pose.position.x = pose_list[-1][0]
+    last_pose.position.y = pose_list[-1][1]
+    last_pose.position.z = pose_list[-1][2]
+    last_pose.orientation.x = pose_list[-1][3]
+    last_pose.orientation.y = pose_list[-1][4]
+    last_pose.orientation.z = pose_list[-1][5]
+    last_pose.orientation.w = pose_list[-1][6]
 
-    return np.array(pose_list)
+    return last_pose
 
 
 class StopWatch:
@@ -216,3 +227,29 @@ class StopWatch:
 
         # Reset the starting time for the name
         del self.start_times[name]
+
+
+class RoutePointsClient(Node):
+    def __init__(self):
+        super().__init__("route_points_client")
+        self.client = self.create_client(SetRoutePoints, "/api/routing/set_route_points")
+
+        # サービスが利用可能になるまで待機
+        while not self.client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("サービスが利用可能になるのを待っています...")
+
+    def send_request(self, goal_pose):
+        request = SetRoutePoints.Request()
+
+        # ヘッダーの設定
+        request.header = Header()
+        request.header.stamp = self.get_clock().now().to_msg()
+        request.header.frame_id = "map"
+
+        request.goal = goal_pose
+        # waypointsは空のリストのまま
+        request.waypoints = []
+
+        # リクエストを送信
+        future = self.client.call_async(request)
+        return future
