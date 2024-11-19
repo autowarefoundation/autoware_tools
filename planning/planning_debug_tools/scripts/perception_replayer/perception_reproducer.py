@@ -24,6 +24,7 @@ from perception_replayer_common import PerceptionReplayerCommon
 import rclpy
 from utils import StopWatch
 from utils import create_empty_pointcloud
+from utils import pub_route
 from utils import translate_objects_coordinate
 
 
@@ -281,8 +282,8 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--bag", help="rosbag", default=None)
+    parser = argparse.ArgumentParser(description="Perception Reproducer")
+    parser.add_argument("-b", "--bag", help="rosbag file path", required=True)
     parser.add_argument(
         "-n",
         "--noise",
@@ -316,10 +317,23 @@ if __name__ == "__main__":
         type=float,
         default=80.0,
     )
-
+    parser.add_argument(
+        "-p",
+        "--pub-route",
+        help=(
+            "publish route created from the initial pose and goal pose retrieved from the beginning and end of the rosbag. "
+            "By default, route are not published."
+        ),
+        action="store_true",
+    )
     args = parser.parse_args()
 
-    rclpy.init()
+    if not args.bag:
+        parser.error("The '--bag' argument is required.")
+
+    if args.pub_route:
+        pub_route(args.bag)
+
     node = PerceptionReproducer(args)
 
     try:

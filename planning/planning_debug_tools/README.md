@@ -195,7 +195,7 @@ This script can overlay the perception results from the rosbag on the planning s
 
 ### How it works
 
-Whenever the ego's position changes, a chronological `reproduce_sequence` queue is generated base on its position with a search radius (default to 2 m).
+Whenever the ego's position changes, a chronological `reproduce_sequence` queue is generated based on its position with a search radius (default to 2 m).
 If the queue is empty, the nearest odom message in the rosbag is added to the queue.
 When publishing perception messages, the first element in the `reproduce_sequence` is popped and published.
 
@@ -203,6 +203,18 @@ This design results in the following behavior:
 
 - When ego stops, the perception messages are published in chronological order until queue is empty.
 - When the ego moves, a perception message close to ego's position is published.
+
+### Available Options
+
+- `-b`, `--bag`: Rosbag file path (required)
+- `-d`, `--detected-object`: Publish detected objects
+- `-t`, `--tracked-object`: Publish tracked objects
+- `-r`, `--search-radius`: Set the search radius in meters (default: 1.5m). If set to 0, always publishes the nearest message
+- `-c`, `--reproduce-cool-down`: Set the cool down time in seconds (default: 80.0s)
+- `-p`, `--pub-route`: Initialize localization and publish a route based on poses from the rosbag
+- `-n`, `--noise`: Apply perception noise to objects when publishing repeated messages (default: True)
+- `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
+- `-v`, `--verbose`: Output debug data
 
 ### How to use
 
@@ -223,8 +235,17 @@ ros2 run planning_debug_tools perception_reproducer.py -b <dir-to-bag-files>
 
 Instead of publishing predicted objects, you can publish detected/tracked objects by designating `-d` or `-t`, respectively.
 
-You can use `-r` option to set the search radius in meters for the perception messages. If it is set to 0, the reproducer always publishes the nearest perception message as how did the old perception_reproducer work.
-`-c`(`--reproduce-cool-down`) option is to set the cool down time in seconds, aiming to prevent republishing recently published messages.
+The `--pub-route` option enables automatic route generation based on the rosbag data. When enabled, the script:
+
+1. Extracts the initial and goal poses from the beginning and end of the rosbag file
+2. Initializes the localization system with the initial pose
+3. Generates and publishes a route to the goal pose
+
+Example usage with route publication:
+
+```bash
+ros2 run planning_debug_tools perception_reproducer.py -b <bag-file> -p
+```
 
 ## Perception replayer
 
