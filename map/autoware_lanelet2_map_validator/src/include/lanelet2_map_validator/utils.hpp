@@ -21,11 +21,7 @@
 #include <string>
 #include <vector>
 
-namespace lanelet
-{
-namespace autoware
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 template <typename T>
 void appendIssues(std::vector<T> & to, std::vector<T> && from)
@@ -76,8 +72,6 @@ void checkPrimitivesType(
   }
 }
 
-}  // namespace validation
-}  // namespace autoware
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation
 
 #endif  // LANELET2_MAP_VALIDATOR__UTILS_HPP_

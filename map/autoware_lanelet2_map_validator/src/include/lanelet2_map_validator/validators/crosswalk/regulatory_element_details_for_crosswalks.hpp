@@ -18,9 +18,7 @@
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
 
-namespace lanelet
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 class RegulatoryElementsDetailsForCrosswalksValidator : public lanelet::validation::MapValidator
 {
@@ -33,8 +31,7 @@ public:
 private:
   lanelet::validation::Issues checkRegulatoryElementOfCrosswalks(const lanelet::LaneletMap & map);
 };
-}  // namespace validation
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation
 
 // clang-format off
 #endif  // LANELET2_MAP_VALIDATOR__VALIDATORS__CROSSWALK__REGULATORY_ELEMENT_DETAILS_FOR_CROSSWALKS_HPP_  // NOLINT

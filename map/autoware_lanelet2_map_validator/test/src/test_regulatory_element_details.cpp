@@ -155,8 +155,8 @@ TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
     "mapping.traffic_light.regulatory_element_details"};
 
   std::set<std::string> testing_validators_set = {
-    lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator::name(),
-    lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator::name()};
+    lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator::name(),
+    lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator::name()};
 
   for (const auto & name : testing_validators_set) {
     std::cout << name << std::endl;
@@ -182,7 +182,7 @@ TEST_F(TestSuite, RegulatoryElementOfTrafficLightWithoutTrafficLight)  // NOLINT
   test_map_ptr->add(tl_reg_elem_no_tl);
   addTestMap(test_map_ptr);
 
-  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
@@ -214,7 +214,7 @@ TEST_F(TestSuite, RegulatoryElementOfTrafficLightWithoutStopLine)  // NOLINT for
   test_map_ptr->add(tl_reg_elem_no_sl);
   addTestMap(test_map_ptr);
 
-  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
@@ -251,7 +251,7 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutPolygon)  // NOLINT for gte
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({cw_no_poly});
   addTestMap(test_map_ptr);
 
-  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
@@ -285,7 +285,7 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutStopline)  // NOLINT for gt
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({cw_no_sl});
   addTestMap(test_map_ptr);
 
-  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
@@ -319,7 +319,7 @@ TEST_F(TestSuite, RegulatoryElementOfCrosswalkWithoutCrosswalk)  // NOLINT for g
   addTestMap(test_map_ptr);
   test_map_ptr->add(reg_elem);
 
-  lanelet::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;

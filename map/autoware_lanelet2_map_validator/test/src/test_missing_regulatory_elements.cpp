@@ -158,9 +158,9 @@ TEST_F(TestSuite, ValidatorAvailability)  // NOLINT for gtest
     "mapping.traffic_light.missing_regulatory_elements"};
 
   std::set<std::string> testing_validators_set = {
-    lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator::name(),
-    lanelet::validation::MissingRegulatoryElementsForStopLinesValidator::name(),
-    lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator::name()};
+    lanelet::autoware::validation::MissingRegulatoryElementsForCrosswalksValidator::name(),
+    lanelet::autoware::validation::MissingRegulatoryElementsForStopLinesValidator::name(),
+    lanelet::autoware::validation::MissingRegulatoryElementsForTrafficLightsValidator::name()};
 
   for (const auto & name : testing_validators_set) {
     std::cout << name << std::endl;
@@ -178,7 +178,7 @@ TEST_F(TestSuite, MissingRegulatoryElementOfTrafficLight)  // NOLINT for gtest
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({tl_no_reg_elem});
   addTestMap(test_map_ptr);
 
-  lanelet::validation::MissingRegulatoryElementsForTrafficLightsValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForTrafficLightsValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
@@ -205,7 +205,7 @@ TEST_F(TestSuite, MissingRegulatoryElementOfCrosswalk)  // NOLINT for gtest
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({cw_no_reg_elem});
   addTestMap(test_map_ptr);
 
-  lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
@@ -229,7 +229,7 @@ TEST_F(TestSuite, MissingRegulatoryElementOfStopLine)  // NOLINT for gtest
   LaneletMapPtr test_map_ptr = lanelet::utils::createMap({sl_no_reg_elem});
   addTestMap(test_map_ptr);
 
-  lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForStopLinesValidator checker;
   const auto & issues = checker(*test_map_ptr);
 
   uint8_t expected_num_issues = 1;
