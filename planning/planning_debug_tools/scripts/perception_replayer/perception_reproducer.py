@@ -17,17 +17,14 @@
 import argparse
 from collections import deque
 import pickle
-import time
 
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import numpy as np
 from perception_replayer_common import PerceptionReplayerCommon
 import rclpy
-from utils import LocalizationInitializer
-from utils import RoutePointsClient
 from utils import StopWatch
 from utils import create_empty_pointcloud
-from utils import get_pose_from_bag
+from utils import pub_route
 from utils import translate_objects_coordinate
 
 
@@ -284,7 +281,7 @@ class PerceptionReproducer(PerceptionReplayerCommon):
         return self.memorized_noised_objects_msg
 
 
-def main():
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Perception Reproducer")
     parser.add_argument("-b", "--bag", help="rosbag file path", required=True)
     parser.add_argument(
@@ -321,10 +318,11 @@ def main():
         default=80.0,
     )
     parser.add_argument(
-        "-s",
-        "--set-route",
+        "-p",
+        "--pub-route",
         help=(
-            "Retrieve and set initial and goal poses from rosbag. " "By default, route are not set."
+            "publish route created from the initial pose and goal pose retrieved from the beginning and end of the rosbag. "
+            "By default, route are not published."
         ),
         action="store_true",
     )
@@ -333,48 +331,15 @@ def main():
     if not args.bag:
         parser.error("The '--bag' argument is required.")
 
-    rclpy.init()
+    if args.pub_route:
+        pub_route(args.bag)
 
-    if args.set_poses:
-        try:
-            initial_pose = get_pose_from_bag(args.bag, position="first")
-            goal_pose = get_pose_from_bag(args.bag, position="last")
-        except Exception as e:
-            print(f"Error retrieving poses from bag: {e}")
-            return
-
-        # ローカリゼーションの初期化
-        localization_client = LocalizationInitializer()
-        future_init = localization_client.send_initial_pose(initial_pose)
-        rclpy.spin_until_future_complete(localization_client, future_init)
-        if future_init.result() is not None:
-            print("Successfully initialized localization.")
-        else:
-            print("Failed to initialize localization.")
-
-        # 初期ポーズが設定されるまで待機
-        time.sleep(1)
-
-        # ルートポイントの設定
-        route_client = RoutePointsClient()
-        future_route = route_client.send_request(goal_pose)
-        rclpy.spin_until_future_complete(route_client, future_route)
-        if future_route.result() is not None:
-            print("Successfully set route points.")
-        else:
-            print("Failed to set route points.")
-
-    # PerceptionReproducerノードの作成と実行
-    perception_node = PerceptionReproducer(args)
+    node = PerceptionReproducer(args)
 
     try:
-        rclpy.spin(perception_node)
+        rclpy.spin(node)
     except KeyboardInterrupt:
-        print("Perception reproducer interrupted by user.")
+        pass
     finally:
-        perception_node.destroy_node()
+        node.destroy_node()
         rclpy.shutdown()
-
-
-if __name__ == "__main__":
-    main()

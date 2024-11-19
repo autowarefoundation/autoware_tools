@@ -16,6 +16,7 @@
 
 import math
 import time
+from typing import Tuple
 
 from autoware_adapi_v1_msgs.srv import SetRoutePoints
 from geometry_msgs.msg import Point
@@ -24,6 +25,7 @@ from geometry_msgs.msg import PoseWithCovariance
 from geometry_msgs.msg import PoseWithCovarianceStamped
 from geometry_msgs.msg import Quaternion
 import numpy as np
+import rclpy
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from rclpy.serialization import deserialize_message
@@ -160,7 +162,7 @@ def is_close_pose(p0, p1, min_dist, max_dist) -> bool:
     return dist < min_dist or dist > max_dist
 
 
-def get_pose_from_bag(input_path: str, position="first", interval=(0.1, 10000.0)) -> Pose:
+def get_pose_from_bag(input_path: str, interval=(0.1, 10000.0)) -> Tuple[Pose, Pose]:
     reader = create_reader(input_path)
     type_map = {
         topic_type.name: topic_type.type for topic_type in reader.get_all_topics_and_types()
@@ -177,8 +179,8 @@ def get_pose_from_bag(input_path: str, position="first", interval=(0.1, 10000.0)
             for transform in msg.transforms:
                 if transform.child_frame_id != "base_link":
                     continue
-                trans = transform.transform.translation  # This is a Vector3
-                rot = transform.transform.rotation  # This is a Quaternion
+                trans = transform.transform.translation
+                rot = transform.transform.rotation
                 if is_first_pose:
                     is_first_pose = False
                     prev_trans = trans
@@ -190,31 +192,73 @@ def get_pose_from_bag(input_path: str, position="first", interval=(0.1, 10000.0)
     if not pose_list:
         raise ValueError("No valid poses found in the bag file.")
 
-    selected_trans, selected_rot = pose_list[0] if position == "first" else pose_list[-1]
-    pose = Pose()
-    # Convert Vector3 to Point
-    pose.position = Point(x=selected_trans.x, y=selected_trans.y, z=selected_trans.z)
-    pose.orientation = selected_rot  # This is already a Quaternion
-    return pose
+    initial_trans, initial_rot = pose_list[0]
+    goal_trans, goal_rot = pose_list[-1]
+
+    initial_pose = Pose()
+    initial_pose.position = Point(x=initial_trans.x, y=initial_trans.y, z=initial_trans.z)
+    initial_pose.orientation = initial_rot
+
+    goal_pose = Pose()
+    goal_pose.position = Point(x=goal_trans.x, y=goal_trans.y, z=goal_trans.z)
+    goal_pose.orientation = goal_rot
+
+    return initial_pose, goal_pose
+
+
+def pub_route(input_path: str):
+    rclpy.init()
+
+    try:
+        first_pose, last_pose = get_pose_from_bag(input_path)
+    except Exception as e:
+        print(f"Error retrieving poses from bag: {e}")
+        return
+
+    localization_client = LocalizationInitializer()
+    future_init = localization_client.send_initial_pose(first_pose)
+    rclpy.spin_until_future_complete(localization_client, future_init)
+    if future_init.result() is not None:
+        print("Successfully initialized localization.")
+    else:
+        print("Failed to initialize localization.")
+
+    # temporarily add a sleep because sometimes the route is not generated correctly without it.
+    # Need to consider a proper solution.
+    time.sleep(2)
+
+    route_client = RoutePointsClient()
+    future_route = route_client.send_request(last_pose)
+    rclpy.spin_until_future_complete(route_client, future_route)
+    if future_route.result() is not None:
+        print("Successfully set route points.")
+    else:
+        print("Failed to set route points.")
 
 
 class StopWatch:
-    def __init__(self, verbose: bool = True):
+    def __init__(self, verbose):
+        # A dictionary to store the starting times
         self.start_times = {}
         self.verbose = verbose
 
-    def tic(self, name: str):
-        """Start timing under the given name."""
+    def tic(self, name):
+        """Store the current time with the given name."""
         self.start_times[name] = time.perf_counter()
 
-    def toc(self, name: str):
-        """Stop timing and print the elapsed time."""
+    def toc(self, name):
+        """Print the elapsed time since the last call to tic() with the same name."""
         if name not in self.start_times:
-            print(f"No start time found for '{name}'!")
+            print(f"No start time found for {name}!")
             return
-        elapsed_time = (time.perf_counter() - self.start_times[name]) * 1000  # in milliseconds
+
+        elapsed_time = (
+            time.perf_counter() - self.start_times[name]
+        ) * 1000  # Convert to milliseconds
         if self.verbose:
-            print(f"Time for '{name}': {elapsed_time:.2f} ms")
+            print(f"Time for {name}: {elapsed_time:.2f} ms")
+
+        # Reset the starting time for the name
         del self.start_times[name]
 
 
