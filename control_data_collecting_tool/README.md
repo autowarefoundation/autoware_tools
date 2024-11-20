@@ -15,19 +15,24 @@ This package provides tools for automatically collecting data using pure pursuit
   - Setting the trajectory from the following types of trajectories ( [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`] ).
 
     - `COURSE_NAME: eight_course`
+
       <img src="resource/figure_eight.png" width="480">
 
     - `COURSE_NAME: u_shaped_return`
+
       <img src="resource/u_shaped.png" width="480">
 
     - `COURSE_NAME: straight_line_positive` or `COURSE_NAME: straight_line_negative`
       ( Both "straight_line_positive" and "straight_line_negative" represent straight line courses, but the direction of travel of the course is reversed.)
+
       <img src="resource/straight_line.png" width="480">
 
     - `COURSE_NAME: reversal_loop_circle`
+
       <img src="resource/reversal_loop_circle.png" width="320">
 
     - `COURSE_NAME: along_road`
+
       <img src="resource/along_road.png" width="540">
 
 ## How to use
@@ -126,7 +131,7 @@ ROS 2 params which are common in all trajectories (`/config/common_param.yaml`):
 | Name                                     | Type     | Description                                                                                         | Default value  |
 | :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
 | `LOAD_ROSBAG2_FILES`                     | `bool`   | Flag that determines whether to load rosbag2 data or not                                            | True           |
-| `COURSE_NAME`                            | `string` | Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`] | `eight_course` |
+| `COURSE_NAME`                            | `string` | Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`] | `eight_course` |
 | `NUM_BINS_V`                             | `int`    | Number of bins of velocity in heatmap                                                               | 10             |
 | `NUM_BINS_STEER`                         | `int`    | Number of bins of steer in heatmap                                                                  | 10             |
 | `NUM_BINS_A`                             | `int`    | Number of bins of acceleration in heatmap                                                           | 10             |
