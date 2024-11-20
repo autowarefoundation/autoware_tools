@@ -8,7 +8,7 @@ This package provides tools for automatically collecting data using pure pursuit
 
 - This package aims to collect a dataset consisting of control inputs (i.e. `control_cmd`) and observation variables (i.e. `kinematic_state`, `steering_status`, etc).
 - The collected dataset can be used as training dataset for learning-based controllers, including [smart_mpc](https://github.com/autowarefoundation/autoware.universe/tree/f30c0350861d020ad26a45806ab1334895122fab/control/smart_mpc_trajectory_follower).
-- The data collecting approach is as follows:
+- Data collecting approach is as follows:
 
   - Following the trajectory using a pure pursuit control law.
   - Adding noises to the trajectory and the control command for data diversity, improving the prediction accuracy of learning model.
@@ -23,21 +23,24 @@ This package provides tools for automatically collecting data using pure pursuit
       <img src="resource/u_shaped.png" width="480">
 
     - `COURSE_NAME: straight_line_positive` or `COURSE_NAME: straight_line_negative`
+
       ( Both "straight_line_positive" and "straight_line_negative" represent straight line courses, but the direction of travel of the course is reversed.)
 
       <img src="resource/straight_line.png" width="480">
 
     - `COURSE_NAME: reversal_loop_circle`
+
       Drive within a circle while adding trajectories and collect data.
 
       <img src="resource/reversal_loop_circle.png" width="320">
 
     - `COURSE_NAME: along_road`
+
       Generate trajectories along the road. This is particularly useful when drawing long straight paths along the road.
 
       <img src="resource/along_road.png" width="540">
 
-## How to use
+## How to Use
 
 1. Launch Autoware.
 
@@ -49,80 +52,78 @@ This package provides tools for automatically collecting data using pure pursuit
 
 3. Add the DataCollectingAreaSelectionTool and DataCollectingGoalPlugin RViz plugins by clicking the "+" icon at the top of the RViz window.
 
-   <img src="resource/add_rviz_plugin.png" width="480">
+<img src="resource/add_rviz_plugin.png" width="480">
 
-4. Launch control_data_collecting_tool.
+4.  Launch control_data_collecting_tool.
 
-   ```bash
-   ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=:=$HOME/autoware_map/sample-map-planning
-   ```
+    ```bash
+    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=:=$HOME/autoware_map/sample-map-planning
+    ```
 
-   - Please specify the same map for `map_path` as the one provided when launching Autoware.
+    - Please specify the same map for `map_path` as the one provided when launching Autoware.
 
-   - Control data collecting tool automatically records topics included in `config/topics.yaml` when the above command is executed.
-     The topics will be saved in rosbag2 format in the directory where the above command is executed.
+    - Control data collecting tool automatically records topics included in `config/topics.yaml` when the above command is executed.
+      Topics will be saved in rosbag2 format in the current directory.
 
-   - The data from `/localization/kinematic_state` and `/localization/acceleration` located in the directory (rosbag2 format) where the command is executed will be automatically loaded and reflected in the data count for these topics.
-     (If `LOAD_ROSBAG2_FILES` in `config/param.yaml` is set to `false`, the data is not loaded.)
+    - The data from `/localization/kinematic_state` and `/localization/acceleration` located in the directory (rosbag2 format) where the command is executed will be automatically loaded and reflected in the data count for these topics.
+      (If `LOAD_ROSBAG2_FILES` in `config/param.yaml` is set to `false`, the data is not loaded.)
 
-5. Add visualization in rviz:
+5.  Add visualization in rviz:
 
-   - `/data_collecting_area`
-     - Type: Polygon
-   - `/data_collecting_trajectory_marker_array`
-     - Type: MarkerArray
-   - `/data_collecting_lookahead_marker_array`
-     - Type: MarkerArray
+    - `/data_collecting_area`
+      - Type: Polygon
+    - `/data_collecting_trajectory_marker_array`
+      - Type: MarkerArray
+    - `/data_collecting_lookahead_marker_array`
+      - Type: MarkerArray
 
-6. The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to 6-1. If you select the trajectory from [`along_road`], please proceed to 6-2.
+6.  The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to i. If you select the trajectory from [`along_road`], please proceed to ii.
 
-- 6-1. If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
+    - 6-1 If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
 
-    <img src="resource/DataCollectingAreaSelection.png" width="480">
+      <img src="resource/DataCollectingAreaSelection.png" width="480">
 
-  Highlight the data collecting area by dragging the mouse over it.
+      Highlight the data collecting area by dragging the mouse over it.
 
-    <img src="resource/select_area.gif" width="480">
+          <img src="resource/select_area.gif" width="480">
 
-  > [!NOTE]
-  > You cannot change the data collecting area while driving.
+      > [!NOTE]
+      > You cannot change the data collecting area while driving.
 
-- 6-2. If you choose the trajectory from [`along_road`], select `DataCollectingGoalPose` plugin.
+    - 6-2. If you choose the trajectory from [`along_road`], select `DataCollectingGoalPose` plugin.
 
-    <img src="resource/DataCollectingGoalPose.png" width="480">
+        <img src="resource/DataCollectingGoalPose.png" width="480">
 
-  By setting the pose of the goal point, a trajectory is generated on the map.
+      By setting the pose of the goal point, a trajectory is generated on the map.
 
-    <img src="resource/set_trajectory_along_road.gif" width="480">
+        <img src="resource/set_trajectory_along_road.gif" width="480">
 
-  > [!NOTE]
-  > You cannot change the goal pose while driving.
-  >
-  > [!NOTE]
-  > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
+      > [!NOTE]
+      > You cannot change the goal pose while driving.
+      > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
 
-7. Click the `LOCAL` button on `OperationMode` in `AutowareStatePanel`.
+7.  Click the `LOCAL` button on `OperationMode` in `AutowareStatePanel`.
 
-   <img src="resource/push_LOCAL.png" width="480">
+    <img src="resource/push_LOCAL.png" width="480">
 
-   Then, data collecting starts.
+    Then, data collecting starts.
 
-   <img src="resource/push_LOCAL.gif" width="480">
+    <img src="resource/push_LOCAL.gif" width="480">
 
-8. If you want to stop data collecting automatic driving, run the following command
+8.  If you want to stop data collecting automatic driving, run the following command
 
-   ```bash
-   ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: true" --once
-   ```
+    ```bash
+    ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: true" --once
+    ```
 
-   > [!NOTE]
-   > When the car crosses the green boundary line, a similar stopping procedure will be automatically triggered.
+    > [!NOTE]
+    > When the car crosses the green boundary line, a similar stopping procedure will be automatically triggered.
 
-9. If you want to restart data collecting automatic driving, run the following command
+9.  If you want to restart data collecting automatic driving, run the following command
 
-   ```bash
-   ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once
-   ```
+    ```bash
+    ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once
+    ```
 
 ## Parameter
 
