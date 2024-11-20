@@ -2,7 +2,7 @@
   ros__parameters:
     # Course Specific Parameters
     velocity_on_curve: 4.5
-    
+
     # Data Collection Range
     COLLECTING_DATA_V_MIN: 0.5
     COLLECTING_DATA_V_MAX: 8.0

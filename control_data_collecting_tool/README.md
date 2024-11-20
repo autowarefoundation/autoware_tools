@@ -9,25 +9,26 @@ This package provides tools for automatically collecting data using pure pursuit
 - This package aims to collect a dataset consisting of control inputs (i.e. `control_cmd`) and observation variables (i.e. `kinematic_state`, `steering_status`, etc).
 - The collected dataset can be used as training dataset for learning-based controllers, including [smart_mpc](https://github.com/autowarefoundation/autoware.universe/tree/f30c0350861d020ad26a45806ab1334895122fab/control/smart_mpc_trajectory_follower).
 - The data collecting approach is as follows:
+
   - Following the trajectory using a pure pursuit control law.
   - Adding noises to the trajectory and the control command for data diversity, improving the prediction accuracy of learning model.
   - Setting the trajectory from the following types of trajectories ( [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`] ).
 
-      - `COURSE_NAME: eight_course`
-        <img src="resource/figure_eight.png" width="480">
+    - `COURSE_NAME: eight_course`
+      <img src="resource/figure_eight.png" width="480">
 
-      - `COURSE_NAME: u_shaped_return`
-        <img src="resource/u_shaped.png" width="480">
+    - `COURSE_NAME: u_shaped_return`
+      <img src="resource/u_shaped.png" width="480">
 
-      - `COURSE_NAME: straight_line_positive` or `COURSE_NAME: straight_line_negative`
-        ( Both "straight_line_positive" and "straight_line_negative" represent straight line courses, but the direction of travel of the course is reversed.)
-        <img src="resource/straight_line.png" width="480">
+    - `COURSE_NAME: straight_line_positive` or `COURSE_NAME: straight_line_negative`
+      ( Both "straight_line_positive" and "straight_line_negative" represent straight line courses, but the direction of travel of the course is reversed.)
+      <img src="resource/straight_line.png" width="480">
 
-      - `COURSE_NAME: reversal_loop_circle`
-        <img src="resource/reversal_loop_circle.png" width="320">
+    - `COURSE_NAME: reversal_loop_circle`
+      <img src="resource/reversal_loop_circle.png" width="320">
 
-      - `COURSE_NAME: along_road`
-        <img src="resource/along_road.png" width="540">
+    - `COURSE_NAME: along_road`
+      <img src="resource/along_road.png" width="540">
 
 ## How to use
 
@@ -48,6 +49,7 @@ This package provides tools for automatically collecting data using pure pursuit
    ```bash
    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=:=$HOME/autoware_map/sample-map-planning
    ```
+
    - Control data collecting tool automatically records topics included in `config/topics.yaml` when the above command is executed.
      The topics will be saved in rosbag2 format in the directory where the above command is executed.
 
@@ -64,30 +66,31 @@ This package provides tools for automatically collecting data using pure pursuit
      - Type: MarkerArray
 
 6. The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to 6-1. If you select the trajectory from [`along_road`].
-  - 6-1. If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
+
+- 6-1. If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
 
    <img src="resource/DataCollectingAreaSelection.png" width="480">
 
-   Highlight the data collecting area by dragging the mouse over it.
+  Highlight the data collecting area by dragging the mouse over it.
 
    <img src="resource/select_area.gif" width="480">
 
-   > [!NOTE]
-   > You cannot change the data collecting area while driving.
+  > [!NOTE]
+  > You cannot change the data collecting area while driving.
 
-  - 6-2. If you choose the trajectory from [`along_road`], put your vehicle on the map and select `DataCollectingGoalPose` plugin.
+- 6-2. If you choose the trajectory from [`along_road`], put your vehicle on the map and select `DataCollectingGoalPose` plugin.
 
    <img src="resource/DataCollectingGoalPose.png" width="480">
 
-   By setting the pose of the goal point, a trajectory is generated on the map.
+  By setting the pose of the goal point, a trajectory is generated on the map.
 
    <img src="resource/Set_Trajectory_along_Load.gif" width="480">
 
-   > [!NOTE]
-   > You cannot change the goal pose while driving.
+  > [!NOTE]
+  > You cannot change the goal pose while driving.
 
-   > [!NOTE]
-   > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
+  > [!NOTE]
+  > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
 
 7. Click the `LOCAL` button on `OperationMode` in `AutowareStatePanel`.
 
@@ -117,6 +120,7 @@ This package provides tools for automatically collecting data using pure pursuit
 There are parameters that are common to all trajectories and parameters that are specific to each trajectory.
 
 ### Common Parameters
+
 ROS 2 params which are common in all trajectories (`/config/common_param.yaml`):
 
 | Name                                     | Type     | Description                                                                                         | Default value  |
@@ -153,54 +157,53 @@ ROS 2 params which are common in all trajectories (`/config/common_param.yaml`):
 | `steer_rate_lim`                         | `double` | Steering angle rate limit [rad/s]                                                                   | 1.0            |
 
 The following parameters are common to all trajectories but can be defined individually for each trajectory. (`/config/course_param/COURSE_NAME_param.yaml`):
-| Name                                     | Type     | Description                                                                                         | Default value  |
+| Name | Type | Description | Default value |
 | :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
-| `COLLECTING_DATA_V_MIN`                  | `double` | Minimum velocity for data collection [m/s]                                                          | 0.0            |
-| `COLLECTING_DATA_V_MAX`                  | `double` | Maximum velocity for data collection [m/s]                                                          | 8.0            |
-| `COLLECTING_DATA_A_MIN`                  | `double` | Minimum velocity for data collection [m/ss]                                                         | 1.0            |
-| `COLLECTING_DATA_A_MAX`                  | `double` | Maximum velocity for data collection [m/ss]                                                         | -1.0           |
-| `longitudinal_velocity_noise_amp`        | `double` | Target longitudinal velocity additional sine noise amplitude [m/s]                                  | 0.01           |
-| `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s]                               | 5.0            |
-| `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s]                               | 20.0           |
-| `acc_noise_amp`                          | `double` | Accel command additional sine noise amplitude [m/ss]                                                | 0.01           |
-| `acc_noise_min_period`                   | `double` | Accel command additional sine noise minimum period [s]                                              | 5.0            |
-| `acc_noise_max_period`                   | `double` | Accel command additional sine noise maximum period [s]                                              | 20.0           |
-| `steer_noise_amp`                        | `double` | Steer command additional sine noise amplitude [rad]                                                 | 0.01           |
-| `steer_noise_max_period`                 | `double` | Steer command additional sine noise maximum period [s]                                              | 5.0            |
-| `steer_noise_min_period`                 | `double` | Steer command additional sine noise minimum period [s]                                              | 20.0           |
+| `COLLECTING_DATA_V_MIN` | `double` | Minimum velocity for data collection [m/s] | 0.0 |
+| `COLLECTING_DATA_V_MAX` | `double` | Maximum velocity for data collection [m/s] | 8.0 |
+| `COLLECTING_DATA_A_MIN` | `double` | Minimum velocity for data collection [m/ss] | 1.0 |
+| `COLLECTING_DATA_A_MAX` | `double` | Maximum velocity for data collection [m/ss] | -1.0 |
+| `longitudinal_velocity_noise_amp` | `double` | Target longitudinal velocity additional sine noise amplitude [m/s] | 0.01 |
+| `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s] | 5.0 |
+| `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s] | 20.0 |
+| `acc_noise_amp` | `double` | Accel command additional sine noise amplitude [m/ss] | 0.01 |
+| `acc_noise_min_period` | `double` | Accel command additional sine noise minimum period [s] | 5.0 |
+| `acc_noise_max_period` | `double` | Accel command additional sine noise maximum period [s] | 20.0 |
+| `steer_noise_amp` | `double` | Steer command additional sine noise amplitude [rad] | 0.01 |
+| `steer_noise_max_period` | `double` | Steer command additional sine noise maximum period [s] | 5.0 |
+| `steer_noise_min_period` | `double` | Steer command additional sine noise minimum period [s] | 20.0 |
 
 ### Course-Specific Parameters
 
 - `COURSE_NAME: eight_course`
 
-| Name                                     | Type     | Description                                                                                         | Default value  |
-| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
-| `velocity_on_curve`                      | `double` | Constant velocity on curve [m/s]                                                                    | 4.5            |
-| `smoothing_window`                       | `double` | Width of window for smoothing trajectory                                                            | 400            |
+| Name                | Type     | Description                              | Default value |
+| :------------------ | :------- | :--------------------------------------- | :------------ |
+| `velocity_on_curve` | `double` | Constant velocity on curve [m/s]         | 4.5           |
+| `smoothing_window`  | `double` | Width of window for smoothing trajectory | 400           |
 
 - `COURSE_NAME: u_shaped_return`
 
-| Name                                     | Type     | Description                                                                                         | Default value  |
-| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
-| `velocity_on_curve`                      | `double` | Constant velocity on curve [m/s]                                                                    | 4.5            |
+| Name                | Type     | Description                      | Default value |
+| :------------------ | :------- | :------------------------------- | :------------ |
+| `velocity_on_curve` | `double` | Constant velocity on curve [m/s] | 4.5           |
 
 - `COURSE_NAME: straight_line_positive` or `COURSE_NAME: straight_line_negative`
 
-| Name                                     | Type     | Description                                                                                         | Default value  |
-| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
-| `stopping_buffer_distance`               | `double` | The safety distance from end of the straihgh line [m]                                               | 10.0           |
+| Name                       | Type     | Description                                           | Default value |
+| :------------------------- | :------- | :---------------------------------------------------- | :------------ |
+| `stopping_buffer_distance` | `double` | The safety distance from end of the straihgh line [m] | 10.0          |
 
 - `COURSE_NAME: reversal_loop_circle`
 
-| Name                                     | Type     | Description                                                                                         | Default value  |
-| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
-| `Radius`                                 | `double` | Radius of the circle where trajectories are generated [m]                                           | 35.0           |
+| Name     | Type     | Description                                               | Default value |
+| :------- | :------- | :-------------------------------------------------------- | :------------ |
+| `Radius` | `double` | Radius of the circle where trajectories are generated [m] | 35.0          |
 
 - `COURSE_NAME: along_road`
 
-| Name                                     | Type     | Description                                                                                         | Default value  |
-| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
-| `velocity_on_curve`                      | `double` | Constant velocity on curve [m/s]                                                                    | 3.5            |
-| `stopping_buffer_distance`               | `double` | The safety distance from end of the straight line [m]                                               | 15.0           |
-| `course_width`                           | `double` | The width of the trajectory [m]                                                                     | 1.5            |
-  
+| Name                       | Type     | Description                                           | Default value |
+| :------------------------- | :------- | :---------------------------------------------------- | :------------ |
+| `velocity_on_curve`        | `double` | Constant velocity on curve [m/s]                      | 3.5           |
+| `stopping_buffer_distance` | `double` | The safety distance from end of the straight line [m] | 15.0          |
+| `course_width`             | `double` | The width of the trajectory [m]                       | 1.5           |
