@@ -128,38 +128,38 @@ There are parameters that are common to all trajectories and parameters that are
 
 ROS 2 params which are common in all trajectories (`/config/common_param.yaml`):
 
-| Name                                     | Type     | Description                                                                                         | Default value  |
-| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
-| `LOAD_ROSBAG2_FILES`                     | `bool`   | Flag that determines whether to load rosbag2 data or not                                            | True           |
+| Name                                     | Type     | Description                                                                                                                               | Default value  |
+| :--------------------------------------- | :------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :------------- |
+| `LOAD_ROSBAG2_FILES`                     | `bool`   | Flag that determines whether to load rosbag2 data or not                                                                                  | True           |
 | `COURSE_NAME`                            | `string` | Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`] | `eight_course` |
-| `NUM_BINS_V`                             | `int`    | Number of bins of velocity in heatmap                                                               | 10             |
-| `NUM_BINS_STEER`                         | `int`    | Number of bins of steer in heatmap                                                                  | 10             |
-| `NUM_BINS_A`                             | `int`    | Number of bins of acceleration in heatmap                                                           | 10             |
-| `V_MIN`                                  | `double` | Minimum velocity in heatmap [m/s]                                                                   | 0.0            |
-| `V_MAX`                                  | `double` | Maximum velocity in heatmap [m/s]                                                                   | 11.5           |
-| `STEER_MIN`                              | `double` | Minimum steer in heatmap [rad]                                                                      | -1.0           |
-| `STEER_MAX`                              | `double` | Maximum steer in heatmap [rad]                                                                      | 1.0            |
-| `A_MIN`                                  | `double` | Minimum acceleration in heatmap [m/ss]                                                              | -1.0           |
-| `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/ss]                                                              | 1.0            |
-| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                               | 0.5            |
-| `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]                                         | 5.0            |
-| `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                             | 0.50           |
-| `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]                                  | 1.0            |
-| `mov_ave_window`                         | `int`    | Moving average smoothing window size                                                                | 100            |
-| `target_longitudinal_velocity`           | `double` | Target longitudinal velocity [m/s]                                                                  | 6.0            |
-| `pure_pursuit_type`                      | `string` | Pure pursuit type (`naive` or `linearized` steer control law )                                      | `linearized`   |
-| `wheel_base`                             | `double` | Wheel base [m]                                                                                      | 2.79           |
-| `acc_kp`                                 | `double` | Accel command proportional gain                                                                     | 1.0            |
-| `lookahead_time`                         | `double` | Pure pursuit lookahead time [s]                                                                     | 2.0            |
-| `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                                                           | 2.0            |
-| `linearized_pure_pursuit_steer_kp_param` | `double` | Linearized pure pursuit steering P gain parameter                                                   | 2.0            |
-| `linearized_pure_pursuit_steer_kd_param` | `double` | Linearized pure pursuit steering D gain parameter                                                   | 2.0            |
-| `stop_acc`                               | `double` | Accel command for stopping data collecting driving [m/ss]                                           | -2.0           |
-| `stop_jerk_lim`                          | `double` | Jerk limit for stopping data collecting driving [m/sss]                                             | 5.0            |
-| `lon_acc_lim`                            | `double` | Longitudinal acceleration limit [m/ss]                                                              | 5.0            |
-| `lon_jerk_lim`                           | `double` | Longitudinal jerk limit [m/sss]                                                                     | 5.0            |
-| `steer_lim`                              | `double` | Steering angle limit [rad]                                                                          | 1.0            |
-| `steer_rate_lim`                         | `double` | Steering angle rate limit [rad/s]                                                                   | 1.0            |
+| `NUM_BINS_V`                             | `int`    | Number of bins of velocity in heatmap                                                                                                     | 10             |
+| `NUM_BINS_STEER`                         | `int`    | Number of bins of steer in heatmap                                                                                                        | 10             |
+| `NUM_BINS_A`                             | `int`    | Number of bins of acceleration in heatmap                                                                                                 | 10             |
+| `V_MIN`                                  | `double` | Minimum velocity in heatmap [m/s]                                                                                                         | 0.0            |
+| `V_MAX`                                  | `double` | Maximum velocity in heatmap [m/s]                                                                                                         | 11.5           |
+| `STEER_MIN`                              | `double` | Minimum steer in heatmap [rad]                                                                                                            | -1.0           |
+| `STEER_MAX`                              | `double` | Maximum steer in heatmap [rad]                                                                                                            | 1.0            |
+| `A_MIN`                                  | `double` | Minimum acceleration in heatmap [m/ss]                                                                                                    | -1.0           |
+| `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/ss]                                                                                                    | 1.0            |
+| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                                                                     | 0.5            |
+| `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]                                                                               | 5.0            |
+| `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                                                                   | 0.50           |
+| `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]                                                                        | 1.0            |
+| `mov_ave_window`                         | `int`    | Moving average smoothing window size                                                                                                      | 100            |
+| `target_longitudinal_velocity`           | `double` | Target longitudinal velocity [m/s]                                                                                                        | 6.0            |
+| `pure_pursuit_type`                      | `string` | Pure pursuit type (`naive` or `linearized` steer control law )                                                                            | `linearized`   |
+| `wheel_base`                             | `double` | Wheel base [m]                                                                                                                            | 2.79           |
+| `acc_kp`                                 | `double` | Accel command proportional gain                                                                                                           | 1.0            |
+| `lookahead_time`                         | `double` | Pure pursuit lookahead time [s]                                                                                                           | 2.0            |
+| `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                                                                                                 | 2.0            |
+| `linearized_pure_pursuit_steer_kp_param` | `double` | Linearized pure pursuit steering P gain parameter                                                                                         | 2.0            |
+| `linearized_pure_pursuit_steer_kd_param` | `double` | Linearized pure pursuit steering D gain parameter                                                                                         | 2.0            |
+| `stop_acc`                               | `double` | Accel command for stopping data collecting driving [m/ss]                                                                                 | -2.0           |
+| `stop_jerk_lim`                          | `double` | Jerk limit for stopping data collecting driving [m/sss]                                                                                   | 5.0            |
+| `lon_acc_lim`                            | `double` | Longitudinal acceleration limit [m/ss]                                                                                                    | 5.0            |
+| `lon_jerk_lim`                           | `double` | Longitudinal jerk limit [m/sss]                                                                                                           | 5.0            |
+| `steer_lim`                              | `double` | Steering angle limit [rad]                                                                                                                | 1.0            |
+| `steer_rate_lim`                         | `double` | Steering angle rate limit [rad/s]                                                                                                         | 1.0            |
 
 The following parameters are common to all trajectories but can be defined individually for each trajectory. (`/config/course_param/COURSE_NAME_param.yaml`):
 | Name | Type | Description | Default value |
