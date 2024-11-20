@@ -15,35 +15,56 @@
 # limitations under the License.
 
 import os
+import yaml
 
 from ament_index_python.packages import get_package_share_directory
 import launch
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch import LaunchService
 from launch_ros.actions import Node
 
+# Load yaml file
+def get_course_name(yaml_file_path):
+    with open(yaml_file_path, 'r') as file:
+        data = yaml.safe_load(file)
+    
+    # get 'COURSE_NAME'
+    course_name = data.get('/**', {}).get('ros__parameters', {}).get('COURSE_NAME', None)
+    return course_name
+
 
 def generate_launch_description():
+
+    # Get the path to the common param file
     package_share_directory = get_package_share_directory("control_data_collecting_tool")
-    param_file_path = os.path.join(package_share_directory, "config", "param.yaml")
+    common_param_file_path = os.path.join(package_share_directory, "config", "common_param.yaml")
+
+    # Get the path to the course-specific param file
+    course_name = get_course_name(common_param_file_path)
+    course_specific_param_file_path = os.path.join(package_share_directory, "config/course_param", course_name + "_param.yaml")
+
     return launch.LaunchDescription(
         [
             Node(
                 package="control_data_collecting_tool",
                 executable="data_collecting_pure_pursuit_trajectory_follower.py",
                 name="data_collecting_pure_pursuit_trajectory_follower",
-                parameters=[param_file_path],
+                parameters=[common_param_file_path],
             ),
             Node(
                 package="control_data_collecting_tool",
                 executable="data_collecting_trajectory_publisher.py",
                 name="data_collecting_trajectory_publisher",
-                parameters=[param_file_path],
+                parameters=[common_param_file_path,
+                            course_specific_param_file_path,
+                    ],
             ),
             Node(
                 package="control_data_collecting_tool",
                 executable="data_collecting_plotter.py",
                 name="data_collecting_plotter",
-                parameters=[param_file_path],
+                parameters=[common_param_file_path],
             ),
             Node(
                 package="control_data_collecting_tool",
@@ -54,7 +75,7 @@ def generate_launch_description():
                 package="control_data_collecting_tool",
                 executable="data_collecting_data_counter.py",
                 name="data_collecting_data_counter",
-                parameters=[param_file_path],
+                parameters=[common_param_file_path],
             ),
         ]
     )

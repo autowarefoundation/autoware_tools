@@ -29,6 +29,12 @@ class DataCollectingBaseNode(Node):
 
         # common params
         self.declare_parameter(
+            "wheel_base",
+            2.79,
+            ParameterDescriptor(description="Wheel base [m]"),
+        )
+
+        self.declare_parameter(
             "NUM_BINS_V",
             10,
             ParameterDescriptor(description="Number of bins of velocity in heatmap"),
@@ -82,11 +88,8 @@ class DataCollectingBaseNode(Node):
             ParameterDescriptor(description="Maximum acceleration in heatmap [m/ss]"),
         )
 
-        self.declare_parameter(
-            "wheel_base",
-            2.79,
-            ParameterDescriptor(description="Wheel base [m]"),
-        )
+        self.ego_point = np.array([0.0, 0.0])
+        self.goal_point = np.array([0.0, 0.0])
 
         self.sub_odometry_ = self.create_subscription(
             Odometry,
@@ -116,8 +119,8 @@ class DataCollectingBaseNode(Node):
             10,
         )
 
-        self._present_kinematic_state = None
-        self._present_acceleration = None
+        self._present_kinematic_state = Odometry()
+        self._present_acceleration = AccelWithCovarianceStamped()
         self.present_operation_mode_ = None
         self._present_control_mode_ = None
 
@@ -160,6 +163,12 @@ class DataCollectingBaseNode(Node):
 
     def onOdometry(self, msg):
         self._present_kinematic_state = msg
+        self.ego_point = np.array(
+            [
+                self._present_kinematic_state.pose.pose.position.x,
+                self._present_kinematic_state.pose.pose.position.y,
+            ]
+        )
 
     def onAcceleration(self, msg):
         self._present_acceleration = msg
