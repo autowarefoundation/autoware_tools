@@ -208,9 +208,11 @@ Each trajectory has specific ROS 2 parameters.
 
 - `COURSE_NAME: reversal_loop_circle`
 
-| Name     | Type     | Description                                               | Default value |
-| :------- | :------- | :-------------------------------------------------------- | :------------ |
-| `Radius` | `double` | Radius of the circle where trajectories are generated [m] | 35.0          |
+| Name                  | Type     | Description                                                                         | Default value |
+| :-------------------- | :------- | :---------------------------------------------------------------------------------- | :------------ |
+| `trajectory_radius`   | `double` | Radius of the circle where trajectories are generated [m]                           | 35.0          |
+| `enclosing_radius`    | `double` | Radius of the circle enclosing the generated trajectories [m]                       | 40.0          |
+| `look_ahead_distance` | `double` | The distance referenced ahead of the vehicle for collecting steering angle data [m] | 15.0          |
 
 - `COURSE_NAME: along_road`
 

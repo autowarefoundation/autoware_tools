@@ -179,23 +179,29 @@ def calc_two_circles_one_line_trajectory(
     step,
     amplitude=0.001,
 ):
-    # A = [
-    #    center_point1[0] + r1 * np.cos(theta_1_start),
-    #    center_point1[1] + r1 * np.sin(theta_1_start),
-    # ]
+    # Generate a trajectory connecting two circles and a straight line segment.
+
+    # Calculate the endpoint of the first circle's arc
     B = [center_point1[0] + r1 * np.cos(theta_1_end), center_point1[1] + r1 * np.sin(theta_1_end)]
+
+    # Calculate the starting point of the second circle's arc
     C = [
         center_point2[0] + r2 * np.cos(theta_2_start),
         center_point2[1] + r2 * np.sin(theta_2_start),
     ]
 
-    circle_AB = r1 * abs(theta_1_end - theta_1_start)
-    circle_CD = r2 * abs(theta_2_end - theta_2_start)
-    BC = np.linalg.norm(np.array(B) - np.array(C))
+    # Compute lengths of individual segments
+    circle_AB = r1 * abs(theta_1_end - theta_1_start)  # Arc length of the first circle
+    circle_CD = r2 * abs(theta_2_end - theta_2_start)  # Arc length of the second circle
+    BC = np.linalg.norm(np.array(B) - np.array(C))  # Length of the straight-line segment
 
+    # Calculate total trajectory distance
     total_distance = circle_AB + BC + circle_CD
+
+    # Create a time array to parameterize the trajectory
     t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
 
+    # Initialize arrays to store trajectory points and attributes
     x = np.zeros(len(t_array))
     y = np.zeros(len(t_array))
     yaw = np.zeros(len(t_array))
@@ -204,64 +210,68 @@ def calc_two_circles_one_line_trajectory(
     parts = np.zeros(len(t_array), dtype=object)
     i_end = len(t_array)
 
+    # Generate trajectory points
     for i, t in enumerate(t_array):
-        if t > total_distance:
+        if t > total_distance:  # Stop if total distance is exceeded
             i_end = i
             break
 
-        if t <= circle_AB:
+        if t <= circle_AB:  # Trajectory on the first circle
             t1 = t
             alpha = t1 / circle_AB
-            t1_rad = (1 - alpha) * theta_1_start + alpha * theta_1_end
+            t1_rad = (1 - alpha) * theta_1_start + alpha * theta_1_end  # Interpolate angle
             x[i] = center_point1[0] + r1 * np.cos(t1_rad)
             y[i] = center_point1[1] + r1 * np.sin(t1_rad)
             achievement_rates[i] = t / total_distance
-            parts[i] = "circle"
+            parts[i] = "circle"  # Label as circle segment
 
-        elif circle_AB < t <= circle_AB + BC:
+        elif circle_AB < t <= circle_AB + BC:  # Trajectory on the straight line
             t2 = t - circle_AB
             alpha = t2 / BC
-            x[i] = (1 - alpha) * B[0] + alpha * C[0]
-            y[i] = (1 - alpha) * B[1] + alpha * C[1]
+            x[i] = (1 - alpha) * B[0] + alpha * C[0]  # Linear interpolation for x
+            y[i] = (1 - alpha) * B[1] + alpha * C[1]  # Linear interpolation for y
             achievement_rates[i] = t / total_distance
-            parts[i] = "linear"
+            parts[i] = "linear"  # Label as linear segment
 
-        elif circle_AB + BC < t <= total_distance:
+        elif circle_AB + BC < t <= total_distance:  # Trajectory on the second circle
             t3 = t - (circle_AB + BC)
             alpha = t3 / circle_CD
-            t3_rad = (1 - alpha) * theta_2_start + alpha * theta_2_end
+            t3_rad = (1 - alpha) * theta_2_start + alpha * theta_2_end  # Interpolate angle
             x[i] = center_point2[0] + r2 * np.cos(t3_rad)
             y[i] = center_point2[1] + r2 * np.sin(t3_rad)
             achievement_rates[i] = t / total_distance
-            parts[i] = "circle"
+            parts[i] = "circle"  # Label as circle segment
 
+    # Trim arrays to the valid trajectory length
     x = x[:i_end]
     y = y[:i_end]
     parts = parts[:i_end]
-    achievement_rates = achievement_rates[:i_end] / achievement_rates[-1]
+    achievement_rates = achievement_rates[:i_end] / achievement_rates[-1]  # Normalize progress
 
+    # Add sinusoidal perturbations to the trajectory
     delta_x = amplitude * np.sin(4.0 * np.pi * achievement_rates) * np.sin(yaw)
     delta_y = amplitude * np.sin(4.0 * np.pi * achievement_rates) * np.cos(yaw)
     x += delta_x
     y += delta_y
 
+    # Calculate derivatives for yaw and curvature
     dx = (x[1:] - x[:-1]) / step
     dy = (y[1:] - y[:-1]) / step
-
     ddx = (dx[1:] - dx[:-1]) / step
     ddy = (dy[1:] - dy[:-1]) / step
 
     yaw = np.arctan2(dy, dx)
-    yaw = np.array(yaw.tolist() + [yaw[-1]])
+    yaw = np.array(yaw.tolist() + [yaw[-1]])  # Append last value for consistent length
 
     curvature = (
         1e-9 + abs(ddx * dy[:-1] - ddy * dx[:-1]) / (dx[:-1] ** 2 + dy[:-1] ** 2 + 1e-9) ** 1.5
     )
-    curvature = np.array(curvature.tolist() + [curvature[-2], curvature[-1]])
+    curvature = np.array(curvature.tolist() + [curvature[-2], curvature[-1]])  # Append values
 
     yaw = yaw[:i_end]
     curvature = curvature[:i_end]
 
+    # Return trajectory details
     return np.array([x, y]).T, yaw, curvature, parts, achievement_rates, total_distance
 
 
@@ -281,51 +291,51 @@ def calc_two_circles_excircle_trajectory(
     step,
     amplitude=0.001,
 ):
-    # A = [
-    #    center_point1[0] + r1 * np.cos(theta_1_start),
-    #    center_point1[1] + r1 * np.sin(theta_1_start),
-    # ]
-    # B = [center_point1[0] + r1 * np.cos(theta_1_end), center_point1[1] + r1 * np.sin(theta_1_end)]
-    # C = [
-    #    center_point2[0] + r2 * np.cos(theta_2_start),
-    #    center_point2[1] + r2 * np.sin(theta_2_start),
-    # ]
+    # Generate a trajectory connecting two circular arcs and an excircle arc.
 
-    circle_AB = r1 * abs(theta_1_end - theta_1_start)
-    circle_BC = ext_r * abs(theta_excircle_end - theta_excircle_start)
-    circle_CD = r2 * abs(theta_2_end - theta_2_start)
+    # Calculate arc lengths of the first circle, excircle, and second circle
+    circle_AB = r1 * abs(theta_1_end - theta_1_start)  # Arc length of the first circle
+    circle_BC = ext_r * abs(theta_excircle_end - theta_excircle_start)  # Arc length of the excircle
+    circle_CD = r2 * abs(theta_2_end - theta_2_start)  # Arc length of the second circle
 
+    # Calculate the total distance of the trajectory
     total_distance = circle_AB + circle_BC + circle_CD
+
+    # Create a time array for parameterizing the trajectory
     t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
 
-    x = np.zeros(len(t_array))
-    y = np.zeros(len(t_array))
-    yaw = np.zeros(len(t_array))
-    curvature = np.zeros(len(t_array))
-    achievement_rates = np.zeros(len(t_array))
-    parts = np.zeros(len(t_array), dtype=object)
+    # Initialize arrays to store trajectory details
+    x = np.zeros(len(t_array))  # x-coordinates
+    y = np.zeros(len(t_array))  # y-coordinates
+    yaw = np.zeros(len(t_array))  # yaw angles
+    curvature = np.zeros(len(t_array))  # curvature values
+    achievement_rates = np.zeros(len(t_array))  # progress rates
+    parts = np.zeros(len(t_array), dtype=object)  # trajectory part labels
 
-    i_end = len(t_array)
+    i_end = len(t_array)  # Valid index range for trajectory points
 
+    # Generate trajectory points
     for i, t in enumerate(t_array):
-        if t > total_distance:
+        if t > total_distance:  # Stop if total distance is exceeded
             i_end = i
             break
 
-        if t <= circle_AB:
+        if t <= circle_AB:  # On the first circle arc
             t1 = t
             alpha = t1 / circle_AB
-            t1_rad = (1 - alpha) * theta_1_start + alpha * theta_1_end
+            t1_rad = (1 - alpha) * theta_1_start + alpha * theta_1_end  # Interpolate angle
             x[i] = center_point1[0] + r1 * np.cos(t1_rad)
             y[i] = center_point1[1] + r1 * np.sin(t1_rad)
             achievement_rates[i] = t / total_distance
-            parts[i] = "circle"
+            parts[i] = "circle"  # Label as circle part
 
-        elif circle_AB < t <= circle_AB + circle_BC:
-            kappa = 0.0 / ext_r
+        elif circle_AB < t <= circle_AB + circle_BC:  # On the excircle arc
+            kappa = 0.0 / ext_r  # Optional curvature scaling factor (not used here)
             t2 = t - circle_AB
             alpha = t2 / circle_BC
-            t2_rad = (1 - alpha) * theta_excircle_start + alpha * theta_excircle_end
+            t2_rad = (
+                1 - alpha
+            ) * theta_excircle_start + alpha * theta_excircle_end  # Interpolate angle
             x[i] = excircle_center_point[0] + (
                 1.0 + kappa * 4 * alpha * (1 - alpha) * 4 * alpha * (1 - alpha)
             ) * ext_r * np.cos(t2_rad)
@@ -333,22 +343,24 @@ def calc_two_circles_excircle_trajectory(
                 1.0 + kappa * 4 * alpha * (1 - alpha) * 4 * alpha * (1 - alpha)
             ) * ext_r * np.sin(t2_rad)
             achievement_rates[i] = t / total_distance
-            parts[i] = "linear"
+            parts[i] = "linear"  # Label as linear part (for simplicity)
 
-        elif circle_AB + circle_BC < t <= total_distance:
+        elif circle_AB + circle_BC < t <= total_distance:  # On the second circle arc
             t3 = t - (circle_AB + circle_BC)
             alpha = t3 / circle_CD
-            t3_rad = (1 - alpha) * theta_2_start + alpha * theta_2_end
+            t3_rad = (1 - alpha) * theta_2_start + alpha * theta_2_end  # Interpolate angle
             x[i] = center_point2[0] + r2 * np.cos(t3_rad)
             y[i] = center_point2[1] + r2 * np.sin(t3_rad)
             achievement_rates[i] = t / total_distance
-            parts[i] = "circle"
+            parts[i] = "circle"  # Label as circle part
 
+    # Trim arrays to the valid trajectory range
     x = x[:i_end]
     y = y[:i_end]
     parts = parts[:i_end]
     achievement_rates = achievement_rates[:i_end]
 
+    # Add sinusoidal perturbations to the trajectory
     delta_x = (
         amplitude * np.sin(4.0 * np.pi * achievement_rates)
         + 0.05 * amplitude * np.sin(16.0 * np.pi * achievement_rates)
@@ -360,22 +372,23 @@ def calc_two_circles_excircle_trajectory(
     x += delta_x
     y += delta_y
 
+    # Compute derivatives for yaw and curvature
     dx = (x[1:] - x[:-1]) / step
     dy = (y[1:] - y[:-1]) / step
-
     ddx = (dx[1:] - dx[:-1]) / step
     ddy = (dy[1:] - dy[:-1]) / step
 
     yaw = np.arctan2(dy, dx)
-    yaw = np.array(yaw.tolist() + [yaw[-1]])
+    yaw = np.array(yaw.tolist() + [yaw[-1]])  # Append the last value for consistency
 
     curvature = (
         1e-9 + abs(ddx * dy[:-1] - ddy * dx[:-1]) / (dx[:-1] ** 2 + dy[:-1] ** 2 + 1e-9) ** 1.5
     )
-    curvature = np.array(curvature.tolist() + [curvature[-2], curvature[-1]])
+    curvature = np.array(curvature.tolist() + [curvature[-2], curvature[-1]])  # Append values
     yaw = yaw[:i_end]
     curvature = curvature[:i_end]
 
+    # Return trajectory details
     return np.array([x, y]).T, yaw, curvature, parts, achievement_rates, total_distance
 
 
@@ -720,70 +733,121 @@ def reverse_trajectory_segment(trajectory_segment):
 
 def declare_reversal_loop_circle_params(node):
     node.declare_parameter(
-        "Radius",
+        "trajectory_radius",
         35.0,
         ParameterDescriptor(
             description="Radius of the circle where trajectories are generated [m]"
         ),
     )
 
+    node.declare_parameter(
+        "enclosing_radius",
+        40.0,
+        ParameterDescriptor(
+            description="Radius of the circle enclosing the generated trajectories [m]"
+        ),
+    )
+
+    node.declare_parameter(
+        "look_ahead_distance",
+        15.0,
+        ParameterDescriptor(
+            description="The distance referenced ahead of the vehicle for collecting steering angle data"
+        ),
+    )
+
 
 class Reversal_Loop_Circle(Base_Course):
     def __init__(self, step: float, param_dict):
+        # Initialize the Reversal_Loop_Circle class and set up trajectories for straight, turning, and boundary paths.
+
+        # Call the constructor of the parent class (Base_Course).
         super().__init__(step, param_dict)
-        self.closed = False
-        self.wheel_base = param_dict["wheel_base"]
 
-        self.R = param_dict["Radius"]
-        self.vel_hist = deque([float(0.0)] * 30, maxlen=30)
-        self.previous_updated_time = 0.0
+        # Initialize general parameters.
+        self.closed = False  # Indicates whether the trajectory is closed.
+        self.wheel_base = param_dict["wheel_base"]  # Vehicle's wheel base.
+        self.trajectory_R = param_dict[
+            "trajectory_radius"
+        ]  # Circle radius for trajectory generation.
+        self.enclosing_R = param_dict["enclosing_radius"]
+        self.vel_hist = deque([float(0.0)] * 30, maxlen=30)  # Velocity history for smoothing.
+        self.previous_updated_time = 0.0  # Timestamp for tracking updates.
 
-        self.target_vel_on_segmentation = 6.0
-        self.target_acc_on_segmentation = 0.0
-        self.vel_idx, self.acc_idx = 0, 0
+        # Initialize velocity and acceleration targets for trajectory segmentation.
+        self.target_vel_on_segmentation = 6.0  # Target velocity.
+        self.target_acc_on_segmentation = 0.0  # Target acceleration.
+        self.vel_idx, self.acc_idx = 0, 0  # Indices for velocity and acceleration bins.
 
-        self.vehicle_phase = "acceleration"
-        self.const_velocity_start_time = 0.0
-        self.updated_target_velocity = False
+        # Set the initial vehicle phase and other state variables.
+        self.vehicle_phase = "acceleration"  # Vehicle's current motion phase.
+        self.const_velocity_start_time = 0.0  # Start time for constant velocity phase.
+        self.updated_target_velocity = (
+            False  # Indicates whether the target velocity has been updated.
+        )
 
-        """
-        Nearly straight trajectory inside circle
-        """
-        self.steer_list = [0.001, 0.01, 0.02, 0.03]
-        self.trajectory_nearly_straight_clock_wise = {}
-        self.trajectory_nearly_straight_counter_clock_wise = {}
+        self.look_ahead_distance = param_dict[
+            "look_ahead_distance"
+        ]  # Distance to look ahead for collecting steer angle.
+
+        # Generate nearly straight trajectories inside the circle.
+
+        self.steer_list = [
+            0.001,
+            0.01,
+            0.02,
+            0.03,
+        ]  # List of steering angles for nearly straight paths.
+        self.trajectory_nearly_straight_clock_wise = (
+            {}
+        )  # Clockwise trajectories for nearly straight paths.
+        self.trajectory_nearly_straight_counter_clock_wise = (
+            {}
+        )  # Counterclockwise trajectories for nearly straight paths.
+
         for i in range(len(self.steer_list)):
-            # Calculate curvature circle r for a given steering angle
+            # Calculate the radius of curvature for a given steering angle.
             r = self.wheel_base / np.tan(self.steer_list[i])
-            # clock wise
-            trajectory = calc_two_circles_common_tangent_trajectory(self.R, r, step=self.step)
+
+            # Generate and store clockwise trajectories.
+            trajectory = calc_two_circles_common_tangent_trajectory(
+                self.trajectory_R, r, step=self.step
+            )
             self.trajectory_nearly_straight_clock_wise[self.steer_list[i]] = trajectory
-            # counter clock
+
+            # Generate and store counterclockwise trajectories by reversing the clockwise trajectory.
             self.trajectory_nearly_straight_counter_clock_wise[
                 self.steer_list[i]
             ] = reverse_trajectory_segment(trajectory)
 
-        """
-        Trajectory for turning the direction
-        """
-        self.trajectory_for_turning = {}
-        self.amplitude_list = []
-        self.turning_steer_list = []
+        # Generate trajectories for changing directions (turning).
+
+        self.trajectory_for_turning = {}  # Store trajectories for direction changes.
+        self.amplitude_list = []  # List of amplitude values for turning.
+        self.turning_steer_list = []  # List of steering angles for turning.
+
         for i in range(200):
-            amplitude = 0.1 * i
+            amplitude = 0.1 * i  # Gradually increase the amplitude for trajectory variations.
             self.amplitude_list.append(str(amplitude))
 
+            # Create a trajectory dictionary for transitions between directions.
             trajectory_for_turning__ = {}
-            r = self.R / 2 * 0.75
+            r = self.trajectory_R / 2 * 0.75  # Use a reduced radius for sharper turns.
             trajectory = calc_two_circles_common_tangent_trajectory(
-                self.R, r, step=self.step, amplitude=amplitude
+                self.trajectory_R, r, step=self.step, amplitude=amplitude
             )
+
+            # Generate clockwise-to-counterclockwise turning trajectories.
             trajectory_for_turning__["clock_wise_to_counter_clock_wise"] = trajectory
 
+            # Generate counterclockwise-to-clockwise turning trajectories by reversing.
             trajectory_reversed = reverse_trajectory_segment(trajectory)
             trajectory_for_turning__["counter_clock_wise_to_clock_wise"] = trajectory_reversed
 
+            # Store the trajectories for turning.
             self.trajectory_for_turning[str(amplitude)] = trajectory_for_turning__
+
+            # Calculate and store the median turning steering angle.
             self.turning_steer_list.append(
                 np.arctan2(
                     (
@@ -795,35 +859,48 @@ class Reversal_Loop_Circle(Base_Course):
                 )
             )
 
-        """
-        trajectory on boundary
-        """
-        self.boundary_trajectory = {}
-        # clock wise
-        trajectory = calc_boundary_trajectory(self.R)
+        # Generate boundary trajectories.
+
+        self.boundary_trajectory = {}  # Store boundary trajectories.
+
+        # Generate clockwise boundary trajectory.
+        trajectory = calc_boundary_trajectory(self.trajectory_R)
         self.boundary_trajectory["clock_wise"] = trajectory
-        # counter clock wise
+
+        # Generate counterclockwise boundary trajectory by reversing.
         trajectory_reversed = reverse_trajectory_segment(trajectory)
         self.boundary_trajectory["counter_clock_wise"] = trajectory_reversed
 
-        """
-        initializing trajectory list
-        """
-        self.trajectory_list = [self.boundary_trajectory["clock_wise"]]
-        self.end_point = self.trajectory_list[-1].trajectory[-1]
-        self.latest_direction = "clock_wise"
-        self.trajectory_length_list = [len(self.trajectory_list[-1].trajectory)]
+        # Initialize the trajectory list with a boundary trajectory.
 
+        self.trajectory_list = [
+            self.boundary_trajectory["clock_wise"]
+        ]  # Start with a clockwise boundary trajectory.
+        self.end_point = self.trajectory_list[-1].trajectory[
+            -1
+        ]  # Endpoint of the initial trajectory.
+        self.latest_direction = "clock_wise"  # Initial direction.
+        self.trajectory_length_list = [
+            len(self.trajectory_list[-1].trajectory)
+        ]  # Track trajectory lengths.
+
+        # Add initial straight and turning trajectories to the trajectory list.
         while len(self.trajectory_length_list) < 3:
+            self.add_trajectory_nearly_straight()  # Add nearly straight trajectories.
             self.add_trajectory_nearly_straight()
-            self.add_trajectory_nearly_straight()
-            steer_of_trajectory = 1e-9
+            steer_of_trajectory = 1e-9  # Minimal steer value for turning initialization.
             self.add_trajectory_for_turning(steer_of_trajectory)
 
     def add_trajectory(self, trajectory):
+        # Add a new trajectory to the trajectory list, ensuring proper alignment and continuity.
+
+        # If the last trajectory and the new trajectory are both non-boundary types,
+        # add a boundary trajectory to ensure proper alignment.
         if self.trajectory_list[-1].type == "non_boundary" and trajectory.type == "non_boundary":
             self.add_trajectory(self.boundary_trajectory[self.latest_direction])
 
+        # If the incoming trajectory's direction is different from the latest trajectory's direction,
+        # and the latest trajectory is a boundary type, add a turning trajectory to connect them.
         if (
             trajectory.in_direction is not self.latest_direction
             and self.trajectory_list[-1].type == "boundary"
@@ -831,48 +908,64 @@ class Reversal_Loop_Circle(Base_Course):
             key_ = self.latest_direction + "_to_" + getattr(trajectory, "in_direction")
             self.add_trajectory(self.trajectory_for_turning[self.amplitude_list[0]][key_])
 
+        # Ensure proper alignment if there are consecutive non-boundary trajectories.
         if self.trajectory_list[-1].type == "non_boundary" and trajectory.type == "non_boundary":
             self.add_trajectory(self.boundary_trajectory[self.latest_direction])
 
-        cos = self.end_point[0] / self.R
-        sin = self.end_point[1] / self.R
-        delta_theta = np.arctan2(sin, cos) - np.pi
-        Rotation = (-np.eye(2)) @ np.array([[cos, -sin], [sin, cos]])
+        # Compute rotation to align the new trajectory with the end of the last trajectory.
+        cos = self.end_point[0] / self.trajectory_R  # Cosine of the angle for alignment
+        sin = self.end_point[1] / self.trajectory_R  # Sine of the angle for alignment
+        delta_theta = np.arctan2(sin, cos) - np.pi  # Rotation angle
+        Rotation = (-np.eye(2)) @ np.array([[cos, -sin], [sin, cos]])  # Rotation matrix
 
+        # Create a modified copy of the input trajectory for alignment.
         trajectory_modified = copy.deepcopy(trajectory)
         trajectory_modified.trajectory = (Rotation @ trajectory.trajectory.T).T
         trajectory_modified.yaw = trajectory.yaw + delta_theta
 
+        # Update the latest direction and endpoint for the trajectory.
         self.latest_direction = trajectory.out_direction
         self.end_point = trajectory_modified.trajectory[-1]
 
+        # Add the modified trajectory to the list and update the length list.
         self.trajectory_list.append(trajectory_modified)
         self.trajectory_length_list.append(len(trajectory_modified.trajectory))
 
     def add_trajectory_nearly_straight(self):
+        # Add a nearly straight trajectory to the trajectory list, depending on the current direction.
+
         if self.latest_direction == "clock_wise":
+            # Add a trajectory for a clockwise direction using a random steering angle.
             self.add_trajectory(
                 self.trajectory_nearly_straight_clock_wise[random.choice(self.steer_list)]
             )
         elif self.latest_direction == "counter_clock_wise":
+            # Add a trajectory for a counterclockwise direction using a random steering angle.
             self.add_trajectory(
                 self.trajectory_nearly_straight_counter_clock_wise[random.choice(self.steer_list)]
             )
 
     def remove_trajectory(self):
+        # Remove the oldest trajectory from the trajectory list to manage memory and data size.
+
         self.trajectory_list.pop(0)
         self.trajectory_length_list.pop(0)
 
     def add_trajectory_for_turning(self, steer):
+        # Add a trajectory for transitioning between clockwise and counterclockwise directions.
+
+        # Find the index of the closest available steering angle in the turning list.
         index = (np.abs(np.array(self.turning_steer_list) - steer)).argmin()
 
         if self.latest_direction == "clock_wise":
+            # Add a trajectory for transitioning from clockwise to counterclockwise direction.
             self.add_trajectory(
                 self.trajectory_for_turning[self.amplitude_list[index]][
                     self.latest_direction + "_to_" + "counter_clock_wise"
                 ]
             )
         elif self.latest_direction == "counter_clock_wise":
+            # Add a trajectory for transitioning from counterclockwise to clockwise direction.
             self.add_trajectory(
                 self.trajectory_for_turning[self.amplitude_list[index]][
                     self.latest_direction + "_to_" + "clock_wise"
@@ -886,20 +979,26 @@ class Reversal_Loop_Circle(Base_Course):
         ego_point=np.array([0.0, 0.0]),
         goal_point=np.array([0.0, 0.0]),
     ):
+        # Concatenate the trajectory points from the first four trajectory segments
         self.trajectory_points = np.concatenate(
             [self.trajectory_list[i].trajectory for i in range(4)],
             axis=0,
         )
+        # Concatenate yaw angles from the first four trajectory segments
         self.yaw = np.concatenate(
             [self.trajectory_list[i].yaw for i in range(4)],
             axis=0,
         )
+        # Concatenate parts (labels) from the first four trajectory segments
         self.parts = np.concatenate([self.trajectory_list[i].parts for i in range(4)], axis=0)
+        # Concatenate curvatures from the first four trajectory segments
         self.curvature = np.concatenate(
             [self.trajectory_list[i].curvature for i in range(4)], axis=0
         )
+        # Concatenate achievement rates from the first four trajectory segments
         self.achievement_rates = np.concatenate(
-            [self.trajectory_list[i].achievement_rates for i in range(4)], axis=0
+            [self.trajectory_list[i].achievement_rates for i in range(4)],
+            axis=0,
         )
 
     def get_target_velocity(
@@ -911,7 +1010,11 @@ class Reversal_Loop_Circle(Base_Course):
         collected_data_counts_of_vel_acc,
         collected_data_counts_of_vel_steer,
     ):
+        # Calculate the target velocity for the vehicle based on its current state, trajectory phase, and constraints such as acceleration limits and trajectory curvature.
+
+        # Initialize target acceleration and velocity if not already updated
         if not self.updated_target_velocity:
+            # Choose velocity and acceleration bins based on collected data
             self.acc_idx, self.vel_idx = self.choose_target_velocity_acc(
                 collected_data_counts_of_vel_acc
             )
@@ -919,51 +1022,59 @@ class Reversal_Loop_Circle(Base_Course):
             self.target_vel_on_segmentation = self.params.v_bin_centers[self.vel_idx]
             self.acc_on_line = self.target_acc_on_segmentation
 
+            # Set the vehicle's phase to "acceleration"
             self.vehicle_phase = "acceleration"
             self.updated_target_velocity = True
 
-        acc_kp_of_pure_pursuit = self.params.acc_kp
+        acc_kp_of_pure_pursuit = self.params.acc_kp  # Proportional gain for acceleration control
+        T = 10.0  # Period of the sine wave used to modulate velocity
+        sine = np.sin(2 * np.pi * current_time / T)  # Sine wave for smooth velocity modulation
 
-        T = 10.0
-        sine = np.sin(2 * np.pi * current_time / T)
-
-        # acceleration
+        # Handle acceleration phase
         if self.vehicle_phase == "acceleration":
             if current_vel < self.target_vel_on_segmentation - 1.0 * abs(
                 self.target_acc_on_segmentation
             ):
+                # Increase velocity with a maximum allowable acceleration
                 target_vel = current_vel + self.params.a_max / acc_kp_of_pure_pursuit * (
                     1.25 + 0.50 * sine
                 )
             else:
+                # Increase velocity with a absolute target acceleration
                 target_vel = current_vel + abs(
                     self.target_acc_on_segmentation
                 ) / acc_kp_of_pure_pursuit * (1.25 + 0.50 * sine)
 
+            # Transition to "constant speed" phase once the target velocity is reached
             if current_vel > self.target_vel_on_segmentation:
                 self.vehicle_phase = "constant_speed"
                 self.const_velocity_start_time = current_time
 
-        # sine curve around target velocity
+        # Handle constant speed phase
         if self.vehicle_phase == "constant_speed":
+            # Modulate velocity around the target with a sine wave
             target_vel = self.target_vel_on_segmentation + 2.0 * (-0.5 + 1.0 * sine)
 
+            # Transition to "deceleration" phase after a fixed duration
             if current_time - self.const_velocity_start_time > T:
                 self.vehicle_phase = "deceleration"
 
-        # deceleration
+        # Handle deceleration phase
         if self.vehicle_phase == "deceleration":
             if current_vel < self.target_vel_on_segmentation - 1.0 * abs(
                 self.target_acc_on_segmentation
             ):
+                # Decrease velocity with a maximum deceleration
                 target_vel = current_vel - self.params.a_max / acc_kp_of_pure_pursuit * (
                     1.25 + 0.50 * sine
                 )
             else:
+                # Decrease velocity with a absolute target acceleration
                 target_vel = current_vel - abs(
                     self.target_acc_on_segmentation
                 ) / acc_kp_of_pure_pursuit * (1.25 + 0.50 * sine)
 
+            # Reset velocity update flag when deceleration is complete
             if (
                 current_vel
                 < self.target_vel_on_segmentation
@@ -971,50 +1082,63 @@ class Reversal_Loop_Circle(Base_Course):
             ):
                 self.updated_target_velocity = False
 
+        # Maintain a smoothed velocity by averaging recent values
         self.vel_hist.append(target_vel)
         target_vel = np.mean(self.vel_hist)
 
-        #
+        # Special handling for trajectory direction changes
         if self.trajectory_list[2].in_direction is not self.trajectory_list[2].out_direction:
+            # Set a fixed target velocity during direction transitions
             target_vel = 3.0 + 1.0 * sine
 
+        # Adjust velocity based on trajectory curvature and lateral acceleration constraints
         if (self.trajectory_list[1].in_direction is not self.trajectory_list[1].out_direction) or (
             self.trajectory_list[2].in_direction is not self.trajectory_list[2].out_direction
         ):
-            max_curvature_on_segment = 1e-9
-            max_lateral_vel_on_segment = 1e9
+            max_curvature_on_segment = 1e-9  # Initialize to a small value to avoid division by zero
+            max_lateral_vel_on_segment = 1e9  # Initialize to a large value as a placeholder
+
+            # Compute the maximum curvature and lateral velocity in a look-ahead segment
             if self.yaw is not None and self.curvature is not None:
-                look_ahead_length = 12.5
-                steer_sign = np.sign(self.yaw[nearestIndex + 1] - self.yaw[nearestIndex])
+                steer_sign = np.sign(
+                    self.yaw[nearestIndex + 1] - self.yaw[nearestIndex]
+                )  # Steering direction
                 max_curvature_on_segment = np.max(
-                    self.curvature[nearestIndex : nearestIndex + int(look_ahead_length / self.step)]
+                    self.curvature[
+                        nearestIndex : nearestIndex + int(self.look_ahead_distance / self.step)
+                    ]
                 )
                 max_lateral_vel_on_segment = np.sqrt(
                     self.params.max_lateral_accel / max_curvature_on_segment
                 )
 
+            # Identify the velocity index for the maximum lateral velocity
             max_vel_idx = np.clip(
                 np.digitize(max_lateral_vel_on_segment, self.params.v_bins) - 1,
                 0,
                 self.params.collecting_data_max_n_v - 1,
             )
 
+            # Compute steering angle and its corresponding index
             steer = np.arctan(self.wheel_base * max_curvature_on_segment) * steer_sign
             steer_idx = np.clip(
                 np.digitize(steer, self.params.steer_bins) - 1, 0, len(self.params.steer_bins) - 2
             )
 
+            # Determine the minimum velocity based on collected data
             min_vel = np.min(collected_data_counts_of_vel_steer[:max_vel_idx, steer_idx])
             vel_idx = np.where(
                 collected_data_counts_of_vel_steer[:max_vel_idx, steer_idx] == min_vel
             )[0]
             target_vel_ = self.params.v_bin_centers[vel_idx[0]]
 
+            # Constrain velocity based on lateral acceleration limits
             max_vel_from_lateral_acc_on_segment = np.sqrt(
                 self.params.max_lateral_accel / max_curvature_on_segment
             )
             target_vel = np.min([target_vel_ + 0.5 * sine, max_vel_from_lateral_acc_on_segment])
 
+        # Ensure the target velocity remains above a minimum threshold
         target_vel = np.max([target_vel, 0.5])
 
         return target_vel
@@ -1027,29 +1151,43 @@ class Reversal_Loop_Circle(Base_Course):
         collected_data_counts_of_vel_acc,
         collected_data_counts_of_vel_steer,
     ):
+        # Updates the trajectory points based on the vehicle's progress.
+        # Adds new trajectory segments as needed and updates the final trajectory data.
+
+        # If the current position exceeds the length of the first two trajectory segments
         if nearestIndex > self.trajectory_length_list[0] + self.trajectory_length_list[1]:
+            # Remove the oldest trajectory segment
             nearestIndex = nearestIndex - self.trajectory_length_list[0]
             self.remove_trajectory()
 
+            # Find the steering angle with the least amount of collected data
             mini_num_data = 1e9
             steer_with_minimum_num_of_data = 1e-9
             for i in range(len(collected_data_counts_of_vel_steer[0])):
+                # Calculate the steering angle at index i
                 steer_at_idx_i = abs(self.params.steer_bin_centers[i]) + 1e-9
+
+                # Compute the maximum velocity allowed by lateral acceleration
                 max_vel_from_lateral_acc = np.sqrt(
                     self.params.max_lateral_accel / (self.wheel_base * np.tan(steer_at_idx_i))
                 )
-                vel_idx = np.digitize(max_vel_from_lateral_acc, self.params.v_bins) - 1
-                num_data = np.mean(np.minimum(collected_data_counts_of_vel_steer[:vel_idx, i], 50))
 
+                # Find the index corresponding to this maximum velocity
+                vel_idx = np.digitize(max_vel_from_lateral_acc, self.params.v_bins) - 1
+
+                # Compute the average number of data points and find the minimum
+                num_data = np.mean(np.minimum(collected_data_counts_of_vel_steer[:vel_idx, i], 50))
                 if num_data < mini_num_data:
                     mini_num_data = num_data
                     steer_with_minimum_num_of_data = steer_at_idx_i
 
+            # Add trajectory segments until the list has 4 segments
             while len(self.trajectory_length_list) < 4:
                 self.add_trajectory_nearly_straight()
                 self.add_trajectory_nearly_straight()
                 self.add_trajectory_for_turning(steer_with_minimum_num_of_data)
 
+        # Concatenate trajectory data from the trajectory list
         self.trajectory_points = np.concatenate(
             [self.trajectory_list[i].trajectory for i in range(4)],
             axis=0,
@@ -1066,22 +1204,31 @@ class Reversal_Loop_Circle(Base_Course):
             [self.trajectory_list[i].achievement_rates for i in range(4)], axis=0
         )
 
+        # Return the updated nearestIndex and trajectory points
         return nearestIndex, *self.return_trajectory_points(yaw_offset, rectangle_center_position)
 
     def get_boundary_points(self):
+        # Computes the boundary points around the trajectory.
+        # This is used to create an external boundary around the trajectory.
+
+        # Return None if trajectory points or yaw is not available
         if self.trajectory_points is None or self.yaw is None:
             return None
 
-        outer_circle_radius = self.R + 5.0
+        # Define the radius for the boundary circle
+        outer_circle_radius = self.enclosing_R
         theta_list = np.linspace(0, 2 * np.pi, 200)
         boundary_points = []
 
+        # Compute the center of the boundary circle
         center_point_x = (self.A[0] + self.B[0] + self.C[0] + self.D[0]) / 4
         center_point_y = (self.A[1] + self.B[1] + self.C[1] + self.D[1]) / 4
 
+        # Calculate the points along the boundary circle
         for theta in theta_list:
             point_x = outer_circle_radius * np.cos(theta) + center_point_x
             point_y = outer_circle_radius * np.sin(theta) + center_point_y
             boundary_points.append([point_x, point_y])
 
+        # Store the boundary points as a numpy array
         self.boundary_points = np.array(boundary_points)
