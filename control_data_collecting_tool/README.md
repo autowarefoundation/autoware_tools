@@ -85,7 +85,7 @@ This package provides tools for automatically collecting data using pure pursuit
 
    > [!NOTE]
    > You cannot change the goal pose while driving.
-   
+
    > [!NOTE]
    > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
 
@@ -114,7 +114,10 @@ This package provides tools for automatically collecting data using pure pursuit
 
 ## Parameter
 
-ROS 2 params which are common in all nodes:
+There are parameters that are common to all trajectories and parameters that are specific to each trajectory.
+
+### Common Parameters
+ROS 2 params which are common in all trajectories (`/config/common_param.yaml`):
 
 | Name                                     | Type     | Description                                                                                         | Default value  |
 | :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
@@ -129,19 +132,12 @@ ROS 2 params which are common in all nodes:
 | `STEER_MAX`                              | `double` | Maximum steer in heatmap [rad]                                                                      | 1.0            |
 | `A_MIN`                                  | `double` | Minimum acceleration in heatmap [m/ss]                                                              | -1.0           |
 | `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/ss]                                                              | 1.0            |
-| `COLLECTING_DATA_V_MIN`                  | `double` | Minimum velocity for data collection [m/s]                                                          | 0.0            |
-| `COLLECTING_DATA_V_MAX`                  | `double` | Maximum velocity for data collection [m/s]                                                          | 11.5           |
-| `COLLECTING_DATA_A_MIN`                  | `double` | Minimum velocity for data collection [m/ss]                                                         | 1.0            |
-| `COLLECTING_DATA_A_MAX`                  | `double` | Maximum velocity for data collection [m/ss]                                                         | -1.0           |
 | `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                               | 0.5            |
 | `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]                                         | 5.0            |
 | `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                             | 0.50           |
 | `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]                                  | 1.0            |
 | `mov_ave_window`                         | `int`    | Moving average smoothing window size                                                                | 100            |
 | `target_longitudinal_velocity`           | `double` | Target longitudinal velocity [m/s]                                                                  | 6.0            |
-| `longitudinal_velocity_noise_amp`        | `double` | Target longitudinal velocity additional sine noise amplitude [m/s]                                  | 0.01           |
-| `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s]                               | 5.0            |
-| `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s]                               | 20.0           |
 | `pure_pursuit_type`                      | `string` | Pure pursuit type (`naive` or `linearized` steer control law )                                      | `linearized`   |
 | `wheel_base`                             | `double` | Wheel base [m]                                                                                      | 2.79           |
 | `acc_kp`                                 | `double` | Accel command proportional gain                                                                     | 1.0            |
@@ -155,9 +151,56 @@ ROS 2 params which are common in all nodes:
 | `lon_jerk_lim`                           | `double` | Longitudinal jerk limit [m/sss]                                                                     | 5.0            |
 | `steer_lim`                              | `double` | Steering angle limit [rad]                                                                          | 1.0            |
 | `steer_rate_lim`                         | `double` | Steering angle rate limit [rad/s]                                                                   | 1.0            |
+
+The following parameters are common to all trajectories but can be defined individually for each trajectory. (`/config/course_param/COURSE_NAME_param.yaml`):
+| Name                                     | Type     | Description                                                                                         | Default value  |
+| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
+| `COLLECTING_DATA_V_MIN`                  | `double` | Minimum velocity for data collection [m/s]                                                          | 0.0            |
+| `COLLECTING_DATA_V_MAX`                  | `double` | Maximum velocity for data collection [m/s]                                                          | 8.0            |
+| `COLLECTING_DATA_A_MIN`                  | `double` | Minimum velocity for data collection [m/ss]                                                         | 1.0            |
+| `COLLECTING_DATA_A_MAX`                  | `double` | Maximum velocity for data collection [m/ss]                                                         | -1.0           |
+| `longitudinal_velocity_noise_amp`        | `double` | Target longitudinal velocity additional sine noise amplitude [m/s]                                  | 0.01           |
+| `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s]                               | 5.0            |
+| `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s]                               | 20.0           |
 | `acc_noise_amp`                          | `double` | Accel command additional sine noise amplitude [m/ss]                                                | 0.01           |
 | `acc_noise_min_period`                   | `double` | Accel command additional sine noise minimum period [s]                                              | 5.0            |
 | `acc_noise_max_period`                   | `double` | Accel command additional sine noise maximum period [s]                                              | 20.0           |
 | `steer_noise_amp`                        | `double` | Steer command additional sine noise amplitude [rad]                                                 | 0.01           |
 | `steer_noise_max_period`                 | `double` | Steer command additional sine noise maximum period [s]                                              | 5.0            |
 | `steer_noise_min_period`                 | `double` | Steer command additional sine noise minimum period [s]                                              | 20.0           |
+
+### Course-Specific Parameters
+
+- `COURSE_NAME: eight_course`
+
+| Name                                     | Type     | Description                                                                                         | Default value  |
+| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
+| `velocity_on_curve`                      | `double` | Constant velocity on curve [m/s]                                                                    | 4.5            |
+| `smoothing_window`                       | `double` | Width of window for smoothing trajectory                                                            | 400            |
+
+- `COURSE_NAME: u_shaped_return`
+
+| Name                                     | Type     | Description                                                                                         | Default value  |
+| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
+| `velocity_on_curve`                      | `double` | Constant velocity on curve [m/s]                                                                    | 4.5            |
+
+- `COURSE_NAME: straight_line_positive` or `COURSE_NAME: straight_line_negative`
+
+| Name                                     | Type     | Description                                                                                         | Default value  |
+| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
+| `stopping_buffer_distance`               | `double` | The safety distance from end of the straihgh line [m]                                               | 10.0           |
+
+- `COURSE_NAME: reversal_loop_circle`
+
+| Name                                     | Type     | Description                                                                                         | Default value  |
+| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
+| `Radius`                                 | `double` | Radius of the circle where trajectories are generated [m]                                           | 35.0           |
+
+- `COURSE_NAME: along_road`
+
+| Name                                     | Type     | Description                                                                                         | Default value  |
+| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
+| `velocity_on_curve`                      | `double` | Constant velocity on curve [m/s]                                                                    | 3.5            |
+| `stopping_buffer_distance`               | `double` | The safety distance from end of the straight line [m]                                               | 15.0           |
+| `course_width`                           | `double` | The width of the trajectory [m]                                                                     | 1.5            |
+  

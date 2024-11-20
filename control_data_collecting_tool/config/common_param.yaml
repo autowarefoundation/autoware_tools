@@ -6,8 +6,8 @@
     # COURSE_NAME: u_shaped_return
     # COURSE_NAME: straight_line_positive
     # COURSE_NAME: straight_line_negative
-    # COURSE_NAME: reversal_loop_circle
-    COURSE_NAME: along_road
+    COURSE_NAME: reversal_loop_circle
+    # COURSE_NAME: along_road
 
     NUM_BINS_V: 10
     NUM_BINS_STEER: 20

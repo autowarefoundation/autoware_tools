@@ -4,8 +4,8 @@
     stopping_buffer_distance: 10.0
 
     # Data Collection Range
-    COLLECTING_DATA_V_MIN: 12.0
-    COLLECTING_DATA_V_MAX: 8.5
+    COLLECTING_DATA_V_MIN: 0.5
+    COLLECTING_DATA_V_MAX: 8.0
     COLLECTING_DATA_A_MIN: -1.0
     COLLECTING_DATA_A_MAX: 1.0
 
@@ -14,10 +14,10 @@
     longitudinal_velocity_noise_min_period: 5.0
     longitudinal_velocity_noise_max_period: 20.0
 
-    acc_noise_amp: 0.0
+    acc_noise_amp: 0.01
     acc_noise_min_period: 5.0
     acc_noise_max_period: 20.0
 
-    steer_noise_amp: 0.00
-    steer_noise_min_period: 10.0
+    steer_noise_amp: 0.01
+    steer_noise_min_period: 5.0
     steer_noise_max_period: 20.0

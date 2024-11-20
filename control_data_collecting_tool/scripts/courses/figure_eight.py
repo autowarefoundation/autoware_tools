@@ -24,7 +24,7 @@ def computeTriangleArea(A, B, C):
 
 def declare_figure_eight_params(node):
     node.declare_parameter("smoothing_window", 400)
-    node.declare_parameter("velocity_on_curve", 3.5)
+    node.declare_parameter("velocity_on_curve", 4.5)
 
 
 class Figure_Eight(Base_Course):
