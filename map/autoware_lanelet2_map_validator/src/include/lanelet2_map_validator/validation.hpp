@@ -46,11 +46,7 @@ constexpr const char * utm = "utm";
 }  // namespace projector_names
 }  // namespace
 
-namespace lanelet
-{
-namespace autoware
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 struct ValidatorInfo
 {
@@ -90,8 +86,6 @@ lanelet::validation::ValidationConfig replace_validator(
 
 void process_requirements(
   json json_data, const lanelet::autoware::validation::MetaConfig & validator_config);
-}  // namespace validation
-}  // namespace autoware
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation
 
 #endif  // LANELET2_MAP_VALIDATOR__VALIDATION_HPP_

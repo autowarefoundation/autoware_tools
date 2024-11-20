@@ -25,9 +25,7 @@
 #include <algorithm>
 #include <set>
 
-namespace lanelet
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 namespace
 {
@@ -102,5 +100,4 @@ MissingRegulatoryElementsForStopLinesValidator::checkMissingRegulatoryElementsFo
   return issues;
 }
 
-}  // namespace validation
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation

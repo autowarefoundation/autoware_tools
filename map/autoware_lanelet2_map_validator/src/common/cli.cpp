@@ -16,11 +16,7 @@
 
 namespace po = boost::program_options;
 
-namespace lanelet
-{
-namespace autoware
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 
 MetaConfig parseCommandLine(int argc, const char * argv[])
@@ -102,6 +98,4 @@ MetaConfig parseCommandLine(int argc, const char * argv[])
   return config;
 }
 
-}  // namespace validation
-}  // namespace autoware
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation

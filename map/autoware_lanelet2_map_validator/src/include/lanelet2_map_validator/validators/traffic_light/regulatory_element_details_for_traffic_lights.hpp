@@ -20,9 +20,7 @@
 
 #include <vector>
 
-namespace lanelet
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 class RegulatoryElementsDetailsForTrafficLightsValidator : public lanelet::validation::MapValidator
 {
@@ -40,8 +38,7 @@ private:
   lanelet::validation::Issues checkRegulatoryElementOfTrafficLights(
     const lanelet::LaneletMap & map);
 };
-}  // namespace validation
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation
 
 // clang-format off
 #endif  // LANELET2_MAP_VALIDATOR__VALIDATORS__TRAFFIC_LIGHT__REGULATORY_ELEMENT_DETAILS_FOR_TRAFFIC_LIGHTS_HPP_  // NOLINT

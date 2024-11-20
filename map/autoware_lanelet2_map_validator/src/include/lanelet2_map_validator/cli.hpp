@@ -22,11 +22,7 @@
 #include <iostream>
 #include <string>
 
-namespace lanelet
-{
-namespace autoware
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 struct MetaConfig
 {
@@ -38,8 +34,6 @@ struct MetaConfig
 
 MetaConfig parseCommandLine(int argc, const char * argv[]);
 
-}  // namespace validation
-}  // namespace autoware
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation
 
 #endif  // LANELET2_MAP_VALIDATOR__CLI_HPP_

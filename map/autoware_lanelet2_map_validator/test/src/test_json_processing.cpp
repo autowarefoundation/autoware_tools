@@ -27,11 +27,7 @@
 
 using json = nlohmann::json;
 
-namespace lanelet
-{
-namespace autoware
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 
 class JsonProcessingTest : public ::testing::Test
@@ -156,6 +152,4 @@ TEST_F(JsonProcessingTest, SummarizeValidatorResults)
   EXPECT_NE(output.find("Total of 1 errors were found"), std::string::npos);
   EXPECT_EQ(output.find("warnings were found"), std::string::npos);
 }
-}  // namespace validation
-}  // namespace autoware
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation

@@ -22,9 +22,7 @@
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_validation/Validation.h>
 
-namespace lanelet
-{
-namespace validation
+namespace lanelet::autoware::validation
 {
 namespace
 {
@@ -125,5 +123,4 @@ RegulatoryElementsDetailsForCrosswalksValidator::checkRegulatoryElementOfCrosswa
   return issues;
 }
 
-}  // namespace validation
-}  // namespace lanelet
+}  // namespace lanelet::autoware::validation
