@@ -9,7 +9,6 @@
     COLLECTING_DATA_A_MIN: -1.0
     COLLECTING_DATA_A_MAX: 1.0
 
-
     # Noise Parameters
     longitudinal_velocity_noise_amp: 0.01
     longitudinal_velocity_noise_min_period: 5.0

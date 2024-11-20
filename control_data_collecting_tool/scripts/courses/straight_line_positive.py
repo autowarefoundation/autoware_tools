@@ -21,8 +21,10 @@ import numpy as np
 def computeTriangleArea(A, B, C):
     return 0.5 * abs(np.cross(B - A, C - A))
 
+
 def declare_straight_line_positive_params(node):
     node.declare_parameter("stopping_buffer_distance", 10.0)
+
 
 class Straight_Line_Positive(Base_Course):
     def __init__(self, step: float, param_dict):
@@ -61,40 +63,61 @@ class Straight_Line_Positive(Base_Course):
         return self.trajectory_points, self.yaw, self.curvature, self.parts, self.achievement_rates
 
     def get_target_velocity(
-        self, nearestIndex, current_time, current_vel, current_acc, collected_data_counts_of_vel_acc, collected_data_counts_of_vel_steer
+        self,
+        nearestIndex,
+        current_time,
+        current_vel,
+        current_acc,
+        collected_data_counts_of_vel_acc,
+        collected_data_counts_of_vel_steer,
     ):
         part = self.parts[nearestIndex]
         achievement_rate = self.achievement_rates[nearestIndex]
         acc_kp_of_pure_pursuit = self.params.acc_kp
 
         # Check and update target velocity on straight line
-        if (part == "straight" and achievement_rate < 0.05):
-            
-            self.acc_idx, self.vel_idx = self.choose_target_velocity_acc(collected_data_counts_of_vel_acc)
+        if part == "straight" and achievement_rate < 0.05:
+            self.acc_idx, self.vel_idx = self.choose_target_velocity_acc(
+                collected_data_counts_of_vel_acc
+            )
             self.target_acc_on_straight_line = self.params.a_bin_centers[self.acc_idx]
             self.target_vel_on_straight_line = self.params.v_bin_centers[self.vel_idx]
 
             distance = len(self.parts) * self.step
-            stop_distance = self.target_vel_on_straight_line ** 2 / (2 * self.params.a_max)
-            self.deceleration_rate = 1.0 - stop_distance / distance - self.stopping_buffer_distance / distance 
+            stop_distance = self.target_vel_on_straight_line**2 / (2 * self.params.a_max)
+            self.deceleration_rate = (
+                1.0 - stop_distance / distance - self.stopping_buffer_distance / distance
+            )
 
         # Calculate sine wave and apply to velocity
         T = self.sine_period_for_velocity
         sine = np.sin(2 * np.pi * current_time / T) * np.sin(np.pi * current_time / T)
-        
+
         if current_vel > self.target_vel_on_straight_line:
             target_vel = self.target_vel_on_straight_line + sine - 1.0
             target_vel = max(target_vel, 0.05)
-        elif current_vel < self.target_vel_on_straight_line - 2.0 * abs(self.target_acc_on_straight_line):
-            target_vel = current_vel + self.params.a_max / acc_kp_of_pure_pursuit * (1.25 + 0.5 * sine)
+        elif current_vel < self.target_vel_on_straight_line - 2.0 * abs(
+            self.target_acc_on_straight_line
+        ):
+            target_vel = current_vel + self.params.a_max / acc_kp_of_pure_pursuit * (
+                1.25 + 0.5 * sine
+            )
         else:
-            target_vel = current_vel + abs(self.target_acc_on_straight_line) / acc_kp_of_pure_pursuit * (1.25 + 0.5 * sine)
+            target_vel = current_vel + abs(
+                self.target_acc_on_straight_line
+            ) / acc_kp_of_pure_pursuit * (1.25 + 0.5 * sine)
 
         # Adjust for deceleration based on achievement rate
         if self.deceleration_rate - 0.05 <= achievement_rate < self.deceleration_rate:
-            target_vel = current_vel - abs(self.target_acc_on_straight_line) / acc_kp_of_pure_pursuit * (1.25 + 0.5 * sine)
+            target_vel = current_vel - abs(
+                self.target_acc_on_straight_line
+            ) / acc_kp_of_pure_pursuit * (1.25 + 0.5 * sine)
         elif self.deceleration_rate <= achievement_rate:
-            target_vel = (current_vel - self.params.a_max / acc_kp_of_pure_pursuit) * (1.0 + 0.5 * sine) * ( 1.0 - achievement_rate )
+            target_vel = (
+                (current_vel - self.params.a_max / acc_kp_of_pure_pursuit)
+                * (1.0 + 0.5 * sine)
+                * (1.0 - achievement_rate)
+            )
 
         return target_vel
 

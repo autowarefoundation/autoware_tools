@@ -1,13 +1,18 @@
 /**:
   ros__parameters:
     # Course Specific Parameters
-    stopping_buffer_distance: 10.0
+    velocity_on_curve: 3.5
+    stopping_distance: 15.0
+    course_width: 1.5
+    
+    # Smoothing window for calculating curvature
+    smoothing_window: 100
 
     # Data Collection Range
-    COLLECTING_DATA_V_MIN: 12.0
-    COLLECTING_DATA_V_MAX: 8.5
+    COLLECTING_DATA_V_MIN: 0.5
+    COLLECTING_DATA_V_MAX: 8.0
     COLLECTING_DATA_A_MIN: -1.0
-    COLLECTING_DATA_A_MAX: 1.0
+    COLLECTING_DATA_A_MAX: 1.0 
 
     # Noise Parameters
     longitudinal_velocity_noise_amp: 0.01

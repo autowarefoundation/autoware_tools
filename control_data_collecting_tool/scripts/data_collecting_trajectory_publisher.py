@@ -16,7 +16,8 @@
 
 from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
-from courses.load_course import load_course, declare_course_params
+from courses.load_course import declare_course_params
+from courses.load_course import load_course
 from data_collecting_base_node import DataCollectingBaseNode
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import PolygonStamped
@@ -167,14 +168,13 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             "map_path",
             None,
             descriptor=ParameterDescriptor(
-                description="Path to the map directory", 
-                dynamic_typing=True
-            )
+                description="Path to the map directory", dynamic_typing=True
+            ),
         )
 
-        '''
+        """
         Declare course specific parameters
-        '''
+        """
         declare_course_params(self.COURSE_NAME, self)
 
         self.trajectory_for_collecting_data_pub_ = self.create_publisher(
@@ -221,7 +221,9 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         self.course = load_course(self.COURSE_NAME, self.trajectory_step, params_dict)
 
         self.timer_period_callback = 0.03  # 30ms
-        self.timer_trajectory_generator = self.create_timer(self.timer_period_callback, self.callback_trajectory_generator)
+        self.timer_trajectory_generator = self.create_timer(
+            self.timer_period_callback, self.callback_trajectory_generator
+        )
 
         self.trajectory_position_data = None
         self.trajectory_yaw_data = None
@@ -287,7 +289,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         self.updateNominalTargetTrajectory()
 
     def updateNominalTargetTrajectory(self):
-
         if self._data_collecting_area_polygon is not None:
             data_collecting_area = np.array(
                 [
@@ -302,7 +303,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 ]
             )
         else:
-            data_collecting_area = np.array([np.array([i,i**2]) for i in range(4)])
+            data_collecting_area = np.array([np.array([i, i**2]) for i in range(4)])
 
         A, B, C, D = (
             data_collecting_area[0][0:2],
@@ -349,7 +350,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             vec_long_side = (
                 unit_vec_from_center_to_point0_data + unit_vec_from_center_to_point1_data
             )
-            
+
         unit_vec_long_side = vec_long_side / np.sqrt((vec_long_side**2).sum())
         if unit_vec_long_side[1] < 0:
             unit_vec_long_side *= -1
@@ -384,7 +385,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
 
             self.course.get_boundary_points()
             self.boundary_points = self.course.boundary_points
-
 
         else:
             self.trajectory_position_data = None
@@ -519,11 +519,11 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 ) % len(trajectory_position_data)
             else:
                 min_index_range = max(0, self.nearestIndex - len(trajectory_position_data) // 4)
-                max_index_range = min( len(trajectory_position_data), self.nearestIndex + len(trajectory_position_data) // 4)
-                index_range = np.arange(
-                    min_index_range,
-                    max_index_range
+                max_index_range = min(
+                    len(trajectory_position_data),
+                    self.nearestIndex + len(trajectory_position_data) // 4,
                 )
+                index_range = np.arange(min_index_range, max_index_range)
             distance = np.sqrt(
                 ((trajectory_position_data[index_range] - present_position[:2]) ** 2).sum(axis=1)
             )
@@ -534,9 +534,14 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             present_acc = self._present_acceleration.accel.accel.linear.x
             current_time = self.get_clock().now().nanoseconds / 1e9
             target_vel = self.course.get_target_velocity(
-                self.nearestIndex, current_time, present_vel, present_acc, self.collected_data_counts_of_vel_acc, self.collected_data_counts_of_vel_steer
+                self.nearestIndex,
+                current_time,
+                present_vel,
+                present_acc,
+                self.collected_data_counts_of_vel_acc,
+                self.collected_data_counts_of_vel_steer,
             )
-            
+
             trajectory_longitudinal_velocity_data = np.array(
                 [target_vel for _ in range(len(trajectory_position_data))]
             )
@@ -581,7 +586,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 trajectory_longitudinal_velocity_data = np.minimum(
                     trajectory_longitudinal_velocity_data, lateral_acc_limit
                 )
-                
+
             # [5-3] apply limit by lateral error
             velocity_limit_by_tracking_error = (
                 self.get_parameter("velocity_limit_by_tracking_error")
@@ -629,10 +634,16 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 ) % len(trajectory_position_data)
             else:
                 pub_trajectoryindex = np.arange(
-                    self.nearestIndex, np.min([self.nearestIndex + int(50 / self.trajectory_step),len(trajectory_position_data)])
+                    self.nearestIndex,
+                    np.min(
+                        [
+                            self.nearestIndex + int(50 / self.trajectory_step),
+                            len(trajectory_position_data),
+                        ]
+                    ),
                 )
 
-            
+            pub_trajectory_length = len(pub_trajectoryindex)
             tmp_traj = Trajectory()
             for i in pub_trajectoryindex:
                 tmp_trajectorypoint = TrajectoryPoint()
@@ -645,7 +656,9 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 tmp_trajectorypoint.pose.orientation.z = np.sin(trajectory_yaw_data[i] / 2)
                 tmp_trajectorypoint.pose.orientation.w = np.cos(trajectory_yaw_data[i] / 2)
 
-                tmp_trajectorypoint.longitudinal_velocity_mps = trajectory_longitudinal_velocity_data[i]
+                tmp_trajectorypoint.longitudinal_velocity_mps = (
+                    trajectory_longitudinal_velocity_data[i]
+                )
                 tmp_traj.points.append(tmp_trajectorypoint)
 
             self.trajectory_for_collecting_data_pub_.publish(tmp_traj)
@@ -682,7 +695,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 marker_traj1.points.append(tmp_marker_point)
 
             marker_array.markers.append(marker_traj1)
-
 
             # boundary
             boundary_marker_traj1 = Marker()
@@ -798,21 +810,26 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             self.data_collecting_trajectory_marker_array_pub_.publish(marker_array)
 
             # [6-3] stop request
-            #self.get_logger().info("self.course.check_in_boundary(present_position): {}".format(self.course.check_in_boundary(present_position)))
+            # self.get_logger().info("self.course.check_in_boundary(present_position): {}".format(self.course.check_in_boundary(present_position)))
             if not self.course.check_in_boundary(present_position):
                 msg = Bool()
                 msg.data = True
                 self.pub_stop_request_.publish(msg)
 
             # [6-4] update trajectory data if necessary
-            (   self.nearestIndex,
+            (
+                self.nearestIndex,
                 self.trajectory_position_data,
                 self.trajectory_yaw_data,
                 self.trajectory_curvature_data,
                 self.trajectory_parts,
                 self.trajectory_achievement_rates,
             ) = self.course.update_trajectory_points(
-                self.nearestIndex, self.yaw_offset, self.rectangle_center_position, self.collected_data_counts_of_vel_acc ,self.collected_data_counts_of_vel_steer
+                self.nearestIndex,
+                self.yaw_offset,
+                self.rectangle_center_position,
+                self.collected_data_counts_of_vel_acc,
+                self.collected_data_counts_of_vel_steer,
             )
 
             if debug_matplotlib_plot_flag:
@@ -846,13 +863,15 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 )
                 self.axs[0].plot(
                     timestamp[self.nearestIndex : self.nearestIndex + pub_trajectory_length],
-                    lateral_acc_limit[self.nearestIndex : self.nearestIndex + pub_trajectory_length],
+                    lateral_acc_limit[
+                        self.nearestIndex : self.nearestIndex + pub_trajectory_length
+                    ],
                     "--",
                     label="lateral acc limit (always)",
                 )
                 self.axs[0].plot(
                     timestamp[self.nearestIndex : self.nearestIndex + pub_trajectory_length],
-                    velocity_limit_by_tracking_error * np.ones(pub_trajectorylen),
+                    velocity_limit_by_tracking_error * np.ones(pub_trajectory_length),
                     "--",
                     label="vel limit by tracking error (only when exceeding threshold)",
                 )

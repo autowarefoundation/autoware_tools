@@ -15,15 +15,21 @@
 # limitations under the License.
 
 
-from courses.along_road import Along_Road, declare_along_road_params
-from courses.figure_eight import Figure_Eight, declare_figure_eight_params
-from courses.reversal_loop_circle import Reversal_Loop_Circle, declare_reversal_loop_circle_params
-from courses.straight_line_negative import Straight_Line_Negative, declare_straight_line_negative_params
-from courses.straight_line_positive import Straight_Line_Positive, declare_straight_line_positive_params
-from courses.u_shaped import U_Shaped, declare_u_shaped_return_params
+from courses.along_road import Along_Road
+from courses.along_road import declare_along_road_params
+from courses.figure_eight import Figure_Eight
+from courses.figure_eight import declare_figure_eight_params
+from courses.reversal_loop_circle import Reversal_Loop_Circle
+from courses.reversal_loop_circle import declare_reversal_loop_circle_params
+from courses.straight_line_negative import Straight_Line_Negative
+from courses.straight_line_negative import declare_straight_line_negative_params
+from courses.straight_line_positive import Straight_Line_Positive
+from courses.straight_line_positive import declare_straight_line_positive_params
+from courses.u_shaped import U_Shaped
+from courses.u_shaped import declare_u_shaped_return_params
+
 
 def declare_course_params(course_name, node):
-
     # Declare the course parameters based on the course name
     if course_name == "eight_course":
         declare_figure_eight_params(node)
@@ -37,9 +43,9 @@ def declare_course_params(course_name, node):
         declare_reversal_loop_circle_params(node)
     elif course_name == "along_road":
         declare_along_road_params(node)
-        
+
+
 def load_course(course_name, step_size, params_dict):
-    
     # Load the course based on the course name
     if course_name == "eight_course":
         course = Figure_Eight(step_size, params_dict)
@@ -53,6 +59,6 @@ def load_course(course_name, step_size, params_dict):
         course = Reversal_Loop_Circle(step_size, params_dict)
     elif course_name == "along_road":
         course = Along_Road(step_size, params_dict)
-    
+
     # Return the course
     return course

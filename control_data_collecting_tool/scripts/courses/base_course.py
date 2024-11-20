@@ -47,34 +47,34 @@ class Base_Course:
         goal_point=np.array([0.0, 0.0]),
     ):
         pass
-    
+
     def choose_target_velocity_acc(self, collected_data_counts_of_vel_acc):
-                
-        N_V = self.params.num_bins_v
-        N_A = self.params.num_bins_a
-    
         min_num_data = 1e12
         min_data_num_margin = 20
         min_index_list = []
 
-        for i in range(
-            self.params.collecting_data_min_n_v, self.params.collecting_data_max_n_v
-        ):
-            for j in range( self.params.collecting_data_min_n_a, self.params.collecting_data_max_n_a ):
-               
-                if ( min_num_data - min_data_num_margin
-                     > collected_data_counts_of_vel_acc[i, j]
-                    ):
+        for i in range(self.params.collecting_data_min_n_v, self.params.collecting_data_max_n_v):
+            for j in range(
+                self.params.collecting_data_min_n_a, self.params.collecting_data_max_n_a
+            ):
+                if min_num_data - min_data_num_margin > collected_data_counts_of_vel_acc[i, j]:
                     min_num_data = collected_data_counts_of_vel_acc[i, j]
                     min_index_list.clear()
                     min_index_list.append((j, i))
 
-                elif ( min_num_data + min_data_num_margin > collected_data_counts_of_vel_acc[i, j] ):
+                elif min_num_data + min_data_num_margin > collected_data_counts_of_vel_acc[i, j]:
                     min_index_list.append((j, i))
-                        
-        return min_index_list[np.random.randint(0, len(min_index_list))]  
-    
-    def get_target_velocity(self, nearestIndex, current_time, current_vel, current_acc, collected_data_counts_of_vel_acc, collected_data_counts_of_vel_steer
+
+        return min_index_list[np.random.randint(0, len(min_index_list))]
+
+    def get_target_velocity(
+        self,
+        nearestIndex,
+        current_time,
+        current_vel,
+        current_acc,
+        collected_data_counts_of_vel_acc,
+        collected_data_counts_of_vel_steer,
     ):
         pass
 
@@ -106,7 +106,6 @@ class Base_Course:
 
         return wn != 0
 
-
     def return_trajectory_points(self, yaw_offset, rectangle_center_position):
         rot_matrix = np.array(
             [
@@ -127,5 +126,12 @@ class Base_Course:
             self.achievement_rates,
         )
 
-    def update_trajectory_points(self, nearestIndex, yaw_offset, rectangle_center_position, collected_data_counts_of_vel_acc , collected_data_counts_of_vel_steer):
+    def update_trajectory_points(
+        self,
+        nearestIndex,
+        yaw_offset,
+        rectangle_center_position,
+        collected_data_counts_of_vel_acc,
+        collected_data_counts_of_vel_steer,
+    ):
         return nearestIndex, *self.return_trajectory_points(yaw_offset, rectangle_center_position)

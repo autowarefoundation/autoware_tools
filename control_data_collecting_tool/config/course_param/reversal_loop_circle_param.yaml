@@ -2,13 +2,12 @@
   ros__parameters:
     # Course Specific Parameters
     Radius: 35.0
-    
+
     # Data Collection Range
     COLLECTING_DATA_V_MIN: 0.5
     COLLECTING_DATA_V_MAX: 8.0
     COLLECTING_DATA_A_MIN: -1.0
     COLLECTING_DATA_A_MAX: 1.0
-
 
     # Noise Parameters
     longitudinal_velocity_noise_amp: 0.01

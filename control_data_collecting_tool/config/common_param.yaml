@@ -40,4 +40,3 @@
     lon_jerk_lim: 0.5
     steer_lim: 0.6
     steer_rate_lim: 0.6
-    
