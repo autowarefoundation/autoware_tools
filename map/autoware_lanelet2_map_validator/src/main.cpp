@@ -73,7 +73,7 @@ int main(int argc, char * argv[])
     input_file >> json_data;
     lanelet::autoware::validation::process_requirements(json_data, meta_config, *lanelet_map_ptr);
   } else {
-    auto issues = lanelet::autoware::validation::apply_validation(
+    const auto issues = lanelet::autoware::validation::apply_validation(
       *lanelet_map_ptr, meta_config.command_line_config.validationConfig);
     lanelet::validation::printAllIssues(issues);
   }
