@@ -23,6 +23,6 @@
       <param from="$(find-pkg-share autoware_planning_data_analyzer)/config/behavior_analyzer.param.yaml"/>
     </composable_node>
 
-    <composable_node pkg="glog_component" plugin="GlogComponent" name="glog_component" namespace=""/>
+    <composable_node pkg="autoware_glog_component" plugin="GlogComponent" name="glog_component" namespace=""/>
   </node_container>
 </launch>
