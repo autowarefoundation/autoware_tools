@@ -986,7 +986,7 @@ class Reversal_Loop_Circle(Base_Course):
             target_vel = np.min([target_vel_ + 0.5 * sine, max_vel_from_lateral_acc_on_segment])
 
 
-        target_vel = np.max([target_vel, 0.05])
+        target_vel = np.max([target_vel, 0.5])
     
         return target_vel
     
