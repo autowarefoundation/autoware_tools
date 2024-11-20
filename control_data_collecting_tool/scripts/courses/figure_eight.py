@@ -16,6 +16,7 @@
 
 from courses.base_course import Base_Course
 import numpy as np
+from rcl_interfaces.msg import ParameterDescriptor
 
 
 def computeTriangleArea(A, B, C):
@@ -23,8 +24,16 @@ def computeTriangleArea(A, B, C):
 
 
 def declare_figure_eight_params(node):
-    node.declare_parameter("smoothing_window", 400)
-    node.declare_parameter("velocity_on_curve", 4.5)
+    node.declare_parameter(
+        "velocity_on_curve",
+        4.5,
+        ParameterDescriptor(description="Constant velocity on curve [m/s] "),
+    )
+    node.declare_parameter(
+        "smoothing_window",
+        400,
+        ParameterDescriptor(description="Width of the window for trajectory smoothing"),
+    )
 
 
 class Figure_Eight(Base_Course):

@@ -16,6 +16,7 @@
 
 from courses.base_course import Base_Course
 import numpy as np
+from rcl_interfaces.msg import ParameterDescriptor
 
 
 def computeTriangleArea(A, B, C):
@@ -23,7 +24,11 @@ def computeTriangleArea(A, B, C):
 
 
 def declare_u_shaped_return_params(node):
-    node.declare_parameter("velocity_on_curve", 4.5)
+    node.declare_parameter(
+        "velocity_on_curve",
+        4.5,
+        ParameterDescriptor(description="Constant velocity on curve [m/s]"),
+    )
 
 
 class U_Shaped(Base_Course):

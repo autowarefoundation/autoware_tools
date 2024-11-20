@@ -62,7 +62,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             "COURSE_NAME",
             "eight_course",
             ParameterDescriptor(
-                description="Course name [eight_course, u_shaped_return, straight_line_positive, straight_line_negative]"
+                description="Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`]"
             ),
         )
         # set course name

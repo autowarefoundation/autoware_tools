@@ -17,6 +17,7 @@
 from courses.base_course import Base_Course
 from courses.lanelet import LaneletMapHandler
 import numpy as np
+from rcl_interfaces.msg import ParameterDescriptor
 from scipy.interpolate import interp1d
 
 
@@ -43,10 +44,26 @@ def resample_curve(x, y, step_size):
 
 def declare_along_road_params(node):
     # Declare the parameters for the along_road course
-    node.declare_parameter("smoothing_window", 100)
-    node.declare_parameter("velocity_on_curve", 3.5)
-    node.declare_parameter("stopping_distance", 15.0)
-    node.declare_parameter("course_width", 1.5)
+    node.declare_parameter(
+        "smoothing_window",
+        100,
+        ParameterDescriptor(description="Width of the window for trajectory smoothing"),
+    )
+    node.declare_parameter(
+        "velocity_on_curve",
+        3.5,
+        ParameterDescriptor(description="Constant velocity on curve [m/s]"),
+    )
+    node.declare_parameter(
+        "stopping_distance",
+        15.0,
+        ParameterDescriptor(description="The safety distance from end of the straight line [m]"),
+    )
+    node.declare_parameter(
+        "course_width",
+        1.5,
+        ParameterDescriptor(description="The width of the trajectory [m]"),
+    )
 
 
 class Along_Road(Base_Course):

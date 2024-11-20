@@ -16,6 +16,7 @@
 
 from courses.base_course import Base_Course
 import numpy as np
+from rcl_interfaces.msg import ParameterDescriptor
 
 
 def computeTriangleArea(A, B, C):
@@ -23,7 +24,11 @@ def computeTriangleArea(A, B, C):
 
 
 def declare_straight_line_positive_params(node):
-    node.declare_parameter("stopping_buffer_distance", 10.0)
+    node.declare_parameter(
+        "stopping_buffer_distance",
+        10.0,
+        ParameterDescriptor(description="The safety distance from end of the straight line [m]"),
+    )
 
 
 class Straight_Line_Positive(Base_Course):

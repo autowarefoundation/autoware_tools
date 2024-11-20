@@ -22,6 +22,7 @@ import statistics
 
 from courses.base_course import Base_Course
 import numpy as np
+from rcl_interfaces.msg import ParameterDescriptor
 
 
 def safe_acos(value):
@@ -718,7 +719,13 @@ def reverse_trajectory_segment(trajectory_segment):
 
 
 def declare_reversal_loop_circle_params(node):
-    node.declare_parameter("Radius", 35.0)
+    node.declare_parameter(
+        "Radius",
+        35.0,
+        ParameterDescriptor(
+            description="Radius of the circle where trajectories are generated [m]"
+        ),
+    )
 
 
 class Reversal_Loop_Circle(Base_Course):
