@@ -182,6 +182,7 @@ def main(args=None):
     if monitor.plot:
         plt.ion()  # Interactive mode on for real-time plot updates
     rclpy.spin(monitor)
+
     monitor.destroy_node()
     rclpy.shutdown()
     if monitor.plot:
