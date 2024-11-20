@@ -36,6 +36,14 @@ def get_course_name(yaml_file_path):
 
 def generate_launch_description():
 
+    # Define the argument for map_path
+    declare_map_path_arg = DeclareLaunchArgument(
+        "map_path",
+        description="Path to the map directory"
+    )
+    # Use the map_path argument in parameters
+    map_path = LaunchConfiguration("map_path")
+
     # Get the path to the common param file
     package_share_directory = get_package_share_directory("control_data_collecting_tool")
     common_param_file_path = os.path.join(package_share_directory, "config", "common_param.yaml")
@@ -58,6 +66,7 @@ def generate_launch_description():
                 name="data_collecting_trajectory_publisher",
                 parameters=[common_param_file_path,
                             course_specific_param_file_path,
+                            {"map_path": map_path},
                     ],
             ),
             Node(
