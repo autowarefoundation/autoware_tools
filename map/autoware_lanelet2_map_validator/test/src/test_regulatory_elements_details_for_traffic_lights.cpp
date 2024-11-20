@@ -26,7 +26,7 @@ private:
 TEST_F(TestRegulatoryElementDetailsForTrafficLights, ValidatorAvailability)  // NOLINT for gtest
 {
   std::string expected_validator_name =
-    lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator::name();
+    lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator::name();
 
   lanelet::validation::Strings validators =
     lanelet::validation::availabeChecks(expected_validator_name);  // cspell:disable-line
@@ -40,7 +40,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, WrongRefersType)  // NOLINT
 {
   load_target_map("traffic_light/traffic_light_with_wrong_refers_type.osm");
 
-  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
@@ -56,7 +56,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, WrongRefLineType)  // NOLIN
 {
   load_target_map("traffic_light/traffic_light_with_wrong_ref_line_type.osm");
 
-  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
@@ -94,7 +94,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefLine)  // NOLINT 
 {
   load_target_map("traffic_light/traffic_light_regulatory_element_without_ref_line.osm");
 
-  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
@@ -109,7 +109,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, CorrectDetails)  // NOLINT 
 {
   load_target_map("traffic_light/traffic_light_with_regulatory_element.osm");
 
-  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
@@ -119,7 +119,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, SampleMap)  // NOLINT for g
 {
   load_target_map("sample_map.osm");
 
-  lanelet::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);

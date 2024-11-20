@@ -26,7 +26,7 @@ private:
 TEST_F(TestMissingRegulatoryElementsForStopLines, ValidatorAvailability)  // NOLINT for gtest
 {
   std::string expected_validator_name =
-    lanelet::validation::MissingRegulatoryElementsForStopLinesValidator::name();
+    lanelet::autoware::validation::MissingRegulatoryElementsForStopLinesValidator::name();
 
   lanelet::validation::Strings validators =
     lanelet::validation::availabeChecks(expected_validator_name);  // cspell:disable-line
@@ -40,7 +40,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, MissingRegulatoryElement)  // 
 {
   load_target_map("stop_line/stop_line_without_regulatory_elements.osm");
 
-  lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForStopLinesValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
@@ -54,7 +54,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, TrafficSignRegulatoryElement) 
 {
   load_target_map("stop_line/stop_line_with_traffic_sign.osm");
 
-  lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForStopLinesValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
@@ -64,7 +64,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, RoadMarkingRegulatoryElement) 
 {
   load_target_map("stop_line/stop_line_with_road_marking.osm");
 
-  lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForStopLinesValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
@@ -74,7 +74,7 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, SampleMap)  // NOLINT for gtes
 {
   load_target_map("sample_map.osm");
 
-  lanelet::validation::MissingRegulatoryElementsForStopLinesValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForStopLinesValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);

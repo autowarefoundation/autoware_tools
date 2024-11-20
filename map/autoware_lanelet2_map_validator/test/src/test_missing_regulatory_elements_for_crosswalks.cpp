@@ -26,7 +26,7 @@ private:
 TEST_F(TestMissingRegulatoryElementsForCrosswalks, ValidatorAvailability)  // NOLINT for gtest
 {
   std::string expected_validator_name =
-    lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator::name();
+    lanelet::autoware::validation::MissingRegulatoryElementsForCrosswalksValidator::name();
 
   lanelet::validation::Strings validators =
     lanelet::validation::availabeChecks(expected_validator_name);  // cspell:disable-line
@@ -40,7 +40,7 @@ TEST_F(TestMissingRegulatoryElementsForCrosswalks, MissingRegulatoryElement)  //
 {
   load_target_map("crosswalk/crosswalk_without_regulatory_elements.osm");
 
-  lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
@@ -54,7 +54,7 @@ TEST_F(TestMissingRegulatoryElementsForCrosswalks, RegulatoryElementExists)  // 
 {
   load_target_map("crosswalk/crosswalk_with_regulatory_element.osm");
 
-  lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
@@ -64,7 +64,7 @@ TEST_F(TestMissingRegulatoryElementsForCrosswalks, SampleMap)  // NOLINT for gte
 {
   load_target_map("sample_map.osm");
 
-  lanelet::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForCrosswalksValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
