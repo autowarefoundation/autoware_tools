@@ -302,13 +302,15 @@ void process_requirements(
 
     // Check prerequisites are OK
     const auto prerequisite_issues = check_prerequisite_completion(validators, validator_name);
+    appendIssues(total_issues, prerequisite_issues);
 
+    // NOTE: if prerequisite_issues is not empty, skip the content validation process
     const auto issues =
       prerequisite_issues.empty()
-        ? std::vector<lanelet::validation::DetectedIssues>()
-        : apply_validation(
+        ? apply_validation(
             lanelet_map, replace_validator(
-                           validator_config.command_line_config.validationConfig, validator_name));
+                           validator_config.command_line_config.validationConfig, validator_name))
+        : std::vector<lanelet::validation::DetectedIssues>();
 
     // Add validation results to the json data
     json & validator_json = find_validator_block(json_data, validator_name);
@@ -341,7 +343,7 @@ void process_requirements(
       }
       validator_json["issues"] = issues_json;
     }
-    appendIssues(total_issues, std::vector<lanelet::validation::DetectedIssues>(issues));
+    appendIssues(total_issues, issues);
   }
 
   // Show results

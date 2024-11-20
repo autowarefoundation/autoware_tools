@@ -58,7 +58,7 @@ int main(int argc, char * argv[])
   if (!std::filesystem::is_regular_file(meta_config.command_line_config.mapFile)) {
     throw std::invalid_argument("Map file doesn't exist or is not a file!");
   }
-  const auto [lanelet_map_ptr, map_issue] = lanelet::autoware::validation::loadAndValidateMapLoad(
+  const auto [lanelet_map_ptr, map_issue] = lanelet::autoware::validation::validateMapLoad(
     meta_config.projector_type, meta_config.command_line_config.mapFile,
     meta_config.command_line_config.validationConfig);
 
