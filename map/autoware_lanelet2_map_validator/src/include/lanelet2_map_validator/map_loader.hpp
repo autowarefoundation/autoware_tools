@@ -27,7 +27,8 @@
 namespace lanelet::autoware::validation
 {
 
-std::pair<lanelet::LaneletMapPtr, std::vector<lanelet::validation::DetectedIssues>> validateMapLoad(
+std::pair<lanelet::LaneletMapPtr, std::vector<lanelet::validation::DetectedIssues>>
+loadAndValidateMap(
   const std::string & projector_type, const std::string & map_file,
   const lanelet::validation::ValidationConfig & val_config);
 
