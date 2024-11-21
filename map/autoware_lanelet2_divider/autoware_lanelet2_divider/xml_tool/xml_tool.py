@@ -148,9 +148,8 @@ def complete_missing_version_tag(input_osm_file_path: str):
             for root_element in element.attrib:
                 if root_element != "version":
                     add_version = True
-                else:
-                    add_version = False
                     break
+                
             if add_version:
                 element.set("version", "1")
 
