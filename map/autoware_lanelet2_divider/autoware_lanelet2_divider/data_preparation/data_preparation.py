@@ -114,7 +114,7 @@ def generate_yaml_dict(layer_filtered_grids, grid_edge_size, mgrs_grid) -> dict:
         dict: A dictionary containing grid metadata for YAML output.
     """
     mgrs_object = mgrs.MGRS()
-    zone, northp, origin_x, origin_y = mgrs_object.MGRSToUTM(mgrs_grid)
+    zone, hemisphere, origin_x, origin_y = mgrs_object.MGRSToUTM(mgrs_grid)
 
     metadata_yaml = {}
     for filtered_grid in layer_filtered_grids:
