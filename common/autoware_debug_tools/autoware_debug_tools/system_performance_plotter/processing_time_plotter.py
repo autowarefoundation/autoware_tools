@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from tier4_debug_msgs.msg import Float64Stamped
+from tier4_debug_msgs.msg import Float64Stamped, Float32Stamped
 
 from .system_performance_plotter_base import PREDEFINED_COMPONENT_NAMES
 from .system_performance_plotter_base import SystemPerformancePlotterBase
@@ -11,7 +11,7 @@ class ProcessingTimePlotter(SystemPerformancePlotterBase):
     def check_topic(self, topic_name):
         if self.grep_topic_name is not None and self.grep_topic_name not in topic_name:
             return False
-        if "/processing_time_ms" not in topic_name:
+        if "/processing_time_ms" not in topic_name and "/exe_time_ms" not in topic_name:
             return False
 
         if self.component_name == "all":
@@ -29,7 +29,7 @@ class ProcessingTimePlotter(SystemPerformancePlotterBase):
         return True
 
     def update_metrics_func(self, topic_name, data, date_time):
-        if not isinstance(data, Float64Stamped):
+        if not isinstance(data, Float64Stamped) and not isinstance(data, Float32Stamped):
             return
 
         if topic_name not in self.stamp_and_metrics:
