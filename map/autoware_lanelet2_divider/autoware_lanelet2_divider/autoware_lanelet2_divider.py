@@ -1,4 +1,5 @@
 import os
+import shutil
 
 import autoware_lanelet2_divider.data_preperation.data_preperation as data_preparation
 from autoware_lanelet2_divider.debug import Debug
@@ -34,6 +35,10 @@ class AutowareLanlet2Divider(Node):
         Debug.log("MGRS Grid: %s" % self.mgrs_grid, DebugMessageType.INFO)
         Debug.log("Grid Edge Size: %d" % self.grid_edge_size, DebugMessageType.INFO)
 
+        # Create copy of osm file
+        shutil.copy(self.input_lanelet2_map_path, self.input_lanelet2_map_path.replace(".osm", "_temp.osm"))
+        self.input_lanelet2_map_path = self.input_lanelet2_map_path.replace(".osm", "_temp.osm")
+
         # Complete if missing "version" element in lanelet2_map.osm
         xml_tool.complete_missing_version_tag(self.input_lanelet2_map_path)
 
@@ -59,6 +64,9 @@ class AutowareLanlet2Divider(Node):
         xml_tool.complete_missing_elements(
             self.input_lanelet2_map_path, os.path.join(self.output_folder_path, "lanelet2_map.osm")
         )
+        
+        # Remove temp osm file
+        os.remove(self.input_lanelet2_map_path)
 
         Debug.log("Autoware Lanelet2 Divider Node has been finished.", DebugMessageType.SUCCESS)
         exit(0)
