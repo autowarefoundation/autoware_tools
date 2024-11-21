@@ -9,7 +9,7 @@ Working principal of this tool is sequentially:
 - Filter generated square grids with the input lanelet2_map.osm
 - Generate map tiles from filtered grids and input lanelet2_map.osm with Osmium Tool
 
-- [autoware_lanalet2_divider](#autoware_lanalet2_divider)
+- [autoware_lanelet2_divider](#autoware_lanelet2_divider)
   - [System Requirements](#system-requirements)
   - [Inputs](#inputs)
     - [MGRS Grid](#mgrs-grid)
@@ -23,7 +23,7 @@ Working principal of this tool is sequentially:
   - [Installation](#installation)
     - [Poetry](#poetry)
     - [Osmium Tool](#osmium-tool)
-    - [autoware_lanalet2_divider Python Dependencies](#autoware_lanalet2_divider-python-dependencies)
+    - [autoware_lanelet2_divider Python Dependencies](#autoware_lanelet2_divider-python-dependencies)
   - [Running](#running)
   - [Example Data](#example-data)
     - [Yildiz Technical University Original Lanelet2 Map](#yildiz-technical-university-original-lanelet2-map) <!-- cspell: ignore Yildiz -->
@@ -128,7 +128,8 @@ ros2 run autoware_lanelet2_divider lanelet2_divider --ros-args --params-file ins
 
 ## Example Data
 
-### Yildiz Technical University Original Lanelet2 Map <!-- cspell: ignore Yildiz -->
+<!-- cspell: ignore Yildiz -->
+### Yildiz Technical University Original Lanelet2 Map
 
 This is an original lanelet2 map file that contains stop lines, speed bumps or other regulatory elements:
 <https://drive.google.com/drive/folders/1VFN0zidAHzIuQCnznVaFzefqqdRS_X5l?usp=drive_link>
@@ -137,7 +138,8 @@ This is an original lanelet2 map file that contains stop lines, speed bumps or o
     <img src="docs/img_ytu_original.png" alt="img_ytu_original" width="60%"/>
 </p>
 
-### Yildiz Technical University Extended Lanelet2 Map (Synthetic) <!-- cspell: ignore Yildiz -->
+
+### Yildiz Technical University Extended Lanelet2 Map (Synthetic)
 
 This is the extended version of the original lanelet2 map file. We extended it to 80 kilometers by hand.
 Still it contains all the regulatory elements:
