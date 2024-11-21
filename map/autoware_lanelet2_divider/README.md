@@ -129,6 +129,7 @@ ros2 run autoware_lanelet2_divider lanelet2_divider --ros-args --params-file ins
 ## Example Data
 
 <!-- cspell: ignore Yildiz -->
+
 ### Yildiz Technical University Original Lanelet2 Map
 
 This is an original lanelet2 map file that contains stop lines, speed bumps or other regulatory elements:
@@ -137,7 +138,6 @@ This is an original lanelet2 map file that contains stop lines, speed bumps or o
 <p align='center'>
     <img src="docs/img_ytu_original.png" alt="img_ytu_original" width="60%"/>
 </p>
-
 
 ### Yildiz Technical University Extended Lanelet2 Map (Synthetic)
 
