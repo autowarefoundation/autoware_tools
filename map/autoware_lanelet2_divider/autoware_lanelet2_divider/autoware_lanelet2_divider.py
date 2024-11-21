@@ -1,7 +1,7 @@
 import os
 import shutil
 
-import autoware_lanelet2_divider.data_preperation.data_preperation as data_preparation
+import autoware_lanelet2_divider.data_preparation.data_preparation as data_preparation
 from autoware_lanelet2_divider.debug import Debug
 from autoware_lanelet2_divider.debug import DebugMessageType
 import autoware_lanelet2_divider.osmium_tool.osmium_tool as osmium_tool
@@ -10,7 +10,7 @@ import rclpy
 from rclpy.node import Node
 
 
-class AutowareLanlet2Divider(Node):
+class AutowareLanelet2Divider(Node):
     def __init__(self):
         super().__init__("autoware_lanelet2_divider")
         Debug.log("Autoware Lanelet2 Divider Node has been started.", DebugMessageType.INFO)
@@ -80,7 +80,7 @@ class AutowareLanlet2Divider(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    autoware_lanelet2_divider = AutowareLanlet2Divider()
+    autoware_lanelet2_divider = AutowareLanelet2Divider()
     rclpy.spin(autoware_lanelet2_divider)
     autoware_lanelet2_divider.destroy_node()
     rclpy.shutdown()

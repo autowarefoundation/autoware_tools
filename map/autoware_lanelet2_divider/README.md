@@ -1,4 +1,4 @@
-# autoware_lanalet2_divider
+# autoware_lanelet2_divider
 
 This is a lanelet2 tile generator tool for Autoware dynamic lanelet2 map loading feature.
 
@@ -26,8 +26,8 @@ Working principal of this tool is sequentially:
     - [autoware_lanalet2_divider Python Dependencies](#autoware_lanalet2_divider-python-dependencies)
   - [Running](#running)
   - [Example Data](#example-data)
-    - [Yildiz Technical University Original Lanelet2 Map](#yildiz-technical-university-original-lanelet2-map)
-    - [Yildiz Technical University Extended Lanelet2 Map (Synthetic)](#yildiz-technical-university-extended-lanelet2-map-synthetic)
+    - [Yildiz Technical University Original Lanelet2 Map](#yildiz-technical-university-original-lanelet2-map) <!-- cspell: ignore Yildiz -->
+    - [Yildiz Technical University Extended Lanelet2 Map (Synthetic)](#yildiz-technical-university-extended-lanelet2-map-synthetic) <!-- cspell: ignore Yildiz -->
   - [Params](#params)
 
 ## System Requirements
@@ -73,7 +73,7 @@ runs an **extract** operation and divides the input lanelet2_map.osm file.
 ### output_layers.gpkg
 
 This file contains the geographical visualization for generated data. This is not used in Autoware or somewhere else.
-It is generating only for debugging the output files. [QGIS](https://qgis.org/en/site/) can be used for opening this
+It is generating only for debugging the output files. [QGIS](https://qgis.org/en/site/) can be used for opening this <!-- cspell: ignore QGIS -->
 file. You need to see the visualizations of generated grids, filtered grids and input lanelet2 map.
 
 <p align='center'>
@@ -110,7 +110,7 @@ ccmake .  ## optional: change CMake settings if needed
 make
 ```
 
-### autoware_lanalet2_divider Python Dependencies
+### autoware_lanelet2_divider Python Dependencies
 
 ```bash
 cd <path-to-autoware_tools/map/autoware_lanalet2_divider>
@@ -128,7 +128,7 @@ ros2 run autoware_lanelet2_divider lanelet2_divider --ros-args --params-file ins
 
 ## Example Data
 
-### Yildiz Technical University Original Lanelet2 Map
+### Yildiz Technical University Original Lanelet2 Map <!-- cspell: ignore Yildiz -->
 
 This is an original lanelet2 map file that contains stop lines, speed bumps or other regulatory elements:
 <https://drive.google.com/drive/folders/1VFN0zidAHzIuQCnznVaFzefqqdRS_X5l?usp=drive_link>
@@ -137,7 +137,7 @@ This is an original lanelet2 map file that contains stop lines, speed bumps or o
     <img src="docs/img_ytu_original.png" alt="img_ytu_original" width="60%"/>
 </p>
 
-### Yildiz Technical University Extended Lanelet2 Map (Synthetic)
+### Yildiz Technical University Extended Lanelet2 Map (Synthetic) <!-- cspell: ignore Yildiz -->
 
 This is the extended version of the original lanelet2 map file. We extended it to 80 kilometers by hand.
 Still it contains all the regulatory elements:
