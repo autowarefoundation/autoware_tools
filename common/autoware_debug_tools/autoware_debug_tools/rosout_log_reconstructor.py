@@ -79,7 +79,11 @@ class RosoutLogReconstructor(Node):
             print(text)
 
 
-if __name__ == "__main__":
+def main():
     rclpy.init()
     node = RosoutLogReconstructor()
     rclpy.spin(node)
+
+
+if __name__ == "__main__":
+    main()
