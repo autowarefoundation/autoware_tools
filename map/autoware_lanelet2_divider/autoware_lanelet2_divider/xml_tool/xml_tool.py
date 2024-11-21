@@ -84,7 +84,9 @@ def complete_missing_elements(input_osm_file_path: str, input_extracted_osm_fold
                             divided_relation_list,
                         )
                 elif r.attrib["type"] == "relation":
-                    if r.attrib["ref"] not in [rela.attrib["id"] for rela in divided_relation_list]: # cspell: ignore rela
+                    if r.attrib["ref"] not in [
+                        rela.attrib["id"] for rela in divided_relation_list
+                    ]:  # cspell: ignore rela
                         for rel in relation_list:
                             if rel.attrib["id"] == r.attrib["ref"]:
                                 divided_map_root.append(rel)

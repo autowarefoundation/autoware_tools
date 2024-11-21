@@ -8,8 +8,8 @@ from autoware_lanelet2_divider.debug import DebugMessageType
 import lanelet2
 from lanelet2.projection import UtmProjector
 import mgrs
-from osgeo import gdal # cspell: ignore osgeo
-from osgeo import ogr # cspell: ignore osgeo
+from osgeo import gdal  # cspell: ignore osgeo
+from osgeo import ogr  # cspell: ignore osgeo
 from tqdm import tqdm
 import utm
 import yaml
@@ -36,7 +36,7 @@ def create_grid_layer(grid_edge_size, layer_grids, mgrs_grid) -> None:
         desc=Debug.get_log("Creating grid layer", DebugMessageType.INFO),
     ):
         for j in range(int(grid_count)):
-            feature_grid = ogr.Feature(layer_grids.GetLayerDefn()) # cspell: ignore Defn
+            feature_grid = ogr.Feature(layer_grids.GetLayerDefn())  # cspell: ignore Defn
             linear_ring = ogr.Geometry(ogr.wkbLinearRing)
             for a in range(5):
                 pt_x, pt_y = 0.0, 0.0
@@ -88,7 +88,9 @@ def generate_lanelet2_layer(mgrs_grid, lanelet2_map_path, lanelet2_whole_mls, la
     for lanelet_linestring in lanelet2_map.lineStringLayer:
         linestring = ogr.Geometry(ogr.wkbLineString)
         for node in lanelet_linestring:
-            node_lat, node_lon = utm.to_latlon(origin_x + node.x, origin_y + node.y, zone, hemisphere)
+            node_lat, node_lon = utm.to_latlon(
+                origin_x + node.x, origin_y + node.y, zone, hemisphere
+            )
             linestring.AddPoint_2D(node_lon, node_lat)
         lanelet2_whole_mls.AddGeometry(linestring)
     feature_lanelet2 = ogr.Feature(layer_lanelet2_whole.GetLayerDefn())  # cspell: ignore Defn
@@ -250,7 +252,9 @@ def data_preparation(
     for grid in layer_grids:
         geometry_grid = grid.GetGeometryRef()
 
-        filtered_feature_grid = ogr.Feature(layer_filtered_grids.GetLayerDefn()) # cspell: ignore Defn
+        filtered_feature_grid = ogr.Feature(
+            layer_filtered_grids.GetLayerDefn()
+        )  # cspell: ignore Defn
         filtered_feature_grid.SetGeometry(geometry_grid)
         if layer_filtered_grids.CreateFeature(filtered_feature_grid) != 0:
             Debug.log("Failed to create feature in shapefile.", DebugMessageType.ERROR)
