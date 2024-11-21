@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from tier4_debug_msgs.msg import Float64Stamped, Float32Stamped
+from tier4_debug_msgs.msg import Float32Stamped
+from tier4_debug_msgs.msg import Float64Stamped
 
 from .system_performance_plotter_base import PREDEFINED_COMPONENT_NAMES
 from .system_performance_plotter_base import SystemPerformancePlotterBase
