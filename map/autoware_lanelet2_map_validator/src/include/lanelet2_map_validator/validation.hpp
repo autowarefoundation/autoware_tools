@@ -20,12 +20,9 @@
 
 #include <nlohmann/json.hpp>
 
-#include <lanelet2_io/Io.h>
-#include <lanelet2_projection/UTM.h>
 #include <lanelet2_validation/Cli.h>
 #include <lanelet2_validation/Validation.h>
 
-#include <memory>
 #include <queue>
 #include <regex>
 #include <string>
@@ -35,16 +32,6 @@
 #include <vector>
 
 using json = nlohmann::json;
-
-namespace
-{
-namespace projector_names
-{
-constexpr const char * mgrs = "mgrs";
-constexpr const char * transverse_mercator = "transverse_mercator";
-constexpr const char * utm = "utm";
-}  // namespace projector_names
-}  // namespace
 
 namespace lanelet::autoware::validation
 {
@@ -58,11 +45,8 @@ struct ValidatorInfo
 
 using Validators = std::unordered_map<std::string, ValidatorInfo>;
 
-std::unique_ptr<lanelet::Projector> getProjector(
-  const std::string & projector_type, const lanelet::GPSPoint & origin);
-
-std::vector<lanelet::validation::DetectedIssues> validateMap(
-  const std::string & projector_type, const std::string & map_file,
+std::vector<lanelet::validation::DetectedIssues> apply_validation(
+  const lanelet::LaneletMap & lanelet_map,
   const lanelet::validation::ValidationConfig & val_config);
 
 Validators parse_validators(const json & json_data);
@@ -85,7 +69,8 @@ lanelet::validation::ValidationConfig replace_validator(
   const lanelet::validation::ValidationConfig & input, const std::string & validator_name);
 
 void process_requirements(
-  json json_data, const lanelet::autoware::validation::MetaConfig & validator_config);
+  json json_data, const lanelet::autoware::validation::MetaConfig & validator_config,
+  const lanelet::LaneletMap & lanelet_map);
 }  // namespace lanelet::autoware::validation
 
 #endif  // LANELET2_MAP_VALIDATOR__VALIDATION_HPP_
