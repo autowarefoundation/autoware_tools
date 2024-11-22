@@ -107,10 +107,8 @@ class LaneletUtils:
 
 
 class LaneletMapHandler:
-    def __init__(self, map_path):
+    def __init__(self, map_path, longitude, latitude):
         # Initialize the map projector and load the lanelet map
-        longitude = 139.6503
-        latitude = 35.6762
         projector = MGRSProjector(Origin(latitude, longitude))
 
         # to do : error handling when loading map if necessary
@@ -226,14 +224,14 @@ class LaneletMapHandler:
                 return interpolated_line, 1
         return center_line, 0
 
-    def plot_trajectory_on_map(self, trajectory=None, trajectory_labels=None):
+    def plot_trajectory_on_map(self, trajectory=None, trajectory_parts=None):
         plt.close()
 
         # Use interactive mode for plotting
         plt.ion()
 
         # Set up the plot for displaying the lanelet map
-        plt.figure(figsize=(10, 10))
+        plt.figure(figsize=(8, 8))
         plt.xlabel("X (m)")
         plt.ylabel("Y (m)")
         plt.title("Lanelet2 Map Boundary Lines")
@@ -248,7 +246,7 @@ class LaneletMapHandler:
             )
 
         # Plot the trajectory if provided
-        if trajectory is not None and trajectory_labels is None:
+        if trajectory is not None and trajectory_parts is None:
             trajectory_len = len(trajectory)
             plt.plot(
                 [trajectory[i, 0] for i in range(trajectory_len)],
@@ -257,28 +255,34 @@ class LaneletMapHandler:
                 linewidth=2,
             )
 
-        elif trajectory is not None and trajectory_labels is not None:
+        elif trajectory is not None and trajectory_parts is not None:
             trajectory_len = len(trajectory)
-            previous_label = trajectory_labels[0]
+            previous_part = trajectory_parts[0]
 
             trajectory_x = []
             trajectory_y = []
 
             for i in range(trajectory_len):
-                if trajectory_labels[i] is not previous_label or i == trajectory_len - 1:
+                if trajectory_parts[i] is not previous_part or i == trajectory_len - 1:
+                    if previous_part == "curve":
+                        label = "velocity = const (velocity_on_curve)"
+                    elif previous_part == "straight":
+                        label = "Data collection is conducted"
+
                     plt.plot(
                         trajectory_x,
                         trajectory_y,
                         linestyle="--",
                         linewidth=2,
-                        label=previous_label,
+                        label=label,
                     )
+
                     trajectory_x = []
                     trajectory_y = []
 
                 trajectory_x.append(trajectory[i, 0])
                 trajectory_y.append(trajectory[i, 1])
-                previous_label = trajectory_labels[i]
+                previous_part = trajectory_parts[i]
 
         plt.legend()
         plt.show()

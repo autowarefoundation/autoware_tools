@@ -38,6 +38,10 @@ This package provides tools for automatically collecting data using pure pursuit
 
       Generate trajectories along the road. This is particularly useful when drawing long straight paths along the road.
 
+      In this course, data collection is conducted only on long straight trajectories, while constant velocity, `velocity_on_curve`, is maintained when driving on sections that include curves. 
+      
+      The minimum length of these long straight trajectories can be specified using the parameter `minimum_length_of_straight_line` (These two parameters `velocity_on_curve` and `minimum_length_of_straight_line` can be configured in `./config/course_param/along_road_param.yaml`).
+      
       <img src="resource/along_road.png" width="540">
 
 ## How to Use
@@ -97,6 +101,11 @@ This package provides tools for automatically collecting data using pure pursuit
       By setting the pose of the goal point, a trajectory is generated on the map.
 
         <img src="resource/set_trajectory_along_road.gif" width="480">
+
+      As soon as the trajectory is generated, the plot with the map and trajectory drawn on it will be created (please see the following picture).
+      In the sections labeled `velocity = const (velocity_on_curve)` in the legend, the vehicle travels at a constant velocity of `velocity_on_curve`. In the sections labeled `Data collection is conducted`, data collection is performed.
+
+        <img src="resource/along_load_plot.png" width="480">
 
       > [!NOTE]
       > You cannot change the goal pose while driving.
@@ -216,9 +225,12 @@ Each trajectory has specific ROS 2 parameters.
 
 - `COURSE_NAME: along_road`
 
-| Name                       | Type     | Description                                           | Default value |
-| :------------------------- | :------- | :---------------------------------------------------- | :------------ |
-| `smoothing_window`         | `double` | Width of the window for trajectory smoothing          | 100           |
-| `velocity_on_curve`        | `double` | Constant velocity on curve [m/s]                      | 3.5           |
-| `stopping_buffer_distance` | `double` | The safety distance from end of the straight line [m] | 15.0          |
-| `course_width`             | `double` | The width of the trajectory [m]                       | 1.5           |
+| Name                                | Type     | Description                                                          | Default value |
+| :---------------------------------  | :------- | :------------------------------------------------------------------- | :------------ |
+| `smoothing_window`                  | `double` | Width of the window for trajectory smoothing                         | 100           |
+| `velocity_on_curve`                 | `double` | Constant velocity on curve [m/s]                                     | 3.5           |
+| `stopping_buffer_distance`          | `double` | The safety distance from end of the straight line [m]                | 15.0          |
+| `course_width`                      | `double` | The width of the trajectory [m]                                      | 1.5           |
+| `minimum_length_of_straight_line`   | `double` | TThe minimum length of straight line for data collection [m]         | 50.0          |
+| `longitude`                         | `double` | The longitude of the origin specified when loading the map [degree]  | 139.6503      |
+| `latitude`                          | `double` | The latitude of the origin specified when loading the map [degree]   | 35.6762       |

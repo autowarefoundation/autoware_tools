@@ -64,14 +64,38 @@ def declare_along_road_params(node):
         1.5,
         ParameterDescriptor(description="The width of the trajectory [m]"),
     )
+    node.declare_parameter(
+        "minimum_length_of_straight_line",
+        50.0,
+        ParameterDescriptor(
+            description="The minimum length of straight line for data collection [m]"
+        ),
+    )
+    node.declare_parameter(
+        "longitude",
+        139.6503,
+        ParameterDescriptor(
+            description="The longitude of the origin specified when loading the map"
+        ),
+    )
+    node.declare_parameter(
+        "latitude",
+        35.6762,
+        ParameterDescriptor(
+            description="The latitude of the origin specified when loading the map"
+        ),
+    )
 
 
 class Along_Road(Base_Course):
     def __init__(self, step: float, param_dict):
         super().__init__(step, param_dict)
         self.closed = False
+
+        longitude = param_dict["longitude"]
+        latitude = param_dict["latitude"]
         map_path = param_dict["map_path"] + "/lanelet2_map.osm"
-        self.handler = LaneletMapHandler(map_path)
+        self.handler = LaneletMapHandler(map_path, longitude, latitude)
 
         self.window_size = param_dict["smoothing_window"]
 
@@ -88,6 +112,7 @@ class Along_Road(Base_Course):
         self.stopping_distance = param_dict["stopping_distance"]
 
         self.course_width = param_dict["course_width"]
+        self.minimum_length_of_straight_line = param_dict["minimum_length_of_straight_line"]
 
     def get_trajectory_points(
         self,
@@ -95,9 +120,11 @@ class Along_Road(Base_Course):
         short_side_length: float,
         ego_point,
         goal_point,
-        straight_segment_threshold=50.0,
         curvature_threshold=1e-2,
     ):
+        # Set the minimum length of straight line for data collection
+        straight_segment_threshold = self.minimum_length_of_straight_line
+
         # Get the shortest path between ego_point and goal_point
         x, y = self.handler.get_shortest_path(ego_point, goal_point)
         if x is None or y is None:  # Exit if no valid path is found
