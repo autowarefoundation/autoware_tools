@@ -37,7 +37,7 @@ protected:
   {
     std::string package_share_directory =
       ament_index_cpp::get_package_share_directory("autoware_lanelet2_map_validator");
-    std::ifstream file(package_share_directory + "/data/" + file_name);
+    std::ifstream file(package_share_directory + "/data/json/" + file_name);
     EXPECT_TRUE(file.is_open()) << "Failed to open test JSON file.";
 
     json json_data;
