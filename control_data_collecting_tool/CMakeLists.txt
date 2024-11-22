@@ -7,7 +7,17 @@ autoware_package()
 install(PROGRAMS
   scripts/data_collecting_pure_pursuit_trajectory_follower.py
   scripts/data_collecting_trajectory_publisher.py
+  scripts/data_collecting_plotter.py
+  scripts/data_collecting_rosbag_record.py
+  scripts/data_collecting_data_counter.py
+  scripts/data_collecting_base_node.py
+  scripts/rosbag_play.py
   DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY config/
+  DESTINATION share/${PROJECT_NAME}/config
 )
 
 find_package(Qt5 REQUIRED Core Widgets)

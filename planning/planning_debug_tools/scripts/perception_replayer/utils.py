@@ -16,14 +16,30 @@
 
 import math
 import time
+from typing import Tuple
 
+from autoware_adapi_v1_msgs.srv import SetRoutePoints
+from geometry_msgs.msg import Point
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseWithCovariance
+from geometry_msgs.msg import PoseWithCovarianceStamped
 from geometry_msgs.msg import Quaternion
 import numpy as np
+import rclpy
+from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.node import Node
+from rclpy.serialization import deserialize_message
 import rosbag2_py
+from rosbag2_py import ConverterOptions
+from rosbag2_py import SequentialReader
+from rosbag2_py import StorageOptions
+from rosidl_runtime_py.utilities import get_message
 from sensor_msgs.msg import PointCloud2
 from sensor_msgs.msg import PointField
+from std_msgs.msg import Header
 from tf_transformations import euler_from_quaternion
 from tf_transformations import quaternion_from_euler
+from tier4_localization_msgs.srv import InitializeLocalization
 
 
 def get_starting_time(uri: str):
@@ -131,6 +147,93 @@ def translate_objects_coordinate(ego_pose, log_ego_pose, objects_msg):
         object_pose.orientation = get_quaternion_from_yaw(log_object_yaw + log_ego_yaw - ego_yaw)
 
 
+def create_reader(bag_dir: str) -> SequentialReader:
+    storage_options = StorageOptions(uri=bag_dir, storage_id="sqlite3")
+    converter_options = ConverterOptions(
+        input_serialization_format="cdr", output_serialization_format="cdr"
+    )
+    reader = SequentialReader()
+    reader.open(storage_options, converter_options)
+    return reader
+
+
+def is_close_pose(p0, p1, min_dist, max_dist) -> bool:
+    dist = np.linalg.norm([p0.x - p1.x, p0.y - p1.y, p0.z - p1.z])
+    return dist < min_dist or dist > max_dist
+
+
+def get_pose_from_bag(input_path: str, interval=(0.1, 10000.0)) -> Tuple[Pose, Pose]:
+    reader = create_reader(input_path)
+    type_map = {
+        topic_type.name: topic_type.type for topic_type in reader.get_all_topics_and_types()
+    }
+    pose_list = []
+    is_first_pose = True
+    prev_trans = None
+
+    while reader.has_next():
+        topic, data, _ = reader.read_next()
+        if topic == "/tf":
+            msg_type = get_message(type_map[topic])
+            msg = deserialize_message(data, msg_type)
+            for transform in msg.transforms:
+                if transform.child_frame_id != "base_link":
+                    continue
+                trans = transform.transform.translation
+                rot = transform.transform.rotation
+                if is_first_pose:
+                    is_first_pose = False
+                    prev_trans = trans
+                elif is_close_pose(prev_trans, trans, interval[0], interval[1]):
+                    continue
+                pose_list.append((trans, rot))
+                prev_trans = trans
+
+    if not pose_list:
+        raise ValueError("No valid poses found in the bag file.")
+
+    initial_trans, initial_rot = pose_list[0]
+    goal_trans, goal_rot = pose_list[-1]
+
+    initial_pose = Pose()
+    initial_pose.position = Point(x=initial_trans.x, y=initial_trans.y, z=initial_trans.z)
+    initial_pose.orientation = initial_rot
+
+    goal_pose = Pose()
+    goal_pose.position = Point(x=goal_trans.x, y=goal_trans.y, z=goal_trans.z)
+    goal_pose.orientation = goal_rot
+
+    return initial_pose, goal_pose
+
+
+def pub_route(input_path: str):
+    try:
+        first_pose, last_pose = get_pose_from_bag(input_path)
+    except Exception as e:
+        print(f"Error retrieving poses from bag: {e}")
+        return
+
+    localization_client = LocalizationInitializer()
+    future_init = localization_client.send_initial_pose(first_pose)
+    rclpy.spin_until_future_complete(localization_client, future_init)
+    if future_init.result() is not None:
+        print("Successfully initialized localization.")
+    else:
+        print("Failed to initialize localization.")
+
+    # temporarily add a sleep because sometimes the route is not generated correctly without it.
+    # Need to consider a proper solution.
+    time.sleep(2)
+
+    route_client = RoutePointsClient()
+    future_route = route_client.send_request(last_pose)
+    rclpy.spin_until_future_complete(route_client, future_route)
+    if future_route.result() is not None:
+        print("Successfully set route points.")
+    else:
+        print("Failed to set route points.")
+
+
 class StopWatch:
     def __init__(self, verbose):
         # A dictionary to store the starting times
@@ -155,3 +258,52 @@ class StopWatch:
 
         # Reset the starting time for the name
         del self.start_times[name]
+
+
+class LocalizationInitializer(Node):
+    def __init__(self):
+        super().__init__("localization_initializer")
+        self.callback_group = ReentrantCallbackGroup()
+        self.client = self.create_client(
+            InitializeLocalization,
+            "/localization/initialize",
+            callback_group=self.callback_group,
+        )
+        while not self.client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("Waiting for '/localization/initialize' service...")
+
+    def create_initial_pose(self, pose: Pose) -> PoseWithCovarianceStamped:
+        pose_with_cov_stamped = PoseWithCovarianceStamped()
+        pose_with_cov_stamped.header.frame_id = "map"
+        pose_with_cov_stamped.header.stamp = self.get_clock().now().to_msg()
+        pose_with_cov = PoseWithCovariance()
+        pose_with_cov.pose = pose
+        covariance = np.identity(6) * 0.01  # Create a 6x6 identity matrix scaled by 0.01
+        pose_with_cov.covariance = covariance.flatten().tolist()
+        pose_with_cov_stamped.pose = pose_with_cov
+        return pose_with_cov_stamped
+
+    def send_initial_pose(self, pose: Pose):
+        request = InitializeLocalization.Request()
+        request.pose_with_covariance = [self.create_initial_pose(pose)]
+        request.method = 1
+        self.get_logger().info("Sending initial pose request...")
+        return self.client.call_async(request)
+
+
+class RoutePointsClient(Node):
+    def __init__(self):
+        super().__init__("route_points_client")
+        self.client = self.create_client(SetRoutePoints, "/api/routing/set_route_points")
+        while not self.client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("Waiting for '/api/routing/set_route_points' service...")
+
+    def send_request(self, goal_pose: Pose):
+        request = SetRoutePoints.Request()
+        request.header = Header()
+        request.header.stamp = self.get_clock().now().to_msg()
+        request.header.frame_id = "map"
+        request.goal = goal_pose
+        request.waypoints = []
+        self.get_logger().info("Sending route points request...")
+        return self.client.call_async(request)

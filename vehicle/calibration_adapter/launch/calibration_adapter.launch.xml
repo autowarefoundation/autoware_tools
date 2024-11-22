@@ -30,5 +30,6 @@
     <remap from="~/output/acceleration_status" to="/calibration/vehicle/acceleration_status"/>
     <remap from="~/output/steering_angle_cmd" to="/calibration/vehicle/steering_angle_cmd"/>
     <remap from="~/output/steering_angle_status" to="/calibration/vehicle/steering_angle_status"/>
+    <remap from="~/output/vehicle_twist" to="/calibration/vehicle/twist_status"/>
   </node>
 </launch>

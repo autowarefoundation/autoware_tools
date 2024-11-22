@@ -24,6 +24,7 @@ from perception_replayer_common import PerceptionReplayerCommon
 import rclpy
 from utils import StopWatch
 from utils import create_empty_pointcloud
+from utils import pub_route
 from utils import translate_objects_coordinate
 
 
@@ -176,8 +177,12 @@ class PerceptionReproducer(PerceptionReplayerCommon):
                 (ego_pose.position.x - ego_odom_msg.pose.pose.position.x) ** 2
                 + (ego_pose.position.y - ego_odom_msg.pose.pose.position.y) ** 2
             )
-            repeat_flag = ego_rosbag_speed > ego_speed * 5 and ego_rosbag_dist > 1.0
-            # set the speed threshold to many (5) times then ego_speed because this constraint is mainly for departing/stopping (ego speed is close to 0).
+            repeat_flag = (
+                ego_rosbag_speed > ego_speed * 2
+                and ego_rosbag_speed > 3.0
+                and ego_rosbag_dist > self.ego_odom_search_radius
+            )
+            # if ego_rosbag_speed is too fast than ego_speed, stop publishing the rosbag's ego odom message temporarily.
 
         if not repeat_flag:
             self.stopwatch.tic("find_topics_by_timestamp")
@@ -277,8 +282,8 @@ class PerceptionReproducer(PerceptionReplayerCommon):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-b", "--bag", help="rosbag", default=None)
+    parser = argparse.ArgumentParser(description="Perception Reproducer")
+    parser.add_argument("-b", "--bag", help="rosbag file path", required=True)
     parser.add_argument(
         "-n",
         "--noise",
@@ -312,10 +317,22 @@ if __name__ == "__main__":
         type=float,
         default=80.0,
     )
-
+    parser.add_argument(
+        "-p",
+        "--pub-route",
+        help=(
+            "publish route created from the initial pose and goal pose retrieved from the beginning and end of the rosbag. "
+            "By default, route are not published."
+        ),
+        action="store_true",
+    )
     args = parser.parse_args()
 
     rclpy.init()
+
+    if args.pub_route:
+        pub_route(args.bag)
+
     node = PerceptionReproducer(args)
 
     try:
