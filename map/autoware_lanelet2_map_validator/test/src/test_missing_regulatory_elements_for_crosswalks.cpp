@@ -47,7 +47,10 @@ TEST_F(TestMissingRegulatoryElementsForCrosswalks, MissingRegulatoryElement)  //
   EXPECT_EQ(issues[0].id, 18);
   EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
   EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::Lanelet);
-  EXPECT_EQ(issues[0].message, "No regulatory element refers to this crosswalk.");
+  EXPECT_EQ(
+    issues[0].message,
+    "[Crosswalk.MissingRegulatoryElements-001] No regulatory element refers to this "
+    "crosswalk.");
 }
 
 TEST_F(TestMissingRegulatoryElementsForCrosswalks, RegulatoryElementExists)  // NOLINT for gtest
