@@ -83,7 +83,7 @@ MissingRegulatoryElementsForTrafficLightsValidator::checkMissingRegulatoryElemen
     if (tl_ids_reg_elem.find(tl_id) == tl_ids_reg_elem.end()) {
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString, tl_id,
-        "No regulatory element refers to this traffic light.");
+        issue_code_prefix(this->name(), 1) + "No regulatory element refers to this traffic light.");
     }
   }
 
