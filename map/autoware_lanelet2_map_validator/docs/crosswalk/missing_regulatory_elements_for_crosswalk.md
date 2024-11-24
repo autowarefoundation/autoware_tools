@@ -11,9 +11,9 @@ Required information for a crosswalk is written in the [Autoware documentation](
 
 The output issue marks "lanelet" as the **primitive**, and the lanelet ID is written together as **ID**.
 
-| Message                                           | Severity | Description                                                                                 | Approach                                                                            |
-| ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| "No regulatory element refers to this crosswalk." | Error    | There is a `crosswalk` subtype lanelet that hasn't been referred to any regulatory element. | Create a `crosswalk` subtype regulatory element and refer to the crosswalk lanelet. |
+| Issue Code                              | Message                                           | Severity | Description                                                                                 | Approach                                                                            |
+| --------------------------------------- | ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Crosswalk.MissingRegulatoryElements-001 | "No regulatory element refers to this crosswalk." | Error    | There is a `crosswalk` subtype lanelet that hasn't been referred to any regulatory element. | Create a `crosswalk` subtype regulatory element and refer to the crosswalk lanelet. |
 
 ## Related source codes
 
