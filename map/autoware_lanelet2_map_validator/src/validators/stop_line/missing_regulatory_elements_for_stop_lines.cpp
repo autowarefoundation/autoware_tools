@@ -93,7 +93,7 @@ MissingRegulatoryElementsForStopLinesValidator::checkMissingRegulatoryElementsFo
     if (sl_ids_reg_elem.find(sl_id) == sl_ids_reg_elem.end()) {
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString, sl_id,
-        "No regulatory element refers to this stop line.");
+        issue_code_prefix(this->name(), 1) + "No regulatory element refers to this stop line.");
     }
   }
 
