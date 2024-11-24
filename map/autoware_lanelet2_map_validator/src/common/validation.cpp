@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <map>
 #include <queue>
+#include <regex>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -153,6 +154,7 @@ std::vector<lanelet::validation::DetectedIssues> describe_unused_validators_to_j
     issue_json["primitive"] =
       lanelet::validation::toString(lanelet::validation::Primitive::Primitive);
     issue_json["id"] = 0;
+    issue_json["issue_code"] = "General.InvalidPrerequisites-001";
     issue_json["message"] = "Prerequisites don't exist OR they are making a loop.";
     issues_json.push_back(issue_json);
     validator_json["issues"] = issues_json;
@@ -166,7 +168,7 @@ std::vector<lanelet::validation::DetectedIssues> describe_unused_validators_to_j
   }
 
   if (issues.size() > 0) {
-    detected_issues.push_back({"invalid_prerequisites", issues});
+    detected_issues.push_back({"general.invalid_prerequisites", issues});
   }
   return detected_issues;
 }
@@ -196,7 +198,7 @@ std::vector<lanelet::validation::DetectedIssues> check_prerequisite_completion(
     issue.severity = lanelet::validation::Severity::Error;
     issue.primitive = lanelet::validation::Primitive::Primitive;
     issue.id = lanelet::InvalId;
-    issue.message = "Prerequisites didn't pass";
+    issue.message = "[General.PrerequisitesFailure-001] Prerequisites didn't pass.";
     issues.push_back(issue);
   }
 
@@ -283,6 +285,7 @@ void process_requirements(
   json json_data, const MetaConfig & validator_config, const lanelet::LaneletMap & lanelet_map)
 {
   std::vector<lanelet::validation::DetectedIssues> total_issues;
+  std::regex issue_code_pattern(R"(\[(.+?)\]\s*(.+))");
 
   // List up validators in order
   Validators validators = parse_validators(json_data);
@@ -327,11 +330,18 @@ void process_requirements(
     if (!issues[0].issues.empty()) {
       json issues_json;
       for (const auto & issue : issues[0].issues) {
+        std::smatch matches;
         json issue_json;
         issue_json["severity"] = lanelet::validation::toString(issue.severity);
         issue_json["primitive"] = lanelet::validation::toString(issue.primitive);
         issue_json["id"] = issue.id;
-        issue_json["message"] = issue.message;
+        if (std::regex_match(issue.message, matches, issue_code_pattern)) {
+          issue_json["issue_code"] = matches[1];
+          issue_json["message"] = matches[2];
+        } else {
+          // Issue messages not matching the issue code format will be output as it is
+          issue_json["message"] = issue.message;
+        }
         issues_json.push_back(issue_json);
 
         if (
