@@ -115,7 +115,7 @@ RegulatoryElementsDetailsForCrosswalksValidator::checkRegulatoryElementOfCrosswa
     const auto & issue_poly = lanelet::validation::Issue(
       lanelet::validation::Severity::Error, lanelet::validation::Primitive::Polygon,
       lanelet::utils::getId(),
-      "Crosswalk polygon of crosswalk regulatory element must have type of Crosswalk_polygon.");
+      "Crosswalk polygon of crosswalk regulatory element must have type of crosswalk_polygon.");
     lanelet::autoware::validation::checkPrimitivesType(
       crosswalk_polygons, lanelet::autoware::Crosswalk::AutowareRoleNameString::CrosswalkPolygon,
       issue_poly, issues);

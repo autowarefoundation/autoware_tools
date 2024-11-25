@@ -328,8 +328,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    if not args.bag:
-        parser.error("The '--bag' argument is required.")
+    rclpy.init()
 
     if args.pub_route:
         pub_route(args.bag)

@@ -207,8 +207,6 @@ def get_pose_from_bag(input_path: str, interval=(0.1, 10000.0)) -> Tuple[Pose, P
 
 
 def pub_route(input_path: str):
-    rclpy.init()
-
     try:
         first_pose, last_pose = get_pose_from_bag(input_path)
     except Exception as e:
