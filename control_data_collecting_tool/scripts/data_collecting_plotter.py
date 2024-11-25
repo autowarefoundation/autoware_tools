@@ -16,16 +16,48 @@
 
 from data_collecting_base_node import DataCollectingBaseNode
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from matplotlib.colors import ListedColormap
+from matplotlib.colors import Normalize
 import numpy as np
 import rclpy
 import seaborn as sns
 from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import Int32MultiArray
+from rcl_interfaces.msg import ParameterDescriptor
 
 
 class DataCollectingPlotter(DataCollectingBaseNode):
     def __init__(self):
         super().__init__("data_collecting_plotter")
+
+        self.declare_parameter(
+            "VEL_ACC_THRESHOLD",
+            40,
+            ParameterDescriptor(
+                description="Threshold of velocity-and-acc heatmap in data collection"
+            ),
+        )
+
+        self.declare_parameter(
+            "VEL_STEER_THRESHOLD",
+            20,
+            ParameterDescriptor(
+                description="Threshold of velocity-and-steer heatmap in data collection"
+            ),
+        )
+
+        self.declare_parameter(
+            "VEL_STEER_RATE_THRESHOLD",
+            20,
+            ParameterDescriptor(
+                description="Threshold of velocity-and-steer_rate heatmap in data collection"
+            ),
+        )
+
+        self.VEL_ACC_THRESHOLD = self.get_parameter("VEL_ACC_THRESHOLD").get_parameter_value().integer_value
+        self.VEL_STEER_THRESHOLD = self.get_parameter("VEL_STEER_THRESHOLD").get_parameter_value().integer_value
+        self.VEL_STEER_RATE_THRESHOLD = self.get_parameter("VEL_STEER_RATE_THRESHOLD").get_parameter_value().integer_value
 
         # callback for plot
         self.grid_update_time_interval = 5.0
@@ -36,6 +68,10 @@ class DataCollectingPlotter(DataCollectingBaseNode):
 
         self.fig, self.axs = plt.subplots(3, 1, figsize=(12, 20))
         plt.ion()
+        self.cmap = ListedColormap(["blue", "yellowgreen"])
+        self.vel_acc_heatmap_norm = Normalize(vmin=0, vmax=2*self.VEL_ACC_THRESHOLD)
+        self.vel_steer_heatmap_norm = Normalize(vmin=0, vmax=2*self.VEL_STEER_THRESHOLD)
+        self.vel_steer_rate_heatmap_norm = Normalize(vmin=0, vmax=2*self.VEL_STEER_RATE_THRESHOLD)
 
         self.collected_data_counts_of_vel_acc_subscription_ = self.create_subscription(
             Int32MultiArray,
@@ -93,6 +129,7 @@ class DataCollectingPlotter(DataCollectingBaseNode):
         plt.pause(0.1)
 
     def plot_data_collection_grid(self):
+
         self.axs[0].cla()
         self.axs[0].scatter(self.acc_hist, self.vel_hist)
         self.axs[0].plot(self.acc_hist, self.vel_hist)
@@ -110,16 +147,39 @@ class DataCollectingPlotter(DataCollectingBaseNode):
         self.heatmap = sns.heatmap(
             self.collected_data_counts_of_vel_acc.T,
             annot=True,
-            cmap="coolwarm",
+            cmap=self.cmap,
+            norm=self.vel_acc_heatmap_norm,
             xticklabels=np.round(self.v_bin_centers, 2),
             yticklabels=np.round(self.a_bin_centers, 2),
             ax=self.axs[1],
             linewidths=0.1,
             linecolor="gray",
+            cbar_kws={'ticks':[0, self.VEL_ACC_THRESHOLD]}
         )
 
         self.axs[1].set_xlabel("Velocity bins")
         self.axs[1].set_ylabel("Acceleration bins")
+
+        # Display mask
+        for i in range(self.collected_data_counts_of_vel_acc.shape[0]):
+            for j in range(self.collected_data_counts_of_vel_acc.shape[1]):
+                if self.mask_vel_acc[i, j] == 1:
+                    rect = Rectangle(
+                        (i, j), 1, 1,
+                        linewidth=0.25,
+                        edgecolor='black',
+                        facecolor='none'
+                    )
+                    #self.axs[1].add_patch(rect)
+                else:
+                    rect = Rectangle(
+                        (i, j), 1, 1,
+                        linewidth=0.25,
+                        edgecolor='black',
+                        facecolor='gray'
+                    )
+                    self.axs[1].add_patch(rect)
+
 
         for collection in self.axs[2].collections:
             if collection.colorbar is not None:
@@ -129,13 +189,35 @@ class DataCollectingPlotter(DataCollectingBaseNode):
         self.heatmap = sns.heatmap(
             self.collected_data_counts_of_vel_steer.T,
             annot=True,
-            cmap="coolwarm",
+            cmap=self.cmap,
+            norm=self.vel_steer_heatmap_norm,
             xticklabels=np.round(self.v_bin_centers, 2),
             yticklabels=np.round(self.steer_bin_centers, 2),
             ax=self.axs[2],
             linewidths=0.1,
             linecolor="gray",
+            cbar_kws={'ticks':[0, self.VEL_STEER_THRESHOLD]}
         )
+
+        # Display mask
+        for i in range(self.collected_data_counts_of_vel_steer.shape[0]):
+            for j in range(self.collected_data_counts_of_vel_steer.shape[1]):
+                if self.mask_vel_steer[i, j] == 1:
+                    rect = Rectangle(
+                        (i, j), 1, 1,
+                        linewidth=0.25,
+                        edgecolor='black',
+                        facecolor='none'
+                    )
+                    self.axs[2].add_patch(rect)
+                else:
+                    rect = Rectangle(
+                        (i, j), 1, 1,
+                        linewidth=0.25,
+                        edgecolor='black',
+                        facecolor='gray'
+                    )
+                    self.axs[2].add_patch(rect)
 
         # update collected steer and velocity grid
         self.axs[2].set_xlabel("Velocity bins")
