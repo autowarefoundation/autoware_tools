@@ -48,7 +48,7 @@ class Base_Course:
     ):
         pass
 
-    def choose_target_velocity_acc(self, collected_data_counts_of_vel_acc):
+    def choose_target_velocity_acc(self, collected_data_counts_of_vel_acc, mask_vel_acc):
         min_num_data = 1e12
         min_data_num_margin = 20
         min_index_list = []
@@ -57,13 +57,14 @@ class Base_Course:
             for j in range(
                 self.params.collecting_data_min_n_a, self.params.collecting_data_max_n_a
             ):
-                if min_num_data - min_data_num_margin > collected_data_counts_of_vel_acc[i, j]:
-                    min_num_data = collected_data_counts_of_vel_acc[i, j]
-                    min_index_list.clear()
-                    min_index_list.append((j, i))
+                if mask_vel_acc[i,j] == 1:
+                    if min_num_data - min_data_num_margin > collected_data_counts_of_vel_acc[i, j]:
+                        min_num_data = collected_data_counts_of_vel_acc[i, j]
+                        min_index_list.clear()
+                        min_index_list.append((j, i))
 
-                elif min_num_data + min_data_num_margin > collected_data_counts_of_vel_acc[i, j]:
-                    min_index_list.append((j, i))
+                    elif min_num_data + min_data_num_margin > collected_data_counts_of_vel_acc[i, j]:
+                        min_index_list.append((j, i))
 
         return min_index_list[np.random.randint(0, len(min_index_list))]
 
@@ -75,6 +76,8 @@ class Base_Course:
         current_acc,
         collected_data_counts_of_vel_acc,
         collected_data_counts_of_vel_steer,
+        mask_vel_acc,
+        mask_vel_steer
     ):
         pass
 

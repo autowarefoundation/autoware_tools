@@ -17,7 +17,6 @@
 
 from courses.along_road import Along_Road
 from courses.along_road import declare_along_road_params
-from courses.along_road import create_along_road_subscription
 from courses.figure_eight import Figure_Eight
 from courses.figure_eight import declare_figure_eight_params
 from courses.reversal_loop_circle import Reversal_Loop_Circle
@@ -57,7 +56,7 @@ def create_course_subscription(course_name, node):
     elif course_name == "reversal_loop_circle":
         pass
     elif course_name == "along_road":
-        create_along_road_subscription(node)
+        pass
 
 def load_course(course_name, step_size, params_dict):
     # Load the course based on the course name

@@ -61,16 +61,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         super().__init__("data_collecting_trajectory_publisher")
 
         self.declare_parameter(
-            "COURSE_NAME",
-            "eight_course",
-            ParameterDescriptor(
-                description="Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`]"
-            ),
-        )
-        # set course name
-        self.COURSE_NAME = self.get_parameter("COURSE_NAME").value
-
-        self.declare_parameter(
             "acc_kp",
             1.0,
             ParameterDescriptor(description="Pure pursuit accel command proportional gain"),
@@ -545,6 +535,8 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 present_acc,
                 self.collected_data_counts_of_vel_acc,
                 self.collected_data_counts_of_vel_steer,
+                self.mask_vel_acc,
+                self.mask_velocity_steer
             )
 
             trajectory_longitudinal_velocity_data = np.array(
