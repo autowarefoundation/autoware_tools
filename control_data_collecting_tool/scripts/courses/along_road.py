@@ -85,6 +85,13 @@ def declare_along_road_params(node):
             description="The latitude of the origin specified when loading the map"
         ),
     )
+    node.declare_parameter(
+        "map_path",
+        "",
+        descriptor=ParameterDescriptor(
+            description="Path to the map directory", dynamic_typing=True
+        ),
+    )
 
 
 class Along_Road(Base_Course):

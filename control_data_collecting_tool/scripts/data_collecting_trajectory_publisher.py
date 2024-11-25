@@ -164,14 +164,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             ParameterDescriptor(description="Maximum velocity for data collection [m/ss]"),
         )
 
-        self.declare_parameter(
-            "map_path",
-            None,
-            descriptor=ParameterDescriptor(
-                description="Path to the map directory", dynamic_typing=True
-            ),
-        )
-
         """
         Declare course specific parameters
         """

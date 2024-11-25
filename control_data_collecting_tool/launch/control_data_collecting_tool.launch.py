@@ -37,7 +37,11 @@ def get_course_name(yaml_file_path):
 
 def generate_launch_description():
     # Define the argument for map_path
-    DeclareLaunchArgument("map_path", description="Path to the map directory")
+    map_path_arg = DeclareLaunchArgument(
+        "map_path",
+        description="Path to the map directory (optional; defaults to None if not provided).",
+        default_value="",  # Default to None
+    )
     # Use the map_path argument in parameters
     map_path = LaunchConfiguration("map_path")
 
@@ -53,6 +57,7 @@ def generate_launch_description():
 
     return launch.LaunchDescription(
         [
+            map_path_arg,
             Node(
                 package="control_data_collecting_tool",
                 executable="data_collecting_pure_pursuit_trajectory_follower.py",
