@@ -18,6 +18,8 @@ from courses.base_course import Base_Course
 from courses.lanelet import LaneletMapHandler
 import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
+from rclpy.qos import QoSProfile, QoSDurabilityPolicy
+from autoware_map_msgs.msg import LaneletMapBin
 from scipy.interpolate import interp1d
 
 
@@ -86,6 +88,22 @@ def declare_along_road_params(node):
         ),
     )
 
+def create_along_road_subscription(node):
+    qos_profile = QoSProfile(
+            depth=1,
+            durability=QoSDurabilityPolicy.TRANSIENT_LOCAL
+            )
+    
+    node.onVectorMap = def onVectorMap(node, msg):
+                            node.course.map = msg
+    node.onVectorMap = 
+
+    node.sub_vector_map_ = node.create_subscription(
+        LaneletMapBin,
+        "/map/vector_map",
+        node.onVectorMap,
+        qos_profile=qos_profile,
+    )
 
 class Along_Road(Base_Course):
     def __init__(self, step: float, param_dict):

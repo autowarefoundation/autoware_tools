@@ -17,6 +17,7 @@
 from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
 from courses.load_course import declare_course_params
+from courses.load_course import create_course_subscription
 from courses.load_course import load_course
 from data_collecting_base_node import DataCollectingBaseNode
 from geometry_msgs.msg import Point
@@ -25,6 +26,7 @@ from geometry_msgs.msg import PoseStamped
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import pi
+import queue
 from rcl_interfaces.msg import ParameterDescriptor
 import rclpy
 from scipy.spatial.transform import Rotation as R
@@ -172,11 +174,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             ),
         )
 
-        """
-        Declare course specific parameters
-        """
-        declare_course_params(self.COURSE_NAME, self)
-
         self.trajectory_for_collecting_data_pub_ = self.create_publisher(
             Trajectory,
             "/data_collecting_trajectory",
@@ -212,6 +209,14 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         )
         self.sub_data_collecting_area_
 
+        """
+        Declare course specific parameters
+        """
+        declare_course_params(self.COURSE_NAME, self)
+
+        self.updated_course_param_queue = queue.Queue()
+        create_course_subscription(self.COURSE_NAME, self)
+        
         # obtain ros params as dictionary
         param_names = self._parameters
         params = self.get_parameters(param_names)
