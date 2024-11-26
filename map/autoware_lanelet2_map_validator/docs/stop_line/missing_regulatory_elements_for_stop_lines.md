@@ -11,9 +11,9 @@ Required information for a stop line is written in the [Autoware documentation](
 
 The output issue marks "linestring" as the **primitive**, and the linestring ID is written together as **ID**.
 
-| Message                                           | Severity | Description                                                                                 | Approach                                                   |
-| ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| "No regulatory element refers to this stop line." | Error    | There is a `stop_line` type linestring that hasn't been referred to any regulatory element. | Create a regulatory element that refers to this stop line. |
+| Issue Code                             | Message                                           | Severity | Description                                                                                 | Approach                                                   |
+| -------------------------------------- | ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| StopLine.MissingRegulatoryElements-001 | "No regulatory element refers to this stop line." | Error    | There is a `stop_line` type linestring that hasn't been referred to any regulatory element. | Create a regulatory element that refers to this stop line. |
 
 ## Related source codes
 

@@ -36,37 +36,6 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, ValidatorAvailability)  // 
   EXPECT_EQ(expected_validator_name, validators[0]);
 }
 
-TEST_F(TestRegulatoryElementDetailsForTrafficLights, WrongRefersType)  // NOLINT for gtest
-{
-  load_target_map("traffic_light/traffic_light_with_wrong_refers_type.osm");
-
-  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
-  const auto & issues = checker(*map_);
-
-  EXPECT_EQ(issues.size(), 1);
-  EXPECT_EQ(issues[0].id, 416);
-  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
-  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::LineString);
-  EXPECT_EQ(
-    issues[0].message,
-    "Refers of traffic light regulatory element must have type of traffic_light.");
-}
-
-TEST_F(TestRegulatoryElementDetailsForTrafficLights, WrongRefLineType)  // NOLINT for gtest
-{
-  load_target_map("traffic_light/traffic_light_with_wrong_ref_line_type.osm");
-
-  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
-  const auto & issues = checker(*map_);
-
-  EXPECT_EQ(issues.size(), 1);
-  EXPECT_EQ(issues[0].id, 414);
-  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
-  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::LineString);
-  EXPECT_EQ(
-    issues[0].message, "ref_line of traffic light regulatory element must have type of stop_line.");
-}
-
 TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefers)  // NOLINT for gtest
 {
   load_target_map("traffic_light/traffic_light_regulatory_element_without_refers.osm");
@@ -102,7 +71,43 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefLine)  // NOLINT 
   EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
   EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
   EXPECT_EQ(
-    issues[0].message, "Regulatory element of traffic light must have a stop line(ref_line).");
+    issues[0].message,
+    "[TrafficLight.RegulatoryElementDetails-001] Regulatory element of traffic light must have a "
+    "stop line(ref_line).");
+}
+
+TEST_F(TestRegulatoryElementDetailsForTrafficLights, WrongRefersType)  // NOLINT for gtest
+{
+  load_target_map("traffic_light/traffic_light_with_wrong_refers_type.osm");
+
+  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  const auto & issues = checker(*map_);
+
+  EXPECT_EQ(issues.size(), 1);
+  EXPECT_EQ(issues[0].id, 416);
+  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
+  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::LineString);
+  EXPECT_EQ(
+    issues[0].message,
+    "[TrafficLight.RegulatoryElementDetails-002] Refers of traffic light regulatory element must "
+    "have type of traffic_light.");
+}
+
+TEST_F(TestRegulatoryElementDetailsForTrafficLights, WrongRefLineType)  // NOLINT for gtest
+{
+  load_target_map("traffic_light/traffic_light_with_wrong_ref_line_type.osm");
+
+  lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+  const auto & issues = checker(*map_);
+
+  EXPECT_EQ(issues.size(), 1);
+  EXPECT_EQ(issues[0].id, 414);
+  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
+  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::LineString);
+  EXPECT_EQ(
+    issues[0].message,
+    "[TrafficLight.RegulatoryElementDetails-003] ref_line of traffic light regulatory element must "
+    "have type of stop_line.");
 }
 
 TEST_F(TestRegulatoryElementDetailsForTrafficLights, CorrectDetails)  // NOLINT for gtest

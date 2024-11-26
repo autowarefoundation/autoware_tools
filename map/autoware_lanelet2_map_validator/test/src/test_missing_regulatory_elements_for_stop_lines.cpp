@@ -47,7 +47,9 @@ TEST_F(TestMissingRegulatoryElementsForStopLines, MissingRegulatoryElement)  // 
   EXPECT_EQ(issues[0].id, 2156);
   EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
   EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::LineString);
-  EXPECT_EQ(issues[0].message, "No regulatory element refers to this stop line.");
+  EXPECT_EQ(
+    issues[0].message,
+    "[StopLine.MissingRegulatoryElements-001] No regulatory element refers to this stop line.");
 }
 
 TEST_F(TestMissingRegulatoryElementsForStopLines, TrafficSignRegulatoryElement)  // NOLINT for gtest
