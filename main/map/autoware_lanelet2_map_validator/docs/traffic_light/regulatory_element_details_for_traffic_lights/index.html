@@ -3070,6 +3070,7 @@ This validator checks four types of issues.</p>
 <table>
 <thead>
 <tr>
+<th>Issue Code</th>
 <th>Message</th>
 <th>Severity</th>
 <th>Primitive</th>
@@ -3079,6 +3080,15 @@ This validator checks four types of issues.</p>
 </thead>
 <tbody>
 <tr>
+<td>TrafficLight.RegulatoryElementDetails-001</td>
+<td>"Regulatory element of traffic light must have a stop line(ref_line)."</td>
+<td>Error</td>
+<td>regulatory element</td>
+<td>There is a <code>traffic_light</code> subtype regulatory element that has no <code>ref_line</code>s</td>
+<td>Add <code>ref_line</code> to the regulatory element that refers to the id of the stop line linestring.</td>
+</tr>
+<tr>
+<td>TrafficLight.RegulatoryElementDetails-002</td>
 <td>"Refers of traffic light regulatory element must have type of traffic_light."</td>
 <td>Error</td>
 <td>linestring</td>
@@ -3086,25 +3096,12 @@ This validator checks four types of issues.</p>
 <td>Check that the <code>refers</code> in the regulatory element is a <code>traffic_light</code> type linestring.</td>
 </tr>
 <tr>
+<td>TrafficLight.RegulatoryElementDetails-003</td>
 <td>"ref_line of traffic light regulatory element must have type of stop_line."</td>
 <td>Error</td>
 <td>linestring</td>
 <td>There is a <code>traffic_light</code> subtype regulatory element whose <code>ref_line</code> is not a <code>stop_line</code> type linestring.</td>
 <td>Check that the <code>ref_line</code> in the regulatory element is a <code>stop_line</code> type linestring</td>
-</tr>
-<tr>
-<td>"Regulatory element of traffic light must have a traffic light(refers)."</td>
-<td>Error</td>
-<td>regulatory element</td>
-<td>There is a <code>traffic_light</code> subtype regulatory element that has no <code>refers</code>es.</td>
-<td>Add <code>refers</code> to the regulatory element that refers to the id of the traffic light linestring.</td>
-</tr>
-<tr>
-<td>"Regulatory element of traffic light must have a stop line(ref_line)."</td>
-<td>Error</td>
-<td>regulatory element</td>
-<td>There is a <code>traffic_light</code> subtype regulatory element that has no <code>ref_line</code>s</td>
-<td>Add <code>ref_line</code> to the regulatory element that refers to the id of the stop line linestring.</td>
 </tr>
 </tbody>
 </table>
