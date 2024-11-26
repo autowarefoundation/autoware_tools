@@ -53,7 +53,8 @@ std::string issue_code(const std::string & name, const int number)
   return snake_to_upper_camel(name_without_prefix) + '-' + id_num;
 }
 
-std::string issue_code_prefix(const std::string & name, const int number)
+std::string append_issue_code_prefix(
+  const std::string & name, const int number, const std::string & message)
 {
-  return "[" + issue_code(name, number) + "] ";
+  return "[" + issue_code(name, number) + "] " + message;
 }

@@ -85,23 +85,25 @@ RegulatoryElementsDetailsForTrafficLightsValidator::checkRegulatoryElementOfTraf
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
         elem->id(),
-        issue_code_prefix(this->name(), 1) +
-          "Regulatory element of traffic light must have a stop line(ref_line).");
+        append_issue_code_prefix(
+          this->name(), 1, "Regulatory element of traffic light must have a stop line(ref_line)."));
     }
 
     const auto & issue_tl = lanelet::validation::Issue(
       lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString,
       lanelet::utils::getId(),
-      issue_code_prefix(this->name(), 2) +
-        "Refers of traffic light regulatory element must have type of traffic_light.");
+      append_issue_code_prefix(
+        this->name(), 2,
+        "Refers of traffic light regulatory element must have type of traffic_light."));
     lanelet::autoware::validation::checkPrimitivesType(
       refers, lanelet::AttributeValueString::TrafficLight, issue_tl, issues);
 
     const auto & issue_sl = lanelet::validation::Issue(
       lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString,
       lanelet::utils::getId(),
-      issue_code_prefix(this->name(), 3) +
-        "ref_line of traffic light regulatory element must have type of stop_line.");
+      append_issue_code_prefix(
+        this->name(), 3,
+        "ref_line of traffic light regulatory element must have type of stop_line."));
     lanelet::autoware::validation::checkPrimitivesType(
       ref_lines, lanelet::AttributeValueString::StopLine, issue_sl, issues);
   }
