@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm generator="VMB">
+  <MetaInfo format_version="1" map_version="4"/>
+  <node id="12" lat="35.90312050245" lon="139.93336394515">
+    <tag k="local_x" v="3747.4346"/>
+    <tag k="local_y" v="73728.6136"/>
+    <tag k="ele" v="19.4901"/>
+  </node>
+  <node id="13" lat="35.90320613425" lon="139.93330587495">
+    <tag k="local_x" v="3742.2979"/>
+    <tag k="local_y" v="73738.169"/>
+    <tag k="ele" v="19.3342"/>
+  </node>
+  <node id="15" lat="35.90311179322" lon="139.93334454132">
+    <tag k="local_x" v="3745.673"/>
+    <tag k="local_y" v="73727.6667"/>
+    <tag k="ele" v="19.4901"/>
+  </node>
+  <node id="16" lat="35.90319742861" lon="139.93328647106">
+    <tag k="local_x" v="3740.5363"/>
+    <tag k="local_y" v="73737.2225"/>
+    <tag k="ele" v="19.3342"/>
+  </node>
+  <node id="19" lat="35.90319860143" lon="139.93328361742">
+    <tag k="local_x" v="3740.2802"/>
+    <tag k="local_y" v="73737.3554"/>
+    <tag k="ele" v="19.3398"/>
+  </node>
+  <node id="20" lat="35.90310780884" lon="139.93334429449">
+    <tag k="local_x" v="3745.6459"/>
+    <tag k="local_y" v="73727.225"/>
+    <tag k="ele" v="19.5744"/>
+  </node>
+  <node id="22" lat="35.90311865117" lon="139.93336826618">
+    <tag k="local_x" v="3747.8223"/>
+    <tag k="local_y" v="73728.404"/>
+    <tag k="ele" v="19.5843"/>
+  </node>
+  <node id="23" lat="35.90320841011" lon="139.93330702788">
+    <tag k="local_x" v="3742.4047"/>
+    <tag k="local_y" v="73738.4203"/>
+    <tag k="ele" v="19.338"/>
+  </node>
+  <node id="42" lat="35.90318584331" lon="139.93334682762">
+    <tag k="local_x" v="3745.969"/>
+    <tag k="local_y" v="73735.878"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="yellow"/>
+  </node>
+  <node id="43" lat="35.90318946024" lon="139.93334427583">
+    <tag k="local_x" v="3745.7431"/>
+    <tag k="local_y" v="73736.2817"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="green"/>
+  </node>
+  <node id="44" lat="35.90318207081" lon="139.93334942471">
+    <tag k="local_x" v="3746.1988"/>
+    <tag k="local_y" v="73735.457"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="red"/>
+  </node>
+  <node id="45" lat="35.9031922467" lon="139.93334221721">
+    <tag k="local_x" v="3745.5607"/>
+    <tag k="local_y" v="73736.5928"/>
+    <tag k="ele" v="24.809"/>
+  </node>
+  <node id="46" lat="35.90317961204" lon="139.93335122738">
+    <tag k="local_x" v="3746.3585"/>
+    <tag k="local_y" v="73735.1825"/>
+    <tag k="ele" v="24.809"/>
+  </node>
+  <node id="56" lat="35.90318757983" lon="139.93335039353">
+    <tag k="local_x" v="3746.2929"/>
+    <tag k="local_y" v="73736.0671"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="yellow"/>
+  </node>
+  <node id="57" lat="35.90318382047" lon="139.93335304807">
+    <tag k="local_x" v="3746.5279"/>
+    <tag k="local_y" v="73735.6475"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="green"/>
+  </node>
+  <node id="58" lat="35.90319114223" lon="139.93334789344">
+    <tag k="local_x" v="3746.0716"/>
+    <tag k="local_y" v="73736.4647"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="red"/>
+  </node>
+  <node id="59" lat="35.90318119147" lon="139.93335486965">
+    <tag k="local_x" v="3746.6891"/>
+    <tag k="local_y" v="73735.3541"/>
+    <tag k="ele" v="24.809"/>
+  </node>
+  <node id="60" lat="35.90319400648" lon="139.9333458637">
+    <tag k="local_x" v="3745.8919"/>
+    <tag k="local_y" v="73736.7844"/>
+    <tag k="ele" v="24.809"/>
+  </node>
+  <node id="63" lat="35.90312635061" lon="139.93330566026">
+    <tag k="local_x" v="3742.1819"/>
+    <tag k="local_y" v="73729.3197"/>
+    <tag k="ele" v="24.809"/>
+  </node>
+  <node id="64" lat="35.90313100244" lon="139.93329761823">
+    <tag k="local_x" v="3741.4618"/>
+    <tag k="local_y" v="73729.8436"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="yellow"/>
+  </node>
+  <node id="65" lat="35.90313461937" lon="139.93329506644">
+    <tag k="local_x" v="3741.2359"/>
+    <tag k="local_y" v="73730.2473"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="green"/>
+  </node>
+  <node id="66" lat="35.90312722995" lon="139.93330021533">
+    <tag k="local_x" v="3741.6916"/>
+    <tag k="local_y" v="73729.4226"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="red"/>
+  </node>
+  <node id="67" lat="35.90313740584" lon="139.93329300783">
+    <tag k="local_x" v="3741.0535"/>
+    <tag k="local_y" v="73730.5584"/>
+    <tag k="ele" v="24.809"/>
+  </node>
+  <node id="68" lat="35.90312477118" lon="139.933302018">
+    <tag k="local_x" v="3741.8513"/>
+    <tag k="local_y" v="73729.1481"/>
+    <tag k="ele" v="24.809"/>
+  </node>
+  <node id="69" lat="35.90313273896" lon="139.93330118303">
+    <tag k="local_x" v="3741.7856"/>
+    <tag k="local_y" v="73730.0327"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="yellow"/>
+  </node>
+  <node id="70" lat="35.90312897961" lon="139.93330383868">
+    <tag k="local_x" v="3742.0207"/>
+    <tag k="local_y" v="73729.6131"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="green"/>
+  </node>
+  <node id="71" lat="35.90313630136" lon="139.93329868405">
+    <tag k="local_x" v="3741.5644"/>
+    <tag k="local_y" v="73730.4303"/>
+    <tag k="ele" v="25.034"/>
+    <tag k="color" v="red"/>
+  </node>
+  <node id="72" lat="35.90313916562" lon="139.93329665432">
+    <tag k="local_x" v="3741.3847"/>
+    <tag k="local_y" v="73730.75"/>
+    <tag k="ele" v="24.809"/>
+  </node>
+  <node id="77" lat="35.90311677153" lon="139.93321604966">
+    <tag k="local_x" v="3734.0836"/>
+    <tag k="local_y" v="73728.3455"/>
+    <tag k="ele" v="19.367"/>
+  </node>
+  <node id="78" lat="35.90314916721" lon="139.93329022595">
+    <tag k="local_x" v="3740.8167"/>
+    <tag k="local_y" v="73731.8657"/>
+    <tag k="ele" v="19.3526"/>
+  </node>
+  <node id="80" lat="35.90314060072" lon="139.93320032692">
+    <tag k="local_x" v="3732.6936"/>
+    <tag k="local_y" v="73731.0041"/>
+    <tag k="ele" v="19.367"/>
+  </node>
+  <node id="81" lat="35.90317290257" lon="139.93327429172">
+    <tag k="local_x" v="3739.4075"/>
+    <tag k="local_y" v="73734.5141"/>
+    <tag k="ele" v="19.3526"/>
+  </node>
+  <node id="93" lat="35.90318486862" lon="139.93337056564">
+    <tag k="local_x" v="3748.11"/>
+    <tag k="local_y" v="73735.7465"/>
+    <tag k="ele" v="19.32"/>
+  </node>
+  <node id="95" lat="35.90320870704" lon="139.93335486496">
+    <tag k="local_x" v="3746.722"/>
+    <tag k="local_y" v="73738.4061"/>
+    <tag k="ele" v="19.32"/>
+  </node>
+  <node id="100" lat="35.90321444738" lon="139.93343840924">
+    <tag k="local_x" v="3754.2682"/>
+    <tag k="local_y" v="73738.9605"/>
+    <tag k="ele" v="19.3041"/>
+  </node>
+  <node id="102" lat="35.9032382858" lon="139.93342270858">
+    <tag k="local_x" v="3752.8802"/>
+    <tag k="local_y" v="73741.6201"/>
+    <tag k="ele" v="19.3041"/>
+  </node>
+  <node id="105" lat="35.90315717736" lon="139.93338915591">
+    <tag k="local_x" v="3749.7541"/>
+    <tag k="local_y" v="73732.6567"/>
+    <tag k="ele" v="19.32"/>
+  </node>
+  <node id="106" lat="35.90318663649" lon="139.9334567274">
+    <tag k="local_x" v="3755.8876"/>
+    <tag k="local_y" v="73735.8577"/>
+    <tag k="ele" v="19.3041"/>
+  </node>
+  <node id="119" lat="35.90312136648" lon="139.93330856838">
+    <tag k="local_x" v="3742.4383"/>
+    <tag k="local_y" v="73728.764"/>
+    <tag k="ele" v="19.3526"/>
+  </node>
+  <node id="126" lat="35.90308897081" lon="139.93323439211">
+    <tag k="local_x" v="3735.7052"/>
+    <tag k="local_y" v="73725.2438"/>
+    <tag k="ele" v="19.367"/>
+  </node>
+  <way id="14">
+    <nd ref="12"/>
+    <nd ref="13"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="17">
+    <nd ref="15"/>
+    <nd ref="16"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="47">
+    <nd ref="43"/>
+    <nd ref="42"/>
+    <nd ref="44"/>
+    <tag k="type" v="light_bulbs"/>
+    <tag k="traffic_light_id" v="48"/>
+  </way>
+  <way id="48">
+    <nd ref="45"/>
+    <nd ref="46"/>
+    <tag k="type" v="traffic_light"/>
+    <tag k="subtype" v="red_yellow_green"/>
+    <tag k="height" v="0.450000"/>
+  </way>
+  <way id="61">
+    <nd ref="57"/>
+    <nd ref="56"/>
+    <nd ref="58"/>
+    <tag k="type" v="light_bulbs"/>
+    <tag k="traffic_light_id" v="62"/>
+  </way>
+  <way id="62">
+    <nd ref="59"/>
+    <nd ref="60"/>
+    <tag k="type" v="traffic_light"/>
+    <tag k="subtype" v="red_yellow_green"/>
+    <tag k="height" v="0.450000"/>
+  </way>
+  <way id="73">
+    <nd ref="65"/>
+    <nd ref="64"/>
+    <nd ref="66"/>
+    <tag k="type" v="light_bulbs"/>
+    <tag k="traffic_light_id" v="74"/>
+  </way>
+  <way id="74">
+    <nd ref="67"/>
+    <nd ref="68"/>
+    <tag k="type" v="traffic_light"/>
+    <tag k="subtype" v="red_yellow_green"/>
+    <tag k="height" v="0.450000"/>
+  </way>
+  <way id="75">
+    <nd ref="70"/>
+    <nd ref="69"/>
+    <nd ref="71"/>
+    <tag k="type" v="light_bulbs"/>
+    <tag k="traffic_light_id" v="76"/>
+  </way>
+  <way id="76">
+    <nd ref="63"/>
+    <nd ref="72"/>
+    <tag k="type" v="traffic_light"/>
+    <tag k="subtype" v="red_yellow_green"/>
+    <tag k="height" v="0.450000"/>
+  </way>
+  <way id="79">
+    <nd ref="77"/>
+    <nd ref="78"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="82">
+    <nd ref="80"/>
+    <nd ref="81"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="94">
+    <nd ref="78"/>
+    <nd ref="93"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="96">
+    <nd ref="81"/>
+    <nd ref="95"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="101">
+    <nd ref="93"/>
+    <nd ref="100"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="103">
+    <nd ref="95"/>
+    <nd ref="102"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="107">
+    <nd ref="105"/>
+    <nd ref="106"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="120">
+    <nd ref="105"/>
+    <nd ref="119"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="127">
+    <nd ref="119"/>
+    <nd ref="126"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="129">
+    <nd ref="81"/>
+    <nd ref="78"/>
+    <tag k="type" v="stop_line"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="130">
+    <nd ref="105"/>
+    <nd ref="93"/>
+    <tag k="type" v="stop_line"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="24">
+    <nd ref="19"/>
+    <nd ref="20"/>
+    <nd ref="22"/>
+    <nd ref="23"/>
+    <tag k="type" v="crosswalk_polygon"/>
+    <tag k="area" v="yes"/>
+  </way>
+  <relation id="18">
+    <member type="way" role="left" ref="17"/>
+    <member type="way" role="right" ref="14"/>
+    <tag k="type" v="lanelet"/>
+    <tag k="subtype" v="crosswalk"/>
+    <tag k="speed_limit" v="10"/>
+    <tag k="location" v="urban"/>
+    <tag k="one_way" v="yes"/>
+    <tag k="participant:pedestrian" v="yes"/>
+  </relation>
+  <relation id="83">
+    <member type="way" role="left" ref="82"/>
+    <member type="way" role="right" ref="79"/>
+    <tag k="type" v="lanelet"/>
+    <tag k="subtype" v="road"/>
+    <tag k="speed_limit" v="10"/>
+    <tag k="location" v="urban"/>
+    <tag k="one_way" v="yes"/>
+  </relation>
+  <relation id="97">
+    <member type="way" role="left" ref="96"/>
+    <member type="way" role="right" ref="94"/>
+    <member type="relation" role="regulatory_element" ref="131"/>
+    <member type="relation" role="regulatory_element" ref="133"/>
+    <tag k="type" v="lanelet"/>
+    <tag k="subtype" v="road"/>
+    <tag k="speed_limit" v="10"/>
+    <tag k="location" v="urban"/>
+    <tag k="one_way" v="yes"/>
+  </relation>
+  <relation id="104">
+    <member type="way" role="left" ref="103"/>
+    <member type="way" role="right" ref="101"/>
+    <tag k="type" v="lanelet"/>
+    <tag k="subtype" v="road"/>
+    <tag k="speed_limit" v="10"/>
+    <tag k="location" v="urban"/>
+    <tag k="one_way" v="yes"/>
+  </relation>
+  <relation id="108">
+    <member type="way" role="left" ref="107"/>
+    <member type="way" role="right" ref="101"/>
+    <tag k="type" v="lanelet"/>
+    <tag k="subtype" v="road"/>
+    <tag k="speed_limit" v="10"/>
+    <tag k="location" v="urban"/>
+    <tag k="one_way" v="yes"/>
+  </relation>
+  <relation id="121">
+    <member type="way" role="left" ref="120"/>
+    <member type="way" role="right" ref="94"/>
+    <member type="relation" role="regulatory_element" ref="132"/>
+    <member type="relation" role="regulatory_element" ref="133"/>
+    <tag k="type" v="lanelet"/>
+    <tag k="subtype" v="road"/>
+    <tag k="speed_limit" v="10"/>
+    <tag k="location" v="urban"/>
+    <tag k="one_way" v="yes"/>
+  </relation>
+  <relation id="128">
+    <member type="way" role="left" ref="127"/>
+    <member type="way" role="right" ref="79"/>
+    <tag k="type" v="lanelet"/>
+    <tag k="subtype" v="road"/>
+    <tag k="speed_limit" v="10"/>
+    <tag k="location" v="urban"/>
+    <tag k="one_way" v="yes"/>
+  </relation>
+  <relation id="131">
+    <member type="way" role="refers" ref="48"/>
+    <member type="way" role="refers" ref="74"/>
+    <member type="way" role="refers" ref="62"/>
+    <member type="way" role="refers" ref="76"/>
+    <member type="way" role="light_bulbs" ref="47"/>
+    <member type="way" role="light_bulbs" ref="73"/>
+    <member type="way" role="light_bulbs" ref="61"/>
+    <member type="way" role="light_bulbs" ref="75"/>
+    <member type="way" role="ref_line" ref="129"/>
+    <tag k="type" v="regulatory_element"/>
+    <tag k="subtype" v="traffic_light"/>
+  </relation>
+  <relation id="132">
+    <member type="way" role="refers" ref="62"/>
+    <member type="way" role="refers" ref="76"/>
+    <member type="way" role="refers" ref="48"/>
+    <member type="way" role="refers" ref="74"/>
+    <member type="way" role="light_bulbs" ref="61"/>
+    <member type="way" role="light_bulbs" ref="75"/>
+    <member type="way" role="light_bulbs" ref="47"/>
+    <member type="way" role="light_bulbs" ref="73"/>
+    <member type="way" role="ref_line" ref="130"/>
+    <tag k="type" v="regulatory_element"/>
+    <tag k="subtype" v="traffic_light"/>
+  </relation>
+  <relation id="133">
+    <member type="way" role="crosswalk_polygon" ref="24"/>
+    <member type="relation" role="refers" ref="18"/>
+    <tag k="type" v="regulatory_element"/>
+    <tag k="subtype" v="crosswalk"/>
+  </relation>
+</osm>
