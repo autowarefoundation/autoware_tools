@@ -536,7 +536,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 self.collected_data_counts_of_vel_acc,
                 self.collected_data_counts_of_vel_steer,
                 self.mask_vel_acc,
-                self.mask_velocity_steer
+                self.mask_vel_steer
             )
 
             trajectory_longitudinal_velocity_data = np.array(

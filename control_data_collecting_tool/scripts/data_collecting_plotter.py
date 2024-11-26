@@ -66,7 +66,7 @@ class DataCollectingPlotter(DataCollectingBaseNode):
             self.timer_callback_plotter,
         )
 
-        self.fig, self.axs = plt.subplots(3, 1, figsize=(12, 20))
+        self.fig, self.axs = plt.subplots(4, 1, figsize=(12, 20))
         plt.ion()
         self.cmap = ListedColormap(["blue", "yellowgreen"])
         self.vel_acc_heatmap_norm = Normalize(vmin=0, vmax=2*self.VEL_ACC_THRESHOLD)
@@ -85,6 +85,14 @@ class DataCollectingPlotter(DataCollectingBaseNode):
             Int32MultiArray,
             "/control_data_collecting_tools/collected_data_counts_of_vel_steer",
             self.subscribe_collected_data_counts_of_vel_steer,
+            10,
+        )
+        self.collected_data_counts_of_vel_steer_subscription_
+
+        self.collected_data_counts_of_vel_steer_rate_subscription_ = self.create_subscription(
+            Int32MultiArray,
+            "/control_data_collecting_tools/collected_data_counts_of_vel_steer_rate",
+            self.subscribe_collected_data_counts_of_vel_steer_rate,
             10,
         )
         self.collected_data_counts_of_vel_steer_subscription_
@@ -117,6 +125,11 @@ class DataCollectingPlotter(DataCollectingBaseNode):
         rows = msg.layout.dim[0].size
         cols = msg.layout.dim[1].size
         self.collected_data_counts_of_vel_steer = np.array(msg.data).reshape((rows, cols))
+
+    def subscribe_collected_data_counts_of_vel_steer_rate(self, msg):
+        rows = msg.layout.dim[0].size
+        cols = msg.layout.dim[1].size
+        self.collected_data_counts_of_vel_steer_rate = np.array(msg.data).reshape((rows, cols))
 
     def subscribe_acc_hist(self, msg):
         self.acc_hist = msg.data
@@ -222,6 +235,49 @@ class DataCollectingPlotter(DataCollectingBaseNode):
         # update collected steer and velocity grid
         self.axs[2].set_xlabel("Velocity bins")
         self.axs[2].set_ylabel("Steer bins")
+
+
+        for collection in self.axs[3].collections:
+            if collection.colorbar is not None:
+                collection.colorbar.remove()
+        self.axs[3].cla()
+
+        self.heatmap = sns.heatmap(
+            self.collected_data_counts_of_vel_steer_rate.T,
+            annot=True,
+            cmap=self.cmap,
+            norm=self.vel_steer_rate_heatmap_norm,
+            xticklabels=np.round(self.v_bin_centers, 2),
+            yticklabels=np.round(self.steer_rate_bin_centers, 2),
+            ax=self.axs[3],
+            linewidths=0.1,
+            linecolor="gray",
+            cbar_kws={'ticks':[0, self.VEL_STEER_THRESHOLD]}
+        )
+
+        # Display mask
+        for i in range(self.collected_data_counts_of_vel_steer_rate.shape[0]):
+            for j in range(self.collected_data_counts_of_vel_steer_rate.shape[1]):
+                if self.mask_vel_steer_rate[i, j] == 1:
+                    rect = Rectangle(
+                        (i, j), 1, 1,
+                        linewidth=0.25,
+                        edgecolor='black',
+                        facecolor='none'
+                    )
+                    self.axs[3].add_patch(rect)
+                else:
+                    rect = Rectangle(
+                        (i, j), 1, 1,
+                        linewidth=0.25,
+                        edgecolor='black',
+                        facecolor='gray'
+                    )
+                    self.axs[3].add_patch(rect)
+
+        # update collected steer and velocity grid
+        self.axs[3].set_xlabel("Velocity bins")
+        self.axs[3].set_ylabel("Steer_Rate bins")
 
         self.fig.canvas.draw()
 

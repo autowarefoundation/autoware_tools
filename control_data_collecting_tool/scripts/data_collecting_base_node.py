@@ -225,8 +225,8 @@ class DataCollectingBaseNode(Node):
         mask_velocity_steering_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering.txt")
         self.mask_vel_steer = self.load_mask_from_txt(mask_velocity_steering_path, self.num_bins_v, self.num_bins_steer)
 
-        mask_velocity_steering_rate_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt")
-        self.mask_vel_steering_rate = self.load_mask_from_txt(mask_velocity_steering_rate_path, self.num_bins_v, self.num_bins_steer_rate)
+        mask_velocity_steer_rate_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt")
+        self.mask_vel_steer_rate = self.load_mask_from_txt(mask_velocity_steer_rate_path, self.num_bins_v, self.num_bins_steer_rate)
 
     def onOdometry(self, msg):
         self._present_kinematic_state = msg
