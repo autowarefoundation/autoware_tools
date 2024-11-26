@@ -36,97 +36,6 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, ValidatorAvailability)  // NO
   EXPECT_EQ(expected_validator_name, validators[0]);
 }
 
-TEST_F(TestRegulatoryElementsDetailsForCrosswalks, WrongRefersType)  // NOLINT for gtest
-{
-  load_target_map("crosswalk/crosswalk_with_wrong_refers_type.osm");
-
-  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map_);
-
-  EXPECT_EQ(issues.size(), 1);
-  EXPECT_EQ(issues[0].id, 18);
-  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
-  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::Lanelet);
-  EXPECT_EQ(
-    issues[0].message, "Refers of crosswalk regulatory element must have type of crosswalk.");
-}
-
-TEST_F(TestRegulatoryElementsDetailsForCrosswalks, WrongRefLineType)  // NOLINT for gtest
-{
-  load_target_map("crosswalk/crosswalk_with_wrong_ref_line_type.osm");
-
-  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map_);
-
-  EXPECT_EQ(issues.size(), 1);
-  EXPECT_EQ(issues[0].id, 27);
-  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
-  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::LineString);
-  EXPECT_EQ(
-    issues[0].message, "ref_line of crosswalk regulatory element must have type of stopline.");
-}
-
-TEST_F(TestRegulatoryElementsDetailsForCrosswalks, WrongPolygonType)  // NOLINT for gtest
-{
-  load_target_map("crosswalk/crosswalk_with_wrong_polygon_type.osm");
-
-  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map_);
-
-  EXPECT_EQ(issues.size(), 1);
-  EXPECT_EQ(issues[0].id, 24);
-  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
-  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::Polygon);
-  EXPECT_EQ(
-    issues[0].message,
-    "Crosswalk polygon of crosswalk regulatory element must have type of crosswalk_polygon.");
-}
-
-TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MissingPolygon)  // NOLINT for gtest
-{
-  load_target_map("crosswalk/crosswalk_without_polygon.osm");
-
-  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map_);
-
-  EXPECT_EQ(issues.size(), 1);
-  EXPECT_EQ(issues[0].id, 31);
-  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Warning);
-  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
-  EXPECT_EQ(
-    issues[0].message, "Regulatory element of crosswalk is nice to have crosswalk_polygon.");
-}
-
-TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MultiplePolygon)  // NOLINT for gtest
-{
-  load_target_map("crosswalk/crosswalk_with_multiple_polygons.osm");
-
-  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map_);
-
-  EXPECT_EQ(issues.size(), 1);
-  EXPECT_EQ(issues[0].id, 31);
-  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
-  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
-  EXPECT_EQ(
-    issues[0].message, "Regulatory element of crosswalk must have only one crosswalk_polygon.");
-}
-
-TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MissingRefLine)  // NOLINT for gtest
-{
-  load_target_map("crosswalk/crosswalk_without_stop_line.osm");
-
-  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
-  const auto & issues = checker(*map_);
-
-  EXPECT_EQ(issues.size(), 1);
-  EXPECT_EQ(issues[0].id, 31);
-  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Info);
-  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
-  EXPECT_EQ(
-    issues[0].message, "Regulatory element of crosswalk does not have stop line(ref_line).");
-}
-
 TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MissingRefers)  // NOLINT for gtest
 {
   load_target_map("crosswalk/crosswalk_regulatory_element_without_refers.osm");
@@ -139,7 +48,9 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MissingRefers)  // NOLINT for
   EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
   EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
   EXPECT_EQ(
-    issues[0].message, "Regulatory element of crosswalk must have lanelet of crosswalk(refers).");
+    issues[0].message,
+    "[Crosswalk.RegulatoryElementDetails-001] Regulatory element of crosswalk must have "
+    "lanelet of crosswalk(refers).");
 }
 
 TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MultipleRefers)  // NOLINT for gtest
@@ -155,7 +66,110 @@ TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MultipleRefers)  // NOLINT fo
   EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
   EXPECT_EQ(
     issues[0].message,
-    "Regulatory element of crosswalk must have only one lanelet of crosswalk(refers).");
+    "[Crosswalk.RegulatoryElementDetails-002] Regulatory element of crosswalk must have "
+    "only one lanelet of crosswalk(refers).");
+}
+
+TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MissingRefLine)  // NOLINT for gtest
+{
+  load_target_map("crosswalk/crosswalk_without_stop_line.osm");
+
+  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  const auto & issues = checker(*map_);
+
+  EXPECT_EQ(issues.size(), 1);
+  EXPECT_EQ(issues[0].id, 31);
+  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Info);
+  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
+  EXPECT_EQ(
+    issues[0].message,
+    "[Crosswalk.RegulatoryElementDetails-003] Regulatory element of crosswalk does not "
+    "have stop line(ref_line).");
+}
+
+TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MissingPolygon)  // NOLINT for gtest
+{
+  load_target_map("crosswalk/crosswalk_without_polygon.osm");
+
+  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  const auto & issues = checker(*map_);
+
+  EXPECT_EQ(issues.size(), 1);
+  EXPECT_EQ(issues[0].id, 31);
+  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Warning);
+  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
+  EXPECT_EQ(
+    issues[0].message,
+    "[Crosswalk.RegulatoryElementDetails-004] Regulatory element of crosswalk is nice to "
+    "have crosswalk_polygon.");
+}
+
+TEST_F(TestRegulatoryElementsDetailsForCrosswalks, MultiplePolygon)  // NOLINT for gtest
+{
+  load_target_map("crosswalk/crosswalk_with_multiple_polygons.osm");
+
+  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  const auto & issues = checker(*map_);
+
+  EXPECT_EQ(issues.size(), 1);
+  EXPECT_EQ(issues[0].id, 31);
+  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
+  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
+  EXPECT_EQ(
+    issues[0].message,
+    "[Crosswalk.RegulatoryElementDetails-005] Regulatory element of crosswalk must have "
+    "only one crosswalk_polygon.");
+}
+
+TEST_F(TestRegulatoryElementsDetailsForCrosswalks, WrongRefersType)  // NOLINT for gtest
+{
+  load_target_map("crosswalk/crosswalk_with_wrong_refers_type.osm");
+
+  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  const auto & issues = checker(*map_);
+
+  EXPECT_EQ(issues.size(), 1);
+  EXPECT_EQ(issues[0].id, 18);
+  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
+  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::Lanelet);
+  EXPECT_EQ(
+    issues[0].message,
+    "[Crosswalk.RegulatoryElementDetails-006] Refers of crosswalk regulatory element must "
+    "have type of crosswalk.");
+}
+
+TEST_F(TestRegulatoryElementsDetailsForCrosswalks, WrongRefLineType)  // NOLINT for gtest
+{
+  load_target_map("crosswalk/crosswalk_with_wrong_ref_line_type.osm");
+
+  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  const auto & issues = checker(*map_);
+
+  EXPECT_EQ(issues.size(), 1);
+  EXPECT_EQ(issues[0].id, 27);
+  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
+  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::LineString);
+  EXPECT_EQ(
+    issues[0].message,
+    "[Crosswalk.RegulatoryElementDetails-007] ref_line of crosswalk regulatory element "
+    "must have type of stopline.");
+}
+
+TEST_F(TestRegulatoryElementsDetailsForCrosswalks, WrongPolygonType)  // NOLINT for gtest
+{
+  load_target_map("crosswalk/crosswalk_with_wrong_polygon_type.osm");
+
+  lanelet::autoware::validation::RegulatoryElementsDetailsForCrosswalksValidator checker;
+  const auto & issues = checker(*map_);
+
+  EXPECT_EQ(issues.size(), 1);
+  EXPECT_EQ(issues[0].id, 24);
+  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
+  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::Polygon);
+  EXPECT_EQ(
+    issues[0].message,
+    "[Crosswalk.RegulatoryElementDetails-008] Crosswalk polygon of crosswalk regulatory "
+    "element must have type of crosswalk_polygon.");
 }
 
 TEST_F(TestRegulatoryElementsDetailsForCrosswalks, CorrectDetails)  // NOLINT for gtest

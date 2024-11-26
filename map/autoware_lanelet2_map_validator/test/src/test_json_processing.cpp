@@ -128,7 +128,7 @@ TEST_F(JsonProcessingTest, DescribeUnusedValidatorsToJson)
   auto detected_issues = describe_unused_validators_to_json(sample_input_data, error_validators);
   EXPECT_EQ(detected_issues.size(), 1);
   EXPECT_EQ(detected_issues[0].issues.size(), 3);
-  EXPECT_EQ(detected_issues[0].checkName, "invalid_prerequisites");
+  EXPECT_EQ(detected_issues[0].checkName, "general.invalid_prerequisites");
   EXPECT_EQ(detected_issues[0].issues[0].severity, lanelet::validation::Severity::Error);
   EXPECT_EQ(detected_issues[0].issues[1].severity, lanelet::validation::Severity::Error);
   EXPECT_EQ(detected_issues[0].issues[2].severity, lanelet::validation::Severity::Error);

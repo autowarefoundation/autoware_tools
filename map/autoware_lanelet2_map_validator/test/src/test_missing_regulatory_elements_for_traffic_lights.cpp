@@ -47,7 +47,10 @@ TEST_F(TestMissingRegulatoryElementsForTrafficLights, MissingRegulatoryElement) 
   EXPECT_EQ(issues[0].id, 416);
   EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
   EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::LineString);
-  EXPECT_EQ(issues[0].message, "No regulatory element refers to this traffic light.");
+  EXPECT_EQ(
+    issues[0].message,
+    "[TrafficLight.MissingRegulatoryElements-001] No regulatory element refers to this traffic "
+    "light.");
 }
 
 TEST_F(TestMissingRegulatoryElementsForTrafficLights, RegulatoryElementExists)  // NOLINT for gtest

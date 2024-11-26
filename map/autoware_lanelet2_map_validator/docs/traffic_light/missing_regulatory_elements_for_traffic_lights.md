@@ -11,9 +11,9 @@ Required information for traffic lights is written in the [Autoware documentatio
 
 The output issue marks "linestring" as the **primitive**, and the linestring ID is written together as **ID**.
 
-| Message                                               | Severity | Description                                                                                     | Approach                                                                           |
-| ----------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| "No regulatory element refers to this traffic light." | Error    | There is a `traffic_light` type linestring that hasn't been referred to any regulatory element. | Create a `traffic_light` subtype regulatory element that refers to this linestring |
+| Issue Code                                 | Message                                               | Severity | Description                                                                                     | Approach                                                                           |
+| ------------------------------------------ | ----------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| TrafficLight.MissingRegulatoryElements-001 | "No regulatory element refers to this traffic light." | Error    | There is a `traffic_light` type linestring that hasn't been referred to any regulatory element. | Create a `traffic_light` subtype regulatory element that refers to this linestring |
 
 ## Related source codes
 
