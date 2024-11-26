@@ -3070,6 +3070,7 @@ This validator checks eight types of issues.</p>
 <table>
 <thead>
 <tr>
+<th>Issue Code</th>
 <th>Message</th>
 <th>Severity</th>
 <th>Primitive</th>
@@ -3079,27 +3080,7 @@ This validator checks eight types of issues.</p>
 </thead>
 <tbody>
 <tr>
-<td>"Refers of crosswalk regulatory element must have type of crosswalk."</td>
-<td>Error</td>
-<td>lanelet</td>
-<td>There is a <code>crosswalk</code> subtype regulatory element whose <code>refers</code> is not a <code>crosswalk</code> subtype lanelet.</td>
-<td>Check that the <code>refers</code> is a <code>crosswalk</code> subtype lanelet</td>
-</tr>
-<tr>
-<td>"ref_line of crosswalk regulatory element must have type of stopline."</td>
-<td>Error</td>
-<td>linestring</td>
-<td>There is a <code>crosswalk</code> subtype regulatory element whose <code>ref_line</code> is not a <code>stop_line</code> type linestring.</td>
-<td>Check that the <code>ref_line</code> is a <code>stop_line</code> type linestring</td>
-</tr>
-<tr>
-<td>"Crosswalk polygon of crosswalk regulatory element must have type of crosswalk_polygon."</td>
-<td>Error</td>
-<td>polygon</td>
-<td>There is a <code>crosswalk</code> subtype regulatory element whose <code>crosswalk_polygon</code> is not a <code>crosswalk_polygon</code> type polygon.</td>
-<td>Check that the <code>crosswalk_polygon</code> mentioned in the regulatory element refers to a <code>crosswalk_polygon</code> type area.</td>
-</tr>
-<tr>
+<td>Crosswalk.RegulatoryElementDetails-001</td>
 <td>"Regulatory element of crosswalk must have lanelet of crosswalk(refers)."</td>
 <td>Error</td>
 <td>regulatory element</td>
@@ -3107,6 +3088,7 @@ This validator checks eight types of issues.</p>
 <td>Write <code>refers</code> referring to a <code>crosswalk</code> subtype lanelet in the regulatory element</td>
 </tr>
 <tr>
+<td>Crosswalk.RegulatoryElementDetails-002</td>
 <td>"Regulatory element of crosswalk must have only one lanelet of crosswalk(refers)."</td>
 <td>Error</td>
 <td>regulatory element</td>
@@ -3114,6 +3096,7 @@ This validator checks eight types of issues.</p>
 <td>A <code>crosswalk</code> subtype regulatory element can have only one <code>refers</code>. Remove the <code>refers</code> that is not a crosswalk lanelet.</td>
 </tr>
 <tr>
+<td>Crosswalk.RegulatoryElementDetails-003</td>
 <td>"Regulatory element of crosswalk does not have stop line(ref_line)."</td>
 <td>Info</td>
 <td>regulatory element</td>
@@ -3121,6 +3104,7 @@ This validator checks eight types of issues.</p>
 <td>Generally, there should be a stop line for the crosswalk. Be sure that the stop line exists or doesn't.</td>
 </tr>
 <tr>
+<td>Crosswalk.RegulatoryElementDetails-004</td>
 <td>"Regulatory element of crosswalk is nice to have crosswalk_polygon."</td>
 <td>Warning</td>
 <td>regulatory element</td>
@@ -3128,11 +3112,36 @@ This validator checks eight types of issues.</p>
 <td>It is recommended to surround a crosswalk with a <code>crosswalk_polygon</code>. Create one and add a <code>crosswalk_polygon</code> role member to the regulatory element with the polygon ID.</td>
 </tr>
 <tr>
+<td>Crosswalk.RegulatoryElementDetails-005</td>
 <td>"Regulatory element of crosswalk must have only one crosswalk_polygon."</td>
 <td>Error</td>
 <td>regulatory element</td>
 <td>There is a <code>crosswalk</code> subtype regulatory element that has multiple <code>crosswalk_polygon</code>s.</td>
-<td>Only one <code>crosswalk_polygon</code> is allowed per polygon. Remove the unnecessary ones.</td>
+<td>Only one <code>crosswalk_polygon</code> is allowed per crosswalk. Remove the unnecessary ones.</td>
+</tr>
+<tr>
+<td>Crosswalk.RegulatoryElementDetails-006</td>
+<td>"Refers of crosswalk regulatory element must have type of crosswalk."</td>
+<td>Error</td>
+<td>lanelet</td>
+<td>There is a <code>crosswalk</code> subtype regulatory element whose <code>refers</code> is not a <code>crosswalk</code> subtype lanelet.</td>
+<td>Check that the <code>refers</code> is a <code>crosswalk</code> subtype lanelet</td>
+</tr>
+<tr>
+<td>Crosswalk.RegulatoryElementDetails-007</td>
+<td>"ref_line of crosswalk regulatory element must have type of stopline."</td>
+<td>Error</td>
+<td>linestring</td>
+<td>There is a <code>crosswalk</code> subtype regulatory element whose <code>ref_line</code> is not a <code>stop_line</code> type linestring.</td>
+<td>Check that the <code>ref_line</code> is a <code>stop_line</code> type linestring</td>
+</tr>
+<tr>
+<td>Crosswalk.RegulatoryElementDetails-008</td>
+<td>"Crosswalk polygon of crosswalk regulatory element must have type of crosswalk_polygon."</td>
+<td>Error</td>
+<td>polygon</td>
+<td>There is a <code>crosswalk</code> subtype regulatory element whose <code>crosswalk_polygon</code> is not a <code>crosswalk_polygon</code> type polygon.</td>
+<td>Check that the <code>crosswalk_polygon</code> mentioned in the regulatory element refers to a <code>crosswalk_polygon</code> type area.</td>
 </tr>
 </tbody>
 </table>
