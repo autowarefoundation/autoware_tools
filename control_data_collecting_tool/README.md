@@ -61,10 +61,10 @@ This package provides tools for automatically collecting data using pure pursuit
 4.  Launch control_data_collecting_tool.
 
     ```bash
-    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=:=$HOME/autoware_map/sample-map-planning
+    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
     ```
 
-    - Please specify the same map for `map_path` as the one provided when launching Autoware.
+    - If you use the `along_road` course, please specify the same map for `map_path` as the one used when launching Autoware. `map_path` is not necessary when using courses other than `along_road`.
 
     - Control data collecting tool automatically records topics included in `config/topics.yaml` when the above command is executed.
       Topics will be saved in rosbag2 format in the current directory.
