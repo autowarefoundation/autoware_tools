@@ -56,19 +56,6 @@ private:
     const lanelet::RegulatoryElementConstPtr & reg_elem);
 
   /**
-   * @brief Returns a linestring that connects both ends of the left and right bounds
-   * of the input lanelet. There might be two candidates (front and back) but this function
-   * only returns the one near to the input 'reference'. This is used to get a directional
-   * stop line from the lanelet here.
-   *
-   * @param lanelet
-   * @param reference
-   * @return lanelet::LineString3d
-   */
-  lanelet::LineString3d get_starting_edge_from_lanelet(
-    const lanelet::ConstLanelet & lanelet, const lanelet::ConstLineString3d & reference);
-
-  /**
    * @brief Returns lanelets that refers the regulatory element specified by the input id
    * from the input lanelet map.
    *
@@ -80,13 +67,26 @@ private:
     const lanelet::LaneletMap & map, const lanelet::Id reg_elem_id);
 
   /**
-   * @brief Convert lanelet::ConstLineString3d to a vector3d. The linestring must be made from two
-   * points.
+   * @brief Convert lanelet::ConstLineString3d to a Eigen::Vector3d.
+   * The linestring must be made only from two points.
    *
    * @param linestring
    * @return Eigen::Vector3d
    */
   Eigen::Vector3d linestring_to_vector3d(const lanelet::ConstLineString3d linestring);
+
+  /**
+   * @brief Returns a linestring that connects both ends of the left and right bounds
+   * of the input lanelet. There might be two candidates (front and back) but this function
+   * only returns the one near to the input 'reference'. This is used to get a directional
+   * stop line from the lanelet here.
+   *
+   * @param lanelet
+   * @param reference
+   * @return lanelet::LineString3d
+   */
+  lanelet::LineString3d get_starting_edge_from_lanelet(
+    const lanelet::ConstLanelet & lanelet, const lanelet::ConstLineString3d & reference);
 };
 }  // namespace lanelet::autoware::validation
 

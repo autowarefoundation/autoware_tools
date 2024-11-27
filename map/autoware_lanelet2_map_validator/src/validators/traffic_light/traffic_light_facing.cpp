@@ -82,8 +82,8 @@ lanelet::validation::Issues TrafficLightFacingValidator::check_traffic_light_fac
         continue;
       }
 
-      // Assume the psuedo stop line from the first lanelet and check it is similar to the ones
-      // of other lanelets
+      // Estimate the psuedo stop line from the first lanelet and check whether it is similar to
+      // those of other lanelets
       lanelet::ConstLineString3d temp_pseudo_stop_line =
         get_starting_edge_from_lanelet(referring_lanelets[0], stop_line);
 
