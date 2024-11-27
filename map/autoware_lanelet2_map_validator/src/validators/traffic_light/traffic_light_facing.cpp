@@ -94,12 +94,13 @@ lanelet::validation::Issues TrafficLightFacingValidator::check_traffic_light_fac
           linestring_to_vector3d(get_starting_edge_from_lanelet(referring_lanelets[i], stop_line));
         double cosine_angle =
           pseudo_stop_line.dot(comparing_line) / (pseudo_stop_line.norm() * comparing_line.norm());
-        if (cosine_angle < 0) {
+        if (cosine_angle < 0.707) {  // about 45 deg
           issues.emplace_back(
             lanelet::validation::Severity::Info, lanelet::validation::Primitive::LineString,
             refers_linestring.id(),
-            issue_code_prefix(this->name(), 1) +
-              "Lanelets referring this traffic_light have several divergent starting lines");
+            append_issue_code_prefix(
+              this->name(), 1,
+              "Lanelets referring this traffic_light have several divergent starting lines"));
         }
       }
 
@@ -122,12 +123,12 @@ lanelet::validation::Issues TrafficLightFacingValidator::check_traffic_light_fac
     if (!tl_has_been_judged_as_correct[id] && tl_has_been_judged_as_wrong[id]) {
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString, id,
-        issue_code_prefix(this->name(), 2) + "The linestring direction seems to be wrong.");
+        append_issue_code_prefix(this->name(), 2, "The linestring direction seems to be wrong."));
     } else if (tl_has_been_judged_as_correct[id] && tl_has_been_judged_as_wrong[id]) {
       issues.emplace_back(
         lanelet::validation::Severity::Warning, lanelet::validation::Primitive::LineString, id,
-        issue_code_prefix(this->name(), 3) +
-          "The linestring direction has been judged as both correct and wrong.");
+        append_issue_code_prefix(
+          this->name(), 3, "The linestring direction has been judged as both correct and wrong."));
     }
   }
 

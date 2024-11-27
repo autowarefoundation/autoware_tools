@@ -38,6 +38,23 @@ TEST_F(TestTrafficLightFacing, ValidatorAvailability)  // NOLINT for gtest
   EXPECT_EQ(expected_validator_name, validators[0]);
 }
 
+TEST_F(TestTrafficLightFacing, WrongReferrerLanelet)  // NOLINT for gtest
+{
+  load_target_map("traffic_light/traffic_light_with_wrong_referrer_lanelet.osm");
+
+  lanelet::autoware::validation::TrafficLightFacingValidator checker;
+  const auto & issues = checker(*map_);
+
+  EXPECT_EQ(issues.size(), 1);
+  EXPECT_EQ(issues[0].id, 416);
+  EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Info);
+  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::LineString);
+  EXPECT_EQ(
+    issues[0].message,
+    "[TrafficLight.CorrectFacing-001] "
+    "Lanelets referring this traffic_light have several divergent starting lines");
+}
+
 TEST_F(TestTrafficLightFacing, WrongTrafficLightFacing)  // NOLINT for gtest
 {
   load_target_map("traffic_light/crosswalk_with_wrong_traffic_light_facing.osm");

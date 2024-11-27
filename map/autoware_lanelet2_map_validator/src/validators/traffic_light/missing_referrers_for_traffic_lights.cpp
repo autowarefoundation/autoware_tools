@@ -57,8 +57,9 @@ MissingReferrersForTrafficLightsValidator::check_missing_referrers_for_traffic_l
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
         reg_elem->id(),
-        issue_code_prefix(this->name(), 1) +
-          "Regulatory element of traffic light must be referred by at least one lanelet.");
+        append_issue_code_prefix(
+          this->name(), 1,
+          "Regulatory element of traffic light must be referred by at least one lanelet."));
       continue;
     }
   }
