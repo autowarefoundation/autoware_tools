@@ -82,7 +82,7 @@ lanelet::validation::Issues TrafficLightFacingValidator::check_traffic_light_fac
         continue;
       }
 
-      // Estimate the psuedo stop line from the first lanelet and check whether it is similar to
+      // Estimate the pseudo stop line from the first lanelet and check whether it is similar to
       // those of other lanelets
       lanelet::ConstLineString3d temp_pseudo_stop_line =
         get_starting_edge_from_lanelet(referring_lanelets[0], stop_line);
@@ -104,7 +104,7 @@ lanelet::validation::Issues TrafficLightFacingValidator::check_traffic_light_fac
         }
       }
 
-      // A traffic light is facing correct if the inner product is positve to the psuedo stop line
+      // A traffic light is facing correct if the inner product is positive to the pseudo stop line
       Eigen::Vector3d traffic_light = linestring_to_vector3d(refers_linestring);
       double cosine_pseudo_stop_line_and_traffic_light =
         pseudo_stop_line.dot(traffic_light) / (pseudo_stop_line.norm() * traffic_light.norm());
@@ -116,7 +116,7 @@ lanelet::validation::Issues TrafficLightFacingValidator::check_traffic_light_fac
     }
   }
 
-  // Digest the stop line non-existance and the traffic light facing error to issues
+  // Digest the stop line non-existence and the traffic light facing error to issues
   for (const auto & entry : tl_has_been_judged_as_correct) {
     lanelet::Id id = entry.first;
 
