@@ -2,7 +2,6 @@
   ros__parameters:
     # Course Specific Parameters
     velocity_on_curve: 4.5
-    # Smoothing window for trajectory
     smoothing_window: 400
 
     # Data Collection Range

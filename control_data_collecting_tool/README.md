@@ -46,17 +46,15 @@ This package provides tools for automatically collecting data using pure pursuit
 
 ## How to Use
 
-1. Launch Autoware.
+1.  Launch Autoware.
 
-   ```bash
-   ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_map/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit
-   ```
+    ```bash
+    ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_map/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit
+    ```
 
-2. Set an initial pose, see [here](https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#2-set-an-initial-pose-for-the-ego-vehicle).
+2.  Set an initial pose, see [here](https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#2-set-an-initial-pose-for-the-ego-vehicle).
 
-3. Add the DataCollectingAreaSelectionTool and DataCollectingGoalPlugin RViz plugins by clicking the "+" icon at the top of the RViz window.
-
-<img src="resource/add_rviz_plugin.png" width="480">
+3.  Add the DataCollectingAreaSelectionTool and DataCollectingGoalPlugin RViz plugins by clicking the "+" icon at the top of the RViz window. <br> <img src="resource/add_rviz_plugin.png" width="480">
 
 4.  Launch control_data_collecting_tool.
 
@@ -81,9 +79,9 @@ This package provides tools for automatically collecting data using pure pursuit
     - `/data_collecting_lookahead_marker_array`
       - Type: MarkerArray
 
-6.  The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to i. If you select the trajectory from [`along_road`], please proceed to ii.
+6.  The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to 6.1. If you select the trajectory from [`along_road`], please proceed to 6.2.
 
-    - 6-1 If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
+    - 6.1 If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
 
       <img src="resource/DataCollectingAreaSelection.png" width="480">
 
@@ -94,7 +92,7 @@ This package provides tools for automatically collecting data using pure pursuit
       > [!NOTE]
       > You cannot change the data collecting area while driving.
 
-    - 6-2. If you choose the trajectory from [`along_road`], select `DataCollectingGoalPose` plugin.
+    - 6.2 If you choose the trajectory from [`along_road`], select `DataCollectingGoalPose` plugin.
 
         <img src="resource/DataCollectingGoalPose.png" width="480">
 
@@ -140,11 +138,11 @@ There are parameters that are common to all trajectories and parameters that are
 
 ### Common Parameters
 
-ROS 2 params which are common in all trajectories (`/config/common_param.yaml`):
+ROS 2 parameters which are common in all trajectories (`/config/common_param.yaml`):
 
 | Name                                     | Type     | Description                                                                                                                               | Default value          |
 | :--------------------------------------- | :------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :--------------------- |
-| `LOAD_ROSBAG2_FILES`                     | `bool`   | Flag that determines whether to load rosbag2 data or not                                                                                  | True                   |
+| `LOAD_ROSBAG2_FILES`                     | `bool`   | Flag that determines whether to load rosbag2 data or not                                                                                  | true                   |
 | `COURSE_NAME`                            | `string` | Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`] | `reversal_loop_circle` |
 | `NUM_BINS_V`                             | `int`    | Number of bins of velocity in heatmap                                                                                                     | 10                     |
 | `NUM_BINS_STEER`                         | `int`    | Number of bins of steer in heatmap                                                                                                        | 20                     |
@@ -154,10 +152,10 @@ ROS 2 params which are common in all trajectories (`/config/common_param.yaml`):
 | `STEER_MIN`                              | `double` | Minimum steer in heatmap [rad]                                                                                                            | -0.6                   |
 | `STEER_MAX`                              | `double` | Maximum steer in heatmap [rad]                                                                                                            | 0.6                    |
 | `A_MIN`                                  | `double` | Minimum acceleration in heatmap [m/ss]                                                                                                    | -1.0                   |
-| `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/ss]                                                                                                    | 2.0                    |
-| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                                                                     | 2.79                   |
-| `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]                                                                               | 0.75                   |
-| `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                                                                   | 1.0                    |
+| `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/ss]                                                                                                    | 1.0                    |
+| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                                                                     | 2.00                   |
+| `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]                                                                               | 1.50                   |
+| `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                                                                   | 0.75                   |
 | `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]                                                                        | 1.0                    |
 | `mov_ave_window`                         | `int`    | Moving average smoothing window size                                                                                                      | 50                     |
 | `target_longitudinal_velocity`           | `double` | Target longitudinal velocity [m/s]                                                                                                        | 6.0                    |
@@ -178,7 +176,7 @@ ROS 2 params which are common in all trajectories (`/config/common_param.yaml`):
 The following parameters are common to all trajectories but can be defined individually for each trajectory. (`/config/course_param/COURSE_NAME_param.yaml`):
 | Name | Type | Description | Default value |
 | :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
-| `COLLECTING_DATA_V_MIN` | `double` | Minimum velocity for data collection [m/s] | 0.0 |
+| `COLLECTING_DATA_V_MIN` | `double` | Minimum velocity for data collection [m/s] | 0.5 |
 | `COLLECTING_DATA_V_MAX` | `double` | Maximum velocity for data collection [m/s] | 8.0 |
 | `COLLECTING_DATA_A_MIN` | `double` | Minimum velocity for data collection [m/ss] | 1.0 |
 | `COLLECTING_DATA_A_MAX` | `double` | Maximum velocity for data collection [m/ss] | -1.0 |
@@ -227,10 +225,10 @@ Each trajectory has specific ROS 2 parameters.
 
 | Name                              | Type     | Description                                                         | Default value |
 | :-------------------------------- | :------- | :------------------------------------------------------------------ | :------------ |
-| `smoothing_window`                | `double` | Width of the window for trajectory smoothing                        | 100           |
 | `velocity_on_curve`               | `double` | Constant velocity on curve [m/s]                                    | 3.5           |
 | `stopping_buffer_distance`        | `double` | The safety distance from end of the straight line [m]               | 15.0          |
 | `course_width`                    | `double` | The width of the trajectory [m]                                     | 1.5           |
-| `minimum_length_of_straight_line` | `double` | TThe minimum length of straight line for data collection [m]        | 50.0          |
+| `smoothing_window`                | `double` | Width of the window for trajectory smoothing                        | 100           |
+| `minimum_length_of_straight_line` | `double` | The minimum length of straight line for data collection [m]         | 50.0          |
 | `longitude`                       | `double` | The longitude of the origin specified when loading the map [degree] | 139.6503      |
 | `latitude`                        | `double` | The latitude of the origin specified when loading the map [degree]  | 35.6762       |
