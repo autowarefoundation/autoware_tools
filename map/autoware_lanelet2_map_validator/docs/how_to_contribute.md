@@ -11,6 +11,8 @@ The main goal of `autoware_lanelet2_map_validator` is to validate whether the la
 
 The list of small validators will be defined as a JSON file (see [`autoware_requirement_set.json`](../autoware_requirement_set.json) for an example), and the output will also be a JSON file that appends validation results to a copy of the input. See [How to use `autoware_lanelet2_map_validator`](../README.md/#how-to-use) for further information about how the input and output are processed.
 
+![autoware_lanelet2_map_validator_input_and_output](../media/autoware_lanelet2_map_validator_io.svg)
+
 Please note that the validators are categorized according to [the vector map requirements written in the Autoware Documentation](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/). If there are any suggestions for new categories please let the pull request (PR) reviewers know. The available categories as of now are
 
 - Lane
