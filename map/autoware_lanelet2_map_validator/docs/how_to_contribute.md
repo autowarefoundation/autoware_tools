@@ -73,6 +73,8 @@ Contributors must also provide test codes to ensure your validator is working pr
   - A test function for each unique issue the validator can detect. It is recommended to create a small lanelet2 map for each unique issue.
     - In this test, please also check that the issue code is emitted as it is expected.
   - A test function that no issues occur when validating `test/data/map/sample_map.osm`. If `sample_map.osm` violates the validation or doesn't contain the primitive to validate, please fix or add the primitives to it.
+- Add the test codes to `CMakeLists.txt` using the `add_validation_test` function.
+  - Currently we have to add this part to `CMakeLists.txt` by hand. Automation is expected in the future.
 
 ### 3. Test the entire validator
 
