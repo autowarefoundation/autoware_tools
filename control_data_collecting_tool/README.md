@@ -46,6 +46,9 @@ This package provides tools for automatically collecting data using pure pursuit
 
 ## How to Use
 
+<!-- prettier-ignore-start -->
+<!-- Since markdownlint and prettier formats are different, use only markdownlint. -->
+
 1. Launch Autoware.
 
     ```bash
@@ -131,6 +134,8 @@ This package provides tools for automatically collecting data using pure pursuit
     ```bash
     ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once
     ```
+
+<!-- prettier-ignore-end -->
 
 ## Parameter
 
