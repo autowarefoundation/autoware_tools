@@ -185,6 +185,7 @@ def plot_distance_histogram(
         transform=plt.gca().transAxes,
         verticalalignment="top",
         horizontalalignment="right",
+        # cspell: disable-next-line
         bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.8},
     )
 
@@ -301,6 +302,7 @@ def compute_resolution(
     kdtree = o3d.geometry.KDTreeFlann(point_cloud)
     distances = []
 
+    # cspell: disable-next-line
     for point in tqdm(point_cloud.points, dynamic_ncols=True):
         # Find k nearest neighbors for each point
         [_, idx, dists] = kdtree.search_knn_vector_3d(point, k + 1)
@@ -333,7 +335,7 @@ def main():
     parser.add_argument(
         "--cache",
         action="store_true",
-        help="Cache the computed distance array into a tempory file, and will try to use cache",
+        help="Cache the computed distance array into a temporary file, and will try to use cache",
     )
     parser.add_argument(
         "--output", "-o", type=str, help="Output path for saving colored point cloud"
