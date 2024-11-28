@@ -13,6 +13,10 @@
 
   <license>Apache License 2.0</license>
 
+  <exec_depend>python3-matplotlib</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-open3d</exec_depend>
+  <exec_depend>python3-tqdm</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>tier4_debug_msgs</exec_depend>
 
