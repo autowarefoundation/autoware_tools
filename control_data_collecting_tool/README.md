@@ -46,17 +46,17 @@ This package provides tools for automatically collecting data using pure pursuit
 
 ## How to Use
 
-1.  Launch Autoware.
+1. Launch Autoware.
 
     ```bash
     ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_map/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit
     ```
 
-2.  Set an initial pose, see [here](https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#2-set-an-initial-pose-for-the-ego-vehicle).
+2. Set an initial pose, see [here](https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#2-set-an-initial-pose-for-the-ego-vehicle).
 
-3.  Add the DataCollectingAreaSelectionTool and DataCollectingGoalPlugin RViz plugins by clicking the "+" icon at the top of the RViz window. <br> <img src="resource/add_rviz_plugin.png" width="480">
+3. Add the DataCollectingAreaSelectionTool and DataCollectingGoalPlugin RViz plugins by clicking the "+" icon at the top of the RViz window. <br> <img src="resource/add_rviz_plugin.png" width="480">
 
-4.  Launch control_data_collecting_tool.
+4. Launch control_data_collecting_tool.
 
     ```bash
     ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
@@ -70,7 +70,7 @@ This package provides tools for automatically collecting data using pure pursuit
     - The data from `/localization/kinematic_state` and `/localization/acceleration` located in the directory (rosbag2 format) where the command is executed will be automatically loaded and reflected in the data count for these topics.
       (If `LOAD_ROSBAG2_FILES` in `config/param.yaml` is set to `false`, the data is not loaded.)
 
-5.  Add visualization in rviz:
+5. Add visualization in rviz:
 
     - `/data_collecting_area`
       - Type: Polygon
@@ -79,7 +79,7 @@ This package provides tools for automatically collecting data using pure pursuit
     - `/data_collecting_lookahead_marker_array`
       - Type: MarkerArray
 
-6.  The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to 6.1. If you select the trajectory from [`along_road`], please proceed to 6.2.
+6. The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to 6.1. If you select the trajectory from [`along_road`], please proceed to 6.2.
 
     - 6.1 If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
 
@@ -109,7 +109,7 @@ This package provides tools for automatically collecting data using pure pursuit
       > You cannot change the goal pose while driving.
       > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
 
-7.  Click the `LOCAL` button on `OperationMode` in `AutowareStatePanel`.
+7. Click the `LOCAL` button on `OperationMode` in `AutowareStatePanel`.
 
     <img src="resource/push_LOCAL.png" width="480">
 
@@ -117,7 +117,7 @@ This package provides tools for automatically collecting data using pure pursuit
 
     <img src="resource/push_LOCAL.gif" width="480">
 
-8.  If you want to stop data collecting automatic driving, run the following command
+8. If you want to stop data collecting automatic driving, run the following command
 
     ```bash
     ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: true" --once
@@ -126,7 +126,7 @@ This package provides tools for automatically collecting data using pure pursuit
     > [!NOTE]
     > When the car crosses the green boundary line, a similar stopping procedure will be automatically triggered.
 
-9.  If you want to restart data collecting automatic driving, run the following command
+9. If you want to restart data collecting automatic driving, run the following command
 
     ```bash
     ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once
