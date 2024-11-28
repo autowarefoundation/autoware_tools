@@ -16,10 +16,10 @@
 
 import time
 
+from autoware_adapi_v1_msgs.msg import OperationModeState
 from autoware_control_msgs.msg import Control as AckermannControlCommand
 from autoware_planning_msgs.msg import Path
 from autoware_planning_msgs.msg import Trajectory
-from autoware_vehicle_msgs.msg import Engage
 from autoware_vehicle_msgs.msg import VelocityReport
 from geometry_msgs.msg import Pose
 from nav_msgs.msg import Odometry
@@ -115,10 +115,10 @@ class VelocityChecker(Node):
 
         # others related to velocity
         self.sub8 = self.create_subscription(
-            Engage, "/autoware/engage", self.CallBackAwEngage, profile
-        )
-        self.sub12 = self.create_subscription(
-            Engage, "/vehicle/engage", self.CallBackVehicleEngage, profile
+            OperationModeState,
+            "/control/vehicle_cmd_gate/operation_mode",
+            self.CallBackAwEngage,
+            profile,
         )
         self.sub9 = self.create_subscription(
             VelocityLimit,
@@ -218,10 +218,8 @@ class VelocityChecker(Node):
         self.printInfo()
 
     def CallBackAwEngage(self, msg):
-        self.autoware_engage = msg.engage
-
-    def CallBackVehicleEngage(self, msg):
-        self.vehicle_engage = msg.engage
+        self.autoware_engage = msg.mode == OperationModeState.AUTONOMOUS
+        self.vehicle_engage = msg.is_autoware_control_enabled
 
     def CallBackExternalVelLim(self, msg):
         self.external_v_lim = msg.max_velocity

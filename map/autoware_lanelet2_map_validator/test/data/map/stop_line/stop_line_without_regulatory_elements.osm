@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm generator="VMB">
+  <MetaInfo format_version="1" map_version="2"/>
+  <node id="2147" lat="35.90323618744" lon="139.93342671934">
+    <tag k="local_x" v="3753.2396"/>
+    <tag k="local_y" v="73741.3834"/>
+    <tag k="ele" v="19.3122"/>
+  </node>
+  <node id="2148" lat="35.90315220252" lon="139.93323296169">
+    <tag k="local_x" v="3735.6527"/>
+    <tag k="local_y" v="73732.2588"/>
+    <tag k="ele" v="19.3717"/>
+  </node>
+  <node id="2150" lat="35.90321231864" lon="139.93344234949">
+    <tag k="local_x" v="3754.6212"/>
+    <tag k="local_y" v="73738.7205"/>
+    <tag k="ele" v="19.3122"/>
+  </node>
+  <node id="2151" lat="35.90312833374" lon="139.93324859188">
+    <tag k="local_x" v="3737.0343"/>
+    <tag k="local_y" v="73729.5959"/>
+    <tag k="ele" v="19.3717"/>
+  </node>
+  <way id="2149">
+    <nd ref="2147"/>
+    <nd ref="2148"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="2152">
+    <nd ref="2150"/>
+    <nd ref="2151"/>
+    <tag k="type" v="line_thin"/>
+    <tag k="subtype" v="solid"/>
+  </way>
+  <way id="2156">
+    <nd ref="2147"/>
+    <nd ref="2150"/>
+    <tag k="type" v="stop_line"/>
+  </way>
+  <relation id="2153">
+    <member type="way" role="left" ref="2149"/>
+    <member type="way" role="right" ref="2152"/>
+    <tag k="type" v="lanelet"/>
+    <tag k="subtype" v="road"/>
+    <tag k="speed_limit" v="10"/>
+    <tag k="location" v="urban"/>
+    <tag k="one_way" v="yes"/>
+  </relation>
+</osm>

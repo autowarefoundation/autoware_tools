@@ -1,0 +1,63 @@
+{
+  "requirements": [
+    {
+      "id": "test-cycle-prerequisites",
+      "validators": [
+        {
+          "name": "validator1",
+          "passed": false,
+          "prerequisites": [
+            {
+              "name": "validator3"
+            }
+          ],
+          "issues": [
+            {
+              "severity": "Error",
+              "primitive": "primitive",
+              "id": 0,
+              "issue_code": "General.InvalidPrerequisites-001",
+              "message": "Prerequisites don't exist OR they are making a loop."
+            }
+          ]
+        },
+        {
+          "name": "validator2",
+          "passed": false,
+          "prerequisites": [
+            {
+              "name": "validator1"
+            }
+          ],
+          "issues": [
+            {
+              "severity": "Error",
+              "primitive": "primitive",
+              "id": 0,
+              "issue_code": "General.InvalidPrerequisites-001",
+              "message": "Prerequisites don't exist OR they are making a loop."
+            }
+          ]
+        },
+        {
+          "name": "validator3",
+          "passed": false,
+          "prerequisites": [
+            {
+              "name": "validator2"
+            }
+          ],
+          "issues": [
+            {
+              "severity": "Error",
+              "primitive": "primitive",
+              "id": 0,
+              "issue_code": "General.InvalidPrerequisites-001",
+              "message": "Prerequisites don't exist OR they are making a loop."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
