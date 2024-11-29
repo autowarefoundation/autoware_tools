@@ -621,11 +621,11 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             # [6] publish
             # [6-1] publish trajectory
             if self.course.closed:
-                pub_trajectoryindex = np.arange(
+                pub_trajectory_index = np.arange(
                     self.nearestIndex, self.nearestIndex + int(50 / self.trajectory_step)
                 ) % len(trajectory_position_data)
             else:
-                pub_trajectoryindex = np.arange(
+                pub_trajectory_index = np.arange(
                     self.nearestIndex,
                     np.min(
                         [
@@ -635,79 +635,79 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                     ),
                 )
 
-            pub_trajectory_length = len(pub_trajectoryindex)
-            tmp_traj = Trajectory()
-            for i in pub_trajectoryindex:
-                tmp_trajectorypoint = TrajectoryPoint()
-                tmp_trajectorypoint.pose.position.x = trajectory_position_data[i, 0]
-                tmp_trajectorypoint.pose.position.y = trajectory_position_data[i, 1]
-                tmp_trajectorypoint.pose.position.z = present_position[2]
+            pub_trajectory_length = len(pub_trajectory_index)
+            tmp_trajectory = Trajectory()
+            for i in pub_trajectory_index:
+                tmp_trajectory_point = TrajectoryPoint()
+                tmp_trajectory_point.pose.position.x = trajectory_position_data[i, 0]
+                tmp_trajectory_point.pose.position.y = trajectory_position_data[i, 1]
+                tmp_trajectory_point.pose.position.z = present_position[2]
 
-                tmp_trajectorypoint.pose.orientation.x = 0.0
-                tmp_trajectorypoint.pose.orientation.y = 0.0
-                tmp_trajectorypoint.pose.orientation.z = np.sin(trajectory_yaw_data[i] / 2)
-                tmp_trajectorypoint.pose.orientation.w = np.cos(trajectory_yaw_data[i] / 2)
+                tmp_trajectory_point.pose.orientation.x = 0.0
+                tmp_trajectory_point.pose.orientation.y = 0.0
+                tmp_trajectory_point.pose.orientation.z = np.sin(trajectory_yaw_data[i] / 2)
+                tmp_trajectory_point.pose.orientation.w = np.cos(trajectory_yaw_data[i] / 2)
 
-                tmp_trajectorypoint.longitudinal_velocity_mps = (
+                tmp_trajectory_point.longitudinal_velocity_mps = (
                     trajectory_longitudinal_velocity_data[i]
                 )
-                tmp_traj.points.append(tmp_trajectorypoint)
+                tmp_trajectory.points.append(tmp_trajectory_point)
 
-            self.trajectory_for_collecting_data_pub_.publish(tmp_traj)
+            self.trajectory_for_collecting_data_pub_.publish(tmp_trajectory)
 
             # [6-2] publish marker_array
             marker_array = MarkerArray()
 
             # [6-2a] local trajectory
-            marker_traj1 = Marker()
-            marker_traj1.type = 4
-            marker_traj1.id = 1
-            marker_traj1.header.frame_id = "map"
+            marker_trajectory_1 = Marker()
+            marker_trajectory_1.type = 4
+            marker_trajectory_1.id = 1
+            marker_trajectory_1.header.frame_id = "map"
 
-            marker_traj1.action = marker_traj1.ADD
+            marker_trajectory_1.action = marker_trajectory_1.ADD
 
-            marker_traj1.scale.x = 0.4
-            marker_traj1.scale.y = 0.0
-            marker_traj1.scale.z = 0.0
+            marker_trajectory_1.scale.x = 0.4
+            marker_trajectory_1.scale.y = 0.0
+            marker_trajectory_1.scale.z = 0.0
 
-            marker_traj1.color.a = 1.0
-            marker_traj1.color.r = 1.0
-            marker_traj1.color.g = 0.0
-            marker_traj1.color.b = 0.0
+            marker_trajectory_1.color.a = 1.0
+            marker_trajectory_1.color.r = 1.0
+            marker_trajectory_1.color.g = 0.0
+            marker_trajectory_1.color.b = 0.0
 
-            marker_traj1.lifetime.nanosec = 500000000
-            marker_traj1.frame_locked = True
+            marker_trajectory_1.lifetime.nanosec = 500000000
+            marker_trajectory_1.frame_locked = True
 
-            marker_traj1.points = []
-            for i in range(len(tmp_traj.points)):
+            marker_trajectory_1.points = []
+            for i in range(len(tmp_trajectory.points)):
                 tmp_marker_point = Point()
-                tmp_marker_point.x = tmp_traj.points[i].pose.position.x
-                tmp_marker_point.y = tmp_traj.points[i].pose.position.y
+                tmp_marker_point.x = tmp_trajectory.points[i].pose.position.x
+                tmp_marker_point.y = tmp_trajectory.points[i].pose.position.y
                 tmp_marker_point.z = 0.0
-                marker_traj1.points.append(tmp_marker_point)
+                marker_trajectory_1.points.append(tmp_marker_point)
 
-            marker_array.markers.append(marker_traj1)
+            marker_array.markers.append(marker_trajectory_1)
 
             # boundary
-            boundary_marker_traj1 = Marker()
-            boundary_marker_traj1.type = 4
-            boundary_marker_traj1.id = 3
-            boundary_marker_traj1.header.frame_id = "map"
+            boundary_marker_trajectory_1 = Marker()
+            boundary_marker_trajectory_1.type = 4
+            boundary_marker_trajectory_1.id = 3
+            boundary_marker_trajectory_1.header.frame_id = "map"
 
-            boundary_marker_traj1.action = boundary_marker_traj1.ADD
+            boundary_marker_trajectory_1.action = boundary_marker_trajectory_1.ADD
 
-            boundary_marker_traj1.scale.x = 0.4
-            boundary_marker_traj1.scale.y = 0.0
-            boundary_marker_traj1.scale.z = 0.0
+            boundary_marker_trajectory_1.scale.x = 0.4
+            boundary_marker_trajectory_1.scale.y = 0.0
+            boundary_marker_trajectory_1.scale.z = 0.0
 
-            boundary_marker_traj1.color.a = 0.5
-            boundary_marker_traj1.color.r = 0.0
-            boundary_marker_traj1.color.g = 1.0
-            boundary_marker_traj1.color.b = 0.0
+            boundary_marker_trajectory_1.color.a = 0.5
+            boundary_marker_trajectory_1.color.r = 0.0
+            boundary_marker_trajectory_1.color.g = 1.0
+            boundary_marker_trajectory_1.color.b = 0.0
 
-            boundary_marker_traj1.lifetime.nanosec = 500000000
-            boundary_marker_traj1.frame_locked = True
-            boundary_marker_traj1.points = []
+            boundary_marker_trajectory_1.lifetime.nanosec = 500000000
+            boundary_marker_trajectory_1.frame_locked = True
+            boundary_marker_trajectory_1.points = []
 
             down_sampling_ = 5
             for i in range(len(self.boundary_points) // down_sampling_):
@@ -715,46 +715,46 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 boundary_tmp_marker_point.x = self.boundary_points[i * down_sampling_][0]
                 boundary_tmp_marker_point.y = self.boundary_points[i * down_sampling_][1]
                 boundary_tmp_marker_point.z = 0.0
-                boundary_marker_traj1.points.append(boundary_tmp_marker_point)
+                boundary_marker_trajectory_1.points.append(boundary_tmp_marker_point)
 
             boundary_tmp_marker_point = Point()
             boundary_tmp_marker_point.x = self.boundary_points[0][0]
             boundary_tmp_marker_point.y = self.boundary_points[0][1]
             boundary_tmp_marker_point.z = 0.0
-            boundary_marker_traj1.points.append(boundary_tmp_marker_point)
+            boundary_marker_trajectory_1.points.append(boundary_tmp_marker_point)
 
-            marker_array.markers.append(boundary_marker_traj1)
+            marker_array.markers.append(boundary_marker_trajectory_1)
 
             # [6-2b] whole trajectory
-            marker_traj2 = Marker()
-            marker_traj2.type = 4
-            marker_traj2.id = 0
-            marker_traj2.header.frame_id = "map"
+            marker_trajectory_2 = Marker()
+            marker_trajectory_2.type = 4
+            marker_trajectory_2.id = 0
+            marker_trajectory_2.header.frame_id = "map"
 
-            marker_traj2.action = marker_traj2.ADD
+            marker_trajectory_2.action = marker_trajectory_2.ADD
 
-            marker_traj2.scale.x = 0.2
-            marker_traj2.scale.y = 0.0
-            marker_traj2.scale.z = 0.0
+            marker_trajectory_2.scale.x = 0.2
+            marker_trajectory_2.scale.y = 0.0
+            marker_trajectory_2.scale.z = 0.0
 
-            marker_traj2.color.a = 1.0
-            marker_traj2.color.r = 0.0
-            marker_traj2.color.g = 0.0
-            marker_traj2.color.b = 1.0
+            marker_trajectory_2.color.a = 1.0
+            marker_trajectory_2.color.r = 0.0
+            marker_trajectory_2.color.g = 0.0
+            marker_trajectory_2.color.b = 1.0
 
-            marker_traj2.lifetime.nanosec = 500000000
-            marker_traj2.frame_locked = True
+            marker_trajectory_2.lifetime.nanosec = 500000000
+            marker_trajectory_2.frame_locked = True
 
-            marker_traj2.points = []
-            marker_downsampling = 5
-            for i in range(len(trajectory_position_data) // marker_downsampling):
+            marker_trajectory_2.points = []
+            marker_down_sampling = 5
+            for i in range(len(trajectory_position_data) // marker_down_sampling):
                 tmp_marker_point = Point()
-                tmp_marker_point.x = trajectory_position_data[i * marker_downsampling, 0]
-                tmp_marker_point.y = trajectory_position_data[i * marker_downsampling, 1]
+                tmp_marker_point.x = trajectory_position_data[i * marker_down_sampling, 0]
+                tmp_marker_point.y = trajectory_position_data[i * marker_down_sampling, 1]
                 tmp_marker_point.z = 0.0
-                marker_traj2.points.append(tmp_marker_point)
+                marker_trajectory_2.points.append(tmp_marker_point)
 
-            marker_array.markers.append(marker_traj2)
+            marker_array.markers.append(marker_trajectory_2)
 
             # [6-2c] add arrow
             marker_arrow = Marker()
@@ -786,14 +786,14 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             marker_arrow.points = []
 
             start_marker_point = Point()
-            start_marker_point.x = tmp_traj.points[0].pose.position.x
-            start_marker_point.y = tmp_traj.points[0].pose.position.y
+            start_marker_point.x = tmp_trajectory.points[0].pose.position.x
+            start_marker_point.y = tmp_trajectory.points[0].pose.position.y
             start_marker_point.z = 0.0
             marker_arrow.points.append(start_marker_point)
 
             end_marker_point = Point()
-            end_marker_point.x = tmp_traj.points[0].pose.position.x + 5.0 * tangent_vec[0]
-            end_marker_point.y = tmp_traj.points[0].pose.position.y + 5.0 * tangent_vec[1]
+            end_marker_point.x = tmp_trajectory.points[0].pose.position.x + 5.0 * tangent_vec[0]
+            end_marker_point.y = tmp_trajectory.points[0].pose.position.y + 5.0 * tangent_vec[1]
             end_marker_point.z = 0.0
             marker_arrow.points.append(end_marker_point)
 
