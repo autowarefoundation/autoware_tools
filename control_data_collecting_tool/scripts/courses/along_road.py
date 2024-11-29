@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# cspell:ignore interp
-# cspell:ignore cumsum
-
 from courses.base_course import Base_Course
 from courses.lanelet import LaneletMapHandler
 import numpy as np

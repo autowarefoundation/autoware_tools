@@ -14,8 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# cspell:ignore interp
-
 import lanelet2
 from lanelet2.core import BasicPoint2d
 from lanelet2.core import BoundingBox2d
