@@ -295,7 +295,9 @@ def calc_two_circles_circum_circle_trajectory(
 
     # Calculate arc lengths of the first circle, circum_circle, and second circle
     circle_AB = r1 * abs(theta_1_end - theta_1_start)  # Arc length of the first circle
-    circle_BC = ext_r * abs(theta_circum_circle_end - theta_circum_circle_start)  # Arc length of the circum_circle
+    circle_BC = ext_r * abs(
+        theta_circum_circle_end - theta_circum_circle_start
+    )  # Arc length of the circum_circle
     circle_CD = r2 * abs(theta_2_end - theta_2_start)  # Arc length of the second circle
 
     # Calculate the total distance of the trajectory

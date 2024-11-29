@@ -99,9 +99,13 @@ class LaneletUtils:
         t_interpolation = np.linspace(0.0, 1.0, max(len(oneLine), len(anotherLine)))
 
         # Perform interpolation between the two lines
-        interpolated_points = np.array([(1.0 - t_interpolation).tolist()]).T * linear_interpolation_one(
+        interpolated_points = np.array(
+            [(1.0 - t_interpolation).tolist()]
+        ).T * linear_interpolation_one(t_interpolation) + np.array(
+            [t_interpolation.tolist()]
+        ).T * linear_interpolation_another(
             t_interpolation
-        ) + np.array([t_interpolation.tolist()]).T * linear_interpolation_another(t_interpolation)
+        )
 
         return interpolated_points
 
