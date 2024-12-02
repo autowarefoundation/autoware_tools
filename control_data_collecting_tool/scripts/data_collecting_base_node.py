@@ -114,6 +114,9 @@ class DataCollectingBaseNode(Node):
             ParameterDescriptor(description="Maximum acceleration in heatmap [m/ss]"),
         )
 
+        self.ego_point = np.array([0.0, 0.0])
+        self.goal_point = np.array([0.0, 0.0])
+
         self.declare_parameter(
             "STEER_RATE_MIN",
             0.0,

@@ -64,7 +64,7 @@ This package provides tools for automatically collecting data using pure pursuit
     ```bash
     ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
     ```
-
+    
     - If you use the `along_road` course, please specify the same map for `map_path` as the one used when launching Autoware. `map_path` is not necessary when using courses other than `along_road`.
 
     - Control data collecting tool automatically records topics included in `config/topics.yaml` when the above command is executed.
@@ -82,9 +82,7 @@ This package provides tools for automatically collecting data using pure pursuit
     - `/data_collecting_lookahead_marker_array`
       - Type: MarkerArray
 
-
 6. The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to 6.1. If you select the trajectory from [`along_road`], please proceed to 6.2.
-
 
     - 6.1 If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
 

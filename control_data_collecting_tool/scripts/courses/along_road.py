@@ -18,8 +18,6 @@ from courses.base_course import Base_Course
 from courses.lanelet import LaneletMapHandler
 import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
-from rclpy.qos import QoSProfile, QoSDurabilityPolicy
-from autoware_map_msgs.msg import LaneletMapBin
 from scipy.interpolate import interp1d as interpolation_1d
 
 

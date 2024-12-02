@@ -1131,7 +1131,7 @@ class Reversal_Loop_Circle(Base_Course):
             )
 
             # Determine the minimum velocity based on collected data
-            min_vel = np.min((collected_data_counts_of_vel_steer + 1e9 * (1-mask_vel_steer) )[:max_vel_idx, steer_idx])
+            min_vel = np.min(collected_data_counts_of_vel_steer[:max_vel_idx, steer_idx])
             vel_idx = np.where(
                 collected_data_counts_of_vel_steer[:max_vel_idx, steer_idx] == min_vel
             )[0]

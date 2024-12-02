@@ -48,6 +48,7 @@ class Base_Course:
     ):
         pass
 
+
     def choose_target_velocity_acc(self, collected_data_counts_of_vel_acc, mask_vel_acc):
         min_num_data = 1e12
         min_data_num_margin = 20
