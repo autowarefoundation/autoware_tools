@@ -61,34 +61,46 @@ RegulatoryElementsDetailsForCrosswalksValidator::checkRegulatoryElementOfCrosswa
     auto crosswalk_polygons = elem->getParameters<lanelet::ConstPolygon3d>(
       lanelet::autoware::Crosswalk::AutowareRoleNameString::CrosswalkPolygon);
 
-    // Report warning if regulatory element does not have crosswalk polygon
-    if (crosswalk_polygons.empty()) {
-      issues.emplace_back(
-        lanelet::validation::Severity::Warning, lanelet::validation::Primitive::RegulatoryElement,
-        elem->id(), "Regulatory element of crosswalk is nice to have crosswalk_polygon.");
-    } else if (crosswalk_polygons.size() > 1) {  // Report error if regulatory element has two or
-                                                 // more crosswalk polygon
-      issues.emplace_back(
-        lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
-        elem->id(), "Regulatory element of crosswalk must have only one crosswalk_polygon.");
-    }
-    // Report Info if regulatory element does not have stop line
-    if (ref_lines.empty()) {
-      issues.emplace_back(
-        lanelet::validation::Severity::Info, lanelet::validation::Primitive::RegulatoryElement,
-        elem->id(), "Regulatory element of crosswalk does not have stop line(ref_line).");
-    }
     // Report error if regulatory element does not have lanelet of crosswalk
     if (refers.empty()) {
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
-        elem->id(), "Regulatory element of crosswalk must have lanelet of crosswalk(refers).");
+        elem->id(),
+        append_issue_code_prefix(
+          this->name(), 1,
+          "Regulatory element of crosswalk must have lanelet of crosswalk(refers)."));
     } else if (refers.size() > 1) {  // Report error if regulatory element has two or more lanelet
                                      // of crosswalk
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
         elem->id(),
-        "Regulatory element of crosswalk must have only one lanelet of crosswalk(refers).");
+        append_issue_code_prefix(
+          this->name(), 2,
+          "Regulatory element of crosswalk must have only one lanelet of crosswalk(refers)."));
+    }
+    // Report Info if regulatory element does not have stop line
+    if (ref_lines.empty()) {
+      issues.emplace_back(
+        lanelet::validation::Severity::Info, lanelet::validation::Primitive::RegulatoryElement,
+        elem->id(),
+        append_issue_code_prefix(
+          this->name(), 3, "Regulatory element of crosswalk does not have stop line(ref_line)."));
+    }
+    // Report warning if regulatory element does not have crosswalk polygon
+    if (crosswalk_polygons.empty()) {
+      issues.emplace_back(
+        lanelet::validation::Severity::Warning, lanelet::validation::Primitive::RegulatoryElement,
+        elem->id(),
+        append_issue_code_prefix(
+          this->name(), 4, "Regulatory element of crosswalk is nice to have crosswalk_polygon."));
+    } else if (crosswalk_polygons.size() > 1) {  // Report error if regulatory element has two or
+                                                 // more crosswalk polygon
+      issues.emplace_back(
+        lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
+        elem->id(),
+        append_issue_code_prefix(
+          this->name(), 5,
+          "Regulatory element of crosswalk must have only one crosswalk_polygon."));
     }
 
     // If this is a crosswalk type regulatory element, the "refers" has to be a "crosswalk" subtype
@@ -96,7 +108,8 @@ RegulatoryElementsDetailsForCrosswalksValidator::checkRegulatoryElementOfCrosswa
     const auto & issue_cw = lanelet::validation::Issue(
       lanelet::validation::Severity::Error, lanelet::validation::Primitive::Lanelet,
       lanelet::utils::getId(),
-      "Refers of crosswalk regulatory element must have type of crosswalk.");
+      append_issue_code_prefix(
+        this->name(), 6, "Refers of crosswalk regulatory element must have type of crosswalk."));
     lanelet::autoware::validation::checkPrimitivesType(
       refers, lanelet::AttributeValueString::Lanelet, lanelet::AttributeValueString::Crosswalk,
       issue_cw, issues);
@@ -106,7 +119,8 @@ RegulatoryElementsDetailsForCrosswalksValidator::checkRegulatoryElementOfCrosswa
     const auto & issue_sl = lanelet::validation::Issue(
       lanelet::validation::Severity::Error, lanelet::validation::Primitive::LineString,
       lanelet::utils::getId(),
-      "ref_line of crosswalk regulatory element must have type of stopline.");
+      append_issue_code_prefix(
+        this->name(), 7, "ref_line of crosswalk regulatory element must have type of stopline."));
     lanelet::autoware::validation::checkPrimitivesType(
       ref_lines, lanelet::AttributeValueString::StopLine, issue_sl, issues);
 
@@ -115,7 +129,9 @@ RegulatoryElementsDetailsForCrosswalksValidator::checkRegulatoryElementOfCrosswa
     const auto & issue_poly = lanelet::validation::Issue(
       lanelet::validation::Severity::Error, lanelet::validation::Primitive::Polygon,
       lanelet::utils::getId(),
-      "Crosswalk polygon of crosswalk regulatory element must have type of Crosswalk_polygon.");
+      append_issue_code_prefix(
+        this->name(), 8,
+        "Crosswalk polygon of crosswalk regulatory element must have type of crosswalk_polygon."));
     lanelet::autoware::validation::checkPrimitivesType(
       crosswalk_polygons, lanelet::autoware::Crosswalk::AutowareRoleNameString::CrosswalkPolygon,
       issue_poly, issues);

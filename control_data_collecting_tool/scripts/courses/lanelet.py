@@ -23,7 +23,7 @@ from lanelet2.routing import RoutingGraph
 from lanelet2_extension_python.projection import MGRSProjector
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d as interpolation_1d
 
 
 class LaneletUtils:
@@ -88,20 +88,24 @@ class LaneletUtils:
         t_another = np.linspace(0.0, 1.0, len(anotherLine))
 
         # Set up linear interpolation functions for both lines
-        linear_interp_one = interp1d(
+        linear_interpolation_one = interpolation_1d(
             t_one, oneLine, axis=0, kind="linear", fill_value="extrapolate"
         )
-        linear_interp_another = interp1d(
+        linear_interpolation_another = interpolation_1d(
             t_another, anotherLine, axis=0, kind="linear", fill_value="extrapolate"
         )
 
         # Define a common interpolation parameter
-        t_interp = np.linspace(0.0, 1.0, max(len(oneLine), len(anotherLine)))
+        t_interpolation = np.linspace(0.0, 1.0, max(len(oneLine), len(anotherLine)))
 
         # Perform interpolation between the two lines
-        interpolated_points = np.array([(1.0 - t_interp).tolist()]).T * linear_interp_one(
-            t_interp
-        ) + np.array([t_interp.tolist()]).T * linear_interp_another(t_interp)
+        interpolated_points = np.array(
+            [(1.0 - t_interpolation).tolist()]
+        ).T * linear_interpolation_one(t_interpolation) + np.array(
+            [t_interpolation.tolist()]
+        ).T * linear_interpolation_another(
+            t_interpolation
+        )
 
         return interpolated_points
 

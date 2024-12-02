@@ -133,21 +133,21 @@ def calc_tangents_and_points(x1, y1, r1, x2, y2, r2):
     return tangents_and_points  # Return list of tangents and contact points
 
 
-def calc_excircle_tangent_to_two_circles(x1, y1, x2, y2, r, r_ext):
+def calc_circum_circle_tangent_to_two_circles(x1, y1, x2, y2, r, r_ext):
     # Distance between the centers of the two circles
     d = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
-    # Check for concentric circles, where an excircle is not possible
+    # Check for concentric circles, where an circum_circle is not possible
     if d == 0:
-        raise ValueError("An excircle does not exist for concentric circles.")
+        raise ValueError("An circum_circle does not exist for concentric circles.")
 
-    # Calculate the center of the excircle
-    R_r = r_ext - r  # Difference between the excircle radius and the given circles' radius
+    # Calculate the center of the circum_circle
+    R_r = r_ext - r  # Difference between the circum_circle radius and the given circles' radius
     theta = np.arctan2(
         np.sqrt(R_r**2 - (d / 2) ** 2), d / 2
     )  # Angle relative to the line between centers
 
-    # Coordinates of the excircle’s center
+    # Coordinates of the circum_circle’s center
     x_center = (x2 - R_r * np.cos(theta) + x1 - R_r * np.cos(np.pi - theta)) / 2
     y_center = (y2 - R_r * np.sin(theta) + y1 - R_r * np.sin(np.pi - theta)) / 2
 
@@ -158,10 +158,10 @@ def calc_excircle_tangent_to_two_circles(x1, y1, x2, y2, r, r_ext):
     contact_2_x = x2 + r * np.cos(theta)
     contact_2_y = y2 + r * np.sin(theta)
 
-    # Return angle of the tangent line, excircle center, and contact points on each circle
+    # Return angle of the tangent line, circum_circle center, and contact points on each circle
     return (
         np.pi - 2 * theta,  # Angle of the tangent line relative to the x-axis
-        [x_center, y_center],  # Center of the excircle
+        [x_center, y_center],  # Center of the circum_circle
         [contact_1_x, contact_1_y],  # Contact point on the first circle
         [contact_2_x, contact_2_y],  # Contact point on the second circle
     )
@@ -275,7 +275,7 @@ def calc_two_circles_one_line_trajectory(
     return np.array([x, y]).T, yaw, curvature, parts, achievement_rates, total_distance
 
 
-def calc_two_circles_excircle_trajectory(
+def calc_two_circles_circum_circle_trajectory(
     center_point1,
     r1,
     theta_1_start,
@@ -284,24 +284,26 @@ def calc_two_circles_excircle_trajectory(
     r2,
     theta_2_start,
     theta_2_end,
-    excircle_center_point,
+    circum_circle_center_point,
     ext_r,
-    theta_excircle_start,
-    theta_excircle_end,
+    theta_circum_circle_start,
+    theta_circum_circle_end,
     step,
     amplitude=0.001,
 ):
-    # Generate a trajectory connecting two circular arcs and an excircle arc.
+    # Generate a trajectory connecting two circular arcs and an circum_circle arc.
 
-    # Calculate arc lengths of the first circle, excircle, and second circle
+    # Calculate arc lengths of the first circle, circum_circle, and second circle
     circle_AB = r1 * abs(theta_1_end - theta_1_start)  # Arc length of the first circle
-    circle_BC = ext_r * abs(theta_excircle_end - theta_excircle_start)  # Arc length of the excircle
+    circle_BC = ext_r * abs(
+        theta_circum_circle_end - theta_circum_circle_start
+    )  # Arc length of the circum_circle
     circle_CD = r2 * abs(theta_2_end - theta_2_start)  # Arc length of the second circle
 
     # Calculate the total distance of the trajectory
     total_distance = circle_AB + circle_BC + circle_CD
 
-    # Create a time array for parameterizing the trajectory
+    # Create a time array to parametrize the trajectory
     t_array = np.arange(start=0.0, stop=total_distance, step=step).astype("float")
 
     # Initialize arrays to store trajectory details
@@ -329,17 +331,17 @@ def calc_two_circles_excircle_trajectory(
             achievement_rates[i] = t / total_distance
             parts[i] = "circle"  # Label as circle part
 
-        elif circle_AB < t <= circle_AB + circle_BC:  # On the excircle arc
+        elif circle_AB < t <= circle_AB + circle_BC:  # On the circum_circle arc
             kappa = 0.0 / ext_r  # Optional curvature scaling factor (not used here)
             t2 = t - circle_AB
             alpha = t2 / circle_BC
             t2_rad = (
                 1 - alpha
-            ) * theta_excircle_start + alpha * theta_excircle_end  # Interpolate angle
-            x[i] = excircle_center_point[0] + (
+            ) * theta_circum_circle_start + alpha * theta_circum_circle_end  # Interpolate angle
+            x[i] = circum_circle_center_point[0] + (
                 1.0 + kappa * 4 * alpha * (1 - alpha) * 4 * alpha * (1 - alpha)
             ) * ext_r * np.cos(t2_rad)
-            y[i] = excircle_center_point[1] + (
+            y[i] = circum_circle_center_point[1] + (
                 1.0 + kappa * 4 * alpha * (1 - alpha) * 4 * alpha * (1 - alpha)
             ) * ext_r * np.sin(t2_rad)
             achievement_rates[i] = t / total_distance
@@ -548,13 +550,13 @@ def calc_two_circles_common_tangent_trajectory(R, r, step, amplitude=0.001):
         center_1 = [-(R - R * 0.75), 0.0]  # Adjusted center of the first circle
         center_2 = [(R - R * 0.75), 0.0]  # Adjusted center of the second circle
 
-        # Calculate external tangent and points for the excircle
+        # Calculate external tangent and points for the circum_circle
         (
             theta,
             (x_center, y_center),
             (contact_1_x, contact_1_y),
             (contact_2_x, contact_2_y),
-        ) = calc_excircle_tangent_to_two_circles(
+        ) = calc_circum_circle_tangent_to_two_circles(
             center_1[0], center_1[1], center_2[0], center_2[1], R * 0.75, r
         )
 
@@ -562,7 +564,7 @@ def calc_two_circles_common_tangent_trajectory(R, r, step, amplitude=0.001):
         theta_1_end = np.arctan2(contact_1_y - center_1[1], contact_1_x - center_1[0])
         theta_2_start = np.arctan2(contact_2_y - center_2[1], contact_2_x - center_2[0])
 
-        # Calculate the trajectory for the excircle configuration
+        # Calculate the trajectory for the circum_circle configuration
         (
             trajectory,
             yaw,
@@ -570,7 +572,7 @@ def calc_two_circles_common_tangent_trajectory(R, r, step, amplitude=0.001):
             parts,
             achievement_rates,
             total_distance,
-        ) = calc_two_circles_excircle_trajectory(
+        ) = calc_two_circles_circum_circle_trajectory(
             center_point1=center_1,
             r1=R * 0.75,
             theta_1_start=np.pi,
@@ -579,10 +581,10 @@ def calc_two_circles_common_tangent_trajectory(R, r, step, amplitude=0.001):
             r2=R * 0.75,
             theta_2_start=theta_2_start,
             theta_2_end=0.0,
-            excircle_center_point=[x_center, y_center],
+            circum_circle_center_point=[x_center, y_center],
             ext_r=r,
-            theta_excircle_start=np.pi - (np.pi - theta) / 2,
-            theta_excircle_end=(np.pi - theta) / 2,
+            theta_circum_circle_start=np.pi - (np.pi - theta) / 2,
+            theta_circum_circle_end=(np.pi - theta) / 2,
             step=step,
             amplitude=amplitude,
         )

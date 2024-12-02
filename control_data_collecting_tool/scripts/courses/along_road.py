@@ -20,7 +20,7 @@ import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from autoware_map_msgs.msg import LaneletMapBin
-from scipy.interpolate import interp1d
+from scipy.interpolate import interp1d as interpolation_1d
 
 
 def resample_curve(x, y, step_size):
@@ -35,10 +35,10 @@ def resample_curve(x, y, step_size):
     new_distances = np.linspace(0, cumulative_distances[-1], num_samples)
 
     # Interpolate x and y based on the distances, then resample
-    x_interp = interp1d(cumulative_distances, x, kind="linear")
-    y_interp = interp1d(cumulative_distances, y, kind="linear")
-    new_x = x_interp(new_distances)
-    new_y = y_interp(new_distances)
+    x_interpolation = interpolation_1d(cumulative_distances, x, kind="linear")
+    y_interpolation = interpolation_1d(cumulative_distances, y, kind="linear")
+    new_x = x_interpolation(new_distances)
+    new_y = y_interpolation(new_distances)
 
     # Return the resampled points along the curve
     return new_x, new_y
@@ -85,6 +85,13 @@ def declare_along_road_params(node):
         35.6762,
         ParameterDescriptor(
             description="The latitude of the origin specified when loading the map"
+        ),
+    )
+    node.declare_parameter(
+        "map_path",
+        "",
+        descriptor=ParameterDescriptor(
+            description="Path to the map directory", dynamic_typing=True
         ),
     )
 
