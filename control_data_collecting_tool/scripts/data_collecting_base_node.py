@@ -18,9 +18,11 @@ from autoware_adapi_v1_msgs.msg import OperationModeState
 from autoware_vehicle_msgs.msg import ControlModeReport
 from geometry_msgs.msg import AccelWithCovarianceStamped
 from nav_msgs.msg import Odometry
+import os
 import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
+from ament_index_python.packages import get_package_share_directory
 
 
 class DataCollectingBaseNode(Node):
@@ -28,6 +30,24 @@ class DataCollectingBaseNode(Node):
         super().__init__(node_name)
 
         # common params
+        self.declare_parameter(
+            "COURSE_NAME",
+            "eight_course",
+            ParameterDescriptor(
+                description="Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`]"
+            ),
+        )
+        # set course name
+        self.COURSE_NAME = self.get_parameter("COURSE_NAME").value
+
+        self.declare_parameter(
+            "MASK_NAME",
+            "default",
+            ParameterDescriptor(
+                description="Masks for Data collection"
+            ),
+        )
+
         self.declare_parameter(
             "wheel_base",
             2.79,
@@ -50,6 +70,12 @@ class DataCollectingBaseNode(Node):
             "NUM_BINS_A",
             10,
             ParameterDescriptor(description="Number of bins of acceleration in heatmap"),
+        )
+
+        self.declare_parameter(
+            "NUM_BINS_STEER_RATE",
+            5,
+            ParameterDescriptor(description="Number of bins of steer in heatmap"),
         )
 
         self.declare_parameter(
@@ -86,6 +112,18 @@ class DataCollectingBaseNode(Node):
             "A_MAX",
             1.0,
             ParameterDescriptor(description="Maximum acceleration in heatmap [m/ss]"),
+        )
+
+        self.declare_parameter(
+            "STEER_RATE_MIN",
+            0.0,
+            ParameterDescriptor(description="Minimum steer in heatmap [rad]"),
+        )
+
+        self.declare_parameter(
+            "STEER_RATE_MAX",
+            0.3,
+            ParameterDescriptor(description="Maximum steer in heatmap [rad]"),
         )
 
         self.ego_point = np.array([0.0, 0.0])
@@ -133,6 +171,10 @@ class DataCollectingBaseNode(Node):
             self.get_parameter("NUM_BINS_STEER").get_parameter_value().integer_value
         )
         self.num_bins_a = self.get_parameter("NUM_BINS_A").get_parameter_value().integer_value
+        self.num_bins_steer_rate = (
+            self.get_parameter("NUM_BINS_STEER_RATE").get_parameter_value().integer_value
+        )
+
         self.v_min, self.v_max = (
             self.get_parameter("V_MIN").get_parameter_value().double_value,
             self.get_parameter("V_MAX").get_parameter_value().double_value,
@@ -145,6 +187,10 @@ class DataCollectingBaseNode(Node):
             self.get_parameter("A_MIN").get_parameter_value().double_value,
             self.get_parameter("A_MAX").get_parameter_value().double_value,
         )
+        self.steer_rate_min, self.steer_rate_max = (
+            self.get_parameter("STEER_RATE_MIN").get_parameter_value().double_value,
+            self.get_parameter("STEER_RATE_MAX").get_parameter_value().double_value,
+        )
 
         self.collected_data_counts_of_vel_acc = np.zeros(
             (self.num_bins_v, self.num_bins_a), dtype=np.int32
@@ -152,14 +198,35 @@ class DataCollectingBaseNode(Node):
         self.collected_data_counts_of_vel_steer = np.zeros(
             (self.num_bins_v, self.num_bins_steer), dtype=np.int32
         )
+        self.collected_data_counts_of_vel_steer_rate = np.zeros(
+            (self.num_bins_v, self.num_bins_steer_rate), dtype=np.int32
+        )
 
         self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins_v + 1)
         self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins_steer + 1)
         self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins_a + 1)
+        self.steer_rate_bins = np.linspace(self.steer_rate_min, self.steer_rate_max, self.num_bins_steer_rate + 1)
 
         self.v_bin_centers = (self.v_bins[:-1] + self.v_bins[1:]) / 2
         self.steer_bin_centers = (self.steer_bins[:-1] + self.steer_bins[1:]) / 2
         self.a_bin_centers = (self.a_bins[:-1] + self.a_bins[1:]) / 2
+        self.steer_rate_bin_centers = (self.steer_rate_bins[:-1] + self.steer_rate_bins[1:]) / 2
+
+        """
+        load mask (data collection range in heat map)
+        """
+        # set mask name
+        MASK_NAME = self.get_parameter("MASK_NAME").value
+        mask_directory_path = get_package_share_directory("control_data_collecting_tool") + "/config/masks/" + MASK_NAME
+
+        mask_vel_acc_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Acceleration.txt")
+        self.mask_vel_acc = self.load_mask_from_txt(mask_vel_acc_path, self.num_bins_v, self.num_bins_a)
+
+        mask_velocity_steering_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering.txt")
+        self.mask_vel_steer = self.load_mask_from_txt(mask_velocity_steering_path, self.num_bins_v, self.num_bins_steer)
+
+        mask_velocity_steer_rate_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt")
+        self.mask_vel_steer_rate = self.load_mask_from_txt(mask_velocity_steer_rate_path, self.num_bins_v, self.num_bins_steer_rate)
 
     def onOdometry(self, msg):
         self._present_kinematic_state = msg
@@ -178,3 +245,22 @@ class DataCollectingBaseNode(Node):
 
     def subscribe_control_mode(self, msg):
         self._present_control_mode_ = msg.mode
+    
+    def load_mask_from_txt(self, file_path, nx, ny):
+        """
+        Loads a numerical mask from a text file into a numpy array.
+
+        Parameters:
+        - file_path: Path to the text file to load.
+
+        Returns:
+        - A numpy array containing the loaded mask.
+        """
+        try:
+            mask = np.loadtxt(file_path, dtype=int)
+            if len(mask) == nx and len(mask[0]) == ny:
+                return mask
+        except Exception as e:
+            pass
+        
+        return np.ones((nx, ny), dtype=int)

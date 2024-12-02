@@ -75,6 +75,8 @@ class Straight_Line_Positive(Base_Course):
         current_acc,
         collected_data_counts_of_vel_acc,
         collected_data_counts_of_vel_steer,
+        mask_vel_acc,
+        mask_vel_steer
     ):
         part = self.parts[nearestIndex]
         achievement_rate = self.achievement_rates[nearestIndex]
@@ -83,7 +85,8 @@ class Straight_Line_Positive(Base_Course):
         # Check and update target velocity on straight line
         if part == "straight" and achievement_rate < 0.05:
             self.acc_idx, self.vel_idx = self.choose_target_velocity_acc(
-                collected_data_counts_of_vel_acc
+                collected_data_counts_of_vel_acc,
+                mask_vel_acc
             )
             self.target_acc_on_straight_line = self.params.a_bin_centers[self.acc_idx]
             self.target_vel_on_straight_line = self.params.v_bin_centers[self.vel_idx]

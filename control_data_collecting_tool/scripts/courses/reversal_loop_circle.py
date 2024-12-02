@@ -1011,6 +1011,8 @@ class Reversal_Loop_Circle(Base_Course):
         current_acc,
         collected_data_counts_of_vel_acc,
         collected_data_counts_of_vel_steer,
+        mask_vel_acc,
+        mask_vel_steer
     ):
         # Calculate the target velocity for the vehicle based on its current state, trajectory phase, and constraints such as acceleration limits and trajectory curvature.
 
@@ -1018,7 +1020,8 @@ class Reversal_Loop_Circle(Base_Course):
         if not self.updated_target_velocity:
             # Choose velocity and acceleration bins based on collected data
             self.acc_idx, self.vel_idx = self.choose_target_velocity_acc(
-                collected_data_counts_of_vel_acc
+                collected_data_counts_of_vel_acc,
+                mask_vel_acc
             )
             self.target_acc_on_segmentation = self.params.a_bin_centers[self.acc_idx]
             self.target_vel_on_segmentation = self.params.v_bin_centers[self.vel_idx]
@@ -1128,7 +1131,7 @@ class Reversal_Loop_Circle(Base_Course):
             )
 
             # Determine the minimum velocity based on collected data
-            min_vel = np.min(collected_data_counts_of_vel_steer[:max_vel_idx, steer_idx])
+            min_vel = np.min((collected_data_counts_of_vel_steer + 1e9 * (1-mask_vel_steer) )[:max_vel_idx, steer_idx])
             vel_idx = np.where(
                 collected_data_counts_of_vel_steer[:max_vel_idx, steer_idx] == min_vel
             )[0]
