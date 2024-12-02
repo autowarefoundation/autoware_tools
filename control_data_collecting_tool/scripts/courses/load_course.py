@@ -44,7 +44,6 @@ def declare_course_params(course_name, node):
     elif course_name == "along_road":
         declare_along_road_params(node)
 
-
 def load_course(course_name, step_size, params_dict):
     # Load the course based on the course name
     if course_name == "eight_course":

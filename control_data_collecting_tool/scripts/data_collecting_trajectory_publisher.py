@@ -25,6 +25,7 @@ from geometry_msgs.msg import PoseStamped
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import pi
+import queue
 from rcl_interfaces.msg import ParameterDescriptor
 import rclpy
 from scipy.spatial.transform import Rotation as R
@@ -203,6 +204,11 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             1,
         )
         self.sub_data_collecting_area_
+        
+        """
+        Declare course specific parameters
+        """
+        declare_course_params(self.COURSE_NAME, self)
 
         # obtain ros params as dictionary
         param_names = self._parameters
@@ -532,6 +538,8 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 present_acc,
                 self.collected_data_counts_of_vel_acc,
                 self.collected_data_counts_of_vel_steer,
+                self.mask_vel_acc,
+                self.mask_vel_steer
             )
 
             trajectory_longitudinal_velocity_data = np.array(
