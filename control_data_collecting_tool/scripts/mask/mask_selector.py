@@ -247,7 +247,7 @@ def main():
     NUM_BINS_V = config["NUM_BINS_V"]
     NUM_BINS_STEER = config["NUM_BINS_STEER"]
     NUM_BINS_A = config["NUM_BINS_A"]
-    NUM_BINS_STEER_RATE = config["NUM_BINS_STEER_RATE"]
+    NUM_BINS_STEER_RATE = config["NUM_BINS_ABS_STEER_RATE"]
 
     V_MIN = config["V_MIN"]
     V_MAX = config["V_MAX"]
@@ -255,12 +255,12 @@ def main():
     STEER_MAX = config["STEER_MAX"]
     A_MIN = config["A_MIN"]
     A_MAX = config["A_MAX"]
-    STEER_RATE_MIN = config["STEER_RATE_MIN"]
-    STEER_RATE_MAX = config["STEER_RATE_MAX"]
+    ABS_STEER_RATE_MIN = config["ABS_STEER_RATE_MIN"]
+    ABS_STEER_RATE_MAX = config["ABS_STEER_RATE_MAX"]
 
     VEL_ACC_THRESHOLD = config["VEL_ACC_THRESHOLD"]
     VEL_STEER_THRESHOLD = config["VEL_STEER_THRESHOLD"]
-    VEL_STEER_RATE_THRESHOLD = config["VEL_STEER_RATE_THRESHOLD"]
+    VEL_ABS_STEER_RATE_THRESHOLD = config["VEL_ABS_STEER_RATE_THRESHOLD"]
 
     # Create 3 instances of the selector with different configurations
     mask_velocity_acceleration_path = os.path.join(directory_path, f"{MASK_NAME}_Velocity_Acceleration.txt")
@@ -280,9 +280,9 @@ def main():
     mask_velocity_steering_rate_path = os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt")
     mask_velocity_steering_rate = load_mask_from_txt(mask_velocity_steering_rate_path)
     selector3 = DataCollectingMaskSelector(window_title="Velocity-Steering Rate Mask",
-                                            x_min=V_MIN, x_max=V_MAX, y_min=STEER_RATE_MIN, y_max=STEER_RATE_MAX,
-                                            num_bins_x=NUM_BINS_V, num_bins_y=NUM_BINS_STEER_RATE, default_number=VEL_STEER_RATE_THRESHOLD,
-                                            xlabel="Velocity (m/s)", ylabel="Steering Rate (rad/s)", mask_xy=mask_velocity_steering_rate)
+                                            x_min=V_MIN, x_max=V_MAX, y_min=ABS_STEER_RATE_MIN, y_max=ABS_STEER_RATE_MAX,
+                                            num_bins_x=NUM_BINS_V, num_bins_y=NUM_BINS_STEER_RATE, default_number=VEL_ABS_STEER_RATE_THRESHOLD,
+                                            xlabel="Velocity (m/s)", ylabel="Abs Steering Rate (rad/s)", mask_xy=mask_velocity_steering_rate)
 
     print("Press Ctrl+C to save Masks and exit.")
 
