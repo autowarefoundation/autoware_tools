@@ -1,17 +1,29 @@
 import os
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import numpy as np
-import threading
 import signal
+import threading
 import time
+
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
 import yaml
 
+
 class DataCollectingMaskSelector:
-    def __init__(self, window_title="Data Collecting Mask Selector",
-                 x_min=0, x_max=10, y_min=-5, y_max=5,
-                 num_bins_x=10, num_bins_y=10, default_number=1,
-                 xlabel="X Axis", ylabel="Y Axis", mask_xy=None):
+    def __init__(
+        self,
+        window_title="Data Collecting Mask Selector",
+        x_min=0,
+        x_max=10,
+        y_min=-5,
+        y_max=5,
+        num_bins_x=10,
+        num_bins_y=10,
+        default_number=1,
+        xlabel="X Axis",
+        ylabel="Y Axis",
+        mask_xy=None,
+    ):
         """
         Initializes the DataCollectingMaskSelector.
 
@@ -38,7 +50,11 @@ class DataCollectingMaskSelector:
         self.ylabel = ylabel
 
         # Initialize mask_xy with the provided array or default to ones
-        self.mask_xy = mask_xy if mask_xy is not None else np.ones((self.num_bins_x, self.num_bins_y), dtype=int)
+        self.mask_xy = (
+            mask_xy
+            if mask_xy is not None
+            else np.ones((self.num_bins_x, self.num_bins_y), dtype=int)
+        )
 
         self.dragging = False
         self.select_mode = True
@@ -63,7 +79,7 @@ class DataCollectingMaskSelector:
         self.ax.set_yticklabels([f"{y:.2f}" for y in self.y_bin_centers[::-1]], minor=True)
 
         # Configure grid lines and labels
-        self.ax.grid(True, color='black', linestyle='-', linewidth=1.5)
+        self.ax.grid(True, color="black", linestyle="-", linewidth=1.5)
         self.ax.set_title(window_title)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
@@ -89,17 +105,28 @@ class DataCollectingMaskSelector:
                 cell_y = self.y_bin_centers[y_bin]
                 if self.mask_xy[x_bin, y_bin] == 1:
                     rect = patches.Rectangle(
-                        (cell_x - (self.x_bins[1] - self.x_bins[0]) / 2,
-                         cell_y - (self.y_bins[1] - self.y_bins[0]) / 2),
+                        (
+                            cell_x - (self.x_bins[1] - self.x_bins[0]) / 2,
+                            cell_y - (self.y_bins[1] - self.y_bins[0]) / 2,
+                        ),
                         self.x_bins[1] - self.x_bins[0],
                         self.y_bins[1] - self.y_bins[0],
-                        linewidth=1, edgecolor='yellowgreen', facecolor='yellowgreen'
+                        linewidth=1,
+                        edgecolor="yellowgreen",
+                        facecolor="yellowgreen",
                     )
                     self.ax.add_patch(rect)
                     clicked_cells[(cell_x, cell_y)] = rect
 
-                    text = self.ax.text(cell_x, cell_y, str(self.default_number),
-                                        ha='center', va='center', fontsize=10, color='black')
+                    text = self.ax.text(
+                        cell_x,
+                        cell_y,
+                        str(self.default_number),
+                        ha="center",
+                        va="center",
+                        fontsize=10,
+                        color="black",
+                    )
                     self.text_objects[(cell_x, cell_y)] = text
                 else:
                     rect = None
@@ -163,16 +190,26 @@ class DataCollectingMaskSelector:
             if cell_center not in self.clicked_cells:
                 # Add the rectangle and text
                 rect = patches.Rectangle(
-                    (cell_center[0] - (self.x_bins[1] - self.x_bins[0]) / 2,
-                    cell_center[1] - (self.y_bins[1] - self.y_bins[0]) / 2),
+                    (
+                        cell_center[0] - (self.x_bins[1] - self.x_bins[0]) / 2,
+                        cell_center[1] - (self.y_bins[1] - self.y_bins[0]) / 2,
+                    ),
                     self.x_bins[1] - self.x_bins[0],
                     self.y_bins[1] - self.y_bins[0],
-                    linewidth=1, edgecolor='yellowgreen', facecolor='yellowgreen'
+                    linewidth=1,
+                    edgecolor="yellowgreen",
+                    facecolor="yellowgreen",
                 )
                 self.ax.add_patch(rect)
-                text = self.ax.text(cell_center[0], cell_center[1],
-                                    str(self.default_number), ha='center', va='center',
-                                    fontsize=10, color='black')
+                text = self.ax.text(
+                    cell_center[0],
+                    cell_center[1],
+                    str(self.default_number),
+                    ha="center",
+                    va="center",
+                    fontsize=10,
+                    color="black",
+                )
                 self.text_objects[cell_center] = text
                 self.clicked_cells[cell_center] = rect
                 self.mask_xy[x_bin, y_bin] = 1
@@ -183,7 +220,7 @@ class DataCollectingMaskSelector:
                 del self.clicked_cells[cell_center]
 
                 # Remove the text
-                #if cell_center in self.text_objects:
+                # if cell_center in self.text_objects:
                 self.text_objects[cell_center].remove()
                 del self.text_objects[cell_center]
 
@@ -200,13 +237,15 @@ def load_config_from_yaml(file_path):
     """
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"YAML file '{file_path}' not found.")
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         try:
             return yaml.safe_load(file)
         except yaml.YAMLError as e:
             raise ValueError(f"Error parsing YAML file '{file_path}': {e}")
 
+
 import numpy as np
+
 
 def load_mask_from_txt(file_path):
     """
@@ -225,6 +264,7 @@ def load_mask_from_txt(file_path):
     except Exception as e:
         print(f"Error loading file {file_path}: {e}")
         return None
+
 
 def main():
     """
@@ -263,26 +303,57 @@ def main():
     VEL_STEER_RATE_THRESHOLD = config["VEL_STEER_RATE_THRESHOLD"]
 
     # Create 3 instances of the selector with different configurations
-    mask_velocity_acceleration_path = os.path.join(directory_path, f"{MASK_NAME}_Velocity_Acceleration.txt")
+    mask_velocity_acceleration_path = os.path.join(
+        directory_path, f"{MASK_NAME}_Velocity_Acceleration.txt"
+    )
     mask_velocity_acceleration = load_mask_from_txt(mask_velocity_acceleration_path)
-    selector1 = DataCollectingMaskSelector(window_title="Velocity-Acceleration Mask",
-                                            x_min=V_MIN, x_max=V_MAX, y_min=A_MIN, y_max=A_MAX,
-                                            num_bins_x=NUM_BINS_V, num_bins_y=NUM_BINS_A, default_number=VEL_ACC_THRESHOLD,
-                                            xlabel="Velocity (m/s)", ylabel="Acceleration (m/s^2)", mask_xy=mask_velocity_acceleration)
+    selector1 = DataCollectingMaskSelector(
+        window_title="Velocity-Acceleration Mask",
+        x_min=V_MIN,
+        x_max=V_MAX,
+        y_min=A_MIN,
+        y_max=A_MAX,
+        num_bins_x=NUM_BINS_V,
+        num_bins_y=NUM_BINS_A,
+        default_number=VEL_ACC_THRESHOLD,
+        xlabel="Velocity (m/s)",
+        ylabel="Acceleration (m/s^2)",
+        mask_xy=mask_velocity_acceleration,
+    )
 
     mask_velocity_steering_path = os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering.txt")
     mask_velocity_steer = load_mask_from_txt(mask_velocity_steering_path)
-    selector2 = DataCollectingMaskSelector(window_title="Velocity-Steering Mask",
-                                            x_min=V_MIN, x_max=V_MAX, y_min=STEER_MIN, y_max=STEER_MAX,
-                                            num_bins_x=NUM_BINS_V, num_bins_y=NUM_BINS_STEER, default_number=VEL_STEER_THRESHOLD,
-                                            xlabel="Velocity (m/s)", ylabel="Steering Angle (rad)", mask_xy=mask_velocity_steer)
+    selector2 = DataCollectingMaskSelector(
+        window_title="Velocity-Steering Mask",
+        x_min=V_MIN,
+        x_max=V_MAX,
+        y_min=STEER_MIN,
+        y_max=STEER_MAX,
+        num_bins_x=NUM_BINS_V,
+        num_bins_y=NUM_BINS_STEER,
+        default_number=VEL_STEER_THRESHOLD,
+        xlabel="Velocity (m/s)",
+        ylabel="Steering Angle (rad)",
+        mask_xy=mask_velocity_steer,
+    )
 
-    mask_velocity_steering_rate_path = os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt")
+    mask_velocity_steering_rate_path = os.path.join(
+        directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt"
+    )
     mask_velocity_steering_rate = load_mask_from_txt(mask_velocity_steering_rate_path)
-    selector3 = DataCollectingMaskSelector(window_title="Velocity-Steering Rate Mask",
-                                            x_min=V_MIN, x_max=V_MAX, y_min=STEER_RATE_MIN, y_max=STEER_RATE_MAX,
-                                            num_bins_x=NUM_BINS_V, num_bins_y=NUM_BINS_STEER_RATE, default_number=VEL_STEER_RATE_THRESHOLD,
-                                            xlabel="Velocity (m/s)", ylabel="Steering Rate (rad/s)", mask_xy=mask_velocity_steering_rate)
+    selector3 = DataCollectingMaskSelector(
+        window_title="Velocity-Steering Rate Mask",
+        x_min=V_MIN,
+        x_max=V_MAX,
+        y_min=STEER_RATE_MIN,
+        y_max=STEER_RATE_MAX,
+        num_bins_x=NUM_BINS_V,
+        num_bins_y=NUM_BINS_STEER_RATE,
+        default_number=VEL_STEER_RATE_THRESHOLD,
+        xlabel="Velocity (m/s)",
+        ylabel="Steering Rate (rad/s)",
+        mask_xy=mask_velocity_steering_rate,
+    )
 
     print("Press Ctrl+C to save Masks and exit.")
 
@@ -309,11 +380,19 @@ def main():
         while not shutdown_event.is_set():
             plt.pause(0.01)
     finally:
-        np.savetxt( mask_velocity_acceleration_path, selector1.mask_xy, fmt="%d")
+        np.savetxt(mask_velocity_acceleration_path, selector1.mask_xy, fmt="%d")
         print("Saved Velocity-Acceleration Mask to", mask_velocity_acceleration_path)
-        np.savetxt(os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering.txt"), selector2.mask_xy, fmt="%d")
+        np.savetxt(
+            os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering.txt"),
+            selector2.mask_xy,
+            fmt="%d",
+        )
         print("Saved Velocity-Steering Mask to", mask_velocity_steering_path)
-        np.savetxt(os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt"), selector3.mask_xy, fmt="%d")
+        np.savetxt(
+            os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt"),
+            selector3.mask_xy,
+            fmt="%d",
+        )
         print("Saved Velocity-Steering Rate Mask to", mask_velocity_steering_rate_path)
         print("Exiting program.")
 

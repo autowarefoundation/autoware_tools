@@ -77,7 +77,9 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_steer", 10
         )
         self.collected_data_counts_of_vel_steer_rate_publisher_ = self.create_publisher(
-            Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_steer_rate", 10
+            Int32MultiArray,
+            "/control_data_collecting_tools/collected_data_counts_of_vel_steer_rate",
+            10,
         )
 
         self.vel_hist_publisher_ = self.create_publisher(
@@ -225,7 +227,6 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
 
         if 0 <= v_bin < self.num_bins_v and 0 <= steer_rate_bin < self.num_bins_steer_rate:
             self.collected_data_counts_of_vel_steer_rate[v_bin, steer_rate_bin] += 1
-        
 
     # call back for counting data points
     def timer_callback_counter(self):

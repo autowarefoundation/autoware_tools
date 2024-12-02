@@ -14,10 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import queue
+
 from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
-from courses.load_course import declare_course_params
 from courses.load_course import create_course_subscription
+from courses.load_course import declare_course_params
 from courses.load_course import load_course
 from data_collecting_base_node import DataCollectingBaseNode
 from geometry_msgs.msg import Point
@@ -26,7 +28,6 @@ from geometry_msgs.msg import PoseStamped
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import pi
-import queue
 from rcl_interfaces.msg import ParameterDescriptor
 import rclpy
 from scipy.spatial.transform import Rotation as R
@@ -203,7 +204,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
 
         self.updated_course_param_queue = queue.Queue()
         create_course_subscription(self.COURSE_NAME, self)
-        
+
         # obtain ros params as dictionary
         param_names = self._parameters
         params = self.get_parameters(param_names)
@@ -533,7 +534,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 self.collected_data_counts_of_vel_acc,
                 self.collected_data_counts_of_vel_steer,
                 self.mask_vel_acc,
-                self.mask_vel_steer
+                self.mask_vel_steer,
             )
 
             trajectory_longitudinal_velocity_data = np.array(

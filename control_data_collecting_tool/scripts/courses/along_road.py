@@ -14,12 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from autoware_map_msgs.msg import LaneletMapBin
 from courses.base_course import Base_Course
 from courses.lanelet import LaneletMapHandler
 import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
-from rclpy.qos import QoSProfile, QoSDurabilityPolicy
-from autoware_map_msgs.msg import LaneletMapBin
+from rclpy.qos import QoSDurabilityPolicy
+from rclpy.qos import QoSProfile
 from scipy.interpolate import interp1d as interpolation_1d
 
 
@@ -94,6 +95,7 @@ def declare_along_road_params(node):
             description="Path to the map directory", dynamic_typing=True
         ),
     )
+
 
 class Along_Road(Base_Course):
     def __init__(self, step: float, param_dict):
@@ -252,7 +254,7 @@ class Along_Road(Base_Course):
         collected_data_counts_of_vel_acc,
         collected_data_counts_of_vel_steer,
         mask_vel_acc,
-        mask_vel_steer
+        mask_vel_steer,
     ):
         part = self.parts[nearestIndex]
         achievement_rate = self.achievement_rates[nearestIndex]
@@ -264,8 +266,7 @@ class Along_Road(Base_Course):
             or (part == "straight" and achievement_rate < 0.05)
         ) and not self.set_target_velocity_on_straight_line:
             self.acc_idx, self.vel_idx = self.choose_target_velocity_acc(
-                collected_data_counts_of_vel_acc,
-                mask_vel_acc
+                collected_data_counts_of_vel_acc, mask_vel_acc
             )
             self.target_acc_on_straight_line = self.params.a_bin_centers[self.acc_idx]
             self.target_vel_on_straight_line = self.params.v_bin_centers[self.vel_idx]

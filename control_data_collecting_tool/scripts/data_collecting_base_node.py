@@ -14,15 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from autoware_adapi_v1_msgs.msg import OperationModeState
 from autoware_vehicle_msgs.msg import ControlModeReport
 from geometry_msgs.msg import AccelWithCovarianceStamped
 from nav_msgs.msg import Odometry
-import os
 import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
-from ament_index_python.packages import get_package_share_directory
 
 
 class DataCollectingBaseNode(Node):
@@ -43,9 +44,7 @@ class DataCollectingBaseNode(Node):
         self.declare_parameter(
             "MASK_NAME",
             "default",
-            ParameterDescriptor(
-                description="Masks for Data collection"
-            ),
+            ParameterDescriptor(description="Masks for Data collection"),
         )
 
         self.declare_parameter(
@@ -205,7 +204,9 @@ class DataCollectingBaseNode(Node):
         self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins_v + 1)
         self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins_steer + 1)
         self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins_a + 1)
-        self.steer_rate_bins = np.linspace(self.steer_rate_min, self.steer_rate_max, self.num_bins_steer_rate + 1)
+        self.steer_rate_bins = np.linspace(
+            self.steer_rate_min, self.steer_rate_max, self.num_bins_steer_rate + 1
+        )
 
         self.v_bin_centers = (self.v_bins[:-1] + self.v_bins[1:]) / 2
         self.steer_bin_centers = (self.steer_bins[:-1] + self.steer_bins[1:]) / 2
@@ -217,16 +218,32 @@ class DataCollectingBaseNode(Node):
         """
         # set mask name
         MASK_NAME = self.get_parameter("MASK_NAME").value
-        mask_directory_path = get_package_share_directory("control_data_collecting_tool") + "/config/masks/" + MASK_NAME
+        mask_directory_path = (
+            get_package_share_directory("control_data_collecting_tool")
+            + "/config/masks/"
+            + MASK_NAME
+        )
 
-        mask_vel_acc_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Acceleration.txt")
-        self.mask_vel_acc = self.load_mask_from_txt(mask_vel_acc_path, self.num_bins_v, self.num_bins_a)
+        mask_vel_acc_path = os.path.join(
+            mask_directory_path, f"{MASK_NAME}_Velocity_Acceleration.txt"
+        )
+        self.mask_vel_acc = self.load_mask_from_txt(
+            mask_vel_acc_path, self.num_bins_v, self.num_bins_a
+        )
 
-        mask_velocity_steering_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering.txt")
-        self.mask_vel_steer = self.load_mask_from_txt(mask_velocity_steering_path, self.num_bins_v, self.num_bins_steer)
+        mask_velocity_steering_path = os.path.join(
+            mask_directory_path, f"{MASK_NAME}_Velocity_Steering.txt"
+        )
+        self.mask_vel_steer = self.load_mask_from_txt(
+            mask_velocity_steering_path, self.num_bins_v, self.num_bins_steer
+        )
 
-        mask_velocity_steer_rate_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt")
-        self.mask_vel_steer_rate = self.load_mask_from_txt(mask_velocity_steer_rate_path, self.num_bins_v, self.num_bins_steer_rate)
+        mask_velocity_steer_rate_path = os.path.join(
+            mask_directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt"
+        )
+        self.mask_vel_steer_rate = self.load_mask_from_txt(
+            mask_velocity_steer_rate_path, self.num_bins_v, self.num_bins_steer_rate
+        )
 
     def onOdometry(self, msg):
         self._present_kinematic_state = msg
@@ -245,7 +262,7 @@ class DataCollectingBaseNode(Node):
 
     def subscribe_control_mode(self, msg):
         self._present_control_mode_ = msg.mode
-    
+
     def load_mask_from_txt(self, file_path, nx, ny):
         """
         Loads a numerical mask from a text file into a numpy array.
@@ -262,5 +279,5 @@ class DataCollectingBaseNode(Node):
                 return mask
         except Exception as e:
             pass
-        
+
         return np.ones((nx, ny), dtype=int)
