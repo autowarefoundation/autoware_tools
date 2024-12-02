@@ -3,4 +3,8 @@
          type="rviz_plugins::DataCollectingAreaSelectionTool"
          base_class_type="rviz_common::Tool">
   </class>
+  <class name="rviz_plugins/DataCollectingGoalPose"
+         type="rviz_plugins::DataCollectingGoalPose"
+         base_class_type="rviz_common::Tool">
+  </class>
 </library>
