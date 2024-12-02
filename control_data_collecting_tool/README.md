@@ -120,6 +120,13 @@ This package provides tools for automatically collecting data using pure pursuit
 
     <img src="resource/push_LOCAL.gif" width="480">
 
+    You can monitor the data collection status in real-time through the window that pops up when this node is launched.
+    (From top to bottom: the speed-acceleration phase diagram, the speed-acceleration heatmap, the speed-steering angle heatmap, the speed-steer rate heatmap, and the speed-jerk heatmap.)
+    <img src="resource/data_collection_status.png" width="480">
+
+    For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/$(MASK_NAME)` as specified by the parameter `MASK_NAME`.
+    The specified heatmap cells are designed to change from blue to green once a certain amount of data (`VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, `VEL_ABS_STEER_RATE_THRESHOLD` ) is collected. It is recommended to collect data until as many cells as possible turn green.
+
 8. If you want to stop data collecting automatic driving, run the following command
 
     ```bash
@@ -167,8 +174,8 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `JERK_MAX`                               | `double` | Maximum jerk in heatmap [m/s^3]                                                                                                           | 0.5                    |
 | `MASK_NAME`                              | `string` | Directory name of masks for data collection                                                                                               | `default`              |
 | `VEL_ACC_THRESHOLD`                      | `int`    | Threshold of velocity-and-acc heatmap in data collection                                                                                  | 40                     |
-| 'VEL_STEER_THRESHOLD'                    | `int`    | Threshold of velocity-and-steer heatmap in data collection                                                                                | 20                     |
-| 'VEL_ABS_STEER_RATE_THRESHOLD'           | `int`    | Threshold of velocity-and-abs_steer_rate heatmap in data collection                                                                       | 20                     |
+| `VEL_STEER_THRESHOLD`                    | `int`    | Threshold of velocity-and-steer heatmap in data collection                                                                                | 20                     |
+| `VEL_ABS_STEER_RATE_THRESHOLD`           | `int`    | Threshold of velocity-and-abs_steer_rate heatmap in data collection                                                                       | 20                     |
 | `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                                                                     | 2.00                   |
 | `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]                                                                               | 1.50                   |
 | `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                                                                   | 0.75                   |
