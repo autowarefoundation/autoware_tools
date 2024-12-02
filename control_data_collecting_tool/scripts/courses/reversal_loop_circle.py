@@ -818,9 +818,9 @@ class Reversal_Loop_Circle(Base_Course):
             self.trajectory_nearly_straight_clock_wise[self.steer_list[i]] = trajectory
 
             # Generate and store counterclockwise trajectories by reversing the clockwise trajectory.
-            self.trajectory_nearly_straight_counter_clock_wise[
-                self.steer_list[i]
-            ] = reverse_trajectory_segment(trajectory)
+            self.trajectory_nearly_straight_counter_clock_wise[self.steer_list[i]] = (
+                reverse_trajectory_segment(trajectory)
+            )
 
         # Generate trajectories for changing directions (turning).
 
