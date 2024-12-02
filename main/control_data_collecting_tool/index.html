@@ -2974,14 +2974,7 @@
       
         <li class="md-nav__item">
   <a href="#how-to-use" class="md-nav__link">
-    How to use
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#change-courses" class="md-nav__link">
-    Change Courses
+    How to Use
   </a>
   
 </li>
@@ -2990,6 +2983,26 @@
   <a href="#parameter" class="md-nav__link">
     Parameter
   </a>
+  
+    <nav class="md-nav" aria-label="Parameter">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-parameters" class="md-nav__link">
+    Common Parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#course-specific-parameters" class="md-nav__link">
+    Course-Specific Parameters
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3013,19 +3026,61 @@
 
 <div><h1 id="control-data-collecting-tool">Control data collecting tool<a class="headerlink" href="#control-data-collecting-tool" title="Permanent link">#</a></h1>
 <p>This package provides tools for automatically collecting data using pure pursuit control within a specified rectangular area.</p>
-<p><img src="resource/demo.gif" width="800"></p>
+<p><img src="resource/push_LOCAL.gif" width="540"></p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h2>
 <ul>
 <li>This package aims to collect a dataset consisting of control inputs (i.e. <code>control_cmd</code>) and observation variables (i.e. <code>kinematic_state</code>, <code>steering_status</code>, etc).</li>
 <li>The collected dataset can be used as training dataset for learning-based controllers, including <a href="https://github.com/autowarefoundation/autoware.universe/tree/f30c0350861d020ad26a45806ab1334895122fab/control/smart_mpc_trajectory_follower">smart_mpc</a>.</li>
-<li>The data collecting approach is as follows:<ul>
-<li>Setting a figure-eight target trajectory within the specified rectangular area.</li>
+<li>
+<p>Data collecting approach is as follows:</p>
+<ul>
 <li>Following the trajectory using a pure pursuit control law.</li>
 <li>Adding noises to the trajectory and the control command for data diversity, improving the prediction accuracy of learning model.</li>
+<li>
+<p>Setting the trajectory from the following types of trajectories ( [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>, <code>reversal_loop_circle</code>, <code>along_road</code>] ).</p>
+<ul>
+<li>
+<p><code>COURSE_NAME: eight_course</code></p>
+<p><img src="resource/figure_eight.png" width="480"></p>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>COURSE_NAME: u_shaped_return</code></p>
+<p><img src="resource/u_shaped.png" width="480"></p>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>COURSE_NAME: straight_line_positive</code> or <code>COURSE_NAME: straight_line_negative</code></p>
+<p>( Both "straight_line_positive" and "straight_line_negative" represent straight line courses, but the direction of travel of the course is reversed.)</p>
+<p><img src="resource/straight_line.png" width="480"></p>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>COURSE_NAME: reversal_loop_circle</code></p>
+<p>Drive within a circle while adding trajectories and collect data.</p>
+<p><img src="resource/reversal_loop_circle.png" width="320"></p>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>COURSE_NAME: along_road</code></p>
+<p>Generate trajectories along the road. This is particularly useful when drawing long straight paths along the road.</p>
+<p>In this course, data collection is conducted only on long straight trajectories, while constant velocity, <code>velocity_on_curve</code>, is maintained when driving on sections that include curves.</p>
+<p>The minimum length of these long straight trajectories can be specified using the parameter <code>minimum_length_of_straight_line</code> (These two parameters <code>velocity_on_curve</code> and <code>minimum_length_of_straight_line</code> can be configured in <code>./config/course_param/along_road_param.yaml</code>).</p>
+<p><img src="resource/along_road.png" width="540"></p>
+</li>
 </ul>
 </li>
 </ul>
-<h2 id="how-to-use">How to use<a class="headerlink" href="#how-to-use" title="Permanent link">#</a></h2>
+</li>
+</ul>
+<h2 id="how-to-use">How to Use<a class="headerlink" href="#how-to-use" title="Permanent link">#</a></h2>
+<!-- prettier-ignore-start -->
+<!-- Since markdownlint and prettier formats are different, use only markdownlint. -->
+
 <ol>
 <li>
 <p>Launch Autoware.</p>
@@ -3036,54 +3091,63 @@
 <p>Set an initial pose, see <a href="https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#2-set-an-initial-pose-for-the-ego-vehicle">here</a>.</p>
 </li>
 <li>
-<p>Add <code>DataCollectingAreaSelectionTool</code> rviz plugin.</p>
-<p><img src="resource/add_rviz_plugin.png" width="480"></p>
+<p>Add the DataCollectingAreaSelectionTool and DataCollectingGoalPlugin RViz plugins by clicking the "+" icon at the top of the RViz window. <br> <img src="resource/add_rviz_plugin.png" width="480"></p>
 </li>
 <li>
 <p>Launch control_data_collecting_tool.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>control_data_collecting_tool<span class="w"> </span>control_data_collecting_tool.launch.py
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>control_data_collecting_tool<span class="w"> </span>control_data_collecting_tool.launch.py<span class="w"> </span>map_path:<span class="o">=</span><span class="nv">$HOME</span>/autoware_map/sample-map-planning
 </code></pre></div>
-<ul>
-<li>Control data collecting tool automatically records topics included in <code>config/topics.yaml</code> when the above command is executed.
-   The topics will be saved in rosbag2 format in the directory where the above command is executed.</li>
-</ul>
-<ul>
-<li>The data from <code>/localization/kinematic_state</code> and <code>/localization/acceleration</code> located in the directory (rosbag2 format) where the command is executed will be automatically loaded and reflected in the data count for these topics.
-   (If <code>LOAD_ROSBAG2_FILES</code> in <code>config/param.yaml</code> is set to <code>false</code>, the data is noe loaded.)</li>
-</ul>
+<p>- If you use the <code>along_road</code> course, please specify the same map for <code>map_path</code> as the one used when launching Autoware. <code>map_path</code> is not necessary when using courses other than <code>along_road</code>.</p>
+<p>- Control data collecting tool automatically records topics included in <code>config/topics.yaml</code> when the above command is executed.
+    Topics will be saved in rosbag2 format in the current directory.</p>
+<p>- The data from <code>/localization/kinematic_state</code> and <code>/localization/acceleration</code> located in the directory (rosbag2 format) where the command is executed will be automatically loaded and reflected in the data count for these topics.
+    (If <code>LOAD_ROSBAG2_FILES</code> in <code>config/param.yaml</code> is set to <code>false</code>, the data is not loaded.)</p>
 </li>
 <li>
 <p>Add visualization in rviz:</p>
-<ul>
-<li><code>/data_collecting_area</code><ul>
-<li>Type: Polygon</li>
-</ul>
-</li>
-<li><code>/data_collecting_trajectory_marker_array</code><ul>
-<li>Type: MarkerArray</li>
-</ul>
-</li>
-<li><code>/data_collecting_lookahead_marker_array</code><ul>
-<li>Type: MarkerArray</li>
-</ul>
-</li>
-</ul>
+<p>- <code>/data_collecting_area</code>
+    - Type: Polygon
+  - <code>/data_collecting_trajectory_marker_array</code>
+    - Type: MarkerArray
+  - <code>/data_collecting_lookahead_marker_array</code>
+    - Type: MarkerArray</p>
 </li>
 <li>
-<p>Select <code>DataCollectingAreaSelectionTool</code> plugin.</p>
-<p><img src="resource/select_tool.png" width="480"></p>
-<p>Highlight the data collecting area by dragging the mouse over it.</p>
-<p><img src="resource/select_area.gif" width="480"></p>
-<blockquote>
-<p>[!NOTE]
-You cannot change the data collecting area while driving.</p>
-</blockquote>
+<p>The following actions differ depending on the selected course. If you select the trajectory from [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>, <code>reversal_loop_circle</code>], proceed to 6.1. If you select the trajectory from [<code>along_road</code>], please proceed to 6.2.</p>
+<p>- 6.1 If you choose the trajectory from [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>, <code>reversal_loop_circle</code>], select <code>DataCollectingAreaSelectionTool</code> plugin.</p>
+<div class="codehilite"><pre><span></span><code>&lt;img src="resource/DataCollectingAreaSelection.png" width="480"&gt;
+
+Highlight the data collecting area by dragging the mouse over it.
+
+    &lt;img src="resource/select_area.gif" width="480"&gt;
+
+&gt; [!NOTE]
+&gt; You cannot change the data collecting area while driving.
+</code></pre></div>
+
+<p>- 6.2 If you choose the trajectory from [<code>along_road</code>], select <code>DataCollectingGoalPose</code> plugin.</p>
+<div class="codehilite"><pre><span></span><code>  &lt;img src="resource/DataCollectingGoalPose.png" width="480"&gt;
+
+By setting the pose of the goal point, a trajectory is generated on the map.
+
+  &lt;img src="resource/set_trajectory_along_road.gif" width="480"&gt;
+
+As soon as the trajectory is generated, the plot with the map and trajectory drawn on it will be created (please see the following picture).
+In the sections labeled `velocity = const (velocity_on_curve)` in the legend, the vehicle travels at a constant velocity of `velocity_on_curve`. In the sections labeled `Data collection is conducted`, data collection is performed.
+
+  &lt;img src="resource/along_load_plot.png" width="480"&gt;
+
+&gt; [!NOTE]
+&gt; You cannot change the goal pose while driving.
+&gt; In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
+</code></pre></div>
+
 </li>
 <li>
 <p>Click the <code>LOCAL</code> button on <code>OperationMode</code> in <code>AutowareStatePanel</code>.</p>
 <p><img src="resource/push_LOCAL.png" width="480"></p>
 <p>Then, data collecting starts.</p>
-<p><img src="resource/demo.gif" width="480"></p>
+<p><img src="resource/push_LOCAL.gif" width="480"></p>
 </li>
 <li>
 <p>If you want to stop data collecting automatic driving, run the following command</p>
@@ -3100,23 +3164,12 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 </code></pre></div>
 </li>
 </ol>
-<h2 id="change-courses">Change Courses<a class="headerlink" href="#change-courses" title="Permanent link">#</a></h2>
-<p>You can change the course by selecting <code>COURSE_NAME</code> in <code>config/param.yaml</code> from [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>].</p>
-<ul>
-<li><code>COURSE_NAME: eight_course</code>
-  <img src="resource/figure_eight.png" width="480"></li>
-</ul>
-<ul>
-<li><code>COURSE_NAME: u_shaped_return</code>
-  <img src="resource/u_shaped.png" width="480"></li>
-</ul>
-<ul>
-<li><code>COURSE_NAME: straight_line_positive</code> or <code>COURSE_NAME: straight_line_negative</code>
-  ( Both "straight_line_positive" and "straight_line_negative" represent straight line courses, but the direction of travel of the course is reversed.)
-  <img src="resource/straight_line.png" width="480"></li>
-</ul>
+<!-- prettier-ignore-end -->
+
 <h2 id="parameter">Parameter<a class="headerlink" href="#parameter" title="Permanent link">#</a></h2>
-<p>ROS 2 params which are common in all nodes:</p>
+<p>There are parameters that are common to all trajectories and parameters that are specific to each trajectory.</p>
+<h3 id="common-parameters">Common Parameters<a class="headerlink" href="#common-parameters" title="Permanent link">#</a></h3>
+<p>ROS 2 parameters which are common in all trajectories (<code>/config/common_param.yaml</code>):</p>
 <table>
 <thead>
 <tr>
@@ -3131,13 +3184,13 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <td align="left"><code>LOAD_ROSBAG2_FILES</code></td>
 <td align="left"><code>bool</code></td>
 <td align="left">Flag that determines whether to load rosbag2 data or not</td>
-<td align="left">True</td>
+<td align="left">true</td>
 </tr>
 <tr>
 <td align="left"><code>COURSE_NAME</code></td>
 <td align="left"><code>string</code></td>
-<td align="left">Course name [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>]</td>
-<td align="left"><code>eight_course</code></td>
+<td align="left">Course name [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>, <code>reversal_loop_circle</code>, <code>along_road</code>]</td>
+<td align="left"><code>reversal_loop_circle</code></td>
 </tr>
 <tr>
 <td align="left"><code>NUM_BINS_V</code></td>
@@ -3149,7 +3202,7 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <td align="left"><code>NUM_BINS_STEER</code></td>
 <td align="left"><code>int</code></td>
 <td align="left">Number of bins of steer in heatmap</td>
-<td align="left">10</td>
+<td align="left">20</td>
 </tr>
 <tr>
 <td align="left"><code>NUM_BINS_A</code></td>
@@ -3173,13 +3226,13 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <td align="left"><code>STEER_MIN</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Minimum steer in heatmap [rad]</td>
-<td align="left">-1.0</td>
+<td align="left">-0.6</td>
 </tr>
 <tr>
 <td align="left"><code>STEER_MAX</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Maximum steer in heatmap [rad]</td>
-<td align="left">1.0</td>
+<td align="left">0.6</td>
 </tr>
 <tr>
 <td align="left"><code>A_MIN</code></td>
@@ -3194,46 +3247,22 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <td align="left">1.0</td>
 </tr>
 <tr>
-<td align="left"><code>COLLECTING_DATA_V_MIN</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Minimum velocity for data collection [m/s]</td>
-<td align="left">0.0</td>
-</tr>
-<tr>
-<td align="left"><code>COLLECTING_DATA_V_MAX</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Maximum velocity for data collection [m/s]</td>
-<td align="left">11.5</td>
-</tr>
-<tr>
-<td align="left"><code>COLLECTING_DATA_A_MIN</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Minimum velocity for data collection [m/ss]</td>
-<td align="left">1.0</td>
-</tr>
-<tr>
-<td align="left"><code>COLLECTING_DATA_A_MAX</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Maximum velocity for data collection [m/ss]</td>
-<td align="left">-1.0</td>
-</tr>
-<tr>
 <td align="left"><code>max_lateral_accel</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Max lateral acceleration limit [m/ss]</td>
-<td align="left">0.5</td>
+<td align="left">2.00</td>
 </tr>
 <tr>
 <td align="left"><code>lateral_error_threshold</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Lateral error threshold where applying velocity limit [m/s]</td>
-<td align="left">5.0</td>
+<td align="left">1.50</td>
 </tr>
 <tr>
 <td align="left"><code>yaw_error_threshold</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Yaw error threshold where applying velocity limit [rad]</td>
-<td align="left">0.50</td>
+<td align="left">0.75</td>
 </tr>
 <tr>
 <td align="left"><code>velocity_limit_by_tracking_error</code></td>
@@ -3245,31 +3274,13 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <td align="left"><code>mov_ave_window</code></td>
 <td align="left"><code>int</code></td>
 <td align="left">Moving average smoothing window size</td>
-<td align="left">100</td>
+<td align="left">50</td>
 </tr>
 <tr>
 <td align="left"><code>target_longitudinal_velocity</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Target longitudinal velocity [m/s]</td>
 <td align="left">6.0</td>
-</tr>
-<tr>
-<td align="left"><code>longitudinal_velocity_noise_amp</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Target longitudinal velocity additional sine noise amplitude [m/s]</td>
-<td align="left">0.01</td>
-</tr>
-<tr>
-<td align="left"><code>longitudinal_velocity_noise_min_period</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Target longitudinal velocity additional sine noise minimum period [s]</td>
-<td align="left">5.0</td>
-</tr>
-<tr>
-<td align="left"><code>longitudinal_velocity_noise_max_period</code></td>
-<td align="left"><code>double</code></td>
-<td align="left">Target longitudinal velocity additional sine noise maximum period [s]</td>
-<td align="left">20.0</td>
 </tr>
 <tr>
 <td align="left"><code>pure_pursuit_type</code></td>
@@ -3329,61 +3340,202 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <td align="left"><code>lon_acc_lim</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Longitudinal acceleration limit [m/ss]</td>
-<td align="left">5.0</td>
+<td align="left">1.5</td>
 </tr>
 <tr>
 <td align="left"><code>lon_jerk_lim</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Longitudinal jerk limit [m/sss]</td>
-<td align="left">5.0</td>
+<td align="left">0.5</td>
 </tr>
 <tr>
 <td align="left"><code>steer_lim</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Steering angle limit [rad]</td>
-<td align="left">1.0</td>
+<td align="left">0.6</td>
 </tr>
 <tr>
 <td align="left"><code>steer_rate_lim</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Steering angle rate limit [rad/s]</td>
-<td align="left">1.0</td>
+<td align="left">0.6</td>
+</tr>
+</tbody>
+</table>
+<p>The following parameters are common to all trajectories but can be defined individually for each trajectory. (<code>/config/course_param/COURSE_NAME_param.yaml</code>):
+| Name | Type | Description | Default value |
+| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
+| <code>COLLECTING_DATA_V_MIN</code> | <code>double</code> | Minimum velocity for data collection [m/s] | 0.5 |
+| <code>COLLECTING_DATA_V_MAX</code> | <code>double</code> | Maximum velocity for data collection [m/s] | 8.0 |
+| <code>COLLECTING_DATA_A_MIN</code> | <code>double</code> | Minimum velocity for data collection [m/ss] | 1.0 |
+| <code>COLLECTING_DATA_A_MAX</code> | <code>double</code> | Maximum velocity for data collection [m/ss] | -1.0 |
+| <code>longitudinal_velocity_noise_amp</code> | <code>double</code> | Target longitudinal velocity additional sine noise amplitude [m/s] | 0.01 |
+| <code>longitudinal_velocity_noise_min_period</code> | <code>double</code> | Target longitudinal velocity additional sine noise minimum period [s] | 5.0 |
+| <code>longitudinal_velocity_noise_max_period</code> | <code>double</code> | Target longitudinal velocity additional sine noise maximum period [s] | 20.0 |
+| <code>acc_noise_amp</code> | <code>double</code> | Accel command additional sine noise amplitude [m/ss] | 0.01 |
+| <code>acc_noise_min_period</code> | <code>double</code> | Accel command additional sine noise minimum period [s] | 5.0 |
+| <code>acc_noise_max_period</code> | <code>double</code> | Accel command additional sine noise maximum period [s] | 20.0 |
+| <code>steer_noise_amp</code> | <code>double</code> | Steer command additional sine noise amplitude [rad] | 0.01 |
+| <code>steer_noise_max_period</code> | <code>double</code> | Steer command additional sine noise maximum period [s] | 5.0 |
+| <code>steer_noise_min_period</code> | <code>double</code> | Steer command additional sine noise minimum period [s] | 20.0 |</p>
+<h3 id="course-specific-parameters">Course-Specific Parameters<a class="headerlink" href="#course-specific-parameters" title="Permanent link">#</a></h3>
+<p>Each trajectory has specific ROS 2 parameters.</p>
+<ul>
+<li><code>COURSE_NAME: eight_course</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>velocity_on_curve</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Constant velocity on curve [m/s]</td>
+<td align="left">4.5</td>
 </tr>
 <tr>
-<td align="left"><code>acc_noise_amp</code></td>
+<td align="left"><code>smoothing_window</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Accel command additional sine noise amplitude [m/ss]</td>
-<td align="left">0.01</td>
+<td align="left">Width of the window for trajectory smoothing</td>
+<td align="left">400</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>COURSE_NAME: u_shaped_return</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>velocity_on_curve</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Constant velocity on curve [m/s]</td>
+<td align="left">4.5</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>COURSE_NAME: straight_line_positive</code> or <code>COURSE_NAME: straight_line_negative</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>stopping_buffer_distance</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">The safety distance from end of the straight line [m]</td>
+<td align="left">10.0</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>COURSE_NAME: reversal_loop_circle</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>trajectory_radius</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Radius of the circle where trajectories are generated [m]</td>
+<td align="left">35.0</td>
 </tr>
 <tr>
-<td align="left"><code>acc_noise_min_period</code></td>
+<td align="left"><code>enclosing_radius</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Accel command additional sine noise minimum period [s]</td>
-<td align="left">5.0</td>
+<td align="left">Radius of the circle enclosing the generated trajectories [m]</td>
+<td align="left">40.0</td>
 </tr>
 <tr>
-<td align="left"><code>acc_noise_max_period</code></td>
+<td align="left"><code>look_ahead_distance</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Accel command additional sine noise maximum period [s]</td>
-<td align="left">20.0</td>
+<td align="left">The distance referenced ahead of the vehicle for collecting steering angle data [m]</td>
+<td align="left">15.0</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><code>COURSE_NAME: along_road</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">Name</th>
+<th align="left">Type</th>
+<th align="left">Description</th>
+<th align="left">Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>velocity_on_curve</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Constant velocity on curve [m/s]</td>
+<td align="left">3.5</td>
 </tr>
 <tr>
-<td align="left"><code>steer_noise_amp</code></td>
+<td align="left"><code>stopping_buffer_distance</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Steer command additional sine noise amplitude [rad]</td>
-<td align="left">0.01</td>
+<td align="left">The safety distance from end of the straight line [m]</td>
+<td align="left">15.0</td>
 </tr>
 <tr>
-<td align="left"><code>steer_noise_max_period</code></td>
+<td align="left"><code>course_width</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Steer command additional sine noise maximum period [s]</td>
-<td align="left">5.0</td>
+<td align="left">The width of the trajectory [m]</td>
+<td align="left">1.5</td>
 </tr>
 <tr>
-<td align="left"><code>steer_noise_min_period</code></td>
+<td align="left"><code>smoothing_window</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Steer command additional sine noise minimum period [s]</td>
-<td align="left">20.0</td>
+<td align="left">Width of the window for trajectory smoothing</td>
+<td align="left">100</td>
+</tr>
+<tr>
+<td align="left"><code>minimum_length_of_straight_line</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">The minimum length of straight line for data collection [m]</td>
+<td align="left">50.0</td>
+</tr>
+<tr>
+<td align="left"><code>longitude</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">The longitude of the origin specified when loading the map [degree]</td>
+<td align="left">139.6503</td>
+</tr>
+<tr>
+<td align="left"><code>latitude</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">The latitude of the origin specified when loading the map [degree]</td>
+<td align="left">35.6762</td>
 </tr>
 </tbody>
 </table></div>
