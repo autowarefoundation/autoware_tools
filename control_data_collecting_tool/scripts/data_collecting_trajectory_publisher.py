@@ -17,7 +17,6 @@
 from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
 from courses.load_course import declare_course_params
-from courses.load_course import create_course_subscription
 from courses.load_course import load_course
 from data_collecting_base_node import DataCollectingBaseNode
 from geometry_msgs.msg import Point
@@ -26,7 +25,6 @@ from geometry_msgs.msg import PoseStamped
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy import pi
-import queue
 from rcl_interfaces.msg import ParameterDescriptor
 import rclpy
 from scipy.spatial.transform import Rotation as R
@@ -59,6 +57,16 @@ def getYaw(orientation_xyzw):
 class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
     def __init__(self):
         super().__init__("data_collecting_trajectory_publisher")
+
+        self.declare_parameter(
+            "COURSE_NAME",
+            "eight_course",
+            ParameterDescriptor(
+                description="Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`]"
+            ),
+        )
+        # set course name
+        self.COURSE_NAME = self.get_parameter("COURSE_NAME").value
 
         self.declare_parameter(
             "acc_kp",
@@ -196,14 +204,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         )
         self.sub_data_collecting_area_
 
-        """
-        Declare course specific parameters
-        """
-        declare_course_params(self.COURSE_NAME, self)
-
-        self.updated_course_param_queue = queue.Queue()
-        create_course_subscription(self.COURSE_NAME, self)
-        
         # obtain ros params as dictionary
         param_names = self._parameters
         params = self.get_parameters(param_names)
@@ -532,8 +532,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 present_acc,
                 self.collected_data_counts_of_vel_acc,
                 self.collected_data_counts_of_vel_steer,
-                self.mask_vel_acc,
-                self.mask_vel_steer
             )
 
             trajectory_longitudinal_velocity_data = np.array(

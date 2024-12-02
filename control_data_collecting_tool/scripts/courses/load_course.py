@@ -44,19 +44,6 @@ def declare_course_params(course_name, node):
     elif course_name == "along_road":
         declare_along_road_params(node)
 
-def create_course_subscription(course_name, node):
-    if course_name == "eight_course":
-        pass
-    elif course_name == "straight_line_positive":
-        pass
-    elif course_name == "straight_line_negative":
-        pass
-    elif course_name == "u_shaped_return":
-        pass
-    elif course_name == "reversal_loop_circle":
-        pass
-    elif course_name == "along_road":
-        pass
 
 def load_course(course_name, step_size, params_dict):
     # Load the course based on the course name

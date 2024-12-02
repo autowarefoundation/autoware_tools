@@ -82,9 +82,7 @@ This package provides tools for automatically collecting data using pure pursuit
     - `/data_collecting_lookahead_marker_array`
       - Type: MarkerArray
 
-
 6. The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to 6.1. If you select the trajectory from [`along_road`], please proceed to 6.2.
-
 
     - 6.1 If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
 
