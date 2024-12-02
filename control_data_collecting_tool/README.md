@@ -144,6 +144,40 @@ This package provides tools for automatically collecting data using pure pursuit
 
 <!-- prettier-ignore-end -->
 
+## Specify data collection range
+
+You can create an original mask to specify the data collection range for the heatmap explained in step 7 of the "How to Use" section.
+
+1. Change the `MASK_NAME` parameter in `config/common_param.yaml` from its default value of `default` to any name you prefer. Here, the name 'original' is used.
+
+2. Modify parameters such as VEL_ACC_THRESHOLD, VEL_STEER_THRESHOLD, and VEL_ABS_STEER_RATE_THRESHOLD to determine the desired amount of data for each cell in the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap.
+
+3. In the `scripts/masks directory`, run
+
+    ```Python3
+    python3 mask_selector.py
+    ```
+
+    then, matplotlib windows for selecting the collection range of the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap will be displayed, one for each. Within these windows, you can modify the heatmap by clicking or dragging. Once you have made changes, you can save them again.
+
+    <img src="resource/mask_selection.png" width="480">
+
+    In these windows, you can modify the heatmaps by clicking or dragging within them. Once you've made your changes, pressing Ctrl+C in the terminal will automatically save the updated maps.
+
+    Afterward, rebuild the control_data_collecting_tool using the following command
+    ```bash
+    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-w" --symlink-install --continue-on-error --packages-up-to control_data_collecting_tool
+    ```
+    and relaunch the control_data_collecting_tool with
+    
+    ```bash
+    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
+    ```
+    
+    This will allow you to see the selected mask applied.
+
+    <img src="resource/original.png" width="480">
+
 ## Parameter
 
 There are parameters that are common to all trajectories and parameters that are specific to each trajectory.
