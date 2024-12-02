@@ -122,6 +122,7 @@ This package provides tools for automatically collecting data using pure pursuit
 
     You can monitor the data collection status in real-time through the window that pops up when this node is launched.
     (From top to bottom: the speed-acceleration phase diagram, the speed-acceleration heatmap, the speed-steering angle heatmap, the speed-steer rate heatmap, and the speed-jerk heatmap.)
+
     <img src="resource/data_collection_status.png" width="480">
 
     For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/$(MASK_NAME)` as specified by the parameter `MASK_NAME`.
@@ -148,7 +149,7 @@ This package provides tools for automatically collecting data using pure pursuit
 
 You can create an original mask to specify the data collection range for the heatmap explained in step 7 of the "How to Use" section.
 
-1. Change the `MASK_NAME` parameter in `config/common_param.yaml` from its default value of `default` to any name you prefer. Here, the name 'original' is used.
+1. Change the `MASK_NAME` parameter in `config/common_param.yaml` from its default value of `default` to any name you prefer.
 
 2. Modify parameters such as VEL_ACC_THRESHOLD, VEL_STEER_THRESHOLD, and VEL_ABS_STEER_RATE_THRESHOLD to determine the desired amount of data for each cell in the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap.
 
