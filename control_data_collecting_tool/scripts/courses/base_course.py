@@ -57,15 +57,13 @@ class Base_Course:
             for j in range(
                 self.params.collecting_data_min_n_a, self.params.collecting_data_max_n_a
             ):
-                if mask_vel_acc[i, j] == 1:
+                if mask_vel_acc[i,j] == 1:
                     if min_num_data - min_data_num_margin > collected_data_counts_of_vel_acc[i, j]:
                         min_num_data = collected_data_counts_of_vel_acc[i, j]
                         min_index_list.clear()
                         min_index_list.append((j, i))
 
-                    elif (
-                        min_num_data + min_data_num_margin > collected_data_counts_of_vel_acc[i, j]
-                    ):
+                    elif min_num_data + min_data_num_margin > collected_data_counts_of_vel_acc[i, j]:
                         min_index_list.append((j, i))
 
         return min_index_list[np.random.randint(0, len(min_index_list))]
@@ -79,7 +77,7 @@ class Base_Course:
         collected_data_counts_of_vel_acc,
         collected_data_counts_of_vel_steer,
         mask_vel_acc,
-        mask_vel_steer,
+        mask_vel_steer
     ):
         pass
 
