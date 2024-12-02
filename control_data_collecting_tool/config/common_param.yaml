@@ -13,19 +13,22 @@
     NUM_BINS_STEER: 20
     NUM_BINS_A: 10
     NUM_BINS_STEER_RATE: 5
+    NUM_BINS_JERK: 10
     V_MIN: 0.0
     V_MAX: 11.5
     STEER_MIN: -0.6
     STEER_MAX: 0.6
     A_MIN: -1.0
     A_MAX: 1.0
-    STEER_RATE_MIN: 0.0
-    STEER_RATE_MAX: 0.3
+    ABS_STEER_RATE_MIN: 0.0
+    ABS_STEER_RATE_MAX: 0.3
+    JERK_MIN: -0.5
+    JERK_MAX: 0.5
 
     MASK_NAME: default
     VEL_ACC_THRESHOLD: 40
     VEL_STEER_THRESHOLD: 20
-    VEL_STEER_RATE_THRESHOLD: 20
+    VEL_ABS_STEER_RATE_THRESHOLD: 20
 
     max_lateral_accel: 2.00
     lateral_error_threshold: 1.50

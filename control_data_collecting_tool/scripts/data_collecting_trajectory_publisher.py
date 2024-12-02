@@ -156,11 +156,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             ParameterDescriptor(description="Maximum velocity for data collection [m/ss]"),
         )
 
-        """
-        Declare course specific parameters
-        """
-        declare_course_params(self.COURSE_NAME, self)
-
         self.trajectory_for_collecting_data_pub_ = self.create_publisher(
             Trajectory,
             "/data_collecting_trajectory",

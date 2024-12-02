@@ -63,6 +63,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
         self.vel_hist = deque([float(0.0)] * 200, maxlen=200)
         self.acc_hist = deque([float(0.0)] * 200, maxlen=200)
         self.previous_steer = 0.0
+        self.previous_acc = 0.0
 
         self.timer_period_callback = 0.033  # 30ms
         self.timer_counter = self.create_timer(
@@ -76,8 +77,11 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
         self.collected_data_counts_of_vel_steer_publisher_ = self.create_publisher(
             Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_steer", 10
         )
-        self.collected_data_counts_of_vel_steer_rate_publisher_ = self.create_publisher(
-            Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_steer_rate", 10
+        self.collected_data_counts_of_vel_abs_steer_rate_publisher_ = self.create_publisher(
+            Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_abs_steer_rate", 10
+        )
+        self.collected_data_counts_of_vel_jerk_publisher_ = self.create_publisher(
+            Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_jerk", 10
         )
 
         self.vel_hist_publisher_ = self.create_publisher(
@@ -205,17 +209,21 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
                             acc,
                             steer,
                             steer_rate=(steer - self.previous_steer) / 0.033,
+                            jerk=(acc - self.previous_acc) / 0.033,
                         )
                     self.previous_steer = steer
+                    self.previous_acc = acc
                     current_time += self.timer_period_callback
 
                 self.previous_steer = 0.0
+                self.previous_acc = 0.0
 
-    def count_observations(self, v, a, steer, steer_rate):
+    def count_observations(self, v, a, steer, steer_rate, jerk):
         v_bin = np.digitize(v, self.v_bins) - 1
         steer_bin = np.digitize(steer, self.steer_bins) - 1
         a_bin = np.digitize(a, self.a_bins) - 1
-        steer_rate_bin = np.digitize(abs(steer_rate), self.steer_rate_bins) - 1
+        abs_steer_rate_bin = np.digitize(abs(steer_rate), self.abs_steer_rate_bins) - 1
+        jerk_bin = np.digitize(jerk, self.jerk_bins) - 1
 
         if 0 <= v_bin < self.num_bins_v and 0 <= a_bin < self.num_bins_a:
             self.collected_data_counts_of_vel_acc[v_bin, a_bin] += 1
@@ -223,10 +231,12 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
         if 0 <= v_bin < self.num_bins_v and 0 <= steer_bin < self.num_bins_steer:
             self.collected_data_counts_of_vel_steer[v_bin, steer_bin] += 1
 
-        if 0 <= v_bin < self.num_bins_v and 0 <= steer_rate_bin < self.num_bins_steer_rate:
-            self.collected_data_counts_of_vel_steer_rate[v_bin, steer_rate_bin] += 1
-        
+        if 0 <= v_bin < self.num_bins_v and 0 <= abs_steer_rate_bin < self.num_bins_abs_steer_rate:
+            self.collected_data_counts_of_vel_abs_steer_rate[v_bin, abs_steer_rate_bin] += 1
 
+        if 0 <= v_bin < self.num_bins_v and 0 <= jerk_bin < self.num_bins_jerk:
+            self.collected_data_counts_of_vel_jerk[v_bin, jerk_bin] += 1
+        
     # call back for counting data points
     def timer_callback_counter(self):
         if (
@@ -241,10 +251,13 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             current_steer = arctan2(
                 wheel_base * angular_z, self._present_kinematic_state.twist.twist.linear.x
             )
-            current_steer_rate = (current_steer - self.previous_steer) / 0.033
-            self.previous_steer = current_steer
             current_vel = self._present_kinematic_state.twist.twist.linear.x
             current_acc = self._present_acceleration.accel.accel.linear.x
+            current_steer_rate = (current_steer - self.previous_steer) / 0.033
+            current_jerk = (current_acc - self.previous_acc) / 0.033
+
+            self.previous_steer = current_steer
+            self.previous_acc = current_acc
 
             if self._present_kinematic_state.twist.twist.linear.x > 1e-3:
                 self.count_observations(
@@ -252,6 +265,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
                     current_acc,
                     current_steer,
                     current_steer_rate,
+                    current_jerk
                 )
 
                 self.acc_hist.append(float(current_acc))
@@ -268,10 +282,16 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             self.collected_data_counts_of_vel_steer,
         )
 
-        # publish collected_data_counts_of_vel_steer_rate
+        # publish collected_data_counts_of_vel_abs_steer_rate
         publish_Int32MultiArray(
-            self.collected_data_counts_of_vel_steer_rate_publisher_,
-            self.collected_data_counts_of_vel_steer_rate,
+            self.collected_data_counts_of_vel_abs_steer_rate_publisher_,
+            self.collected_data_counts_of_vel_abs_steer_rate,
+        )
+
+        # publish collected_data_counts_of_vel_jerk
+        publish_Int32MultiArray(
+            self.collected_data_counts_of_vel_jerk_publisher_,
+            self.collected_data_counts_of_vel_jerk,
         )
 
         # publish acc_hist
