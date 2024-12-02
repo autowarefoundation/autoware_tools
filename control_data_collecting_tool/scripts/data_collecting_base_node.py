@@ -73,9 +73,15 @@ class DataCollectingBaseNode(Node):
         )
 
         self.declare_parameter(
-            "NUM_BINS_STEER_RATE",
+            "NUM_BINS_ABS_STEER_RATE",
             5,
-            ParameterDescriptor(description="Number of bins of steer in heatmap"),
+            ParameterDescriptor(description="Number of bins of absolute value of steer rate in heatmap"),
+        )
+
+        self.declare_parameter(
+            "NUM_BINS_JERK",
+            5,
+            ParameterDescriptor(description="Number of bins of jerk in heatmap"),
         )
 
         self.declare_parameter(
@@ -114,19 +120,28 @@ class DataCollectingBaseNode(Node):
             ParameterDescriptor(description="Maximum acceleration in heatmap [m/ss]"),
         )
 
-        self.ego_point = np.array([0.0, 0.0])
-        self.goal_point = np.array([0.0, 0.0])
-
         self.declare_parameter(
-            "STEER_RATE_MIN",
+            "ABS_STEER_RATE_MIN",
             0.0,
             ParameterDescriptor(description="Minimum steer in heatmap [rad]"),
         )
 
         self.declare_parameter(
-            "STEER_RATE_MAX",
+            "ABS_STEER_RATE_MAX",
             0.3,
             ParameterDescriptor(description="Maximum steer in heatmap [rad]"),
+        )
+
+        self.declare_parameter(
+            "JERK_MIN",
+            -0.5,
+            ParameterDescriptor(description="Minimum jerk in heatmap [m/s^3]"),
+        )
+
+        self.declare_parameter(
+            "JERK_MAX",
+            0.5,
+            ParameterDescriptor(description="Maximum jerk in heatmap [m/s^3]"),
         )
 
         self.ego_point = np.array([0.0, 0.0])
@@ -174,8 +189,11 @@ class DataCollectingBaseNode(Node):
             self.get_parameter("NUM_BINS_STEER").get_parameter_value().integer_value
         )
         self.num_bins_a = self.get_parameter("NUM_BINS_A").get_parameter_value().integer_value
-        self.num_bins_steer_rate = (
-            self.get_parameter("NUM_BINS_STEER_RATE").get_parameter_value().integer_value
+        self.num_bins_abs_steer_rate = (
+            self.get_parameter("NUM_BINS_ABS_STEER_RATE").get_parameter_value().integer_value
+        )
+        self.num_bins_jerk = (
+            self.get_parameter("NUM_BINS_JERK").get_parameter_value().integer_value
         )
 
         self.v_min, self.v_max = (
@@ -190,9 +208,14 @@ class DataCollectingBaseNode(Node):
             self.get_parameter("A_MIN").get_parameter_value().double_value,
             self.get_parameter("A_MAX").get_parameter_value().double_value,
         )
-        self.steer_rate_min, self.steer_rate_max = (
-            self.get_parameter("STEER_RATE_MIN").get_parameter_value().double_value,
-            self.get_parameter("STEER_RATE_MAX").get_parameter_value().double_value,
+        self.abs_steer_rate_min, self.abs_steer_rate_max = (
+            self.get_parameter("ABS_STEER_RATE_MIN").get_parameter_value().double_value,
+            self.get_parameter("ABS_STEER_RATE_MAX").get_parameter_value().double_value,
+        )
+
+        self.jerk_min, self.jerk_max = (
+            self.get_parameter("JERK_MIN").get_parameter_value().double_value,
+            self.get_parameter("JERK_MAX").get_parameter_value().double_value,
         )
 
         self.collected_data_counts_of_vel_acc = np.zeros(
@@ -201,19 +224,24 @@ class DataCollectingBaseNode(Node):
         self.collected_data_counts_of_vel_steer = np.zeros(
             (self.num_bins_v, self.num_bins_steer), dtype=np.int32
         )
-        self.collected_data_counts_of_vel_steer_rate = np.zeros(
-            (self.num_bins_v, self.num_bins_steer_rate), dtype=np.int32
+        self.collected_data_counts_of_vel_abs_steer_rate = np.zeros(
+            (self.num_bins_v, self.num_bins_abs_steer_rate), dtype=np.int32
+        )
+        self.collected_data_counts_of_vel_jerk = np.zeros(
+            (self.num_bins_v, self.num_bins_jerk), dtype=np.int32
         )
 
         self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins_v + 1)
         self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins_steer + 1)
         self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins_a + 1)
-        self.steer_rate_bins = np.linspace(self.steer_rate_min, self.steer_rate_max, self.num_bins_steer_rate + 1)
+        self.abs_steer_rate_bins = np.linspace(self.abs_steer_rate_min, self.abs_steer_rate_max, self.num_bins_abs_steer_rate + 1)
+        self.jerk_bins = np.linspace(self.jerk_min, self.jerk_max, self.num_bins_jerk + 1)
 
         self.v_bin_centers = (self.v_bins[:-1] + self.v_bins[1:]) / 2
         self.steer_bin_centers = (self.steer_bins[:-1] + self.steer_bins[1:]) / 2
         self.a_bin_centers = (self.a_bins[:-1] + self.a_bins[1:]) / 2
-        self.steer_rate_bin_centers = (self.steer_rate_bins[:-1] + self.steer_rate_bins[1:]) / 2
+        self.abs_steer_rate_bin_centers = (self.abs_steer_rate_bins[:-1] + self.abs_steer_rate_bins[1:]) / 2
+        self.jerk_bin_centers = (self.jerk_bins[:-1] + self.jerk_bins[1:]) / 2
 
         """
         load mask (data collection range in heat map)
@@ -228,8 +256,8 @@ class DataCollectingBaseNode(Node):
         mask_velocity_steering_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering.txt")
         self.mask_vel_steer = self.load_mask_from_txt(mask_velocity_steering_path, self.num_bins_v, self.num_bins_steer)
 
-        mask_velocity_steer_rate_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt")
-        self.mask_vel_steer_rate = self.load_mask_from_txt(mask_velocity_steer_rate_path, self.num_bins_v, self.num_bins_steer_rate)
+        mask_velocity_abs_steer_rate_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt")
+        self.mask_vel_abs_steer_rate = self.load_mask_from_txt(mask_velocity_abs_steer_rate_path, self.num_bins_v, self.num_bins_abs_steer_rate)
 
     def onOdometry(self, msg):
         self._present_kinematic_state = msg

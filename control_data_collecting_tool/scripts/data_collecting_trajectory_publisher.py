@@ -60,16 +60,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         super().__init__("data_collecting_trajectory_publisher")
 
         self.declare_parameter(
-            "COURSE_NAME",
-            "eight_course",
-            ParameterDescriptor(
-                description="Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`]"
-            ),
-        )
-        # set course name
-        self.COURSE_NAME = self.get_parameter("COURSE_NAME").value
-
-        self.declare_parameter(
             "acc_kp",
             1.0,
             ParameterDescriptor(description="Pure pursuit accel command proportional gain"),
@@ -164,11 +154,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             1.0,
             ParameterDescriptor(description="Maximum velocity for data collection [m/ss]"),
         )
-
-        """
-        Declare course specific parameters
-        """
-        declare_course_params(self.COURSE_NAME, self)
 
         self.trajectory_for_collecting_data_pub_ = self.create_publisher(
             Trajectory,
