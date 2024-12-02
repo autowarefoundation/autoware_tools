@@ -14,8 +14,6 @@
 
 #include "lanelet2_map_validator/validation.hpp"
 
-#include <autoware_lanelet2_extension/projection/mgrs_projector.hpp>
-#include <autoware_lanelet2_extension/projection/transverse_mercator_projector.hpp>
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
@@ -23,6 +21,7 @@
 #include <iomanip>
 #include <map>
 #include <queue>
+#include <regex>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -42,56 +41,11 @@
 namespace lanelet::autoware::validation
 {
 
-std::unique_ptr<lanelet::Projector> getProjector(
-  const std::string & projector_type, const lanelet::GPSPoint & origin)
-
+std::vector<lanelet::validation::DetectedIssues> apply_validation(
+  const lanelet::LaneletMap & lanelet_map, const lanelet::validation::ValidationConfig & val_config)
 {
-  if (projector_type == projector_names::mgrs) {
-    return std::make_unique<lanelet::projection::MGRSProjector>();
-  }
-  if (projector_type == projector_names::transverse_mercator) {
-    return std::make_unique<lanelet::projection::TransverseMercatorProjector>(
-      lanelet::Origin{origin});
-  }
-  if (projector_type == projector_names::utm) {
-    return std::make_unique<lanelet::projection::UtmProjector>(lanelet::Origin{origin});
-  }
-  return nullptr;
-}
-
-std::vector<lanelet::validation::DetectedIssues> validateMap(
-  const std::string & projector_type, const std::string & map_file,
-  const lanelet::validation::ValidationConfig & val_config)
-{
-  std::vector<lanelet::validation::DetectedIssues> issues;
-  lanelet::LaneletMapPtr map{nullptr};
-  lanelet::validation::Strings errors;
-  try {
-    const auto projector = getProjector(projector_type, val_config.origin);
-    if (!projector) {
-      errors.push_back("No valid map projection type specified!");
-    } else {
-      map = lanelet::load(map_file, *projector, &errors);
-    }
-    if (map) {
-      appendIssues(issues, lanelet::validation::validateMap(*map, val_config));
-    } else {
-      errors.push_back("Failed to load map!");
-    }
-    if (!errors.empty()) {
-      issues.emplace_back("general", utils::transform(errors, [](auto & error) {
-                            return lanelet::validation::Issue(
-                              lanelet::validation::Severity::Error, error);
-                          }));
-    }
-  } catch (lanelet::LaneletError & err) {
-    issues.emplace_back("general", utils::transform(errors, [](auto & error) {
-                          return lanelet::validation::Issue(
-                            lanelet::validation::Severity::Error, error);
-                        }));
-  }
-
-  return issues;
+  return lanelet::validation::validateMap(
+    const_cast<lanelet::LaneletMap &>(lanelet_map), val_config);
 }
 
 Validators parse_validators(const json & json_data)
@@ -200,6 +154,7 @@ std::vector<lanelet::validation::DetectedIssues> describe_unused_validators_to_j
     issue_json["primitive"] =
       lanelet::validation::toString(lanelet::validation::Primitive::Primitive);
     issue_json["id"] = 0;
+    issue_json["issue_code"] = "General.InvalidPrerequisites-001";
     issue_json["message"] = "Prerequisites don't exist OR they are making a loop.";
     issues_json.push_back(issue_json);
     validator_json["issues"] = issues_json;
@@ -213,7 +168,7 @@ std::vector<lanelet::validation::DetectedIssues> describe_unused_validators_to_j
   }
 
   if (issues.size() > 0) {
-    detected_issues.push_back({"invalid_prerequisites", issues});
+    detected_issues.push_back({"general.invalid_prerequisites", issues});
   }
   return detected_issues;
 }
@@ -243,7 +198,7 @@ std::vector<lanelet::validation::DetectedIssues> check_prerequisite_completion(
     issue.severity = lanelet::validation::Severity::Error;
     issue.primitive = lanelet::validation::Primitive::Primitive;
     issue.id = lanelet::InvalId;
-    issue.message = "Prerequisites didn't pass";
+    issue.message = "[General.PrerequisitesFailure-001] Prerequisites didn't pass.";
     issues.push_back(issue);
   }
 
@@ -326,9 +281,11 @@ lanelet::validation::ValidationConfig replace_validator(
   return temp;
 }
 
-void process_requirements(json json_data, const MetaConfig & validator_config)
+void process_requirements(
+  json json_data, const MetaConfig & validator_config, const lanelet::LaneletMap & lanelet_map)
 {
-  std::vector<lanelet::validation::DetectedIssues> issues;
+  std::vector<lanelet::validation::DetectedIssues> total_issues;
+  std::regex issue_code_pattern(R"(\[(.+?)\]\s*(.+))");
 
   // List up validators in order
   Validators validators = parse_validators(json_data);
@@ -338,49 +295,53 @@ void process_requirements(json json_data, const MetaConfig & validator_config)
   if (auto unused_validator_issues =
         describe_unused_validators_to_json(json_data, remaining_validators);
       !unused_validator_issues.empty()) {
-    appendIssues(issues, std::move(unused_validator_issues));
+    appendIssues(total_issues, std::move(unused_validator_issues));
   }
 
   // Main validation process
   while (!validation_queue.empty()) {
-    std::string validator_name = validation_queue.front();
+    const std::string validator_name = validation_queue.front();
     validation_queue.pop();
 
-    std::vector<lanelet::validation::DetectedIssues> temp_issues;
-
     // Check prerequisites are OK
-    appendIssues(temp_issues, check_prerequisite_completion(validators, validator_name));
+    const auto prerequisite_issues = check_prerequisite_completion(validators, validator_name);
+    appendIssues(total_issues, prerequisite_issues);
 
-    if (temp_issues.size() == 0) {
-      // Validate map
-      appendIssues(
-        temp_issues,
-        validateMap(
-          validator_config.projector_type, validator_config.command_line_config.mapFile,
-          replace_validator(
-            validator_config.command_line_config.validationConfig, validator_name)));
-    }
+    // NOTE: if prerequisite_issues is not empty, skip the content validation process
+    const auto issues =
+      prerequisite_issues.empty()
+        ? apply_validation(
+            lanelet_map, replace_validator(
+                           validator_config.command_line_config.validationConfig, validator_name))
+        : std::vector<lanelet::validation::DetectedIssues>();
 
     // Add validation results to the json data
     json & validator_json = find_validator_block(json_data, validator_name);
-    if (temp_issues.size() == 0) {
+    if (issues.empty()) {
       validator_json["passed"] = true;
       continue;
     }
 
-    if (temp_issues[0].warnings().size() + temp_issues[0].errors().size() == 0) {
+    if (issues[0].warnings().size() + issues[0].errors().size() == 0) {
       validator_json["passed"] = true;
     } else {
       validator_json["passed"] = false;
     }
-    if (temp_issues[0].issues.size() > 0) {
+    if (!issues[0].issues.empty()) {
       json issues_json;
-      for (const auto & issue : temp_issues[0].issues) {
+      for (const auto & issue : issues[0].issues) {
+        std::smatch matches;
         json issue_json;
         issue_json["severity"] = lanelet::validation::toString(issue.severity);
         issue_json["primitive"] = lanelet::validation::toString(issue.primitive);
         issue_json["id"] = issue.id;
-        issue_json["message"] = issue.message;
+        if (std::regex_match(issue.message, matches, issue_code_pattern)) {
+          issue_json["issue_code"] = matches[1];
+          issue_json["message"] = matches[2];
+        } else {
+          // Issue messages not matching the issue code format will be output as it is
+          issue_json["message"] = issue.message;
+        }
         issues_json.push_back(issue_json);
 
         if (
@@ -392,12 +353,12 @@ void process_requirements(json json_data, const MetaConfig & validator_config)
       }
       validator_json["issues"] = issues_json;
     }
-    appendIssues(issues, std::move(temp_issues));
+    appendIssues(total_issues, issues);
   }
 
   // Show results
   summarize_validator_results(json_data);
-  lanelet::validation::printAllIssues(issues);
+  lanelet::validation::printAllIssues(total_issues);
 
   // Save results
   if (!validator_config.output_file_path.empty()) {

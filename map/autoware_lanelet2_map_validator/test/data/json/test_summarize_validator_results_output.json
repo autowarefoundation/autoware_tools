@@ -35,6 +35,7 @@
               "severity": "Error",
               "primitive": "primitive",
               "id": 0,
+              "issue_code": "General.InvalidPrerequisites-001",
               "message": "Prerequisites don't exist OR they are making a loop."
             }
           ]
