@@ -29,7 +29,7 @@
     VEL_ACC_THRESHOLD: 40
     VEL_STEER_THRESHOLD: 20
     VEL_ABS_STEER_RATE_THRESHOLD: 20
-    
+
     max_lateral_accel: 2.00
     lateral_error_threshold: 1.50
     yaw_error_threshold: 0.75

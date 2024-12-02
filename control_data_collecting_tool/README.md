@@ -64,7 +64,7 @@ This package provides tools for automatically collecting data using pure pursuit
     ```bash
     ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
     ```
-    
+
     - If you use the `along_road` course, please specify the same map for `map_path` as the one used when launching Autoware. `map_path` is not necessary when using courses other than `along_road`.
 
     - Control data collecting tool automatically records topics included in `config/topics.yaml` when the above command is executed.
@@ -169,7 +169,7 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/ss]                                                                                                    | 1.0                    |
 | `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                                                                     | 2.00                   |
 | `ABS_STEER_RATE_MIN`                     | `double` | Minimum absolute value of steer rate in heatmap [rad/s]                                                                                   | 0.0                    |
-| `ABS_STEER_RATE_MAX`                     | `double` | Maximum  absolute value of steer rate in heatmap [rad/s]                                                                                  | 0.3                    |
+| `ABS_STEER_RATE_MAX`                     | `double` | Maximum absolute value of steer rate in heatmap [rad/s]                                                                                   | 0.3                    |
 | `JERK_MIN`                               | `double` | Minimum jerk in heatmap [m/s^3]                                                                                                           | -0.5                   |
 | `JERK_MAX`                               | `double` | Maximum jerk in heatmap [m/s^3]                                                                                                           | 0.5                    |
 | `MASK_NAME`                              | `string` | Directory name of masks for data collection                                                                                               | `default`              |

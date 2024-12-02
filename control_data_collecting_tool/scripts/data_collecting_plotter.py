@@ -15,16 +15,16 @@
 # limitations under the License.
 
 from data_collecting_base_node import DataCollectingBaseNode
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 from matplotlib.colors import ListedColormap
 from matplotlib.colors import Normalize
+from matplotlib.patches import Rectangle
+import matplotlib.pyplot as plt
 import numpy as np
+from rcl_interfaces.msg import ParameterDescriptor
 import rclpy
 import seaborn as sns
 from std_msgs.msg import Float32MultiArray
 from std_msgs.msg import Int32MultiArray
-from rcl_interfaces.msg import ParameterDescriptor
 
 
 class DataCollectingPlotter(DataCollectingBaseNode):
@@ -55,9 +55,15 @@ class DataCollectingPlotter(DataCollectingBaseNode):
             ),
         )
 
-        self.VEL_ACC_THRESHOLD = self.get_parameter("VEL_ACC_THRESHOLD").get_parameter_value().integer_value
-        self.VEL_STEER_THRESHOLD = self.get_parameter("VEL_STEER_THRESHOLD").get_parameter_value().integer_value
-        self.VEL_ABS_STEER_RATE_THRESHOLD = self.get_parameter("VEL_ABS_STEER_RATE_THRESHOLD").get_parameter_value().integer_value
+        self.VEL_ACC_THRESHOLD = (
+            self.get_parameter("VEL_ACC_THRESHOLD").get_parameter_value().integer_value
+        )
+        self.VEL_STEER_THRESHOLD = (
+            self.get_parameter("VEL_STEER_THRESHOLD").get_parameter_value().integer_value
+        )
+        self.VEL_ABS_STEER_RATE_THRESHOLD = (
+            self.get_parameter("VEL_ABS_STEER_RATE_THRESHOLD").get_parameter_value().integer_value
+        )
 
         # callback for plot
         self.grid_update_time_interval = 5.0
@@ -69,9 +75,11 @@ class DataCollectingPlotter(DataCollectingBaseNode):
         self.fig, self.axs = plt.subplots(5, 1, figsize=(12, 24))
         plt.ion()
         self.cmap = ListedColormap(["blue", "yellowgreen"])
-        self.vel_acc_heatmap_norm = Normalize(vmin=0, vmax=2*self.VEL_ACC_THRESHOLD)
-        self.vel_steer_heatmap_norm = Normalize(vmin=0, vmax=2*self.VEL_STEER_THRESHOLD)
-        self.vel_abs_steer_rate_heatmap_norm = Normalize(vmin=0, vmax=2*self.VEL_ABS_STEER_RATE_THRESHOLD)
+        self.vel_acc_heatmap_norm = Normalize(vmin=0, vmax=2 * self.VEL_ACC_THRESHOLD)
+        self.vel_steer_heatmap_norm = Normalize(vmin=0, vmax=2 * self.VEL_STEER_THRESHOLD)
+        self.vel_abs_steer_rate_heatmap_norm = Normalize(
+            vmin=0, vmax=2 * self.VEL_ABS_STEER_RATE_THRESHOLD
+        )
 
         self.collected_data_counts_of_vel_acc_subscription_ = self.create_subscription(
             Int32MultiArray,
@@ -155,7 +163,6 @@ class DataCollectingPlotter(DataCollectingBaseNode):
         plt.pause(0.1)
 
     def plot_data_collection_grid(self):
-
         self.axs[0].cla()
         self.axs[0].scatter(self.acc_hist, self.vel_hist)
         self.axs[0].plot(self.acc_hist, self.vel_hist)
@@ -180,7 +187,7 @@ class DataCollectingPlotter(DataCollectingBaseNode):
             ax=self.axs[1],
             linewidths=0.1,
             linecolor="gray",
-            cbar_kws={'ticks':[0, self.VEL_ACC_THRESHOLD]}
+            cbar_kws={"ticks": [0, self.VEL_ACC_THRESHOLD]},
         )
 
         self.axs[1].set_xlabel("Velocity bins")
@@ -191,21 +198,14 @@ class DataCollectingPlotter(DataCollectingBaseNode):
             for j in range(self.collected_data_counts_of_vel_acc.shape[1]):
                 if self.mask_vel_acc[i, j] == 1:
                     rect = Rectangle(
-                        (i, j), 1, 1,
-                        linewidth=0.25,
-                        edgecolor='black',
-                        facecolor='none'
+                        (i, j), 1, 1, linewidth=0.25, edgecolor="black", facecolor="none"
                     )
-                    #self.axs[1].add_patch(rect)
+                    # self.axs[1].add_patch(rect)
                 else:
                     rect = Rectangle(
-                        (i, j), 1, 1,
-                        linewidth=0.25,
-                        edgecolor='black',
-                        facecolor='gray'
+                        (i, j), 1, 1, linewidth=0.25, edgecolor="black", facecolor="gray"
                     )
                     self.axs[1].add_patch(rect)
-
 
         for collection in self.axs[2].collections:
             if collection.colorbar is not None:
@@ -222,7 +222,7 @@ class DataCollectingPlotter(DataCollectingBaseNode):
             ax=self.axs[2],
             linewidths=0.1,
             linecolor="gray",
-            cbar_kws={'ticks':[0, self.VEL_STEER_THRESHOLD]}
+            cbar_kws={"ticks": [0, self.VEL_STEER_THRESHOLD]},
         )
 
         # Display mask
@@ -230,25 +230,18 @@ class DataCollectingPlotter(DataCollectingBaseNode):
             for j in range(self.collected_data_counts_of_vel_steer.shape[1]):
                 if self.mask_vel_steer[i, j] == 1:
                     rect = Rectangle(
-                        (i, j), 1, 1,
-                        linewidth=0.25,
-                        edgecolor='black',
-                        facecolor='none'
+                        (i, j), 1, 1, linewidth=0.25, edgecolor="black", facecolor="none"
                     )
                     self.axs[2].add_patch(rect)
                 else:
                     rect = Rectangle(
-                        (i, j), 1, 1,
-                        linewidth=0.25,
-                        edgecolor='black',
-                        facecolor='gray'
+                        (i, j), 1, 1, linewidth=0.25, edgecolor="black", facecolor="gray"
                     )
                     self.axs[2].add_patch(rect)
 
         # update collected steer and velocity grid
         self.axs[2].set_xlabel("Velocity bins")
         self.axs[2].set_ylabel("Steer bins")
-
 
         for collection in self.axs[3].collections:
             if collection.colorbar is not None:
@@ -265,7 +258,7 @@ class DataCollectingPlotter(DataCollectingBaseNode):
             ax=self.axs[3],
             linewidths=0.1,
             linecolor="gray",
-            cbar_kws={'ticks':[0, self.VEL_STEER_THRESHOLD]}
+            cbar_kws={"ticks": [0, self.VEL_STEER_THRESHOLD]},
         )
 
         # Display mask
@@ -273,18 +266,12 @@ class DataCollectingPlotter(DataCollectingBaseNode):
             for j in range(self.collected_data_counts_of_vel_abs_steer_rate.shape[1]):
                 if self.mask_vel_abs_steer_rate[i, j] == 1:
                     rect = Rectangle(
-                        (i, j), 1, 1,
-                        linewidth=0.25,
-                        edgecolor='black',
-                        facecolor='none'
+                        (i, j), 1, 1, linewidth=0.25, edgecolor="black", facecolor="none"
                     )
                     self.axs[3].add_patch(rect)
                 else:
                     rect = Rectangle(
-                        (i, j), 1, 1,
-                        linewidth=0.25,
-                        edgecolor='black',
-                        facecolor='gray'
+                        (i, j), 1, 1, linewidth=0.25, edgecolor="black", facecolor="gray"
                     )
                     self.axs[3].add_patch(rect)
 

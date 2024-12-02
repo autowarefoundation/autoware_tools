@@ -1,30 +1,29 @@
 import os
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import numpy as np
-import threading
 import signal
+import threading
 import time
+
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import numpy as np
 import yaml
 
-class DataCollectingMaskSelector:
-    def __init__(self, window_title="Data Collecting Mask Selector",
-                 x_min=0, x_max=10, y_min=-5, y_max=5,
-                 num_bins_x=10, num_bins_y=10, default_number=1,
-                 xlabel="X Axis", ylabel="Y Axis", mask_xy=None):
-        """
-        Initializes the DataCollectingMaskSelector.
 
-        Parameters:
-        - window_title: Title of the window
-        - x_min, x_max: Range of the X-axis
-        - y_min, y_max: Range of the Y-axis
-        - num_bins_x, num_bins_y: Number of bins along the X and Y axes
-        - default_number: Default value displayed in each grid cell
-        - xlabel: Label for the X-axis
-        - ylabel: Label for the Y-axis
-        - mask_xy: 2D numpy array representing the selection state of each grid cell
-        """
+class DataCollectingMaskSelector:
+    def __init__(
+        self,
+        window_title="Data Collecting Mask Selector",
+        x_min=0,
+        x_max=10,
+        y_min=-5,
+        y_max=5,
+        num_bins_x=10,
+        num_bins_y=10,
+        default_number=1,
+        xlabel="X Axis",
+        ylabel="Y Axis",
+        mask_xy=None,
+    ):
         self.grid_update_time_interval = 5.0
         self.x_min, self.x_max = x_min, x_max
         self.y_min, self.y_max = y_min, y_max
@@ -38,7 +37,11 @@ class DataCollectingMaskSelector:
         self.ylabel = ylabel
 
         # Initialize mask_xy with the provided array or default to ones
-        self.mask_xy = mask_xy if mask_xy is not None else np.ones((self.num_bins_x, self.num_bins_y), dtype=int)
+        self.mask_xy = (
+            mask_xy
+            if mask_xy is not None
+            else np.ones((self.num_bins_x, self.num_bins_y), dtype=int)
+        )
 
         self.dragging = False
         self.select_mode = True
@@ -63,7 +66,7 @@ class DataCollectingMaskSelector:
         self.ax.set_yticklabels([f"{y:.2f}" for y in self.y_bin_centers[::-1]], minor=True)
 
         # Configure grid lines and labels
-        self.ax.grid(True, color='black', linestyle='-', linewidth=1.5)
+        self.ax.grid(True, color="black", linestyle="-", linewidth=1.5)
         self.ax.set_title(window_title)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
@@ -79,9 +82,6 @@ class DataCollectingMaskSelector:
         self.fig.canvas.mpl_connect("motion_notify_event", self.on_motion)
 
     def initialize_cells(self):
-        """
-        Initializes all cells in the grid with rectangles and numbers based on self.mask_xy.
-        """
         clicked_cells = {}
         for x_bin in range(self.num_bins_x):
             for y_bin in range(self.num_bins_y):
@@ -89,17 +89,28 @@ class DataCollectingMaskSelector:
                 cell_y = self.y_bin_centers[y_bin]
                 if self.mask_xy[x_bin, y_bin] == 1:
                     rect = patches.Rectangle(
-                        (cell_x - (self.x_bins[1] - self.x_bins[0]) / 2,
-                         cell_y - (self.y_bins[1] - self.y_bins[0]) / 2),
+                        (
+                            cell_x - (self.x_bins[1] - self.x_bins[0]) / 2,
+                            cell_y - (self.y_bins[1] - self.y_bins[0]) / 2,
+                        ),
                         self.x_bins[1] - self.x_bins[0],
                         self.y_bins[1] - self.y_bins[0],
-                        linewidth=1, edgecolor='yellowgreen', facecolor='yellowgreen'
+                        linewidth=1,
+                        edgecolor="yellowgreen",
+                        facecolor="yellowgreen",
                     )
                     self.ax.add_patch(rect)
                     clicked_cells[(cell_x, cell_y)] = rect
 
-                    text = self.ax.text(cell_x, cell_y, str(self.default_number),
-                                        ha='center', va='center', fontsize=10, color='black')
+                    text = self.ax.text(
+                        cell_x,
+                        cell_y,
+                        str(self.default_number),
+                        ha="center",
+                        va="center",
+                        fontsize=10,
+                        color="black",
+                    )
                     self.text_objects[(cell_x, cell_y)] = text
                 else:
                     rect = None
@@ -107,36 +118,23 @@ class DataCollectingMaskSelector:
         return clicked_cells
 
     def on_press(self, event):
-        """Handles mouse button press events."""
         self.dragging = True
         self.toggle_select_mode(event)
         self.update_cell(event)
 
     def on_release(self, event):
-        """Handles mouse button release events."""
         self.dragging = False
 
     def on_motion(self, event):
-        """Handles mouse movement events while dragging."""
         if self.dragging:
             self.update_cell(event)
 
     def toggle_select_mode(self, event):
-        """
-        Toggles between select and deselect modes based on the clicked cell.
-        """
         _, _, cell_center = self.get_cell_from_event(event)
         if cell_center is not None:
             self.select_mode = cell_center not in self.clicked_cells
 
     def get_cell_from_event(self, event):
-        """
-        Maps a mouse click event to the corresponding grid cell.
-
-        Returns:
-        - x_bin, y_bin: Indices of the cell
-        - cell_center: Center coordinates of the cell
-        """
         if event.xdata is None or event.ydata is None:
             return None, None, None
 
@@ -152,9 +150,6 @@ class DataCollectingMaskSelector:
             return None, None, None
 
     def update_cell(self, event):
-        """
-        Updates the state of the cell based on the mouse event.
-        """
         x_bin, y_bin, cell_center = self.get_cell_from_event(event)
         if cell_center is None:
             return
@@ -163,16 +158,26 @@ class DataCollectingMaskSelector:
             if cell_center not in self.clicked_cells:
                 # Add the rectangle and text
                 rect = patches.Rectangle(
-                    (cell_center[0] - (self.x_bins[1] - self.x_bins[0]) / 2,
-                    cell_center[1] - (self.y_bins[1] - self.y_bins[0]) / 2),
+                    (
+                        cell_center[0] - (self.x_bins[1] - self.x_bins[0]) / 2,
+                        cell_center[1] - (self.y_bins[1] - self.y_bins[0]) / 2,
+                    ),
                     self.x_bins[1] - self.x_bins[0],
                     self.y_bins[1] - self.y_bins[0],
-                    linewidth=1, edgecolor='yellowgreen', facecolor='yellowgreen'
+                    linewidth=1,
+                    edgecolor="yellowgreen",
+                    facecolor="yellowgreen",
                 )
                 self.ax.add_patch(rect)
-                text = self.ax.text(cell_center[0], cell_center[1],
-                                    str(self.default_number), ha='center', va='center',
-                                    fontsize=10, color='black')
+                text = self.ax.text(
+                    cell_center[0],
+                    cell_center[1],
+                    str(self.default_number),
+                    ha="center",
+                    va="center",
+                    fontsize=10,
+                    color="black",
+                )
                 self.text_objects[cell_center] = text
                 self.clicked_cells[cell_center] = rect
                 self.mask_xy[x_bin, y_bin] = 1
@@ -183,7 +188,7 @@ class DataCollectingMaskSelector:
                 del self.clicked_cells[cell_center]
 
                 # Remove the text
-                #if cell_center in self.text_objects:
+                # if cell_center in self.text_objects:
                 self.text_objects[cell_center].remove()
                 del self.text_objects[cell_center]
 
@@ -195,29 +200,16 @@ class DataCollectingMaskSelector:
 
 
 def load_config_from_yaml(file_path):
-    """
-    Loads configurations for DataCollectingMaskSelector from a YAML file.
-    """
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"YAML file '{file_path}' not found.")
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         try:
             return yaml.safe_load(file)
         except yaml.YAMLError as e:
             raise ValueError(f"Error parsing YAML file '{file_path}': {e}")
 
-import numpy as np
 
 def load_mask_from_txt(file_path):
-    """
-    Loads a numerical mask from a text file into a numpy array.
-
-    Parameters:
-    - file_path: Path to the text file to load.
-
-    Returns:
-    - A numpy array containing the loaded mask.
-    """
     try:
         mask = np.loadtxt(file_path, dtype=int)
         print(f"Loaded mask from {file_path}:")
@@ -226,10 +218,8 @@ def load_mask_from_txt(file_path):
         print(f"Error loading file {file_path}: {e}")
         return None
 
+
 def main():
-    """
-    Main function to run the mask selector application.
-    """
     shutdown_event = threading.Event()
 
     def handle_shutdown(signum, frame):
@@ -263,26 +253,57 @@ def main():
     VEL_ABS_STEER_RATE_THRESHOLD = config["VEL_ABS_STEER_RATE_THRESHOLD"]
 
     # Create 3 instances of the selector with different configurations
-    mask_velocity_acceleration_path = os.path.join(directory_path, f"{MASK_NAME}_Velocity_Acceleration.txt")
+    mask_velocity_acceleration_path = os.path.join(
+        directory_path, f"{MASK_NAME}_Velocity_Acceleration.txt"
+    )
     mask_velocity_acceleration = load_mask_from_txt(mask_velocity_acceleration_path)
-    selector1 = DataCollectingMaskSelector(window_title="Velocity-Acceleration Mask",
-                                            x_min=V_MIN, x_max=V_MAX, y_min=A_MIN, y_max=A_MAX,
-                                            num_bins_x=NUM_BINS_V, num_bins_y=NUM_BINS_A, default_number=VEL_ACC_THRESHOLD,
-                                            xlabel="Velocity (m/s)", ylabel="Acceleration (m/s^2)", mask_xy=mask_velocity_acceleration)
+    selector1 = DataCollectingMaskSelector(
+        window_title="Velocity-Acceleration Mask",
+        x_min=V_MIN,
+        x_max=V_MAX,
+        y_min=A_MIN,
+        y_max=A_MAX,
+        num_bins_x=NUM_BINS_V,
+        num_bins_y=NUM_BINS_A,
+        default_number=VEL_ACC_THRESHOLD,
+        xlabel="Velocity (m/s)",
+        ylabel="Acceleration (m/s^2)",
+        mask_xy=mask_velocity_acceleration,
+    )
 
     mask_velocity_steering_path = os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering.txt")
     mask_velocity_steer = load_mask_from_txt(mask_velocity_steering_path)
-    selector2 = DataCollectingMaskSelector(window_title="Velocity-Steering Mask",
-                                            x_min=V_MIN, x_max=V_MAX, y_min=STEER_MIN, y_max=STEER_MAX,
-                                            num_bins_x=NUM_BINS_V, num_bins_y=NUM_BINS_STEER, default_number=VEL_STEER_THRESHOLD,
-                                            xlabel="Velocity (m/s)", ylabel="Steering Angle (rad)", mask_xy=mask_velocity_steer)
+    selector2 = DataCollectingMaskSelector(
+        window_title="Velocity-Steering Mask",
+        x_min=V_MIN,
+        x_max=V_MAX,
+        y_min=STEER_MIN,
+        y_max=STEER_MAX,
+        num_bins_x=NUM_BINS_V,
+        num_bins_y=NUM_BINS_STEER,
+        default_number=VEL_STEER_THRESHOLD,
+        xlabel="Velocity (m/s)",
+        ylabel="Steering Angle (rad)",
+        mask_xy=mask_velocity_steer,
+    )
 
-    mask_velocity_steering_rate_path = os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt")
+    mask_velocity_steering_rate_path = os.path.join(
+        directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt"
+    )
     mask_velocity_steering_rate = load_mask_from_txt(mask_velocity_steering_rate_path)
-    selector3 = DataCollectingMaskSelector(window_title="Velocity-Steering Rate Mask",
-                                            x_min=V_MIN, x_max=V_MAX, y_min=ABS_STEER_RATE_MIN, y_max=ABS_STEER_RATE_MAX,
-                                            num_bins_x=NUM_BINS_V, num_bins_y=NUM_BINS_STEER_RATE, default_number=VEL_ABS_STEER_RATE_THRESHOLD,
-                                            xlabel="Velocity (m/s)", ylabel="Abs Steering Rate (rad/s)", mask_xy=mask_velocity_steering_rate)
+    selector3 = DataCollectingMaskSelector(
+        window_title="Velocity-Steering Rate Mask",
+        x_min=V_MIN,
+        x_max=V_MAX,
+        y_min=ABS_STEER_RATE_MIN,
+        y_max=ABS_STEER_RATE_MAX,
+        num_bins_x=NUM_BINS_V,
+        num_bins_y=NUM_BINS_STEER_RATE,
+        default_number=VEL_ABS_STEER_RATE_THRESHOLD,
+        xlabel="Velocity (m/s)",
+        ylabel="Abs Steering Rate (rad/s)",
+        mask_xy=mask_velocity_steering_rate,
+    )
 
     print("Press Ctrl+C to save Masks and exit.")
 
@@ -309,11 +330,19 @@ def main():
         while not shutdown_event.is_set():
             plt.pause(0.01)
     finally:
-        np.savetxt( mask_velocity_acceleration_path, selector1.mask_xy, fmt="%d")
+        np.savetxt(mask_velocity_acceleration_path, selector1.mask_xy, fmt="%d")
         print("Saved Velocity-Acceleration Mask to", mask_velocity_acceleration_path)
-        np.savetxt(os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering.txt"), selector2.mask_xy, fmt="%d")
+        np.savetxt(
+            os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering.txt"),
+            selector2.mask_xy,
+            fmt="%d",
+        )
         print("Saved Velocity-Steering Mask to", mask_velocity_steering_path)
-        np.savetxt(os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt"), selector3.mask_xy, fmt="%d")
+        np.savetxt(
+            os.path.join(directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt"),
+            selector3.mask_xy,
+            fmt="%d",
+        )
         print("Saved Velocity-Steering Rate Mask to", mask_velocity_steering_rate_path)
         print("Exiting program.")
 

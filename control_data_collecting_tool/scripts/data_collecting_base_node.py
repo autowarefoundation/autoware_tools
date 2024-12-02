@@ -14,15 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+
+from ament_index_python.packages import get_package_share_directory
 from autoware_adapi_v1_msgs.msg import OperationModeState
 from autoware_vehicle_msgs.msg import ControlModeReport
 from geometry_msgs.msg import AccelWithCovarianceStamped
 from nav_msgs.msg import Odometry
-import os
 import numpy as np
 from rcl_interfaces.msg import ParameterDescriptor
 from rclpy.node import Node
-from ament_index_python.packages import get_package_share_directory
 
 
 class DataCollectingBaseNode(Node):
@@ -43,9 +44,7 @@ class DataCollectingBaseNode(Node):
         self.declare_parameter(
             "MASK_NAME",
             "default",
-            ParameterDescriptor(
-                description="Masks for Data collection"
-            ),
+            ParameterDescriptor(description="Masks for Data collection"),
         )
 
         self.declare_parameter(
@@ -75,7 +74,9 @@ class DataCollectingBaseNode(Node):
         self.declare_parameter(
             "NUM_BINS_ABS_STEER_RATE",
             5,
-            ParameterDescriptor(description="Number of bins of absolute value of steer rate in heatmap"),
+            ParameterDescriptor(
+                description="Number of bins of absolute value of steer rate in heatmap"
+            ),
         )
 
         self.declare_parameter(
@@ -192,9 +193,7 @@ class DataCollectingBaseNode(Node):
         self.num_bins_abs_steer_rate = (
             self.get_parameter("NUM_BINS_ABS_STEER_RATE").get_parameter_value().integer_value
         )
-        self.num_bins_jerk = (
-            self.get_parameter("NUM_BINS_JERK").get_parameter_value().integer_value
-        )
+        self.num_bins_jerk = self.get_parameter("NUM_BINS_JERK").get_parameter_value().integer_value
 
         self.v_min, self.v_max = (
             self.get_parameter("V_MIN").get_parameter_value().double_value,
@@ -234,30 +233,46 @@ class DataCollectingBaseNode(Node):
         self.v_bins = np.linspace(self.v_min, self.v_max, self.num_bins_v + 1)
         self.steer_bins = np.linspace(self.steer_min, self.steer_max, self.num_bins_steer + 1)
         self.a_bins = np.linspace(self.a_min, self.a_max, self.num_bins_a + 1)
-        self.abs_steer_rate_bins = np.linspace(self.abs_steer_rate_min, self.abs_steer_rate_max, self.num_bins_abs_steer_rate + 1)
+        self.abs_steer_rate_bins = np.linspace(
+            self.abs_steer_rate_min, self.abs_steer_rate_max, self.num_bins_abs_steer_rate + 1
+        )
         self.jerk_bins = np.linspace(self.jerk_min, self.jerk_max, self.num_bins_jerk + 1)
 
         self.v_bin_centers = (self.v_bins[:-1] + self.v_bins[1:]) / 2
         self.steer_bin_centers = (self.steer_bins[:-1] + self.steer_bins[1:]) / 2
         self.a_bin_centers = (self.a_bins[:-1] + self.a_bins[1:]) / 2
-        self.abs_steer_rate_bin_centers = (self.abs_steer_rate_bins[:-1] + self.abs_steer_rate_bins[1:]) / 2
+        self.abs_steer_rate_bin_centers = (
+            self.abs_steer_rate_bins[:-1] + self.abs_steer_rate_bins[1:]
+        ) / 2
         self.jerk_bin_centers = (self.jerk_bins[:-1] + self.jerk_bins[1:]) / 2
 
-        """
-        load mask (data collection range in heat map)
-        """
-        # set mask name
         MASK_NAME = self.get_parameter("MASK_NAME").value
-        mask_directory_path = get_package_share_directory("control_data_collecting_tool") + "/config/masks/" + MASK_NAME
+        mask_directory_path = (
+            get_package_share_directory("control_data_collecting_tool")
+            + "/config/masks/"
+            + MASK_NAME
+        )
 
-        mask_vel_acc_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Acceleration.txt")
-        self.mask_vel_acc = self.load_mask_from_txt(mask_vel_acc_path, self.num_bins_v, self.num_bins_a)
+        mask_vel_acc_path = os.path.join(
+            mask_directory_path, f"{MASK_NAME}_Velocity_Acceleration.txt"
+        )
+        self.mask_vel_acc = self.load_mask_from_txt(
+            mask_vel_acc_path, self.num_bins_v, self.num_bins_a
+        )
 
-        mask_velocity_steering_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering.txt")
-        self.mask_vel_steer = self.load_mask_from_txt(mask_velocity_steering_path, self.num_bins_v, self.num_bins_steer)
+        mask_velocity_steering_path = os.path.join(
+            mask_directory_path, f"{MASK_NAME}_Velocity_Steering.txt"
+        )
+        self.mask_vel_steer = self.load_mask_from_txt(
+            mask_velocity_steering_path, self.num_bins_v, self.num_bins_steer
+        )
 
-        mask_velocity_abs_steer_rate_path = os.path.join(mask_directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt")
-        self.mask_vel_abs_steer_rate = self.load_mask_from_txt(mask_velocity_abs_steer_rate_path, self.num_bins_v, self.num_bins_abs_steer_rate)
+        mask_velocity_abs_steer_rate_path = os.path.join(
+            mask_directory_path, f"{MASK_NAME}_Velocity_Steering_Rate.txt"
+        )
+        self.mask_vel_abs_steer_rate = self.load_mask_from_txt(
+            mask_velocity_abs_steer_rate_path, self.num_bins_v, self.num_bins_abs_steer_rate
+        )
 
     def onOdometry(self, msg):
         self._present_kinematic_state = msg
@@ -276,22 +291,13 @@ class DataCollectingBaseNode(Node):
 
     def subscribe_control_mode(self, msg):
         self._present_control_mode_ = msg.mode
-    
+
     def load_mask_from_txt(self, file_path, nx, ny):
-        """
-        Loads a numerical mask from a text file into a numpy array.
-
-        Parameters:
-        - file_path: Path to the text file to load.
-
-        Returns:
-        - A numpy array containing the loaded mask.
-        """
         try:
             mask = np.loadtxt(file_path, dtype=int)
             if len(mask) == nx and len(mask[0]) == ny:
                 return mask
         except Exception as e:
-            pass
-        
+            self.get_logger().error(f"Failed to load mask from {file_path}: {e}")
+
         return np.ones((nx, ny), dtype=int)

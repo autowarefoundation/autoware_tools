@@ -78,7 +78,9 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_steer", 10
         )
         self.collected_data_counts_of_vel_abs_steer_rate_publisher_ = self.create_publisher(
-            Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_abs_steer_rate", 10
+            Int32MultiArray,
+            "/control_data_collecting_tools/collected_data_counts_of_vel_abs_steer_rate",
+            10,
         )
         self.collected_data_counts_of_vel_jerk_publisher_ = self.create_publisher(
             Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_jerk", 10
@@ -236,7 +238,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
 
         if 0 <= v_bin < self.num_bins_v and 0 <= jerk_bin < self.num_bins_jerk:
             self.collected_data_counts_of_vel_jerk[v_bin, jerk_bin] += 1
-        
+
     # call back for counting data points
     def timer_callback_counter(self):
         if (
@@ -261,11 +263,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
 
             if self._present_kinematic_state.twist.twist.linear.x > 1e-3:
                 self.count_observations(
-                    current_vel,
-                    current_acc,
-                    current_steer,
-                    current_steer_rate,
-                    current_jerk
+                    current_vel, current_acc, current_steer, current_steer_rate, current_jerk
                 )
 
                 self.acc_hist.append(float(current_acc))
