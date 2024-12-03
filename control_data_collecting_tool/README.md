@@ -125,7 +125,7 @@ This package provides tools for automatically collecting data using pure pursuit
 
     <img src="resource/data_collection_status.png" width="480">
 
-    For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/$(MASK_NAME)` as specified by the parameter `MASK_NAME`.
+    For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/$(MASK_NAME)` where `MASK_NAME` is a parameter specifying mask name.
     The specified heatmap cells are designed to change from blue to green once a certain amount of data (`VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, `VEL_ABS_STEER_RATE_THRESHOLD` ) is collected. It is recommended to collect data until as many cells as possible turn green.
 
 8. If you want to stop data collecting automatic driving, run the following command
@@ -159,13 +159,13 @@ You can create an original mask to specify the data collection range for the hea
     python3 mask_selector.py
     ```
 
-    then, matplotlib windows for selecting the collection range of the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap will be displayed, one for each. Within these windows, you can modify the heatmap by clicking or dragging. Once you have made changes, you can save them again.
+    then, matplotlib windows for selecting the collection range of the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap will be displayed, one for each.
 
     <img src="resource/mask_selection.png" width="480">
 
     In these windows, you can modify the heatmaps by clicking or dragging within them. Once you've made your changes, pressing Ctrl+C in the terminal will automatically save the updated maps.
 
-    Afterward, rebuild the control_data_collecting_tool using the following command
+    Afterward, rebuild the `control_data_collecting_tool` using the following command
     ```bash
     colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-w" --symlink-install --continue-on-error --packages-up-to control_data_collecting_tool
     ```
