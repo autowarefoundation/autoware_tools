@@ -155,29 +155,31 @@ You can create an original mask to specify the data collection range for the hea
 
 3. In the `scripts/masks directory`, run
 
-    ```Python3
-    python3 mask_selector.py
-    ```
+   ```Python3
+   python3 mask_selector.py
+   ```
 
-    then, matplotlib windows for selecting the collection range of the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap will be displayed, one for each.
+   then, matplotlib windows for selecting the collection range of the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap will be displayed, one for each.
 
-    <img src="resource/mask_selection.png" width="480">
+   <img src="resource/mask_selection.png" width="480">
 
-    In these windows, you can modify the heatmaps by clicking or dragging within them. Once you've made your changes, pressing Ctrl+C in the terminal will automatically save the updated maps.
+   In these windows, you can modify the heatmaps by clicking or dragging within them. Once you've made your changes, pressing Ctrl+C in the terminal will automatically save the updated maps.
 
-    Afterward, rebuild the `control_data_collecting_tool` using the following command
-    ```bash
-    colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-w" --symlink-install --continue-on-error --packages-up-to control_data_collecting_tool
-    ```
-    and relaunch the control_data_collecting_tool with
-    
-    ```bash
-    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
-    ```
-    
-    This will allow you to see the selected mask applied.
+   Afterward, rebuild the `control_data_collecting_tool` using the following command
 
-    <img src="resource/original.png" width="480">
+   ```bash
+   colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-w" --symlink-install --continue-on-error --packages-up-to control_data_collecting_tool
+   ```
+
+   and relaunch the control_data_collecting_tool with
+
+   ```bash
+   ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
+   ```
+
+   This will allow you to see the selected mask applied.
+
+   <img src="resource/original.png" width="480">
 
 ## Parameter
 
