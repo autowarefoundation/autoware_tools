@@ -25,11 +25,21 @@
 #include <cmath>
 #include <limits>
 #include <map>
+#include <set>
 
 #define NOT_EXAMINED 0
 #define FOUND_CORRECT 1
 #define FOUND_WRONG 2
 #define FOUND_AMBIGUOUS 3
+
+struct CompareByRegElemId
+{
+  bool operator()(
+    const lanelet::TrafficLightConstPtr & lhs, const lanelet::TrafficLightConstPtr & rhs) const
+  {
+    return lhs->id() < rhs->id();
+  }
+};
 
 namespace lanelet::autoware::validation
 {
@@ -56,17 +66,21 @@ lanelet::validation::Issues TrafficLightFacingValidator::check_traffic_light_fac
   // Collect lanelets that refers traffic_light subtype regulatory elements
   // and those regulatory elements
   lanelet::ConstLanelets traffic_light_referrers;
+  std::set<lanelet::TrafficLightConstPtr, CompareByRegElemId> traffic_light_reg_elems;
   for (const lanelet::ConstLanelet & lane : map.laneletLayer) {
-    if (!lane.regulatoryElementsAs<lanelet::TrafficLight>().empty()) {
+    std::vector<lanelet::TrafficLightConstPtr> lane_tl_reg_elems =
+      lane.regulatoryElementsAs<lanelet::TrafficLight>();
+    if (!lane_tl_reg_elems.empty()) {
       traffic_light_referrers.push_back(lane);
+      for (const auto & tl_ptr : lane_tl_reg_elems) {
+        traffic_light_reg_elems.insert(tl_ptr);
+      }
     }
   }
   lanelet::LaneletSubmapConstUPtr referrers_submap =
     lanelet::utils::createConstSubmap(traffic_light_referrers, {});
-  std::vector<lanelet::TrafficLightConstPtr> traffic_light_reg_elems =
-    lanelet::utils::query::trafficLights(traffic_light_referrers);
 
-  // Get all red_yellow_green traffic lights with a std::map of flags
+  // Get all traffic lights with a std::map of status
   std::map<lanelet::Id, int> traffic_light_facing_status;
 
   // Main validation procedure
@@ -83,11 +97,7 @@ lanelet::validation::Issues TrafficLightFacingValidator::check_traffic_light_fac
         continue;
       }
 
-      if (
-        traffic_light_facing_status.find(refers_linestring.id()) ==
-        traffic_light_facing_status.end()) {
-        traffic_light_facing_status.insert({refers_linestring.id(), NOT_EXAMINED});
-      }
+      traffic_light_facing_status.insert({refers_linestring.id(), NOT_EXAMINED});
 
       const lanelet::ConstLanelets referring_lanelets =
         referrers_submap->laneletLayer.findUsages(reg_elem);
