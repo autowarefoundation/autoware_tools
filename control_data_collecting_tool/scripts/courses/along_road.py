@@ -75,14 +75,14 @@ def declare_along_road_params(node):
         "longitude",
         139.6503,
         ParameterDescriptor(
-            description="The longitude of the origin specified when loading the map"
+            description="The longitude of the origin specified when loading the map [degree]"
         ),
     )
     node.declare_parameter(
         "latitude",
         35.6762,
         ParameterDescriptor(
-            description="The latitude of the origin specified when loading the map"
+            description="The latitude of the origin specified when loading the map [degree]"
         ),
     )
     node.declare_parameter(

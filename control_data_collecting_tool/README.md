@@ -82,7 +82,7 @@ This package provides tools for automatically collecting data using pure pursuit
     - `/data_collecting_lookahead_marker_array`
       - Type: MarkerArray
 
-6. The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to 6.1. If you select the trajectory from [`along_road`], please proceed to 6.2.
+6. The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], please proceed to 6.1. If you select the trajectory from [`along_road`], please proceed to 6.2.
 
     - 6.1 If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
 
@@ -90,7 +90,7 @@ This package provides tools for automatically collecting data using pure pursuit
 
       Highlight the data collecting area by dragging the mouse over it.
 
-          <img src="resource/select_area.gif" width="480">
+      <img src="resource/select_area.gif" width="480">
 
       > [!NOTE]
       > You cannot change the data collecting area while driving.
@@ -112,7 +112,7 @@ This package provides tools for automatically collecting data using pure pursuit
       > You cannot change the goal pose while driving.
       > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
 
-7. Click the `LOCAL` button on `OperationMode` in `AutowareStatePanel`.
+7. Click the `LOCAL` button in `AutowareStatePanel`.
 
     <img src="resource/push_LOCAL.png" width="480">
 
@@ -125,7 +125,7 @@ This package provides tools for automatically collecting data using pure pursuit
 
     <img src="resource/data_collection_status.png" width="480">
 
-    For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/$(MASK_NAME)` where `MASK_NAME` is a parameter specifying mask name.
+    For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/MASK_NAME` where `MASK_NAME` is a parameter specifying mask name (Please also see `config/common_param.yaml`).
     The specified heatmap cells are designed to change from blue to green once a certain amount of data (`VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, `VEL_ABS_STEER_RATE_THRESHOLD` ) is collected. It is recommended to collect data until as many cells as possible turn green.
 
 8. If you want to stop data collecting automatic driving, run the following command
@@ -151,9 +151,9 @@ You can create an original mask to specify the data collection range for the hea
 
 1. Change the `MASK_NAME` parameter in `config/common_param.yaml` from its default value of `default` to any name you prefer.
 
-2. Modify parameters such as VEL_ACC_THRESHOLD, VEL_STEER_THRESHOLD, and VEL_ABS_STEER_RATE_THRESHOLD to determine the desired amount of data for each cell in the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap.
+2. Modify parameters such as `VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, and `VEL_ABS_STEER_RATE_THRESHOLD` to determine the desired amount of data for each cell in the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap.
 
-3. In the `scripts/masks directory`, run
+3. In the `scripts/masks` directory, run
 
    ```Python3
    python3 mask_selector.py
@@ -163,7 +163,7 @@ You can create an original mask to specify the data collection range for the hea
 
    <img src="resource/mask_selection.png" width="480">
 
-   In these windows, you can modify the heatmaps by clicking or dragging within them. Once you've made your changes, pressing Ctrl+C in the terminal will automatically save the updated maps.
+   In these windows, you can modify the heatmaps by clicking or dragging within them. Once you've made your changes, pressing `Ctrl+C` in the terminal will automatically save the updated maps.
 
    Afterward, rebuild the `control_data_collecting_tool` using the following command
 
@@ -202,9 +202,9 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `V_MAX`                                  | `double` | Maximum velocity in heatmap [m/s]                                                                                                         | 11.5                   |
 | `STEER_MIN`                              | `double` | Minimum steer in heatmap [rad]                                                                                                            | -0.6                   |
 | `STEER_MAX`                              | `double` | Maximum steer in heatmap [rad]                                                                                                            | 0.6                    |
-| `A_MIN`                                  | `double` | Minimum acceleration in heatmap [m/ss]                                                                                                    | -1.0                   |
-| `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/ss]                                                                                                    | 1.0                    |
-| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                                                                     | 2.00                   |
+| `A_MIN`                                  | `double` | Minimum acceleration in heatmap [m/s^2]                                                                                                   | -1.0                   |
+| `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/s^2]                                                                                                   | 1.0                    |
+| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/s^2]                                                                                                    | 2.00                   |
 | `ABS_STEER_RATE_MIN`                     | `double` | Minimum absolute value of steer rate in heatmap [rad/s]                                                                                   | 0.0                    |
 | `ABS_STEER_RATE_MAX`                     | `double` | Maximum absolute value of steer rate in heatmap [rad/s]                                                                                   | 0.3                    |
 | `JERK_MIN`                               | `double` | Minimum jerk in heatmap [m/s^3]                                                                                                           | -0.5                   |
@@ -213,8 +213,8 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `VEL_ACC_THRESHOLD`                      | `int`    | Threshold of velocity-and-acc heatmap in data collection                                                                                  | 40                     |
 | `VEL_STEER_THRESHOLD`                    | `int`    | Threshold of velocity-and-steer heatmap in data collection                                                                                | 20                     |
 | `VEL_ABS_STEER_RATE_THRESHOLD`           | `int`    | Threshold of velocity-and-abs_steer_rate heatmap in data collection                                                                       | 20                     |
-| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                                                                     | 2.00                   |
-| `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]                                                                               | 1.50                   |
+| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/s^2]                                                                                                    | 2.00                   |
+| `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m]                                                                                 | 1.50                   |
 | `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                                                                   | 0.75                   |
 | `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]                                                                        | 1.0                    |
 | `mov_ave_window`                         | `int`    | Moving average smoothing window size                                                                                                      | 50                     |
@@ -226,10 +226,10 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                                                                                                 | 2.0                    |
 | `linearized_pure_pursuit_steer_kp_param` | `double` | Linearized pure pursuit steering P gain parameter                                                                                         | 2.0                    |
 | `linearized_pure_pursuit_steer_kd_param` | `double` | Linearized pure pursuit steering D gain parameter                                                                                         | 2.0                    |
-| `stop_acc`                               | `double` | Accel command for stopping data collecting driving [m/ss]                                                                                 | -2.0                   |
-| `stop_jerk_lim`                          | `double` | Jerk limit for stopping data collecting driving [m/sss]                                                                                   | 5.0                    |
-| `lon_acc_lim`                            | `double` | Longitudinal acceleration limit [m/ss]                                                                                                    | 1.5                    |
-| `lon_jerk_lim`                           | `double` | Longitudinal jerk limit [m/sss]                                                                                                           | 0.5                    |
+| `stop_acc`                               | `double` | Accel command for stopping data collecting driving [m/s^2]                                                                                | -2.0                   |
+| `stop_jerk_lim`                          | `double` | Jerk limit for stopping data collecting driving [m/s^3]                                                                                   | 5.0                    |
+| `lon_acc_lim`                            | `double` | Longitudinal acceleration limit [m/s^2]                                                                                                   | 1.5                    |
+| `lon_jerk_lim`                           | `double` | Longitudinal jerk limit [m/s^3]                                                                                                           | 0.5                    |
 | `steer_lim`                              | `double` | Steering angle limit [rad]                                                                                                                | 0.6                    |
 | `steer_rate_lim`                         | `double` | Steering angle rate limit [rad/s]                                                                                                         | 0.6                    |
 
@@ -238,8 +238,8 @@ The following parameters are common to all trajectories but can be defined indiv
 | :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
 | `COLLECTING_DATA_V_MIN` | `double` | Minimum velocity for data collection [m/s] | 0.5 |
 | `COLLECTING_DATA_V_MAX` | `double` | Maximum velocity for data collection [m/s] | 8.0 |
-| `COLLECTING_DATA_A_MIN` | `double` | Minimum velocity for data collection [m/ss] | 1.0 |
-| `COLLECTING_DATA_A_MAX` | `double` | Maximum velocity for data collection [m/ss] | -1.0 |
+| `COLLECTING_DATA_A_MIN` | `double` | Minimum velocity for data collection [m/s^2] | 1.0 |
+| `COLLECTING_DATA_A_MAX` | `double` | Maximum velocity for data collection [m/s^2] | -1.0 |
 | `longitudinal_velocity_noise_amp` | `double` | Target longitudinal velocity additional sine noise amplitude [m/s] | 0.01 |
 | `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s] | 5.0 |
 | `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s] | 20.0 |

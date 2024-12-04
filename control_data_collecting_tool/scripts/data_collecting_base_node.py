@@ -112,13 +112,13 @@ class DataCollectingBaseNode(Node):
         self.declare_parameter(
             "A_MIN",
             -1.0,
-            ParameterDescriptor(description="Minimum acceleration in heatmap [m/ss]"),
+            ParameterDescriptor(description="Minimum acceleration in heatmap [m/s^2]"),
         )
 
         self.declare_parameter(
             "A_MAX",
             1.0,
-            ParameterDescriptor(description="Maximum acceleration in heatmap [m/ss]"),
+            ParameterDescriptor(description="Maximum acceleration in heatmap [m/s^2]"),
         )
 
         self.declare_parameter(

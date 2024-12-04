@@ -67,7 +67,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         self.declare_parameter(
             "max_lateral_accel",
             0.5,
-            ParameterDescriptor(description="Max lateral acceleration limit [m/ss]"),
+            ParameterDescriptor(description="Max lateral acceleration limit [m/s^2]"),
         )
 
         self.declare_parameter(
@@ -145,13 +145,13 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         self.declare_parameter(
             "COLLECTING_DATA_A_MIN",
             -1.0,
-            ParameterDescriptor(description="Minimum velocity for data collection [m/ss]"),
+            ParameterDescriptor(description="Minimum velocity for data collection [m/s^2]"),
         )
 
         self.declare_parameter(
             "COLLECTING_DATA_A_MAX",
             1.0,
-            ParameterDescriptor(description="Maximum velocity for data collection [m/ss]"),
+            ParameterDescriptor(description="Maximum velocity for data collection [m/s^2]"),
         )
 
         self.trajectory_for_collecting_data_pub_ = self.create_publisher(
