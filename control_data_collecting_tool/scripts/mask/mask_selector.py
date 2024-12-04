@@ -222,7 +222,7 @@ def load_mask_from_txt(file_path):
 def main():
     shutdown_event = threading.Event()
 
-    def handle_shutdown(signum, frame):
+    def handle_shutdown(sig_num, frame):
         shutdown_event.set()
 
     signal.signal(signal.SIGINT, handle_shutdown)
