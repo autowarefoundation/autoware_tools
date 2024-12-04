@@ -3,7 +3,7 @@
 
   <!-- vehicle info -->
   <arg name="vehicle_model" default="lexus"/>
-  <include file="$(find-pkg-share global_parameter_loader)/launch/global_params.launch.py">
+  <include file="$(find-pkg-share autoware_global_parameter_loader)/launch/global_params.launch.py">
     <arg name="vehicle_model" value="$(var vehicle_model)"/>
   </include>
 
