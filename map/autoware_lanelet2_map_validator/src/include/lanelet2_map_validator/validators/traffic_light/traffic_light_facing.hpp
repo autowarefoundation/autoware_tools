@@ -47,26 +47,6 @@ private:
   bool is_red_yellow_green_traffic_light(const lanelet::ConstLineString3d & linestring);
 
   /**
-   * @brief Get a stop line from a regulatory element
-   *
-   * @param reg_elem Pointer to the regulatory element object
-   * @return lanelet::ConstLineString3d The stop_line referred by the regulatory element
-   */
-  lanelet::ConstLineString3d get_stop_line_from_reg_elem(
-    const lanelet::RegulatoryElementConstPtr & reg_elem);
-
-  /**
-   * @brief Returns lanelets that refers the regulatory element specified by the input id
-   * from the input lanelet map.
-   *
-   * @param map
-   * @param reg_elem_id
-   * @return lanelet::ConstLanelets
-   */
-  lanelet::ConstLanelets collect_referring_lanelets(
-    const lanelet::LaneletMap & map, const lanelet::Id reg_elem_id);
-
-  /**
    * @brief Convert lanelet::ConstLineString3d to a Eigen::Vector3d.
    * The linestring must be made only from two points.
    *
