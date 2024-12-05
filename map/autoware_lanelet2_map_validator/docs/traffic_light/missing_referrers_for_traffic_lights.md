@@ -10,7 +10,7 @@ This validator checks whether each `traffic_light` type regulatory element has b
 
 | Issue Code                        | Message                                                                       | Severity | Primitive          | Description                                                                                  | Approach                                                                                   |
 | --------------------------------- | ----------------------------------------------------------------------------- | -------- | ------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| TrafficLight.MissingReferrers-001 | Regulatory element of traffic light must be referred by at least one lanelet. | Error    | Regulatory Element | There is a `traffic_light` type regulatory element that hasn't been referred by any lanelet. | The lanelet that might be blocked by the traffic light must refer this regulatory element. |
+| TrafficLight.MissingReferrers-001 | Regulatory element of traffic light must be referred by at least one lanelet. | Error    | Regulatory Element | There is a `traffic_light` type regulatory element that hasn't been referred by any lanelet. | The lanelet that might be controlled by the traffic light must refer this regulatory element. |
 
 ## Related source codes
 
