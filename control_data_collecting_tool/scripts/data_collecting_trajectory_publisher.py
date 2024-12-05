@@ -59,16 +59,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         super().__init__("data_collecting_trajectory_publisher")
 
         self.declare_parameter(
-            "COURSE_NAME",
-            "eight_course",
-            ParameterDescriptor(
-                description="Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`]"
-            ),
-        )
-        # set course name
-        self.COURSE_NAME = self.get_parameter("COURSE_NAME").value
-
-        self.declare_parameter(
             "acc_kp",
             1.0,
             ParameterDescriptor(description="Pure pursuit accel command proportional gain"),
@@ -77,7 +67,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         self.declare_parameter(
             "max_lateral_accel",
             0.5,
-            ParameterDescriptor(description="Max lateral acceleration limit [m/ss]"),
+            ParameterDescriptor(description="Max lateral acceleration limit [m/s^2]"),
         )
 
         self.declare_parameter(
@@ -155,19 +145,14 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         self.declare_parameter(
             "COLLECTING_DATA_A_MIN",
             -1.0,
-            ParameterDescriptor(description="Minimum velocity for data collection [m/ss]"),
+            ParameterDescriptor(description="Minimum velocity for data collection [m/s^2]"),
         )
 
         self.declare_parameter(
             "COLLECTING_DATA_A_MAX",
             1.0,
-            ParameterDescriptor(description="Maximum velocity for data collection [m/ss]"),
+            ParameterDescriptor(description="Maximum velocity for data collection [m/s^2]"),
         )
-
-        """
-        Declare course specific parameters
-        """
-        declare_course_params(self.COURSE_NAME, self)
 
         self.trajectory_for_collecting_data_pub_ = self.create_publisher(
             Trajectory,
@@ -203,6 +188,11 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             1,
         )
         self.sub_data_collecting_area_
+
+        """
+        Declare course specific parameters
+        """
+        declare_course_params(self.COURSE_NAME, self)
 
         # obtain ros params as dictionary
         param_names = self._parameters
@@ -532,6 +522,8 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 present_acc,
                 self.collected_data_counts_of_vel_acc,
                 self.collected_data_counts_of_vel_steer,
+                self.mask_vel_acc,
+                self.mask_vel_steer,
             )
 
             trajectory_longitudinal_velocity_data = np.array(
