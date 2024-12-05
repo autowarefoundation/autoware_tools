@@ -51,8 +51,8 @@ MissingReferrersForTrafficLightsValidator::check_missing_referrers_for_traffic_l
     }
 
     // At least one lanelet should refer a traffic_light regulatory element
-    const lanelet::ConstLanelets referring_lanelets =
-      collect_referring_lanelets(map, reg_elem->id());
+    const lanelet::ConstLanelets referring_lanelets = map.laneletLayer.findUsages(reg_elem);
+
     if (referring_lanelets.size() == 0) {
       issues.emplace_back(
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::RegulatoryElement,
@@ -66,19 +66,4 @@ MissingReferrersForTrafficLightsValidator::check_missing_referrers_for_traffic_l
 
   return issues;
 }
-
-lanelet::ConstLanelets MissingReferrersForTrafficLightsValidator::collect_referring_lanelets(
-  const lanelet::LaneletMap & map, const lanelet::Id target_reg_elem_id)
-{
-  lanelet::ConstLanelets lanelet_group;
-  for (const lanelet::ConstLanelet & lanelet : map.laneletLayer) {
-    for (lanelet::RegulatoryElementConstPtr reg_elem : lanelet.regulatoryElements()) {
-      if (reg_elem->id() == target_reg_elem_id) {
-        lanelet_group.push_back(lanelet);
-      }
-    }
-  }
-  return lanelet_group;
-}
-
 }  // namespace lanelet::autoware::validation

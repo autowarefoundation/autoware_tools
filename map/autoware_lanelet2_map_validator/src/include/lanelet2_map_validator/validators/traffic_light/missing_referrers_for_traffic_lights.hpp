@@ -36,17 +36,6 @@ private:
    */
   lanelet::validation::Issues check_missing_referrers_for_traffic_lights(
     const lanelet::LaneletMap & map);
-
-  /**
-   * @brief Returns lanelets that refers the regulatory element specified by the input id
-   * from the input lanelet map.
-   *
-   * @param map
-   * @param reg_elem_id
-   * @return lanelet::ConstLanelets
-   */
-  lanelet::ConstLanelets collect_referring_lanelets(
-    const lanelet::LaneletMap & map, const lanelet::Id reg_elem_id);
 };
 }  // namespace lanelet::autoware::validation
 
