@@ -63,44 +63,32 @@ lanelet::validation::Issues TrafficLightFacingValidator::check_traffic_light_fac
 {
   lanelet::validation::Issues issues;
 
-  // Collect lanelets that refers traffic_light subtype regulatory elements
-  // and those regulatory elements
-  lanelet::ConstLanelets traffic_light_referrers;
-  std::set<lanelet::TrafficLightConstPtr, CompareByRegElemId> traffic_light_reg_elems;
-  for (const lanelet::ConstLanelet & lane : map.laneletLayer) {
-    std::vector<lanelet::TrafficLightConstPtr> lane_tl_reg_elems =
-      lane.regulatoryElementsAs<lanelet::TrafficLight>();
-    if (!lane_tl_reg_elems.empty()) {
-      traffic_light_referrers.push_back(lane);
-      for (const auto & tl_ptr : lane_tl_reg_elems) {
-        traffic_light_reg_elems.insert(tl_ptr);
-      }
-    }
-  }
-  lanelet::LaneletSubmapConstUPtr referrers_submap =
-    lanelet::utils::createConstSubmap(traffic_light_referrers, {});
-
   // Get all traffic lights with a std::map of status
   std::map<lanelet::Id, int> traffic_light_facing_status;
 
   // Main validation procedure
-  for (const lanelet::TrafficLightConstPtr & reg_elem : traffic_light_reg_elems) {
-    lanelet::Optional<lanelet::ConstLineString3d> stop_line = reg_elem->stopLine();
+  for (const lanelet::RegulatoryElementConstPtr & reg_elem : map.regulatoryElementLayer) {
+    // Skip non traffic light regulatory elements
+    const auto tl_reg_elem = std::dynamic_pointer_cast<const lanelet::TrafficLight>(reg_elem);
+    if (!tl_reg_elem) {
+      continue;
+    }
+
+    lanelet::Optional<lanelet::ConstLineString3d> stop_line = tl_reg_elem->stopLine();
     if (!stop_line) {
       // This case should be filtered out by mapping.traffic_light.regulatory_element_details
       continue;
     }
 
     for (const lanelet::ConstLineString3d & refers_linestring :
-         reg_elem->getParameters<lanelet::ConstLineString3d>(lanelet::RoleName::Refers)) {
+         tl_reg_elem->getParameters<lanelet::ConstLineString3d>(lanelet::RoleName::Refers)) {
       if (!is_red_yellow_green_traffic_light(refers_linestring)) {
         continue;
       }
 
       traffic_light_facing_status.insert({refers_linestring.id(), NOT_EXAMINED});
 
-      const lanelet::ConstLanelets referring_lanelets =
-        referrers_submap->laneletLayer.findUsages(reg_elem);
+      const lanelet::ConstLanelets referring_lanelets = map.laneletLayer.findUsages(tl_reg_elem);
 
       if (referring_lanelets.empty()) {
         // This case should be filtered out by mapping.traffic_light.missing_referrers
