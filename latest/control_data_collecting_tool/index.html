@@ -3012,6 +3012,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#specify-data-collection-range" class="md-nav__link">
+    Specify data collection range
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#parameter" class="md-nav__link">
     Parameter
   </a>
@@ -3145,13 +3152,13 @@
     - Type: MarkerArray</p>
 </li>
 <li>
-<p>The following actions differ depending on the selected course. If you select the trajectory from [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>, <code>reversal_loop_circle</code>], proceed to 6.1. If you select the trajectory from [<code>along_road</code>], please proceed to 6.2.</p>
+<p>The following actions differ depending on the selected course. If you select the trajectory from [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>, <code>reversal_loop_circle</code>], please proceed to 6.1. If you select the trajectory from [<code>along_road</code>], please proceed to 6.2.</p>
 <p>- 6.1 If you choose the trajectory from [<code>eight_course</code>, <code>u_shaped_return</code>, <code>straight_line_positive</code>, <code>straight_line_negative</code>, <code>reversal_loop_circle</code>], select <code>DataCollectingAreaSelectionTool</code> plugin.</p>
 <div class="codehilite"><pre><span></span><code>&lt;img src="resource/DataCollectingAreaSelection.png" width="480"&gt;
 
 Highlight the data collecting area by dragging the mouse over it.
 
-    &lt;img src="resource/select_area.gif" width="480"&gt;
+&lt;img src="resource/select_area.gif" width="480"&gt;
 
 &gt; [!NOTE]
 &gt; You cannot change the data collecting area while driving.
@@ -3176,10 +3183,15 @@ In the sections labeled `velocity = const (velocity_on_curve)` in the legend, th
 
 </li>
 <li>
-<p>Click the <code>LOCAL</code> button on <code>OperationMode</code> in <code>AutowareStatePanel</code>.</p>
+<p>Click the <code>LOCAL</code> button in <code>AutowareStatePanel</code>.</p>
 <p><img src="resource/push_LOCAL.png" width="480"></p>
 <p>Then, data collecting starts.</p>
 <p><img src="resource/push_LOCAL.gif" width="480"></p>
+<p>You can monitor the data collection status in real-time through the window that pops up when this node is launched.
+  (From top to bottom: the speed-acceleration phase diagram, the speed-acceleration heatmap, the speed-steering angle heatmap, the speed-steer rate heatmap, and the speed-jerk heatmap.)</p>
+<p><img src="resource/data_collection_status.png" width="480"></p>
+<p>For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder <code>config/masks/MASK_NAME</code> where <code>MASK_NAME</code> is a parameter specifying mask name (Please also see <code>config/common_param.yaml</code>).
+  The specified heatmap cells are designed to change from blue to green once a certain amount of data (<code>VEL_ACC_THRESHOLD</code>, <code>VEL_STEER_THRESHOLD</code>, <code>VEL_ABS_STEER_RATE_THRESHOLD</code> ) is collected. It is recommended to collect data until as many cells as possible turn green.</p>
 </li>
 <li>
 <p>If you want to stop data collecting automatic driving, run the following command</p>
@@ -3198,6 +3210,32 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 </ol>
 <!-- prettier-ignore-end -->
 
+<h2 id="specify-data-collection-range">Specify data collection range<a class="headerlink" href="#specify-data-collection-range" title="Permanent link">#</a></h2>
+<p>You can create an original mask to specify the data collection range for the heatmap explained in step 7 of the "How to Use" section.</p>
+<ol>
+<li>
+<p>Change the <code>MASK_NAME</code> parameter in <code>config/common_param.yaml</code> from its default value of <code>default</code> to any name you prefer.</p>
+</li>
+<li>
+<p>Modify parameters such as <code>VEL_ACC_THRESHOLD</code>, <code>VEL_STEER_THRESHOLD</code>, and <code>VEL_ABS_STEER_RATE_THRESHOLD</code> to determine the desired amount of data for each cell in the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap.</p>
+</li>
+<li>
+<p>In the <code>scripts/masks</code> directory, run</p>
+<div class="highlight"><pre><span></span><code><span class="n">python3</span> <span class="n">mask_selector</span><span class="o">.</span><span class="n">py</span>
+</code></pre></div>
+<p>then, matplotlib windows for selecting the collection range of the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap will be displayed, one for each.</p>
+<p><img src="resource/mask_selection.png" width="480"></p>
+<p>In these windows, you can modify the heatmaps by clicking or dragging within them. Once you've made your changes, pressing <code>Ctrl+C</code> in the terminal will automatically save the updated maps.</p>
+<p>Afterward, rebuild the <code>control_data_collecting_tool</code> using the following command</p>
+<div class="highlight"><pre><span></span><code>colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>-DCMAKE_CXX_FLAGS<span class="o">=</span><span class="s2">"-w"</span><span class="w"> </span>--symlink-install<span class="w"> </span>--continue-on-error<span class="w"> </span>--packages-up-to<span class="w"> </span>control_data_collecting_tool
+</code></pre></div>
+<p>and relaunch the control_data_collecting_tool with</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>control_data_collecting_tool<span class="w"> </span>control_data_collecting_tool.launch.py<span class="w"> </span>map_path:<span class="o">=</span><span class="nv">$HOME</span>/autoware_map/sample-map-planning
+</code></pre></div>
+<p>This will allow you to see the selected mask applied.</p>
+<p><img src="resource/original.png" width="480"></p>
+</li>
+</ol>
 <h2 id="parameter">Parameter<a class="headerlink" href="#parameter" title="Permanent link">#</a></h2>
 <p>There are parameters that are common to all trajectories and parameters that are specific to each trajectory.</p>
 <h3 id="common-parameters">Common Parameters<a class="headerlink" href="#common-parameters" title="Permanent link">#</a></h3>
@@ -3243,6 +3281,18 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <td align="left">10</td>
 </tr>
 <tr>
+<td align="left"><code>NUM_BINS_ABS_STEER_RATE</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Number of bins of absolute value of steer rate in heatmap</td>
+<td align="left">5</td>
+</tr>
+<tr>
+<td align="left"><code>NUM_BINS_JERK</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Number of bins of jerk in heatmap</td>
+<td align="left">10</td>
+</tr>
+<tr>
 <td align="left"><code>V_MIN</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Minimum velocity in heatmap [m/s]</td>
@@ -3269,25 +3319,79 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <tr>
 <td align="left"><code>A_MIN</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Minimum acceleration in heatmap [m/ss]</td>
+<td align="left">Minimum acceleration in heatmap [m/s^2]</td>
 <td align="left">-1.0</td>
 </tr>
 <tr>
 <td align="left"><code>A_MAX</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Maximum acceleration in heatmap [m/ss]</td>
+<td align="left">Maximum acceleration in heatmap [m/s^2]</td>
 <td align="left">1.0</td>
 </tr>
 <tr>
 <td align="left"><code>max_lateral_accel</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Max lateral acceleration limit [m/ss]</td>
+<td align="left">Max lateral acceleration limit [m/s^2]</td>
+<td align="left">2.00</td>
+</tr>
+<tr>
+<td align="left"><code>ABS_STEER_RATE_MIN</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Minimum absolute value of steer rate in heatmap [rad/s]</td>
+<td align="left">0.0</td>
+</tr>
+<tr>
+<td align="left"><code>ABS_STEER_RATE_MAX</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Maximum absolute value of steer rate in heatmap [rad/s]</td>
+<td align="left">0.3</td>
+</tr>
+<tr>
+<td align="left"><code>JERK_MIN</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Minimum jerk in heatmap [m/s^3]</td>
+<td align="left">-0.5</td>
+</tr>
+<tr>
+<td align="left"><code>JERK_MAX</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Maximum jerk in heatmap [m/s^3]</td>
+<td align="left">0.5</td>
+</tr>
+<tr>
+<td align="left"><code>MASK_NAME</code></td>
+<td align="left"><code>string</code></td>
+<td align="left">Directory name of masks for data collection</td>
+<td align="left"><code>default</code></td>
+</tr>
+<tr>
+<td align="left"><code>VEL_ACC_THRESHOLD</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Threshold of velocity-and-acc heatmap in data collection</td>
+<td align="left">40</td>
+</tr>
+<tr>
+<td align="left"><code>VEL_STEER_THRESHOLD</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Threshold of velocity-and-steer heatmap in data collection</td>
+<td align="left">20</td>
+</tr>
+<tr>
+<td align="left"><code>VEL_ABS_STEER_RATE_THRESHOLD</code></td>
+<td align="left"><code>int</code></td>
+<td align="left">Threshold of velocity-and-abs_steer_rate heatmap in data collection</td>
+<td align="left">20</td>
+</tr>
+<tr>
+<td align="left"><code>max_lateral_accel</code></td>
+<td align="left"><code>double</code></td>
+<td align="left">Max lateral acceleration limit [m/s^2]</td>
 <td align="left">2.00</td>
 </tr>
 <tr>
 <td align="left"><code>lateral_error_threshold</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Lateral error threshold where applying velocity limit [m/s]</td>
+<td align="left">Lateral error threshold where applying velocity limit [m]</td>
 <td align="left">1.50</td>
 </tr>
 <tr>
@@ -3359,25 +3463,25 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <tr>
 <td align="left"><code>stop_acc</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Accel command for stopping data collecting driving [m/ss]</td>
+<td align="left">Accel command for stopping data collecting driving [m/s^2]</td>
 <td align="left">-2.0</td>
 </tr>
 <tr>
 <td align="left"><code>stop_jerk_lim</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Jerk limit for stopping data collecting driving [m/sss]</td>
+<td align="left">Jerk limit for stopping data collecting driving [m/s^3]</td>
 <td align="left">5.0</td>
 </tr>
 <tr>
 <td align="left"><code>lon_acc_lim</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Longitudinal acceleration limit [m/ss]</td>
+<td align="left">Longitudinal acceleration limit [m/s^2]</td>
 <td align="left">1.5</td>
 </tr>
 <tr>
 <td align="left"><code>lon_jerk_lim</code></td>
 <td align="left"><code>double</code></td>
-<td align="left">Longitudinal jerk limit [m/sss]</td>
+<td align="left">Longitudinal jerk limit [m/s^3]</td>
 <td align="left">0.5</td>
 </tr>
 <tr>
@@ -3399,8 +3503,8 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 | :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
 | <code>COLLECTING_DATA_V_MIN</code> | <code>double</code> | Minimum velocity for data collection [m/s] | 0.5 |
 | <code>COLLECTING_DATA_V_MAX</code> | <code>double</code> | Maximum velocity for data collection [m/s] | 8.0 |
-| <code>COLLECTING_DATA_A_MIN</code> | <code>double</code> | Minimum velocity for data collection [m/ss] | 1.0 |
-| <code>COLLECTING_DATA_A_MAX</code> | <code>double</code> | Maximum velocity for data collection [m/ss] | -1.0 |
+| <code>COLLECTING_DATA_A_MIN</code> | <code>double</code> | Minimum velocity for data collection [m/s^2] | 1.0 |
+| <code>COLLECTING_DATA_A_MAX</code> | <code>double</code> | Maximum velocity for data collection [m/s^2] | -1.0 |
 | <code>longitudinal_velocity_noise_amp</code> | <code>double</code> | Target longitudinal velocity additional sine noise amplitude [m/s] | 0.01 |
 | <code>longitudinal_velocity_noise_min_period</code> | <code>double</code> | Target longitudinal velocity additional sine noise minimum period [s] | 5.0 |
 | <code>longitudinal_velocity_noise_max_period</code> | <code>double</code> | Target longitudinal velocity additional sine noise maximum period [s] | 20.0 |
