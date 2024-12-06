@@ -12,13 +12,37 @@
       "id": "vm-04-01",
       "validators": [
         {
-          "name": "mapping.crosswalk.missing_regulatory_elements"
+          "name": "mapping.traffic_light.missing_regulatory_elements"
         },
         {
-          "name": "mapping.crosswalk.regulatory_element_details",
+          "name": "mapping.traffic_light.missing_referrers",
           "prerequisites": [
             {
-              "name": "mapping.crosswalk.missing_regulatory_elements"
+              "name": "mapping.traffic_light.missing_regulatory_elements"
+            }
+          ]
+        },
+        {
+          "name": "mapping.traffic_light.regulatory_element_details",
+          "prerequisites": [
+            {
+              "name": "mapping.traffic_light.missing_regulatory_elements"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "vm-04-02",
+      "validators": [
+        {
+          "name": "mapping.traffic_light.correct_facing",
+          "prerequisites": [
+            {
+              "name": "mapping.traffic_light.missing_referrers"
+            },
+            {
+              "name": "mapping.traffic_light.regulatory_element_details"
             }
           ]
         }
@@ -28,13 +52,13 @@
       "id": "vm-05-01",
       "validators": [
         {
-          "name": "mapping.traffic_light.missing_regulatory_elements"
+          "name": "mapping.crosswalk.missing_regulatory_elements"
         },
         {
-          "name": "mapping.traffic_light.regulatory_element_details",
+          "name": "mapping.crosswalk.regulatory_element_details",
           "prerequisites": [
             {
-              "name": "mapping.traffic_light.missing_regulatory_elements"
+              "name": "mapping.crosswalk.missing_regulatory_elements"
             }
           ]
         }

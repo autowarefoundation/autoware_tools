@@ -75,14 +75,14 @@ def declare_along_road_params(node):
         "longitude",
         139.6503,
         ParameterDescriptor(
-            description="The longitude of the origin specified when loading the map"
+            description="The longitude of the origin specified when loading the map [degree]"
         ),
     )
     node.declare_parameter(
         "latitude",
         35.6762,
         ParameterDescriptor(
-            description="The latitude of the origin specified when loading the map"
+            description="The latitude of the origin specified when loading the map [degree]"
         ),
     )
     node.declare_parameter(
@@ -250,6 +250,8 @@ class Along_Road(Base_Course):
         current_acc,
         collected_data_counts_of_vel_acc,
         collected_data_counts_of_vel_steer,
+        mask_vel_acc,
+        mask_vel_steer,
     ):
         part = self.parts[nearestIndex]
         achievement_rate = self.achievement_rates[nearestIndex]
@@ -261,7 +263,7 @@ class Along_Road(Base_Course):
             or (part == "straight" and achievement_rate < 0.05)
         ) and not self.set_target_velocity_on_straight_line:
             self.acc_idx, self.vel_idx = self.choose_target_velocity_acc(
-                collected_data_counts_of_vel_acc
+                collected_data_counts_of_vel_acc, mask_vel_acc
             )
             self.target_acc_on_straight_line = self.params.a_bin_centers[self.acc_idx]
             self.target_vel_on_straight_line = self.params.v_bin_centers[self.vel_idx]
