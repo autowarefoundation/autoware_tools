@@ -107,3 +107,15 @@ ros2 run autoware_debug_tools cpu_usage_plotter <bag-path> -n 20
 ```
 
 ![cpu_usage_plot_example](images/cpu_usage_plot_example.png)
+
+## Rosout Log Reconstructor
+
+This script shows the log from the `/rosout` topic on the terminal.
+
+### Usage
+
+```bash
+ros2 run autoware_debug_tools rosout_log_reconstructor
+```
+
+![rosout_log_example](images/rosout_log_example.png)
