@@ -18,6 +18,7 @@
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
 
+#include <string>
 #include <utility>
 
 namespace lanelet::autoware::validation
@@ -34,10 +35,11 @@ public:
 
 private:
   lanelet::validation::Issues check_intersection_area_segment_type(const lanelet::LaneletMap & map);
-  std::pair<lanelet::ConstLanelets, lanelet::ConstLineStrings3d> extract_nearby_elements(
+  lanelet::LaneletSubmapUPtr create_nearby_borders_submap(
     const lanelet::LaneletMap & map, const lanelet::ConstPolygon3d & intersection_area);
   lanelet::BoundingBox2d get_circumscribed_box_from_polygon(
     const lanelet::ConstPolygon3d & polygon);
+  std::string ids_to_string(const lanelet::Ids ids);
 };
 }  // namespace lanelet::autoware::validation
 

@@ -48,14 +48,36 @@ IntersectionAreaSegmentTypeValidator::check_intersection_area_segment_type(
   lanelet::validation::Issues issues;
 
   for (const lanelet::ConstPolygon3d & polygon3d : map.polygonLayer) {
-    const auto [nearby_lanelets, nearby_road_borders] = extract_nearby_elements(map, polygon3d);
+    if (
+      !polygon3d.hasAttribute(lanelet::AttributeName::Type) ||
+      polygon3d.attribute(lanelet::AttributeName::Type).value() != "intersection_area") {
+      continue;
+    }
+
+    const auto borders_submap = create_nearby_borders_submap(map, polygon3d);
+    lanelet::Ids invalid_point_ids = {};
+    for (const lanelet::ConstPoint3d & point : polygon3d) {
+      lanelet::LineStrings3d search_results = borders_submap->lineStringLayer.findUsages(point);
+      if (search_results.empty()) {
+        invalid_point_ids.push_back(point.id());
+      }
+    }
+    if (!invalid_point_ids.empty()) {
+      issues.emplace_back(
+        lanelet::validation::Severity::Error, lanelet::validation::Primitive::Polygon,
+        polygon3d.id(),
+        append_issue_code_prefix(
+          this->name(), 1,
+          "This intersection area is not made by points from road_border linestrings or lanelet "
+          "edges. (Point ID: " +
+            ids_to_string(invalid_point_ids) + ")"));
+    }
   }
 
   return issues;
 }
 
-std::pair<lanelet::ConstLanelets, lanelet::ConstLineStrings3d>
-IntersectionAreaSegmentTypeValidator::extract_nearby_elements(
+lanelet::LaneletSubmapUPtr IntersectionAreaSegmentTypeValidator::create_nearby_borders_submap(
   const lanelet::LaneletMap & map, const lanelet::ConstPolygon3d & intersection_area)
 {
   lanelet::BoundingBox2d bbox2d = get_circumscribed_box_from_polygon(intersection_area);
@@ -63,17 +85,54 @@ IntersectionAreaSegmentTypeValidator::extract_nearby_elements(
   lanelet::ConstLanelets nearby_lanelets = map.laneletLayer.search(bbox2d);
   lanelet::ConstLineStrings3d nearby_linestrings = map.lineStringLayer.search(bbox2d);
 
-  lanelet::ConstLineStrings3d nearby_road_borders;
-  for (const auto linestring : nearby_linestrings) {
+  lanelet::LineStrings3d nearby_borders;
+
+  // Collect lanelet edges intersecting the intersection area
+  for (const auto & lanelet : nearby_lanelets) {
+    if (
+      !lanelet.hasAttribute(lanelet::AttributeName::Subtype) ||
+      lanelet.attribute(lanelet::AttributeName::Subtype).value() !=
+        lanelet::AttributeValueString::Road) {
+      continue;
+    }
+
+    if (bbox2d.contains(lanelet.leftBound2d().front().basicPoint2d())) {
+      lanelet::Point3d left_point(lanelet.leftBound().front());
+      lanelet::Point3d right_point(lanelet.rightBound().front());
+
+      lanelet::AttributeMap attribute;
+      attribute["type"] = "lanelet_edge";  // An instant linestring type for this code
+
+      lanelet::LineString3d lanelet_front_edge(
+        lanelet::utils::getId(), {left_point, right_point}, attribute);
+      nearby_borders.push_back(lanelet_front_edge);
+    }
+
+    if (bbox2d.contains(lanelet.leftBound2d().back().basicPoint2d())) {
+      lanelet::Point3d left_point(lanelet.leftBound().back());
+      lanelet::Point3d right_point(lanelet.rightBound().back());
+
+      lanelet::AttributeMap attribute;
+      attribute["type"] = "lanelet_edge";  // An instant linestring type for this code
+
+      lanelet::LineString3d lanelet_back_edge(
+        lanelet::utils::getId(), {left_point, right_point}, attribute);
+      nearby_borders.push_back(lanelet_back_edge);
+    }
+  }
+
+  // Collect road_border subtype linestrings
+  for (const auto & linestring : nearby_linestrings) {
     if (
       linestring.hasAttribute(lanelet::AttributeName::Type) &&
       linestring.attribute(lanelet::AttributeName::Type).value() ==
         lanelet::AttributeValueString::RoadBorder) {
-      nearby_road_borders.push_back(linestring);
+      auto data = std::const_pointer_cast<LineStringData>(linestring.constData());
+      nearby_borders.push_back(lanelet::LineString3d(data, linestring.inverted()));
     }
   }
 
-  return std::make_pair(nearby_lanelets, nearby_road_borders);
+  return lanelet::utils::createSubmap(nearby_borders);
 }
 
 lanelet::BoundingBox2d IntersectionAreaSegmentTypeValidator::get_circumscribed_box_from_polygon(
@@ -94,6 +153,19 @@ lanelet::BoundingBox2d IntersectionAreaSegmentTypeValidator::get_circumscribed_b
 
   return lanelet::BoundingBox2d(
     lanelet::BasicPoint2d(minX, minY), lanelet::BasicPoint2d(maxX, maxY));
+}
+
+std::string IntersectionAreaSegmentTypeValidator::ids_to_string(const lanelet::Ids ids)
+{
+  std::string result = "(";
+  for (size_t i = 0; i < ids.size(); i++) {
+    result += std::to_string(ids[i]);
+    if (i < ids.size() - 1) {
+      result += ", ";
+    }
+  }
+  result += ")";
+  return result;
 }
 
 }  // namespace lanelet::autoware::validation

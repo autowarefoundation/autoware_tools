@@ -47,6 +47,12 @@ lanelet::validation::Issues IntersectionAreaValidityValidator::check_intersectio
   lanelet::validation::Issues issues;
 
   for (const lanelet::ConstPolygon3d & polygon3d : map.polygonLayer) {
+    if (
+      !polygon3d.hasAttribute(lanelet::AttributeName::Type) ||
+      polygon3d.attribute(lanelet::AttributeName::Type).value() != "intersection_area") {
+      continue;
+    }
+
     lanelet::BasicPolygon2d basic_polygon2d = lanelet::traits::to2D(polygon3d.basicPolygon());
 
     std::string reason;
@@ -56,7 +62,9 @@ lanelet::validation::Issues IntersectionAreaValidityValidator::check_intersectio
         lanelet::validation::Severity::Error, lanelet::validation::Primitive::Polygon,
         polygon3d.id(),
         append_issue_code_prefix(
-          this->name(), 1, "This intersection_area is not valid (reason: " + reason + ")."));
+          this->name(), 1,
+          "This intersection_area doesn't satisfy boost::geometry::is_valid (reason: " + reason +
+            ")."));
     }
   }
 
