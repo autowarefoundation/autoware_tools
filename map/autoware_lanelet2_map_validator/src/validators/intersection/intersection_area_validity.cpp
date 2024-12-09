@@ -62,24 +62,4 @@ lanelet::validation::Issues IntersectionAreaValidityValidator::check_intersectio
 
   return issues;
 }
-
-lanelet::BoundingBox2d get_circumscribed_box_from_polygon(const lanelet::ConstPolygon3d & polygon)
-{
-  double minX = std::numeric_limits<double>::max();
-  double minY = std::numeric_limits<double>::max();
-  double maxX = std::numeric_limits<double>::lowest();
-  double maxY = std::numeric_limits<double>::lowest();
-
-  for (const lanelet::ConstPoint3d & point : polygon) {
-    const lanelet::BasicPoint2d & coord = point.basicPoint2d();
-    minX = std::min(minX, coord.x());
-    minY = std::min(minY, coord.y());
-    maxX = std::max(maxX, coord.x());
-    maxY = std::max(maxY, coord.y());
-  }
-
-  return lanelet::BoundingBox2d(
-    lanelet::BasicPoint2d(minX, minY), lanelet::BasicPoint2d(maxX, maxY));
-}
-
 }  // namespace lanelet::autoware::validation
