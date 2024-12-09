@@ -3152,7 +3152,7 @@ Please take a look at the <a href="#design-concept">Design Concept</a> and follo
 <code>autoware_lanelet2_map_validator</code> achieves this by running a list of small validators.
 In other words, each vector map requirement will be validated by one or more validators.
 It is recommended to keep validators small and they don't have to be unique to a specific requirement so that we can broaden the expression of map requirements. (It doesn't mean that a validator should output only one kind of error!)</p>
-<p>The list of small validators will be defined as a JSON file (see <a href="../autoware_requirement_set.json"><code>autoware_requirement_set.json</code></a> for an example), and the output will also be a JSON file that appends validation results to a copy of the input. See <a href="../README.md/#how-to-use">How to use <code>autoware_lanelet2_map_validator</code></a> for further information about how the input and output are processed.</p>
+<p>The list of small validators will be defined as a JSON file (see <a href="https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/autoware_requirement_set.json"><code>autoware_requirement_set.json</code></a> for an example), and the output will also be a JSON file that appends validation results to a copy of the input. See <a href="../#how-to-use">How to use <code>autoware_lanelet2_map_validator</code></a> for further information about how the input and output are processed.</p>
 <p><img alt="autoware_lanelet2_map_validator_input_and_output" src="../../media/autoware_lanelet2_map_validator_io.svg"></p>
 <p>Please note that the validators are categorized according to <a href="https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/">the vector map requirements written in the Autoware Documentation</a>. If there are any suggestions for new categories please let the pull request (PR) reviewers know. The available categories as of now are</p>
 <ul>
@@ -3172,7 +3172,7 @@ It is recommended to keep validators small and they don't have to be unique to a
 <p><code>autoware_lanelet2_map_validator</code> is based on the <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2">Lanelet2 library provided by fzi-forschungszentrum-informatik</a>.</p>
 <!--- cSpell:enable --->
 
-<p>Contributors are encouraged to make their validators by following the class structure shown in <a href="../src/validators/validator_template.cpp"><code>validator_template.cpp</code></a> and <a href="../src/validators/validator_template.hpp"><code>validator_template.hpp</code></a>. Looking at other implementations may also be helpful.</p>
+<p>Contributors are encouraged to make their validators by following the class structure shown in <a href="https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/src/validators/validator_template.cpp"><code>validator_template.cpp</code></a> and <a href="https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/src/validators/validator_template.hpp"><code>validator_template.hpp</code></a>. Looking at other implementations may also be helpful.</p>
 <h4 id="restrictions-for-path-structure">Restrictions for path structure<a class="headerlink" href="#restrictions-for-path-structure" title="Permanent link">#</a></h4>
 <ul>
 <li>The source file (<code>.cpp</code>) must belong to <code>src/validators/\&lt;CATEGORY\&gt;/</code></li>
@@ -3257,7 +3257,7 @@ The document must explain the following.</p>
 </ul>
 </li>
 </ul>
-<p>In addition, add a link of the document to the table <a href="../README.md/#relationship-between-requirements-and-validators">Relationship between requirements and validators</a> in the main <code>README.md</code> to let the users know which map requirement your validator relates with.</p>
+<p>In addition, add a link of the document to the table <a href="../#relationship-between-requirements-and-validators">Relationship between requirements and validators</a> in the main <code>README.md</code> to let the users know which map requirement your validator relates with.</p>
 <h3 id="5-submit-a-pull-request">5. Submit a pull request<a class="headerlink" href="#5-submit-a-pull-request" title="Permanent link">#</a></h3>
 <p>Submit a pull request to the <a href="https://github.com/autowarefoundation/autoware_tools">autowarefoundation/autoware_tools</a> repository.</p></div>
 
