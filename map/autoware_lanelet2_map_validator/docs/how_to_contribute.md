@@ -27,11 +27,17 @@ Please note that the validators are categorized according to [the vector map req
 
 ## Contribution Guide
 
-This section is aimed at contributers who want to add their own validators. If you want to change the core process of `autoware_lanelet2_map_validator`, please open a PR and discuss it with the maintainers.
+This section is aimed at contributors who want to add their own validators. If you want to change the core process of `autoware_lanelet2_map_validator`, please open a PR and discuss it with the maintainers.
 
 ### 1. Implement your validator
 
-`autoware_lanelet2_map_validator` is based on the [Lanelet2 library provided by fzi-forschungszentrum-informatik](https://github.com/fzi-forschungszentrum-informatik/Lanelet2). Contributers are encouraged to make their validators by following the class structure shown in [`validator_template.cpp`](../src/validators/validator_template.cpp) and [`validator_template.hpp`](../src/validators/validator_template.hpp). Looking at other implementations may also be helpful.
+<!--- cSpell:disable --->
+
+`autoware_lanelet2_map_validator` is based on the [Lanelet2 library provided by fzi-forschungszentrum-informatik](https://github.com/fzi-forschungszentrum-informatik/Lanelet2).
+
+<!--- cSpell:enable --->
+
+Contributors are encouraged to make their validators by following the class structure shown in [`validator_template.cpp`](../src/validators/validator_template.cpp) and [`validator_template.hpp`](../src/validators/validator_template.hpp). Looking at other implementations may also be helpful.
 
 #### Restrictions for path structure
 
