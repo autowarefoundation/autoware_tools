@@ -11,7 +11,7 @@ The main goal of `autoware_lanelet2_map_validator` is to validate whether the la
 In other words, each vector map requirement will be validated by one or more validators.
 It is recommended to keep validators small and they don't have to be unique to a specific requirement so that we can broaden the expression of map requirements. (It doesn't mean that a validator should output only one kind of error!)
 
-The list of small validators will be defined as a JSON file (see [`autoware_requirement_set.json`](../autoware_requirement_set.json) for an example), and the output will also be a JSON file that appends validation results to a copy of the input. See [How to use `autoware_lanelet2_map_validator`](../README.md/#how-to-use) for further information about how the input and output are processed.
+The list of small validators will be defined as a JSON file (see [`autoware_requirement_set.json`](https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/autoware_requirement_set.json) for an example), and the output will also be a JSON file that appends validation results to a copy of the input. See [How to use `autoware_lanelet2_map_validator`](../#how-to-use) for further information about how the input and output are processed.
 
 ![autoware_lanelet2_map_validator_input_and_output](../media/autoware_lanelet2_map_validator_io.svg)
 
@@ -37,7 +37,7 @@ This section is aimed at contributors who want to add their own validators. If y
 
 <!--- cSpell:enable --->
 
-Contributors are encouraged to make their validators by following the class structure shown in [`validator_template.cpp`](../src/validators/validator_template.cpp) and [`validator_template.hpp`](../src/validators/validator_template.hpp). Looking at other implementations may also be helpful.
+Contributors are encouraged to make their validators by following the class structure shown in [`validator_template.cpp`](https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/src/validators/validator_template.cpp) and [`validator_template.hpp`](https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/src/validators/validator_template.hpp). Looking at other implementations may also be helpful.
 
 #### Restrictions for path structure
 
@@ -113,7 +113,7 @@ The document must explain the following.
   - Description of the issue
   - Approach to fix the issue
 
-In addition, add a link of the document to the table [Relationship between requirements and validators](../README.md/#relationship-between-requirements-and-validators) in the main `README.md` to let the users know which map requirement your validator relates with.
+In addition, add a link of the document to the table [Relationship between requirements and validators](../#relationship-between-requirements-and-validators) in the main `README.md` to let the users know which map requirement your validator relates with.
 
 ### 5. Submit a pull request
 
