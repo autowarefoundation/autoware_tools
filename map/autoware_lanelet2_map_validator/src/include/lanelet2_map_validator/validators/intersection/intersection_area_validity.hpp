@@ -29,6 +29,8 @@ public:
 
 private:
   lanelet::validation::Issues check_intersection_area_validity(const lanelet::LaneletMap & map);
+  lanelet::BoundingBox2d get_circumscribed_box_from_polygon(
+    const lanelet::ConstPolygon3d & polygon);
 };
 }  // namespace lanelet::autoware::validation
 

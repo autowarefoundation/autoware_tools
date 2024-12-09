@@ -16,10 +16,13 @@
 
 #include "lanelet2_map_validator/utils.hpp"
 
-#include <lanelet2_core/LaneletMap.h>
+#include <boost/geometry/algorithms/is_valid.hpp>
 
-#include <algorithm>
-#include <set>
+#include <lanelet2_core/LaneletMap.h>
+#include <lanelet2_core/geometry/Polygon.h>
+#include <lanelet2_core/primitives/Polygon.h>
+
+#include <limits>
 
 namespace lanelet::autoware::validation
 {
@@ -43,7 +46,40 @@ lanelet::validation::Issues IntersectionAreaValidityValidator::check_intersectio
 {
   lanelet::validation::Issues issues;
 
+  for (const lanelet::ConstPolygon3d & polygon3d : map.polygonLayer) {
+    lanelet::BasicPolygon2d basic_polygon2d = lanelet::traits::to2D(polygon3d.basicPolygon());
+
+    std::string reason;
+    bool polygon_is_valid = boost::geometry::is_valid(basic_polygon2d, reason);
+    if (!polygon_is_valid) {
+      issues.emplace_back(
+        lanelet::validation::Severity::Error, lanelet::validation::Primitive::Polygon,
+        polygon3d.id(),
+        append_issue_code_prefix(
+          this->name(), 1, "This intersection_area is not valid (reason: " + reason + ")."));
+    }
+  }
+
   return issues;
+}
+
+lanelet::BoundingBox2d get_circumscribed_box_from_polygon(const lanelet::ConstPolygon3d & polygon)
+{
+  double minX = std::numeric_limits<double>::max();
+  double minY = std::numeric_limits<double>::max();
+  double maxX = std::numeric_limits<double>::lowest();
+  double maxY = std::numeric_limits<double>::lowest();
+
+  for (const lanelet::ConstPoint3d & point : polygon) {
+    const lanelet::BasicPoint2d & coord = point.basicPoint2d();
+    minX = std::min(minX, coord.x());
+    minY = std::min(minY, coord.y());
+    maxX = std::max(maxX, coord.x());
+    maxY = std::max(maxY, coord.y());
+  }
+
+  return lanelet::BoundingBox2d(
+    lanelet::BasicPoint2d(minX, minY), lanelet::BasicPoint2d(maxX, maxY));
 }
 
 }  // namespace lanelet::autoware::validation
