@@ -7,7 +7,9 @@ Please take a look at the [Design Concept](#design-concept) and follow the [Cont
 ## Design Concept
 
 The main goal of `autoware_lanelet2_map_validator` is to validate whether the lanelet2 map matches the vector map requirements for Autoware.
-`autoware_lanelet2_map_validator` achieves this by running a list of small validators. Each vector map requirement will be validated by one or more validators. It is recommended to keep validators small and they don't have to be unique to a specific requirement so that we can broaden the map requirements. (It doesn't mean that a validator should output only one kind of error!)
+`autoware_lanelet2_map_validator` achieves this by running a list of small validators.
+In other words, each vector map requirement will be validated by one or more validators.
+It is recommended to keep validators small and they don't have to be unique to a specific requirement so that we can broaden the expression of map requirements. (It doesn't mean that a validator should output only one kind of error!)
 
 The list of small validators will be defined as a JSON file (see [`autoware_requirement_set.json`](../autoware_requirement_set.json) for an example), and the output will also be a JSON file that appends validation results to a copy of the input. See [How to use `autoware_lanelet2_map_validator`](../README.md/#how-to-use) for further information about how the input and output are processed.
 
@@ -69,7 +71,7 @@ Contributors must also provide test codes to ensure your validator is working pr
 #### Restrictions for test code implementation
 
 - Tests should be executable by `colcon test`. It is strongly recommended to use the [gtest (googletest) format](https://github.com/google/googletest).
-- If possible, inherit the `MapValidationTester` class for common map loading process.
+- If possible, the `MapValidationTester` class may be useful to inherit common map loading process.
 - The test code must contain the following.
   - A test function that checks whether the validator is available.
   - A test function for each unique issue the validator can detect. It is recommended to create a small lanelet2 map for each unique issue.
@@ -94,7 +96,7 @@ ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator -p mgrs
 Contributors must provide documentation to explain what the validator can do.
 The document must explain the following.
 
-- The validator name (The one written in the header file (`.hpp`))
+- The validator's name
 - Feature of the validator
 - The source code where the validator is implemented
 - A table of issues that the validator can detect. The following details are required.
@@ -104,6 +106,8 @@ The document must explain the following.
   - Primitive
   - Description of the issue
   - Approach to fix the issue
+
+In addition, add a link of the document to the table [Relationship between requirements and validators](../README.md/#relationship-between-requirements-and-validators) in the main `README.md` to let the users know which map requirement your validator relates with.
 
 ### 5. Submit a pull request
 
