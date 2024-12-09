@@ -11,7 +11,7 @@ The main goal of `autoware_lanelet2_map_validator` is to validate whether the la
 In other words, each vector map requirement will be validated by one or more validators.
 It is recommended to keep validators small and they don't have to be unique to a specific requirement so that we can broaden the expression of map requirements. (It doesn't mean that a validator should output only one kind of error!)
 
-The list of small validators will be defined as a JSON file (see [`autoware_requirement_set.json`](https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/autoware_requirement_set.json) for an example), and the output will also be a JSON file that appends validation results to a copy of the input. See [How to use `autoware_lanelet2_map_validator`](../#how-to-use) for further information about how the input and output are processed.
+The list of small validators will be defined as a JSON file (see [`autoware_requirement_set.json`](https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/autoware_requirement_set.json) for an example), and the output will also be a JSON file that appends validation results to a copy of the input. See [How to use `autoware_lanelet2_map_validator`](https://github.com/autowarefoundation/autoware_tools/tree/main/map/autoware_lanelet2_map_validator#relationship-between-requirements-and-validators) for further information about how the input and output are processed.
 
 ![autoware_lanelet2_map_validator_input_and_output](../media/autoware_lanelet2_map_validator_io.svg)
 
