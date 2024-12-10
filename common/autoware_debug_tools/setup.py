@@ -28,6 +28,7 @@ setup(
             "topic_connection_checker = autoware_debug_tools.topic_connection_checker.topic_connection_checker_node:main",
             "topic_localizer = autoware_debug_tools.topic_connection_checker.localize_topic:main",
             "rosout_log_reconstructor = autoware_debug_tools.rosout_log_reconstructor:main",
+            "frequent_log_checker = autoware_debug_tools.frequent_log_checker:main",
         ],
     },
 )
