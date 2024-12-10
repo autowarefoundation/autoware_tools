@@ -123,16 +123,16 @@ ros2 run autoware_debug_tools rosout_log_reconstructor
 ## Frequent Log Checker
 
 This script shows the frequent log from the `launch.log`.
-In detail, the log which appears more than the threshold times during the duration will be shown.
+In detail, the log which appears more than the threshold times during the duration will be list down.
 
 ### Usage
 
 ```bash
-ros2 run autoware_debug_tools frequent_log_checker <file-path>
+ros2 run autoware_debug_tools frequent_log_checker <launch-log-path>
 ```
 
-The command options are
+The command has following options.
 
-- `-d`: duration to check the frequent log
+- `-d`: duration to count the number of log
 - `-c`: threshold of the log count during the duration
 - `-f`: log format. Several log formats are pre-defined in the script.

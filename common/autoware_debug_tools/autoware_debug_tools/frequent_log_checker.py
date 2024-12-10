@@ -35,7 +35,7 @@ class Log:
         return False
 
 
-def check(log_file, duration_to_check, log_count_threshold, log_format):
+def check(log_file, duration_to_count, log_count_threshold, log_format):
     recent_log_list = []
     unique_frequent_log_list = []
 
@@ -70,7 +70,7 @@ def check(log_file, duration_to_check, log_count_threshold, log_format):
             # remove obsolete or already frequent log
             for log in recent_log_list[:]:
                 duration = timestamp - log.timestamp
-                if duration_to_check < duration:
+                if duration_to_count < duration:
                     recent_log_list.remove(log)
 
             # extract duplicated (= frequent) log
@@ -95,7 +95,7 @@ def check(log_file, duration_to_check, log_count_threshold, log_format):
 def main():
     parser = argparse.ArgumentParser(description="frequent log checker")
     parser.add_argument("log_file", help="launch log file")
-    parser.add_argument("-d", "--log-duration", default=1.0, help="duration to check log")
+    parser.add_argument("-d", "--log-duration", default=1.0, help="duration to count log")
     parser.add_argument("-c", "--log-count", default=2, help="log count threshold")
     parser.add_argument("-f", "--log-format", default="1", help="log format")
     args = parser.parse_args()
