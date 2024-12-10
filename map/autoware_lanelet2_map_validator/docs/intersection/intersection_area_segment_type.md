@@ -8,7 +8,7 @@ mapping.intersection.intersection_area_segment_type
 
 This validator check whether each `intersection_area` type polygon is made from points that belong to `road_border` type linestrings or the starting/ending edge of a lanelet.
 
-This is acheived by the following procedure.
+This is achieved by the following procedure.
 
 1. Create a 2D bounding box that circumscribes the polygon.
 2. Collect `road_border` type linestrings within or intersecting the 2D bounding box.
