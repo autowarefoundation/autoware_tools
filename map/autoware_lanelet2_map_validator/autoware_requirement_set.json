@@ -15,12 +15,7 @@
           "name": "mapping.intersection.intersection_area_validity"
         },
         {
-          "name": "mapping.intersection.intersection_area_segment_type",
-          "prerequisites": [
-            {
-              "name": "mapping.intersection.intersection_area_validity"
-            }
-          ]
+          "name": "mapping.intersection.intersection_area_segment_type"
         }
       ]
     },
