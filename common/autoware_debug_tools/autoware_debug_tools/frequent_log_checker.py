@@ -39,10 +39,10 @@ def check(log_file, duration_to_count, log_count_threshold, log_format):
     recent_log_list = []
     unique_frequent_log_list = []
 
-    # with open("autoware.log", "r") as f:
     with open(log_file, "r") as f:
         for full_message in f.readlines():
             try:
+                # The following implementation depends on the log format.
                 if log_format == "1":
                     node_name = full_message.split("[")[4].split("]")[0]
                     timestamp = float(full_message.split("[")[0][:-1])
@@ -88,8 +88,13 @@ def check(log_file, duration_to_count, log_count_threshold, log_format):
                 if log_count_threshold <= log_count:
                     unique_frequent_log_list.append(recent_log_list[i])
 
-    for frequent_log in unique_frequent_log_list:
-        print(frequent_log.full_message)
+    if len(unique_frequent_log_list) == 0:
+        print(
+            "No frequent log. The log format designated by the `-f` option may be different from the actual log format."
+        )
+    else:
+        for frequent_log in unique_frequent_log_list:
+            print(frequent_log.full_message)
 
 
 def main():
