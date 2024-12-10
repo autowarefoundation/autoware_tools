@@ -27,6 +27,7 @@ setup(
             "memory_usage_plotter = autoware_debug_tools.system_performance_plotter.memory_usage_plotter:main",
             "topic_connection_checker = autoware_debug_tools.topic_connection_checker.topic_connection_checker_node:main",
             "topic_localizer = autoware_debug_tools.topic_connection_checker.localize_topic:main",
+            "rosout_log_reconstructor = autoware_debug_tools.rosout_log_reconstructor:main",
         ],
     },
 )
