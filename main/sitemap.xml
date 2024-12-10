@@ -131,6 +131,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://autowarefoundation.github.io/autoware_tools/main/map/autoware_lanelet2_map_validator/docs/how_to_contribute/</loc>
+         <lastmod>2024-12-10</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://autowarefoundation.github.io/autoware_tools/main/map/autoware_lanelet2_map_validator/docs/crosswalk/missing_regulatory_elements_for_crosswalk/</loc>
          <lastmod>2024-12-10</lastmod>
          <changefreq>daily</changefreq>
