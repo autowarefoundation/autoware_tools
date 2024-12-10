@@ -287,6 +287,10 @@ The directory structure should be the same to that of the `src/validators` direc
 - [mapping.crosswalk.missing_regulatory_elements](./docs/crosswalk/missing_regulatory_elements_for_crosswalk.md)
 - [mapping.crosswalk.regulatory_element_details](./docs/crosswalk/regulatory_element_details_for_crosswalks.md)
 
+## How to add a new validator
+
+If you want to contribute to `autoware_lanelet2_map_validator`, please check out the [how_to_contribute](./docs/how_to_contribute.md) first.
+
 ## Relationship between requirements and validators
 
 This is a table describing the correspondence between the validators that each requirement consists of.
