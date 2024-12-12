@@ -9,6 +9,17 @@
       ]
     },
     {
+      "id": "vm-03-08",
+      "validators": [
+        {
+          "name": "mapping.intersection.intersection_area_validity"
+        },
+        {
+          "name": "mapping.intersection.intersection_area_segment_type"
+        }
+      ]
+    },
+    {
       "id": "vm-04-01",
       "validators": [
         {

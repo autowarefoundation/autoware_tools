@@ -65,6 +65,8 @@ if(BUILD_TESTING)
   add_validation_test(regulatory_elements_details_for_traffic_lights)
   add_validation_test(traffic_light_facing)
   add_validation_test(missing_referrers_for_traffic_lights)
+  add_validation_test(intersection_area_validity)
+  add_validation_test(intersection_area_segment_type)
 endif()
 
 ament_auto_package(
