@@ -34,9 +34,30 @@ public:
   lanelet::validation::Issues operator()(const lanelet::LaneletMap & map) override;
 
 private:
+  /**
+   * @brief The main validation process
+   *
+   * @param map
+   * @return lanelet::validation::Issues
+   */
   lanelet::validation::Issues check_intersection_area_segment_type(const lanelet::LaneletMap & map);
+
+  /**
+   * @brief Create a submap consisting of road_border linestrings and lanelet edges only.
+   *
+   * @param map
+   * @param intersection_area
+   * @return lanelet::LaneletSubmapUPtr
+   */
   lanelet::LaneletSubmapUPtr create_nearby_borders_submap(
     const lanelet::LaneletMap & map, const lanelet::ConstPolygon3d & intersection_area);
+
+  /**
+   * @brief Create a list-up-string from Ids=vector<Id>
+   *
+   * @param ids
+   * @return std::string
+   */
   std::string ids_to_string(const lanelet::Ids ids);
 };
 }  // namespace lanelet::autoware::validation
