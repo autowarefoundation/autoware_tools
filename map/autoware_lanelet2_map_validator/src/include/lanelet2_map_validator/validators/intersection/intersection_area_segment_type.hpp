@@ -37,8 +37,6 @@ private:
   lanelet::validation::Issues check_intersection_area_segment_type(const lanelet::LaneletMap & map);
   lanelet::LaneletSubmapUPtr create_nearby_borders_submap(
     const lanelet::LaneletMap & map, const lanelet::ConstPolygon3d & intersection_area);
-  lanelet::BoundingBox2d get_circumscribed_box_from_polygon(
-    const lanelet::ConstPolygon3d & polygon);
   std::string ids_to_string(const lanelet::Ids ids);
 };
 }  // namespace lanelet::autoware::validation

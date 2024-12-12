@@ -80,7 +80,8 @@ IntersectionAreaSegmentTypeValidator::check_intersection_area_segment_type(
 lanelet::LaneletSubmapUPtr IntersectionAreaSegmentTypeValidator::create_nearby_borders_submap(
   const lanelet::LaneletMap & map, const lanelet::ConstPolygon3d & intersection_area)
 {
-  lanelet::BoundingBox2d bbox2d = get_circumscribed_box_from_polygon(intersection_area);
+  lanelet::BoundingBox2d bbox2d =
+    lanelet::geometry::boundingBox2d(lanelet::traits::toBasicPolygon2d(intersection_area));
 
   lanelet::ConstLanelets nearby_lanelets = map.laneletLayer.search(bbox2d);
   lanelet::ConstLineStrings3d nearby_linestrings = map.lineStringLayer.search(bbox2d);
@@ -133,26 +134,6 @@ lanelet::LaneletSubmapUPtr IntersectionAreaSegmentTypeValidator::create_nearby_b
   }
 
   return lanelet::utils::createSubmap(nearby_borders);
-}
-
-lanelet::BoundingBox2d IntersectionAreaSegmentTypeValidator::get_circumscribed_box_from_polygon(
-  const lanelet::ConstPolygon3d & polygon)
-{
-  double minX = std::numeric_limits<double>::max();
-  double minY = std::numeric_limits<double>::max();
-  double maxX = std::numeric_limits<double>::lowest();
-  double maxY = std::numeric_limits<double>::lowest();
-
-  for (const lanelet::ConstPoint3d & point : polygon) {
-    const lanelet::BasicPoint2d & coord = point.basicPoint2d();
-    minX = std::min(minX, coord.x());
-    minY = std::min(minY, coord.y());
-    maxX = std::max(maxX, coord.x());
-    maxY = std::max(maxY, coord.y());
-  }
-
-  return lanelet::BoundingBox2d(
-    lanelet::BasicPoint2d(minX, minY), lanelet::BasicPoint2d(maxX, maxY));
 }
 
 std::string IntersectionAreaSegmentTypeValidator::ids_to_string(const lanelet::Ids ids)
