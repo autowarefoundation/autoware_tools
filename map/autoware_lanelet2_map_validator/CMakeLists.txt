@@ -60,14 +60,6 @@ if(BUILD_TESTING)
   foreach(TEST_FILE ${test_src})
     add_validation_test(${TEST_FILE})
   endforeach()
-
-  #add_validation_test(missing_regulatory_elements_for_stop_lines)
-  #add_validation_test(missing_regulatory_elements_for_crosswalks)
-  #add_validation_test(missing_regulatory_elements_for_traffic_lights)
-  #add_validation_test(regulatory_elements_details_for_crosswalks)
-  #add_validation_test(regulatory_elements_details_for_traffic_lights)
-  #add_validation_test(traffic_light_facing)
-  #add_validation_test(missing_referrers_for_traffic_lights)
 endif()
 
 ament_auto_package(
