@@ -1,7 +1,11 @@
-site_name: Autoware Universe Documentation
-site_url: https://autowarefoundation.github.io/autoware_tools
+# This file is automatically synced from:
+# https://github.com/autowarefoundation/sync-file-templates
+# To make changes, update the source repository and follow the guidelines in its README.
+
+site_name: Autoware Tools Documentation
+site_url: https://autowarefoundation.github.io/autoware-tools-documentation
 repo_url: https://github.com/autowarefoundation/autoware_tools
-edit_uri: https://github.com/autowarefoundation/autoware_tools/edit/main/
+edit_uri: https://github.com/autowarefoundation/autoware-tools-documentation/edit/main/
 docs_dir: .
 copyright: Copyright &copy; 2023 The Autoware Foundation
 

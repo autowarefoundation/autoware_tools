@@ -24,6 +24,7 @@
 #include <pcl/point_types.h>
 
 #include <iostream>
+#include <string>
 #include <unordered_set>
 #include <vector>
 

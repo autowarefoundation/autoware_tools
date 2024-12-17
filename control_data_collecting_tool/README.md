@@ -234,21 +234,22 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `steer_rate_lim`                         | `double` | Steering angle rate limit [rad/s]                                                                                                         | 0.6                    |
 
 The following parameters are common to all trajectories but can be defined individually for each trajectory. (`/config/course_param/COURSE_NAME_param.yaml`):
-| Name | Type | Description | Default value |
-| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
-| `COLLECTING_DATA_V_MIN` | `double` | Minimum velocity for data collection [m/s] | 0.5 |
-| `COLLECTING_DATA_V_MAX` | `double` | Maximum velocity for data collection [m/s] | 8.0 |
-| `COLLECTING_DATA_A_MIN` | `double` | Minimum velocity for data collection [m/s^2] | 1.0 |
-| `COLLECTING_DATA_A_MAX` | `double` | Maximum velocity for data collection [m/s^2] | -1.0 |
-| `longitudinal_velocity_noise_amp` | `double` | Target longitudinal velocity additional sine noise amplitude [m/s] | 0.01 |
-| `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s] | 5.0 |
-| `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s] | 20.0 |
-| `acc_noise_amp` | `double` | Accel command additional sine noise amplitude [m/ss] | 0.01 |
-| `acc_noise_min_period` | `double` | Accel command additional sine noise minimum period [s] | 5.0 |
-| `acc_noise_max_period` | `double` | Accel command additional sine noise maximum period [s] | 20.0 |
-| `steer_noise_amp` | `double` | Steer command additional sine noise amplitude [rad] | 0.01 |
-| `steer_noise_max_period` | `double` | Steer command additional sine noise maximum period [s] | 5.0 |
-| `steer_noise_min_period` | `double` | Steer command additional sine noise minimum period [s] | 20.0 |
+
+| Name                                     | Type     | Description                                                           | Default value |
+| :--------------------------------------- | :------- | :-------------------------------------------------------------------- | :------------ |
+| `COLLECTING_DATA_V_MIN`                  | `double` | Minimum velocity for data collection [m/s]                            | 0.5           |
+| `COLLECTING_DATA_V_MAX`                  | `double` | Maximum velocity for data collection [m/s]                            | 8.0           |
+| `COLLECTING_DATA_A_MIN`                  | `double` | Minimum velocity for data collection [m/s^2]                          | 1.0           |
+| `COLLECTING_DATA_A_MAX`                  | `double` | Maximum velocity for data collection [m/s^2]                          | -1.0          |
+| `longitudinal_velocity_noise_amp`        | `double` | Target longitudinal velocity additional sine noise amplitude [m/s]    | 0.01          |
+| `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s] | 5.0           |
+| `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s] | 20.0          |
+| `acc_noise_amp`                          | `double` | Accel command additional sine noise amplitude [m/ss]                  | 0.01          |
+| `acc_noise_min_period`                   | `double` | Accel command additional sine noise minimum period [s]                | 5.0           |
+| `acc_noise_max_period`                   | `double` | Accel command additional sine noise maximum period [s]                | 20.0          |
+| `steer_noise_amp`                        | `double` | Steer command additional sine noise amplitude [rad]                   | 0.01          |
+| `steer_noise_max_period`                 | `double` | Steer command additional sine noise maximum period [s]                | 5.0           |
+| `steer_noise_min_period`                 | `double` | Steer command additional sine noise minimum period [s]                | 20.0          |
 
 ### Course-Specific Parameters
 

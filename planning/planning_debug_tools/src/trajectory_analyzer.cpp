@@ -14,6 +14,10 @@
 
 #include "planning_debug_tools/trajectory_analyzer.hpp"
 
+#include <memory>
+#include <string>
+#include <vector>
+
 namespace planning_debug_tools
 {
 TrajectoryAnalyzerNode::TrajectoryAnalyzerNode(const rclcpp::NodeOptions & options)

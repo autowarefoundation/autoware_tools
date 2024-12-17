@@ -51,9 +51,9 @@ struct LoggerNamespaceInfo
 };
 class LoggingLevelConfigureRvizPlugin : public rviz_common::Panel
 {
-  Q_OBJECT  // This macro is needed for Qt to handle slots and signals
+Q_OBJECT  // This macro is needed for Qt to handle slots and signals
 
-    public : LoggingLevelConfigureRvizPlugin(QWidget * parent = nullptr);
+  public : LoggingLevelConfigureRvizPlugin(QWidget * parent = nullptr);
   void onInitialize() override;
   void save(rviz_common::Config config) const override;
   void load(const rviz_common::Config & config) override;

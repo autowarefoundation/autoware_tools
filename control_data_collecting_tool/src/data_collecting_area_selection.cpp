@@ -23,6 +23,8 @@
 
 #include <autoware_adapi_v1_msgs/msg/operation_mode_state.hpp>
 
+#include <memory>
+
 using std::placeholders::_1;
 
 namespace rviz_plugins

@@ -49,7 +49,11 @@
 #include <pcl/filters/voxel_grid.h>
 
 #include <filesystem>
+#include <list>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace fs = std::filesystem;
 

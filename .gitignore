@@ -3,3 +3,5 @@
 # Visual Studio Code
 .vscode/
 *.code-workspace
+
+/node_modules/

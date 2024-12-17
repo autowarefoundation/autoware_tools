@@ -526,9 +526,9 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         # [2] publish cmd
         control_cmd_msg = AckermannControlCommand()
-        control_cmd_msg.stamp = (
-            control_cmd_msg.lateral.stamp
-        ) = control_cmd_msg.longitudinal.stamp = (self.get_clock().now().to_msg())
+        control_cmd_msg.stamp = control_cmd_msg.lateral.stamp = (
+            control_cmd_msg.longitudinal.stamp
+        ) = (self.get_clock().now().to_msg())
         control_cmd_msg.longitudinal.velocity = trajectory_longitudinal_velocity[nearestIndex]
         control_cmd_msg.longitudinal.acceleration = cmd[0]
         control_cmd_msg.lateral.steering_tire_angle = cmd[1]
