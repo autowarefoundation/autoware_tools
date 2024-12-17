@@ -83,11 +83,11 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   parameters_->w1 = declare_parameter<double>("weight.lon_comfortability");
   parameters_->w2 = declare_parameter<double>("weight.efficiency");
   parameters_->w3 = declare_parameter<double>("weight.safety");
-  parameters_->grid_seach.dt = declare_parameter<double>("grid_seach.dt");
-  parameters_->grid_seach.min = declare_parameter<double>("grid_seach.min");
-  parameters_->grid_seach.max = declare_parameter<double>("grid_seach.max");
-  parameters_->grid_seach.resolution = declare_parameter<double>("grid_seach.resolution");
-  parameters_->grid_seach.thread_num = declare_parameter<int>("grid_seach.thread_num");
+  parameters_->grid_search.dt = declare_parameter<double>("grid_search.dt");
+  parameters_->grid_search.min = declare_parameter<double>("grid_search.min");
+  parameters_->grid_search.max = declare_parameter<double>("grid_search.max");
+  parameters_->grid_search.resolution = declare_parameter<double>("grid_search.resolution");
+  parameters_->grid_search.thread_num = declare_parameter<int>("grid_search.thread_num");
   parameters_->target_state.lat_positions =
     declare_parameter<std::vector<double>>("target_state.lateral_positions");
   parameters_->target_state.lat_velocities =
@@ -205,7 +205,7 @@ void BehaviorAnalyzerNode::weight(
   [[maybe_unused]] const Trigger::Request::SharedPtr req, Trigger::Response::SharedPtr res)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  RCLCPP_INFO(get_logger(), "start weight grid seach.");
+  RCLCPP_INFO(get_logger(), "start weight grid search.");
 
   const auto & p = parameters_;
 
@@ -215,9 +215,9 @@ void BehaviorAnalyzerNode::weight(
 
   std::vector<Result> weight_grid;
 
-  double resolution = p->grid_seach.resolution;
-  double min = p->grid_seach.min;
-  double max = p->grid_seach.max;
+  double resolution = p->grid_search.resolution;
+  double min = p->grid_search.min;
+  double max = p->grid_search.max;
   for (double w0 = min; w0 < max + 0.1 * resolution; w0 += resolution) {
     for (double w1 = min; w1 < max + 0.1 * resolution; w1 += resolution) {
       for (double w2 = min; w2 < max + 0.1 * resolution; w2 += resolution) {
@@ -246,7 +246,7 @@ void BehaviorAnalyzerNode::weight(
 
   stop_watch.tic("total_time");
   while (reader_.has_next() && rclcpp::ok()) {
-    update(bag_data, p->grid_seach.dt);
+    update(bag_data, p->grid_search.dt);
 
     if (!bag_data->ready()) break;
 
@@ -282,7 +282,7 @@ void BehaviorAnalyzerNode::weight(
     size_t i = 0;
     while (rclcpp::ok()) {
       std::vector<std::thread> threads;
-      for (size_t thread_id = 0; thread_id < p->grid_seach.thread_num; thread_id++) {
+      for (size_t thread_id = 0; thread_id < p->grid_search.thread_num; thread_id++) {
         threads.emplace_back(update, data_set, i + thread_id);
       }
 
@@ -290,14 +290,14 @@ void BehaviorAnalyzerNode::weight(
 
       if (i + 1 > weight_grid.size()) break;
 
-      i += p->grid_seach.thread_num;
+      i += p->grid_search.thread_num;
     }
 
     show_best_result();
   }
   std::cout << "process time: " << stop_watch.toc("total_time") << "[ms]" << std::endl;
 
-  RCLCPP_INFO(get_logger(), "finish weight grid seach.");
+  RCLCPP_INFO(get_logger(), "finish weight grid search.");
 
   res->success = true;
 }

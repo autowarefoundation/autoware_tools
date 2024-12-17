@@ -91,7 +91,7 @@ struct Parameters
   double w1{1.0};
   double w2{1.0};
   double w3{1.0};
-  GridSearchParameters grid_seach{};
+  GridSearchParameters grid_search{};
   TargetStateParameters target_state{};
 };
 
