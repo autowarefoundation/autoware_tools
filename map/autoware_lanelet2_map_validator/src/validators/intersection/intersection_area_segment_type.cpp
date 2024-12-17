@@ -23,6 +23,7 @@
 #include <lanelet2_core/primitives/Polygon.h>
 
 #include <limits>
+#include <string>
 
 namespace lanelet::autoware::validation
 {

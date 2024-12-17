@@ -50,6 +50,9 @@
 #include <rviz_common/uniform_string_stream.hpp>
 #include <tier4_debug_rviz_plugin/float32_multi_array_stamped_pie_chart.hpp>
 
+#include <algorithm>
+#include <string>
+
 namespace rviz_plugins
 {
 

@@ -18,6 +18,12 @@
 
 #include <autoware/universe_utils/ros/marker_helper.hpp>
 
+#include <algorithm>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
 namespace autoware::behavior_analyzer
 {
 using autoware::universe_utils::createDefaultMarker;

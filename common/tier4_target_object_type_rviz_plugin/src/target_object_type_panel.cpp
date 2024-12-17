@@ -20,6 +20,9 @@
 #include <rclcpp/parameter_client.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <memory>
+#include <string>
+
 TargetObjectTypePanel::TargetObjectTypePanel(QWidget * parent) : rviz_common::Panel(parent)
 {
   node_ = std::make_shared<rclcpp::Node>("matrix_display_node");

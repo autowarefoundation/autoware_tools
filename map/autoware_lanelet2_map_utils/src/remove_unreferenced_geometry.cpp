@@ -22,6 +22,7 @@
 #include <lanelet2_io/Io.h>
 
 #include <iostream>
+#include <string>
 #include <unordered_set>
 #include <vector>
 
