@@ -29,6 +29,7 @@ public:
   lanelet::validation::Issues operator()(const lanelet::LaneletMap & map) override;
 
 private:
+  lanelet::validation::Issues checkFunction(const lanelet::LaneletMap & map);
 };
 }  // namespace lanelet::autoware::validation
 
