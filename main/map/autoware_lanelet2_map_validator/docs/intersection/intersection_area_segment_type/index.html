@@ -8,27 +8,27 @@
       
       
       
-        <link rel="canonical" href="https://autowarefoundation.github.io/autoware_tools/main/planning/autoware_rtc_replayer/">
+        <link rel="canonical" href="https://autowarefoundation.github.io/autoware_tools/main/map/autoware_lanelet2_map_validator/docs/intersection/intersection_area_segment_type/">
       
       
-        <link rel="prev" href="../autoware_route_client/">
+        <link rel="prev" href="../../crosswalk/regulatory_element_details_for_crosswalks/">
       
       
-        <link rel="next" href="../planning_debug_tools/">
+        <link rel="next" href="../intersection_area_validity/">
       
-      <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
+      <link rel="icon" href="../../../../../docs/assets/images/autoware-foundation.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.20">
     
     
       
-        <title>rtc_replayer - Autoware Universe Documentation</title>
+        <title>intersection_area_segment_type - Autoware Universe Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -44,11 +44,11 @@
       
     
     
-      <link rel="stylesheet" href="../../docs/assets/css/extra.css">
+      <link rel="stylesheet" href="../../../../../docs/assets/css/extra.css">
     
       <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#rtc_replayer" class="md-skip">
+        <a href="#intersection_area_segment_type" class="md-skip">
           Skip to content
         </a>
       
@@ -97,7 +97,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Autoware Universe Documentation" class="md-header__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
+    <a href="../../../../.." title="Autoware Universe Documentation" class="md-header__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4zm-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-48H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              rtc_replayer
+              intersection_area_segment_type
             
           </span>
         </div>
@@ -214,7 +214,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../autoware_dependency_checker/" class="md-tabs__link">
+      <a href="../../../../../autoware_dependency_checker/" class="md-tabs__link">
         Autoware dependency checker
       </a>
     </li>
@@ -230,7 +230,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../bag2lanelet/" class="md-tabs__link">
+      <a href="../../../../../bag2lanelet/" class="md-tabs__link">
         Bag2lanelet
       </a>
     </li>
@@ -251,7 +251,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../common/autoware_debug_tools/" class="md-tabs__link">
+      <a href="../../../../../common/autoware_debug_tools/" class="md-tabs__link">
         Common
       </a>
     </li>
@@ -274,7 +274,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../control/stop_accel_evaluator/" class="md-tabs__link">
+      <a href="../../../../../control/stop_accel_evaluator/" class="md-tabs__link">
         Control
       </a>
     </li>
@@ -292,7 +292,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../control_data_collecting_tool/" class="md-tabs__link">
+      <a href="../../../../../control_data_collecting_tool/" class="md-tabs__link">
         Control data collecting tool
       </a>
     </li>
@@ -308,7 +308,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../driving_environment_analyzer/" class="md-tabs__link">
+      <a href="../../../../../driving_environment_analyzer/" class="md-tabs__link">
         Driving environment analyzer
       </a>
     </li>
@@ -329,7 +329,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
+      <a href="../../../../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
         Evaluation
       </a>
     </li>
@@ -352,7 +352,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../localization/deviation_estimation_tools/ReadMe/" class="md-tabs__link">
+      <a href="../../../../../localization/deviation_estimation_tools/ReadMe/" class="md-tabs__link">
         Localization
       </a>
     </li>
@@ -364,6 +364,8 @@
         
   
   
+    
+  
 
 
   
@@ -375,7 +377,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../map/autoware_lanelet2_map_utils/" class="md-tabs__link">
+      <a href="../../../../autoware_lanelet2_map_utils/" class="md-tabs__link md-tabs__link--active">
         Map
       </a>
     </li>
@@ -387,8 +389,6 @@
         
   
   
-    
-  
 
 
   
@@ -400,7 +400,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../autoware_planning_data_analyzer/" class="md-tabs__link md-tabs__link--active">
+      <a href="../../../../../planning/autoware_planning_data_analyzer/" class="md-tabs__link">
         Planning
       </a>
     </li>
@@ -423,7 +423,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../simulator/simulator_compatibility_test/" class="md-tabs__link">
+      <a href="../../../../../simulator/simulator_compatibility_test/" class="md-tabs__link">
         Simulator
       </a>
     </li>
@@ -446,7 +446,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
+      <a href="../../../../../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
         System
       </a>
     </li>
@@ -469,7 +469,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../vehicle/calibration_adapter/" class="md-tabs__link">
+      <a href="../../../../../vehicle/calibration_adapter/" class="md-tabs__link">
         Vehicle
       </a>
     </li>
@@ -505,7 +505,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Autoware Universe Documentation" class="md-nav__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
+    <a href="../../../../.." title="Autoware Universe Documentation" class="md-nav__button md-logo" aria-label="Autoware Universe Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4zm-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-48H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
@@ -556,7 +556,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../autoware_dependency_checker/">Autoware dependency checker</a>
+          <a href="../../../../../autoware_dependency_checker/">Autoware dependency checker</a>
           
         </div>
       
@@ -603,7 +603,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../bag2lanelet/">Bag2lanelet</a>
+          <a href="../../../../../bag2lanelet/">Bag2lanelet</a>
           
         </div>
       
@@ -709,7 +709,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/autoware_debug_tools/">Autoware debug tools</a>
+          <a href="../../../../../common/autoware_debug_tools/">Autoware debug tools</a>
           
             <label for="__nav_3_1">
               <span class="md-nav__icon md-icon"></span>
@@ -798,7 +798,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../common/autoware_debug_tools/autoware_debug_tools/topic_connection_checker/readme/" class="md-nav__link">
+      <a href="../../../../../common/autoware_debug_tools/autoware_debug_tools/topic_connection_checker/readme/" class="md-nav__link">
         Topic Connection Checker
       </a>
     </li>
@@ -855,7 +855,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/mission_planner_rviz_plugin/">Mission planner rviz plugin</a>
+          <a href="../../../../../common/mission_planner_rviz_plugin/">Mission planner rviz plugin</a>
           
         </div>
       
@@ -903,7 +903,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/rtc_manager_rviz_plugin/">Rtc manager rviz plugin</a>
+          <a href="../../../../../common/rtc_manager_rviz_plugin/">Rtc manager rviz plugin</a>
           
         </div>
       
@@ -951,7 +951,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_automatic_goal_rviz_plugin/">Tier4 automatic goal rviz plugin</a>
+          <a href="../../../../../common/tier4_automatic_goal_rviz_plugin/">Tier4 automatic goal rviz plugin</a>
           
         </div>
       
@@ -999,7 +999,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_control_rviz_plugin/">Tier4 control rviz plugin</a>
+          <a href="../../../../../common/tier4_control_rviz_plugin/">Tier4 control rviz plugin</a>
           
         </div>
       
@@ -1047,7 +1047,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_debug_rviz_plugin/">Tier4 debug rviz plugin</a>
+          <a href="../../../../../common/tier4_debug_rviz_plugin/">Tier4 debug rviz plugin</a>
           
         </div>
       
@@ -1095,7 +1095,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_debug_tools/">Tier4 debug tools</a>
+          <a href="../../../../../common/tier4_debug_tools/">Tier4 debug tools</a>
           
         </div>
       
@@ -1143,7 +1143,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_logging_level_configure_rviz_plugin/">Tier4 logging level configure rviz plugin</a>
+          <a href="../../../../../common/tier4_logging_level_configure_rviz_plugin/">Tier4 logging level configure rviz plugin</a>
           
         </div>
       
@@ -1191,7 +1191,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_screen_capture_rviz_plugin/">Tier4 screen capture rviz plugin</a>
+          <a href="../../../../../common/tier4_screen_capture_rviz_plugin/">Tier4 screen capture rviz plugin</a>
           
         </div>
       
@@ -1239,7 +1239,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_simulated_clock_rviz_plugin/">Tier4 simulated clock rviz plugin</a>
+          <a href="../../../../../common/tier4_simulated_clock_rviz_plugin/">Tier4 simulated clock rviz plugin</a>
           
         </div>
       
@@ -1287,7 +1287,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_string_viewer_rviz_plugin/">Tier4 string viewer rviz plugin</a>
+          <a href="../../../../../common/tier4_string_viewer_rviz_plugin/">Tier4 string viewer rviz plugin</a>
           
         </div>
       
@@ -1335,7 +1335,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_target_object_type_rviz_plugin/">Tier4 target object type rviz plugin</a>
+          <a href="../../../../../common/tier4_target_object_type_rviz_plugin/">Tier4 target object type rviz plugin</a>
           
         </div>
       
@@ -1426,7 +1426,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../control/stop_accel_evaluator/">Stop accel evaluator</a>
+          <a href="../../../../../control/stop_accel_evaluator/">Stop accel evaluator</a>
           
         </div>
       
@@ -1474,7 +1474,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../control/vehicle_cmd_analyzer/">Vehicle cmd analyzer</a>
+          <a href="../../../../../control/vehicle_cmd_analyzer/">Vehicle cmd analyzer</a>
           
         </div>
       
@@ -1528,7 +1528,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../control_data_collecting_tool/">Control data collecting tool</a>
+          <a href="../../../../../control_data_collecting_tool/">Control data collecting tool</a>
           
         </div>
       
@@ -1575,7 +1575,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../driving_environment_analyzer/">Driving environment analyzer</a>
+          <a href="../../../../../driving_environment_analyzer/">Driving environment analyzer</a>
           
         </div>
       
@@ -1657,7 +1657,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../evaluation/tier4_metrics_rviz_plugin/">Tier4 metrics rviz plugin</a>
+          <a href="../../../../../evaluation/tier4_metrics_rviz_plugin/">Tier4 metrics rviz plugin</a>
           
         </div>
       
@@ -1759,7 +1759,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
+      <a href="../../../../../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
         deviation_estimation_tools
       </a>
     </li>
@@ -1786,16 +1786,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
       
       
         
@@ -1814,7 +1814,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_9">
           <span class="md-nav__icon md-icon"></span>
           Map
@@ -1849,7 +1849,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../map/autoware_lanelet2_map_utils/">Autoware lanelet2 map utils</a>
+          <a href="../../../../autoware_lanelet2_map_utils/">Autoware lanelet2 map utils</a>
           
         </div>
       
@@ -1873,18 +1873,18 @@
               
   
   
+    
+  
   
     
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2" checked>
       
       
         
@@ -1899,7 +1899,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../map/autoware_lanelet2_map_validator/">Autoware lanelet2 map validator</a>
+          <a href="../../../">Autoware lanelet2 map validator</a>
           
             <label for="__nav_9_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1907,7 +1907,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_2_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_9_2">
           <span class="md-nav__icon md-icon"></span>
           Autoware lanelet2 map validator
@@ -1920,16 +1920,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_2_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2_2" checked>
       
       
         
@@ -1950,7 +1950,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_9_2_2_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_9_2_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_9_2_2">
           <span class="md-nav__icon md-icon"></span>
           Docs
@@ -1963,7 +1963,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/how_to_contribute/" class="md-nav__link">
+      <a href="../../how_to_contribute/" class="md-nav__link">
         How to contribute to `autoware_lanelet2_map_validator`
       </a>
     </li>
@@ -2012,7 +2012,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/crosswalk/missing_regulatory_elements_for_crosswalk/" class="md-nav__link">
+      <a href="../../crosswalk/missing_regulatory_elements_for_crosswalk/" class="md-nav__link">
         missing_regulator_elements_for_crosswalk
       </a>
     </li>
@@ -2026,7 +2026,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/crosswalk/regulatory_element_details_for_crosswalks/" class="md-nav__link">
+      <a href="../../crosswalk/regulatory_element_details_for_crosswalks/" class="md-nav__link">
         regulatory_element_details_for_crosswalks
       </a>
     </li>
@@ -2045,16 +2045,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_2_2_3" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2_2_3" checked>
       
       
         
@@ -2069,7 +2069,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_9_2_2_3_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_9_2_2_3_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_9_2_2_3">
           <span class="md-nav__icon md-icon"></span>
           Intersection
@@ -2080,11 +2080,79 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/intersection/intersection_area_segment_type/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          intersection_area_segment_type
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         intersection_area_segment_type
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#validator-name" class="md-nav__link">
+    Validator name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feature" class="md-nav__link">
+    Feature
+  </a>
+  
+    <nav class="md-nav" aria-label="Feature">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supplementary-information" class="md-nav__link">
+    Supplementary information
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-source-codes" class="md-nav__link">
+    Related source codes
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2096,7 +2164,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/intersection/intersection_area_validity/" class="md-nav__link">
+      <a href="../intersection_area_validity/" class="md-nav__link">
         intersection_area_validity
       </a>
     </li>
@@ -2150,7 +2218,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/stop_line/missing_regulatory_elements_for_stop_lines/" class="md-nav__link">
+      <a href="../../stop_line/missing_regulatory_elements_for_stop_lines/" class="md-nav__link">
         missing_regulator_elements_for_stop_lines
       </a>
     </li>
@@ -2210,7 +2278,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/traffic_light/missing_referrers_for_traffic_lights/" class="md-nav__link">
+      <a href="../../traffic_light/missing_referrers_for_traffic_lights/" class="md-nav__link">
         missing_referrers_for_traffic_lights
       </a>
     </li>
@@ -2224,7 +2292,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/traffic_light/missing_regulatory_elements_for_traffic_lights/" class="md-nav__link">
+      <a href="../../traffic_light/missing_regulatory_elements_for_traffic_lights/" class="md-nav__link">
         missing_regulator_elements_for_traffic_lights
       </a>
     </li>
@@ -2238,7 +2306,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/traffic_light/regulatory_element_details_for_traffic_lights/" class="md-nav__link">
+      <a href="../../traffic_light/regulatory_element_details_for_traffic_lights/" class="md-nav__link">
         regulatory_element_details_for_traffic_lights
       </a>
     </li>
@@ -2252,7 +2320,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/traffic_light/traffic_light_facing/" class="md-nav__link">
+      <a href="../../traffic_light/traffic_light_facing/" class="md-nav__link">
         traffic_light_facing
       </a>
     </li>
@@ -2309,7 +2377,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../map/autoware_pointcloud_divider/">Autoware pointcloud divider</a>
+          <a href="../../../../autoware_pointcloud_divider/">Autoware pointcloud divider</a>
           
         </div>
       
@@ -2357,7 +2425,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../map/autoware_pointcloud_merger/">Autoware pointcloud merger</a>
+          <a href="../../../../autoware_pointcloud_merger/">Autoware pointcloud merger</a>
           
         </div>
       
@@ -2389,16 +2457,16 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
       
       
         
@@ -2417,7 +2485,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_10">
           <span class="md-nav__icon md-icon"></span>
           Planning
@@ -2452,7 +2520,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../autoware_planning_data_analyzer/">Autoware planning data analyzer</a>
+          <a href="../../../../../planning/autoware_planning_data_analyzer/">Autoware planning data analyzer</a>
           
         </div>
       
@@ -2500,7 +2568,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../autoware_route_client/">Autoware route client</a>
+          <a href="../../../../../planning/autoware_route_client/">Autoware route client</a>
           
         </div>
       
@@ -2524,18 +2592,18 @@
               
   
   
-    
-  
   
     
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10_3" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_3" >
       
       
         
@@ -2547,12 +2615,12 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index md-nav__link--active">
-          <a href="./">Autoware rtc replayer</a>
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../../../../planning/autoware_rtc_replayer/">Autoware rtc replayer</a>
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_3_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_10_3">
           <span class="md-nav__icon md-icon"></span>
           Autoware rtc replayer
@@ -2598,7 +2666,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../planning_debug_tools/">Planning debug tools</a>
+          <a href="../../../../../planning/planning_debug_tools/">Planning debug tools</a>
           
             <label for="__nav_10_4">
               <span class="md-nav__icon md-icon"></span>
@@ -2621,7 +2689,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
+      <a href="../../../../../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
         Doc stop reason visualizer
       </a>
     </li>
@@ -2705,7 +2773,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../simulator/simulator_compatibility_test/">Simulator compatibility test</a>
+          <a href="../../../../../simulator/simulator_compatibility_test/">Simulator compatibility test</a>
           
         </div>
       
@@ -2794,7 +2862,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../system/rqt_diagnostic_graph_monitor/">Rqt diagnostic graph monitor</a>
+          <a href="../../../../../system/rqt_diagnostic_graph_monitor/">Rqt diagnostic graph monitor</a>
           
         </div>
       
@@ -2889,7 +2957,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/calibration_adapter/">Calibration adapter</a>
+          <a href="../../../../../vehicle/calibration_adapter/">Calibration adapter</a>
           
         </div>
       
@@ -2937,7 +3005,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/parameter_estimator/">Parameter estimator</a>
+          <a href="../../../../../vehicle/parameter_estimator/">Parameter estimator</a>
           
         </div>
       
@@ -2985,7 +3053,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/pitch_checker/">Pitch checker</a>
+          <a href="../../../../../vehicle/pitch_checker/">Pitch checker</a>
           
         </div>
       
@@ -3033,7 +3101,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/time_delay_estimator/">Time delay estimator</a>
+          <a href="../../../../../vehicle/time_delay_estimator/">Time delay estimator</a>
           
         </div>
       
@@ -3086,30 +3154,23 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
-    Purpose
+  <a href="#validator-name" class="md-nav__link">
+    Validator name
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#inputs-outputs" class="md-nav__link">
-    Inputs / Outputs
+  <a href="#feature" class="md-nav__link">
+    Feature
   </a>
   
-    <nav class="md-nav" aria-label="Inputs / Outputs">
+    <nav class="md-nav" aria-label="Feature">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#input" class="md-nav__link">
-    Input
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
-    Output
+  <a href="#supplementary-information" class="md-nav__link">
+    Supplementary information
   </a>
   
 </li>
@@ -3120,22 +3181,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#inner-workings-algorithms" class="md-nav__link">
-    Inner-workings / Algorithms
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#assumptions-known-limits" class="md-nav__link">
-    Assumptions / Known limits
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#future-extensions-unimplemented-parts" class="md-nav__link">
-    Future extensions / Unimplemented parts
+  <a href="#related-source-codes" class="md-nav__link">
+    Related source codes
   </a>
   
 </li>
@@ -3158,52 +3205,48 @@
   
 
 
-<div><h1 id="rtc_replayer">rtc_replayer<a class="headerlink" href="#rtc_replayer" title="Permanent link">#</a></h1>
-<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">#</a></h2>
-<p>The current issue for RTC commands is that service is not recorded to rosbag, so it's very hard to analyze what was happened exactly.
-So this package makes it possible to replay rtc commands service from rosbag rtc status topic to resolve that issue.</p>
-<h2 id="inputs-outputs">Inputs / Outputs<a class="headerlink" href="#inputs-outputs" title="Permanent link">#</a></h2>
-<h3 id="input">Input<a class="headerlink" href="#input" title="Permanent link">#</a></h3>
+<div><h1 id="intersection_area_segment_type">intersection_area_segment_type<a class="headerlink" href="#intersection_area_segment_type" title="Permanent link">#</a></h1>
+<h2 id="validator-name">Validator name<a class="headerlink" href="#validator-name" title="Permanent link">#</a></h2>
+<p>mapping.intersection.intersection_area_segment_type</p>
+<h2 id="feature">Feature<a class="headerlink" href="#feature" title="Permanent link">#</a></h2>
+<p>This validator check whether each <code>intersection_area</code> type polygon is made from points that belong to <code>road_border</code> type linestrings or the starting/ending edge of a lanelet.</p>
+<p>This is achieved by the following procedure.</p>
+<ol>
+<li>Create a 2D bounding box that circumscribes the polygon.</li>
+<li>Collect <code>road_border</code> type linestrings within or intersecting the 2D bounding box.</li>
+<li>Collect starting/ending edges of lanelets within or intersecting the 2D bounding box.</li>
+<li>Examine each point that constitutes the polygon whether it belongs to the collection above.</li>
+</ol>
+<p>The validator outputs the following issue with the corresponding ID of the primitive.</p>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
+<th>Issue Code</th>
+<th>Message</th>
+<th>Severity</th>
+<th>Primitive</th>
 <th>Description</th>
+<th>Approach</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>/debug/rtc_status</code></td>
-<td>tier4_rtc_msgs::msg::CooperateStatusArray</td>
-<td>CooperateStatusArray that is recorded in rosbag</td>
+<td>Intersection.IntersectionAreaSegmentType-001</td>
+<td>"This intersection area is not made by points from road_border linestrings or lanelet edges. (Point ID: \&lt;POINT ID LIST&gt;)"</td>
+<td>Error</td>
+<td>Polygon</td>
+<td>The <code>intersection_area</code> polygon has points that doesn't belong to <code>road_border</code> type linestrings or lanelet edges. The violating points are listed up at \&lt;POINT ID LIST&gt;.</td>
+<td>Ensure that the <code>intersection_area</code> is formed ONLY by <code>road_border</code> linestrings and lanelet edges.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">#</a></h3>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>/api/external/set/rtc_commands</code></td>
-<td>tier4_rtc_msgs::msg::CooperateCommands</td>
-<td>CooperateCommands that is replayed by this package</td>
-</tr>
-</tbody>
-</table>
-<h2 id="inner-workings-algorithms">Inner-workings / Algorithms<a class="headerlink" href="#inner-workings-algorithms" title="Permanent link">#</a></h2>
-<p><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBjb250ZW50U3R5bGVUeXBlPSJ0ZXh0L2NzcyIgZGF0YS1kaWFncmFtLXR5cGU9IkFDVElWSVRZIiBoZWlnaHQ9IjI4MHB4IiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIiBzdHlsZT0id2lkdGg6MTM1cHg7aGVpZ2h0OjI4MHB4O2JhY2tncm91bmQ6I0ZGRkZGRjsiIHZlcnNpb249IjEuMSIgdmlld0JveD0iMCAwIDEzNSAyODAiIHdpZHRoPSIxMzVweCIgem9vbUFuZFBhbj0ibWFnbmlmeSI+PHRpdGxlPnJ0YyByZXBsYXllcjwvdGl0bGU+PGRlZnMvPjxnPjx0ZXh0IGZpbGw9IiMwMDAwMDAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nIiB0ZXh0TGVuZ3RoPSI5Mi45NjE5IiB4PSIyMCIgeT0iMzIuOTk1MSI+cnRjIHJlcGxheWVyPC90ZXh0PjxlbGxpcHNlIGN4PSI2Ny45ODEiIGN5PSI1Ny4yOTY5IiBmaWxsPSIjMjIyMjIyIiByeD0iMTAiIHJ5PSIxMCIgc3R5bGU9InN0cm9rZTojMjIyMjIyO3N0cm9rZS13aWR0aDoxOyIvPjxyZWN0IGZpbGw9IiNGMUYxRjEiIGhlaWdodD0iMzMuOTY4OCIgcng9IjEyLjUiIHJ5PSIxMi41IiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjAuNTsiIHdpZHRoPSI2MS4xMTUyIiB4PSIzNy40MjMzIiB5PSI4Ny4yOTY5Ii8+PHRleHQgZmlsbD0iIzAwMDAwMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGxlbmd0aEFkanVzdD0ic3BhY2luZyIgdGV4dExlbmd0aD0iNDEuMTE1MiIgeD0iNDcuNDIzMyIgeT0iMTA4LjQzNTUiPnJvc2JhZzwvdGV4dD48cmVjdCBmaWxsPSIjRjFGMUYxIiBoZWlnaHQ9IjMzLjk2ODgiIHJ4PSIxMi41IiByeT0iMTIuNSIgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDowLjU7IiB3aWR0aD0iOTIuMjc1NCIgeD0iMjEuODQzMyIgeT0iMTQxLjI2NTYiLz48dGV4dCBmaWxsPSIjMDAwMDAwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgbGVuZ3RoQWRqdXN0PSJzcGFjaW5nIiB0ZXh0TGVuZ3RoPSI3Mi4yNzU0IiB4PSIzMS44NDMzIiB5PSIxNjIuNDA0MyI+cnRjX3JlcGxheWVyPC90ZXh0PjxyZWN0IGZpbGw9IiNGMUYxRjEiIGhlaWdodD0iMzMuOTY4OCIgcng9IjEyLjUiIHJ5PSIxMi41IiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjAuNTsiIHdpZHRoPSI5NS43NTU5IiB4PSIyMC4xMDMiIHk9IjE5NS4yMzQ0Ii8+PHRleHQgZmlsbD0iIzAwMDAwMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIGxlbmd0aEFkanVzdD0ic3BhY2luZyIgdGV4dExlbmd0aD0iNzUuNzU1OSIgeD0iMzAuMTAzIiB5PSIyMTYuMzczIj5ydGNfaW50ZXJmYWNlPC90ZXh0PjxlbGxpcHNlIGN4PSI2Ny45ODEiIGN5PSIyNTkuMjAzMSIgZmlsbD0ibm9uZSIgcng9IjEwIiByeT0iMTAiIHN0eWxlPSJzdHJva2U6IzIyMjIyMjtzdHJva2Utd2lkdGg6MS41OyIvPjxsaW5lIHN0eWxlPSJzdHJva2U6IzIyMjIyMjtzdHJva2Utd2lkdGg6Mi41OyIgeDE9IjYxLjc5MzgiIHgyPSI3NC4xNjgxIiB5MT0iMjUzLjAxNTkiIHkyPSIyNjUuMzkwMyIvPjxsaW5lIHN0eWxlPSJzdHJva2U6IzIyMjIyMjtzdHJva2Utd2lkdGg6Mi41OyIgeDE9Ijc0LjE2ODEiIHgyPSI2MS43OTM4IiB5MT0iMjUzLjAxNTkiIHkyPSIyNjUuMzkwMyIvPjxsaW5lIHN0eWxlPSJzdHJva2U6IzE4MTgxODtzdHJva2Utd2lkdGg6MTsiIHgxPSI2Ny45ODEiIHgyPSI2Ny45ODEiIHkxPSI2Ny4yOTY5IiB5Mj0iODcuMjk2OSIvPjxwb2x5Z29uIGZpbGw9IiMxODE4MTgiIHBvaW50cz0iNjMuOTgxLDc3LjI5NjksNjcuOTgxLDg3LjI5NjksNzEuOTgxLDc3LjI5NjksNjcuOTgxLDgxLjI5NjkiIHN0eWxlPSJzdHJva2U6IzE4MTgxODtzdHJva2Utd2lkdGg6MTsiLz48bGluZSBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjE7IiB4MT0iNjcuOTgxIiB4Mj0iNjcuOTgxIiB5MT0iMTIxLjI2NTYiIHkyPSIxNDEuMjY1NiIvPjxwb2x5Z29uIGZpbGw9IiMxODE4MTgiIHBvaW50cz0iNjMuOTgxLDEzMS4yNjU2LDY3Ljk4MSwxNDEuMjY1Niw3MS45ODEsMTMxLjI2NTYsNjcuOTgxLDEzNS4yNjU2IiBzdHlsZT0ic3Ryb2tlOiMxODE4MTg7c3Ryb2tlLXdpZHRoOjE7Ii8+PGxpbmUgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDoxOyIgeDE9IjY3Ljk4MSIgeDI9IjY3Ljk4MSIgeTE9IjE3NS4yMzQ0IiB5Mj0iMTk1LjIzNDQiLz48cG9seWdvbiBmaWxsPSIjMTgxODE4IiBwb2ludHM9IjYzLjk4MSwxODUuMjM0NCw2Ny45ODEsMTk1LjIzNDQsNzEuOTgxLDE4NS4yMzQ0LDY3Ljk4MSwxODkuMjM0NCIgc3R5bGU9InN0cm9rZTojMTgxODE4O3N0cm9rZS13aWR0aDoxOyIvPjxsaW5lIHN0eWxlPSJzdHJva2U6IzE4MTgxODtzdHJva2Utd2lkdGg6MTsiIHgxPSI2Ny45ODEiIHgyPSI2Ny45ODEiIHkxPSIyMjkuMjAzMSIgeTI9IjI0OS4yMDMxIi8+PHBvbHlnb24gZmlsbD0iIzE4MTgxOCIgcG9pbnRzPSI2My45ODEsMjM5LjIwMzEsNjcuOTgxLDI0OS4yMDMxLDcxLjk4MSwyMzkuMjAzMSw2Ny45ODEsMjQzLjIwMzEiIHN0eWxlPSJzdHJva2U6IzE4MTgxODtzdHJva2Utd2lkdGg6MTsiLz48IS0tU1JDPVtBeWFpb0tiTEEyZjlMWVhBQlNYOWg0bWp1WWVrSUltZ3VVQW9BaWVsSmFmQ2ptUW5JZkJaT1Q4bVZjUFVJTWZITWM5b0FiMFdESXk1MDAwMF0tLT48L2c+PC9zdmc+" class="uml" alt="uml diagram" title=""></p>
-<h2 id="assumptions-known-limits">Assumptions / Known limits<a class="headerlink" href="#assumptions-known-limits" title="Permanent link">#</a></h2>
-<p>This package can't replay CooperateCommands correctly if CooperateStatusArray is not stable.
-And this replay is always later one step than actual however it will not affect much for behavior.</p>
-<h2 id="future-extensions-unimplemented-parts">Future extensions / Unimplemented parts<a class="headerlink" href="#future-extensions-unimplemented-parts" title="Permanent link">#</a></h2>
-<p>tbd.</p></div>
+<h3 id="supplementary-information">Supplementary information<a class="headerlink" href="#supplementary-information" title="Permanent link">#</a></h3>
+<p>Note that this validator only examines what type of linestring the points constituting the polygon belongs to, and doesn't examine they have a valid connection. Use the <code>mapping.intersection.intersection_area_validity</code> to check whether the polygon is <code>boost::geometry::is_valid()</code>.</p>
+<h2 id="related-source-codes">Related source codes<a class="headerlink" href="#related-source-codes" title="Permanent link">#</a></h2>
+<ul>
+<li>intersection_area_segment_type.hpp</li>
+<li>intersection_area_segment_type.cpp</li>
+</ul></div>
 
 
 
@@ -3230,7 +3273,7 @@ And this replay is always later one step than actual however it will not affect 
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../autoware_route_client/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Route Client" rel="prev">
+          <a href="../../crosswalk/regulatory_element_details_for_crosswalks/" class="md-footer__link md-footer__link--prev" aria-label="Previous: regulatory_element_details_for_crosswalks" rel="prev">
             <div class="md-footer__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
             </div>
@@ -3239,20 +3282,20 @@ And this replay is always later one step than actual however it will not affect 
                 Previous
               </span>
               <div class="md-ellipsis">
-                Route Client
+                regulatory_element_details_for_crosswalks
               </div>
             </div>
           </a>
         
         
           
-          <a href="../planning_debug_tools/" class="md-footer__link md-footer__link--next" aria-label="Next: Planning Debug Tools" rel="next">
+          <a href="../intersection_area_validity/" class="md-footer__link md-footer__link--next" aria-label="Next: intersection_area_validity" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Planning Debug Tools
+                intersection_area_validity
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -3288,13 +3331,13 @@ And this replay is always later one step than actual however it will not affect 
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../../../../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="../../docs/assets/js/mathjax.js"></script>
+          <script src="../../../../../docs/assets/js/mathjax.js"></script>
         
       
         
