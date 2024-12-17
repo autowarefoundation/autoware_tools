@@ -2,7 +2,7 @@
 
 ## 1. Quick start
 
-This repository consists of three main tools implemented on ROS2.
+This repository consists of three main tools implemented on ROS 2.
 
 1. Deviation Estimator
 2. Deviation Evaluator
