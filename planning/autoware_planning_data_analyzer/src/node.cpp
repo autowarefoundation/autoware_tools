@@ -86,7 +86,7 @@ BehaviorAnalyzerNode::BehaviorAnalyzerNode(const rclcpp::NodeOptions & node_opti
   parameters_->grid_seach.dt = declare_parameter<double>("grid_seach.dt");
   parameters_->grid_seach.min = declare_parameter<double>("grid_seach.min");
   parameters_->grid_seach.max = declare_parameter<double>("grid_seach.max");
-  parameters_->grid_seach.resolusion = declare_parameter<double>("grid_seach.resolusion");
+  parameters_->grid_seach.resolution = declare_parameter<double>("grid_seach.resolution");
   parameters_->grid_seach.thread_num = declare_parameter<int>("grid_seach.thread_num");
   parameters_->target_state.lat_positions =
     declare_parameter<std::vector<double>>("target_state.lateral_positions");
@@ -215,13 +215,13 @@ void BehaviorAnalyzerNode::weight(
 
   std::vector<Result> weight_grid;
 
-  double resolusion = p->grid_seach.resolusion;
+  double resolution = p->grid_seach.resolution;
   double min = p->grid_seach.min;
   double max = p->grid_seach.max;
-  for (double w0 = min; w0 < max + 0.1 * resolusion; w0 += resolusion) {
-    for (double w1 = min; w1 < max + 0.1 * resolusion; w1 += resolusion) {
-      for (double w2 = min; w2 < max + 0.1 * resolusion; w2 += resolusion) {
-        for (double w3 = min; w3 < max + 0.1 * resolusion; w3 += resolusion) {
+  for (double w0 = min; w0 < max + 0.1 * resolution; w0 += resolution) {
+    for (double w1 = min; w1 < max + 0.1 * resolution; w1 += resolution) {
+      for (double w2 = min; w2 < max + 0.1 * resolution; w2 += resolution) {
+        for (double w3 = min; w3 < max + 0.1 * resolution; w3 += resolution) {
           weight_grid.emplace_back(w0, w1, w2, w3);
         }
       }
