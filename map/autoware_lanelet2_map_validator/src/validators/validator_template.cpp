@@ -34,6 +34,9 @@ lanelet::validation::Issues ValidatorTemplate::operator()(const lanelet::Lanelet
 
 lanelet::validation::Issues ValidatorTemplate::checkFunction(const lanelet::LaneletMap & map){
   lanelet::validation::Issues issues;
+
+  (void)map;
+
   return issues;
 }
 }  // namespace lanelet::autoware::validation
