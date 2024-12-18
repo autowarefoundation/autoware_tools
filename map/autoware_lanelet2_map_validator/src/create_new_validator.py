@@ -3,7 +3,7 @@ import os
 
 def create_files(base_directory, category_name, code_name, class_name, validator_name, check_function_name):
     # Define directories
-    template_directory = os.path.join(base_directory, 'src')
+    template_directory = os.path.join(base_directory, 'src/validators')
     src_directory = os.path.join(base_directory, 'src/validators', category_name)
     include_directory = os.path.join(base_directory, 'src/include/lanelet2_map_validator/validators', category_name)
     docs_directory = os.path.join(base_directory, 'docs', category_name)
@@ -31,11 +31,11 @@ def create_files(base_directory, category_name, code_name, class_name, validator
         content = content.replace('mapping.validator.template', validator_name)
         content = content.replace('checkFunction', check_function_name)
         content = content.replace(
-            'validator_template.hpp'
+            'validator_template.hpp',
             'lanelet2_map_validator/validators/' + category_name + '/' + code_name + '.hpp'
         )
         content = content.replace(
-            'VALIDATORS__VALIDATOR_TEMPLATE_HPP_'
+            'VALIDATORS__VALIDATOR_TEMPLATE_HPP_',
             'LANELET2_MAP_VALIDATOR__VALIDATORS__' + category_name.upper() + '__' + code_name.upper() + '_HPP_'
         )
         with open(file_path, 'w') as file:
@@ -44,7 +44,7 @@ def create_files(base_directory, category_name, code_name, class_name, validator
 if __name__ == "__main__":
     # User-defined parameters
     directory_path = "./"  # Replace with package directory path
-    category_name = "category"
+    category_name = "stop_line"
     code_name = "enter_code_name" # 
     class_name = "EnterClassNameValidator"
     validator_name = "mapping.enter.validator_name"
