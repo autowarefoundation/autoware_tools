@@ -1,0 +1,44 @@
+{
+  "requirements": [
+    {
+      "id": "success-requirement",
+      "validators": [
+        {
+          "name": "validator1",
+          "passed": true
+        },
+        {
+          "name": "validator2",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "id": "failure-requirement",
+      "validators": [
+        {
+          "name": "validator3",
+          "passed": true
+        },
+        {
+          "name": "validator4",
+          "passed": false,
+          "prerequisites": [
+            {
+              "name": "validator5"
+            }
+          ],
+          "issues": [
+            {
+              "severity": "Error",
+              "primitive": "primitive",
+              "id": 0,
+              "issue_code": "General.InvalidPrerequisites-001",
+              "message": "Prerequisites don't exist OR they are making a loop."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

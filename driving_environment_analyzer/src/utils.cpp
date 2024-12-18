@@ -23,8 +23,11 @@
 
 #include <lanelet2_routing/RoutingGraphContainer.h>
 
+#include <algorithm>
+#include <limits>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace driving_environment_analyzer::utils

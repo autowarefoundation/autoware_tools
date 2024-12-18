@@ -67,7 +67,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
         self.declare_parameter(
             "lookahead_time",
             2.0,
-            ParameterDescriptor(description="Pure pursuit lookahead length coef [m/(m/s)]"),
+            ParameterDescriptor(description="Pure pursuit lookahead length coef [s]"),
         )
 
         self.declare_parameter(
@@ -92,7 +92,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
             "stop_acc",
             -2.0,
             ParameterDescriptor(
-                description="Accel command for stopping data collecting driving [m/ss]"
+                description="Accel command for stopping data collecting driving [m/s^2]"
             ),
         )
 
@@ -100,7 +100,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
             "stop_jerk_lim",
             2.0,
             ParameterDescriptor(
-                description="Jerk limit for stopping data collecting driving [m/sss]"
+                description="Jerk limit for stopping data collecting driving [m/s^3]"
             ),
         )
 
@@ -108,13 +108,13 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
         self.declare_parameter(
             "lon_acc_lim",
             2.0,
-            ParameterDescriptor(description="Longitudinal acceleration limit [m/ss]"),
+            ParameterDescriptor(description="Longitudinal acceleration limit [m/s^2]"),
         )
 
         self.declare_parameter(
             "lon_jerk_lim",
             5.0,
-            ParameterDescriptor(description="Longitudinal jerk limit [m/sss]"),
+            ParameterDescriptor(description="Longitudinal jerk limit [m/s^3]"),
         )
 
         self.declare_parameter(
@@ -131,8 +131,8 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         self.declare_parameter(
             "acc_noise_amp",
-            0.00,
-            ParameterDescriptor(description="Accel cmd additional sine noise amplitude [m/ss]"),
+            0.01,
+            ParameterDescriptor(description="Accel cmd additional sine noise amplitude [m/s^2]"),
         )
 
         self.declare_parameter(
@@ -149,7 +149,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         self.declare_parameter(
             "steer_noise_amp",
-            0.00,
+            0.01,
             ParameterDescriptor(description="Steer cmd additional sine noise amplitude [rad]"),
         )
 
@@ -526,9 +526,9 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         # [2] publish cmd
         control_cmd_msg = AckermannControlCommand()
-        control_cmd_msg.stamp = (
-            control_cmd_msg.lateral.stamp
-        ) = control_cmd_msg.longitudinal.stamp = (self.get_clock().now().to_msg())
+        control_cmd_msg.stamp = control_cmd_msg.lateral.stamp = (
+            control_cmd_msg.longitudinal.stamp
+        ) = (self.get_clock().now().to_msg())
         control_cmd_msg.longitudinal.velocity = trajectory_longitudinal_velocity[nearestIndex]
         control_cmd_msg.longitudinal.acceleration = cmd[0]
         control_cmd_msg.lateral.steering_tire_angle = cmd[1]
@@ -543,38 +543,38 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
         # [3] publish marker
         marker_array = MarkerArray()
 
-        marker_traj = Marker()
-        marker_traj.type = 4
-        marker_traj.id = 1
-        marker_traj.header.frame_id = "map"
+        marker_trajectory = Marker()
+        marker_trajectory.type = 4
+        marker_trajectory.id = 1
+        marker_trajectory.header.frame_id = "map"
 
-        marker_traj.action = marker_traj.ADD
+        marker_trajectory.action = marker_trajectory.ADD
 
-        marker_traj.scale.x = 0.6
-        marker_traj.scale.y = 0.0
-        marker_traj.scale.z = 0.0
+        marker_trajectory.scale.x = 0.6
+        marker_trajectory.scale.y = 0.0
+        marker_trajectory.scale.z = 0.0
 
-        marker_traj.color.a = 1.0
-        marker_traj.color.r = 0.0
-        marker_traj.color.g = 1.0
-        marker_traj.color.b = 0.0
+        marker_trajectory.color.a = 1.0
+        marker_trajectory.color.r = 0.0
+        marker_trajectory.color.g = 1.0
+        marker_trajectory.color.b = 0.0
 
-        marker_traj.lifetime.nanosec = 500000000
-        marker_traj.frame_locked = True
+        marker_trajectory.lifetime.nanosec = 500000000
+        marker_trajectory.frame_locked = True
 
-        marker_traj.points = []
+        marker_trajectory.points = []
         tmp_marker_point = Point()
         tmp_marker_point.x = present_position[0]
         tmp_marker_point.y = present_position[1]
         tmp_marker_point.z = 0.0
-        marker_traj.points.append(tmp_marker_point)
+        marker_trajectory.points.append(tmp_marker_point)
         tmp_marker_point = Point()
         tmp_marker_point.x = trajectory_position[targetIndex][0]
         tmp_marker_point.y = trajectory_position[targetIndex][1]
         tmp_marker_point.z = 0.0
-        marker_traj.points.append(tmp_marker_point)
+        marker_trajectory.points.append(tmp_marker_point)
 
-        marker_array.markers.append(marker_traj)
+        marker_array.markers.append(marker_trajectory)
         self.data_collecting_lookahead_marker_array_pub_.publish(marker_array)
 
         # [99] debug plot

@@ -78,7 +78,7 @@ struct GridSearchParameters
 {
   double min{0.0};
   double max{1.0};
-  double resolusion{0.01};
+  double resolution{0.01};
   double dt{1.0};
   size_t thread_num{4};
 };
@@ -91,7 +91,7 @@ struct Parameters
   double w1{1.0};
   double w2{1.0};
   double w3{1.0};
-  GridSearchParameters grid_seach{};
+  GridSearchParameters grid_search{};
   TargetStateParameters target_state{};
 };
 

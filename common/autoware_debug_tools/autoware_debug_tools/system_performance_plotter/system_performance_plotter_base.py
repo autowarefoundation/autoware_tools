@@ -36,6 +36,7 @@ class SystemPerformancePlotterBase:
         self.ymax = args.ymax
         self.number_of_plot = args.number_of_plot
         self.save_result = args.save_result
+        self.skip_plt_show = args.skip_plt_show
         self.ylabel = ylabel
         self.output_suffix = output_suffix
 
@@ -174,7 +175,8 @@ class SystemPerformancePlotterBase:
             # save figure of plot
             plt.savefig(f"./result/{output_name}-{timestamp}.png")
 
-        plt.show()
+        if not self.skip_plt_show:
+            plt.show()
 
 
 def create_common_argment(ymax=None):
@@ -192,6 +194,13 @@ def create_common_argment(ymax=None):
     )
     parser.add_argument(
         "-s", "--save-result", default=False, action="store_true", help="whether to save result"
+    )
+    parser.add_argument(
+        "-p",
+        "--skip_plt_show",
+        default=False,
+        action="store_true",
+        help="whether to skip plt.show()",
     )
 
     args = parser.parse_args()

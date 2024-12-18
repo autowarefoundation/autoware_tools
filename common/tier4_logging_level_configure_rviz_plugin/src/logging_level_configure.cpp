@@ -21,7 +21,13 @@
 #include <rviz_common/display_context.hpp>
 #include <tier4_logging_level_configure_rviz_plugin/logging_level_configure.hpp>
 
+#include <algorithm>
 #include <cstdlib>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace rviz_plugin
 {

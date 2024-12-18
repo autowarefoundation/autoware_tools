@@ -23,6 +23,10 @@
 
 #include <unique_identifier_msgs/msg/uuid.hpp>
 
+#include <algorithm>
+#include <memory>
+#include <string>
+
 namespace rviz_plugins
 {
 inline std::string Bool2String(const bool var)

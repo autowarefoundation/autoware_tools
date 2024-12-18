@@ -46,6 +46,7 @@ private:
   rclcpp::Publisher<Float32Stamped>::SharedPtr pub_acceleration_status_;
   rclcpp::Publisher<Float32Stamped>::SharedPtr pub_acceleration_cmd_;
   rclcpp::Publisher<Float32Stamped>::SharedPtr pub_steering_angle_cmd_;
+  rclcpp::Publisher<TwistStamped>::SharedPtr pub_vehicle_twist_;
   rclcpp::Subscription<ControlCommandStamped>::SharedPtr sub_control_cmd_;
   rclcpp::Subscription<Velocity>::SharedPtr sub_twist_;
   template <class T>

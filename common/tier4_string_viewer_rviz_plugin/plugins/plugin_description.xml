@@ -1,0 +1,7 @@
+<library path="tier4_string_viewer_rviz_plugin">
+  <class
+    type="tier4_string_viewer_rviz_plugin::StringViewerPanel"
+    base_class_type="rviz_common::Panel">
+    <description>StringViewerPanel</description>
+  </class>
+</library>
