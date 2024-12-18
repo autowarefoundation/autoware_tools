@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "validator_template.hpp"
+
 #include "lanelet2_map_validator/utils.hpp"
 
 namespace lanelet::autoware::validation
@@ -26,13 +27,13 @@ lanelet::validation::Issues ValidatorTemplate::operator()(const lanelet::Lanelet
 {
   lanelet::validation::Issues issues;
 
-  lanelet::autoware::validation::appendIssues(
-    issues, checkFunction(map));
+  lanelet::autoware::validation::appendIssues(issues, checkFunction(map));
 
   return issues;
 }
 
-lanelet::validation::Issues ValidatorTemplate::checkFunction(const lanelet::LaneletMap & map){
+lanelet::validation::Issues ValidatorTemplate::checkFunction(const lanelet::LaneletMap & map)
+{
   lanelet::validation::Issues issues;
 
   (void)map;

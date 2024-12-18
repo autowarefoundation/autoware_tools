@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "validator_template.hpp"
 #include "map_validation_tester.hpp"
+#include "validator_template.hpp"
 
 #include <gtest/gtest.h>
 #include <lanelet2_core/LaneletMap.h>
@@ -25,8 +25,7 @@ private:
 
 TEST_F(TestValidatorTemplate, ValidatorAvailability)  // NOLINT for gtest
 {
-  std::string expected_validator_name =
-    lanelet::autoware::validation::ValidatorTemplate::name();
+  std::string expected_validator_name = lanelet::autoware::validation::ValidatorTemplate::name();
 
   lanelet::validation::Strings validators =
     lanelet::validation::availabeChecks(expected_validator_name);  // cspell:disable-line
