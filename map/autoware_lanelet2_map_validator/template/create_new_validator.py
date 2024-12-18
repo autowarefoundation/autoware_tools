@@ -6,7 +6,7 @@ def create_files(
     base_directory, category_name, code_name, class_name, validator_name, check_function_name
 ):
     # Define directories
-    template_directory = os.path.join(base_directory, "src/validators")
+    template_directory = os.path.join(base_directory, "template")
     src_directory = os.path.join(base_directory, "src/validators", category_name)
     include_directory = os.path.join(
         base_directory, "src/include/lanelet2_map_validator/validators", category_name
@@ -30,6 +30,13 @@ def create_files(
     shutil.copy(test_template, test_new)
     shutil.copy(docs_template, docs_new)
 
+    # This is only for documents!!
+    with open(docs_new, "r") as file:
+        content = file.read()
+    content = content.replace("validator_template", code_name)
+    with open(docs_new, "w") as file:
+        file.write(content)
+
     # Replace class name in the new files
     for file_path in [cpp_new, hpp_new, test_new, docs_new]:
         with open(file_path, "r") as file:
@@ -38,13 +45,12 @@ def create_files(
         content = content.replace("ValidatorTemplate", class_name)
         content = content.replace("mapping.validator.template", validator_name)
         content = content.replace("checkFunction", check_function_name)
-        content = content.replace("- validator_template", "- " + code_name)
         content = content.replace(
             "validator_template.hpp",
             "lanelet2_map_validator/validators/" + category_name + "/" + code_name + ".hpp",
         )
         content = content.replace(
-            "VALIDATORS__VALIDATOR_TEMPLATE_HPP_",
+            "MAP__AUTOWARE_LANELET2_MAP_VALIDATOR__TEMPLATES__VALIDATOR_TEMPLATE_HPP_",
             "LANELET2_MAP_VALIDATOR__VALIDATORS__"
             + category_name.upper()
             + "__"
@@ -58,7 +64,7 @@ def create_files(
 if __name__ == "__main__":
     # User-defined parameters
     directory_path = "./"  # Replace with package directory path
-    category_name = "category"
+    category_name = "stop_line"
     code_name = "enter_code_name"  #
     class_name = "EnterClassNameValidator"
     validator_name = "mapping.enter.validator_name"
