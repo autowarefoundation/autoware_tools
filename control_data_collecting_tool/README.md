@@ -267,9 +267,9 @@ You can create an original mask to specify the data collection range for the hea
 
   The following two steps are taken to obtain steering angle data.
 
-    1. Starting from the ego vehicle's current position, the system examines a segment of the trajectory ahead, covering a distance defined by looking_ahead_distance, to identify the point of maximum curvature.
+  1. Starting from the ego vehicle's current position, the system examines a segment of the trajectory ahead, covering a distance defined by looking_ahead_distance, to identify the point of maximum curvature.
 
-    2. This maximum curvature determines the steering angle the vehicle will use. The vehicle then adjusts its speed toward the speed associated with the sparsest steering angle data.
+  2. This maximum curvature determines the steering angle the vehicle will use. The vehicle then adjusts its speed toward the speed associated with the sparsest steering angle data.
 
     <img src="resource/looking_ahead.png" width="480">
 
