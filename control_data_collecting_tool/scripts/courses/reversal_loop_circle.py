@@ -1147,9 +1147,7 @@ class Reversal_Loop_Circle(Base_Course):
             max_vel_from_lateral_acc_on_segment = np.sqrt(
                 self.params.max_lateral_accel / max_curvature_on_segment
             )
-            target_vel = np.min(
-                [target_vel_ + 1.0 * sine**2, max_vel_from_lateral_acc_on_segment]
-            )
+            target_vel = np.min([target_vel_ + 1.0 * sine**2, max_vel_from_lateral_acc_on_segment])
 
         return target_vel
 
