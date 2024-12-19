@@ -21,9 +21,13 @@ def create_files(
     test_template = os.path.join(template_directory, "test_validator_template.cpp")
     docs_template = os.path.join(template_directory, "validator_template.md")
     cpp_new = os.path.join(src_directory, f"{code_name}.cpp")
+    print("Create " + cpp_new)
     hpp_new = os.path.join(include_directory, f"{code_name}.hpp")
+    print("Create " + hpp_new)
     test_new = os.path.join(test_directory, f"test_{code_name}.cpp")
+    print("Create " + test_new)
     docs_new = os.path.join(docs_directory, f"{code_name}.md")
+    print("Create " + docs_new)
 
     # Copy template files
     shutil.copy(cpp_template, cpp_new)
