@@ -1,3 +1,4 @@
+import argparse
 import os
 import shutil
 
@@ -62,13 +63,42 @@ def create_files(
 
 
 if __name__ == "__main__":
+    # Arguments
+    parser = argparse.ArgumentParser(description="Generate files for a new validator.")
+    parser.add_argument(
+        "--base_directory", default="./", help="Path to the autoware_lanelet2_map_validator package"
+    )
+    parser.add_argument(
+        "--category_name", default="enter_category", help="Category name of the validator"
+    )
+    parser.add_argument(
+        "--code_name",
+        default="enter_code_name",
+        help="Code name for the validator files (e.g. code_name.cpp, code_name.hpp)",
+    )
+    parser.add_argument(
+        "--class_name", default="EnterClassNameValidator", help="Class name for the validator"
+    )
+    parser.add_argument(
+        "--validator_name",
+        default="mapping.category.something",
+        help="Full validator name (e. g. mapping.category.something)",
+    )
+    parser.add_argument(
+        "--check_function_name",
+        default="enter_function_name",
+        help="Check function name for the validator",
+    )
+
+    args = parser.parse_args()
+
     # User-defined parameters
-    directory_path = "./"  # Replace with package directory path
-    category_name = "stop_line"
-    code_name = "enter_code_name"  #
-    class_name = "EnterClassNameValidator"
-    validator_name = "mapping.enter.validator_name"
-    check_function_name = "enter_function_name"
+    directory_path = args.base_directory  # Replace with package directory path
+    category_name = args.category_name
+    code_name = args.code_name
+    class_name = args.class_name
+    validator_name = args.validator_name
+    check_function_name = args.check_function_name
 
     create_files(
         directory_path, category_name, code_name, class_name, validator_name, check_function_name
