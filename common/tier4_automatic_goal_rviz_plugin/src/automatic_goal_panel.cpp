@@ -18,6 +18,9 @@
 
 #include <autoware/universe_utils/ros/marker_helper.hpp>
 
+#include <string>
+#include <utility>
+
 namespace rviz_plugins
 {
 AutowareAutomaticGoalPanel::AutowareAutomaticGoalPanel(QWidget * parent)

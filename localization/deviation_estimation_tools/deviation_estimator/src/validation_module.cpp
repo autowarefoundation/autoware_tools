@@ -14,6 +14,12 @@
 
 #include "deviation_estimator/validation_module.hpp"
 
+#include <algorithm>
+#include <limits>
+#include <string>
+#include <utility>
+#include <vector>
+
 /**
  * @brief ValidationModule validates if estimated parameters are properly converged, given a
  * predefined threshold in this constructor arguments
