@@ -3107,6 +3107,33 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#trajectory-generation-and-data-collection-logic" class="md-nav__link">
+    Trajectory generation and data collection logic
+  </a>
+  
+    <nav class="md-nav" aria-label="Trajectory generation and data collection logic">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-collection-logic-common-to-all-courses" class="md-nav__link">
+    Data collection logic common to all courses
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trajectory-generation-and-data-collection-logic-specific-to-reversal_loop_circle" class="md-nav__link">
+    Trajectory generation and data collection logic specific to reversal_loop_circle
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#parameter" class="md-nav__link">
     Parameter
   </a>
@@ -3324,6 +3351,100 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <p><img src="resource/original.png" width="480"></p>
 </li>
 </ol>
+<h2 id="trajectory-generation-and-data-collection-logic">Trajectory generation and data collection logic<a class="headerlink" href="#trajectory-generation-and-data-collection-logic" title="Permanent link">#</a></h2>
+<ul>
+<li>
+<h3 id="data-collection-logic-common-to-all-courses">Data collection logic common to all courses<a class="headerlink" href="#data-collection-logic-common-to-all-courses" title="Permanent link">#</a></h3>
+<p>In <code>control_data_collection_tool</code>, all courses collect velocity and acceleration data in a similar manner.</p>
+<p>By appropriately adjusting the <code>target_velocity</code> provided to the pure pursuit algorithm, speed and acceleration data are efficiently collected. Data collection consists of four phases: selection of target speed and acceleration, acceleration phase, constant speed phase, the deceleration phase. A general method for collecting speed and acceleration data is described below, though it does not strictly adhere to the outlined steps.</p>
+<ol>
+<li>
+<p>Selection of target speed and acceleration</p>
+<p>In the speed-acceleration heatmap, the speed and acceleration with fewer data points are set as the target speed and acceleration, which are then defined here as <code>target_velocity_on_section</code> and <code>target_acceleration_on_section</code>.</p>
+</li>
+<li>
+<p>Acceleration phase
+   The vehicle accelerates by setting <code>target_velocity</code> as follows until its speed exceeds <code>target_velocity_on_section</code>.</p>
+<div class="highlight"><pre><span></span><code>  <span class="c1"># sine_curve is derived from appropriate amplitude and period, defined separately</span>
+  <span class="n">target_velocity</span> <span class="o">=</span> <span class="n">current_velocity</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">target_acceleration_on_section</span><span class="p">)</span> <span class="o">/</span> <span class="n">acc_kp</span> <span class="o">+</span> <span class="n">sine_curve</span>
+</code></pre></div>
+<p><code>current_velocity</code> is a current velocity of vehicle and <code>acc_kp</code> accel command proportional gain in pure pursuit algorithm. <code>sine_curve</code> is a sine wave added to partially mitigate situations where the vehicle fails to achieve the target acceleration.</p>
+</li>
+<li>
+<p>Constant speed phase
+   When the vehicle reaches <code>target_velocity_on_section</code>, <code>target_velocity</code> is defined as follows to allow the vehicle to run around the target speed for a certain period of time.</p>
+<div class="highlight"><pre><span></span><code>  <span class="c1"># sine_curve is derived from appropriate amplitude and period, defined separately</span>
+  <span class="n">target_velocity</span> <span class="o">=</span> <span class="n">target_velocity_on_section</span> <span class="o">+</span> <span class="n">sine_curve</span> <span class="o">+</span> <span class="n">sine_curve</span>
+</code></pre></div>
+</li>
+<li>
+<p>Deceleration phase
+   In the deceleration phase, similar to the acceleration phase, <code>target_velocity</code> is defined as follows to ensure the vehicle decelerates.</p>
+<div class="highlight"><pre><span></span><code>  <span class="c1"># sine_curve is derived from appropriate amplitude and period, defined separately</span>
+  <span class="n">target_velocity</span> <span class="o">=</span> <span class="n">current_velocity</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">target_acceleration_on_section</span><span class="p">)</span> <span class="o">/</span> <span class="n">acc_kp</span> <span class="o">+</span> <span class="n">sine_curve</span>
+</code></pre></div>
+<p>After decelerating to a sufficiently low speed, return to step i.</p>
+</li>
+</ol>
+</li>
+</ul>
+<ul>
+<li>
+<h3 id="trajectory-generation-and-data-collection-logic-specific-to-reversal_loop_circle">Trajectory generation and data collection logic specific to <code>reversal_loop_circle</code><a class="headerlink" href="#trajectory-generation-and-data-collection-logic-specific-to-reversal_loop_circle" title="Permanent link">#</a></h3>
+<p>In the <code>reversal_loop_circle</code> course, sections are sequentially added to the course while collecting various data on speed, acceleration, and steering angle.</p>
+</li>
+</ul>
+<ul>
+<li>
+<h4 id="trajectory-generation-logic-for-reversal_loop_circle">Trajectory generation logic for <code>reversal_loop_circle</code><a class="headerlink" href="#trajectory-generation-logic-for-reversal_loop_circle" title="Permanent link">#</a></h4>
+<p>The <code>reversal_loop_circle</code> aims to generate a trajectory with the largest possible radius of curvature within a radius <code>trajectory_radius</code>, allowing data collection in a confined area without significantly reducing speed.</p>
+<p>The <code>reversal_loop_circle</code> is primarily generated by connecting the following three components, <code>common tangent</code>, <code>circumscribing_circle</code> and <code>boundary</code> as shown in the following picture.</p>
+<p><img src="resource/whole_trajectory.png" width="480"></p>
+<p>All the components listed below are available in both clockwise and counterclockwise versions. The rationale for having two versions is to ensure data collection for both right-hand drive and left-hand drive configurations.</p>
+<ul>
+<li>
+<p><code>common tangent</code></p>
+<p>The <code>common tangent</code> is generated by drawing a common tangent to two inscribed circles. In this section, a sine curve is added in the normal direction to generate a trajectory for collecting data with larger steering angles.
+The amplitude of the sine curve is determined based on the desired steering angle data.</p>
+<p><img src="resource/common_tangent.png" width="480"></p>
+<p><img src="resource/common_tangent_counter_clockwise.png" width="480"></p>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>circumscribing_circle</code></p>
+<p>The <code>circumscribing_circle</code> part is created by drawing the common circumscribed circle of the circles.
+This section is generated to achieve nearly straight movement within the outer circle while minimizing the increase in curvature.</p>
+<p><img src="resource/circumscribing_circle.png" width="480"></p>
+<p><img src="resource/circumscribing_circle_counter_clockwise.png" width="480"></p>
+</li>
+</ul>
+<ul>
+<li>
+<p><code>boundary</code></p>
+<p>The <code>boundary</code> part is used to connect the <code>common tangent</code> and the <code>circumscribing_circle</code> sections.</p>
+<p><img src="resource/boundary.png" width="480"></p>
+<p><img src="resource/boundary_counter_clockwise.png" width="480"></p>
+</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li>
+<h4 id="velocity-and-steering-angle-data-collection-logic-for-reversal_loop_circle">Velocity and steering angle data collection logic for <code>reversal_loop_circle</code><a class="headerlink" href="#velocity-and-steering-angle-data-collection-logic-for-reversal_loop_circle" title="Permanent link">#</a></h4>
+<p>Speed and steering angle data are gathered in the <code>common tangent</code> section of the trajectory. The common tangent section is particularly effective for collecting steering angle data because a trajectory with minimal data is intentionally created by adding a sine wave of suitable amplitude to the curvature.</p>
+<p>The following two steps are taken to obtain steering angle data.</p>
+<ol>
+<li>
+<p>Starting from the ego vehicle's current position, the system examines a segment of the trajectory ahead, covering a distance defined by looking_ahead_distance, to identify the point of maximum curvature.</p>
+</li>
+<li>
+<p>This maximum curvature determines the steering angle the vehicle will use. The vehicle then adjusts its speed toward the speed associated with the sparsest steering angle data.</p>
+<p><img src="resource/looking_ahead.png" width="480"></p>
+</li>
+</ol>
+</li>
+</ul>
 <h2 id="parameter">Parameter<a class="headerlink" href="#parameter" title="Permanent link">#</a></h2>
 <p>There are parameters that are common to all trajectories and parameters that are specific to each trajectory.</p>
 <h3 id="common-parameters">Common Parameters<a class="headerlink" href="#common-parameters" title="Permanent link">#</a></h3>
@@ -3420,7 +3541,7 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <td align="left"><code>max_lateral_accel</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">Max lateral acceleration limit [m/s^2]</td>
-<td align="left">2.00</td>
+<td align="left">2.70</td>
 </tr>
 <tr>
 <td align="left"><code>ABS_STEER_RATE_MIN</code></td>
@@ -3777,7 +3898,7 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <td align="left"><code>look_ahead_distance</code></td>
 <td align="left"><code>double</code></td>
 <td align="left">The distance referenced ahead of the vehicle for collecting steering angle data [m]</td>
-<td align="left">15.0</td>
+<td align="left">35.0</td>
 </tr>
 </tbody>
 </table>
