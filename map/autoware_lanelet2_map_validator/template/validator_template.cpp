@@ -14,6 +14,8 @@
 
 #include "validator_template.hpp"
 
+#include "lanelet2_map_validator/utils.hpp"
+
 namespace lanelet::autoware::validation
 {
 namespace
@@ -25,7 +27,15 @@ lanelet::validation::Issues ValidatorTemplate::operator()(const lanelet::Lanelet
 {
   lanelet::validation::Issues issues;
 
-  // Remove this line and write down how to append issues
+  lanelet::autoware::validation::appendIssues(issues, checkFunction(map));
+
+  return issues;
+}
+
+lanelet::validation::Issues ValidatorTemplate::checkFunction(const lanelet::LaneletMap & map)
+{
+  lanelet::validation::Issues issues;
+
   (void)map;
 
   return issues;
