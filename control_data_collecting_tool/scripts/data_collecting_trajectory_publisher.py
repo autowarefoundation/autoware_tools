@@ -72,7 +72,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
 
         self.declare_parameter(
             "lateral_error_threshold",
-            2.0,
+            2.70,
             ParameterDescriptor(
                 description="Lateral error threshold where applying velocity limit [m/s]"
             ),

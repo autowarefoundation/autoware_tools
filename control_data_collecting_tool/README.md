@@ -296,7 +296,7 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `STEER_MAX`                              | `double` | Maximum steer in heatmap [rad]                                                                                                            | 0.6                    |
 | `A_MIN`                                  | `double` | Minimum acceleration in heatmap [m/s^2]                                                                                                   | -1.0                   |
 | `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/s^2]                                                                                                   | 1.0                    |
-| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/s^2]                                                                                                    | 2.00                   |
+| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/s^2]                                                                                                    | 2.70                   |
 | `ABS_STEER_RATE_MIN`                     | `double` | Minimum absolute value of steer rate in heatmap [rad/s]                                                                                   | 0.0                    |
 | `ABS_STEER_RATE_MAX`                     | `double` | Maximum absolute value of steer rate in heatmap [rad/s]                                                                                   | 0.3                    |
 | `JERK_MIN`                               | `double` | Minimum jerk in heatmap [m/s^3]                                                                                                           | -0.5                   |
@@ -371,7 +371,7 @@ Each trajectory has specific ROS 2 parameters.
 | :-------------------- | :------- | :---------------------------------------------------------------------------------- | :------------ |
 | `trajectory_radius`   | `double` | Radius of the circle where trajectories are generated [m]                           | 35.0          |
 | `enclosing_radius`    | `double` | Radius of the circle enclosing the generated trajectories [m]                       | 40.0          |
-| `look_ahead_distance` | `double` | The distance referenced ahead of the vehicle for collecting steering angle data [m] | 15.0          |
+| `look_ahead_distance` | `double` | The distance referenced ahead of the vehicle for collecting steering angle data [m] | 35.0          |
 
 - `COURSE_NAME: along_road`
 
