@@ -70,8 +70,8 @@ TEST_F(TestIntersectionAreaDanglingReferenceError, ValidateDanglingReference)  /
   EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::Lanelet);
   EXPECT_EQ(
     issues[0].message,
-    "[Intersection.IntersectionAreaDanglingReference-001] Lanelet of ID 53 has dangling "
-    "reference to non-existing intersection area of ID 777");
+    "[Intersection.IntersectionAreaDanglingReference-001] Dangling "
+    "reference to non-existing intersection area of ID 777 is detected");
 }
 
 TEST_F(TestIntersectionAreaDanglingReferenceOK, ValidIntersectionArea)  // NOLINT for gtest

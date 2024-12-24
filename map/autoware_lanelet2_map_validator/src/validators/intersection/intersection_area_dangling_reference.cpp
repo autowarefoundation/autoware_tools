@@ -61,13 +61,6 @@ IntersectionAreaDanglingReferenceValidator::check_intersection_area_dangling_ref
     return id;
   };
 
-  std::vector<std::pair<lanelet::ConstLanelet, lanelet::Id>> intersection_with_area_lanelets;
-  for (const auto & lanelet : map.laneletLayer) {
-    if (const auto id_opt = is_intersection_with_area(lanelet); id_opt) {
-      intersection_with_area_lanelets.emplace_back(lanelet, id_opt.value());
-    }
-  }
-
   std::unordered_set<lanelet::Id> intersection_area_ids;
   for (const auto & area : map.polygonLayer) {
     if (
@@ -77,15 +70,18 @@ IntersectionAreaDanglingReferenceValidator::check_intersection_area_dangling_ref
   }
 
   lanelet::validation::Issues issues;
-  for (const auto & [lanelet, intersection_area_id] : intersection_with_area_lanelets) {
-    if (intersection_area_ids.find(intersection_area_id) == intersection_area_ids.end()) {
-      issues.emplace_back(
-        lanelet::validation::Severity::Error, lanelet::validation::Primitive::Lanelet, lanelet.id(),
-        append_issue_code_prefix(
-          this->name(), 1,
-          "Lanelet of ID " + std::to_string(lanelet.id()) +
-            " has dangling reference to non-existing intersection area of ID " +
-            std::to_string(intersection_area_id)));
+  for (const auto & lanelet : map.laneletLayer) {
+    if (const auto id_opt = is_intersection_with_area(lanelet); id_opt) {
+      const auto id = id_opt.value();
+      if (intersection_area_ids.find(id) == intersection_area_ids.end()) {
+        issues.emplace_back(
+          lanelet::validation::Severity::Error, lanelet::validation::Primitive::Lanelet,
+          lanelet.id(),
+          append_issue_code_prefix(
+            this->name(), 1,
+            "Dangling reference to non-existing intersection area of ID " + std::to_string(id) +
+              " is detected"));
+      }
     }
   }
 
