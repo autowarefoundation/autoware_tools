@@ -6,7 +6,7 @@ mapping.intersection.intersection_area_dangling_reference
 
 ## Feature
 
-This validator check whether each intersection lanelet(namely the lanelet with `turn_direction` property) has existing reference to `intersection_area` polygon. The countercase occurs when an existing intersection_area is deleted but its referrers are not updated.
+This validator checks whether each intersection lanelet(namely the lanelet with `turn_direction` property) has reference to existing `intersection_area` polygon. Such invalid case occurs when an intersection_area is deleted but its referrers are not updated.
 
 This is achieved by the following procedure.
 
