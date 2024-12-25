@@ -20,33 +20,11 @@
 
 #include <string>
 
-class TestIntersectionAreaDanglingReferenceError : public MapValidationTester
+class TestIntersectionAreaDanglingReference : public MapValidationTester
 {
-protected:
-  void SetUp() override
-  {
-    // prepare `map_` and `loading_errors_`
-    // this class uses erroneous map
-    load_target_map("intersection/intersection_area_with_dangling_reference.osm");
-  }
-
-private:
 };
 
-class TestIntersectionAreaDanglingReferenceOK : public MapValidationTester
-{
-protected:
-  void SetUp() override
-  {
-    // prepare `map_` and `loading_errors_`
-    // this class uses valid map
-    load_target_map("intersection/basic_intersection_area.osm");
-  }
-
-private:
-};
-
-TEST_F(TestIntersectionAreaDanglingReferenceError, ValidatorAvailability)  // NOLINT for gtest
+TEST_F(TestIntersectionAreaDanglingReference, ValidatorAvailability)  // NOLINT for gtest
 {
   std::string expected_validator_name =
     lanelet::autoware::validation::IntersectionAreaDanglingReferenceValidator::name();
@@ -59,8 +37,9 @@ TEST_F(TestIntersectionAreaDanglingReferenceError, ValidatorAvailability)  // NO
   EXPECT_EQ(expected_validator_name, validators[0]);
 }
 
-TEST_F(TestIntersectionAreaDanglingReferenceError, ValidateDanglingReference)  // NOLINT for gtest
+TEST_F(TestIntersectionAreaDanglingReference, ValidateDanglingReference)  // NOLINT for gtest
 {
+  load_target_map("intersection/intersection_area_with_dangling_reference.osm");
   lanelet::autoware::validation::IntersectionAreaDanglingReferenceValidator checker;
   const auto & issues = checker(*map_);
 
@@ -74,8 +53,9 @@ TEST_F(TestIntersectionAreaDanglingReferenceError, ValidateDanglingReference)  /
     "reference to non-existing intersection area of ID 777 is detected");
 }
 
-TEST_F(TestIntersectionAreaDanglingReferenceOK, ValidIntersectionArea)  // NOLINT for gtest
+TEST_F(TestIntersectionAreaDanglingReference, ValidIntersectionArea)  // NOLINT for gtest
 {
+  load_target_map("intersection/basic_intersection_area.osm");
   lanelet::autoware::validation::IntersectionAreaDanglingReferenceValidator checker;
   const auto & issues = checker(*map_);
 
