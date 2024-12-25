@@ -15,8 +15,8 @@ This is achieved by the following procedure.
 
 The validator outputs the following issue with the corresponding ID of the primitive.
 
-| Issue Code                                         | Message                                                                                 | Severity | Primitive | Description                                                                        | Approach                                                             |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------- | -------- | --------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Issue Code                                         | Message                                                                                 | Severity | Primitive | Description                                                                                                    | Approach                                                             |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------- | -------- | --------- | -------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Intersection.IntersectionAreaDanglingReference-001 | "Dangling reference to non-existing intersection area of ID \<LANELET ID\> is detected" | Error    | Lanelet   | The reported lanelet will cause a runtime error when attempting to look up the non-existent intersection_area. | Go to the reported lanelet and delete "intersection_area" key entry. |
 
 ### Supplementary information
