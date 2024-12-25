@@ -9,6 +9,14 @@
       ]
     },
     {
+      "id": "vm-03-01",
+      "validators": [
+        {
+          "name": "mapping.intersection.intersection_area_dangling_reference"
+        }
+      ]
+    },
+    {
       "id": "vm-03-08",
       "validators": [
         {

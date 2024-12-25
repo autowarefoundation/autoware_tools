@@ -67,6 +67,7 @@ if(BUILD_TESTING)
   add_validation_test(missing_referrers_for_traffic_lights)
   add_validation_test(intersection_area_validity)
   add_validation_test(intersection_area_segment_type)
+  add_validation_test(intersection_area_dangling_reference)
 endif()
 
 ament_auto_package(
