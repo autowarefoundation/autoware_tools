@@ -50,7 +50,19 @@ You can use the script [`create_new_validator.py`](https://github.com/autowarefo
 You can use this by the command like this example:
 
 ```shell
-python3 create_new_validator.py \
+create_new_validator.py \
+--base_directory ./ \
+--category_name traffic_light \
+--code_name traffic_light_facing \
+--class_name TrafficLightFacingValidator \
+--validator_name mapping.traffic_light.correct_facing \
+--check_function_name check_traffic_light_facing
+```
+
+OR
+
+```shell
+ros2 run autoware_lanelet2_map_validator create_new_validator.py \
 --base_directory ./ \
 --category_name traffic_light \
 --code_name traffic_light_facing \
@@ -63,6 +75,7 @@ All arguments are required.
 
 - `--base_directory`: The directory to the `autoware_lanelet2_map_validator` package.
 - `--category_name`: The category (like lanelet, traffic_light...) where your validator belongs to. Look [Design Concept](#design-concept) to see the list of categories.
+- `--code_name`: The name for the files. The source code names will be like `<code_name>.cpp` and `<code_name.hpp>`
 - `--class_name`: The base class name of your validator which will be defined in your new header file.
 - `--validator_name`: The name of the validator which will be displayed when `autoware_lanelet2_map_validator` is executed with a `--print` option. The naming rules are explained in [Restrictions for validator class implementation](#restrictions-for-validator-class-implementation).
 - `--check_function_name`: The main function name of your validator which will be defined in your header file, and its implementation will be written in the cpp source file.
