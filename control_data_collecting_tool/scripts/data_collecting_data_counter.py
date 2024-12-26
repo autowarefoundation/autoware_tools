@@ -86,6 +86,22 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_jerk", 10
         )
 
+        self.collected_data_counts_of_vel_accel_pedal_input_publisher_ = self.create_publisher(
+            Int32MultiArray,
+            "/control_data_collecting_tools/collected_data_counts_of_vel_accel_pedal_input",
+            10,
+        )
+
+        self.collected_data_counts_of_vel_brake_pedal_input_publisher_ = self.create_publisher(
+            Int32MultiArray,
+            "/control_data_collecting_tools/collected_data_counts_of_vel_brake_pedal_input",
+            10,
+        )
+
+        self.collected_data_counts_of_vel_jerk_publisher_ = self.create_publisher(
+            Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_jerk", 10
+        )
+
         self.vel_hist_publisher_ = self.create_publisher(
             Float32MultiArray, "/control_data_collecting_tools/vel_hist", 10
         )
@@ -239,6 +255,36 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
         if 0 <= v_bin < self.num_bins_v and 0 <= jerk_bin < self.num_bins_jerk:
             self.collected_data_counts_of_vel_jerk[v_bin, jerk_bin] += 1
 
+    def count_pedal_input_observation(self, actuation_cmd, current_vel):
+        if actuation_cmd is not None:
+            accel_pedal_input = actuation_cmd.actuation.accel_cmd
+            brake_pedal_input = actuation_cmd.actuation.brake_cmd
+            accel_pedal_input_bin = (
+                np.digitize(accel_pedal_input, self.accel_pedal_input_bin_centers) - 1
+            )
+            brake_pedal_input_bin = (
+                np.digitize(brake_pedal_input, self.brake_pedal_input_bin_centers) - 1
+            )
+            v_bin = np.digitize(current_vel, self.v_bins) - 1
+
+            if accel_pedal_input > 1e-3:
+                if (
+                    0 <= v_bin < self.num_bins_v
+                    and 0 <= accel_pedal_input_bin < self.num_bins_accel_pedal_input
+                ):
+                    self.collected_data_counts_of_vel_accel_pedal_input[
+                        v_bin, accel_pedal_input_bin
+                    ] += 1
+
+            if brake_pedal_input > 1e-3:
+                if (
+                    0 <= v_bin < self.num_bins_v
+                    and 0 <= brake_pedal_input_bin < self.num_bins_brake_pedal_input
+                ):
+                    self.collected_data_counts_of_vel_brake_pedal_input[
+                        v_bin, brake_pedal_input_bin
+                    ] += 1
+
     # call back for counting data points
     def timer_callback_counter(self):
         if (
@@ -257,6 +303,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             current_acc = self._present_acceleration.accel.accel.linear.x
             current_steer_rate = (current_steer - self.previous_steer) / 0.033
             current_jerk = (current_acc - self.previous_acc) / 0.033
+            pedal_input = self._present_actuation_cmd
 
             self.previous_steer = current_steer
             self.previous_acc = current_acc
@@ -265,6 +312,8 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
                 self.count_observations(
                     current_vel, current_acc, current_steer, current_steer_rate, current_jerk
                 )
+                if abs(current_steer) < 0.2:
+                    self.count_pedal_input_observation(pedal_input, current_vel)
 
                 self.acc_hist.append(float(current_acc))
                 self.vel_hist.append(float(current_vel))
@@ -290,6 +339,17 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
         publish_Int32MultiArray(
             self.collected_data_counts_of_vel_jerk_publisher_,
             self.collected_data_counts_of_vel_jerk,
+        )
+
+        #
+        publish_Int32MultiArray(
+            self.collected_data_counts_of_vel_accel_pedal_input_publisher_,
+            self.collected_data_counts_of_vel_accel_pedal_input,
+        )
+
+        publish_Int32MultiArray(
+            self.collected_data_counts_of_vel_brake_pedal_input_publisher_,
+            self.collected_data_counts_of_vel_brake_pedal_input,
         )
 
         # publish acc_hist

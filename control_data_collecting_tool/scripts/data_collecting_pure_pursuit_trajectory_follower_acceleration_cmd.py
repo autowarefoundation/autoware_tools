@@ -26,6 +26,7 @@ import rclpy
 from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
 from std_msgs.msg import Bool
+from std_msgs.msg import Float32
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 
@@ -42,7 +43,18 @@ def getYaw(orientation_xyzw):
 
 class DataCollectingPurePursuitTrajectoryFollower(Node):
     def __init__(self):
-        super().__init__("data_collecting_pure_pursuit_trajectory_follower")
+        super().__init__("data_collecting_pure_pursuit_trajectory_follower_acceleration_input")
+
+        # common params
+        self.declare_parameter(
+            "CONTROL_MODE",
+            "acceleration_cmd",
+            ParameterDescriptor(
+                description="Control mode [`acceleration_cmd`, `actuation_cmd`, `external_acceleration_cmd`, `external_actuation_cmd`]"
+            ),
+        )
+        # set control mode
+        self.CONTROL_MODE = self.get_parameter("CONTROL_MODE").value
 
         self.declare_parameter(
             "pure_pursuit_type",
@@ -181,6 +193,14 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
         )
         self.sub_trajectory_
 
+        self.sub_acceleration_cmd_ = self.create_subscription(
+            Float32,
+            "/data_collecting_acceleration_cmd",
+            self.onAccelerationCmd,
+            1,
+        )
+        self.sub_acceleration_cmd_
+
         self.sub_operation_mode_ = self.create_subscription(
             OperationModeState,
             "/system/operation_mode/state",
@@ -221,6 +241,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
         self._present_kinematic_state = None
         self._present_trajectory = None
         self._present_operation_mode = None
+        self.acceleration_cmd = None
         self.stop_request = False
         self._previous_cmd = np.zeros(2)
 
@@ -236,6 +257,9 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
     def onTrajectory(self, msg):
         self._present_trajectory = msg
+
+    def onAccelerationCmd(self, msg):
+        self.acceleration_cmd = msg.data
 
     def onOperationMode(self, msg):
         self._present_operation_mode = msg
@@ -474,6 +498,13 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
                 'pure_pursuit_type should be "naive" or "linearized" but is set to "%s" '
                 % pure_pursuit_type
             )
+
+        # overwrite control cmd when external_accel_input mode
+        if self.CONTROL_MODE == "external_acceleration_cmd":
+            acceleration_cmd = self.get_parameter("stop_acc").get_parameter_value().double_value
+            if self.acceleration_cmd is not None:
+                acceleration_cmd = self.acceleration_cmd
+            cmd[0] = acceleration_cmd
 
         cmd_without_noise = 1 * cmd
 

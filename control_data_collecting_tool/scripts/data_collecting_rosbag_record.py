@@ -85,13 +85,9 @@ class MessageWriter:
 
         # Create topics in the rosbag for recording
         if self.open_writer:
-            for topic_name, topic_type in zip(
-                subscribable_topic_list, subscribable_topic_type_list
-            ):
+            for topic_name, topic_type in zip(subscribable_topic_list, subscribable_topic_type_list):
                 if topic_name not in self.subscribed_topic:
-                    self.node.get_logger().info(
-                        f"Recording topic: {topic_name} of type: {topic_type}"
-                    )
+                    self.node.get_logger().info(f"Recording topic: {topic_name} of type: {topic_type}")
                     topic_metadata = TopicMetadata(
                         name=topic_name, type=topic_type, serialization_format="cdr"
                     )
@@ -121,6 +117,7 @@ class MessageWriter:
         for topic_name in self.subscribed_topic:
             if topic_name in self.subscribing_topic:
                 self.subscribing_topic.remove(topic_name)
+
 
     # call back function called in start recording
     def callback_write_message(self, topic_name, message):
@@ -197,14 +194,15 @@ class DataCollectingRosbagRecord(Node):
             self.present_operation_mode_ == 3
             and self._present_control_mode_ == 1
             and self.subscribed
-        ):
+        ):  
             self.writer.subscribe_topics()
             self.writer.record()
-
+        
         # Stop recording if the operation mode changes from 3(LOCAL)
         if (
-            self.present_operation_mode_ != 3 or self._present_control_mode_ != 1
-        ) and self.subscribed:
+            (self.present_operation_mode_ != 3 or self._present_control_mode_ != 1)
+            and self.subscribed
+        ):
             self.writer.stop_record()
             self.subscribed = False
 
