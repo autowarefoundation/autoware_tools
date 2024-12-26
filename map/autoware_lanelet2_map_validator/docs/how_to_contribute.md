@@ -37,7 +37,51 @@ This section is aimed at contributors who want to add their own validators. If y
 
 <!--- cSpell:enable --->
 
-Contributors are encouraged to make their validators by following the class structure shown in [`validator_template.cpp`](https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/src/validators/validator_template.cpp) and [`validator_template.hpp`](https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/src/validators/validator_template.hpp). Looking at other implementations may also be helpful.
+Contributors are encouraged to make their validators by following the class structure shown in [`validator_template.cpp`](https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/template/validator_template.cpp) and [`validator_template.hpp`](https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/template/validator_template.hpp).
+
+#### `create_new_validator.py` may be useful
+
+You can use the script [`create_new_validator.py`](https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/template/create_new_validator.py) to generate the required files below.
+
+- Source codes (cpp and hpp)
+- Test code (cpp)
+- Document file (md)
+
+You can use this by the command like this example:
+
+```shell
+create_new_validator.py \
+--base_directory ./ \
+--category_name traffic_light \
+--code_name traffic_light_facing \
+--class_name TrafficLightFacingValidator \
+--validator_name mapping.traffic_light.correct_facing \
+--check_function_name check_traffic_light_facing
+```
+
+OR
+
+```shell
+ros2 run autoware_lanelet2_map_validator create_new_validator.py \
+--base_directory ./ \
+--category_name traffic_light \
+--code_name traffic_light_facing \
+--class_name TrafficLightFacingValidator \
+--validator_name mapping.traffic_light.correct_facing \
+--check_function_name check_traffic_light_facing
+```
+
+All arguments are required.
+
+- `--base_directory`: The directory to the `autoware_lanelet2_map_validator` package.
+- `--category_name`: The category (like lanelet, traffic_light...) where your validator belongs to. Look [Design Concept](#design-concept) to see the list of categories.
+- `--code_name`: The name for the files. The source code names will be like `<code_name>.cpp` and `<code_name.hpp>`
+- `--class_name`: The base class name of your validator which will be defined in your new header file.
+- `--validator_name`: The name of the validator which will be displayed when `autoware_lanelet2_map_validator` is executed with a `--print` option. The naming rules are explained in [Restrictions for validator class implementation](#restrictions-for-validator-class-implementation).
+- `--check_function_name`: The main function name of your validator which will be defined in your header file, and its implementation will be written in the cpp source file.
+
+It may be quicker to recognize what this script do by trying the command out.
+If you feel typing these arguments exhausting, you can overwrite the `default` value in the python script, but do not forget not to commit those changes.
 
 #### Restrictions for path structure
 

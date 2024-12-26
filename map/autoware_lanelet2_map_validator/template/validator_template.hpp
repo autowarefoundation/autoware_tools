@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef VALIDATORS__VALIDATOR_TEMPLATE_HPP_
-#define VALIDATORS__VALIDATOR_TEMPLATE_HPP_
+#ifndef MAP__AUTOWARE_LANELET2_MAP_VALIDATOR__TEMPLATE__VALIDATOR_TEMPLATE_HPP_
+#define MAP__AUTOWARE_LANELET2_MAP_VALIDATOR__TEMPLATE__VALIDATOR_TEMPLATE_HPP_
 
 #include <lanelet2_validation/Validation.h>
 #include <lanelet2_validation/ValidatorFactory.h>
@@ -29,7 +29,8 @@ public:
   lanelet::validation::Issues operator()(const lanelet::LaneletMap & map) override;
 
 private:
+  lanelet::validation::Issues checkFunction(const lanelet::LaneletMap & map);
 };
 }  // namespace lanelet::autoware::validation
 
-#endif  // VALIDATORS__VALIDATOR_TEMPLATE_HPP_
+#endif  // MAP__AUTOWARE_LANELET2_MAP_VALIDATOR__TEMPLATE__VALIDATOR_TEMPLATE_HPP_
