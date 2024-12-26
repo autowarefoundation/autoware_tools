@@ -19,6 +19,7 @@
 #include <lanelet2_core/LaneletMap.h>
 
 #include <set>
+#include <string>
 
 class TestTrafficLightFacing : public MapValidationTester
 {

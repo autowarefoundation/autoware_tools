@@ -223,9 +223,9 @@ def process_include_tag(
                 local_context,
                 base_namespace,
             )
-            temp_context[
-                name
-            ] = value  # temp_context is used to pass arguments to the included file and updated on the fly for each argument
+            temp_context[name] = (
+                value  # temp_context is used to pass arguments to the included file and updated on the fly for each argument
+            )
     for key in argument_dict:
         temp_context[key] = argument_dict[key]
     if included_file:

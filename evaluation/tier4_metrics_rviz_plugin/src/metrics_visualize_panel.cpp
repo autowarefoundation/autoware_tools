@@ -21,8 +21,10 @@
 #include <X11/Xlib.h>
 
 #include <algorithm>
+#include <iostream>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace rviz_plugins

@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "lanelet2_map_validator/validators/traffic_light/missing_referrers_for_traffic_lights.hpp"
+#include "lanelet2_map_validator/validators/traffic_light/missing_regulatory_elements_for_traffic_lights.hpp"
 #include "map_validation_tester.hpp"
 
 #include <gtest/gtest.h>
 #include <lanelet2_core/LaneletMap.h>
 
-class TestMissingReferrersForTrafficLights : public MapValidationTester
+#include <string>
+
+class TestMissingRegulatoryElementsForTrafficLights : public MapValidationTester
 {
 private:
 };
 
-TEST_F(TestMissingReferrersForTrafficLights, ValidatorAvailability)  // NOLINT for gtest
+TEST_F(TestMissingRegulatoryElementsForTrafficLights, ValidatorAvailability)  // NOLINT for gtest
 {
   std::string expected_validator_name =
-    lanelet::autoware::validation::MissingReferrersForTrafficLightsValidator::name();
+    lanelet::autoware::validation::MissingRegulatoryElementsForTrafficLightsValidator::name();
 
   lanelet::validation::Strings validators =
     lanelet::validation::availabeChecks(expected_validator_name);  // cspell:disable-line
@@ -36,39 +38,39 @@ TEST_F(TestMissingReferrersForTrafficLights, ValidatorAvailability)  // NOLINT f
   EXPECT_EQ(expected_validator_name, validators[0]);
 }
 
-TEST_F(TestMissingReferrersForTrafficLights, MissingReferrers)  // NOLINT for gtest
+TEST_F(TestMissingRegulatoryElementsForTrafficLights, MissingRegulatoryElement)  // NOLINT for gtest
 {
-  load_target_map("traffic_light/traffic_light_without_referrer.osm");
+  load_target_map("traffic_light/traffic_light_without_regulatory_element.osm");
 
-  lanelet::autoware::validation::MissingReferrersForTrafficLightsValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForTrafficLightsValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 1);
-  EXPECT_EQ(issues[0].id, 1025);
+  EXPECT_EQ(issues[0].id, 416);
   EXPECT_EQ(issues[0].severity, lanelet::validation::Severity::Error);
-  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::RegulatoryElement);
+  EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::LineString);
   EXPECT_EQ(
     issues[0].message,
-    "[TrafficLight.MissingReferrers-001] Regulatory element of traffic light must be referred by "
-    "at least one lanelet.");
+    "[TrafficLight.MissingRegulatoryElements-001] No regulatory element refers to this traffic "
+    "light.");
 }
 
-TEST_F(TestMissingReferrersForTrafficLights, ReferrerExists)  // NOLINT for gtest
+TEST_F(TestMissingRegulatoryElementsForTrafficLights, RegulatoryElementExists)  // NOLINT for gtest
 {
   load_target_map("traffic_light/traffic_light_with_regulatory_element.osm");
 
-  lanelet::autoware::validation::MissingReferrersForTrafficLightsValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForTrafficLightsValidator checker;
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
 }
 
-TEST_F(TestMissingReferrersForTrafficLights, SampleMap)  // NOLINT for gtest
+TEST_F(TestMissingRegulatoryElementsForTrafficLights, SampleMap)  // NOLINT for gtest
 {
   load_target_map("sample_map.osm");
 
-  lanelet::autoware::validation::MissingReferrersForTrafficLightsValidator checker;
+  lanelet::autoware::validation::MissingRegulatoryElementsForTrafficLightsValidator checker;
   const auto & issues = checker(*map_);
 
-  EXPECT_EQ(issues.size(), 0);  // Four INFOs should appear
+  EXPECT_EQ(issues.size(), 0);
 }

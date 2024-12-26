@@ -21,6 +21,8 @@
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_validation/Validation.h>
 
+#include <vector>
+
 namespace lanelet::autoware::validation
 {
 namespace

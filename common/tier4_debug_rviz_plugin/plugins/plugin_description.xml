@@ -7,6 +7,6 @@
   <class name="rviz_plugins/StringStampedOverlayDisplay"
     type="rviz_plugins::StringStampedOverlayDisplay"
     base_class_type="rviz_common::Display">
-    <description>Display drivable area of tier4_debug_msgs::msg::StringStamped</description>
+    <description>Display drivable area of autoware_internal_debug_msgs::msg::StringStamped</description>
   </class>
 </library>

@@ -13,6 +13,11 @@
 // limitations under the License.
 #include "automatic_goal_sender.hpp"
 
+#include <cstdio>
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace automatic_goal
 {
 AutowareAutomaticGoalSender::AutowareAutomaticGoalSender() : Node("automatic_goal_sender")

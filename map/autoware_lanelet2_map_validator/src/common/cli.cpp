@@ -14,6 +14,9 @@
 
 #include "lanelet2_map_validator/cli.hpp"
 
+#include <iostream>
+#include <string>
+
 namespace po = boost::program_options;
 
 namespace lanelet::autoware::validation

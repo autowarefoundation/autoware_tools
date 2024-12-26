@@ -170,7 +170,7 @@ void StringStampedOverlayDisplay::update(float wall_dt, float ros_dt)
 }
 
 void StringStampedOverlayDisplay::processMessage(
-  const tier4_debug_msgs::msg::StringStamped::ConstSharedPtr msg_ptr)
+  const autoware_internal_debug_msgs::msg::StringStamped::ConstSharedPtr msg_ptr)
 {
   if (!isEnabled()) {
     return;

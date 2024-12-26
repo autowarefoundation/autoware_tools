@@ -18,6 +18,13 @@
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/readers/sequential_reader.hpp>
 
+#include <algorithm>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
 int main(int argc, char ** argv)
 {
   if (argc != 2) {

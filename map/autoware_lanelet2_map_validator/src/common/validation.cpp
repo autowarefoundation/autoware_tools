@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <map>
 #include <queue>
 #include <regex>
@@ -26,6 +27,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 // ANSI color codes for console output
 #define BOLD_ONLY "\033[1m"

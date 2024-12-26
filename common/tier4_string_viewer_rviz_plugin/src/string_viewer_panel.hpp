@@ -22,12 +22,12 @@
 #include <rviz_common/ros_integration/ros_node_abstraction_iface.hpp>
 #include <rviz_common/ros_topic_display.hpp>
 
-#include <tier4_debug_msgs/msg/string_stamped.hpp>
+#include <autoware_internal_debug_msgs/msg/string_stamped.hpp>
 
 namespace tier4_string_viewer_rviz_plugin
 {
 
-using tier4_debug_msgs::msg::StringStamped;
+using autoware_internal_debug_msgs::msg::StringStamped;
 
 class QLineEdit;
 

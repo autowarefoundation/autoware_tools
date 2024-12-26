@@ -17,6 +17,8 @@
 #include "autoware/universe_utils/geometry/geometry.hpp"
 #include "deviation_estimator/utils.hpp"
 
+#include <vector>
+
 /**
  * @brief update gyroscope bias based on a given trajectory data
  */

@@ -16,15 +16,18 @@
 
 #include "autoware/motion_utils/trajectory/trajectory.hpp"
 
-#include <lanelet2_extension/regulatory_elements/Forward.hpp>
-#include <lanelet2_extension/utility/message_conversion.hpp>
-#include <lanelet2_extension/utility/utilities.hpp>
+#include <autoware_lanelet2_extension/regulatory_elements/Forward.hpp>
+#include <autoware_lanelet2_extension/utility/message_conversion.hpp>
+#include <autoware_lanelet2_extension/utility/utilities.hpp>
 #include <magic_enum.hpp>
 
 #include <lanelet2_routing/RoutingGraphContainer.h>
 
+#include <algorithm>
+#include <limits>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace driving_environment_analyzer::utils

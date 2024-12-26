@@ -17,8 +17,10 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <ctime>
+#include <deque>
 #include <filesystem>
 #include <iostream>
+#include <string>
 
 namespace rviz_plugins
 {
