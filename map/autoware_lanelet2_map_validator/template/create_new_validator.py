@@ -55,7 +55,7 @@ def create_files(
             "lanelet2_map_validator/validators/" + category_name + "/" + code_name + ".hpp",
         )
         content = content.replace(
-            "MAP__AUTOWARE_LANELET2_MAP_VALIDATOR__TEMPLATES__VALIDATOR_TEMPLATE_HPP_",
+            "MAP__AUTOWARE_LANELET2_MAP_VALIDATOR__TEMPLATE__VALIDATOR_TEMPLATE_HPP_",
             "LANELET2_MAP_VALIDATOR__VALIDATORS__"
             + category_name.upper()
             + "__"
