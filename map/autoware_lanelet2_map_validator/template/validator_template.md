@@ -6,7 +6,7 @@ mapping.validator.template
 
 ## Feature
 
-Feature explaination here.
+Feature explanation here.
 
 | Issue Code | Message | Severity | Description | Approach |
 | ---------- | ------- | -------- | ----------- | -------- |
