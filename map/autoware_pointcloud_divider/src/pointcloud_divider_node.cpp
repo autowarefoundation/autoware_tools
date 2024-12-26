@@ -18,6 +18,8 @@
 
 #include <pcl/point_types.h>
 
+#include <string>
+
 namespace autoware::pointcloud_divider
 {
 

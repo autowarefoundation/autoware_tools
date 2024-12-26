@@ -15,6 +15,9 @@
 #include "rtc_replayer/rtc_replayer_node.hpp"
 
 #include <algorithm>
+#include <iostream>
+#include <memory>
+#include <string>
 
 namespace autoware::rtc_replayer
 {

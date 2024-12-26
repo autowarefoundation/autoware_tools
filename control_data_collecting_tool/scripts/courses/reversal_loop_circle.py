@@ -752,7 +752,7 @@ def declare_reversal_loop_circle_params(node):
 
     node.declare_parameter(
         "look_ahead_distance",
-        15.0,
+        35.0,
         ParameterDescriptor(
             description="The distance referenced ahead of the vehicle for collecting steering angle data"
         ),
@@ -818,9 +818,9 @@ class Reversal_Loop_Circle(Base_Course):
             self.trajectory_nearly_straight_clock_wise[self.steer_list[i]] = trajectory
 
             # Generate and store counterclockwise trajectories by reversing the clockwise trajectory.
-            self.trajectory_nearly_straight_counter_clock_wise[
-                self.steer_list[i]
-            ] = reverse_trajectory_segment(trajectory)
+            self.trajectory_nearly_straight_counter_clock_wise[self.steer_list[i]] = (
+                reverse_trajectory_segment(trajectory)
+            )
 
         # Generate trajectories for changing directions (turning).
 
@@ -1011,6 +1011,8 @@ class Reversal_Loop_Circle(Base_Course):
         current_acc,
         collected_data_counts_of_vel_acc,
         collected_data_counts_of_vel_steer,
+        mask_vel_acc,
+        mask_vel_steer,
     ):
         # Calculate the target velocity for the vehicle based on its current state, trajectory phase, and constraints such as acceleration limits and trajectory curvature.
 
@@ -1018,7 +1020,7 @@ class Reversal_Loop_Circle(Base_Course):
         if not self.updated_target_velocity:
             # Choose velocity and acceleration bins based on collected data
             self.acc_idx, self.vel_idx = self.choose_target_velocity_acc(
-                collected_data_counts_of_vel_acc
+                collected_data_counts_of_vel_acc, mask_vel_acc
             )
             self.target_acc_on_segmentation = self.params.a_bin_centers[self.acc_idx]
             self.target_vel_on_segmentation = self.params.v_bin_centers[self.vel_idx]
@@ -1028,38 +1030,33 @@ class Reversal_Loop_Circle(Base_Course):
             self.vehicle_phase = "acceleration"
             self.updated_target_velocity = True
 
+            self.alpha = 0.5 + np.random.randint(0, 2) * 0.5
+
         acc_kp_of_pure_pursuit = self.params.acc_kp  # Proportional gain for acceleration control
-        T = 10.0  # Period of the sine wave used to modulate velocity
+        # Period should be parameterized
+        T = 5.0  # Period of the sine wave used to modulate velocity
         sine = np.sin(2 * np.pi * current_time / T)  # Sine wave for smooth velocity modulation
 
+        target_acc = 0.0
         # Handle acceleration phase
         if self.vehicle_phase == "acceleration":
             if current_vel < self.target_vel_on_segmentation - 1.0 * abs(
                 self.target_acc_on_segmentation
             ):
                 # Increase velocity with a maximum allowable acceleration
-                target_vel = current_vel + self.params.a_max / acc_kp_of_pure_pursuit * (
-                    1.25 + 0.50 * sine
+                target_acc = (
+                    self.alpha * self.params.a_max / acc_kp_of_pure_pursuit * (0.4 + 0.6 * sine)
                 )
             else:
                 # Increase velocity with a absolute target acceleration
-                target_vel = current_vel + abs(
-                    self.target_acc_on_segmentation
-                ) / acc_kp_of_pure_pursuit * (1.25 + 0.50 * sine)
+                target_acc = (
+                    abs(self.target_acc_on_segmentation) / acc_kp_of_pure_pursuit + 0.1 * sine
+                )
 
             # Transition to "constant speed" phase once the target velocity is reached
             if current_vel > self.target_vel_on_segmentation:
                 self.vehicle_phase = "constant_speed"
                 self.const_velocity_start_time = current_time
-
-        # Handle constant speed phase
-        if self.vehicle_phase == "constant_speed":
-            # Modulate velocity around the target with a sine wave
-            target_vel = self.target_vel_on_segmentation + 2.0 * (-0.5 + 1.0 * sine)
-
-            # Transition to "deceleration" phase after a fixed duration
-            if current_time - self.const_velocity_start_time > T:
-                self.vehicle_phase = "deceleration"
 
         # Handle deceleration phase
         if self.vehicle_phase == "deceleration":
@@ -1067,35 +1064,47 @@ class Reversal_Loop_Circle(Base_Course):
                 self.target_acc_on_segmentation
             ):
                 # Decrease velocity with a maximum deceleration
-                target_vel = current_vel - self.params.a_max / acc_kp_of_pure_pursuit * (
-                    1.25 + 0.50 * sine
+                target_acc = (
+                    -self.alpha * self.params.a_max / acc_kp_of_pure_pursuit * (0.4 + 0.6 * sine)
                 )
             else:
                 # Decrease velocity with a absolute target acceleration
-                target_vel = current_vel - abs(
-                    self.target_acc_on_segmentation
-                ) / acc_kp_of_pure_pursuit * (1.25 + 0.50 * sine)
+                target_acc = (
+                    -abs(self.target_acc_on_segmentation) / acc_kp_of_pure_pursuit + 0.1 * sine
+                )
 
             # Reset velocity update flag when deceleration is complete
-            if (
-                current_vel
-                < self.target_vel_on_segmentation
-                - 1.0 * abs(self.target_acc_on_segmentation) / acc_kp_of_pure_pursuit
-            ):
+            if current_vel < self.target_vel_on_segmentation / 4.0:
                 self.updated_target_velocity = False
 
         # Maintain a smoothed velocity by averaging recent values
+        # 10.0 should be parameterized
+        target_vel = current_vel + target_acc + 10.0 * (target_acc - current_acc)
+
+        # Handle constant speed phase
+        if self.vehicle_phase == "constant_speed":
+            # Modulate velocity around the target with a sine wave
+            target_vel = (
+                self.target_vel_on_segmentation
+                + 2.0
+                * np.sin(2 * np.pi * current_time / 5.0)
+                * np.sin(2 * np.pi * current_time / 10.0)
+                - 2.0
+            )
+            if current_time - self.const_velocity_start_time > 20.0:
+                self.vehicle_phase = "deceleration"
+
         self.vel_hist.append(target_vel)
         target_vel = np.mean(self.vel_hist)
 
         # Special handling for trajectory direction changes
         if self.trajectory_list[2].in_direction is not self.trajectory_list[2].out_direction:
             # Set a fixed target velocity during direction transitions
-            target_vel = 3.0 + 1.0 * sine
+            target_vel = 2.0 + 2.0 * sine
 
         # Adjust velocity based on trajectory curvature and lateral acceleration constraints
-        if (self.trajectory_list[1].in_direction is not self.trajectory_list[1].out_direction) or (
-            self.trajectory_list[2].in_direction is not self.trajectory_list[2].out_direction
+        if (self.trajectory_list[0].in_direction is not self.trajectory_list[0].out_direction) or (
+            self.trajectory_list[1].in_direction is not self.trajectory_list[1].out_direction
         ):
             max_curvature_on_segment = 1e-9  # Initialize to a small value to avoid division by zero
             max_lateral_vel_on_segment = 1e9  # Initialize to a large value as a placeholder
@@ -1138,10 +1147,7 @@ class Reversal_Loop_Circle(Base_Course):
             max_vel_from_lateral_acc_on_segment = np.sqrt(
                 self.params.max_lateral_accel / max_curvature_on_segment
             )
-            target_vel = np.min([target_vel_ + 0.5 * sine, max_vel_from_lateral_acc_on_segment])
-
-        # Ensure the target velocity remains above a minimum threshold
-        target_vel = np.max([target_vel, 0.5])
+            target_vel = np.min([target_vel_ + 1.0 * sine**2, max_vel_from_lateral_acc_on_segment])
 
         return target_vel
 

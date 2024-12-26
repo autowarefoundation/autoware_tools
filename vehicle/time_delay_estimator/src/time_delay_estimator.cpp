@@ -19,6 +19,7 @@
 #include "time_delay_estimator/data_processor.hpp"
 #include "time_delay_estimator/parameters.hpp"
 
+#include <iostream>
 #include <memory>
 #include <string>
 

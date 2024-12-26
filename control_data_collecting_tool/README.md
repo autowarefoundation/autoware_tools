@@ -82,7 +82,7 @@ This package provides tools for automatically collecting data using pure pursuit
     - `/data_collecting_lookahead_marker_array`
       - Type: MarkerArray
 
-6. The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], proceed to 6.1. If you select the trajectory from [`along_road`], please proceed to 6.2.
+6. The following actions differ depending on the selected course. If you select the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], please proceed to 6.1. If you select the trajectory from [`along_road`], please proceed to 6.2.
 
     - 6.1 If you choose the trajectory from [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`], select `DataCollectingAreaSelectionTool` plugin.
 
@@ -90,7 +90,7 @@ This package provides tools for automatically collecting data using pure pursuit
 
       Highlight the data collecting area by dragging the mouse over it.
 
-          <img src="resource/select_area.gif" width="480">
+      <img src="resource/select_area.gif" width="480">
 
       > [!NOTE]
       > You cannot change the data collecting area while driving.
@@ -112,13 +112,21 @@ This package provides tools for automatically collecting data using pure pursuit
       > You cannot change the goal pose while driving.
       > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
 
-7. Click the `LOCAL` button on `OperationMode` in `AutowareStatePanel`.
+7. Click the `LOCAL` button in `AutowareStatePanel`.
 
     <img src="resource/push_LOCAL.png" width="480">
 
     Then, data collecting starts.
 
     <img src="resource/push_LOCAL.gif" width="480">
+
+    You can monitor the data collection status in real-time through the window that pops up when this node is launched.
+    (From top to bottom: the speed-acceleration phase diagram, the speed-acceleration heatmap, the speed-steering angle heatmap, the speed-steer rate heatmap, and the speed-jerk heatmap.)
+
+    <img src="resource/data_collection_status.png" width="480">
+
+    For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/MASK_NAME` where `MASK_NAME` is a parameter specifying mask name (Please also see `config/common_param.yaml`).
+    The specified heatmap cells are designed to change from blue to green once a certain amount of data (`VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, `VEL_ABS_STEER_RATE_THRESHOLD` ) is collected. It is recommended to collect data until as many cells as possible turn green.
 
 8. If you want to stop data collecting automatic driving, run the following command
 
@@ -137,6 +145,134 @@ This package provides tools for automatically collecting data using pure pursuit
 
 <!-- prettier-ignore-end -->
 
+## Specify data collection range
+
+You can create an original mask to specify the data collection range for the heatmap explained in step 7 of the "How to Use" section.
+
+1. Change the `MASK_NAME` parameter in `config/common_param.yaml` from its default value of `default` to any name you prefer.
+
+2. Modify parameters such as `VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, and `VEL_ABS_STEER_RATE_THRESHOLD` to determine the desired amount of data for each cell in the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap.
+
+3. In the `scripts/masks` directory, run
+
+   ```Python3
+   python3 mask_selector.py
+   ```
+
+   then, matplotlib windows for selecting the collection range of the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap will be displayed, one for each.
+
+   <img src="resource/mask_selection.png" width="480">
+
+   In these windows, you can modify the heatmaps by clicking or dragging within them. Once you've made your changes, pressing `Ctrl+C` in the terminal will automatically save the updated maps.
+
+   Afterward, rebuild the `control_data_collecting_tool` using the following command
+
+   ```bash
+   colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-w" --symlink-install --continue-on-error --packages-up-to control_data_collecting_tool
+   ```
+
+   and relaunch the control_data_collecting_tool with
+
+   ```bash
+   ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
+   ```
+
+   This will allow you to see the selected mask applied.
+
+   <img src="resource/original.png" width="480">
+
+## Trajectory generation and data collection logic
+
+- ### Data collection logic common to all courses
+
+  In `control_data_collection_tool`, all courses collect velocity and acceleration data in a similar manner.
+
+  By appropriately adjusting the `target_velocity` provided to the pure pursuit algorithm, speed and acceleration data are efficiently collected. Data collection consists of four phases: selection of target speed and acceleration, acceleration phase, constant speed phase, the deceleration phase. A general method for collecting speed and acceleration data is described below, though it does not strictly adhere to the outlined steps.
+
+  1. Selection of target speed and acceleration
+
+     In the speed-acceleration heatmap, the speed and acceleration with fewer data points are set as the target speed and acceleration, which are then defined here as `target_velocity_on_section` and `target_acceleration_on_section`.
+
+  2. Acceleration phase
+     The vehicle accelerates by setting `target_velocity` as follows until its speed exceeds `target_velocity_on_section`.
+
+     ```Python3
+       # sine_curve is derived from appropriate amplitude and period, defined separately
+       target_velocity = current_velocity + abs(target_acceleration_on_section) / acc_kp + sine_curve
+     ```
+
+     `current_velocity` is a current velocity of vehicle and `acc_kp` accel command proportional gain in pure pursuit algorithm. `sine_curve` is a sine wave added to partially mitigate situations where the vehicle fails to achieve the target acceleration.
+
+  3. Constant speed phase
+     When the vehicle reaches `target_velocity_on_section`, `target_velocity` is defined as follows to allow the vehicle to run around the target speed for a certain period of time.
+
+     ```Python3
+       # sine_curve is derived from appropriate amplitude and period, defined separately
+       target_velocity = target_velocity_on_section + sine_curve + sine_curve
+     ```
+
+  4. Deceleration phase
+     In the deceleration phase, similar to the acceleration phase, `target_velocity` is defined as follows to ensure the vehicle decelerates.
+
+     ```Python3
+       # sine_curve is derived from appropriate amplitude and period, defined separately
+       target_velocity = current_velocity - abs(target_acceleration_on_section) / acc_kp + sine_curve
+     ```
+
+     After decelerating to a sufficiently low speed, return to step i.
+
+- ### Trajectory generation and data collection logic specific to `reversal_loop_circle`
+
+  In the `reversal_loop_circle` course, sections are sequentially added to the course while collecting various data on speed, acceleration, and steering angle.
+
+- #### Trajectory generation logic for `reversal_loop_circle`
+
+  The `reversal_loop_circle` aims to generate a trajectory with the largest possible radius of curvature within a radius `trajectory_radius`, allowing data collection in a confined area without significantly reducing speed.
+
+  The `reversal_loop_circle` is primarily generated by connecting the following three components, `common tangent`, `circumscribing_circle` and `boundary` as shown in the following picture.
+
+    <img src="resource/whole_trajectory.png" width="480">
+
+  All the components listed below are available in both clockwise and counterclockwise versions. The rationale for having two versions is to ensure data collection for both right-hand drive and left-hand drive configurations.
+
+  - `common tangent`
+
+    The `common tangent` is generated by drawing a common tangent to two inscribed circles. In this section, a sine curve is added in the normal direction to generate a trajectory for collecting data with larger steering angles.
+    The amplitude of the sine curve is determined based on the desired steering angle data.
+
+      <img src="resource/common_tangent.png" width="480">
+
+      <img src="resource/common_tangent_counter_clockwise.png" width="480">
+
+  - `circumscribing_circle`
+
+    The `circumscribing_circle` part is created by drawing the common circumscribed circle of the circles.
+    This section is generated to achieve nearly straight movement within the outer circle while minimizing the increase in curvature.
+
+      <img src="resource/circumscribing_circle.png" width="480">
+
+      <img src="resource/circumscribing_circle_counter_clockwise.png" width="480">
+
+  - `boundary`
+
+    The `boundary` part is used to connect the `common tangent` and the `circumscribing_circle` sections.
+
+      <img src="resource/boundary.png" width="480">
+
+      <img src="resource/boundary_counter_clockwise.png" width="480">
+
+- #### Velocity and steering angle data collection logic for `reversal_loop_circle`
+
+  Speed and steering angle data are gathered in the `common tangent` section of the trajectory. The common tangent section is particularly effective for collecting steering angle data because a trajectory with minimal data is intentionally created by adding a sine wave of suitable amplitude to the curvature.
+
+  The following two steps are taken to obtain steering angle data.
+
+  1. Starting from the ego vehicle's current position, the system examines a segment of the trajectory ahead, covering a distance defined by looking_ahead_distance, to identify the point of maximum curvature.
+
+  2. This maximum curvature determines the steering angle the vehicle will use. The vehicle then adjusts its speed toward the speed associated with the sparsest steering angle data.
+
+    <img src="resource/looking_ahead.png" width="480">
+
 ## Parameter
 
 There are parameters that are common to all trajectories and parameters that are specific to each trajectory.
@@ -152,14 +288,25 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `NUM_BINS_V`                             | `int`    | Number of bins of velocity in heatmap                                                                                                     | 10                     |
 | `NUM_BINS_STEER`                         | `int`    | Number of bins of steer in heatmap                                                                                                        | 20                     |
 | `NUM_BINS_A`                             | `int`    | Number of bins of acceleration in heatmap                                                                                                 | 10                     |
+| `NUM_BINS_ABS_STEER_RATE`                | `int`    | Number of bins of absolute value of steer rate in heatmap                                                                                 | 5                      |
+| `NUM_BINS_JERK`                          | `int`    | Number of bins of jerk in heatmap                                                                                                         | 10                     |
 | `V_MIN`                                  | `double` | Minimum velocity in heatmap [m/s]                                                                                                         | 0.0                    |
 | `V_MAX`                                  | `double` | Maximum velocity in heatmap [m/s]                                                                                                         | 11.5                   |
 | `STEER_MIN`                              | `double` | Minimum steer in heatmap [rad]                                                                                                            | -0.6                   |
 | `STEER_MAX`                              | `double` | Maximum steer in heatmap [rad]                                                                                                            | 0.6                    |
-| `A_MIN`                                  | `double` | Minimum acceleration in heatmap [m/ss]                                                                                                    | -1.0                   |
-| `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/ss]                                                                                                    | 1.0                    |
-| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/ss]                                                                                                     | 2.00                   |
-| `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m/s]                                                                               | 1.50                   |
+| `A_MIN`                                  | `double` | Minimum acceleration in heatmap [m/s^2]                                                                                                   | -1.0                   |
+| `A_MAX`                                  | `double` | Maximum acceleration in heatmap [m/s^2]                                                                                                   | 1.0                    |
+| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/s^2]                                                                                                    | 2.70                   |
+| `ABS_STEER_RATE_MIN`                     | `double` | Minimum absolute value of steer rate in heatmap [rad/s]                                                                                   | 0.0                    |
+| `ABS_STEER_RATE_MAX`                     | `double` | Maximum absolute value of steer rate in heatmap [rad/s]                                                                                   | 0.3                    |
+| `JERK_MIN`                               | `double` | Minimum jerk in heatmap [m/s^3]                                                                                                           | -0.5                   |
+| `JERK_MAX`                               | `double` | Maximum jerk in heatmap [m/s^3]                                                                                                           | 0.5                    |
+| `MASK_NAME`                              | `string` | Directory name of masks for data collection                                                                                               | `default`              |
+| `VEL_ACC_THRESHOLD`                      | `int`    | Threshold of velocity-and-acc heatmap in data collection                                                                                  | 40                     |
+| `VEL_STEER_THRESHOLD`                    | `int`    | Threshold of velocity-and-steer heatmap in data collection                                                                                | 20                     |
+| `VEL_ABS_STEER_RATE_THRESHOLD`           | `int`    | Threshold of velocity-and-abs_steer_rate heatmap in data collection                                                                       | 20                     |
+| `max_lateral_accel`                      | `double` | Max lateral acceleration limit [m/s^2]                                                                                                    | 2.00                   |
+| `lateral_error_threshold`                | `double` | Lateral error threshold where applying velocity limit [m]                                                                                 | 1.50                   |
 | `yaw_error_threshold`                    | `double` | Yaw error threshold where applying velocity limit [rad]                                                                                   | 0.75                   |
 | `velocity_limit_by_tracking_error`       | `double` | Velocity limit applied when tracking error exceeds threshold [m/s]                                                                        | 1.0                    |
 | `mov_ave_window`                         | `int`    | Moving average smoothing window size                                                                                                      | 50                     |
@@ -171,29 +318,30 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `min_lookahead`                          | `double` | Pure pursuit minimum lookahead length [m]                                                                                                 | 2.0                    |
 | `linearized_pure_pursuit_steer_kp_param` | `double` | Linearized pure pursuit steering P gain parameter                                                                                         | 2.0                    |
 | `linearized_pure_pursuit_steer_kd_param` | `double` | Linearized pure pursuit steering D gain parameter                                                                                         | 2.0                    |
-| `stop_acc`                               | `double` | Accel command for stopping data collecting driving [m/ss]                                                                                 | -2.0                   |
-| `stop_jerk_lim`                          | `double` | Jerk limit for stopping data collecting driving [m/sss]                                                                                   | 5.0                    |
-| `lon_acc_lim`                            | `double` | Longitudinal acceleration limit [m/ss]                                                                                                    | 1.5                    |
-| `lon_jerk_lim`                           | `double` | Longitudinal jerk limit [m/sss]                                                                                                           | 0.5                    |
+| `stop_acc`                               | `double` | Accel command for stopping data collecting driving [m/s^2]                                                                                | -2.0                   |
+| `stop_jerk_lim`                          | `double` | Jerk limit for stopping data collecting driving [m/s^3]                                                                                   | 5.0                    |
+| `lon_acc_lim`                            | `double` | Longitudinal acceleration limit [m/s^2]                                                                                                   | 1.5                    |
+| `lon_jerk_lim`                           | `double` | Longitudinal jerk limit [m/s^3]                                                                                                           | 0.5                    |
 | `steer_lim`                              | `double` | Steering angle limit [rad]                                                                                                                | 0.6                    |
 | `steer_rate_lim`                         | `double` | Steering angle rate limit [rad/s]                                                                                                         | 0.6                    |
 
 The following parameters are common to all trajectories but can be defined individually for each trajectory. (`/config/course_param/COURSE_NAME_param.yaml`):
-| Name | Type | Description | Default value |
-| :--------------------------------------- | :------- | :-------------------------------------------------------------------------------------------------- | :------------- |
-| `COLLECTING_DATA_V_MIN` | `double` | Minimum velocity for data collection [m/s] | 0.5 |
-| `COLLECTING_DATA_V_MAX` | `double` | Maximum velocity for data collection [m/s] | 8.0 |
-| `COLLECTING_DATA_A_MIN` | `double` | Minimum velocity for data collection [m/ss] | 1.0 |
-| `COLLECTING_DATA_A_MAX` | `double` | Maximum velocity for data collection [m/ss] | -1.0 |
-| `longitudinal_velocity_noise_amp` | `double` | Target longitudinal velocity additional sine noise amplitude [m/s] | 0.01 |
-| `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s] | 5.0 |
-| `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s] | 20.0 |
-| `acc_noise_amp` | `double` | Accel command additional sine noise amplitude [m/ss] | 0.01 |
-| `acc_noise_min_period` | `double` | Accel command additional sine noise minimum period [s] | 5.0 |
-| `acc_noise_max_period` | `double` | Accel command additional sine noise maximum period [s] | 20.0 |
-| `steer_noise_amp` | `double` | Steer command additional sine noise amplitude [rad] | 0.01 |
-| `steer_noise_max_period` | `double` | Steer command additional sine noise maximum period [s] | 5.0 |
-| `steer_noise_min_period` | `double` | Steer command additional sine noise minimum period [s] | 20.0 |
+
+| Name                                     | Type     | Description                                                           | Default value |
+| :--------------------------------------- | :------- | :-------------------------------------------------------------------- | :------------ |
+| `COLLECTING_DATA_V_MIN`                  | `double` | Minimum velocity for data collection [m/s]                            | 0.5           |
+| `COLLECTING_DATA_V_MAX`                  | `double` | Maximum velocity for data collection [m/s]                            | 8.0           |
+| `COLLECTING_DATA_A_MIN`                  | `double` | Minimum velocity for data collection [m/s^2]                          | 1.0           |
+| `COLLECTING_DATA_A_MAX`                  | `double` | Maximum velocity for data collection [m/s^2]                          | -1.0          |
+| `longitudinal_velocity_noise_amp`        | `double` | Target longitudinal velocity additional sine noise amplitude [m/s]    | 0.01          |
+| `longitudinal_velocity_noise_min_period` | `double` | Target longitudinal velocity additional sine noise minimum period [s] | 5.0           |
+| `longitudinal_velocity_noise_max_period` | `double` | Target longitudinal velocity additional sine noise maximum period [s] | 20.0          |
+| `acc_noise_amp`                          | `double` | Accel command additional sine noise amplitude [m/ss]                  | 0.01          |
+| `acc_noise_min_period`                   | `double` | Accel command additional sine noise minimum period [s]                | 5.0           |
+| `acc_noise_max_period`                   | `double` | Accel command additional sine noise maximum period [s]                | 20.0          |
+| `steer_noise_amp`                        | `double` | Steer command additional sine noise amplitude [rad]                   | 0.01          |
+| `steer_noise_max_period`                 | `double` | Steer command additional sine noise maximum period [s]                | 5.0           |
+| `steer_noise_min_period`                 | `double` | Steer command additional sine noise minimum period [s]                | 20.0          |
 
 ### Course-Specific Parameters
 
@@ -224,7 +372,7 @@ Each trajectory has specific ROS 2 parameters.
 | :-------------------- | :------- | :---------------------------------------------------------------------------------- | :------------ |
 | `trajectory_radius`   | `double` | Radius of the circle where trajectories are generated [m]                           | 35.0          |
 | `enclosing_radius`    | `double` | Radius of the circle enclosing the generated trajectories [m]                       | 40.0          |
-| `look_ahead_distance` | `double` | The distance referenced ahead of the vehicle for collecting steering angle data [m] | 15.0          |
+| `look_ahead_distance` | `double` | The distance referenced ahead of the vehicle for collecting steering angle data [m] | 35.0          |
 
 - `COURSE_NAME: along_road`
 

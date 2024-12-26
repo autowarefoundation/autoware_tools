@@ -22,9 +22,9 @@ def find_package(package_name) -> str:
 
             BASE_PROJECT_MAPPING[package_name] = get_package_share_directory(package_name)
         else:
-            BASE_PROJECT_MAPPING[
-                package_name
-            ] = f"/opt/ros/humble/share/{package_name}"  # use this for temporal solution;
+            BASE_PROJECT_MAPPING[package_name] = (
+                f"/opt/ros/humble/share/{package_name}"  # use this for temporal solution;
+            )
         return BASE_PROJECT_MAPPING[package_name]
 
 

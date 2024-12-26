@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <map>
 #include <queue>
 #include <regex>
@@ -26,6 +27,7 @@
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 // ANSI color codes for console output
 #define BOLD_ONLY "\033[1m"
@@ -305,7 +307,6 @@ void process_requirements(
 
     // Check prerequisites are OK
     const auto prerequisite_issues = check_prerequisite_completion(validators, validator_name);
-    appendIssues(total_issues, prerequisite_issues);
 
     // NOTE: if prerequisite_issues is not empty, skip the content validation process
     const auto issues =
@@ -313,7 +314,7 @@ void process_requirements(
         ? apply_validation(
             lanelet_map, replace_validator(
                            validator_config.command_line_config.validationConfig, validator_name))
-        : std::vector<lanelet::validation::DetectedIssues>();
+        : std::move(prerequisite_issues);
 
     // Add validation results to the json data
     json & validator_json = find_validator_block(json_data, validator_name);

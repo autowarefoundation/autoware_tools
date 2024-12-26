@@ -17,6 +17,7 @@
 
 #include <pcl/point_types.h>
 
+#include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>

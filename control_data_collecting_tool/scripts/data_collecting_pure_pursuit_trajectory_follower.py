@@ -67,7 +67,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
         self.declare_parameter(
             "lookahead_time",
             2.0,
-            ParameterDescriptor(description="Pure pursuit lookahead length coef [m/(m/s)]"),
+            ParameterDescriptor(description="Pure pursuit lookahead length coef [s]"),
         )
 
         self.declare_parameter(
@@ -92,7 +92,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
             "stop_acc",
             -2.0,
             ParameterDescriptor(
-                description="Accel command for stopping data collecting driving [m/ss]"
+                description="Accel command for stopping data collecting driving [m/s^2]"
             ),
         )
 
@@ -100,7 +100,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
             "stop_jerk_lim",
             2.0,
             ParameterDescriptor(
-                description="Jerk limit for stopping data collecting driving [m/sss]"
+                description="Jerk limit for stopping data collecting driving [m/s^3]"
             ),
         )
 
@@ -108,13 +108,13 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
         self.declare_parameter(
             "lon_acc_lim",
             2.0,
-            ParameterDescriptor(description="Longitudinal acceleration limit [m/ss]"),
+            ParameterDescriptor(description="Longitudinal acceleration limit [m/s^2]"),
         )
 
         self.declare_parameter(
             "lon_jerk_lim",
             5.0,
-            ParameterDescriptor(description="Longitudinal jerk limit [m/sss]"),
+            ParameterDescriptor(description="Longitudinal jerk limit [m/s^3]"),
         )
 
         self.declare_parameter(
@@ -132,7 +132,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
         self.declare_parameter(
             "acc_noise_amp",
             0.01,
-            ParameterDescriptor(description="Accel cmd additional sine noise amplitude [m/ss]"),
+            ParameterDescriptor(description="Accel cmd additional sine noise amplitude [m/s^2]"),
         )
 
         self.declare_parameter(
@@ -526,9 +526,9 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         # [2] publish cmd
         control_cmd_msg = AckermannControlCommand()
-        control_cmd_msg.stamp = (
-            control_cmd_msg.lateral.stamp
-        ) = control_cmd_msg.longitudinal.stamp = (self.get_clock().now().to_msg())
+        control_cmd_msg.stamp = control_cmd_msg.lateral.stamp = (
+            control_cmd_msg.longitudinal.stamp
+        ) = (self.get_clock().now().to_msg())
         control_cmd_msg.longitudinal.velocity = trajectory_longitudinal_velocity[nearestIndex]
         control_cmd_msg.longitudinal.acceleration = cmd[0]
         control_cmd_msg.lateral.steering_tire_angle = cmd[1]

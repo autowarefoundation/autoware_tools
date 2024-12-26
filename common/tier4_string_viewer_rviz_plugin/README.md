@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This plugin displays the ROS message whose topic type is `tier4_debug_msgs::msg::StringStamped` in rviz.
+This plugin displays the ROS message whose topic type is `autoware_internal_debug_msgs::msg::StringStamped` in rviz.
 
 ## Assumptions / Known limits
 

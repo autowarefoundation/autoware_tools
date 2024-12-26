@@ -15,6 +15,8 @@
 #include "deviation_estimator/logger.hpp"
 
 #include <cmath>
+#include <string>
+#include <vector>
 
 /**
  * @brief constructor for Logger class
