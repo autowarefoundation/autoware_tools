@@ -50,7 +50,13 @@ You can use the script [`create_new_validator.py`](https://github.com/autowarefo
 You can use this by the command like this example:
 
 ```shell
-python3 create_new_validator.py --base_directory ./ --category_name traffic_light --code_name traffic_light_facing --class_name TrafficLightFacingValidator --validator_name mapping.traffic_light.correct_facing --check_function_name check_traffic_light_facing
+python3 create_new_validator.py \
+--base_directory ./ \
+--category_name traffic_light \
+--code_name traffic_light_facing \
+--class_name TrafficLightFacingValidator \
+--validator_name mapping.traffic_light.correct_facing \
+--check_function_name check_traffic_light_facing
 ```
 
 All arguments are required.
