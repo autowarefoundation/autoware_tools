@@ -1894,6 +1894,8 @@
         
           
         
+          
+        
       
       
         
@@ -2367,6 +2369,60 @@
           
         </ul>
       </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_2_3" >
+      
+      
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_9_2_3" id="__nav_9_2_3_label" tabindex="0">
+          Template
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_9_2_3_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_9_2_3">
+          <span class="md-nav__icon md-icon"></span>
+          Template
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../template/validator_template/" class="md-nav__link">
+        validator_template
+      </a>
     </li>
   
 
@@ -3292,7 +3348,43 @@ It is recommended to keep validators small and they don't have to be unique to a
 <p><code>autoware_lanelet2_map_validator</code> is based on the <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2">Lanelet2 library provided by fzi-forschungszentrum-informatik</a>.</p>
 <!--- cSpell:enable --->
 
-<p>Contributors are encouraged to make their validators by following the class structure shown in <a href="https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/src/validators/validator_template.cpp"><code>validator_template.cpp</code></a> and <a href="https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/src/validators/validator_template.hpp"><code>validator_template.hpp</code></a>. Looking at other implementations may also be helpful.</p>
+<p>Contributors are encouraged to make their validators by following the class structure shown in <a href="https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/template/validator_template.cpp"><code>validator_template.cpp</code></a> and <a href="https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/template/validator_template.hpp"><code>validator_template.hpp</code></a>.</p>
+<h4 id="create_new_validatorpy-may-be-useful"><code>create_new_validator.py</code> may be useful<a class="headerlink" href="#create_new_validatorpy-may-be-useful" title="Permanent link">#</a></h4>
+<p>You can use the script <a href="https://github.com/autowarefoundation/autoware_tools/blob/main/map/autoware_lanelet2_map_validator/template/create_new_validator.py"><code>create_new_validator.py</code></a> to generate the required files below.</p>
+<ul>
+<li>Source codes (cpp and hpp)</li>
+<li>Test code (cpp)</li>
+<li>Document file (md)</li>
+</ul>
+<p>You can use this by the command like this example:</p>
+<div class="highlight"><pre><span></span><code>create_new_validator.py<span class="w"> </span><span class="se">\</span>
+--base_directory<span class="w"> </span>./<span class="w"> </span><span class="se">\</span>
+--category_name<span class="w"> </span>traffic_light<span class="w"> </span><span class="se">\</span>
+--code_name<span class="w"> </span>traffic_light_facing<span class="w"> </span><span class="se">\</span>
+--class_name<span class="w"> </span>TrafficLightFacingValidator<span class="w"> </span><span class="se">\</span>
+--validator_name<span class="w"> </span>mapping.traffic_light.correct_facing<span class="w"> </span><span class="se">\</span>
+--check_function_name<span class="w"> </span>check_traffic_light_facing
+</code></pre></div>
+<p>OR</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>create_new_validator.py<span class="w"> </span><span class="se">\</span>
+--base_directory<span class="w"> </span>./<span class="w"> </span><span class="se">\</span>
+--category_name<span class="w"> </span>traffic_light<span class="w"> </span><span class="se">\</span>
+--code_name<span class="w"> </span>traffic_light_facing<span class="w"> </span><span class="se">\</span>
+--class_name<span class="w"> </span>TrafficLightFacingValidator<span class="w"> </span><span class="se">\</span>
+--validator_name<span class="w"> </span>mapping.traffic_light.correct_facing<span class="w"> </span><span class="se">\</span>
+--check_function_name<span class="w"> </span>check_traffic_light_facing
+</code></pre></div>
+<p>All arguments are required.</p>
+<ul>
+<li><code>--base_directory</code>: The directory to the <code>autoware_lanelet2_map_validator</code> package.</li>
+<li><code>--category_name</code>: The category (like lanelet, traffic_light...) where your validator belongs to. Look <a href="#design-concept">Design Concept</a> to see the list of categories.</li>
+<li><code>--code_name</code>: The name for the files. The source code names will be like <code>&lt;code_name&gt;.cpp</code> and <code>&lt;code_name.hpp&gt;</code></li>
+<li><code>--class_name</code>: The base class name of your validator which will be defined in your new header file.</li>
+<li><code>--validator_name</code>: The name of the validator which will be displayed when <code>autoware_lanelet2_map_validator</code> is executed with a <code>--print</code> option. The naming rules are explained in <a href="#restrictions-for-validator-class-implementation">Restrictions for validator class implementation</a>.</li>
+<li><code>--check_function_name</code>: The main function name of your validator which will be defined in your header file, and its implementation will be written in the cpp source file.</li>
+</ul>
+<p>It may be quicker to recognize what this script do by trying the command out.
+If you feel typing these arguments exhausting, you can overwrite the <code>default</code> value in the python script, but do not forget not to commit those changes.</p>
 <h4 id="restrictions-for-path-structure">Restrictions for path structure<a class="headerlink" href="#restrictions-for-path-structure" title="Permanent link">#</a></h4>
 <ul>
 <li>The source file (<code>.cpp</code>) must belong to <code>src/validators/\&lt;CATEGORY\&gt;/</code></li>
