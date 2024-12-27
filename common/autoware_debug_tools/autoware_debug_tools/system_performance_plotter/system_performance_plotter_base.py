@@ -179,7 +179,7 @@ class SystemPerformancePlotterBase:
             plt.show()
 
 
-def create_common_argment(ymax=None):
+def create_common_argument(ymax=None):
     parser = argparse.ArgumentParser(description="report system performance from rosbag.")
     parser.add_argument("bag_file", help="input bagfile")
     parser.add_argument("-c", "--component-name", default="all", type=str, help="component name")

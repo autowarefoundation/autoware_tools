@@ -7,7 +7,7 @@ from tier4_debug_msgs.msg import Float64Stamped as Tier4Float64Stamped
 
 from .system_performance_plotter_base import PREDEFINED_COMPONENT_NAMES
 from .system_performance_plotter_base import SystemPerformancePlotterBase
-from .system_performance_plotter_base import create_common_argment
+from .system_performance_plotter_base import create_common_argument
 
 
 class ProcessingTimePlotter(SystemPerformancePlotterBase):
@@ -50,7 +50,7 @@ class ProcessingTimePlotter(SystemPerformancePlotterBase):
 
 
 def main():
-    args = create_common_argment(100)
+    args = create_common_argument(100)
     plotter = ProcessingTimePlotter(args, "Processing Time [ms]", "_processing_time")
     plotter.run()
 
