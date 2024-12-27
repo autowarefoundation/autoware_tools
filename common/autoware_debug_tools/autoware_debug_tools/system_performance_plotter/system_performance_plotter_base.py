@@ -22,8 +22,8 @@ PREDEFINED_COMPONENT_NAMES = [
     "control",
     "system",
 ]
-LINESTYLES = ["solid", "dashed"]
-NUM_LINESTYLES = len(LINESTYLES)
+LINE_STYLES = ["solid", "dashed"]
+NUM_LINE_STYLES = len(LINE_STYLES)
 COLORS = plt.get_cmap("tab20")
 NUM_COLORS = len(COLORS.colors)
 
@@ -118,7 +118,7 @@ class SystemPerformancePlotterBase:
             stamp = raw_data_arr[:, 0]
             rate = raw_data_arr[:, 1]
             color = COLORS(idx % NUM_COLORS)
-            linestyle = LINESTYLES[(idx // NUM_COLORS) % NUM_LINESTYLES]
+            linestyle = LINE_STYLES[(idx // NUM_COLORS) % NUM_LINE_STYLES]
             ax.plot(stamp, rate, label=name, color=color, linestyle=linestyle)
 
             self.report_data[name].append(np.round(rate.mean(), 3))
