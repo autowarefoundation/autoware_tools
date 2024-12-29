@@ -16,8 +16,11 @@
 
 from datetime import datetime
 import sys
+import os
+import yaml
 
 from std_msgs.msg import Float32
+from ament_index_python.packages import get_package_share_directory
 from autoware_control_msgs.msg import Control
 from autoware_vehicle_msgs.msg import ControlModeReport
 from autoware_vehicle_msgs.msg import GearCommand
@@ -33,30 +36,24 @@ from rclpy.node import Node
 from tier4_vehicle_msgs.msg import ActuationCommandStamped
 
 COUNTDOWN_TIME = 3  # [sec]
-TARGET_VELOCITY = 42.5 / 4  # [km/h]
-TARGET_ACTUATION_FOR_ACCEL = 0.3
-TARGET_ACTUATION_FOR_BRAKE = 0.5 
-TARGET_JERK_FOR_DRIVE = 1.5  # [m/s^3]
-TARGET_JERK_FOR_BRAKE = -1.5  # [m/s^3]
 
-MAX_ACCEL_PEDAL = 0.5
-MIN_BRAKE_PEDAL = 0.8
-
-TOPIC_LIST_FOR_VALIDATION = [
-    "/vehicle/status/velocity_status",
-    "/control/command/actuation_cmd",
-    "/sensing/imu/imu_data",
-    "/vehicle/status/control_mode",
-]
-
-NODE_LIST_FOR_VALIDATION = [
-    "/raw_vehicle_cmd_converter"
-]
-
-
-class MapAccuracyTester(Node):
+class DataCollectingActuationCmd(Node):
     def __init__(self):
-        super().__init__("map_accuracy_tester")
+        super().__init__("data_collecting_actuation_cmd")
+
+        package_share_directory = get_package_share_directory("control_data_collecting_tool")
+        topic_file_path = os.path.join(package_share_directory, "config", "cmd_param.yaml")
+        with open(topic_file_path, "r") as file:
+            topic_data = yaml.safe_load(file)
+
+        self.TARGET_VELOCITY = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["TARGET_VELOCITY"]
+        self.TARGET_ACTUATION_FOR_ACCEL = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["TARGET_ACTUATION_FOR_ACCEL"]
+        self.TARGET_ACTUATION_FOR_BRAKE = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["TARGET_ACTUATION_FOR_BRAKE"]
+        self.MAX_ACCEL_PEDAL = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["MAX_ACCEL_PEDAL"]
+        self.MIN_BRAKE_PEDAL = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["MIN_BRAKE_PEDAL"]
+        self.TOPIC_LIST_FOR_VALIDATION = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["topics"]
+        self.NODE_LIST_FOR_VALIDATION = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["validation_nodes"]
+
         self.client_control_mode = self.create_client(
             ControlModeCommand, "/control/control_mode_request"
         )
@@ -112,7 +109,7 @@ class MapAccuracyTester(Node):
     def run(self):
         print("===== Start actuate tester =====")
         lib.system.check_service_active("autoware.service")
-        lib.system.check_node_active(NODE_LIST_FOR_VALIDATION)
+        lib.system.check_node_active(self.NODE_LIST_FOR_VALIDATION)
 
         print("===== Reset commands =====")
         lib.command.reset_commands(self)
@@ -142,20 +139,20 @@ class MapAccuracyTester(Node):
                 print(f"record rosbag: {filename}")
 
                 print(
-                    f"===== Drive to {TARGET_VELOCITY} km/h with accel pedal actuation {target_actuation} ====="
+                    f"===== Drive to {self.TARGET_VELOCITY} km/h with accel pedal actuation {target_actuation} ====="
                 )
                 lib.command.change_gear(self, "drive")
                 lib.cui.ready_check("Ready to drive?")
                 lib.cui.countdown(COUNTDOWN_TIME)
-                lib.command.actuate(self, mode, target_actuation, TARGET_VELOCITY, break_time=30.0)
+                lib.command.actuate(self, mode, target_actuation, self.TARGET_VELOCITY, break_time=30.0)
                 print("===== End rosbag record =====")
                 process.terminate()
                 lib.command.actuate(
-                    self, "brake", TARGET_ACTUATION_FOR_BRAKE, 1e-3
+                    self, "brake", self.TARGET_ACTUATION_FOR_BRAKE, 1e-3
                 )
             elif mode == "brake":
                 print(
-                    f"===== Drive to {TARGET_VELOCITY} km/h and brake pedal actuation with {target_actuation} ====="
+                    f"===== Drive to {self.TARGET_VELOCITY} km/h and brake pedal actuation with {target_actuation} ====="
                 )
                 lib.command.change_gear(self, "drive")
                 lib.cui.ready_check("Ready to drive?")
@@ -163,8 +160,8 @@ class MapAccuracyTester(Node):
                 lib.command.actuate(
                     self,
                     "accel",
-                    TARGET_ACTUATION_FOR_ACCEL,
-                    TARGET_VELOCITY,
+                    self.TARGET_ACTUATION_FOR_ACCEL,
+                    self.TARGET_VELOCITY,
                 )
                 filename = self.get_rosbag_name(mode, target_actuation)
                 process = lib.rosbag.record_ros2_bag(filename, lib.rosbag.TOPIC_LIST)
@@ -181,7 +178,7 @@ class MapAccuracyTester(Node):
             process.wait()
 
             print("===== Validate rosbag =====")
-            is_rosbag_valid = lib.rosbag.validate(filename, TOPIC_LIST_FOR_VALIDATION)
+            is_rosbag_valid = lib.rosbag.validate(filename, self.TOPIC_LIST_FOR_VALIDATION)
             if not is_rosbag_valid:
                 print(f"Rosag validation error: {filename}")
                 sys.exit(1)
@@ -192,9 +189,9 @@ class MapAccuracyTester(Node):
 
     def get_min_max_acceleration(self, mode):
         if mode == "accel":
-            return 0.0, MAX_ACCEL_PEDAL
+            return 0.0, self.MAX_ACCEL_PEDAL
         if mode == "brake":
-            return 0.0, MIN_BRAKE_PEDAL
+            return 0.0, self.MIN_BRAKE_PEDAL
 
     def get_rosbag_name(self, mode, target_acceleration):
         current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -212,7 +209,7 @@ class MapAccuracyTester(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    tester = MapAccuracyTester()
+    tester = DataCollectingActuationCmd()
     tester.run()
 
     tester.destroy_node()

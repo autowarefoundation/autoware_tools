@@ -39,6 +39,8 @@ install(PROGRAMS
   scripts/data_collecting_rosbag_record.py
   scripts/data_collecting_data_counter.py
   scripts/data_collecting_base_node.py
+  scripts/calibration/data_collecting_acceleration_cmd.py
+  scripts/calibration/data_collecting_actuation_cmd.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
