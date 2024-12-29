@@ -2,7 +2,7 @@
   ros__parameters:
     CONTROL_MODE: acceleration_cmd
     # CONTROL_MODE: actuation_cmd
-    #CONTROL_MODE: external_acceleration_cmd
+    # CONTROL_MODE: external_acceleration_cmd
     # CONTROL_MODE: external_actuation_cmd
 
     LOAD_ROSBAG2_FILES: false
@@ -35,6 +35,8 @@
     ACCEL_PEDAL_INPUT_MIN: 0.01
     BRAKE_PEDAL_INPUT_MAX: 0.8
     BRAKE_PEDAL_INPUT_MIN: 0.0
+
+    STEER_THRESHOLD_FOR_PEDAL_INPUT_COUNT: 0.2
 
     MASK_NAME: default
     VEL_ACC_THRESHOLD: 40
