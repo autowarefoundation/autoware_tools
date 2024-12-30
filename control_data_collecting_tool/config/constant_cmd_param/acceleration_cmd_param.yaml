@@ -1,0 +1,18 @@
+/data_collecting_acceleration_cmd:
+  ros__parameters:
+
+    # params for data_collecting_acceleration_cmd
+    TARGET_VELOCITY: 11.80
+    TARGET_ACCELERATION_FOR_DRIVE: 1.5
+    TARGET_ACCELERATION_FOR_BRAKE: -1.5
+    TARGET_JERK_FOR_DRIVE: 1.5
+    TARGET_JERK_FOR_BRAKE: -1.5
+    MIN_ACCEL: -5.0
+    MAX_ACCEL: 2.0
+    topics:
+      - /vehicle/status/velocity_status
+      - /control/command/actuation_cmd
+      - /sensing/imu/imu_data
+      - /vehicle/status/control_mode
+    validation_nodes:
+      - /data_collecting_pure_pursuit_trajectory_follower_acceleration_cmd
