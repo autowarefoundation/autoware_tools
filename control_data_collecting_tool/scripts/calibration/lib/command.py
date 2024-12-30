@@ -94,24 +94,29 @@ def change_gear(node, target_gear):
             break
 
 
-def accelerate(node, target_acceleration, target_velocity, mode, target_jerk=None, break_time=120.0):
+def accelerate(
+    node, target_acceleration, target_velocity, mode, target_jerk=None, break_time=120.0
+):
     print(f"Accelerate with {target_acceleration} m/s^2.")
     start_time = time.time()
-    
-    if target_jerk == None:
+
+    if target_jerk is None:
         acceleration_cmd = target_acceleration
     else:
         acceleration_cmd = 0.0
 
-    condition = (
-        lambda: acceleration_cmd < target_acceleration - 1e-3
-        if mode == "drive"
-        else acceleration_cmd > target_acceleration + 1e-3
-    )
-    while condition():
+    def check_condition(acceleration_cmd, target_acceleration, mode):
+        if mode == "drive":
+            return acceleration_cmd < target_acceleration - 1e-3
+        else:
+            return acceleration_cmd > target_acceleration + 1e-3
+
+    while check_condition(acceleration_cmd, target_acceleration, mode):
         acceleration_cmd += target_jerk / 10.0
         data_collecting_control_cmd = acceleration_cmd
-        node.pub_data_collecting_control_cmd.publish(Float32(data=float(data_collecting_control_cmd)))
+        node.pub_data_collecting_control_cmd.publish(
+            Float32(data=float(data_collecting_control_cmd))
+        )
         time.sleep(0.1)
 
     data_collecting_control_cmd = target_acceleration
@@ -119,10 +124,10 @@ def accelerate(node, target_acceleration, target_velocity, mode, target_jerk=Non
 
     while rclpy.ok():
         rclpy.spin_once(node)
-        if (mode == "drive" and node.current_velocity * 3.6 >= target_velocity) or (
-            mode == "brake" and node.current_velocity * 3.6 <= target_velocity
+        if (mode == "drive" and node.current_velocity >= target_velocity) or (
+            mode == "brake" and node.current_velocity <= target_velocity
         ):
-            print(f"Reached {target_velocity} km/h.")
+            print(f"Reached {target_velocity} m/s.")
             data_collecting_control_cmd = 0.0 if mode == "drive" else -2.5
             node.pub_data_collecting_control_cmd.publish(
                 Float32(data=float(data_collecting_control_cmd))
@@ -153,11 +158,10 @@ def actuate(node, mode, target_command, target_velocity, break_time=120.0):
 
     while rclpy.ok():
         rclpy.spin_once(node)
-        if (
-            (mode == "accel" and node.current_velocity * 3.6 >= target_velocity)
-            or (mode == "brake" and node.current_velocity * 3.6 <= target_velocity)
+        if (mode == "accel" and node.current_velocity >= target_velocity) or (
+            mode == "brake" and node.current_velocity <= target_velocity
         ):
-            print(f"Reached {target_velocity} km/h.")
+            print(f"Reached {target_velocity} m/s.")
             data_collecting_pedal_input = 0.0
             if mode == "accel":
                 data_collecting_pedal_input = 0.0

@@ -129,7 +129,11 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             ),
         )
 
-        self.steer_threshold_for_pedal_count = self.get_parameter("STEER_THRESHOLD_FOR_PEDAL_INPUT_COUNT").get_parameter_value().double_value
+        self.steer_threshold_for_pedal_count = (
+            self.get_parameter("STEER_THRESHOLD_FOR_PEDAL_INPUT_COUNT")
+            .get_parameter_value()
+            .double_value
+        )
 
         if load_rosbag2_files:
             # candidates referencing the rosbag data

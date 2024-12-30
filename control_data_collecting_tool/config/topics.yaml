@@ -2,9 +2,7 @@ topics:
   - /localization/kinematic_state
   - /localization/acceleration
   - /vehicle/status/steering_status
-  - /sensing/imu/imu_data
   - /system/operation_mode/state
-  - /vehicle/status/control_mode
+  - /control/command/control_cmd
   - /external/selected/control_cmd
-  - /external/selected/gear_cmd
-  - /data_collecting_trajectory
+  - /control/command/actuation_cmd

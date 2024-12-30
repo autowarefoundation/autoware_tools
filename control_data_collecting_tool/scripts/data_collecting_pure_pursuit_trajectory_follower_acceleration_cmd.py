@@ -116,7 +116,6 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
             ),
         )
 
-        # lim default values are taken from https://github.com/autowarefoundation/autoware.universe/blob/e90d3569bacaf64711072a94511ccdb619a59464/control/autoware_vehicle_cmd_gate/config/vehicle_cmd_gate.param.yaml
         self.declare_parameter(
             "lon_acc_lim",
             2.0,
@@ -195,7 +194,7 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         self.sub_acceleration_cmd_ = self.create_subscription(
             Float32,
-            "/data_collecting_acceleration_cmd",
+            "/data_collecting_accel_cmd",
             self.onAccelerationCmd,
             1,
         )
@@ -506,6 +505,8 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
                 acceleration_cmd = self.acceleration_cmd
             cmd[0] = acceleration_cmd
 
+        self.get_logger().info("cmd_mode : " + self.CONTROL_MODE)
+
         cmd_without_noise = 1 * cmd
 
         tmp_acc_noise = self.acc_noise_list.pop(0)
@@ -557,9 +558,9 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
 
         # [2] publish cmd
         control_cmd_msg = AckermannControlCommand()
-        control_cmd_msg.stamp = (
-            control_cmd_msg.lateral.stamp
-        ) = control_cmd_msg.longitudinal.stamp = (self.get_clock().now().to_msg())
+        control_cmd_msg.stamp = control_cmd_msg.lateral.stamp = (
+            control_cmd_msg.longitudinal.stamp
+        ) = (self.get_clock().now().to_msg())
         control_cmd_msg.longitudinal.velocity = trajectory_longitudinal_velocity[nearestIndex]
         control_cmd_msg.longitudinal.acceleration = cmd[0]
         control_cmd_msg.lateral.steering_tire_angle = cmd[1]

@@ -115,10 +115,7 @@ def generate_launch_description():
             ]
         )
 
-    elif (
-        control_mode == "actuation_cmd"
-        or control_mode == "external_actuation_cmd"
-    ):
+    elif control_mode == "actuation_cmd" or control_mode == "external_actuation_cmd":
         return launch.LaunchDescription(
             [
                 map_path_arg,
@@ -126,7 +123,10 @@ def generate_launch_description():
                     package="control_data_collecting_tool",
                     executable="data_collecting_pure_pursuit_trajectory_follower_actuation_cmd.py",
                     name="data_collecting_pure_pursuit_trajectory_follower_actuation_cmd",
-                    parameters=[common_param_file_path, {"accel_brake_map_path": accel_brake_map_path}],
+                    parameters=[
+                        common_param_file_path,
+                        {"accel_brake_map_path": accel_brake_map_path},
+                    ],
                 ),
                 Node(
                     package="control_data_collecting_tool",
