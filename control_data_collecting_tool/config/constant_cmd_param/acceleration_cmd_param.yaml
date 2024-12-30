@@ -1,6 +1,5 @@
 /data_collecting_acceleration_cmd:
   ros__parameters:
-
     # params for data_collecting_acceleration_cmd
     TARGET_VELOCITY: 11.80
     TARGET_ACCELERATION_FOR_DRIVE: 1.5

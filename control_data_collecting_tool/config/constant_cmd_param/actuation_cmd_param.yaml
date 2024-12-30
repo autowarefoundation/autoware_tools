@@ -1,10 +1,9 @@
 /data_collecting_actuation_cmd:
   ros__parameters:
-
     # params for data_collecting_actuation_cmd
     TARGET_VELOCITY: 11.80
     TARGET_ACTUATION_FOR_ACCEL: 0.3
-    TARGET_ACTUATION_FOR_BRAKE: 0.5 
+    TARGET_ACTUATION_FOR_BRAKE: 0.5
     TARGET_JERK_FOR_DRIVE: 1.5
     TARGET_JERK_FOR_BRAKE: -1.5
     MAX_ACCEL_PEDAL: 0.5
