@@ -21,37 +21,38 @@ from scipy.interpolate import RegularGridInterpolator
 
 class MapConverter:
     def __init__(self, path_to_map):
-        #
+        # Load map data from CSV and initialize grid values
         map_df = pd.read_csv(path_to_map, delimiter=",", header=0)
         self.map_grid = map_df.to_numpy()[:, 1:]
 
-        #
+        # Extract velocity grid from column headers
         self.velocity_grid_map = np.array(map_df.columns[1:], dtype=float)
         self.max_vel_of_map = self.velocity_grid_map[-1]
         self.min_vel_of_map = self.velocity_grid_map[0]
 
-        #
+        # Extract pedal grid from the first column
         self.pedal_grid_map = map_df.to_numpy()[:, 0]
         self.max_pedal_of_map = self.pedal_grid_map[-1]
         self.min_pedal_of_map = self.pedal_grid_map[0]
 
-        #
+        # Create an interpolator for the map grid
         self.map_grid_interpolator = RegularGridInterpolator(
             (self.pedal_grid_map, self.velocity_grid_map), self.map_grid
         )
 
     def pedal_to_accel_input(self, pedal, velocity):
-        #
+        # Convert pedal input and velocity to acceleration input using interpolation
         pedal = np.clip(pedal, self.min_pedal_of_map, self.max_pedal_of_map)
         velocity = np.clip(velocity, self.min_vel_of_map, self.max_vel_of_map)
         accel_input = self.map_grid_interpolator([pedal, velocity])[0]
 
-        #
         return accel_input
 
     def accel_input_to_pedal(self, accel_input, velocity):
+        # Convert acceleration input and velocity to pedal input
         velocity = np.clip(velocity, self.min_vel_of_map, self.max_vel_of_map)
 
+        # Find velocity interval for interpolation
         vel_idx = 0
         alpha = 0.0
         for i in range(len(self.velocity_grid_map) - 1):
@@ -62,18 +63,22 @@ class MapConverter:
                 vel_idx = i
                 alpha = (velocity - vel_left_grid) / (vel_right_grid - vel_left_grid)
 
+        # Interpolate acceleration input map for given velocity
         accel_input_map = (
             alpha * self.map_grid[:, vel_idx] + (1 - alpha) * self.map_grid[:, vel_idx + 1]
         )
 
+        # Clip acceleration input within the bounds of the map
         min_accel_map = np.min([accel_input_map[0], accel_input_map[-1]])
         max_accel_map = np.max([accel_input_map[0], accel_input_map[-1]])
         accel_input = np.clip(accel_input, min_accel_map, max_accel_map)
-        actuation_input = 0.0
 
+        # Find corresponding pedal input using interpolation
+        actuation_input = 0.0
         for i in range(len(accel_input_map) - 1):
             if accel_input_map[i] <= accel_input_map[i + 1]:
-                if accel_input_map[i] <= accel_input and accel_input <= accel_input_map[i + 1]:
+                # Increasing interval
+                if accel_input_map[i] <= accel_input <= accel_input_map[i + 1]:
                     delta_accel_input = accel_input_map[i + 1] - accel_input_map[i]
                     if abs(delta_accel_input) < 1e-3:
                         actuation_input = self.pedal_grid_map[i]
@@ -82,10 +87,10 @@ class MapConverter:
                         actuation_input = (
                             beta * self.pedal_grid_map[i + 1] + (1 - beta) * self.pedal_grid_map[i]
                         )
-
             elif accel_input_map[i + 1] < accel_input_map[i]:
+                # Decreasing interval
                 sign = -1
-                if accel_input_map[i + 1] <= accel_input and accel_input <= accel_input_map[i]:
+                if accel_input_map[i + 1] <= accel_input <= accel_input_map[i]:
                     delta_accel_input = accel_input_map[i] - accel_input_map[i + 1]
                     if abs(delta_accel_input) < 1e-3:
                         actuation_input = sign * self.pedal_grid_map[i]
@@ -100,25 +105,27 @@ class MapConverter:
 
 class AccelBrakeMapConverter:
     def __init__(self, path_to_accel_map, path_to_brake_map):
-        #
+        # Initialize converters for acceleration and brake maps
         self.accel_map_converter = MapConverter(path_to_accel_map)
         self.brake_map_converter = MapConverter(path_to_brake_map)
 
     def convert_accel_input_to_actuation_cmd(self, accel_input, velocity):
-        #
+        # Convert acceleration input to actuation command
         accel_actuation_cmd = self.accel_map_converter.accel_input_to_pedal(accel_input, velocity)
         brake_actuation_cmd = self.brake_map_converter.accel_input_to_pedal(accel_input, velocity)
 
         return accel_actuation_cmd - brake_actuation_cmd
 
     def convert_actuation_cmd_to_accel_input(self, actuation_cmd, velocity):
-        #
+        # Convert actuation command to acceleration input
         accel_input = 0.0
         if actuation_cmd > 0.0:
+            # Positive command corresponds to acceleration
             accel_input = self.accel_map_converter.pedal_to_accel_input(
                 abs(actuation_cmd), velocity
             )
         if actuation_cmd <= 0.0:
+            # Negative command corresponds to braking
             accel_input = self.brake_map_converter.pedal_to_accel_input(
                 abs(actuation_cmd), velocity
             )
