@@ -142,7 +142,7 @@ def accelerate(
 
 
 def actuate(node, mode, target_command, target_velocity, break_time=120.0):
-    print(f"Actuate with {mode} command: {target_command}.")
+    print(f"Actuate with {mode} pedal input: {target_command}.")
     start_time = time.time()
 
     data_collecting_pedal_input = 0.0

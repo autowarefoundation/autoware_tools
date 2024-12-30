@@ -135,7 +135,179 @@ This package provides tools for automatically collecting data using pure pursuit
 
       - `external_acceleration_cmd`
 
+        This mode enables the collection of constant acceleration data for both positive and negative acceleration scenarios.
+
+        - Positive Acceleration Data Collection
+
+          1. Start the Tool by using the following command
+
+            ```bash
+            ros2 run control_data_collecting_tool data_collecting_acceleration_cmd
+            ```
+
+          2. Confirm Data Collection: The tool prompts you to confirm whether to proceed with positive acceleration data collection:
+
+            ```bash
+            Do you want to collect constant positive acceleration cmd data? (yes/no)
+            ```
+
+          3. Input Acceleration: When prompted, input the desired acceleration value:
+
+            ```bash
+            Target acceleration [0.0 ~ 2.0 m/s^2]
+            ```
+
+          4. Gear Change and Readiness Check: Pleas click the `LOCAL` button in `AutowareStatePanel`  as in 7.1 and the tool checks if the system is ready for the operation. You will see the following prompt:
+
+            ```bash
+            Ready to drive? (yes/no)
+            ```
+
+          5. Execution and Recording: After 3-second counting, the vehicle accelerates to the target velocity specified in the configuration file. During this process, the following message is displayed:
+
+            ```bash
+            Accelerate with target_acceleration m/s^2
+            ```
+
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_acceleration_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+
+            ```bash
+            /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
+            ```
+
+          6. Deceleration Phase: After reaching the target velocity, the tool applies a deceleration using the TARGET_ACCELERATION_FOR_BRAKE parameter to bring the vehicle to a stop.
+
+          7. Completion: Once the data is recorded and the vehicle is safely stopped, the session ends. The tool validates the recorded data.
+
+        - Negative Acceleration Data Collection
+
+          1. Start the Tool by using the following command
+
+            ```bash
+            ros2 run control_data_collecting_tool data_collecting_acceleration_cmd
+            ```
+
+          2. Confirm Data Collection: The tool prompts you to confirm whether to proceed with negative acceleration data collection (the following message will be displayed after answering `no` to `Do you want to collect constant positive acceleration cmd data? (yes/no)` in Positive Acceleration Data Collection):
+
+            ```bash
+            Do you want to collect constant negative acceleration cmd data? (yes/no)
+            ```
+
+          3. Input Acceleration: When prompted, input the desired acceleration value:
+
+            ```bash
+            Target acceleration [-5.0 ~ 0.0 m/s^2]
+            ```
+
+          4. Gear Change and Readiness Check: Pleas click the `LOCAL` button in `AutowareStatePanel` as in 7.1 and the tool checks if the system is ready for the operation. You will see the following prompt:
+
+            ```bash
+            Ready to drive? (yes/no)
+            ```
+
+          5. Acceleration Phase: After 3-second counting, the vehicle accelerates to the TARGET_VELOCITY with TARGET_ACCELERATION_FOR_DRIVE before braking.
+
+          6. Braking and Recording: Once the target velocity is achieved, the tool applies the braking command. During this process, you will see:
+
+            ```bash
+            Accelerate with target_acceleration m/s^2
+            ```
+
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_acceleration_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+
+            ```bash
+            /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
+            ```
+
+          7. Completion: Once the data is recorded and the vehicle is safely stopped, the session ends. The tool validates the recorded data.
+
       - `external_actuation_cmd`
+
+        This mode enables the collection of constant accel/brake pedal input data.
+
+        - Accel Pedal Data Collection
+
+          1. Start the tool by using the following command
+
+            ```bash
+            ros2 run control_data_collecting_tool data_collecting_actuation_cmd
+            ```
+
+          2. Confirm Data Collection: The tool prompts you to confirm whether to proceed with positive acceleration data collection:
+
+            ```bash
+            Do you want to accel pedal input data? (yes/no)
+            ```
+
+          3. Input Accel Pedal input: When prompted, input the desired accel pedal input value:
+
+            ```bash
+            Target accel pedal input [0.0 ~ 0.5 ] 
+            ```
+
+          4. Gear Change and Readiness Check: Pleas click the `LOCAL` button in `AutowareStatePanel`  as in 7.1 and the tool checks if the system is ready for the operation. You will see the following prompt:
+
+            ```bash
+            Ready to drive? (yes/no)
+            ```
+
+          5. Execution and Recording: After 3-second counting, the vehicle accelerates to the target velocity specified in the configuration file. During this process, the following message is displayed:
+
+            ```bash
+            Actuate with accel pedal input: target_accel_pedal_input
+            ```
+
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_acceleration_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+
+            ```bash
+            /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
+            ```
+
+          6. Deceleration Phase: After reaching the target velocity, the tool applies a deceleration using the TARGET_ACTUATION_FOR_BRAKE parameter to bring the vehicle to a stop.
+
+          7. Completion: Once the data is recorded and the vehicle is safely stopped, the session ends. The tool validates the recorded data.
+
+        - Brake Pedal Data Collection
+
+          1. Start the tool by using the following command
+
+            ```bash
+            ros2 run control_data_collecting_tool data_collecting_actuation_cmd
+            ```
+
+          2. Confirm Data Collection: The tool prompts you to confirm whether to proceed with brake pedal input data collection (the following message will be displayed after answering `no` to `Do you want to accel pedal input data? (yes/no)` in Accel Pedal Data Collection):
+
+            ```bash
+            Do you want to brake pedal input data? (yes/no)
+            ```
+
+          3. Input Brake Pedal input: When prompted, input the desired brake pedal input value:
+
+            ```bash
+            Target brake pedal input [0.0 ~ 0.8 ]
+            ```
+
+          4. Gear Change and Readiness Check: Pleas click the `LOCAL` button in `AutowareStatePanel` as in 7.1 and the tool checks if the system is ready for the operation. You will see the following prompt:
+
+            ```bash
+            Ready to drive? (yes/no)
+            ```
+
+          5. Acceleration Phase: After 3-second counting, the vehicle accelerates to the TARGET_VELOCITY with TARGET_ACTUATION_FOR_ACCEL before braking.
+
+          6. Braking and Recording: Once the target velocity is achieved, the tool applies the braking command. During this process, you will see:
+
+            ```bash
+            Actuate with brake pedal input: target_brake_pedal_input
+            ```
+
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_acceleration_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+
+            ```bash
+            /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
+            ```
+
+          7. Completion: Once the data is recorded and the vehicle is safely stopped, the session ends. The tool validates the recorded data.
 
 8. If you want to stop data collecting automatic driving, run the following command
 
@@ -399,24 +571,22 @@ Each trajectory has specific ROS 2 parameters.
 
 - `data_collecting_acceleration_cmd.py`
 
-| Name                            | Type     | Description | Default value |
-| :------------------------------ | :------- | :---------- | :------------ |
-| `TARGET_VELOCITY`               | `double` |             | 11.80         |
-| `TARGET_ACCELERATION_FOR_DRIVE` | `double` |             | 0.3           |
-| `TARGET_ACCELERATION_FOR_BRAKE` | `double` |             | 0.5           |
-| `TARGET_JERK_FOR_DRIVE`         | `double` |             | 1.5           |
-| `TARGET_JERK_FOR_BRAKE`         | `double` |             | -1.5          |
-| `MIN_ACCEL`                     | `double` |             | -5.0          |
-| `MAX_ACCEL`                     | `double` |             | 2.0           |
+| Name                            | Type     | Description                                                                  | Default value |
+| :------------------------------ | :------- | :--------------------------------------------------------------------------- | :------------ |
+| `TARGET_VELOCITY`               | `double` | The maximum velocity for data collection [m/s]                               | 11.80         |
+| `TARGET_ACCELERATION_FOR_DRIVE` | `double` | Target acceleration when collecting deceleration data [m/s^2]                | 0.3           |
+| `TARGET_ACCELERATION_FOR_BRAKE` | `double` | Target deceleration when collecting acceleration data [m/s^2]                | 0.5           |
+| `TARGET_JERK_FOR_DRIVE`         | `double` | The target rate of change of acceleration (jerk) for smooth driving [m/s^3]  | 1.5           |
+| `TARGET_JERK_FOR_BRAKE`         | `double` | The target rate of change of acceleration (jerk) when braking [m/s^3]        | -1.5          |
+| `MIN_ACCEL`                     | `double` | The minimum allowable acceleration for data collection [m/s^2]               | -5.0          |
+| `MAX_ACCEL`                     | `double` | The maximum allowable acceleration for data collection [m/s^2]               | 2.0           |
 
 - `data_collecting_actuation_cmd.py`
 
-| Name                         | Type     | Description | Default value |
-| :--------------------------- | :------- | :---------- | :------------ |
-| `TARGET_VELOCITY`            | `double` |             | 11.80         |
-| `TARGET_ACTUATION_FOR_ACCEL` | `double` |             | 0.3           |
-| `TARGET_ACTUATION_FOR_BRAKE` | `double` |             | 0.5           |
-| `TARGET_JERK_FOR_DRIVE`      | `double` |             | 1.5           |
-| `TARGET_JERK_FOR_BRAKE`      | `double` |             | -1.5          |
-| `MAX_ACCEL_PEDAL`            | `double` |             | 0.5           |
-| `MIN_BRAKE_PEDAL`            | `double` |             | 0.8           |
+| Name                         | Type     | Description                                                               | Default value |
+| :--------------------------- | :------- | :------------------------------------------------------------------------ | :------------ |
+| `TARGET_VELOCITY`            | `double` |  The maximum velocity for data collection [m/s]                           | 11.80         |
+| `TARGET_ACTUATION_FOR_ACCEL` | `double` |  Target accel pedal input when collecting brake pedal input data          | 0.3           |
+| `TARGET_ACTUATION_FOR_BRAKE` | `double` |  Target brake pedal input when collecting accel pedal input data          | 0.5           |
+| `MAX_ACCEL_PEDAL`            | `double` |  The maximum allowable accel pedal input for data collection              | 0.5           |
+| `MIN_BRAKE_PEDAL`            | `double` |  The maximum allowable brake pedal input for data collection              | 0.8           |

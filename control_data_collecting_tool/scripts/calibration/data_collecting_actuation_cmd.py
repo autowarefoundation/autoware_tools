@@ -71,8 +71,6 @@ class DataCollectingActuationCmd(Node):
             "ros__parameters"
         ]["validation_nodes"]
 
-        print(self.NODE_LIST_FOR_VALIDATION)
-
         self.client_control_mode = self.create_client(
             ControlModeCommand, "/control/control_mode_request"
         )
@@ -135,11 +133,11 @@ class DataCollectingActuationCmd(Node):
         print("===== Reset commands =====")
         lib.command.reset_commands(self)
 
-        print("===== Start collecting constant accel pedal data =====")
-        lib.cui.do_check("Do you want to accel pedal data?", lambda: self.check("accel"))
+        print("===== Start collecting constant accel pedal input data =====")
+        lib.cui.do_check("Do you want to accel pedal input data?", lambda: self.check("accel"))
 
-        print("===== Start collecting constant brake pedal data =====")
-        lib.cui.do_check("Do you want to brake pedal data?", lambda: self.check("brake"))
+        print("===== Start collecting constant brake pedal input data =====")
+        lib.cui.do_check("Do you want to brake pedal input data?", lambda: self.check("brake"))
 
         print("===== Successfully finished! =====")
 
@@ -149,7 +147,7 @@ class DataCollectingActuationCmd(Node):
             print("===== Input target accel pedal input =====")
             min_actuation, max_actuation = self.get_min_max_acceleration(mode)
             target_actuation = lib.cui.input_target_value(
-                mode + " actuation", min_actuation, max_actuation, ""
+                mode + " pedal input", min_actuation, max_actuation, ""
             )
 
             if mode == "accel":
@@ -160,7 +158,7 @@ class DataCollectingActuationCmd(Node):
                 print(f"record rosbag: {filename}")
 
                 print(
-                    f"===== Drive to {self.TARGET_VELOCITY} m/s with accel pedal actuation {target_actuation} ====="
+                    f"===== Drive to {self.TARGET_VELOCITY} m/s with accel pedal input {target_actuation} ====="
                 )
                 lib.command.change_gear(self, "drive")
                 lib.cui.ready_check("Ready to drive?")
@@ -173,7 +171,7 @@ class DataCollectingActuationCmd(Node):
                 lib.command.actuate(self, "brake", self.TARGET_ACTUATION_FOR_BRAKE, 1e-3)
             elif mode == "brake":
                 print(
-                    f"===== Drive to {self.TARGET_VELOCITY} m/s and brake pedal actuation with {target_actuation} ====="
+                    f"===== Drive to {self.TARGET_VELOCITY} m/s and brake pedal input with {target_actuation} ====="
                 )
                 lib.command.change_gear(self, "drive")
                 lib.cui.ready_check("Ready to drive?")
@@ -204,7 +202,7 @@ class DataCollectingActuationCmd(Node):
                 print(f"Rosbag validation error: {filename}")
                 sys.exit(1)
 
-            is_finished = lib.cui.finish_check(f"Will you continue to check {mode} map?")
+            is_finished = lib.cui.finish_check(f"Will you continue to collect {mode} pedal input data?")
 
         print(f"===== Successfully {mode} map checking finished! =====")
 
@@ -218,7 +216,7 @@ class DataCollectingActuationCmd(Node):
         current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
         filename = "_".join(
             [
-                "acceleration_accuracy",
+                "constant_actuation_cmd",
                 mode,
                 str(target_acceleration),
                 current_time,

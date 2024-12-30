@@ -77,8 +77,6 @@ class DataCollectingAccelerationCmd(Node):
             "ros__parameters"
         ]["validation_nodes"]
 
-        print(self.NODE_LIST_FOR_VALIDATION)
-
         self.client_control_mode = self.create_client(
             ControlModeCommand, "/control/control_mode_request"
         )
@@ -128,19 +126,16 @@ class DataCollectingAccelerationCmd(Node):
         lib.system.check_service_active("autoware.service")
         lib.system.check_node_active(self.NODE_LIST_FOR_VALIDATION)
 
-        print(f"===== Set Acceleration to {self.TARGET_ACCELERATION_FOR_BRAKE} =====")
-        lib.command.accelerate(
-            self, self.TARGET_ACCELERATION_FOR_BRAKE, 1e-3, "brake", self.TARGET_JERK_FOR_BRAKE
-        )
-
         print("===== Start collecting constant positive acceleration cmd data =====")
         lib.cui.do_check(
-            "Do you want to collect positive acceleration cmd data?", lambda: self.check("accel")
+            "Do you want to collect constant positive acceleration cmd data?",
+            lambda: self.check("accel"),
         )
 
         print("===== Start collecting constant negative acceleration cmd data =====")
         lib.cui.do_check(
-            "Do you want to collect negative acceleration cmd data?", lambda: self.check("brake")
+            "Do you want to collect constant negative acceleration cmd data?",
+            lambda: self.check("brake"),
         )
 
         print("===== Successfully finished! =====")
@@ -227,7 +222,7 @@ class DataCollectingAccelerationCmd(Node):
         current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
         filename = "_".join(
             [
-                "acceleration_accuracy",
+                "constant_acceleration_cmd",
                 mode,
                 str(target_acceleration),
                 current_time,

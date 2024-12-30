@@ -43,7 +43,7 @@ def getYaw(orientation_xyzw):
 
 class DataCollectingPurePursuitTrajectoryFollower(Node):
     def __init__(self):
-        super().__init__("data_collecting_pure_pursuit_trajectory_follower_acceleration_input")
+        super().__init__("data_collecting_pure_pursuit_trajectory_follower_acceleration_cmd")
 
         # common params
         self.declare_parameter(
