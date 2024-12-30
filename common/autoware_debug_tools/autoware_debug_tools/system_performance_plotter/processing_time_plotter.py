@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
-from tier4_debug_msgs.msg import Float32Stamped
-from tier4_debug_msgs.msg import Float64Stamped
+from autoware_internal_debug_msgs.msg import Float32Stamped
+from autoware_internal_debug_msgs.msg import Float64Stamped
+from tier4_debug_msgs.msg import Float32Stamped as Tier4Float32Stamped
+from tier4_debug_msgs.msg import Float64Stamped as Tier4Float64Stamped
 
 from .system_performance_plotter_base import PREDEFINED_COMPONENT_NAMES
 from .system_performance_plotter_base import SystemPerformancePlotterBase
-from .system_performance_plotter_base import create_common_argment
+from .system_performance_plotter_base import create_common_argument
 
 
 class ProcessingTimePlotter(SystemPerformancePlotterBase):
@@ -30,7 +32,12 @@ class ProcessingTimePlotter(SystemPerformancePlotterBase):
         return True
 
     def update_metrics_func(self, topic_name, data, date_time):
-        if not isinstance(data, Float64Stamped) and not isinstance(data, Float32Stamped):
+        if (
+            not isinstance(data, Tier4Float64Stamped)
+            and not isinstance(data, Tier4Float32Stamped)
+            and not isinstance(data, Float64Stamped)
+            and not isinstance(data, Float32Stamped)
+        ):
             return
 
         if topic_name not in self.stamp_and_metrics:
@@ -43,7 +50,7 @@ class ProcessingTimePlotter(SystemPerformancePlotterBase):
 
 
 def main():
-    args = create_common_argment(100)
+    args = create_common_argument(100)
     plotter = ProcessingTimePlotter(args, "Processing Time [ms]", "_processing_time")
     plotter.run()
 
