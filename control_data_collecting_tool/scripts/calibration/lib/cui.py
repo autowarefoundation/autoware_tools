@@ -35,7 +35,7 @@ def input_yes_or_no(description):
             else:
                 print("Please enter 'yes' or 'no'.")
         except KeyboardInterrupt as e:
-            print("\nOperation canceled by user.")
+            print("\nOperation canceled by user : " + str(e))
             sys.exit(1)
         except Exception as e:
             print(e)
@@ -58,7 +58,7 @@ def do_check(description, func):
         try:
             func()
         except Exception as e:
-            print(f"Error occured while executing the function: {e}")
+            print(f"Error occurred while executing the function: {e}")
 
 
 def finish_check(description):
@@ -79,7 +79,7 @@ def input_target_value(description, min_value, max_value, unit):
                 continue
             break
         except KeyboardInterrupt as e:
-            print("\nOperation canceled by user.")
+            print("\nOperation canceled by user : " + str(e))
             sys.exit(1)
         except Exception as e:
             print(e)

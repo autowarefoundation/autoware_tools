@@ -15,11 +15,9 @@
 # limitations under the License.
 
 from datetime import datetime
-import sys
 import os
-import yaml
+import sys
 
-from std_msgs.msg import Float32
 from ament_index_python.packages import get_package_share_directory
 from autoware_control_msgs.msg import Control
 from autoware_vehicle_msgs.msg import ControlModeReport
@@ -33,28 +31,53 @@ import lib.rosbag
 import lib.system
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import Float32
 from tier4_vehicle_msgs.msg import ActuationCommandStamped
+import yaml
 
 COUNTDOWN_TIME = 3  # [sec]
+
 
 class DataCollectingAccelerationCmd(Node):
     def __init__(self):
         super().__init__("data_collecting_acceleration_cmd")
 
         package_share_directory = get_package_share_directory("control_data_collecting_tool")
-        topic_file_path = os.path.join(package_share_directory, "config", "cmd_param.yaml")
+        topic_file_path = os.path.join(
+            package_share_directory, "config/constant_cmd_param", "acceleration_cmd_param.yaml"
+        )
         with open(topic_file_path, "r") as file:
             topic_data = yaml.safe_load(file)
 
-        self.TARGET_VELOCITY = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["TARGET_VELOCITY"]
-        self.TARGET_ACCELERATION_FOR_DRIVE = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["TARGET_ACCELERATION_FOR_DRIVE"]
-        self.TARGET_ACCELERATION_FOR_BRAKE = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["TARGET_ACCELERATION_FOR_BRAKE"]
-        self.TARGET_JERK_FOR_DRIVE = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["TARGET_JERK_FOR_DRIVE"]
-        self.TARGET_JERK_FOR_BRAKE = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["TARGET_JERK_FOR_BRAKE"]
-        self.MIN_ACCEL = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["MIN_ACCEL"]
-        self.MAX_ACCEL = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["MAX_ACCEL"]
-        self.TOPIC_LIST_FOR_VALIDATION = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["topics"]
-        self.NODE_LIST_FOR_VALIDATION = topic_data["data_collecting_acceleration_cmd"]["ros__parameters"]["validation_nodes"]
+        self.TARGET_VELOCITY = topic_data["/data_collecting_acceleration_cmd"]["ros__parameters"][
+            "TARGET_VELOCITY"
+        ]
+        self.TARGET_ACCELERATION_FOR_DRIVE = topic_data["/data_collecting_acceleration_cmd"][
+            "ros__parameters"
+        ]["TARGET_ACCELERATION_FOR_DRIVE"]
+        self.TARGET_ACCELERATION_FOR_BRAKE = topic_data["/data_collecting_acceleration_cmd"][
+            "ros__parameters"
+        ]["TARGET_ACCELERATION_FOR_BRAKE"]
+        self.TARGET_JERK_FOR_DRIVE = topic_data["/data_collecting_acceleration_cmd"][
+            "ros__parameters"
+        ]["TARGET_JERK_FOR_DRIVE"]
+        self.TARGET_JERK_FOR_BRAKE = topic_data["/data_collecting_acceleration_cmd"][
+            "ros__parameters"
+        ]["TARGET_JERK_FOR_BRAKE"]
+        self.MIN_ACCEL = topic_data["/data_collecting_acceleration_cmd"]["ros__parameters"][
+            "MIN_ACCEL"
+        ]
+        self.MAX_ACCEL = topic_data["/data_collecting_acceleration_cmd"]["ros__parameters"][
+            "MAX_ACCEL"
+        ]
+        self.TOPIC_LIST_FOR_VALIDATION = topic_data["/data_collecting_acceleration_cmd"][
+            "ros__parameters"
+        ]["topics"]
+        self.NODE_LIST_FOR_VALIDATION = topic_data["/data_collecting_acceleration_cmd"][
+            "ros__parameters"
+        ]["validation_nodes"]
+
+        print(self.NODE_LIST_FOR_VALIDATION)
 
         self.client_control_mode = self.create_client(
             ControlModeCommand, "/control/control_mode_request"
@@ -63,7 +86,9 @@ class DataCollectingAccelerationCmd(Node):
         while not self.client_control_mode.wait_for_service(timeout_sec=1.0):
             print("Waiting for the control mode service to become available...")
 
-        self.pub_data_collecting_control_cmd = self.create_publisher(Float32, "/data_collecting_accel_cmd", 1)
+        self.pub_data_collecting_control_cmd = self.create_publisher(
+            Float32, "/data_collecting_accel_cmd", 1
+        )
         self.pub_control_cmd = self.create_publisher(Control, "/control/command/control_cmd", 1)
         self.pub_gear_cmd = self.create_publisher(GearCommand, "/control/command/gear_cmd", 1)
 
@@ -99,7 +124,7 @@ class DataCollectingAccelerationCmd(Node):
         self.current_gear = msg.report
 
     def run(self):
-        print("===== Start map accuracy tester =====")
+        print("===== Start data_collecting_acceleration_cmd =====")
         lib.system.check_service_active("autoware.service")
         lib.system.check_node_active(self.NODE_LIST_FOR_VALIDATION)
 
@@ -108,11 +133,15 @@ class DataCollectingAccelerationCmd(Node):
             self, self.TARGET_ACCELERATION_FOR_BRAKE, 1e-3, "brake", self.TARGET_JERK_FOR_BRAKE
         )
 
-        print("===== Start checking accel map =====")
-        lib.cui.do_check("Do you want to check accel map?", lambda: self.check("accel"))
+        print("===== Start collecting constant positive acceleration cmd data =====")
+        lib.cui.do_check(
+            "Do you want to collect positive acceleration cmd data?", lambda: self.check("accel")
+        )
 
-        print("===== Start checking brake map =====")
-        lib.cui.do_check("Do you want to check brake map?", lambda: self.check("brake"))
+        print("===== Start collecting constant negative acceleration cmd data =====")
+        lib.cui.do_check(
+            "Do you want to collect negative acceleration cmd data?", lambda: self.check("brake")
+        )
 
         print("===== Successfully finished! =====")
 
@@ -127,7 +156,7 @@ class DataCollectingAccelerationCmd(Node):
 
             if mode == "accel":
                 print(
-                    f"===== Drive to {self.TARGET_VELOCITY} km/h with acceleration {target_acceleration} ====="
+                    f"===== Drive to {self.TARGET_VELOCITY} m/s with acceleration {target_acceleration} ====="
                 )
                 lib.command.change_gear(self, "drive")
                 lib.cui.ready_check("Ready to drive?")
@@ -136,16 +165,22 @@ class DataCollectingAccelerationCmd(Node):
                 filename = self.get_rosbag_name(mode, target_acceleration)
                 process = lib.rosbag.record_ros2_bag(filename, lib.rosbag.TOPIC_LIST)
                 print(f"record rosbag: {filename}")
-                lib.command.accelerate(self, target_acceleration, self.TARGET_VELOCITY, "drive",break_time=60.0)
+                lib.command.accelerate(
+                    self, target_acceleration, self.TARGET_VELOCITY, "drive", break_time=60.0
+                )
                 print("===== End rosbag record =====")
                 process.terminate()
                 lib.command.accelerate(
-                    self, self.TARGET_ACCELERATION_FOR_BRAKE, 1e-3, "brake", self.TARGET_JERK_FOR_BRAKE
+                    self,
+                    self.TARGET_ACCELERATION_FOR_BRAKE,
+                    1e-3,
+                    "brake",
+                    self.TARGET_JERK_FOR_BRAKE,
                 )
-                
+
             elif mode == "brake":
                 print(
-                    f"===== Drive to {TARGET_VELOCITY} km/h and brake with {target_acceleration} ====="
+                    f"===== Drive to {self.TARGET_VELOCITY} m/s and brake with {target_acceleration} ====="
                 )
                 lib.command.change_gear(self, "drive")
                 lib.cui.ready_check("Ready to drive?")
@@ -164,7 +199,7 @@ class DataCollectingAccelerationCmd(Node):
                 lib.command.accelerate(self, target_acceleration, 1e-3, "brake")
                 print("===== End rosbag record =====")
                 process.terminate()
-                
+
             else:
                 print(f"Invalid mode: {mode}")
                 sys.exit(1)
@@ -173,7 +208,7 @@ class DataCollectingAccelerationCmd(Node):
             print("===== Validate rosbag =====")
             is_rosbag_valid = lib.rosbag.validate(filename, self.TOPIC_LIST_FOR_VALIDATION)
             if not is_rosbag_valid:
-                print(f"Rosag validation error: {filename}")
+                print(f"Rosbag validation error: {filename}")
                 sys.exit(1)
 
             is_finished = lib.cui.finish_check(f"Will you continue to check {mode} map?")

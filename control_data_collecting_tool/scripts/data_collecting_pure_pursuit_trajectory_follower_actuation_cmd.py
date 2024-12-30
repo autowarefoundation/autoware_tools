@@ -117,7 +117,6 @@ class DataCollectingPurePursuitTrajectoryFollowerActuationCmd(Node):
             ),
         )
 
-        # lim default values are taken from https://github.com/autowarefoundation/autoware.universe/blob/e90d3569bacaf64711072a94511ccdb619a59464/control/autoware_vehicle_cmd_gate/config/vehicle_cmd_gate.param.yaml
         self.declare_parameter(
             "lon_acc_lim",
             2.0,
@@ -178,6 +177,14 @@ class DataCollectingPurePursuitTrajectoryFollowerActuationCmd(Node):
             ParameterDescriptor(description="Steer cmd additional sine noise maximum period [s]"),
         )
 
+        self.declare_parameter(
+            "accel_brake_map_path",
+            "",
+            descriptor=ParameterDescriptor(
+                description="Path to the accel/brake map directory", dynamic_typing=True
+            ),
+        )
+
         self.sub_odometry_ = self.create_subscription(
             Odometry,
             "/localization/kinematic_state",
@@ -235,10 +242,16 @@ class DataCollectingPurePursuitTrajectoryFollowerActuationCmd(Node):
             "/data_collecting_lookahead_marker_array",
             1,
         )
-        
+
         # load accel/brake map
-        path_to_accel_map = self.get_parameter("accel_brake_map_path").get_parameter_value().string_value + "/accel_map.csv"
-        path_to_brake_map = self.get_parameter("accel_brake_map_path").get_parameter_value().string_value + "/brake_map.csv"
+        path_to_accel_map = (
+            self.get_parameter("accel_brake_map_path").get_parameter_value().string_value
+            + "/accel_map.csv"
+        )
+        path_to_brake_map = (
+            self.get_parameter("accel_brake_map_path").get_parameter_value().string_value
+            + "/brake_map.csv"
+        )
         self.accel_brake_map = AccelBrakeMapConverter(path_to_accel_map, path_to_brake_map)
 
         self.timer_period_callback = 0.03  # 30ms
@@ -285,12 +298,6 @@ class DataCollectingPurePursuitTrajectoryFollowerActuationCmd(Node):
         longitudinal_vel_obs,
         pos_xy_ref_target,
     ):
-        # naive pure pursuit steering control law
-        wheel_base = self.get_parameter("wheel_base").get_parameter_value().double_value
-        # acc_kp = self.get_parameter("acc_kp").get_parameter_value().double_value
-        # longitudinal_vel_err = longitudinal_vel_obs - longitudinal_vel_ref_nearest
-        # ure_pursuit_acc_cmd = -acc_kp * longitudinal_vel_err
-
         alpha = (
             np.arctan2(pos_xy_ref_target[1] - pos_xy_obs[1], pos_xy_ref_target[0] - pos_xy_obs[0])
             - pos_yaw_obs[0]
@@ -309,9 +316,8 @@ class DataCollectingPurePursuitTrajectoryFollowerActuationCmd(Node):
         pos_xy_ref_nearest,
         pos_yaw_ref_nearest,
     ):
-        # control law equal to simple_trajectory_follower in autoware
+
         wheel_base = self.get_parameter("wheel_base").get_parameter_value().double_value
-        # acc_kp = self.get_parameter("acc_kp").get_parameter_value().double_value
 
         # Currently, the following params are not declared as ROS 2 params.
         lookahead_coef = self.get_parameter("lookahead_time").get_parameter_value().double_value
@@ -564,9 +570,9 @@ class DataCollectingPurePursuitTrajectoryFollowerActuationCmd(Node):
         # [2] publish actuation cmd
         # should be modified
         control_cmd_msg = AckermannControlCommand()
-        control_cmd_msg.stamp = (
-            control_cmd_msg.lateral.stamp
-        ) = control_cmd_msg.longitudinal.stamp = (self.get_clock().now().to_msg())
+        control_cmd_msg.stamp = control_cmd_msg.lateral.stamp = (
+            control_cmd_msg.longitudinal.stamp
+        ) = (self.get_clock().now().to_msg())
         control_cmd_msg.longitudinal.velocity = trajectory_longitudinal_velocity[nearestIndex]
         control_cmd_msg.longitudinal.acceleration = cmd[0]
         control_cmd_msg.lateral.steering_tire_angle = cmd[1]

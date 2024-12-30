@@ -62,13 +62,14 @@ This package provides tools for automatically collecting data using pure pursuit
 4. Launch control_data_collecting_tool.
 
     ```bash
-    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
+    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning accel_brake_map_path:=/path/to/your/accel_brake_map_dir
     ```
 
     - If you use the `along_road` course, please specify the same map for `map_path` as the one used when launching Autoware. `map_path` is not necessary when using courses other than `along_road`.
 
-    - Control data collecting tool automatically records topics included in `config/topics.yaml` when the above command is executed.
-      Topics will be saved in rosbag2 format in the current directory.
+    - If you set CONTROL_MODE to actuation_cmd or external_actuation_cmd, please specify the directory where the accel/brake maps used by your control system are located.
+
+    - Control data collecting tool automatically records topics included in `config/topics.yaml` when the above command is executed. Topics will be saved in rosbag2 format in the current directory.
 
     - The data from `/localization/kinematic_state` and `/localization/acceleration` located in the directory (rosbag2 format) where the command is executed will be automatically loaded and reflected in the data count for these topics.
       (If `LOAD_ROSBAG2_FILES` in `config/param.yaml` is set to `false`, the data is not loaded.)
@@ -112,21 +113,29 @@ This package provides tools for automatically collecting data using pure pursuit
       > You cannot change the goal pose while driving.
       > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
 
-7. Click the `LOCAL` button in `AutowareStatePanel`.
+7. The following actions differ depending on the `CONTROL_MODE`. If you select the control mode from [ `acceleration_cmd`, `actuation_cmd`], please proceed to 7.1. If you select the control mode from [`external_acceleration_cmd`, `external_actuation_cmd`], please proceed to 7.2.
 
-    <img src="resource/push_LOCAL.png" width="480">
+    - 7.1 If you choose the control mode from [ `acceleration_cmd`, `actuation_cmd`], click the `LOCAL` button in `AutowareStatePanel`.
 
-    Then, data collecting starts.
+        <img src="resource/push_LOCAL.png" width="480">
 
-    <img src="resource/push_LOCAL.gif" width="480">
+        Then, data collecting starts.
 
-    You can monitor the data collection status in real-time through the window that pops up when this node is launched.
-    (From top to bottom: the speed-acceleration phase diagram, the speed-acceleration heatmap, the speed-steering angle heatmap, the speed-steer rate heatmap, and the speed-jerk heatmap.)
+        <img src="resource/push_LOCAL.gif" width="480">
 
-    <img src="resource/data_collection_status.png" width="480">
+        You can monitor the data collection status in real-time through the window that pops up when this node is launched.
+        (From top to bottom: the speed-acceleration phase diagram, the speed-acceleration heatmap, the speed-steering angle heatmap, the speed-steer rate heatmap, and the speed-jerk heatmap.)
 
-    For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/MASK_NAME` where `MASK_NAME` is a parameter specifying mask name (Please also see `config/common_param.yaml`).
-    The specified heatmap cells are designed to change from blue to green once a certain amount of data (`VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, `VEL_ABS_STEER_RATE_THRESHOLD` ) is collected. It is recommended to collect data until as many cells as possible turn green.
+        <img src="resource/data_collection_status.png" width="480">
+
+        For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/MASK_NAME` where `MASK_NAME` is a parameter specifying mask name (Please also see `config/common_param.yaml`).
+        The specified heatmap cells are designed to change from blue to green once a certain amount of data (`VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, `VEL_ABS_STEER_RATE_THRESHOLD` ) is collected. It is recommended to collect data until as many cells as possible turn green.
+
+    - 7.2 In the case you choose the control mode from  [`external_acceleration_cmd`, `external_actuation_cmd`].
+
+      - `external_acceleration_cmd`
+
+      - `external_actuation_cmd`
 
 8. If you want to stop data collecting automatic driving, run the following command
 
@@ -208,7 +217,7 @@ You can create an original mask to specify the data collection range for the hea
 
      ```Python3
        # sine_curve is derived from appropriate amplitude and period, defined separately
-       target_velocity = target_velocity_on_section + sine_curve + sine_curve
+       target_velocity = target_velocity_on_section + sine_curve
      ```
 
   4. Deceleration phase
@@ -275,8 +284,6 @@ You can create an original mask to specify the data collection range for the hea
 
 ## Parameter
 
-There are parameters that are common to all trajectories and parameters that are specific to each trajectory.
-
 ### Common Parameters
 
 ROS 2 parameters which are common in all trajectories (`/config/common_param.yaml`):
@@ -290,7 +297,7 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `NUM_BINS_STEER`                         | `int`    | Number of bins of steer in heatmap                                                                                                        | 20                     |
 | `NUM_BINS_A`                             | `int`    | Number of bins of acceleration in heatmap                                                                                                 | 10                     |
 | `NUM_BINS_ABS_STEER_RATE`                | `int`    | Number of bins of absolute value of steer rate in heatmap                                                                                 | 5                      |
-| `NUM_BINS_JERK`                          | `int`    | Number of bins of jerk in heatmap        `                                                                                                 | 10                     |
+| `NUM_BINS_JERK`                          | `int`    | Number of bins of jerk in heatmap `                                                                                                       | 10                     |
 | `V_MIN`                                  | `double` | Minimum velocity in heatmap [m/s]                                                                                                         | 0.0                    |
 | `V_MAX`                                  | `double` | Maximum velocity in heatmap [m/s]                                                                                                         | 11.5                   |
 | `STEER_MIN`                              | `double` | Minimum steer in heatmap [rad]                                                                                                            | -0.6                   |
@@ -302,6 +309,7 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `ABS_STEER_RATE_MAX`                     | `double` | Maximum absolute value of steer rate in heatmap [rad/s]                                                                                   | 0.3                    |
 | `JERK_MIN`                               | `double` | Minimum jerk in heatmap [m/s^3]                                                                                                           | -0.5                   |
 | `JERK_MAX`                               | `double` | Maximum jerk in heatmap [m/s^3]                                                                                                           | 0.5                    |
+| `STEER_THRESHOLD_FOR_PEDAL_INPUT_COUNT`  | `string` | Threshold of steering angle to count pedal input data                                                                                     | 0.2                    |
 | `MASK_NAME`                              | `string` | Directory name of masks for data collection                                                                                               | `default`              |
 | `VEL_ACC_THRESHOLD`                      | `int`    | Threshold of velocity-and-acc heatmap in data collection                                                                                  | 40                     |
 | `VEL_STEER_THRESHOLD`                    | `int`    | Threshold of velocity-and-steer heatmap in data collection                                                                                | 20                     |
@@ -386,3 +394,29 @@ Each trajectory has specific ROS 2 parameters.
 | `minimum_length_of_straight_line` | `double` | The minimum length of straight line for data collection [m]         | 50.0          |
 | `longitude`                       | `double` | The longitude of the origin specified when loading the map [degree] | 139.6503      |
 | `latitude`                        | `double` | The latitude of the origin specified when loading the map [degree]  | 35.6762       |
+
+### Parameters for `data_collecting_acceleration_cmd.py` and `data_collecting_actuation_cmd.py`
+
+- `data_collecting_acceleration_cmd.py`
+
+| Name                            | Type     | Description | Default value |
+| :------------------------------ | :------- | :---------- | :------------ |
+| `TARGET_VELOCITY`               | `double` |             | 11.80         |
+| `TARGET_ACCELERATION_FOR_DRIVE` | `double` |             | 0.3           |
+| `TARGET_ACCELERATION_FOR_BRAKE` | `double` |             | 0.5           |
+| `TARGET_JERK_FOR_DRIVE`         | `double` |             | 1.5           |
+| `TARGET_JERK_FOR_BRAKE`         | `double` |             | -1.5          |
+| `MIN_ACCEL`                     | `double` |             | -5.0          |
+| `MAX_ACCEL`                     | `double` |             | 2.0           |
+
+- `data_collecting_actuation_cmd.py`
+
+| Name                         | Type     | Description | Default value |
+| :--------------------------- | :------- | :---------- | :------------ |
+| `TARGET_VELOCITY`            | `double` |             | 11.80         |
+| `TARGET_ACTUATION_FOR_ACCEL` | `double` |             | 0.3           |
+| `TARGET_ACTUATION_FOR_BRAKE` | `double` |             | 0.5           |
+| `TARGET_JERK_FOR_DRIVE`      | `double` |             | 1.5           |
+| `TARGET_JERK_FOR_BRAKE`      | `double` |             | -1.5          |
+| `MAX_ACCEL_PEDAL`            | `double` |             | 0.5           |
+| `MIN_BRAKE_PEDAL`            | `double` |             | 0.8           |

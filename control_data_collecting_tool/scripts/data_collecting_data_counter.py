@@ -65,7 +65,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
         self.previous_steer = 0.0
         self.previous_acc = 0.0
 
-        self.timer_period_callback = 0.033  # 30ms
+        self.timer_period_callback = 0.033
         self.timer_counter = self.create_timer(
             self.timer_period_callback,
             self.timer_callback_counter,
@@ -119,6 +119,20 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
 
         load_rosbag2_files = (
             self.get_parameter("LOAD_ROSBAG2_FILES").get_parameter_value().bool_value
+        )
+
+        self.declare_parameter(
+            "STEER_THRESHOLD_FOR_PEDAL_INPUT_COUNT",
+            0.2,
+            ParameterDescriptor(
+                description="Threshold of steering angle to count pedal input data"
+            ),
+        )
+
+        self.steer_threshold_for_pedal_count = (
+            self.get_parameter("STEER_THRESHOLD_FOR_PEDAL_INPUT_COUNT")
+            .get_parameter_value()
+            .double_value
         )
 
         if load_rosbag2_files:
@@ -312,7 +326,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
                 self.count_observations(
                     current_vel, current_acc, current_steer, current_steer_rate, current_jerk
                 )
-                if abs(current_steer) < 0.2:
+                if abs(current_steer) < self.steer_threshold_for_pedal_count:
                     self.count_pedal_input_observation(pedal_input, current_vel)
 
                 self.acc_hist.append(float(current_acc))
