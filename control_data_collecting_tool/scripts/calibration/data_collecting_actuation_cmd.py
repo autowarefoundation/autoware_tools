@@ -202,7 +202,9 @@ class DataCollectingActuationCmd(Node):
                 print(f"Rosbag validation error: {filename}")
                 sys.exit(1)
 
-            is_finished = lib.cui.finish_check(f"Will you continue to collect {mode} pedal input data?")
+            is_finished = lib.cui.finish_check(
+                f"Will you continue to collect {mode} pedal input data?"
+            )
 
         print(f"===== Successfully {mode} map checking finished! =====")
 
