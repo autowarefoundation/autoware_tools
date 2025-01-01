@@ -65,7 +65,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
         self.previous_steer = 0.0
         self.previous_acc = 0.0
 
-        self.timer_period_callback = 0.033  # 30ms
+        self.timer_period_callback = 0.033
         self.timer_counter = self.create_timer(
             self.timer_period_callback,
             self.timer_callback_counter,
@@ -82,6 +82,22 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             "/control_data_collecting_tools/collected_data_counts_of_vel_abs_steer_rate",
             10,
         )
+        self.collected_data_counts_of_vel_jerk_publisher_ = self.create_publisher(
+            Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_jerk", 10
+        )
+
+        self.collected_data_counts_of_vel_accel_pedal_input_publisher_ = self.create_publisher(
+            Int32MultiArray,
+            "/control_data_collecting_tools/collected_data_counts_of_vel_accel_pedal_input",
+            10,
+        )
+
+        self.collected_data_counts_of_vel_brake_pedal_input_publisher_ = self.create_publisher(
+            Int32MultiArray,
+            "/control_data_collecting_tools/collected_data_counts_of_vel_brake_pedal_input",
+            10,
+        )
+
         self.collected_data_counts_of_vel_jerk_publisher_ = self.create_publisher(
             Int32MultiArray, "/control_data_collecting_tools/collected_data_counts_of_vel_jerk", 10
         )
@@ -103,6 +119,20 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
 
         load_rosbag2_files = (
             self.get_parameter("LOAD_ROSBAG2_FILES").get_parameter_value().bool_value
+        )
+
+        self.declare_parameter(
+            "STEER_THRESHOLD_FOR_PEDAL_INPUT_COUNT",
+            0.2,
+            ParameterDescriptor(
+                description="Threshold of steering angle to count pedal input data"
+            ),
+        )
+
+        self.steer_threshold_for_pedal_count = (
+            self.get_parameter("STEER_THRESHOLD_FOR_PEDAL_INPUT_COUNT")
+            .get_parameter_value()
+            .double_value
         )
 
         if load_rosbag2_files:
@@ -239,6 +269,36 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
         if 0 <= v_bin < self.num_bins_v and 0 <= jerk_bin < self.num_bins_jerk:
             self.collected_data_counts_of_vel_jerk[v_bin, jerk_bin] += 1
 
+    def count_pedal_input_observation(self, actuation_cmd, current_vel):
+        if actuation_cmd is not None:
+            accel_pedal_input = actuation_cmd.actuation.accel_cmd
+            brake_pedal_input = actuation_cmd.actuation.brake_cmd
+            accel_pedal_input_bin = (
+                np.digitize(accel_pedal_input, self.accel_pedal_input_bin_centers) - 1
+            )
+            brake_pedal_input_bin = (
+                np.digitize(brake_pedal_input, self.brake_pedal_input_bin_centers) - 1
+            )
+            v_bin = np.digitize(current_vel, self.v_bins) - 1
+
+            if accel_pedal_input > 1e-3:
+                if (
+                    0 <= v_bin < self.num_bins_v
+                    and 0 <= accel_pedal_input_bin < self.num_bins_accel_pedal_input
+                ):
+                    self.collected_data_counts_of_vel_accel_pedal_input[
+                        v_bin, accel_pedal_input_bin
+                    ] += 1
+
+            if brake_pedal_input > 1e-3:
+                if (
+                    0 <= v_bin < self.num_bins_v
+                    and 0 <= brake_pedal_input_bin < self.num_bins_brake_pedal_input
+                ):
+                    self.collected_data_counts_of_vel_brake_pedal_input[
+                        v_bin, brake_pedal_input_bin
+                    ] += 1
+
     # call back for counting data points
     def timer_callback_counter(self):
         if (
@@ -257,6 +317,7 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
             current_acc = self._present_acceleration.accel.accel.linear.x
             current_steer_rate = (current_steer - self.previous_steer) / 0.033
             current_jerk = (current_acc - self.previous_acc) / 0.033
+            pedal_input = self._present_actuation_cmd
 
             self.previous_steer = current_steer
             self.previous_acc = current_acc
@@ -265,6 +326,8 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
                 self.count_observations(
                     current_vel, current_acc, current_steer, current_steer_rate, current_jerk
                 )
+                if abs(current_steer) < self.steer_threshold_for_pedal_count:
+                    self.count_pedal_input_observation(pedal_input, current_vel)
 
                 self.acc_hist.append(float(current_acc))
                 self.vel_hist.append(float(current_vel))
@@ -290,6 +353,17 @@ class DataCollectingDataCounter(DataCollectingBaseNode):
         publish_Int32MultiArray(
             self.collected_data_counts_of_vel_jerk_publisher_,
             self.collected_data_counts_of_vel_jerk,
+        )
+
+        #
+        publish_Int32MultiArray(
+            self.collected_data_counts_of_vel_accel_pedal_input_publisher_,
+            self.collected_data_counts_of_vel_accel_pedal_input,
+        )
+
+        publish_Int32MultiArray(
+            self.collected_data_counts_of_vel_brake_pedal_input_publisher_,
+            self.collected_data_counts_of_vel_brake_pedal_input,
         )
 
         # publish acc_hist

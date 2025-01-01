@@ -285,7 +285,7 @@ class Along_Road(Base_Course):
 
         # Calculate sine wave and apply to velocity
         T = self.sine_period_for_velocity
-        sine = np.sin(2 * np.pi * current_time / T) * np.sin(np.pi * current_time / T)
+        sine = np.sin(np.pi * current_time / T)
 
         if current_vel > self.target_vel_on_straight_line:
             target_vel = self.target_vel_on_straight_line + sine
@@ -307,7 +307,7 @@ class Along_Road(Base_Course):
             ) / acc_kp_of_pure_pursuit * (1.25 + 0.5 * sine)
         elif self.deceleration_rate <= achievement_rate:
             target_vel = max(
-                current_vel - self.params.a_max / acc_kp_of_pure_pursuit * (1.0 + 0.5 * sine),
+                current_vel - self.params.a_max / acc_kp_of_pure_pursuit * (1.25 + 0.5 * sine),
                 self.velocity_on_curve,
             )
 

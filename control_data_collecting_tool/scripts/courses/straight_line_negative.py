@@ -57,7 +57,7 @@ class Straight_Line_Negative(Base_Course):
         t_array = np.arange(start=0.0, stop=total_distance, step=self.step).astype("float")
 
         self.yaw = np.zeros(len(t_array))
-        self.parts = ["linear" for _ in range(len(t_array.copy()))]
+        self.parts = ["straight" for _ in range(len(t_array.copy()))]
         x = np.linspace(-total_distance / 2, total_distance / 2, len(t_array))
         y = np.zeros(len(t_array))
 
@@ -98,10 +98,10 @@ class Straight_Line_Negative(Base_Course):
 
         # Calculate sine wave and apply to velocity
         T = self.sine_period_for_velocity
-        sine = np.sin(2 * np.pi * current_time / T) * np.sin(np.pi * current_time / T)
+        sine = np.sin(2 * np.pi * current_time / T)
 
         if current_vel > self.target_vel_on_straight_line:
-            target_vel = self.target_vel_on_straight_line + sine - 1.0
+            target_vel = self.target_vel_on_straight_line + sine - 0.5
             target_vel = max(target_vel, 0.05)
         elif current_vel < self.target_vel_on_straight_line - 2.0 * abs(
             self.target_acc_on_straight_line
@@ -120,11 +120,7 @@ class Straight_Line_Negative(Base_Course):
                 self.target_acc_on_straight_line
             ) / acc_kp_of_pure_pursuit * (1.25 + 0.5 * sine)
         elif self.deceleration_rate <= achievement_rate:
-            target_vel = (
-                (current_vel - self.params.a_max / acc_kp_of_pure_pursuit)
-                * (1.0 + 0.5 * sine)
-                * (1.0 - achievement_rate)
-            )
+            target_vel = 0.0
 
         return target_vel
 
