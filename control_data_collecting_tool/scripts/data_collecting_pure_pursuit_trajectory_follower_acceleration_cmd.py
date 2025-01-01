@@ -505,8 +505,6 @@ class DataCollectingPurePursuitTrajectoryFollower(Node):
                 acceleration_cmd = self.acceleration_cmd
             cmd[0] = acceleration_cmd
 
-        self.get_logger().info("cmd_mode : " + self.CONTROL_MODE)
-
         cmd_without_noise = 1 * cmd
 
         tmp_acc_noise = self.acc_noise_list.pop(0)

@@ -113,9 +113,9 @@ This package provides tools for automatically collecting data using pure pursuit
       > You cannot change the goal pose while driving.
       > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
 
-7. The following actions differ depending on the `CONTROL_MODE`. If you select the control mode from [ `acceleration_cmd`, `actuation_cmd`], please proceed to 7.1. If you select the control mode from [`external_acceleration_cmd`, `external_actuation_cmd`], please proceed to 7.2.
+7. The following actions differ depending on the `CONTROL_MODE`. If you select the control mode from [ `acceleration_cmd`], please proceed to 7.1. If you select the control mode from [`actuation_cmd`], please proceed to 7.2. If you select the control mode from [`external_acceleration_cmd`, `external_actuation_cmd`], please proceed to 7.3.
 
-    - 7.1 If you choose the control mode from [ `acceleration_cmd`, `actuation_cmd`], click the `LOCAL` button in `AutowareStatePanel`.
+    - 7.1 If you choose the control mode from [ `acceleration_cmd`], click the `LOCAL` button in `AutowareStatePanel`.
 
         <img src="resource/push_LOCAL.png" width="480">
 
@@ -131,7 +131,13 @@ This package provides tools for automatically collecting data using pure pursuit
         For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/MASK_NAME` where `MASK_NAME` is a parameter specifying mask name (Please also see `config/common_param.yaml`).
         The specified heatmap cells are designed to change from blue to green once a certain amount of data (`VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, `VEL_ABS_STEER_RATE_THRESHOLD` ) is collected. It is recommended to collect data until as many cells as possible turn green.
 
-    - 7.2 In the case you choose the control mode from  [`external_acceleration_cmd`, `external_actuation_cmd`].
+    - 7.2 If you choose the control mode from [`actuation_cmd`], click the LOCAL button in the AutowareStatePanel as described in Section 7.1.
+      > [NOTE]
+      > At this time, the control mode `actuation_cmd` is only implemented in the course `reversal_loop_circle` and cannot be used in other courses.
+
+      This mode allows you to collect data on various accel and brake pedal inputs. To monitor the data collection status of accel/brake input, please use the functionality of [autoware_accel_brake_map_calibrator](https://github.com/autowarefoundation/autoware.universe/blob/main/vehicle/autoware_accel_brake_map_calibrator/README.md).
+
+    - 7.3 In the case you choose the control mode from  [`external_acceleration_cmd`, `external_actuation_cmd`].
 
       - `external_acceleration_cmd`
 
@@ -163,7 +169,7 @@ This package provides tools for automatically collecting data using pure pursuit
             Ready to drive? (yes/no)
             ```
 
-          f. Execution and Recording: After 3-second counting, the vehicle accelerates to the target velocity specified in the configuration file. During this process, the following message is displayed:
+          f. Execution and Recording: After 3-second counting, the vehicle accelerates to `TARGET_VELOCITY` specified in the configuration file. During this process, the following message is displayed:
 
             ```bash
             Accelerate with target_acceleration m/s^2
@@ -175,7 +181,7 @@ This package provides tools for automatically collecting data using pure pursuit
             /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
             ```
 
-          g. Deceleration Phase: After reaching the target velocity, the tool applies a deceleration using the TARGET_ACCELERATION_FOR_BRAKE parameter to bring the vehicle to a stop.
+          g. Deceleration Phase: After reaching `TARGET_VELOCITY`, the tool applies a deceleration using the TARGET_ACCELERATION_FOR_BRAKE parameter to bring the vehicle to a stop.
 
           h. Completion: Once the data is recorded and the vehicle is safely stopped, the session ends. The tool validates the recorded data.
 
@@ -205,15 +211,15 @@ This package provides tools for automatically collecting data using pure pursuit
             Ready to drive? (yes/no)
             ```
 
-          e. Acceleration Phase: After 3-second counting, the vehicle accelerates to the TARGET_VELOCITY with TARGET_ACCELERATION_FOR_DRIVE before braking.
+          e. Acceleration Phase: After 3-second counting, the vehicle accelerates to the `TARGET_VELOCITY` with TARGET_ACCELERATION_FOR_DRIVE before braking.
 
-          f. Braking and Recording: Once the target velocity is achieved, the tool applies the braking command. During this process, you will see:
+          f. Braking and Recording: Once `TARGET_VELOCITY` is achieved, the tool applies the braking command. During this process, you will see:
 
             ```bash
             Accelerate with target_acceleration m/s^2
             ```
 
-            A ROS bag file records all relevant topics during this session. The filename is generated as constant_acceleration_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_acceleration_cmd_BRAKE_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
 
             ```bash
             /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
@@ -251,19 +257,19 @@ This package provides tools for automatically collecting data using pure pursuit
             Ready to drive? (yes/no)
             ```
 
-          e. Execution and Recording: After 3-second counting, the vehicle accelerates to the target velocity specified in the configuration file. During this process, the following message is displayed:
+          e. Execution and Recording: After 3-second counting, the vehicle accelerates to `TARGET_VELOCITY` specified in the configuration file. During this process, the following message is displayed:
 
             ```bash
             Actuate with accel pedal input: target_accel_pedal_input
             ```
 
-            A ROS bag file records all relevant topics during this session. The filename is generated as constant_acceleration_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_actuation_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
 
             ```bash
             /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
             ```
 
-          f. Deceleration Phase: After reaching the target velocity, the tool applies a deceleration using the TARGET_ACTUATION_FOR_BRAKE parameter to bring the vehicle to a stop.
+          f. Deceleration Phase: After reaching `TARGET_VELOCITY`, the tool applies a deceleration using the TARGET_ACTUATION_FOR_BRAKE parameter to bring the vehicle to a stop.
 
           g. Completion: Once the data is recorded and the vehicle is safely stopped, the session ends. The tool validates the recorded data.
 
@@ -293,15 +299,15 @@ This package provides tools for automatically collecting data using pure pursuit
             Ready to drive? (yes/no)
             ```
 
-          e. Acceleration Phase: After 3-second counting, the vehicle accelerates to the TARGET_VELOCITY with TARGET_ACTUATION_FOR_ACCEL before braking.
+          e. Acceleration Phase: After 3-second counting, the vehicle accelerates to the `TARGET_VELOCITY` with TARGET_ACTUATION_FOR_ACCEL before braking.
 
-          f. Braking and Recording: Once the target velocity is achieved, the tool applies the braking command. During this process, you will see:
+          f. Braking and Recording: Once `TARGET_VELOCITY` is achieved, the tool applies the braking command. During this process, you will see:
 
             ```bash
             Actuate with brake pedal input: target_brake_pedal_input
             ```
 
-            A ROS bag file records all relevant topics during this session. The filename is generated as constant_acceleration_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_actuation_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
 
             ```bash
             /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
@@ -378,8 +384,8 @@ You can create an original mask to specify the data collection range for the hea
      The vehicle accelerates by setting `target_velocity` as follows until its speed exceeds `target_velocity_on_section`.
 
      ```Python3
-       # sine_curve is derived from appropriate amplitude and period, defined separately
-       target_velocity = current_velocity + abs(target_acceleration_on_section) / acc_kp + sine_curve
+       # b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately
+       target_velocity = current_velocity + abs(target_acceleration_on_section) / acc_kp * (b + sine_curve)
      ```
 
      `current_velocity` is a current velocity of vehicle and `acc_kp` accel command proportional gain in pure pursuit algorithm. `sine_curve` is a sine wave added to partially mitigate situations where the vehicle fails to achieve the target acceleration.
@@ -388,16 +394,16 @@ You can create an original mask to specify the data collection range for the hea
      When the vehicle reaches `target_velocity_on_section`, `target_velocity` is defined as follows to allow the vehicle to run around the target speed for a certain period of time.
 
      ```Python3
-       # sine_curve is derived from appropriate amplitude and period, defined separately
-       target_velocity = target_velocity_on_section + sine_curve
+       # b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately
+       target_velocity = target_velocity_on_section + b + sine_curve
      ```
 
   4. Deceleration phase
      In the deceleration phase, similar to the acceleration phase, `target_velocity` is defined as follows to ensure the vehicle decelerates.
 
      ```Python3
-       # sine_curve is derived from appropriate amplitude and period, defined separately
-       target_velocity = current_velocity - abs(target_acceleration_on_section) / acc_kp + sine_curve
+       # b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately
+       target_velocity = current_velocity - abs(target_acceleration_on_section) / acc_kp * (b + sine_curve)
      ```
 
      After decelerating to a sufficiently low speed, return to step i.
@@ -448,7 +454,7 @@ You can create an original mask to specify the data collection range for the hea
 
   The following two steps are taken to obtain steering angle data.
 
-  1. Starting from the ego vehicle's current position, the system examines a segment of the trajectory ahead, covering a distance defined by looking_ahead_distance, to identify the point of maximum curvature.
+  1. Starting from the ego vehicle's current position, the system examines a segment of the trajectory ahead, covering a distance defined by look_ahead_distance, to identify the point of maximum curvature.
 
   2. This maximum curvature determines the steering angle the vehicle will use. The vehicle then adjusts its speed toward the speed associated with the sparsest steering angle data.
 

@@ -445,22 +445,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             or self.trajectory_position_data is not None
             or self.trajectory_yaw_data is not None
         ):
-            # [0] update nominal target trajectory if changing related ros2 params
-            target_longitudinal_velocity = (
-                self.get_parameter("target_longitudinal_velocity")
-                .get_parameter_value()
-                .double_value
-            )
-
-            window = self.get_parameter("mov_ave_window").get_parameter_value().integer_value
-
-            if (
-                np.abs(target_longitudinal_velocity - self.current_target_longitudinal_velocity)
-                > 1e-6
-                or window != self.current_window
-            ):
-                self.updateNominalTargetTrajectory()
-
             # [1] receive observation from topic
             present_position = np.array(
                 [
@@ -553,7 +537,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             index_array_near = np.argsort(distance)
             if self.present_operation_mode_ == 3:
                 self.nearestIndex = index_range[index_array_near[0]]
-            # set target velocity
+            # set target velocity or target pedal input
             present_vel = present_linear_velocity[0]
             present_acc = self._present_acceleration.accel.accel.linear.x
             current_time = self.get_clock().now().nanoseconds / 1e9
@@ -572,13 +556,19 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                     self.mask_vel_steer,
                 )
             elif self.CONTROL_MODE == "actuation_cmd":
-                target_pedal_input = self.course.get_target_pedal_input(
-                    self.nearestIndex,
-                    current_time,
-                    present_vel,
-                    self.collected_data_counts_of_vel_accel_pedal_input,
-                    self.collected_data_counts_of_vel_brake_pedal_input,
-                )
+                if self.COURSE_NAME == "reversal_loop_circle":
+                    target_pedal_input = self.course.get_target_pedal_input(
+                        self.nearestIndex,
+                        current_time,
+                        present_vel,
+                        self.collected_data_counts_of_vel_accel_pedal_input,
+                        self.collected_data_counts_of_vel_brake_pedal_input,
+                    )
+                else:
+                    msg = Bool()
+                    msg.data = True
+                    self.pub_stop_request_.publish(msg)
+                    self.get_logger().error(f"Control mode {self.CONTROL_MODE} is not supported when the course is {self.COURSE_NAME}")
             elif (
                 self.CONTROL_MODE == "external_acceleration_cmd"
                 or self.CONTROL_MODE == "external_actuation_cmd"
