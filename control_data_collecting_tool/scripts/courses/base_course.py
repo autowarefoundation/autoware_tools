@@ -108,7 +108,7 @@ class Base_Course:
         mask_vel_steer,
     ):
         return None
-    
+
     def get_target_pedal_input(
         self,
         nearestIndex,

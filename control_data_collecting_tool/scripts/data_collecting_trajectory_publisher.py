@@ -568,7 +568,9 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                     msg = Bool()
                     msg.data = True
                     self.pub_stop_request_.publish(msg)
-                    self.get_logger().error(f"Control mode {self.CONTROL_MODE} is not supported when the course is {self.COURSE_NAME}")
+                    self.get_logger().error(
+                        f"Control mode {self.CONTROL_MODE} is not supported when the course is {self.COURSE_NAME}"
+                    )
             elif (
                 self.CONTROL_MODE == "external_acceleration_cmd"
                 or self.CONTROL_MODE == "external_actuation_cmd"

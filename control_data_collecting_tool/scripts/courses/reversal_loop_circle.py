@@ -826,9 +826,9 @@ class Reversal_Loop_Circle(Base_Course):
             self.trajectory_nearly_straight_clock_wise[self.steer_list[i]] = trajectory
 
             # Generate and store counterclockwise trajectories by reversing the clockwise trajectory.
-            self.trajectory_nearly_straight_counter_clock_wise[
-                self.steer_list[i]
-            ] = reverse_trajectory_segment(trajectory)
+            self.trajectory_nearly_straight_counter_clock_wise[self.steer_list[i]] = (
+                reverse_trajectory_segment(trajectory)
+            )
 
         # Generate trajectories for changing directions (turning).
 
@@ -1198,16 +1198,22 @@ class Reversal_Loop_Circle(Base_Course):
         if self.vehicle_phase == "acceleration":
             target_pedal_input = self.target_accel_pedal_input_on_segmentation + 0.05 * sine
             if current_time - self.acceleration_start_time > self.max_phase_time:
-                target_pedal_input = self.params.accel_pedal_input_max / 2 * sine + self.params.accel_pedal_input_max / 2
+                target_pedal_input = (
+                    self.params.accel_pedal_input_max / 2 * sine
+                    + self.params.accel_pedal_input_max / 2
+                )
             if current_vel > max_velocity:
                 self.vehicle_phase = "deceleration"
                 self.deceleration_start_time = current_time
 
         # Handle deceleration phase
         if self.vehicle_phase == "deceleration":
-            target_pedal_input = - self.target_brake_pedal_input_on_segmentation - 0.05 * sine
+            target_pedal_input = -self.target_brake_pedal_input_on_segmentation - 0.05 * sine
             if current_time - self.deceleration_start_time > self.max_phase_time:
-                target_pedal_input = - self.params.brake_pedal_input_max / 2 * sine - self.params.brake_pedal_input_max / 2
+                target_pedal_input = (
+                    -self.params.brake_pedal_input_max / 2 * sine
+                    - self.params.brake_pedal_input_max / 2
+                )
             if current_vel < 0.05:
                 self.updated_target_velocity = False
 
