@@ -67,7 +67,8 @@ TEST_F(TestIntersectionTurnDirectionTagging, WrongTurnDirectionTag)  // NOLINT f
   EXPECT_EQ(issues[0].primitive, lanelet::validation::Primitive::Lanelet);
   EXPECT_EQ(
     issues[0].message,
-    "[Intersection.TurnDirectionTagging-002] Invalid turn_direction tag \"leftt\" is found.");
+    "[Intersection.TurnDirectionTagging-002] "
+    "Invalid turn_direction tag \"leftt\" is found.");  // cspell:disable-line
 }
 
 TEST_F(TestIntersectionTurnDirectionTagging, CorrectIntersection)  // NOLINT for gtest

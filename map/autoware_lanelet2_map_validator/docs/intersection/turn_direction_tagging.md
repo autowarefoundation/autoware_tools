@@ -8,7 +8,7 @@ mapping.intersection.turn_direction_tagging
 
 This validator checks whether lanelets inside the `intersection_area` polygon have a `turn_direction` tag and it is set to "straight", "left", or "right".
 
-The validator will output the follwoing issues with the corresponding primitive ID.
+The validator will output the following issues with the corresponding primitive ID.
 
 | Issue Code                            | Message                                              | Severity | Primitive | Description                                                                                                        | Approach                                                                                                                                                             |
 | ------------------------------------- | ---------------------------------------------------- | -------- | --------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
