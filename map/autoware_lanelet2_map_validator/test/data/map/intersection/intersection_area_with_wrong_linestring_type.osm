@@ -1,86 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <osm generator="VMB">
-  <MetaInfo format_version="1" map_version="2"/>
-  <node id="285" lat="35.90327302784" lon="139.9336616108">
-    <tag k="local_x" v="3774.4814"/>
-    <tag k="local_y" v="73745.2383"/>
-    <tag k="ele" v="19.267"/>
-  </node>
-  <node id="287" lat="35.90324402805" lon="139.93364250018">
-    <tag k="local_x" v="3772.7217"/>
-    <tag k="local_y" v="73742.0405"/>
-    <tag k="ele" v="19.273"/>
-  </node>
-  <node id="288" lat="35.90323819449" lon="139.93364041649">
-    <tag k="local_x" v="3772.5266"/>
-    <tag k="local_y" v="73741.3955"/>
-    <tag k="ele" v="19.276"/>
-  </node>
-  <node id="290" lat="35.9032057502" lon="139.93363708304">
-    <tag k="local_x" v="3772.1865"/>
-    <tag k="local_y" v="73737.8001"/>
-    <tag k="ele" v="19.284"/>
-  </node>
-  <node id="343" lat="35.90325133347" lon="139.93344963934">
-    <tag k="local_x" v="3755.3263"/>
-    <tag k="local_y" v="73743.0408"/>
-    <tag k="ele" v="19.25"/>
-  </node>
-  <node id="345" lat="35.90327994506" lon="139.93346888918">
-    <tag k="local_x" v="3757.0981"/>
-    <tag k="local_y" v="73746.1954"/>
-    <tag k="ele" v="19.23"/>
-  </node>
-  <node id="346" lat="35.90328672265" lon="139.93347138904">
-    <tag k="local_x" v="3757.3319"/>
-    <tag k="local_y" v="73746.9447"/>
-    <tag k="ele" v="19.225"/>
-  </node>
-  <node id="348" lat="35.90331916726" lon="139.93347486093">
-    <tag k="local_x" v="3757.6845"/>
-    <tag k="local_y" v="73750.54"/>
-    <tag k="ele" v="19.202"/>
-  </node>
-  <node id="360" lat="35.90319177783" lon="139.93353394455">
-    <tag k="local_x" v="3762.8621"/>
-    <tag k="local_y" v="73736.3519"/>
-    <tag k="ele" v="19.274"/>
-  </node>
-  <node id="361" lat="35.90319383421" lon="139.93352561156">
-    <tag k="local_x" v="3762.1126"/>
-    <tag k="local_y" v="73736.5882"/>
-    <tag k="ele" v="19.272"/>
-  </node>
-  <node id="363" lat="35.9031969451" lon="139.93348547233">
-    <tag k="local_x" v="3758.4941"/>
-    <tag k="local_y" v="73736.9728"/>
-    <tag k="ele" v="19.263"/>
-  </node>
-  <node id="397" lat="35.90317608354" lon="139.93356897239">
-    <tag k="local_x" v="3766.0041"/>
-    <tag k="local_y" v="73734.5766"/>
-    <tag k="ele" v="19.285"/>
-  </node>
-  <node id="420" lat="35.90334850041" lon="139.93354266698">
-    <tag k="local_x" v="3763.839"/>
-    <tag k="local_y" v="73753.7268"/>
-    <tag k="ele" v="19.21"/>
-  </node>
-  <node id="422" lat="35.90333302799" lon="139.93357841663">
-    <tag k="local_x" v="3767.0464"/>
-    <tag k="local_y" v="73751.9754"/>
-    <tag k="ele" v="19.223"/>
-  </node>
-  <node id="423" lat="35.90333113903" lon="139.93358580547">
-    <tag k="local_x" v="3767.7109"/>
-    <tag k="local_y" v="73751.7586"/>
-    <tag k="ele" v="19.226"/>
-  </node>
-  <node id="425" lat="35.90332841683" lon="139.93362555503">
-    <tag k="local_x" v="3771.2947"/>
-    <tag k="local_y" v="73751.4175"/>
-    <tag k="ele" v="19.253"/>
-  </node>
+  <MetaInfo format_version="1" map_version="3"/>
   <node id="1100" lat="35.90336541715" lon="139.93379219407">
     <tag k="type" v="end"/>
     <tag k="local_x" v="3786.3774"/>
@@ -2451,46 +2371,6 @@
     <nd ref="1995"/>
     <tag k="type" v="virtual"/>
   </way>
-  <way id="325">
-    <nd ref="346"/>
-    <nd ref="422"/>
-    <tag k="type" v="pedestrian_marking"/>
-  </way>
-  <way id="326">
-    <nd ref="348"/>
-    <nd ref="420"/>
-    <tag k="type" v="pedestrian_marking"/>
-  </way>
-  <way id="327">
-    <nd ref="361"/>
-    <nd ref="345"/>
-    <tag k="type" v="pedestrian_marking"/>
-  </way>
-  <way id="328">
-    <nd ref="363"/>
-    <nd ref="343"/>
-    <tag k="type" v="pedestrian_marking"/>
-  </way>
-  <way id="329">
-    <nd ref="288"/>
-    <nd ref="360"/>
-    <tag k="type" v="pedestrian_marking"/>
-  </way>
-  <way id="330">
-    <nd ref="290"/>
-    <nd ref="397"/>
-    <tag k="type" v="pedestrian_marking"/>
-  </way>
-  <way id="331">
-    <nd ref="423"/>
-    <nd ref="287"/>
-    <tag k="type" v="pedestrian_marking"/>
-  </way>
-  <way id="332">
-    <nd ref="425"/>
-    <nd ref="285"/>
-    <tag k="type" v="pedestrian_marking"/>
-  </way>
   <way id="9175">
     <nd ref="1885"/>
     <nd ref="1886"/>
@@ -2807,15 +2687,15 @@
     <tag k="type" v="intersection_area"/>
     <tag k="area" v="yes"/>
   </way>
-  <relation id="49" visible="true" version="1">
+  <relation id="49">
     <member type="way" role="left" ref="197"/>
     <member type="way" role="right" ref="204"/>
-    <tag k="location" v="urban" />
-    <tag k="one_way" v="yes" />
-    <tag k="speed_limit" v="30" />
-    <tag k="subtype" v="road" />
-    <tag k="turn_direction" v="straight" />
-    <tag k="type" v="lanelet" />
+    <tag k="type" v="lanelet"/>
+    <tag k="subtype" v="road"/>
+    <tag k="speed_limit" v="30"/>
+    <tag k="location" v="urban"/>
+    <tag k="one_way" v="yes"/>
+    <tag k="turn_direction" v="straight"/>
   </relation>
   <relation id="50">
     <member type="way" role="left" ref="199"/>
