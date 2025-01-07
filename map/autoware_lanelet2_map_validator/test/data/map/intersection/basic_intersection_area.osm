@@ -2155,6 +2155,14 @@
     <tag k="type" v="line_thin" />
     <tag k="width" v="0.200" />
   </way>
+  <way id="197">
+    <nd ref="1890"/>
+    <nd ref="5966"/>
+    <nd ref="5965"/>
+    <nd ref="1994"/>
+    <nd ref="1995"/>
+    <tag k="type" v="virtual"/>
+  </way>
   <way id="199" visible="true" version="1">
     <nd ref="1890" />
     <nd ref="5966" />
@@ -2798,6 +2806,16 @@
     <tag k="area" v="yes" />
     <tag k="type" v="intersection_area" />
   </way>
+  <relation id="49" visible="true" version="1">
+    <member type="way" role="left" ref="197"/>
+    <member type="way" role="right" ref="204"/>
+    <tag k="location" v="urban" />
+    <tag k="one_way" v="yes" />
+    <tag k="speed_limit" v="30" />
+    <tag k="subtype" v="road" />
+    <tag k="turn_direction" v="straight" />
+    <tag k="type" v="lanelet" />
+  </relation>
   <relation id="50" visible="true" version="1">
     <member type="way" ref="199" role="left" />
     <member type="way" ref="218" role="right" />
