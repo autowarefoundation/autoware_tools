@@ -46,6 +46,7 @@
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>autoware_behavior_path_planner</test_depend>
   <test_depend>autoware_behavior_velocity_planner</test_depend>
+  <test_depend>autoware_global_parameter_loader</test_depend>
   <test_depend>autoware_lint_common</test_depend>
   <test_depend>ros_testing</test_depend>
 
