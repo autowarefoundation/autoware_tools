@@ -32,7 +32,7 @@ ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator
 You can use `autoware_lanelet2_map_validator` with the following command. This will run all validators including the default built-in validators in the [lanelet2_validation](https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation).
 
 ```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file <absolute_or_relative_path_to_autoware_requirement_set.json> --projector mgrs
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file <absolute_or_relative_path/to_your/lanelet2_map.osm> --projector mgrs
 ```
 
 ### Run a specific validator
