@@ -32,7 +32,7 @@ ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator
 You can use `autoware_lanelet2_map_validator` with the following command. This will run all validators including the default built-in validators in the [lanelet2_validation](https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation).
 
 ```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm --projection mgrs
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file <absolute_or_relative_path/to_your/lanelet2_map.osm> --projector mgrs
 ```
 
 ### Run a specific validator
@@ -41,11 +41,11 @@ ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_f
 If you want to call a few validators, you can select them with the `--validator, -v` option.
 
 ```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm --projection mgrs --validator mapping.traffic_light.missing_regulatory_elements
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm --projector mgrs --validator mapping.traffic_light.missing_regulatory_elements
 ```
 
 You can get a list of available validators with the `--print` option.
-(`-p` is for `--projection`)
+(`-p` is for `--projector`)
 
 ```bash
 ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --print
@@ -58,13 +58,13 @@ ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --print
 The output filename will be `lanelet2_validation_results.json`.
 
 ```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file path/to_your/lanelet2_map.osm --projection mgrs --input_requirements autoware_requirements_set.json --output_directory ./
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator --map_file <absolute_or_relative_path/to_your/lanelet2_map.osm> --projector mgrs --input_requirements <absolute_or_relative_path_to_autoware_requirement_set.json> --output_directory ./
 ```
 
 (Short version)
 
 ```bash
-ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator -m path/to_your/lanelet2_map.osm -p mgrs -i autoware_requirements_set.json -o ./
+ros2 run autoware_lanelet2_map_validator autoware_lanelet2_map_validator -m <absolute_or_relative_path/to_your/lanelet2_map.osm> -p mgrs -i <absolute_or_relative_path_to_autoware_requirement_set.json> -o ./
 ```
 
 #### Input file
