@@ -148,7 +148,7 @@ This package provides tools for automatically collecting data using pure pursuit
           a. Start the Tool by using the following command
 
             ```bash
-            ros2 run control_data_collecting_tool data_collecting_acceleration_cmd
+            ros2 run control_data_collecting_tool data_collecting_acceleration_cmd.py
             ```
 
           b. Confirm Data Collection: The tool prompts you to confirm whether to proceed with positive acceleration data collection:
