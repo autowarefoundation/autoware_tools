@@ -221,6 +221,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://autowarefoundation.github.io/autoware-tools-documentation/latest/planning/autoware_static_centerline_generator/</loc>
+         <lastmod>2025-01-09</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://autowarefoundation.github.io/autoware-tools-documentation/latest/planning/planning_debug_tools/</loc>
          <lastmod>2025-01-09</lastmod>
          <changefreq>daily</changefreq>
