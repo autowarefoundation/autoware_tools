@@ -211,8 +211,7 @@ class Figure_Eight(Base_Course):
         self.previous_part = part
 
         # Calculate sine wave and apply to velocity
-        T = self.sine_period_for_velocity
-        sine = np.sin(2 * np.pi * current_time / T) * np.sin(np.pi * current_time / T)
+        sine = np.sin(np.pi * current_time / self.sine_period_for_velocity)
 
         if current_vel > self.target_vel_on_straight_line:
             target_vel = self.target_vel_on_straight_line + sine + 1.5 * sine - 1.0

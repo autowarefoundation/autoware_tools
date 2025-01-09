@@ -33,12 +33,15 @@ pluginlib_export_plugin_description_file(rviz_common plugins/plugin_description.
 
 # Install scripts
 install(PROGRAMS
-  scripts/data_collecting_pure_pursuit_trajectory_follower.py
+  scripts/data_collecting_pure_pursuit_trajectory_follower_acceleration_cmd.py
+  scripts/data_collecting_pure_pursuit_trajectory_follower_actuation_cmd.py
   scripts/data_collecting_trajectory_publisher.py
   scripts/data_collecting_plotter.py
   scripts/data_collecting_rosbag_record.py
   scripts/data_collecting_data_counter.py
   scripts/data_collecting_base_node.py
+  scripts/calibration/data_collecting_acceleration_cmd.py
+  scripts/calibration/data_collecting_actuation_cmd.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
