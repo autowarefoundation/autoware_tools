@@ -55,7 +55,60 @@ def generate_test_description():
             DeclareLaunchArgument("start_lanelet_id", default_value="215"),
             DeclareLaunchArgument("end_lanelet_id", default_value="216"),
             DeclareLaunchArgument(
-                "centerline_source", default_value="optimization_trajectory_base"
+                "map_loader_param",
+                default_value=os.path.join(
+                    get_package_share_directory("autoware_map_loader"),
+                    "config/lanelet2_map_loader.param.yaml",
+                ),
+            ),
+            DeclareLaunchArgument(
+                "behavior_path_planner_param",
+                default_value=os.path.join(
+                    get_package_share_directory("autoware_behavior_path_planner"),
+                    "config/behavior_path_planner.param.yaml",
+                ),
+            ),
+            DeclareLaunchArgument(
+                "behavior_velocity_planner_param",
+                default_value=os.path.join(
+                    get_package_share_directory("autoware_behavior_velocity_planner"),
+                    "config/behavior_velocity_planner.param.yaml",
+                ),
+            ),
+            DeclareLaunchArgument(
+                "path_smoother_param",
+                default_value=os.path.join(
+                    get_package_share_directory("autoware_path_smoother"),
+                    "config/path_smoother.param.yaml",
+                ),
+            ),
+            DeclareLaunchArgument(
+                "path_optimizer_param",
+                default_value=os.path.join(
+                    get_package_share_directory("autoware_path_optimizer"),
+                    "config/path_optimizer.param.yaml",
+                ),
+            ),
+            DeclareLaunchArgument(
+                "mission_planner_param",
+                default_value=os.path.join(
+                    get_package_share_directory("autoware_mission_planner"),
+                    "config/mission_planner.param.yaml",
+                ),
+            ),
+            DeclareLaunchArgument(
+                "common_param",
+                default_value=os.path.join(
+                    get_package_share_directory("autoware_static_centerline_generator"),
+                    "config/common.param.yaml",
+                ),
+            ),
+            DeclareLaunchArgument(
+                "nearest_search_param",
+                default_value=os.path.join(
+                    get_package_share_directory("autoware_static_centerline_generator"),
+                    "config/nearest_search.param.yaml",
+                ),
             ),
             static_centerline_generator,
             # Start test after 1s - gives time for the autoware_static_centerline_generator to finish initialization

@@ -19,8 +19,12 @@
   <!-- topic -->
   <arg name="lanelet2_map_topic" default="/map/vector_map"/>
   <arg name="lanelet2_map_marker_topic" default="/map/vector_map_marker"/>
-  <!-- param -->
-  <arg name="map_loader_param" default="$(find-pkg-share autoware_map_loader)/config/lanelet2_map_loader.param.yaml"/>
+
+  <!-- common param -->
+  <arg name="common_param" default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/common.param.yaml"/>
+  <arg name="nearest_search_param" default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/nearest_search.param.yaml"/>
+  <!-- component param -->
+  <arg name="map_loader_param" default="$(find-pkg-share autoware_launch)/config/map/lanelet2_map_loader.param.yaml"/>
   <arg
     name="behavior_path_planner_param"
     default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/lane_driving/behavior_planning/behavior_path_planner/behavior_path_planner.param.yaml"
@@ -64,8 +68,8 @@
     <param name="start_lanelet_id" value="$(var start_lanelet_id)"/>
     <param name="end_lanelet_id" value="$(var end_lanelet_id)"/>
     <!-- common param -->
-    <param from="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/common.param.yaml"/>
-    <param from="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/nearest_search.param.yaml"/>
+    <param from="$(var common_param)"/>
+    <param from="$(var nearest_search_param)"/>
     <!-- component param -->
     <param from="$(var map_loader_param)"/>
     <param from="$(var behavior_path_planner_param)"/>
