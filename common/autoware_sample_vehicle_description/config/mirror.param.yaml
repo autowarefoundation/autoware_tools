@@ -1,0 +1,16 @@
+/**:
+  ros__parameters:
+    mirror:
+      min_longitudinal_offset: 7.00
+      max_longitudinal_offset: 8.00
+      min_lateral_offset: -1.60
+      max_lateral_offset: 1.55
+      min_height_offset: 1.65
+      max_height_offset: 2.60
+    tire:
+      min_longitudinal_offset: 4.60
+      max_longitudinal_offset: 5.80
+      min_lateral_offset: -1.55
+      max_lateral_offset: 1.55
+      min_height_offset: 0.00
+      max_height_offset: 1.20
