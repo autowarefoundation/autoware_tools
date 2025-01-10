@@ -1,4 +1,4 @@
-# How to contribute to `autoware_lanelet2_map_validator`
+# How to contribute to autoware_lanelet2_map_validator
 
 Your contribution is welcome to achieve a broad view of validation for lanelet2 maps.
 This document gives you the instructions on how to add a validator to `autoware_lanelet2_map_validator`.
