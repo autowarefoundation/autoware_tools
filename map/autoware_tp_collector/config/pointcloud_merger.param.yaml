@@ -1,7 +1,0 @@
-/**:
-  ros__parameters:
-    # Downsampling resolution
-    leaf_size: -0.1
-    input_pcd_dir: $(var input_pcd_dir) # Path to the folder containing the input PCD Files
-    output_pcd: $(var output_pcd) # Path to the merged PCD File
-    point_type: "point_xyzi" # Type of points when processing PCD files

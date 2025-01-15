@@ -37,7 +37,7 @@ from tier4_debug_msgs.msg import Float32Stamped
 from builtin_interfaces.msg import Time
 import pandas as pd
 
-##### Convert names of pcd segments to 2d coordinates #####
+##### Convert names of pcd segments to 2d numpy array #####
 def name_to_coordinate(seg_name: str):
     # Remove the extension
     name_only = os.path.splitext(seg_name)[0]
@@ -46,49 +46,56 @@ def name_to_coordinate(seg_name: str):
     # Return the coordinates as a 1x2 ndarray
     return np.array(str_coors, dtype = float).reshape(1, 2)
 
-##### Read the YAML file to get the list of PCD segments and scores #####
-def get_pcd_segments_and_scores(pcd_map_dir: str) -> dict:
+def get_pcd_segments_and_scores(pcd_map_dir: str) -> pd.DataFrame:
+    # Check if the required folders/files exist
     if not os.path.exists(pcd_map_dir):
-        print("Error: %s does not exist!"%(pcd_map_dir))
+        print("Error: {0} does not exist!".format(pcd_map_dir))
         exit()
-
-    pcd_path = os.path.join(pcd_map_dir, "pointcloud_map.pcd/")
+    
+    pcd_path = os.path.join(pcd_map_dir, "pointcloud_map.pcd")
 
     if not os.path.exists(pcd_path):
-        print("Error: %s does not exist!"%(pcd_path))
+        print("Error: {0} does not exist!".format(pcd_path))
+        exit()
+    
+    metadata_path = os.path.join(pcd_map_dir, "pointcloud_map_metadata.yaml")
+
+    if not os.path.exists(metadata_path):
+        print("Error: {0} does not exist!".format(metadata_path))
         exit()
 
-    yaml_path = os.path.join(pcd_map_dir, "pointcloud_map_metadata.yaml")
+    score_path = os.path.join(pcd_map_dir, "score.csv")
 
-    # Create a dataframe to record the avg tp of 2D segments
+    if not os.path.exists(score_path):
+        print("Error: {0} does not exist!".format(score_path))
+        exit()
+
+    # Read the metadata file and get the list of segments
     segment_df = pd.DataFrame(columns = ["x", "y", "tp"])
 
-    with open(yaml_path, "r") as f:
+    with open(metadata_path, "r") as f:
         for key, value in yaml.safe_load(f).items():
             if key != "x_resolution" and key != "y_resolution":
                 seg_idx = name_to_coordinate(key)
                 segment_df.loc[len(segment_df)] = [seg_idx[0], seg_idx[1], 0]
 
-    # A 2D array that contains the 2D coordinates of segments
-    # We'll use this to build a KDtree
+    # Create a 2D kdtree on the segments
     seg_tree_nodes = np.zeros((len(segment_df), 2), dtype = float)
 
     for index, row in segment_df.iterrows():
-        seg_tree_nodes[index,:] = [row["x"], row["y"]]
+        seg_tree_nodes[index, :] = [row["x"], row["y"]]
 
-    # Create a 2D kdtree on the segment list
     kdtree = sp.KDTree(seg_tree_nodes)
 
-    # Load the score map
-    score_path = os.path.join(pcd_map_dir, "scores.csv")
-
+    # Read the score file
     with open(score_path, "r") as f:
         reader = csv.reader(f)
+
         for index, row in enumerate(reader):
             segment_df.loc[index, "tp"] = float(row[1])
-
-    return {"segment_df": segment_df, "kdtree": kdtree}
     
+    return {"segment_df" : segment_df, "kdtree" : kdtree}
+
 ##### Stamp search #####
 def stamp_search(stamp: int, tp_df: pd.DataFrame) -> int:
     left = 0
@@ -135,7 +142,7 @@ def collect_rosbag_tp(bag_path: str) -> pd.DataFrame:
             tp_df.loc[len(tp_df)] = [stamp, tp_msg.data]
     
     # Now from the two list above build a table of estimated pose and corresponding TPs
-    ndt_res_df = pd.DataFrame(columns = ["x", "y", "tp"])
+    ndt_res_df = pd.DataFrame(columns = ["x", "y", "tp", "avg_tp"])
 
     for row in pose_df.itertuples():
         stamp = row["stamp"]
@@ -144,31 +151,27 @@ def collect_rosbag_tp(bag_path: str) -> pd.DataFrame:
         tid = stamp_search(stamp, tp_df)
         
         if tid >= 0:
-            ndt_res_df[len(ndt_res_df)] = [pose.position.x, pose.position.y, tp_df["data"][tid]]
+            ndt_res_df[len(ndt_res_df)] = [pose.position.x, pose.position.y, tp_df["data"][tid], 0.0]
         
     return ndt_res_df
 
-##### Update map's TP #####
-def update_avg_tp(ndt_res_df: pd.DataFrame, segment_dict: dict):
-    # Iterate on poses and the corresponding TPs
-    for tp_row in ndt_res_df.itertuples():
-        # Find indices of map segments that cover the current pose
-        nn_idx = segment_dict["kdtree"].query_ball_point([tp_row["x"], tp_row["y"]], 20.0)
+def estimate_tps(segment_dict: dict, ndt_res_df: pd.DataFrame):
+    for row in ndt_res_df.itertuples():
+        nn_idx = segment_dict["kdtree"].query_ball_point([row["x"], row["y"]], 20.0)
+        sum_tp = 0.0
 
         for idx in nn_idx:
-            # If the TP from rosbag is greater than the current TP of the segment,
-            # replace the segment TP with the TP from the rosbag
-            # TODO: record the average TP of segments
-            if tp_row[1] > segment_dict["segment_df"].loc[idx, "tp"]:
-                segment_dict["segment_df"].loc[idx, "tp"] = tp_row[1]
+            sum_tp += segment_dict["segment_df"].loc[idx, "tp"]
+        
+        row["avg_tp"] = sum_tp / len(nn_idx)
 
-##### Save the segment TPs #####
-def save_tps(pcd_map_dir: str, segment_dict: dict):
-    score_path = os.path.join(pcd_map_dir, "score.csv")
+##### Save the tp and average tps to CSV file #####
+def save_results(ndt_res_df: pd.DataFrame, result_path: str):
+    ndt_res_df.to_csv(result_path)
 
-    with open(score_path, "w") as f:
-        for row in segment_dict["segment_df"].itertuples():
-            f.write("%d_%d,%f\n" % (int(row["x"]), int(row["y"]), row["tp"]))
+##### Show the results on 2D map #####
+def show(result_path: str):
+    print("Testing")
 
 def processing(pcd_map_dir: str, rosbag_path: str):
     # Get the segment lists and scores
@@ -176,9 +179,12 @@ def processing(pcd_map_dir: str, rosbag_path: str):
     # Read the rosbag and get the ndt poses and corresponding tps
     ndt_res_df = collect_rosbag_tp(rosbag_path)
     # Update the TPs of segments
-    update_avg_tp(ndt_res_df, segment_dict)
+    estimate_tps(segment_dict, ndt_res_df)
     # Save the new TPs
-    save_tps(pcd_map_dir, segment_dict)
+    result_path = os.path.join(pcd_map_dir, "result.csv")
+    save_results(ndt_res_df, result_path)
+    show(result_path)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

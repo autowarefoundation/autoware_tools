@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>autoware_pointcloud_merger</name>
+  <name>autoware_tp_manager</name>
   <version>0.1.0</version>
-  <description>A package for dividing PCD files to non-overlapped segments</description>
+  <description>A package for checking TP scores of NDT matching</description>
   <maintainer email="anh.nguyen.2@tier4.jp">Anh Nguyen</maintainer>
   <license>Apache License 2.0</license>
 
@@ -12,7 +12,6 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>autoware_cmake</buildtool_depend>
 
-  <depend>autoware_pointcloud_divider</depend>
   <depend>libpcl-all-dev</depend>
   <depend>yaml-cpp</depend>
 
