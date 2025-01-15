@@ -48,7 +48,7 @@ class Params:
         self.steer_bin_centers = (self.steer_bins[:-1] + self.steer_bins[1:]) / 2
         self.a_bin_centers = (self.a_bins[:-1] + self.a_bins[1:]) / 2
 
-        collecting_data_min_v, collecting_data_max_v = (
+        self.collecting_data_min_v, self.collecting_data_max_v = (
             param_dict["COLLECTING_DATA_V_MIN"],
             param_dict["COLLECTING_DATA_V_MAX"],
         )
@@ -58,12 +58,40 @@ class Params:
             param_dict["COLLECTING_DATA_A_MAX"],
         )
 
-        self.collecting_data_min_n_v = max([np.digitize(collecting_data_min_v, self.v_bins) - 1, 0])
+        self.collecting_data_min_n_v = max(
+            [np.digitize(self.collecting_data_min_v, self.v_bins) - 1, 0]
+        )
         self.collecting_data_max_n_v = (
-            min([np.digitize(collecting_data_max_v, self.v_bins) - 1, self.num_bins_v - 1]) + 1
+            min([np.digitize(self.collecting_data_max_v, self.v_bins) - 1, self.num_bins_v - 1]) + 1
         )
 
-        self.collecting_data_min_n_a = max([np.digitize(collecting_data_min_a, self.v_bins) - 1, 0])
+        self.collecting_data_min_n_a = max([np.digitize(collecting_data_min_a, self.a_bins) - 1, 0])
         self.collecting_data_max_n_a = (
-            min([np.digitize(collecting_data_max_a, self.v_bins) - 1, self.num_bins_a - 1]) + 1
+            min([np.digitize(collecting_data_max_a, self.a_bins) - 1, self.num_bins_a - 1]) + 1
         )
+
+        self.accel_pedal_input_min = param_dict["ACCEL_PEDAL_INPUT_MIN"]
+        self.accel_pedal_input_max = param_dict["ACCEL_PEDAL_INPUT_MAX"]
+        self.num_bins_accel_pedal_input = param_dict["NUM_BINS_ACCEL_PEDAL_INPUT"]
+        self.accel_pedal_input_bins = np.linspace(
+            self.accel_pedal_input_min,
+            self.accel_pedal_input_max,
+            self.num_bins_accel_pedal_input + 1,
+        )
+        self.accel_pedal_input_bin_centers = (
+            self.accel_pedal_input_bins[:-1] + self.accel_pedal_input_bins[1:]
+        ) / 2
+
+        self.brake_pedal_input_min = param_dict["BRAKE_PEDAL_INPUT_MIN"]
+        self.brake_pedal_input_max = param_dict["BRAKE_PEDAL_INPUT_MAX"]
+        self.num_bins_brake_pedal_input = param_dict["NUM_BINS_BRAKE_PEDAL_INPUT"]
+        self.brake_pedal_input_bins = np.linspace(
+            self.brake_pedal_input_min,
+            self.brake_pedal_input_max,
+            self.num_bins_brake_pedal_input + 1,
+        )
+        self.brake_pedal_input_bin_centers = (
+            self.brake_pedal_input_bins[:-1] + self.brake_pedal_input_bins[1:]
+        ) / 2
+
+        self.control_mode = param_dict["CONTROL_MODE"]

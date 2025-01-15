@@ -62,13 +62,14 @@ This package provides tools for automatically collecting data using pure pursuit
 4. Launch control_data_collecting_tool.
 
     ```bash
-    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
+    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning accel_brake_map_path:=/path/to/your/accel_brake_map_dir
     ```
 
     - If you use the `along_road` course, please specify the same map for `map_path` as the one used when launching Autoware. `map_path` is not necessary when using courses other than `along_road`.
 
-    - Control data collecting tool automatically records topics included in `config/topics.yaml` when the above command is executed.
-      Topics will be saved in rosbag2 format in the current directory.
+    - If you set CONTROL_MODE to actuation_cmd or external_actuation_cmd, please specify the directory where the accel/brake maps used by your control system are located.
+
+    - Control data collecting tool automatically records topics included in `config/topics.yaml` when the above command is executed. Topics will be saved in rosbag2 format in the current directory.
 
     - The data from `/localization/kinematic_state` and `/localization/acceleration` located in the directory (rosbag2 format) where the command is executed will be automatically loaded and reflected in the data count for these topics.
       (If `LOAD_ROSBAG2_FILES` in `config/param.yaml` is set to `false`, the data is not loaded.)
@@ -112,21 +113,207 @@ This package provides tools for automatically collecting data using pure pursuit
       > You cannot change the goal pose while driving.
       > In cases where course generation fails, which can happen under certain conditions, please reposition the vehicle or redraw the goal pose.
 
-7. Click the `LOCAL` button in `AutowareStatePanel`.
+7. The following actions differ depending on the `CONTROL_MODE`. If you select the control mode from [ `acceleration_cmd`], please proceed to 7.1. If you select the control mode from [`actuation_cmd`], please proceed to 7.2. If you select the control mode from [`external_acceleration_cmd`, `external_actuation_cmd`], please proceed to 7.3.
 
-    <img src="resource/push_LOCAL.png" width="480">
+    - 7.1 If you choose the control mode from [ `acceleration_cmd`], click the `LOCAL` button in `AutowareStatePanel`.
 
-    Then, data collecting starts.
+        <img src="resource/push_LOCAL.png" width="480">
 
-    <img src="resource/push_LOCAL.gif" width="480">
+        Then, data collecting starts.
 
-    You can monitor the data collection status in real-time through the window that pops up when this node is launched.
-    (From top to bottom: the speed-acceleration phase diagram, the speed-acceleration heatmap, the speed-steering angle heatmap, the speed-steer rate heatmap, and the speed-jerk heatmap.)
+        <img src="resource/push_LOCAL.gif" width="480">
 
-    <img src="resource/data_collection_status.png" width="480">
+        You can monitor the data collection status in real-time through the window that pops up when this node is launched.
+        (From top to bottom: the speed-acceleration phase diagram, the speed-acceleration heatmap, the speed-steering angle heatmap, the speed-steer rate heatmap, and the speed-jerk heatmap.)
 
-    For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/MASK_NAME` where `MASK_NAME` is a parameter specifying mask name (Please also see `config/common_param.yaml`).
-    The specified heatmap cells are designed to change from blue to green once a certain amount of data (`VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, `VEL_ABS_STEER_RATE_THRESHOLD` ) is collected. It is recommended to collect data until as many cells as possible turn green.
+        <img src="resource/data_collection_status.png" width="480">
+
+        For the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap, the collection range can be specified by the masks located in the folder `config/masks/MASK_NAME` where `MASK_NAME` is a parameter specifying mask name (Please also see `config/common_param.yaml`).
+        The specified heatmap cells are designed to change from blue to green once a certain amount of data (`VEL_ACC_THRESHOLD`, `VEL_STEER_THRESHOLD`, `VEL_ABS_STEER_RATE_THRESHOLD` ) is collected. It is recommended to collect data until as many cells as possible turn green.
+
+    - 7.2 If you choose the control mode from [`actuation_cmd`], click the LOCAL button in the AutowareStatePanel as described in Section 7.1.
+      > [NOTE]
+      > At this time, the control mode `actuation_cmd` is only implemented in the course `reversal_loop_circle` and cannot be used in other courses.
+
+      This mode allows you to collect data on various accel and brake pedal inputs. To monitor the data collection status of accel/brake input, please use the functionality of [autoware_accel_brake_map_calibrator](https://github.com/autowarefoundation/autoware.universe/blob/main/vehicle/autoware_accel_brake_map_calibrator/README.md).
+
+    - 7.3 In the case you choose the control mode from  [`external_acceleration_cmd`, `external_actuation_cmd`].
+
+      - `external_acceleration_cmd`
+
+        This mode enables the collection of constant acceleration data for both positive and negative acceleration scenarios.
+
+        - Positive Acceleration Data Collection
+
+          a. Start the Tool by using the following command
+
+            ```bash
+            ros2 run control_data_collecting_tool data_collecting_acceleration_cmd.py
+            ```
+
+          b. Confirm Data Collection: The tool prompts you to confirm whether to proceed with positive acceleration data collection:
+
+            ```bash
+            Do you want to collect constant positive acceleration cmd data? (yes/no)
+            ```
+
+          c. Input Acceleration: When prompted, input the desired acceleration value:
+
+            ```bash
+            Target acceleration [0.0 ~ 2.0 m/s^2]
+            ```
+
+          d. Gear Change and Readiness Check: Pleas click the `LOCAL` button in `AutowareStatePanel`  as in 7.1 and the tool checks if the system is ready for the operation. You will see the following prompt:
+
+            ```bash
+            Ready to drive? (yes/no)
+            ```
+
+          f. Execution and Recording: After 3-second counting, the vehicle accelerates to `TARGET_VELOCITY` specified in the configuration file. During this process, the following message is displayed:
+
+            ```bash
+            Accelerate with target_acceleration m/s^2
+            ```
+
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_acceleration_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+
+            ```bash
+            /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
+            ```
+
+          g. Deceleration Phase: After reaching `TARGET_VELOCITY`, the tool applies a deceleration using the TARGET_ACCELERATION_FOR_BRAKE parameter to bring the vehicle to a stop.
+
+          h. Completion: Once the data is recorded and the vehicle is safely stopped, the session ends. The tool validates the recorded data.
+
+        - Negative Acceleration Data Collection
+
+          a. Start the Tool by using the following command
+
+            ```bash
+            ros2 run control_data_collecting_tool data_collecting_acceleration_cmd
+            ```
+
+          b. Confirm Data Collection: The tool prompts you to confirm whether to proceed with negative acceleration data collection (the following message will be displayed after answering `no` to `Do you want to collect constant positive acceleration cmd data? (yes/no)` in Positive Acceleration Data Collection):
+
+            ```bash
+            Do you want to collect constant negative acceleration cmd data? (yes/no)
+            ```
+
+          c. Input Acceleration: When prompted, input the desired acceleration value:
+
+            ```bash
+            Target acceleration [-5.0 ~ 0.0 m/s^2]
+            ```
+
+          d. Gear Change and Readiness Check: Pleas click the `LOCAL` button in `AutowareStatePanel` as in 7.1 and the tool checks if the system is ready for the operation. You will see the following prompt:
+
+            ```bash
+            Ready to drive? (yes/no)
+            ```
+
+          e. Acceleration Phase: After 3-second counting, the vehicle accelerates to the `TARGET_VELOCITY` with TARGET_ACCELERATION_FOR_DRIVE before braking.
+
+          f. Braking and Recording: Once `TARGET_VELOCITY` is achieved, the tool applies the braking command. During this process, you will see:
+
+            ```bash
+            Accelerate with target_acceleration m/s^2
+            ```
+
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_acceleration_cmd_BRAKE_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+
+            ```bash
+            /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
+            ```
+
+          g. Completion: Once the data is recorded and the vehicle is safely stopped, the session ends. The tool validates the recorded data.
+
+      - `external_actuation_cmd`
+
+        This mode enables the collection of constant accel/brake pedal input data.
+
+        - Accel Pedal Data Collection
+
+          a. Start the tool by using the following command
+
+            ```bash
+            ros2 run control_data_collecting_tool data_collecting_actuation_cmd
+            ```
+
+          b. Confirm Data Collection: The tool prompts you to confirm whether to proceed with positive acceleration data collection:
+
+            ```bash
+            Do you want to accel pedal input data? (yes/no)
+            ```
+
+          c. Input Accel Pedal input: When prompted, input the desired accel pedal input value:
+
+            ```bash
+            Target accel pedal input [0.0 ~ 0.5 ]
+            ```
+
+          d. Gear Change and Readiness Check: Pleas click the `LOCAL` button in `AutowareStatePanel`  as in 7.1 and the tool checks if the system is ready for the operation. You will see the following prompt:
+
+            ```bash
+            Ready to drive? (yes/no)
+            ```
+
+          e. Execution and Recording: After 3-second counting, the vehicle accelerates to `TARGET_VELOCITY` specified in the configuration file. During this process, the following message is displayed:
+
+            ```bash
+            Actuate with accel pedal input: target_accel_pedal_input
+            ```
+
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_actuation_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+
+            ```bash
+            /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
+            ```
+
+          f. Deceleration Phase: After reaching `TARGET_VELOCITY`, the tool applies a deceleration using the TARGET_ACTUATION_FOR_BRAKE parameter to bring the vehicle to a stop.
+
+          g. Completion: Once the data is recorded and the vehicle is safely stopped, the session ends. The tool validates the recorded data.
+
+        - Brake Pedal Data Collection
+
+          a. Start the tool by using the following command
+
+            ```bash
+            ros2 run control_data_collecting_tool data_collecting_actuation_cmd
+            ```
+
+          b. Confirm Data Collection: The tool prompts you to confirm whether to proceed with brake pedal input data collection (the following message will be displayed after answering `no` to `Do you want to accel pedal input data? (yes/no)` in Accel Pedal Data Collection):
+
+            ```bash
+            Do you want to brake pedal input data? (yes/no)
+            ```
+
+          c. Input Brake Pedal input: When prompted, input the desired brake pedal input value:
+
+            ```bash
+            Target brake pedal input [0.0 ~ 0.8 ]
+            ```
+
+          d. Gear Change and Readiness Check: Pleas click the `LOCAL` button in `AutowareStatePanel` as in 7.1 and the tool checks if the system is ready for the operation. You will see the following prompt:
+
+            ```bash
+            Ready to drive? (yes/no)
+            ```
+
+          e. Acceleration Phase: After 3-second counting, the vehicle accelerates to the `TARGET_VELOCITY` with TARGET_ACTUATION_FOR_ACCEL before braking.
+
+          f. Braking and Recording: Once `TARGET_VELOCITY` is achieved, the tool applies the braking command. During this process, you will see:
+
+            ```bash
+            Actuate with brake pedal input: target_brake_pedal_input
+            ```
+
+            A ROS bag file records all relevant topics during this session. The filename is generated as constant_actuation_cmd_ACCEL_TARGET_ACCELERATION_CURRENT_TIME, where TARGET_ACCELERATION is input target acceleration value, and CURRENT_TIME is the timestamp in YYYYMMDD-HHMMSS format. The ROS bag file will specifically include topics matching the regular expression:
+
+            ```bash
+            /control/(.*)|/vehicle/(.*)|/imu/(.*)|/sensing/imu/(.*)
+            ```
+
+          g. Completion: Once the data is recorded and the vehicle is safely stopped, the session ends. The tool validates the recorded data.
 
 8. If you want to stop data collecting automatic driving, run the following command
 
@@ -197,8 +384,8 @@ You can create an original mask to specify the data collection range for the hea
      The vehicle accelerates by setting `target_velocity` as follows until its speed exceeds `target_velocity_on_section`.
 
      ```Python3
-       # sine_curve is derived from appropriate amplitude and period, defined separately
-       target_velocity = current_velocity + abs(target_acceleration_on_section) / acc_kp + sine_curve
+       # b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately
+       target_velocity = current_velocity + abs(target_acceleration_on_section) / acc_kp * (b + sine_curve)
      ```
 
      `current_velocity` is a current velocity of vehicle and `acc_kp` accel command proportional gain in pure pursuit algorithm. `sine_curve` is a sine wave added to partially mitigate situations where the vehicle fails to achieve the target acceleration.
@@ -207,16 +394,16 @@ You can create an original mask to specify the data collection range for the hea
      When the vehicle reaches `target_velocity_on_section`, `target_velocity` is defined as follows to allow the vehicle to run around the target speed for a certain period of time.
 
      ```Python3
-       # sine_curve is derived from appropriate amplitude and period, defined separately
-       target_velocity = target_velocity_on_section + sine_curve + sine_curve
+       # b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately
+       target_velocity = target_velocity_on_section + b + sine_curve
      ```
 
   4. Deceleration phase
      In the deceleration phase, similar to the acceleration phase, `target_velocity` is defined as follows to ensure the vehicle decelerates.
 
      ```Python3
-       # sine_curve is derived from appropriate amplitude and period, defined separately
-       target_velocity = current_velocity - abs(target_acceleration_on_section) / acc_kp + sine_curve
+       # b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately
+       target_velocity = current_velocity - abs(target_acceleration_on_section) / acc_kp * (b + sine_curve)
      ```
 
      After decelerating to a sufficiently low speed, return to step i.
@@ -267,7 +454,7 @@ You can create an original mask to specify the data collection range for the hea
 
   The following two steps are taken to obtain steering angle data.
 
-  1. Starting from the ego vehicle's current position, the system examines a segment of the trajectory ahead, covering a distance defined by looking_ahead_distance, to identify the point of maximum curvature.
+  1. Starting from the ego vehicle's current position, the system examines a segment of the trajectory ahead, covering a distance defined by look_ahead_distance, to identify the point of maximum curvature.
 
   2. This maximum curvature determines the steering angle the vehicle will use. The vehicle then adjusts its speed toward the speed associated with the sparsest steering angle data.
 
@@ -275,14 +462,13 @@ You can create an original mask to specify the data collection range for the hea
 
 ## Parameter
 
-There are parameters that are common to all trajectories and parameters that are specific to each trajectory.
-
 ### Common Parameters
 
 ROS 2 parameters which are common in all trajectories (`/config/common_param.yaml`):
 
 | Name                                     | Type     | Description                                                                                                                               | Default value          |
 | :--------------------------------------- | :------- | :---------------------------------------------------------------------------------------------------------------------------------------- | :--------------------- |
+| `CONTROL_MODE`                           | `string` | Control mode [`acceleration_cmd`, `actuation_cmd`, `external_acceleration_cmd`, `external_actuation_cmd`]                                 | `acceleration_cmd`     |
 | `LOAD_ROSBAG2_FILES`                     | `bool`   | Flag that determines whether to load rosbag2 data or not                                                                                  | true                   |
 | `COURSE_NAME`                            | `string` | Course name [`eight_course`, `u_shaped_return`, `straight_line_positive`, `straight_line_negative`, `reversal_loop_circle`, `along_road`] | `reversal_loop_circle` |
 | `NUM_BINS_V`                             | `int`    | Number of bins of velocity in heatmap                                                                                                     | 10                     |
@@ -290,6 +476,8 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `NUM_BINS_A`                             | `int`    | Number of bins of acceleration in heatmap                                                                                                 | 10                     |
 | `NUM_BINS_ABS_STEER_RATE`                | `int`    | Number of bins of absolute value of steer rate in heatmap                                                                                 | 5                      |
 | `NUM_BINS_JERK`                          | `int`    | Number of bins of jerk in heatmap                                                                                                         | 10                     |
+| `NUM_BINS_ACCEL_PEDAL_INPUT`             | `int`    | Number of bins of accel pedal input in heatmap                                                                                            | 8                      |
+| `NUM_BINS_BRAKE_PEDAL_INPUT`             | `int`    | Number of bins of brake pedal input in heatmap                                                                                            | 16                     |
 | `V_MIN`                                  | `double` | Minimum velocity in heatmap [m/s]                                                                                                         | 0.0                    |
 | `V_MAX`                                  | `double` | Maximum velocity in heatmap [m/s]                                                                                                         | 11.5                   |
 | `STEER_MIN`                              | `double` | Minimum steer in heatmap [rad]                                                                                                            | -0.6                   |
@@ -301,6 +489,11 @@ ROS 2 parameters which are common in all trajectories (`/config/common_param.yam
 | `ABS_STEER_RATE_MAX`                     | `double` | Maximum absolute value of steer rate in heatmap [rad/s]                                                                                   | 0.3                    |
 | `JERK_MIN`                               | `double` | Minimum jerk in heatmap [m/s^3]                                                                                                           | -0.5                   |
 | `JERK_MAX`                               | `double` | Maximum jerk in heatmap [m/s^3]                                                                                                           | 0.5                    |
+| `ACCEL_PEDAL_INPUT_MIN`                  | `double` | Minimum accel pedal in heatmap                                                                                                            | 0.4                    |
+| `ACCEL_PEDAL_INPUT_MAX`                  | `double` | Maximum accel pedal in heatmap                                                                                                            | 0.0                    |
+| `BRAKE_PEDAL_INPUT_MIN`                  | `double` | Minimum brake pedal in heatmap                                                                                                            | 0.8                    |
+| `BRAKE_PEDAL_INPUT_MAX`                  | `double` | Maximum brake pedal in heatmap                                                                                                            | 0.0                    |
+| `STEER_THRESHOLD_FOR_PEDAL_INPUT_COUNT`  | `string` | Threshold of steering angle to count pedal input data                                                                                     | 0.2                    |
 | `MASK_NAME`                              | `string` | Directory name of masks for data collection                                                                                               | `default`              |
 | `VEL_ACC_THRESHOLD`                      | `int`    | Threshold of velocity-and-acc heatmap in data collection                                                                                  | 40                     |
 | `VEL_STEER_THRESHOLD`                    | `int`    | Threshold of velocity-and-steer heatmap in data collection                                                                                | 20                     |
@@ -385,3 +578,27 @@ Each trajectory has specific ROS 2 parameters.
 | `minimum_length_of_straight_line` | `double` | The minimum length of straight line for data collection [m]         | 50.0          |
 | `longitude`                       | `double` | The longitude of the origin specified when loading the map [degree] | 139.6503      |
 | `latitude`                        | `double` | The latitude of the origin specified when loading the map [degree]  | 35.6762       |
+
+### Parameters for `data_collecting_acceleration_cmd.py` and `data_collecting_actuation_cmd.py`
+
+- `data_collecting_acceleration_cmd.py`
+
+| Name                            | Type     | Description                                                                 | Default value |
+| :------------------------------ | :------- | :-------------------------------------------------------------------------- | :------------ |
+| `TARGET_VELOCITY`               | `double` | The maximum velocity for data collection [m/s]                              | 11.80         |
+| `TARGET_ACCELERATION_FOR_DRIVE` | `double` | Target acceleration when collecting deceleration data [m/s^2]               | 0.3           |
+| `TARGET_ACCELERATION_FOR_BRAKE` | `double` | Target deceleration when collecting acceleration data [m/s^2]               | 0.5           |
+| `TARGET_JERK_FOR_DRIVE`         | `double` | The target rate of change of acceleration (jerk) for smooth driving [m/s^3] | 1.5           |
+| `TARGET_JERK_FOR_BRAKE`         | `double` | The target rate of change of acceleration (jerk) when braking [m/s^3]       | -1.5          |
+| `MIN_ACCEL`                     | `double` | The minimum allowable acceleration for data collection [m/s^2]              | -5.0          |
+| `MAX_ACCEL`                     | `double` | The maximum allowable acceleration for data collection [m/s^2]              | 2.0           |
+
+- `data_collecting_actuation_cmd.py`
+
+| Name                         | Type     | Description                                                     | Default value |
+| :--------------------------- | :------- | :-------------------------------------------------------------- | :------------ |
+| `TARGET_VELOCITY`            | `double` | The maximum velocity for data collection [m/s]                  | 11.80         |
+| `TARGET_ACTUATION_FOR_ACCEL` | `double` | Target accel pedal input when collecting brake pedal input data | 0.3           |
+| `TARGET_ACTUATION_FOR_BRAKE` | `double` | Target brake pedal input when collecting accel pedal input data | 0.5           |
+| `MAX_ACCEL_PEDAL`            | `double` | The maximum allowable accel pedal input for data collection     | 0.5           |
+| `MIN_BRAKE_PEDAL`            | `double` | The maximum allowable brake pedal input for data collection     | 0.8           |

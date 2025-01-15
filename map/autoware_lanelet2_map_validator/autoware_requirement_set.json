@@ -17,6 +17,14 @@
       ]
     },
     {
+      "id": "vm-03-02",
+      "validators": [
+        {
+          "name": "mapping.intersection.turn_direction_tagging"
+        }
+      ]
+    },
+    {
       "id": "vm-03-08",
       "validators": [
         {
