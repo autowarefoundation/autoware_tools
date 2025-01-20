@@ -92,7 +92,7 @@ def generate_test_description():
             DeclareLaunchArgument(
                 "mission_planner_param",
                 default_value=os.path.join(
-                    get_package_share_directory("autoware_mission_planner"),
+                    get_package_share_directory("autoware_mission_planner_universe"),
                     "config/mission_planner.param.yaml",
                 ),
             ),

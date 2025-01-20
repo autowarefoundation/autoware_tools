@@ -22,7 +22,7 @@
   <depend>autoware_map_loader</depend>
   <depend>autoware_map_msgs</depend>
   <depend>autoware_map_projection_loader</depend>
-  <depend>autoware_mission_planner</depend>
+  <depend>autoware_mission_planner_universe</depend>
   <depend>autoware_motion_utils</depend>
   <depend>autoware_osqp_interface</depend>
   <depend>autoware_path_optimizer</depend>

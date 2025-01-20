@@ -45,7 +45,7 @@ def generate_test_description():
             {"start_lanelet_id": 215},
             {"end_lanelet_id": 216},
             os.path.join(
-                get_package_share_directory("autoware_mission_planner"),
+                get_package_share_directory("autoware_mission_planner_universe"),
                 "config",
                 "mission_planner.param.yaml",
             ),
