@@ -65,7 +65,7 @@ loadAndValidateMap(
     if (!projector) {
       errors.push_back("No valid map projection type specified!");
     } else {
-      map = lanelet::load(map_file, *projector, &errors);
+      map = lanelet::load(map_file, "autoware_validator_osm_handler", *projector, &errors);
     }
     if (!map) {
       errors.push_back("Failed to load map!");
