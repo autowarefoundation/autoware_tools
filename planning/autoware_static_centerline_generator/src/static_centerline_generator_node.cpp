@@ -452,8 +452,8 @@ std::vector<lanelet::Id> StaticCenterlineGeneratorNode::plan_route(
     // create mission_planner plugin
     auto plugin_loader = pluginlib::ClassLoader<autoware::mission_planner_universe::PlannerPlugin>(
       "autoware_mission_planner_universe", "autoware::mission_planner_universe::PlannerPlugin");
-    auto mission_planner =
-      plugin_loader.createSharedInstance("autoware::mission_planner_universe::lanelet2::DefaultPlanner");
+    auto mission_planner = plugin_loader.createSharedInstance(
+      "autoware::mission_planner_universe::lanelet2::DefaultPlanner");
 
     // initialize mission_planner
     auto node = rclcpp::Node("mission_planner");
