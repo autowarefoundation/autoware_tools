@@ -1,16 +1,13 @@
-// Copyright 2025 Autoware Foundation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * Copyright (c) 2018
+ * FZI Forschungszentrum Informatik, Karlsruhe, Germany (www.fzi.de)
+ * All rights reserved.
+ *
+ * Modifications by [Taiki Yamada/Autoware Foundation], 2025
+ *
+ * This software is licensed under the BSD-3-Clause license.
+ * See the LICENSE file for details.
+ */
 
 #include "lanelet2_map_validator/autoware_validator_osm_parser.hpp"
 
@@ -53,19 +50,6 @@ void testAndPrintLocaleWarning(ErrorMessages & errors)
   }
 }
 
-Errors buildErrorMessage(const std::string & errorIntro, const Errors & errors)
-{
-  if (errors.empty()) {
-    return {};
-  }
-  Errors message{errorIntro};
-  message.reserve(errors.size() + 1);
-  for (const auto & error : errors) {
-    message.push_back("\t- " + error);
-  }
-  return message;
-}
-
 RegisterParser<AutowareValidatorOsmParser> regParser;
 }  // namespace
 
@@ -87,8 +71,7 @@ std::unique_ptr<LaneletMap> AutowareValidatorOsmParser::parse(
   registerIds(file.nodes);
   registerIds(file.ways);
   registerIds(file.relations);
-  errors = buildErrorMessage(
-    "Errors ocurred while parsing Lanelet Map:", utils::concatenate({osmReadErrors, errors}));
+  errors = utils::concatenate({osmReadErrors, errors});
   return map;
 }
 }  // namespace lanelet::io_handlers
