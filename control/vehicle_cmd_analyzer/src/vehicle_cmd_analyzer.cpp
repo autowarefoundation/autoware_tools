@@ -33,7 +33,7 @@ VehicleCmdAnalyzer::VehicleCmdAnalyzer(const rclcpp::NodeOptions & options)
   sub_vehicle_cmd_ = this->create_subscription<autoware_control_msgs::msg::Control>(
     "/control/command/control_cmd", rclcpp::QoS(10),
     std::bind(&VehicleCmdAnalyzer::callbackVehicleCommand, this, std::placeholders::_1));
-  pub_debug_ = create_publisher<tier4_debug_msgs::msg::Float32MultiArrayStamped>(
+  pub_debug_ = create_publisher<autoware_internal_debug_msgs::msg::Float32MultiArrayStamped>(
     "~/debug_values", rclcpp::QoS{1});
 
   // Timer
@@ -83,7 +83,7 @@ void VehicleCmdAnalyzer::publishDebugData()
   debug_values_.setValues(DebugValues::TYPE::CURRENT_TARGET_LATERAL_ACC, a_lat);
 
   // publish debug values
-  tier4_debug_msgs::msg::Float32MultiArrayStamped debug_msg{};
+  autoware_internal_debug_msgs::msg::Float32MultiArrayStamped debug_msg{};
   debug_msg.stamp = this->now();
   for (const auto & v : debug_values_.getValues()) {
     debug_msg.data.push_back(v);
