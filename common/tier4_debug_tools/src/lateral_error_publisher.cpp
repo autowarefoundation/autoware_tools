@@ -35,10 +35,11 @@ LateralErrorPublisher::LateralErrorPublisher(const rclcpp::NodeOptions & node_op
   sub_ground_truth_pose_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
     "~/input/ground_truth_pose_with_covariance", rclcpp::QoS{1},
     std::bind(&LateralErrorPublisher::onGroundTruthPose, this, _1));
-  pub_control_lateral_error_ =
-    create_publisher<autoware_internal_debug_msgs::msg::Float32Stamped>("~/control_lateral_error", 1);
+  pub_control_lateral_error_ = create_publisher<autoware_internal_debug_msgs::msg::Float32Stamped>(
+    "~/control_lateral_error", 1);
   pub_localization_lateral_error_ =
-    create_publisher<autoware_internal_debug_msgs::msg::Float32Stamped>("~/localization_lateral_error", 1);
+    create_publisher<autoware_internal_debug_msgs::msg::Float32Stamped>(
+      "~/localization_lateral_error", 1);
   pub_lateral_error_ =
     create_publisher<autoware_internal_debug_msgs::msg::Float32Stamped>("~/lateral_error", 1);
 }

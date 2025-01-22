@@ -22,9 +22,9 @@
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <autoware_internal_debug_msgs/msg/float32_stamped.hpp>
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
-#include <autoware_internal_debug_msgs/msg/float32_stamped.hpp>
 
 class LateralErrorPublisher : public rclcpp::Node
 {
