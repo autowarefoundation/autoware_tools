@@ -22,7 +22,7 @@ import sys
 
 import rclpy
 from rclpy.node import Node
-from tier4_debug_msgs.msg import Float64Stamped
+from autoware_internal_debug_msgs.msg import Float64Stamped
 
 
 class ProcessingTimeSubscriber(Node):

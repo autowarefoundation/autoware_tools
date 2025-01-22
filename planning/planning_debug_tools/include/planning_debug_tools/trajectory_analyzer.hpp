@@ -24,7 +24,7 @@
 #include "autoware_planning_msgs/msg/path.hpp"
 #include "autoware_planning_msgs/msg/trajectory.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "tier4_debug_msgs/msg/float64_multi_array_stamped.hpp"
+#include "autoware_internal_debug_msgs/msg/float64_multi_array_stamped.hpp"
 #include "tier4_planning_msgs/msg/path_with_lane_id.hpp"
 
 #include <iostream>
