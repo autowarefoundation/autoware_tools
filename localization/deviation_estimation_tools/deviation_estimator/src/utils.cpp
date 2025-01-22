@@ -87,7 +87,7 @@ geometry_msgs::msg::Vector3 interpolate_vector3_stamped(
  * point
  */
 geometry_msgs::msg::Point integrate_position(
-  const std::vector<tier4_debug_msgs::msg::Float64Stamped> & vx_list,
+  const std::vector<autoware_internal_debug_msgs::msg::Float64Stamped> & vx_list,
   const std::vector<geometry_msgs::msg::Vector3Stamped> & gyro_list, const double coef_vx,
   const double yaw_init)
 {
@@ -153,7 +153,7 @@ geometry_msgs::msg::Vector3 integrate_orientation(
 /**
  * @brief calculate mean of |vx|
  */
-double get_mean_abs_vx(const std::vector<tier4_debug_msgs::msg::Float64Stamped> & vx_list)
+double get_mean_abs_vx(const std::vector<autoware_internal_debug_msgs::msg::Float64Stamped> & vx_list)
 {
   double mean_abs_vx = 0;
   for (const auto & msg : vx_list) {
@@ -179,7 +179,7 @@ double get_mean_abs_wz(const std::vector<geometry_msgs::msg::Vector3Stamped> & g
 /**
  * @brief calculate mean of acceleration
  */
-double get_mean_accel(const std::vector<tier4_debug_msgs::msg::Float64Stamped> & vx_list)
+double get_mean_accel(const std::vector<autoware_internal_debug_msgs::msg::Float64Stamped> & vx_list)
 {
   const double dt =
     (rclcpp::Time(vx_list.back().stamp) - rclcpp::Time(vx_list.front().stamp)).seconds();

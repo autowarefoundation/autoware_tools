@@ -21,7 +21,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
-#include "tier4_debug_msgs/msg/float64_stamped.hpp"
+#include "autoware_internal_debug_msgs/msg/float64_stamped.hpp"
 
 #include <tf2/transform_datatypes.h>
 
@@ -39,7 +39,7 @@
 struct TrajectoryData
 {
   std::vector<geometry_msgs::msg::PoseStamped> pose_list;
-  std::vector<tier4_debug_msgs::msg::Float64Stamped> vx_list;
+  std::vector<autoware_internal_debug_msgs::msg::Float64Stamped> vx_list;
   std::vector<geometry_msgs::msg::Vector3Stamped> gyro_list;
 };
 
@@ -95,12 +95,12 @@ double calculate_std_mean_const(const std::vector<T> & v, const double mean)
 
 struct CompareMsgTimestamp
 {
-  bool operator()(tier4_debug_msgs::msg::Float64Stamped const & t1, double const & t2) const
+  bool operator()(autoware_internal_debug_msgs::msg::Float64Stamped const & t1, double const & t2) const
   {
     return rclcpp::Time(t1.stamp).seconds() < t2;
   }
 
-  bool operator()(tier4_debug_msgs::msg::Float64Stamped const & t1, rclcpp::Time const & t2) const
+  bool operator()(autoware_internal_debug_msgs::msg::Float64Stamped const & t1, rclcpp::Time const & t2) const
   {
     return rclcpp::Time(t1.stamp).seconds() < t2.seconds();
   }
@@ -163,7 +163,7 @@ double norm_xy(const T p1, const U p2)
 double clip_radian(const double rad);
 
 geometry_msgs::msg::Point integrate_position(
-  const std::vector<tier4_debug_msgs::msg::Float64Stamped> & vx_list,
+  const std::vector<autoware_internal_debug_msgs::msg::Float64Stamped> & vx_list,
   const std::vector<geometry_msgs::msg::Vector3Stamped> & gyro_list, const double coef_vx,
   const double yaw_init);
 
@@ -176,9 +176,9 @@ geometry_msgs::msg::Vector3 integrate_orientation(
   const std::vector<geometry_msgs::msg::Vector3Stamped> & gyro_list,
   const geometry_msgs::msg::Vector3 & gyro_bias);
 
-double get_mean_abs_vx(const std::vector<tier4_debug_msgs::msg::Float64Stamped> & vx_list);
+double get_mean_abs_vx(const std::vector<autoware_internal_debug_msgs::msg::Float64Stamped> & vx_list);
 double get_mean_abs_wz(const std::vector<geometry_msgs::msg::Vector3Stamped> & gyro_list);
-double get_mean_accel(const std::vector<tier4_debug_msgs::msg::Float64Stamped> & vx_list);
+double get_mean_accel(const std::vector<autoware_internal_debug_msgs::msg::Float64Stamped> & vx_list);
 
 geometry_msgs::msg::Vector3 transform_vector3(
   const geometry_msgs::msg::Vector3 & vec, const geometry_msgs::msg::TransformStamped & transform);
