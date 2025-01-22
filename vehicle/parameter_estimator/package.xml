@@ -17,7 +17,7 @@
   <depend>rclcpp</depend>
   <depend>sensor_msgs</depend>
   <depend>tier4_calibration_msgs</depend>
-  <depend>tier4_debug_msgs</depend>
+  <depend>autoware_internal_debug_msgs</depend>
   <exec_depend>plotjuggler</exec_depend>
   <exec_depend>plotjuggler_ros</exec_depend>
 
