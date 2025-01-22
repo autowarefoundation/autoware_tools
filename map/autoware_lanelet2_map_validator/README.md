@@ -359,3 +359,8 @@ The "Validators" column will be blank if it hasn't be implemented.
 | vm-07-02 | Range of detecting pedestrians who enter the road       | (Not possible to validate because real-world correspondence cannot be determined programmatically.)                                                                                                                                                                                                                                                             |
 | vm-07-03 | Guardrails, guard pipes, fences                         | (Not possible to validate because real-world correspondence cannot be determined programmatically.)                                                                                                                                                                                                                                                             |
 | vm-07-04 | Ellipsoidal height                                      | (Not possible to validate because real-world correspondence cannot be determined programmatically?)                                                                                                                                                                                                                                                             |
+
+## Third-Party Components
+
+Portions of this software are derived from Lanelet2 by FZI Forschungszentrum Informatik, Karlsruhe, Germany, and are licensed under the BSD-3-Clause license.
+See the LICENSE file for the original license details.
