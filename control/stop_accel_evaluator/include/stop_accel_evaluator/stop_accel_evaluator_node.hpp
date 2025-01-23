@@ -19,11 +19,11 @@
 #include "autoware/universe_utils/ros/self_pose_listener.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "autoware_internal_debug_msgs/msg/float32_multi_array_stamped.hpp"
+#include "autoware_internal_debug_msgs/msg/float32_stamped.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "sensor_msgs/msg/imu.hpp"
-#include "tier4_debug_msgs/msg/float32_multi_array_stamped.hpp"
-#include "tier4_debug_msgs/msg/float32_stamped.hpp"
 
 #include <deque>
 #include <memory>
@@ -31,11 +31,11 @@
 namespace stop_accel_evaluator
 {
 using autoware::universe_utils::SelfPoseListener;
+using autoware_internal_debug_msgs::msg::Float32MultiArrayStamped;
+using autoware_internal_debug_msgs::msg::Float32Stamped;
 using geometry_msgs::msg::TwistStamped;
 using nav_msgs::msg::Odometry;
 using sensor_msgs::msg::Imu;
-using tier4_debug_msgs::msg::Float32MultiArrayStamped;
-using tier4_debug_msgs::msg::Float32Stamped;
 
 class StopAccelEvaluatorNode : public rclcpp::Node
 {
