@@ -33,11 +33,13 @@ struct Debugger
     rclcpp::QoS durable_qos(queue_size);
     durable_qos.transient_local();  // option for latching
 
-    pub_debug_ = rclcpp::create_publisher<autoware_internal_debug_msgs::msg::Float32MultiArrayStamped>(
-      node, "~/debug_values/" + name, durable_qos);
+    pub_debug_ =
+      rclcpp::create_publisher<autoware_internal_debug_msgs::msg::Float32MultiArrayStamped>(
+        node, "~/debug_values/" + name, durable_qos);
     debug_values_.data.resize(num_debug_values_, 0.0);
   }
-  rclcpp::Publisher<autoware_internal_debug_msgs::msg::Float32MultiArrayStamped>::SharedPtr pub_debug_;
+  rclcpp::Publisher<autoware_internal_debug_msgs::msg::Float32MultiArrayStamped>::SharedPtr
+    pub_debug_;
   void publishDebugValue() { pub_debug_->publish(debug_values_); }
   static constexpr std::uint8_t num_debug_values_ = 20;
   mutable autoware_internal_debug_msgs::msg::Float32MultiArrayStamped debug_values_;
