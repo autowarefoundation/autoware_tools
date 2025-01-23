@@ -2,7 +2,7 @@
   <class name="rviz_plugins/Float32MultiArrayStampedPieChart"
     type="rviz_plugins::Float32MultiArrayStampedPieChartDisplay"
     base_class_type="rviz_common::Display">
-    <description>Display drivable area of tier4_debug_msgs::msg::Float32MultiArrayStamped</description>
+    <description>Display drivable area of autoware_internal_debug_msgs::msg::Float32MultiArrayStamped</description>
   </class>
   <class name="rviz_plugins/StringStampedOverlayDisplay"
     type="rviz_plugins::StringStampedOverlayDisplay"
