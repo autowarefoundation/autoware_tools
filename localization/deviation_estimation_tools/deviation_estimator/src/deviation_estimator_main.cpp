@@ -99,7 +99,7 @@ int main(int argc, char ** argv)
       if (index >= static_cast<int64_t>(trajectory_data_list.size())) {
         trajectory_data_list.resize(index + 1);
       }
-      tier4_debug_msgs::msg::Float64Stamped vx;
+      autoware_internal_debug_msgs::msg::Float64Stamped vx;
       vx.stamp = velocity_status_msg->header.stamp;
       vx.data = velocity_status_msg->longitudinal_velocity;
       trajectory_data_list[index].vx_list.push_back(vx);

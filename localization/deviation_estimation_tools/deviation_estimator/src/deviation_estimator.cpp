@@ -202,7 +202,7 @@ void DeviationEstimator::callback_pose_with_covariance(
 void DeviationEstimator::callback_wheel_odometry(
   const autoware_vehicle_msgs::msg::VelocityReport::ConstSharedPtr wheel_odometry_msg_ptr)
 {
-  tier4_debug_msgs::msg::Float64Stamped vx;
+  autoware_internal_debug_msgs::msg::Float64Stamped vx;
   vx.stamp = wheel_odometry_msg_ptr->header.stamp;
   vx.data = wheel_odometry_msg_ptr->longitudinal_velocity;
 
