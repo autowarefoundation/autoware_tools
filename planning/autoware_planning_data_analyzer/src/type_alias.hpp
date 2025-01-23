@@ -18,6 +18,7 @@
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info_utils.hpp>
 
+#include "autoware_internal_debug_msgs/msg/float32_multi_array_stamped.hpp"
 #include "autoware_map_msgs/msg/lanelet_map_bin.hpp"
 #include "autoware_perception_msgs/msg/predicted_objects.hpp"
 #include "autoware_planning_msgs/msg/lanelet_route.hpp"
@@ -26,7 +27,6 @@
 #include "autoware_vehicle_msgs/msg/steering_report.hpp"
 #include "geometry_msgs/msg/accel_with_covariance_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-#include "tier4_debug_msgs/msg/float32_multi_array_stamped.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 #include "visualization_msgs/msg/marker_array.hpp"
 #include <std_srvs/srv/set_bool.hpp>
@@ -51,6 +51,7 @@ using autoware_vehicle_msgs::msg::SteeringReport;
 using route_handler::RouteHandler;
 
 // ros2
+using autoware_internal_debug_msgs::msg::Float32MultiArrayStamped;
 using geometry_msgs::msg::AccelWithCovarianceStamped;
 using geometry_msgs::msg::Point;
 using geometry_msgs::msg::Pose;
@@ -60,7 +61,6 @@ using nav_msgs::msg::Odometry;
 using std_srvs::srv::SetBool;
 using std_srvs::srv::Trigger;
 using tf2_msgs::msg::TFMessage;
-using tier4_debug_msgs::msg::Float32MultiArrayStamped;
 using visualization_msgs::msg::Marker;
 using visualization_msgs::msg::MarkerArray;
 }  // namespace autoware::behavior_analyzer
