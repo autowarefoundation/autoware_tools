@@ -54,15 +54,6 @@ def compute_total_message_count(rosbag_path):
 
     return total_message_count
 
-##### Convert names of pcd segments to 2d coordinates #####
-def name_to_coordinate(seg_name: str):
-    # Remove the extension
-    name_only = os.path.splitext(seg_name)[0]
-    str_coors = name_only.split("_")
-
-    # Return the coordinates as a 1x2 ndarray
-    return np.array(str_coors, dtype = float).reshape(1, 2)
-
 ##### Read the YAML file to get the list of PCD segments and scores #####
 def get_pcd_segments_and_scores(pcd_map_dir: str) -> dict:
     if not os.path.exists(pcd_map_dir):
