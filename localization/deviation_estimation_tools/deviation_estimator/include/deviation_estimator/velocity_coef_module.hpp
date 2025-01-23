@@ -17,9 +17,9 @@
 
 #include "deviation_estimator/utils.hpp"
 
+#include "autoware_internal_debug_msgs/msg/float64_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/vector3_stamped.hpp"
-#include "autoware_internal_debug_msgs/msg/float64_stamped.hpp"
 
 #include <utility>
 #include <vector>
