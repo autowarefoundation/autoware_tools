@@ -18,6 +18,8 @@ import time
 
 from autoware_adapi_v1_msgs.msg import OperationModeState
 from autoware_control_msgs.msg import Control as AckermannControlCommand
+from autoware_internal_debug_msgs.msg import Float32MultiArrayStamped
+from autoware_internal_debug_msgs.msg import Float32Stamped
 from autoware_planning_msgs.msg import Path
 from autoware_planning_msgs.msg import Trajectory
 from autoware_vehicle_msgs.msg import VelocityReport
@@ -29,8 +31,6 @@ from rclpy.node import Node
 from tf2_ros import LookupException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
-from autoware_internal_debug_msgs.msg import Float32MultiArrayStamped
-from autoware_internal_debug_msgs.msg import Float32Stamped
 from tier4_planning_msgs.msg import PathWithLaneId
 from tier4_planning_msgs.msg import VelocityLimit
 
