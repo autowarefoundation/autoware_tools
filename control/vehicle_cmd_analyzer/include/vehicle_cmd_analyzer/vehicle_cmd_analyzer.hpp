@@ -21,7 +21,7 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include "autoware_control_msgs/msg/control.hpp"
-#include "tier4_debug_msgs/msg/float32_multi_array_stamped.hpp"
+#include "autoware_internal_debug_msgs/msg/float32_multi_array_stamped.hpp"
 
 #include <algorithm>
 #include <memory>
@@ -33,7 +33,8 @@ class VehicleCmdAnalyzer : public rclcpp::Node
 {
 private:
   rclcpp::Subscription<autoware_control_msgs::msg::Control>::SharedPtr sub_vehicle_cmd_;
-  rclcpp::Publisher<tier4_debug_msgs::msg::Float32MultiArrayStamped>::SharedPtr pub_debug_;
+  rclcpp::Publisher<autoware_internal_debug_msgs::msg::Float32MultiArrayStamped>::SharedPtr
+    pub_debug_;
   rclcpp::TimerBase::SharedPtr timer_control_;
 
   std::shared_ptr<autoware_control_msgs::msg::Control> vehicle_cmd_ptr_{nullptr};
