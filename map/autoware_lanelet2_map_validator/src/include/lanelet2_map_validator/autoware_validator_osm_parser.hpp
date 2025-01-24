@@ -19,20 +19,16 @@
 
 namespace lanelet::io_handlers
 {
-class AutowareValidatorOsmParser : public lanelet::io_handlers::OsmParser
+class AutowareValidatorOsmParser : public OsmParser
 {
 public:
+  using OsmParser::OsmParser;
   std::unique_ptr<LaneletMap> parse(
     const std::string & filename, ErrorMessages & errors) const override;
 
   static constexpr const char * extension() { return ".osm"; }
 
   static constexpr const char * name() { return "autoware_validator_osm_handler"; }
-
-  AutowareValidatorOsmParser(const lanelet::Projector & projector, const io::Configuration & config)
-  : OsmParser(projector, config)
-  {
-  }
 };
 }  // namespace lanelet::io_handlers
 

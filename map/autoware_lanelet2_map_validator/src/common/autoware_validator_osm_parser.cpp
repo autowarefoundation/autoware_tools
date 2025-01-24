@@ -165,12 +165,12 @@ void removeAndFixPlaceholders(
 namespace autoware
 {
 
-class AutowareValidatorOsmParser
+class AutowareValidatorOsmFileParser
 {
 public:
   static File read(const pugi::xml_node & fileNode, Errors * errors = nullptr)
   {
-    AutowareValidatorOsmParser autowareValidatorOsmParser;
+    AutowareValidatorOsmFileParser autowareValidatorOsmParser;
     File file;
     auto osmNode = fileNode.child(keyword::Osm);
     file.nodes = autowareValidatorOsmParser.readNodes(osmNode);
@@ -296,7 +296,7 @@ private:
     return relations;
   }
 
-  AutowareValidatorOsmParser() = default;
+  AutowareValidatorOsmFileParser() = default;
   void reportParseError(Id id, const std::string & what)
   {
     auto errstr = "Error reading primitive with id " + std::to_string(id) + " from file: " + what;
@@ -307,7 +307,7 @@ private:
 
 File read(pugi::xml_document & node, Errors * errors)
 {
-  return AutowareValidatorOsmParser::read(node, errors);
+  return AutowareValidatorOsmFileParser::read(node, errors);
 }
 }  // namespace autoware
 }  // namespace lanelet::osm
