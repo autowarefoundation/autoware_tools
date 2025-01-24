@@ -44,10 +44,6 @@ if(BUILD_TESTING)
     test/src/include
     src/include)
 
-  target_link_libraries(autoware_lanelet2_map_validator_test_lib
-    autoware_lanelet2_map_validator_lib
-  )
-
   # test for general lanelet2 map validators
   function(add_validation_test TEST_FILE)
     get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
@@ -59,6 +55,7 @@ if(BUILD_TESTING)
     target_link_libraries(
       ${VALIDATION_NAME}_test
       autoware_lanelet2_map_validator_test_lib
+      autoware_lanelet2_map_validator_lib
     )
   endfunction()
 
