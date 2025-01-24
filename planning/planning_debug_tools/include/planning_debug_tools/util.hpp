@@ -21,7 +21,7 @@
 
 #include "autoware_planning_msgs/msg/path.hpp"
 #include "autoware_planning_msgs/msg/trajectory.hpp"
-#include "tier4_planning_msgs/msg/path_with_lane_id.hpp"
+#include "autoware_internal_planning_msgs/msg/path_with_lane_id.hpp"
 
 #include <vector>
 
@@ -33,7 +33,7 @@ using autoware::universe_utils::getPoint;
 using autoware::universe_utils::getRPY;
 using autoware_planning_msgs::msg::PathPoint;
 using autoware_planning_msgs::msg::TrajectoryPoint;
-using tier4_planning_msgs::msg::PathPointWithLaneId;
+using autoware_internal_planning_msgs::msg::PathPointWithLaneId;
 
 double getVelocity(const PathPoint & p)
 {
