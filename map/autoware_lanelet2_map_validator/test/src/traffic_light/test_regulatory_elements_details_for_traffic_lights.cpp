@@ -45,20 +45,25 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefers)  // NOLINT f
   // traffic_light-type regulatory elements that has no refers will not be loaded from the start
   // and should be mentioned in the loading_errors
 
-  bool found_error_on_loading = false;
-  int target_primitive_id = 1025;
-  std::string target_message =
+  bool found_identical_issue = false;
+  const int target_primitive_id = 1025;
+
+  const lanelet::validation::Severity target_severity = lanelet::validation::Severity::Error;
+  const lanelet::validation::Primitive target_primitive = lanelet::validation::Primitive::Primitive;
+  const lanelet::Id target_issue_id = lanelet::InvalId;
+  const std::string target_message =
     "Error parsing primitive " + std::to_string(target_primitive_id) +
     ": Creating a regulatory element of type traffic_light failed: No traffic light defined!";
 
-  for (const auto & error : loading_errors_) {
-    if (error.find(target_message) != std::string::npos) {
-      found_error_on_loading = true;
-      break;
+  for (const auto & issue : loading_issues_[0].issues) {
+    if (
+      issue.severity == target_severity && issue.primitive == target_primitive &&
+      issue.id == target_issue_id && issue.message == target_message) {
+      found_identical_issue = true;
     }
   }
 
-  EXPECT_TRUE(found_error_on_loading);
+  EXPECT_TRUE(found_identical_issue);
 }
 
 TEST_F(TestRegulatoryElementDetailsForTrafficLights, MissingRefLine)  // NOLINT for gtest
@@ -127,6 +132,7 @@ TEST_F(TestRegulatoryElementDetailsForTrafficLights, SampleMap)  // NOLINT for g
   load_target_map("sample_map.osm");
 
   lanelet::autoware::validation::RegulatoryElementsDetailsForTrafficLightsValidator checker;
+
   const auto & issues = checker(*map_);
 
   EXPECT_EQ(issues.size(), 0);
