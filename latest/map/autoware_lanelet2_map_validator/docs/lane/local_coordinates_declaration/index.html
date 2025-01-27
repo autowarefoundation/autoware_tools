@@ -8,27 +8,27 @@
       
       
       
-        <link rel="canonical" href="https://autowarefoundation.github.io/autoware-tools-documentation/latest/simulator/simulator_compatibility_test/">
+        <link rel="canonical" href="https://autowarefoundation.github.io/autoware-tools-documentation/latest/map/autoware_lanelet2_map_validator/docs/lane/local_coordinates_declaration/">
       
       
-        <link rel="prev" href="../../planning/planning_debug_tools/doc-stop-reason-visualizer/">
+        <link rel="prev" href="../../intersection/turn_direction_tagging/">
       
       
-        <link rel="next" href="../../system/rqt_diagnostic_graph_monitor/">
+        <link rel="next" href="../../stop_line/missing_regulatory_elements_for_stop_lines/">
       
-      <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
+      <link rel="icon" href="../../../../../docs/assets/images/autoware-foundation.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.20">
     
     
       
-        <title>simulator_compatibility_test - Autoware Tools Documentation</title>
+        <title>local_coordinates_declaration - Autoware Tools Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -44,11 +44,11 @@
       
     
     
-      <link rel="stylesheet" href="../../docs/assets/css/extra.css">
+      <link rel="stylesheet" href="../../../../../docs/assets/css/extra.css">
     
       <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#simulator_compatibility_test" class="md-skip">
+        <a href="#local_coordinates_declaration" class="md-skip">
           Skip to content
         </a>
       
@@ -97,7 +97,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Autoware Tools Documentation" class="md-header__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
+    <a href="../../../../.." title="Autoware Tools Documentation" class="md-header__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4zm-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-48H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              simulator_compatibility_test
+              local_coordinates_declaration
             
           </span>
         </div>
@@ -214,7 +214,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../autoware_dependency_checker/" class="md-tabs__link">
+      <a href="../../../../../autoware_dependency_checker/" class="md-tabs__link">
         Autoware dependency checker
       </a>
     </li>
@@ -230,7 +230,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../bag2lanelet/" class="md-tabs__link">
+      <a href="../../../../../bag2lanelet/" class="md-tabs__link">
         Bag2lanelet
       </a>
     </li>
@@ -251,7 +251,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../common/autoware_debug_tools/" class="md-tabs__link">
+      <a href="../../../../../common/autoware_debug_tools/" class="md-tabs__link">
         Common
       </a>
     </li>
@@ -274,7 +274,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../control/stop_accel_evaluator/" class="md-tabs__link">
+      <a href="../../../../../control/stop_accel_evaluator/" class="md-tabs__link">
         Control
       </a>
     </li>
@@ -292,7 +292,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../control_data_collecting_tool/" class="md-tabs__link">
+      <a href="../../../../../control_data_collecting_tool/" class="md-tabs__link">
         Control data collecting tool
       </a>
     </li>
@@ -308,7 +308,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../driving_environment_analyzer/" class="md-tabs__link">
+      <a href="../../../../../driving_environment_analyzer/" class="md-tabs__link">
         Driving environment analyzer
       </a>
     </li>
@@ -329,7 +329,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
+      <a href="../../../../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
         Evaluation
       </a>
     </li>
@@ -352,7 +352,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../localization/deviation_estimation_tools/ReadMe/" class="md-tabs__link">
+      <a href="../../../../../localization/deviation_estimation_tools/ReadMe/" class="md-tabs__link">
         Localization
       </a>
     </li>
@@ -363,6 +363,8 @@
       
         
   
+  
+    
   
 
 
@@ -375,7 +377,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../map/autoware_lanelet2_map_utils/" class="md-tabs__link">
+      <a href="../../../../autoware_lanelet2_map_utils/" class="md-tabs__link md-tabs__link--active">
         Map
       </a>
     </li>
@@ -398,7 +400,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../planning/autoware_planning_data_analyzer/" class="md-tabs__link">
+      <a href="../../../../../planning/autoware_planning_data_analyzer/" class="md-tabs__link">
         Planning
       </a>
     </li>
@@ -409,8 +411,6 @@
       
         
   
-  
-    
   
 
 
@@ -423,7 +423,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="./" class="md-tabs__link md-tabs__link--active">
+      <a href="../../../../../simulator/simulator_compatibility_test/" class="md-tabs__link">
         Simulator
       </a>
     </li>
@@ -446,7 +446,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
+      <a href="../../../../../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
         System
       </a>
     </li>
@@ -469,7 +469,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../vehicle/calibration_adapter/" class="md-tabs__link">
+      <a href="../../../../../vehicle/calibration_adapter/" class="md-tabs__link">
         Vehicle
       </a>
     </li>
@@ -505,7 +505,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Autoware Tools Documentation" class="md-nav__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
+    <a href="../../../../.." title="Autoware Tools Documentation" class="md-nav__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4zm-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-48H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
@@ -556,7 +556,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../autoware_dependency_checker/">Autoware dependency checker</a>
+          <a href="../../../../../autoware_dependency_checker/">Autoware dependency checker</a>
           
         </div>
       
@@ -603,7 +603,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../bag2lanelet/">Bag2lanelet</a>
+          <a href="../../../../../bag2lanelet/">Bag2lanelet</a>
           
         </div>
       
@@ -709,7 +709,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/autoware_debug_tools/">Autoware debug tools</a>
+          <a href="../../../../../common/autoware_debug_tools/">Autoware debug tools</a>
           
             <label for="__nav_3_1">
               <span class="md-nav__icon md-icon"></span>
@@ -798,7 +798,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../common/autoware_debug_tools/autoware_debug_tools/topic_connection_checker/readme/" class="md-nav__link">
+      <a href="../../../../../common/autoware_debug_tools/autoware_debug_tools/topic_connection_checker/readme/" class="md-nav__link">
         Topic Connection Checker
       </a>
     </li>
@@ -855,7 +855,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/mission_planner_rviz_plugin/">Mission planner rviz plugin</a>
+          <a href="../../../../../common/mission_planner_rviz_plugin/">Mission planner rviz plugin</a>
           
         </div>
       
@@ -903,7 +903,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/rtc_manager_rviz_plugin/">Rtc manager rviz plugin</a>
+          <a href="../../../../../common/rtc_manager_rviz_plugin/">Rtc manager rviz plugin</a>
           
         </div>
       
@@ -951,7 +951,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_automatic_goal_rviz_plugin/">Tier4 automatic goal rviz plugin</a>
+          <a href="../../../../../common/tier4_automatic_goal_rviz_plugin/">Tier4 automatic goal rviz plugin</a>
           
         </div>
       
@@ -999,7 +999,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_control_rviz_plugin/">Tier4 control rviz plugin</a>
+          <a href="../../../../../common/tier4_control_rviz_plugin/">Tier4 control rviz plugin</a>
           
         </div>
       
@@ -1047,7 +1047,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_debug_rviz_plugin/">Tier4 debug rviz plugin</a>
+          <a href="../../../../../common/tier4_debug_rviz_plugin/">Tier4 debug rviz plugin</a>
           
         </div>
       
@@ -1095,7 +1095,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_debug_tools/">Tier4 debug tools</a>
+          <a href="../../../../../common/tier4_debug_tools/">Tier4 debug tools</a>
           
         </div>
       
@@ -1143,7 +1143,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_logging_level_configure_rviz_plugin/">Tier4 logging level configure rviz plugin</a>
+          <a href="../../../../../common/tier4_logging_level_configure_rviz_plugin/">Tier4 logging level configure rviz plugin</a>
           
         </div>
       
@@ -1191,7 +1191,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_screen_capture_rviz_plugin/">Tier4 screen capture rviz plugin</a>
+          <a href="../../../../../common/tier4_screen_capture_rviz_plugin/">Tier4 screen capture rviz plugin</a>
           
         </div>
       
@@ -1239,7 +1239,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_simulated_clock_rviz_plugin/">Tier4 simulated clock rviz plugin</a>
+          <a href="../../../../../common/tier4_simulated_clock_rviz_plugin/">Tier4 simulated clock rviz plugin</a>
           
         </div>
       
@@ -1287,7 +1287,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_string_viewer_rviz_plugin/">Tier4 string viewer rviz plugin</a>
+          <a href="../../../../../common/tier4_string_viewer_rviz_plugin/">Tier4 string viewer rviz plugin</a>
           
         </div>
       
@@ -1335,7 +1335,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_target_object_type_rviz_plugin/">Tier4 target object type rviz plugin</a>
+          <a href="../../../../../common/tier4_target_object_type_rviz_plugin/">Tier4 target object type rviz plugin</a>
           
         </div>
       
@@ -1426,7 +1426,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../control/stop_accel_evaluator/">Stop accel evaluator</a>
+          <a href="../../../../../control/stop_accel_evaluator/">Stop accel evaluator</a>
           
         </div>
       
@@ -1474,7 +1474,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../control/vehicle_cmd_analyzer/">Vehicle cmd analyzer</a>
+          <a href="../../../../../control/vehicle_cmd_analyzer/">Vehicle cmd analyzer</a>
           
         </div>
       
@@ -1528,7 +1528,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../control_data_collecting_tool/">Control data collecting tool</a>
+          <a href="../../../../../control_data_collecting_tool/">Control data collecting tool</a>
           
         </div>
       
@@ -1575,7 +1575,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../driving_environment_analyzer/">Driving environment analyzer</a>
+          <a href="../../../../../driving_environment_analyzer/">Driving environment analyzer</a>
           
         </div>
       
@@ -1657,7 +1657,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../evaluation/tier4_metrics_rviz_plugin/">Tier4 metrics rviz plugin</a>
+          <a href="../../../../../evaluation/tier4_metrics_rviz_plugin/">Tier4 metrics rviz plugin</a>
           
         </div>
       
@@ -1759,7 +1759,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
+      <a href="../../../../../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
         deviation_estimation_tools
       </a>
     </li>
@@ -1786,16 +1786,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
       
       
         
@@ -1814,7 +1814,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_9">
           <span class="md-nav__icon md-icon"></span>
           Map
@@ -1849,7 +1849,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../map/autoware_lanelet2_map_utils/">Autoware lanelet2 map utils</a>
+          <a href="../../../../autoware_lanelet2_map_utils/">Autoware lanelet2 map utils</a>
           
         </div>
       
@@ -1873,18 +1873,18 @@
               
   
   
+    
+  
   
     
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2" checked>
       
       
         
@@ -1901,7 +1901,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../map/autoware_lanelet2_map_validator/">Autoware lanelet2 map validator</a>
+          <a href="../../../">Autoware lanelet2 map validator</a>
           
             <label for="__nav_9_2">
               <span class="md-nav__icon md-icon"></span>
@@ -1909,7 +1909,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_2_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_9_2">
           <span class="md-nav__icon md-icon"></span>
           Autoware lanelet2 map validator
@@ -1922,16 +1922,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_2_2" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2_2" checked>
       
       
         
@@ -1954,7 +1954,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_9_2_2_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_9_2_2_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_9_2_2">
           <span class="md-nav__icon md-icon"></span>
           Docs
@@ -1967,7 +1967,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/how_to_contribute/" class="md-nav__link">
+      <a href="../../how_to_contribute/" class="md-nav__link">
         How to contribute to autoware_lanelet2_map_validator
       </a>
     </li>
@@ -2016,7 +2016,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/crosswalk/missing_regulatory_elements_for_crosswalk/" class="md-nav__link">
+      <a href="../../crosswalk/missing_regulatory_elements_for_crosswalk/" class="md-nav__link">
         missing_regulator_elements_for_crosswalk
       </a>
     </li>
@@ -2030,7 +2030,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/crosswalk/regulatory_element_details_for_crosswalks/" class="md-nav__link">
+      <a href="../../crosswalk/regulatory_element_details_for_crosswalks/" class="md-nav__link">
         regulatory_element_details_for_crosswalks
       </a>
     </li>
@@ -2090,7 +2090,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/intersection/intersection_area_dangling_reference/" class="md-nav__link">
+      <a href="../../intersection/intersection_area_dangling_reference/" class="md-nav__link">
         intersection_area_dangling_reference
       </a>
     </li>
@@ -2104,7 +2104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/intersection/intersection_area_segment_type/" class="md-nav__link">
+      <a href="../../intersection/intersection_area_segment_type/" class="md-nav__link">
         intersection_area_segment_type
       </a>
     </li>
@@ -2118,7 +2118,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/intersection/intersection_area_validity/" class="md-nav__link">
+      <a href="../../intersection/intersection_area_validity/" class="md-nav__link">
         intersection_area_validity
       </a>
     </li>
@@ -2132,7 +2132,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/intersection/turn_direction_tagging/" class="md-nav__link">
+      <a href="../../intersection/turn_direction_tagging/" class="md-nav__link">
         turn_direction_tagging
       </a>
     </li>
@@ -2151,16 +2151,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_2_2_4" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2_2_4" checked>
       
       
         
@@ -2173,7 +2173,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_9_2_2_4_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_9_2_2_4_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_9_2_2_4">
           <span class="md-nav__icon md-icon"></span>
           Lane
@@ -2184,11 +2184,66 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/lane/local_coordinates_declaration/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          local_coordinates_declaration
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         local_coordinates_declaration
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#validator-name" class="md-nav__link">
+    Validator name
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feature" class="md-nav__link">
+    Feature
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-source-codes" class="md-nav__link">
+    Related source codes
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2240,7 +2295,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/stop_line/missing_regulatory_elements_for_stop_lines/" class="md-nav__link">
+      <a href="../../stop_line/missing_regulatory_elements_for_stop_lines/" class="md-nav__link">
         missing_regulator_elements_for_stop_lines
       </a>
     </li>
@@ -2300,7 +2355,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/traffic_light/missing_referrers_for_traffic_lights/" class="md-nav__link">
+      <a href="../../traffic_light/missing_referrers_for_traffic_lights/" class="md-nav__link">
         missing_referrers_for_traffic_lights
       </a>
     </li>
@@ -2314,7 +2369,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/traffic_light/missing_regulatory_elements_for_traffic_lights/" class="md-nav__link">
+      <a href="../../traffic_light/missing_regulatory_elements_for_traffic_lights/" class="md-nav__link">
         missing_regulator_elements_for_traffic_lights
       </a>
     </li>
@@ -2328,7 +2383,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/traffic_light/regulatory_element_details_for_traffic_lights/" class="md-nav__link">
+      <a href="../../traffic_light/regulatory_element_details_for_traffic_lights/" class="md-nav__link">
         regulatory_element_details_for_traffic_lights
       </a>
     </li>
@@ -2342,7 +2397,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/docs/traffic_light/traffic_light_facing/" class="md-nav__link">
+      <a href="../../traffic_light/traffic_light_facing/" class="md-nav__link">
         traffic_light_facing
       </a>
     </li>
@@ -2403,7 +2458,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../map/autoware_lanelet2_map_validator/template/validator_template/" class="md-nav__link">
+      <a href="../../../template/validator_template/" class="md-nav__link">
         validator_template
       </a>
     </li>
@@ -2453,7 +2508,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../map/autoware_pointcloud_divider/">Autoware pointcloud divider</a>
+          <a href="../../../../autoware_pointcloud_divider/">Autoware pointcloud divider</a>
           
         </div>
       
@@ -2501,7 +2556,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../map/autoware_pointcloud_merger/">Autoware pointcloud merger</a>
+          <a href="../../../../autoware_pointcloud_merger/">Autoware pointcloud merger</a>
           
         </div>
       
@@ -2598,7 +2653,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/autoware_planning_data_analyzer/">Autoware planning data analyzer</a>
+          <a href="../../../../../planning/autoware_planning_data_analyzer/">Autoware planning data analyzer</a>
           
         </div>
       
@@ -2646,7 +2701,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/autoware_route_client/">Autoware route client</a>
+          <a href="../../../../../planning/autoware_route_client/">Autoware route client</a>
           
         </div>
       
@@ -2694,7 +2749,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/autoware_rtc_replayer/">Autoware rtc replayer</a>
+          <a href="../../../../../planning/autoware_rtc_replayer/">Autoware rtc replayer</a>
           
         </div>
       
@@ -2742,7 +2797,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/autoware_static_centerline_generator/">Autoware static centerline generator</a>
+          <a href="../../../../../planning/autoware_static_centerline_generator/">Autoware static centerline generator</a>
           
         </div>
       
@@ -2792,7 +2847,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/planning_debug_tools/">Planning debug tools</a>
+          <a href="../../../../../planning/planning_debug_tools/">Planning debug tools</a>
           
             <label for="__nav_10_5">
               <span class="md-nav__icon md-icon"></span>
@@ -2815,7 +2870,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
+      <a href="../../../../../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
         Doc stop reason visualizer
       </a>
     </li>
@@ -2842,16 +2897,16 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
       
       
         
@@ -2864,7 +2919,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_11">
           <span class="md-nav__icon md-icon"></span>
           Simulator
@@ -2875,18 +2930,18 @@
               
   
   
-    
-  
   
     
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11_1" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11_1" >
       
       
         
@@ -2898,12 +2953,12 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index md-nav__link--active">
-          <a href="./">Simulator compatibility test</a>
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../../../../simulator/simulator_compatibility_test/">Simulator compatibility test</a>
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_1_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_11_1_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_11_1">
           <span class="md-nav__icon md-icon"></span>
           Simulator compatibility test
@@ -2988,7 +3043,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../system/rqt_diagnostic_graph_monitor/">Rqt diagnostic graph monitor</a>
+          <a href="../../../../../system/rqt_diagnostic_graph_monitor/">Rqt diagnostic graph monitor</a>
           
         </div>
       
@@ -3083,7 +3138,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/calibration_adapter/">Calibration adapter</a>
+          <a href="../../../../../vehicle/calibration_adapter/">Calibration adapter</a>
           
         </div>
       
@@ -3131,7 +3186,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/parameter_estimator/">Parameter estimator</a>
+          <a href="../../../../../vehicle/parameter_estimator/">Parameter estimator</a>
           
         </div>
       
@@ -3179,7 +3234,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/pitch_checker/">Pitch checker</a>
+          <a href="../../../../../vehicle/pitch_checker/">Pitch checker</a>
           
         </div>
       
@@ -3227,7 +3282,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/time_delay_estimator/">Time delay estimator</a>
+          <a href="../../../../../vehicle/time_delay_estimator/">Time delay estimator</a>
           
         </div>
       
@@ -3280,165 +3335,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
-    Purpose
+  <a href="#validator-name" class="md-nav__link">
+    Validator name
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#overview-of-the-test-codes" class="md-nav__link">
-    Overview of the test codes
+  <a href="#feature" class="md-nav__link">
+    Feature
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#test-procedures-for-test_sim_common_manual_testing" class="md-nav__link">
-    Test Procedures for test_sim_common_manual_testing
-  </a>
-  
-    <nav class="md-nav" aria-label="Test Procedures for test_sim_common_manual_testing">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#build-process-before-test" class="md-nav__link">
-    Build process before test
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#test-case-1" class="md-nav__link">
-    Test Case #1
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#test-case-2" class="md-nav__link">
-    Test Case #2
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#test-case-3" class="md-nav__link">
-    Test Case #3
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#test-case-4" class="md-nav__link">
-    Test Case #4
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#test-case-5" class="md-nav__link">
-    Test Case #5
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#test-case-6" class="md-nav__link">
-    Test Case #6
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#test-procedures-for-test_morai_sim" class="md-nav__link">
-    Test Procedures for test_morai_sim
-  </a>
-  
-    <nav class="md-nav" aria-label="Test Procedures for test_morai_sim">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#build-process-before-test_1" class="md-nav__link">
-    Build process before test
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#inner-workings-algorithms" class="md-nav__link">
-    Inner-workings / Algorithms
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#inputs-outputs" class="md-nav__link">
-    Inputs / Outputs
-  </a>
-  
-    <nav class="md-nav" aria-label="Inputs / Outputs">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#input" class="md-nav__link">
-    Input
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
-    Output
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    Parameters
-  </a>
-  
-    <nav class="md-nav" aria-label="Parameters">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#node-parameters" class="md-nav__link">
-    Node Parameters
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#core-parameters" class="md-nav__link">
-    Core Parameters
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#assumptions-known-limits" class="md-nav__link">
-    Assumptions / Known limits
+  <a href="#related-source-codes" class="md-nav__link">
+    Related source codes
   </a>
   
 </li>
@@ -3461,240 +3373,56 @@
   
 
 
-<div><h1 id="simulator_compatibility_test">simulator_compatibility_test<a class="headerlink" href="#simulator_compatibility_test" title="Permanent link">#</a></h1>
-<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">#</a></h2>
-<p>Test procedures (e.g. test codes) to check whether a certain simulator is compatible with Autoware</p>
-<h2 id="overview-of-the-test-codes">Overview of the test codes<a class="headerlink" href="#overview-of-the-test-codes" title="Permanent link">#</a></h2>
-<p>File structure</p>
-<ul>
-<li>test_base</li>
-<li>test_sim_common_manual_testing</li>
-<li>test_morai_sim</li>
-</ul>
-<ol>
-<li>test_base provides shared methods for testing. Other test codes are created based on functions defined here.</li>
-<li>test_sim_common_manual_testing provides the most basic functions. Any simulator can be tested using codes here. However, to make these codes usable with any simulators, the codes do not include any features for test automation.</li>
-<li>test_morai_sim is an automated version of test_sim_common_manual_testing for MORAI SIM: Drive. Thus it includes 'MORAI SIM: Drive'-specific codes. Users of the other simulators may create similar version for their simulator of interest.</li>
-</ol>
-<h2 id="test-procedures-for-test_sim_common_manual_testing">Test Procedures for test_sim_common_manual_testing<a class="headerlink" href="#test-procedures-for-test_sim_common_manual_testing" title="Permanent link">#</a></h2>
-<h3 id="build-process-before-test">Build process before test<a class="headerlink" href="#build-process-before-test" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>install/setup.bash
-colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>simulator_compatibility_test
-<span class="nb">cd</span><span class="w"> </span>src/universe/autoware.universe/tools/simulator_test/simulator_compatibility_test/test_sim_common_manual_testing
-</code></pre></div>
-<p>To run each test case manually</p>
-<h3 id="test-case-1">Test Case #1<a class="headerlink" href="#test-case-1" title="Permanent link">#</a></h3>
-<ol>
-<li>Run your simulator</li>
-<li>Load a map and an ego vehicle for the test</li>
-<li>
-<p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_01_control_mode_and_report.py
-</code></pre></div>
-</li>
-<li>
-<p>Check if expected behavior is created within the simulator</p>
-<ul>
-<li>Ego vehicle control mode is changed into Manual (If the simulator has a GUI for this one, it should display the ego is in Manual)</li>
-<li>Ego vehicle control mode is changed into Auto (If the simulator has a GUI for this one, it should display the ego is in Auto)</li>
-</ul>
-</li>
-<li>Check if pytest output is passed or failure</li>
-</ol>
-<h3 id="test-case-2">Test Case #2<a class="headerlink" href="#test-case-2" title="Permanent link">#</a></h3>
-<ol>
-<li>Run your simulator (If the simulator is already running, skip this part)</li>
-<li>Load a map and an ego vehicle for the test (If a map and an ego are loaded already, skip this part)</li>
-<li>
-<p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_02_change_gear_and_report.py
-</code></pre></div>
-</li>
-<li>
-<p>Check if expected behavior is created within the simulator</p>
-<ul>
-<li>Ego vehicle gear mode is changed into "P" (If the simulator has a GUI for this one, it should display the gear mode is in "P")</li>
-<li>Ego vehicle gear mode is changed into "N" (If the simulator has a GUI for this one, it should display the gear mode is in "N")</li>
-<li>Ego vehicle gear mode is changed into "R" (If the simulator has a GUI for this one, it should display the gear mode is in "R")</li>
-<li>Ego vehicle gear mode is changed into "D" (If the simulator has a GUI for this one, it should display the gear mode is in "D")</li>
-</ul>
-</li>
-<li>Check if pytest output is passed or failure</li>
-</ol>
-<h3 id="test-case-3">Test Case #3<a class="headerlink" href="#test-case-3" title="Permanent link">#</a></h3>
-<ol>
-<li>Run your simulator (If the simulator is already running, skip this part)</li>
-<li>Load a map and an ego vehicle for the test (If a map and an ego are loaded already, skip this part)</li>
-<li>
-<p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_03_longitudinal_command_and_report.py
-</code></pre></div>
-</li>
-<li>
-<p>Check if expected behavior is created within the simulator</p>
-<ul>
-<li>Ego vehicle longitudinal velocity is greater than 10 kph (If the simulator has a GUI for this one, it should display the longitudinal velocity is greater than 10 kph)</li>
-<li>Ego vehicle longitudinal velocity is going below 10 kph. This is an ego vehicle initialize process to ensure the following acceleration is made by longitudinal.acceleration value (If the simulator has a GUI for this one, it should display the longitudinal velocity is less than 10 kph)</li>
-<li>Ego vehicle longitudinal velocity is greater than 10 kph (If the simulator has a GUI for this one, it should display the longitudinal velocity is greater than 10 kph)</li>
-<li>Ego vehicle longitudinal velocity is going below 10 kph. This is an ego vehicle reset process to tear down this test case.</li>
-</ul>
-</li>
-<li>Check if pytest output is passed or failure</li>
-</ol>
-<h3 id="test-case-4">Test Case #4<a class="headerlink" href="#test-case-4" title="Permanent link">#</a></h3>
-<ol>
-<li>Run your simulator (If the simulator is already running, skip this part)</li>
-<li>Load a map and an ego vehicle for the test (If a map and an ego are loaded already, skip this part)</li>
-<li>
-<p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_04_lateral_command_and_report.py
-</code></pre></div>
-</li>
-<li>
-<p>Check if expected behavior is created within the simulator</p>
-<ul>
-<li>Ego vehicle steering and/or tire value is greater than 0 degree (If the simulator has a GUI for this one, it should display the steering and/or tire is greater than 0 degree)</li>
-<li>Ego vehicle steering and/or tire value is 0 degree. This is a reset process. (If the simulator has a GUI for this one, it should display the steering and/or tire is 0 degree)</li>
-<li>Ego vehicle steering and/or tire value is less than 0 degree (If the simulator has a GUI for this one, it should display the steering and/or tire is less than 0 degree)</li>
-<li>Ego vehicle steering and/or tire value is 0 degree. This is a reset process. (If the simulator has a GUI for this one, it should display the steering and/or tire is 0 degree)</li>
-</ul>
-</li>
-<li>Check if pytest output is passed or failure</li>
-</ol>
-<h3 id="test-case-5">Test Case #5<a class="headerlink" href="#test-case-5" title="Permanent link">#</a></h3>
-<ol>
-<li>Run your simulator (If the simulator is already running, skip this part)</li>
-<li>Load a map and an ego vehicle for the test (If a map and an ego are loaded already, skip this part)</li>
-<li>
-<p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_05_turn_indicators_cmd_and_report.py
-</code></pre></div>
-</li>
-<li>
-<p>Check if expected behavior is created within the simulator</p>
-<ul>
-<li>Ego vehicle left turn indicator is turned on (If the simulator has a GUI for this one, it should display the left turn indicator is turned on)</li>
-<li>Ego vehicle right turn indicator is turned on (If the simulator has a GUI for this one, it should display the right turn indicator is turned on)</li>
-<li>Ego vehicle both turn indicators are turned off. This is a reset process. (If the simulator has a GUI for this one, it should display both left and right turn indicators are turned off)</li>
-</ul>
-</li>
-<li>Check if pytest output is passed or failure</li>
-</ol>
-<h3 id="test-case-6">Test Case #6<a class="headerlink" href="#test-case-6" title="Permanent link">#</a></h3>
-<ol>
-<li>Run your simulator (If the simulator is already running, skip this part)</li>
-<li>Load a map and an ego vehicle for the test (If a map and an ego are loaded already, skip this part)</li>
-<li>
-<p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_06_hazard_lights_cmd_and_report.py
-</code></pre></div>
-</li>
-<li>
-<p>Check if expected behavior is created within the simulator</p>
-<ul>
-<li>Ego vehicle hazard lights are turned on (If the simulator has a GUI for this one, it should display the hazard lights are turned on or blinking)</li>
-<li>Ego vehicle hazard lights are turned off. This is a reset process. (If the simulator has a GUI for this one, it should display the hazard lights are turned off)</li>
-</ul>
-</li>
-<li>Check if pytest output is passed or failure</li>
-</ol>
-<h2 id="test-procedures-for-test_morai_sim">Test Procedures for test_morai_sim<a class="headerlink" href="#test-procedures-for-test_morai_sim" title="Permanent link">#</a></h2>
-<h3 id="build-process-before-test_1">Build process before test<a class="headerlink" href="#build-process-before-test_1" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>install/setup.bash
-colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>simulator_compatibility_test
-<span class="nb">cd</span><span class="w"> </span>src/universe/autoware.universe/tools/simulator_test/simulator_compatibility_test/test_morai_sim
-</code></pre></div>
-<p>Detailed process</p>
-<p>(WIP)</p>
-<h2 id="inner-workings-algorithms">Inner-workings / Algorithms<a class="headerlink" href="#inner-workings-algorithms" title="Permanent link">#</a></h2>
-<h2 id="inputs-outputs">Inputs / Outputs<a class="headerlink" href="#inputs-outputs" title="Permanent link">#</a></h2>
-<h3 id="input">Input<a class="headerlink" href="#input" title="Permanent link">#</a></h3>
+<div><h1 id="local_coordinates_declaration">local_coordinates_declaration<a class="headerlink" href="#local_coordinates_declaration" title="Permanent link">#</a></h1>
+<h2 id="validator-name">Validator name<a class="headerlink" href="#validator-name" title="Permanent link">#</a></h2>
+<p>mapping.lane.local_coordinates_declaration</p>
+<h2 id="feature">Feature<a class="headerlink" href="#feature" title="Permanent link">#</a></h2>
+<p>This validator checks whether local coordinates are declared to each point in a Lanelet2 map if one or more points have local coordinates. If a Lanelet2 map is made to have local coordinates, each point MUST have both a <code>local_x</code> tag and a <code>local_y</code> tag.</p>
+<p>If the Lanelet2 map is NOT made to have local coordinates and doesn't have a single point with <code>local_x</code> or <code>local_y</code> declared, this validator ignores the map and outputs no issues.</p>
+<p>The validator outputs the following issue with the corresponding ID of the primitive.</p>
 <table>
 <thead>
 <tr>
-<th>Name</th>
-<th>Type</th>
+<th>Issue Code</th>
+<th>Message</th>
+<th>Severity</th>
+<th>Primitive</th>
 <th>Description</th>
+<th>Approach</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>/vehicle/status/control_mode</code></td>
-<td><code>autoware_vehicle_msgs::msg::ControlModeReport</code></td>
-<td>for [Test Case #1]</td>
+<td>Lane.LocalCoordinatesDeclaration-001</td>
+<td>This point doesn't have local coordinates while others do.</td>
+<td>Error</td>
+<td>Point</td>
+<td>The map has a point that has tags <code>local_x</code> and <code>local_y</code> but this point doesn't have them. All points in a map must be set to have both tags or not at all.</td>
+<td>Be sure to align whether each point has or does not have both tabs <code>local_x</code> and <code>local_y</code></td>
 </tr>
 <tr>
-<td><code>/vehicle/status/gear_status</code></td>
-<td><code>autoware_vehicle_msgs::msg::GearReport</code></td>
-<td>for [Test Case #2]</td>
+<td>Lane.LocalCoordinatesDeclaration-002</td>
+<td>"local_x" is declared but "local_y" is not."</td>
+<td>Error</td>
+<td>Point</td>
+<td>The point has a <code>local_x</code> tag but doesn't have a <code>local_y</code> tag.</td>
+<td>Be sure that all points have both tags <code>local_x</code> and <code>local_y</code>.</td>
 </tr>
 <tr>
-<td><code>/vehicle/status/velocity_status</code></td>
-<td><code>autoware_vehicle_msgs::msg::VelocityReport</code></td>
-<td>for [Test Case #3]</td>
-</tr>
-<tr>
-<td><code>/vehicle/status/steering_status</code></td>
-<td><code>autoware_vehicle_msgs::msg::SteeringReport</code></td>
-<td>for [Test Case #4]</td>
-</tr>
-<tr>
-<td><code>/vehicle/status/turn_indicators_status</code></td>
-<td><code>autoware_vehicle_msgs::msg::TurnIndicatorsReport</code></td>
-<td>for [Test Case #5]</td>
-</tr>
-<tr>
-<td><code>/vehicle/status/hazard_lights_status</code></td>
-<td><code>autoware_vehicle_msgs::msg::HazardLightsReport</code></td>
-<td>for [Test Case #6]</td>
+<td>Lane.LocalCoordinatesDeclaration-003</td>
+<td>"local_y" is declared but "local_x" is not."</td>
+<td>Error</td>
+<td>Point</td>
+<td>The point has a <code>local_y</code> tag but doesn't have a <code>local_x</code> tag.</td>
+<td>Be sure that all points have both tags <code>local_x</code> and <code>local_y</code>.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">#</a></h3>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>/control/command/control_cmd</code></td>
-<td><code>autoware_control_msgs/Control</code></td>
-<td>for [Test Case #3, #4]</td>
-</tr>
-<tr>
-<td><code>/control/command/control_mode_cmd</code></td>
-<td><code>autoware_vehicle_msgs/ControlModeCommand</code></td>
-<td>for [Test Case #1]</td>
-</tr>
-<tr>
-<td><code>/control/command/gear_cmd</code></td>
-<td><code>autoware_vehicle_msgs/GearCommand</code></td>
-<td>for [Test Case #2]</td>
-</tr>
-<tr>
-<td><code>/vehicle/status/steering_status</code></td>
-<td><code>autoware_vehicle_msgs/TurnIndicatorsCommand</code></td>
-<td>for [Test Case #5]</td>
-</tr>
-<tr>
-<td><code>/control/command/turn_indicators_cmd</code></td>
-<td><code>autoware_vehicle_msgs/HazardLightsCommand</code></td>
-<td>for [Test Case #6]</td>
-</tr>
-</tbody>
-</table>
-<h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">#</a></h2>
-<p>None.</p>
-<h3 id="node-parameters">Node Parameters<a class="headerlink" href="#node-parameters" title="Permanent link">#</a></h3>
-<p>None.</p>
-<h3 id="core-parameters">Core Parameters<a class="headerlink" href="#core-parameters" title="Permanent link">#</a></h3>
-<p>None.</p>
-<h2 id="assumptions-known-limits">Assumptions / Known limits<a class="headerlink" href="#assumptions-known-limits" title="Permanent link">#</a></h2>
-<p>None.</p></div>
+<h2 id="related-source-codes">Related source codes<a class="headerlink" href="#related-source-codes" title="Permanent link">#</a></h2>
+<ul>
+<li>local_coordinates_declaration.cpp</li>
+<li>local_coordinates_declaration.hpp</li>
+</ul></div>
 
 
 
@@ -3721,7 +3449,7 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Doc stop reason visualizer" rel="prev">
+          <a href="../../intersection/turn_direction_tagging/" class="md-footer__link md-footer__link--prev" aria-label="Previous: turn_direction_tagging" rel="prev">
             <div class="md-footer__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
             </div>
@@ -3730,20 +3458,20 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
                 Previous
               </span>
               <div class="md-ellipsis">
-                Doc stop reason visualizer
+                turn_direction_tagging
               </div>
             </div>
           </a>
         
         
           
-          <a href="../../system/rqt_diagnostic_graph_monitor/" class="md-footer__link md-footer__link--next" aria-label="Next: System diagnostic monitor" rel="next">
+          <a href="../../stop_line/missing_regulatory_elements_for_stop_lines/" class="md-footer__link md-footer__link--next" aria-label="Next: missing_regulator_elements_for_stop_lines" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                System diagnostic monitor
+                missing_regulator_elements_for_stop_lines
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -3779,13 +3507,13 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../../../../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="../../docs/assets/js/mathjax.js"></script>
+          <script src="../../../../../docs/assets/js/mathjax.js"></script>
         
       
         
