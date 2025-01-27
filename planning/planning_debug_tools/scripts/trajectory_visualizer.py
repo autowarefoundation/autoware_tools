@@ -16,6 +16,8 @@
 
 import argparse
 
+from autoware_internal_planning_msgs.msg import PathPointWithLaneId
+from autoware_internal_planning_msgs.msg import PathWithLaneId
 from autoware_planning_msgs.msg import Path
 from autoware_planning_msgs.msg import PathPoint
 from autoware_planning_msgs.msg import Trajectory
@@ -31,8 +33,6 @@ import rclpy
 from rclpy.node import Node
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
-from autoware_internal_planning_msgs.msg import PathPointWithLaneId
-from autoware_internal_planning_msgs.msg import PathWithLaneId
 from tier4_planning_msgs.msg import VelocityLimit
 
 parser = argparse.ArgumentParser()
