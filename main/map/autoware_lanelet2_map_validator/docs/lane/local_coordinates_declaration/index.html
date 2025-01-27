@@ -8,20 +8,20 @@
       
       
       
-        <link rel="canonical" href="https://autowarefoundation.github.io/autoware-tools-documentation/main/map/autoware_lanelet2_map_validator/docs/intersection/intersection_area_dangling_reference/">
+        <link rel="canonical" href="https://autowarefoundation.github.io/autoware-tools-documentation/main/map/autoware_lanelet2_map_validator/docs/lane/local_coordinates_declaration/">
       
       
-        <link rel="prev" href="../../crosswalk/regulatory_element_details_for_crosswalks/">
+        <link rel="prev" href="../../intersection/turn_direction_tagging/">
       
       
-        <link rel="next" href="../intersection_area_segment_type/">
+        <link rel="next" href="../../stop_line/missing_regulatory_elements_for_stop_lines/">
       
       <link rel="icon" href="../../../../../docs/assets/images/autoware-foundation.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.20">
     
     
       
-        <title>intersection_area_dangling_reference - Autoware Tools Documentation</title>
+        <title>local_coordinates_declaration - Autoware Tools Documentation</title>
       
     
     
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#intersection_area_dangling_reference" class="md-skip">
+        <a href="#local_coordinates_declaration" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              intersection_area_dangling_reference
+              local_coordinates_declaration
             
           </span>
         </div>
@@ -2049,16 +2049,16 @@
               
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2_2_3" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_2_2_3" >
       
       
         
@@ -2077,10 +2077,106 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_9_2_2_3_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_9_2_2_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_9_2_2_3">
           <span class="md-nav__icon md-icon"></span>
           Intersection
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../intersection/intersection_area_dangling_reference/" class="md-nav__link">
+        intersection_area_dangling_reference
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../intersection/intersection_area_segment_type/" class="md-nav__link">
+        intersection_area_segment_type
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../intersection/intersection_area_validity/" class="md-nav__link">
+        intersection_area_validity
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../intersection/turn_direction_tagging/" class="md-nav__link">
+        turn_direction_tagging
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2_2_4" checked>
+      
+      
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_9_2_2_4" id="__nav_9_2_2_4_label" tabindex="0">
+          Lane
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_9_2_2_4_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_9_2_2_4">
+          <span class="md-nav__icon md-icon"></span>
+          Lane
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -2100,12 +2196,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          intersection_area_dangling_reference
+          local_coordinates_declaration
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        intersection_area_dangling_reference
+        local_coordinates_declaration
       </a>
       
         
@@ -2135,19 +2231,6 @@
     Feature
   </a>
   
-    <nav class="md-nav" aria-label="Feature">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#supplementary-information" class="md-nav__link">
-    Supplementary information
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -2161,102 +2244,6 @@
   
 </nav>
       
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../intersection_area_segment_type/" class="md-nav__link">
-        intersection_area_segment_type
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../intersection_area_validity/" class="md-nav__link">
-        intersection_area_validity
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../turn_direction_tagging/" class="md-nav__link">
-        turn_direction_tagging
-      </a>
-    </li>
-  
-
-            
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-      
-      
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_2_2_4" >
-      
-      
-        
-          
-        
-      
-      
-        <label class="md-nav__link" for="__nav_9_2_2_4" id="__nav_9_2_2_4_label" tabindex="0">
-          Lane
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_9_2_2_4_label" aria-expanded="false">
-        <label class="md-nav__title" for="__nav_9_2_2_4">
-          <span class="md-nav__icon md-icon"></span>
-          Lane
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../lane/local_coordinates_declaration/" class="md-nav__link">
-        local_coordinates_declaration
-      </a>
     </li>
   
 
@@ -3359,19 +3346,6 @@
     Feature
   </a>
   
-    <nav class="md-nav" aria-label="Feature">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#supplementary-information" class="md-nav__link">
-    Supplementary information
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -3399,16 +3373,12 @@
   
 
 
-<div><h1 id="intersection_area_dangling_reference">intersection_area_dangling_reference<a class="headerlink" href="#intersection_area_dangling_reference" title="Permanent link">#</a></h1>
+<div><h1 id="local_coordinates_declaration">local_coordinates_declaration<a class="headerlink" href="#local_coordinates_declaration" title="Permanent link">#</a></h1>
 <h2 id="validator-name">Validator name<a class="headerlink" href="#validator-name" title="Permanent link">#</a></h2>
-<p>mapping.intersection.intersection_area_dangling_reference</p>
+<p>mapping.lane.local_coordinates_declaration</p>
 <h2 id="feature">Feature<a class="headerlink" href="#feature" title="Permanent link">#</a></h2>
-<p>This validator checks whether each intersection lanelet(namely the lanelet with <code>turn_direction</code> property) has reference to existing <code>intersection_area</code> polygon. Such invalid case occurs when an intersection_area is deleted but its referrers are not updated.</p>
-<p>This is achieved by the following procedure.</p>
-<ol>
-<li>Obtain the set of <code>intersection_area</code> polygon IDs</li>
-<li>Check if intersection lanelet has "intersection_area" key and its value is contained in the above IDs</li>
-</ol>
+<p>This validator checks whether local coordinates are declared to each point in a Lanelet2 map if one or more points have local coordinates. If a Lanelet2 map is made to have local coordinates, each point MUST have both a <code>local_x</code> tag and a <code>local_y</code> tag.</p>
+<p>If the Lanelet2 map is NOT made to have local coordinates and doesn't have a single point with <code>local_x</code> or <code>local_y</code> declared, this validator ignores the map and outputs no issues.</p>
 <p>The validator outputs the following issue with the corresponding ID of the primitive.</p>
 <table>
 <thead>
@@ -3423,20 +3393,35 @@
 </thead>
 <tbody>
 <tr>
-<td>Intersection.IntersectionAreaDanglingReference-001</td>
-<td>"Dangling reference to non-existing intersection area of ID \&lt;LANELET ID&gt; is detected"</td>
+<td>Lane.LocalCoordinatesDeclaration-001</td>
+<td>This point doesn't have local coordinates while others do.</td>
 <td>Error</td>
-<td>Lanelet</td>
-<td>The reported lanelet will cause a runtime error when attempting to look up the non-existent intersection_area.</td>
-<td>Go to the reported lanelet and delete "intersection_area" key entry.</td>
+<td>Point</td>
+<td>The map has a point that has tags <code>local_x</code> and <code>local_y</code> but this point doesn't have them. All points in a map must be set to have both tags or not at all.</td>
+<td>Be sure to align whether each point has or does not have both tabs <code>local_x</code> and <code>local_y</code></td>
+</tr>
+<tr>
+<td>Lane.LocalCoordinatesDeclaration-002</td>
+<td>"local_x" is declared but "local_y" is not."</td>
+<td>Error</td>
+<td>Point</td>
+<td>The point has a <code>local_x</code> tag but doesn't have a <code>local_y</code> tag.</td>
+<td>Be sure that all points have both tags <code>local_x</code> and <code>local_y</code>.</td>
+</tr>
+<tr>
+<td>Lane.LocalCoordinatesDeclaration-003</td>
+<td>"local_y" is declared but "local_x" is not."</td>
+<td>Error</td>
+<td>Point</td>
+<td>The point has a <code>local_y</code> tag but doesn't have a <code>local_x</code> tag.</td>
+<td>Be sure that all points have both tags <code>local_x</code> and <code>local_y</code>.</td>
 </tr>
 </tbody>
 </table>
-<h3 id="supplementary-information">Supplementary information<a class="headerlink" href="#supplementary-information" title="Permanent link">#</a></h3>
 <h2 id="related-source-codes">Related source codes<a class="headerlink" href="#related-source-codes" title="Permanent link">#</a></h2>
 <ul>
-<li>intersection_area_dangling_reference.hpp</li>
-<li>intersection_area_dangling_reference.cpp</li>
+<li>local_coordinates_declaration.cpp</li>
+<li>local_coordinates_declaration.hpp</li>
 </ul></div>
 
 
@@ -3464,7 +3449,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../../crosswalk/regulatory_element_details_for_crosswalks/" class="md-footer__link md-footer__link--prev" aria-label="Previous: regulatory_element_details_for_crosswalks" rel="prev">
+          <a href="../../intersection/turn_direction_tagging/" class="md-footer__link md-footer__link--prev" aria-label="Previous: turn_direction_tagging" rel="prev">
             <div class="md-footer__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
             </div>
@@ -3473,20 +3458,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                regulatory_element_details_for_crosswalks
+                turn_direction_tagging
               </div>
             </div>
           </a>
         
         
           
-          <a href="../intersection_area_segment_type/" class="md-footer__link md-footer__link--next" aria-label="Next: intersection_area_segment_type" rel="next">
+          <a href="../../stop_line/missing_regulatory_elements_for_stop_lines/" class="md-footer__link md-footer__link--next" aria-label="Next: missing_regulator_elements_for_stop_lines" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                intersection_area_segment_type
+                missing_regulator_elements_for_stop_lines
               </div>
             </div>
             <div class="md-footer__button md-icon">
