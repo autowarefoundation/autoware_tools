@@ -33,48 +33,40 @@ import yaml
 from scipy import spatial as sp
 import numpy as np
 from geometry_msgs.msg import PoseWithCovarianceStamped
+import sensor_msgs.msg as sensor_msgs
+import std_msgs.msg as std_msgs
+import rclpy
+from rclpy.node import Node
 from tier4_debug_msgs.msg import Float32Stamped
 from builtin_interfaces.msg import Time
 import pandas as pd
-import open3d as o3d
-import matplotlib.pyplot as plt
 import tqdm
+import time
+import shutil
+import open3d as o3d
 
-def compute_total_message_count(rosbag_path):
-    if rosbag_path.endswith(".db3"):
-        yaml_path = os.path.join(os.path.dirname(rosbag_path), "metadata.yaml")
-    else:
-        yaml_path = os.path.join(rosbag_path, "metadata.yaml")
+class TPChecker(Node):
 
-    with open(yaml_path, "r") as f:
-        data = yaml.safe_load(f)
-
-    total_message_count = 0
-    for topic_data in data["rosbag2_bagfile_information"]["topics_with_message_count"]:
-        total_message_count += topic_data["message_count"]
-
-    return total_message_count
-
-class TPChecker:
     def __init__(self):
-        self.segment_dict = {}  # Segment indices, TP, kdtree
-        self.base_path = ""     # Path to the base directory of the PCD segments
-        self.ndt_res_df = pd.DataFrame()    # A set of tp read from a rosbag
-        self.pcd_map_2d = pd.DataFrame(columns = ["x", "y", "color"])
-                                # A 2D map of pcd, color indicates the map changes
-        self.point_num = 0
+        super().__init__('tp_checker')
+        self.segment_df = None  # Segment indices, TP, kdtree
+        self.kdtree = None      # A 2D kdtree to search for segments in the vicinity of poses
+        self.ndt_res_df = None  # A set of tp read from a rosbag
+        self.pcd_path = None    # Path to the directory containing PCD segments
+        self.changed_dir = None # A directory contains the segments that need to be examined
+        self.result_csv = None # Path to the result CSV file
 
     # Read the input map directory and setup the segment dictionary
-    def set_pcd_map(self, pcd_map_dir: str):
+    def __set_pcd_map(self, pcd_map_dir: str):
         # Check if the required folders/files exist
         if not os.path.exists(pcd_map_dir):
             print("Error: {0} does not exist!".format(pcd_map_dir))
             exit()
         
-        pcd_path = os.path.join(pcd_map_dir, "pointcloud_map.pcd")
+        self.pcd_path = os.path.join(pcd_map_dir, "pointcloud_map.pcd")
 
-        if not os.path.exists(pcd_path):
-            print("Error: {0} does not exist!".format(pcd_path))
+        if not os.path.exists(self.pcd_path):
+            print("Error: {0} does not exist!".format(self.pcd_path))
             exit()
         
         metadata_path = os.path.join(pcd_map_dir, "pointcloud_map_metadata.yaml")
@@ -83,45 +75,37 @@ class TPChecker:
             print("Error: {0} does not exist!".format(metadata_path))
             exit()
 
-        score_path = os.path.join(pcd_map_dir, "score.csv")
+        score_path = os.path.join(pcd_map_dir, "scores.csv")
 
         if not os.path.exists(score_path):
             print("Error: {0} does not exist!".format(score_path))
             exit()
 
         # Read the metadata file and get the list of segments
-        segment_df = pd.DataFrame(columns = ["x", "y", "tp", "pcd"])
+        print("Read the PCD map at {0}".format(pcd_map_dir))
+        self.segment_df = pd.DataFrame(columns = ["x", "y", "tp", "seg_key"])
 
         with open(metadata_path, "r") as f:
             for key, value in yaml.safe_load(f).items():
                 if key != "x_resolution" and key != "y_resolution":
-                    # Read PCD files and store them into a 2D map
-                    seg_path = os.path.join(pcd_path, key)
-                    pcd = o3d.io.read_point_cloud(seg_path)
-                    # Downsample the segment to a greater resolution
-                    # This segment is just for visualizing the result, no need to be detailed
-                    ds_pcd = self.__downsample(np.asarray(pcd.points))
-                    segment_df.loc[len(segment_df)] = [float(value[0]), float(value[1]), 0, ds_pcd]
-                    self.point_num += len(ds_pcd)
+                    self.segment_df.loc[len(self.segment_df)] = [float(value[0]), float(value[1]), 0, key]
+                    
 
         # Create a 2D kdtree on the segments
-        seg_tree_nodes = np.zeros((len(segment_df), 2), dtype = float)
+        seg_tree_nodes = np.zeros((len(self.segment_df), 2), dtype = float)
 
-        for index, row in segment_df.iterrows():
+        for index, row in self.segment_df.iterrows():
             seg_tree_nodes[index, :] = [row["x"], row["y"]]
 
-        kdtree = sp.KDTree(seg_tree_nodes)
+        self.kdtree = sp.KDTree(seg_tree_nodes)
 
         # Read the score file
         with open(score_path, "r") as f:
             reader = csv.reader(f)
 
             for index, row in enumerate(reader):
-                segment_df.loc[index, "tp"] = float(row[1])
+                self.segment_df.loc[index, "tp"] = float(row[1])
         
-        self.segment_dict["segment_df"] = segment_df
-        self.segment_dict["kdtree"] = kdtree
-        self.base_path = pcd_path
 
     ##### Stamp search #####
     def __stamp_search(self, stamp: int, tp_df: pd.DataFrame) -> int:
@@ -151,8 +135,10 @@ class TPChecker:
         )
         reader.open(bag_storage_options, bag_converter_options)
 
-        total_message_count = compute_total_message_count(bag_path)
-        progress_bar = tqdm.tqdm(total=total_message_count)
+        total_message_count = self.__compute_total_message_count(bag_path)
+
+        print("Read the input rosbag at {0}".format(bag_path))
+        progress_bar = tqdm.tqdm(total = total_message_count)
 
         pose_df = pd.DataFrame(columns = ["stamp", "pose_msg"])
         tp_df = pd.DataFrame(columns = ["stamp", "tp"])
@@ -171,11 +157,14 @@ class TPChecker:
                 stamp = tp_msg.stamp.sec * 1e9 + tp_msg.stamp.nanosec
 
                 tp_df.loc[len(tp_df)] = [stamp, tp_msg.data]
-        
-        # Now from the two list above build a table of estimated pose and corresponding TPs
-        self.ndt_res_df = pd.DataFrame(columns = ["x", "y", "tp", "avg_tp"])
 
-        progress_bar = tqdm.tqdm(total=len(pose_df))
+        progress_bar.close()
+        # Now from the two list above build a table of estimated pose and corresponding TPs
+        self.ndt_res_df = pd.DataFrame(columns = ["x", "y", "tp", "expected_tp"])
+
+        print("Prepare the tp list...")
+
+        progress_bar = tqdm.tqdm(total = len(pose_df))
 
         for row in pose_df.itertuples():
             progress_bar.update(1)
@@ -186,18 +175,21 @@ class TPChecker:
             tid = self.__stamp_search(stamp, tp_df)
             
             if tid >= 0:
-                self.ndt_res_df[len(self.ndt_res_df)] = [pose.position.x, pose.position.y, tp_df["tp"][tid], 0.0]
+                self.ndt_res_df.loc[len(self.ndt_res_df)] = [pose.position.x, pose.position.y, tp_df["tp"][tid], 0.0]
+
+        progress_bar.close()
+
 
     # Mark the segments which may has changed
     def __mark_changes(self):
-        print("Checking map changes...\n")
-        change_mark = np.zeros(len(self.segment_dict["segment_df"]), dtype = int)
+        print("Checking map changes... tp len = {0}".format(len(self.ndt_res_df)))
+        self.change_mark = np.zeros(len(self.segment_df), dtype = int)
 
         progress_bar = tqdm.tqdm(total = len(self.ndt_res_df))
 
-        for row in self.ndt_res_df.itertuples():
+        for i, row in self.ndt_res_df.iterrows():
             progress_bar.update(1)
-            nn_idx = self.segment_dict["kdtree"].query_ball_point([row.x, row.y], 20.0)
+            nn_idx = self.kdtree.query_ball_point([row.x, row.y], 20.0)
 
             if len(nn_idx) == 0:
                 continue
@@ -205,81 +197,153 @@ class TPChecker:
             sum_tp = 0.0
 
             for idx in nn_idx:
-                sum_tp += self.segment_dict["segment_df"].loc[idx, "tp"]
+                sum_tp += self.segment_df.loc[idx, "tp"]
             
-            row.avg_tp = sum_tp / len(nn_idx)
+            self.ndt_res_df.loc[i, "expected_tp"] = sum_tp / float(len(nn_idx))
 
-            if abs(row.tp - row.avg_tp) / row.tp >= 0.2:
+            if abs(row.tp - row.expected_tp) / row.tp >= 0.2:
                 for idx in nn_idx:
-                    change_mark[idx] = 1
+                    self.change_mark[idx] = 1
 
-        # Export the 2D map
-        print("Coloring 2D map...\n")
-        progress_bar = tqdm.tqdm(total = len(change_mark))
-        self.pcd_map_2d = pd.DataFrame({"x" : np.zeros(self.point_num), 
-                                        "y" : np.zeros(self.point_num), 
-                                        "color" : ["" for j in range(self.point_num)]})
-        
-        print("Length of change mark = {0}".format(len(change_mark)))
-        i = 0
+        progress_bar.close()
 
-        for idx, value in enumerate(change_mark):
+        # Save the changed segments
+        progress_bar = tqdm.tqdm(total = len(self.change_mark))      
+
+        for idx, value in enumerate(self.change_mark):
             progress_bar.update(1)
-            if value == 0:
-                color = "blue"
-            else:
-                color = "red"
-            # Insert points with color to the 2D map
-            for p in self.segment_dict["segment_df"].loc[idx, "pcd"]:
-                self.pcd_map_2d.loc[i] = [p[0], p[1], color]
-                i += 1
+            # Copy changed segments to the destinated folder
+            seg_key = self.segment_df.loc[idx, "seg_key"]
 
-    # Downsample a point cloud
-    def __downsample(self, cloud: np.array) -> np.array:
-        return cloud        
+            if value != 0:
+                shutil.copyfile(os.path.join(self.pcd_path, seg_key), 
+                                os.path.join(self.changed_dir, seg_key))
+        progress_bar.close()
+
+
+    def __compute_total_message_count(self, rosbag_path):
+        if rosbag_path.endswith(".db3"):
+            yaml_path = os.path.join(os.path.dirname(rosbag_path), "metadata.yaml")
+        else:
+            yaml_path = os.path.join(rosbag_path, "metadata.yaml")
+
+        with open(yaml_path, "r") as f:
+            data = yaml.safe_load(f)
+
+        total_message_count = 0
+        for topic_data in data["rosbag2_bagfile_information"]["topics_with_message_count"]:
+            total_message_count += topic_data["message_count"]
+
+        return total_message_count
+
 
     # Save the tp and average tps to CSV file #####
-    def save_results(self, result_path: str):
-        self.ndt_res_df.to_csv(result_path)
+    def __save_results(self: str):
+        self.ndt_res_df.to_csv(self.result_csv)
 
-    # Plot the points with color from the 2D segment map
-    def show(self, result_path: str):
-        print("Plotting")
-        plt.scatter(self.pcd_map_2d["x"], self.pcd_map_2d["y"], 
-                    c = self.pcd_map_2d["color"])
-        
-        plt.legend()
-        plt.grid()
-        plt.savefig(result_path)
+    def __show(self):
+        ros_float_dtype = sensor_msgs.PointField.FLOAT32
+        ros_uint32_dtype = sensor_msgs.PointField.UINT32
+        dtype = np.float32
+        itemsize = np.dtype(dtype).itemsize
 
-        try:
-            plt.show()
-        except KeyboardInterrupt:
-            print("Quit by keyboard interrupt")
+        fields = [sensor_msgs.PointField(name = "x", offset = 0, datatype = ros_float_dtype, count = 1),
+            sensor_msgs.PointField(name = "y", offset = itemsize, datatype = ros_float_dtype, count = 1),
+            sensor_msgs.PointField(name = "z", offset = itemsize * 2, datatype = ros_float_dtype, count = 1),
+            sensor_msgs.PointField(name = "rgba", offset = itemsize * 3, datatype = ros_uint32_dtype, count = 1)]
 
-    def check(self, rosbag_path: str):
+        points = []
+        pc2_width = 0
+
+        progress_bar = tqdm.tqdm(total = len(self.segment_df))
+        origin = None
+
+        for i, tuple in self.segment_df.iterrows():
+            progress_bar.update(1)
+            # Load the current segment
+            pcd = o3d.io.read_point_cloud(os.path.join(self.pcd_path, tuple.seg_key))
+            np_pcd = np.asarray(pcd.points)
+            rgba = self.__set_color_based_on_mark(self.change_mark[i])
+
+            for p in np_pcd:
+                if origin == None:
+                    origin = [p[0], p[1], p[2]]
+                pt = [p[0] - origin[0], p[1] - origin[1], p[2] - origin[2], rgba]
+                points.append(pt)
+                pc2_width += 1
+
+        header = std_msgs.Header()
+        header.frame_id = "map"
+        pc2_msg = sensor_msgs.PointCloud2(
+            header = header,
+            height = 1,
+            width = pc2_width,
+            is_dense = False,
+            is_bigendian = False,
+            fields = fields,
+            point_step = itemsize * 4,
+            row_step = itemsize * 4 * pc2_width,
+            data = np.array(points).astype(dtype).tobytes()
+        )
+
+        pcd_publisher = self.create_publisher(sensor_msgs.PointCloud2, '/autoware_tp_checker', 10)
+
+        while True:
+            pcd_publisher.publish(pc2_msg)
+            time.sleep(5)
+
+
+    def __set_color_based_on_mark(self, mark) -> int:
+        # The may-be-changed segments are colored red
+        # The may-not-be-changed segments are colored white
+        if mark == 1:
+            r = 255
+            g = 0
+            b = 0 
+        else:
+            r = 255
+            g = 255
+            b = 255
+
+        rgb = (r << 16) | (g << 8) | b
+
+        return rgb
+
+    def processing(self, pcd_path: str, rosbag_path: str, result_path: str):
+        if not os.path.exists(result_path):
+            os.makedirs(result_path)
+        else:
+            shutil.rmtree(result_path)
+            os.makedirs(result_path)
+
+        self.changed_dir = os.path.join(result_path, "changed_dir")
+        os.makedirs(self.changed_dir)
+        self.result_csv = os.path.join(result_path, "result.csv")
+
+        self.__set_pcd_map(pcd_path)
+
         # Read the rosbag and get the ndt poses and corresponding tps
         self.__collect_rosbag_tp(rosbag_path)
         # Update the TPs of segments
         self.__mark_changes()
-        # Save the new TPs
-        self.save_results()
-        # Display the result
-        self.show()
+        self.__save_results()
+        self.__show()
 
 if __name__ == "__main__":
+    rclpy.init()
     parser = argparse.ArgumentParser()
     parser.add_argument("map_path", help="The path to the PCD folder")
     parser.add_argument("bag_path", help="The path to the input rosbag")
+    parser.add_argument("result_path", help="The path to the result folder")
 
     args = parser.parse_args()
 
     # Practice with string % a bit
-    print("Input PCD map at %s" % (args.map_path))
-    print("Input rosbag at %s" % (args.bag_path))
+    print("Input PCD map at {0}".format(args.map_path))
+    print("Input rosbag at {0}".format(args.bag_path))
+    print("Results are saved at {0}".format(args.result_path))
 
     # Run
     checker = TPChecker()
 
-    checker.set_pcd_map(args.map_path)
-    checker.check(args.bag_path)
+    checker.processing(args.map_path, args.bag_path, args.result_path)
