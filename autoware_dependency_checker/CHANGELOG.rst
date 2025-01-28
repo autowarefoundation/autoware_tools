@@ -1,0 +1,24 @@
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Changelog for package autoware_dependency_checker
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Forthcoming
+-----------
+* feat(dependency_checker): add dependency checker script (`#89 <https://github.com/sasakisasaki/autoware_tools/issues/89>`_)
+  * add dependency_checker
+  * fix
+  * style(pre-commit): autofix
+  * fix bag
+  * apply markdownlint
+  * fix typo
+  Co-authored-by: Yutaka Kondo <yutaka.kondo@youtalk.jp>
+  fix typo
+  Co-authored-by: Yutaka Kondo <yutaka.kondo@youtalk.jp>
+  * add dep ament_cmake
+  * fix based on shellcheck
+  * fix words
+  * add cspell ignore
+  ---------
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+  Co-authored-by: Yutaka Kondo <yutaka.kondo@youtalk.jp>
+* Contributors: Masaki Baba
