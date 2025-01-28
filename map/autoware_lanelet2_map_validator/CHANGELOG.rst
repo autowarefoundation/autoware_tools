@@ -2,8 +2,8 @@
 Changelog for package autoware_lanelet2_map_validator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * feat(lanelet2_map_validator): check local coordinates declaration (`#194 <https://github.com/autowarefoundation/autoware_tools/issues/194>`_)
   * Implement mapping.lane.local_coordinates_declaration

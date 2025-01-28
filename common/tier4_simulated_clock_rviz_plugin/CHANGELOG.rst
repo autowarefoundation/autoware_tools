@@ -2,8 +2,8 @@
 Changelog for package tier4_simulated_clock_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * chore(rviz_plugin): move peripheral rviz plugin (`#27 <https://github.com/autowarefoundation/autoware_tools/issues/27>`_)
   * feat:  calibrator tier4 pkg name (`#200 <https://github.com/autowarefoundation/autoware_tools/issues/200>`_)

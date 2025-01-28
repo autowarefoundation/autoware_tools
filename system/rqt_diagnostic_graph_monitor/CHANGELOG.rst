@@ -2,8 +2,8 @@
 Changelog for package rqt_diagnostic_graph_monitor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * fix(rqt_diagnostic_graph_monitor): add missing dependency (`#149 <https://github.com/autowarefoundation/autoware_tools/issues/149>`_)
 * feat(rqt_diagnostic_graph_monitor): ignore status before struct (`#106 <https://github.com/autowarefoundation/autoware_tools/issues/106>`_)

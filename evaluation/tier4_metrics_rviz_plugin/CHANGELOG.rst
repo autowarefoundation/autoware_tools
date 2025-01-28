@@ -2,8 +2,8 @@
 Changelog for package tier4_metrics_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * chore: sync files (`#11 <https://github.com/autowarefoundation/autoware_tools/issues/11>`_)
   Co-authored-by: github-actions <github-actions@github.com>
   Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>

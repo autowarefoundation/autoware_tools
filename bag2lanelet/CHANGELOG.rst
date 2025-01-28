@@ -2,8 +2,8 @@
 Changelog for package bag2lanelet
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * feat(bag2lanelet): add bag2lanelet package (`#6 <https://github.com/autowarefoundation/autoware_tools/issues/6>`_)
   * feat(bag2lanelet): add bag2lanelet package
   * apply pre-commit

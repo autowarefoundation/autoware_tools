@@ -2,8 +2,8 @@
 Changelog for package autoware_planning_data_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * feat(autoware_planning_data_analyzer)!: replace tier4_debug_msgs with tier4_internal_debug_msgs (`#199 <https://github.com/autowarefoundation/autoware_tools/issues/199>`_)
 * chore: sync files (`#11 <https://github.com/autowarefoundation/autoware_tools/issues/11>`_)

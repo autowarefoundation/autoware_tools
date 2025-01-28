@@ -2,8 +2,8 @@
 Changelog for package vehicle_cmd_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * feat(vehicle_cmd_analyzer)!: replace tier4_debug_msgs with tier4_internal_debug_msgs (`#204 <https://github.com/autowarefoundation/autoware_tools/issues/204>`_)
 * refactor(global_parameter_loader): prefix package and namespace with autoware (`#159 <https://github.com/autowarefoundation/autoware_tools/issues/159>`_)
 * feat: add vehicle, control and localization calibration tools (`#22 <https://github.com/autowarefoundation/autoware_tools/issues/22>`_)

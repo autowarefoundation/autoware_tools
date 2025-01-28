@@ -2,8 +2,8 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * feat(planning_debug_tools)!: replace tier4_debug_msgs with tier4_internal_debug_msgs (`#200 <https://github.com/autowarefoundation/autoware_tools/issues/200>`_)
 * chore: sync files (`#11 <https://github.com/autowarefoundation/autoware_tools/issues/11>`_)

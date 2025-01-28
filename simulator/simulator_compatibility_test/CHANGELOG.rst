@@ -2,8 +2,8 @@
 Changelog for package simulator_compatibility_test
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * fix: autoware_msgs (`#68 <https://github.com/autowarefoundation/autoware_tools/issues/68>`_)
 * feat(simulator_compatibility_test): temporariy remove tests for control_mode_command (`#34 <https://github.com/autowarefoundation/autoware_tools/issues/34>`_)
 * feat!: change from autoware_auto_msgs to autoware_msgs (`#30 <https://github.com/autowarefoundation/autoware_tools/issues/30>`_)

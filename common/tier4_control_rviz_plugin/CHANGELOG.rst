@@ -2,8 +2,8 @@
 Changelog for package tier4_control_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * add time to gear cmd (`#128 <https://github.com/autowarefoundation/autoware_tools/issues/128>`_)
 * feat(tier4_control_rviz_plugin): change to read topic by polling and add missing subscriber (`#51 <https://github.com/autowarefoundation/autoware_tools/issues/51>`_)

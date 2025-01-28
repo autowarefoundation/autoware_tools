@@ -2,8 +2,8 @@
 Changelog for package calibration_adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * fix: some fix on calibration_adapter and parameter_estimator (`#127 <https://github.com/autowarefoundation/autoware_tools/issues/127>`_)
   * some fix on calibration_adapter and parameter_estimator

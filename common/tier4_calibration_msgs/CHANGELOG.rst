@@ -2,8 +2,8 @@
 Changelog for package tier4_calibration_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * feat: add vehicle, control and localization calibration tools (`#22 <https://github.com/autowarefoundation/autoware_tools/issues/22>`_)
   * add vehicle control localization tools

@@ -2,8 +2,8 @@
 Changelog for package stop_accel_evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * remove COLCON_IGNORE
 * feat(stop_accel_evaluator)!: replace tier4_debug_msgs with tier4_internal_debug_msgs (`#201 <https://github.com/autowarefoundation/autoware_tools/issues/201>`_)

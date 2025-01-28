@@ -2,8 +2,8 @@
 Changelog for package driving_environment_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * fix: to use autoware_lanelet2_extension (`#178 <https://github.com/autowarefoundation/autoware_tools/issues/178>`_)
   * Fixed to use autoware_lanelet2_extension

@@ -2,8 +2,8 @@
 Changelog for package parameter_estimator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * feat(parameter_estimator)!: replace tier4_debug_msgs with tier4_internal_debug_msgs (`#198 <https://github.com/autowarefoundation/autoware_tools/issues/198>`_)
   * feat(parameter_estimator)!: replace tier4_debug_msgs with tier4_internal_debug_msgs

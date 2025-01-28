@@ -2,8 +2,8 @@
 Changelog for package autoware_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * feat: use autoware_internal_debug_msgs in processing_time_plotter.py (`#184 <https://github.com/autowarefoundation/autoware_tools/issues/184>`_)
   * feat: use autoware_internal_debug_msgs in processing_time_plotter.py
   * fix typo: argment -> argument

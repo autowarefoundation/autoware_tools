@@ -2,8 +2,8 @@
 Changelog for package tier4_debug_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * feat(tier4_debug_rviz_plugin)!: replace tier4_debug_msgs with tier4_internal_debug_msgs (`#202 <https://github.com/autowarefoundation/autoware_tools/issues/202>`_)
 * feat(tier4_xxx_rviz_plugin): use StringStamped in autoware_internal_debug_msgs (`#181 <https://github.com/autowarefoundation/autoware_tools/issues/181>`_)

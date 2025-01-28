@@ -2,8 +2,8 @@
 Changelog for package tier4_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * feat(tier4_debug_tools)!: replace tier4_debug_msgs with tier4_internal_debug_msgs (`#203 <https://github.com/autowarefoundation/autoware_tools/issues/203>`_)
 * refactor(universe_utils/motion_utils)!: add autoware namespace (`#59 <https://github.com/autowarefoundation/autoware_tools/issues/59>`_)

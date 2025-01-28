@@ -2,8 +2,8 @@
 Changelog for package pitch_checker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * refactor(universe_utils/motion_utils)!: add autoware namespace (`#59 <https://github.com/autowarefoundation/autoware_tools/issues/59>`_)
   * refactor(universe_utils): add autoware namespace

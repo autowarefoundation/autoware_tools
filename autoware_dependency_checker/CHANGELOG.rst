@@ -2,8 +2,8 @@
 Changelog for package autoware_dependency_checker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * feat(dependency_checker): add dependency checker script (`#89 <https://github.com/autowarefoundation/autoware_tools/issues/89>`_)
   * add dependency_checker

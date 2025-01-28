@@ -2,8 +2,8 @@
 Changelog for package control_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.1.0 (2025-01-28)
+------------------
 * unify version to 0.0.0
 * feat(control_debug_tools): smooth graph lateral_deviation_monitor (`#138 <https://github.com/autowarefoundation/autoware_tools/issues/138>`_)
 * feat(control): print max value in lateral deviation monitor (`#102 <https://github.com/autowarefoundation/autoware_tools/issues/102>`_)
