@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "lanelet2_map_validator/cli.hpp"
+#include "lanelet2_map_validator/io.hpp"
 #include "lanelet2_map_validator/map_loader.hpp"
 #include "lanelet2_map_validator/utils.hpp"
 #include "lanelet2_map_validator/validation.hpp"
@@ -23,6 +24,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <string>
 
 int main(int argc, char * argv[])
 {
@@ -67,12 +69,16 @@ int main(int argc, char * argv[])
     lanelet::validation::printAllIssues(map_issue);
   } else if (!meta_config.requirements_file.empty()) {
     if (!std::filesystem::is_regular_file(meta_config.requirements_file)) {
-      throw std::invalid_argument("Input file doesn't exist or is not a file!");
+      throw std::invalid_argument("Input JSON file doesn't exist or is not a file!");
     }
     std::ifstream input_file(meta_config.requirements_file);
     json json_data;
     input_file >> json_data;
     lanelet::autoware::validation::process_requirements(json_data, meta_config, *lanelet_map_ptr);
+    lanelet::autoware::validation::insert_validator_info_to_map(
+      meta_config.command_line_config.mapFile,
+      std::filesystem::path(meta_config.requirements_file).filename().string(),
+      json_data.value("version", ""));
   } else {
     const auto issues = lanelet::autoware::validation::apply_validation(
       *lanelet_map_ptr, meta_config.command_line_config.validationConfig);

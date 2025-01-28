@@ -67,6 +67,11 @@ if(BUILD_TESTING)
   endforeach()
 endif()
 
+install(
+  FILES package.xml autoware_requirement_set.json
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_auto_package(
   INSTALL_TO_SHARE
   test/data
