@@ -25,6 +25,43 @@ Please note that the validators are categorized according to [the vector map req
 - Area
 - Others
 
+## Version Control
+
+`autoware_lanelet2_map_validator` began version control on January, 2025 in order to clarify the linkage to versioned map requirements and specifications.
+The version of `autoware_lanelet2_map_validator` starts from `1.0.0` having the major, minor, and patch version.
+See the following sections for further explanations of each version.
+Note that the version of `autoware_lanelet2_map_validator` is stated in the `package.xml` and it is a separated to that of `autoware_requiremenet_set.json`.
+Therefore, the version written in `autoware_requirement_set.json` is **NOT** linked to the version of `autoware_lanelet2_map_validator`.
+The version of `autoware_requirement_set.json` refers to the version of [map requirements and specifications for Autoware](https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/) (... which is not having its version controlled so yes leave it alone for now).
+
+### Major version
+
+The major version increases with the following changes.
+
+- Destructive changes that backward compatibility cannot be maintained.
+- The format of inputs and outputs drastically changes.
+- The entire code structure drastically changes.
+
+The major version is NOT intended to be updated frequenetly.
+
+### Minor version
+
+The minor version increases with the following changes.
+
+- Addition of new validators.
+- Modification of existing validators due to updates of map requirements or other reasons.
+  - Even if the validation result changes, it will not be taken as the lost of backward compability if it only affects a few validators.
+- Modification to the entire validation process that doesn't affect backward compatibility.
+
+This minor version is intended to be updated frequently as pull requests increase.
+
+### Patch version
+
+The patch version increases with the following changes.
+
+- Bug fixes
+- Refactors that don't change the features.
+
 ## Contribution Guide
 
 This section is aimed at contributors who want to add their own validators. If you want to change the core process of `autoware_lanelet2_map_validator`, please open a PR and discuss it with the maintainers.
@@ -127,8 +164,6 @@ Contributors must also provide test codes to ensure your validator is working pr
   - A test function for each unique issue the validator can detect. It is recommended to create a small lanelet2 map for each unique issue.
     - In this test, please also check that the issue code is emitted as expected.
   - A test function ensuring that no issues occur when validating `test/data/map/sample_map.osm`. If `sample_map.osm` violates the validation or doesn't contain the primitive to validate, please fix or add the primitives to it.
-- Add the test code to `CMakeLists.txt` using the `add_validation_test` function.
-  - Currently, this part must be added to CMakeLists.txt manually. Automation is expected in the future.
 
 ### 3. Test the entire validator
 
@@ -159,6 +194,12 @@ The document must explain the following.
 
 In addition, add a link of the document to the table [Relationship between requirements and validators](https://github.com/autowarefoundation/autoware_tools/tree/main/map/autoware_lanelet2_map_validator#relationship-between-requirements-and-validators) in the main `README.md` to let the users know which map requirement your validator relates with.
 
-### 5. Submit a pull request
+### 5. Increase version
+
+Contributors must increase the version of `autoware_lanelet2_map_validator`.
+See [Version Control](#version-control) for further information about how versioning is managed.
+Note that contributors should increase the version in `package.xml` and do **NOT** edit the one in `autoware_requirement_set.json` unless the map requirements in Autoware documentation got its version changed.
+
+### 6. Submit a pull request
 
 Submit a pull request to the [autowarefoundation/autoware_tools](https://github.com/autowarefoundation/autoware_tools) repository.
