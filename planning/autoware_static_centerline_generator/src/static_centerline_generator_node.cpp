@@ -32,7 +32,7 @@
 #include "utils.hpp"
 
 #include <autoware/geography_utils/lanelet2_projector.hpp>
-#include <autoware/mission_planner/mission_planner_plugin.hpp>
+#include <autoware/mission_planner_universe/mission_planner_plugin.hpp>
 #include <autoware/universe_utils/ros/marker_helper.hpp>
 #include <pluginlib/class_loader.hpp>
 
@@ -450,10 +450,10 @@ std::vector<lanelet::Id> StaticCenterlineGeneratorNode::plan_route(
       std::vector<geometry_msgs::msg::Pose>{start_center_pose, end_center_pose};
 
     // create mission_planner plugin
-    auto plugin_loader = pluginlib::ClassLoader<autoware::mission_planner::PlannerPlugin>(
-      "autoware_mission_planner", "autoware::mission_planner::PlannerPlugin");
-    auto mission_planner =
-      plugin_loader.createSharedInstance("autoware::mission_planner::lanelet2::DefaultPlanner");
+    auto plugin_loader = pluginlib::ClassLoader<autoware::mission_planner_universe::PlannerPlugin>(
+      "autoware_mission_planner_universe", "autoware::mission_planner_universe::PlannerPlugin");
+    auto mission_planner = plugin_loader.createSharedInstance(
+      "autoware::mission_planner_universe::lanelet2::DefaultPlanner");
 
     // initialize mission_planner
     auto node = rclcpp::Node("mission_planner");

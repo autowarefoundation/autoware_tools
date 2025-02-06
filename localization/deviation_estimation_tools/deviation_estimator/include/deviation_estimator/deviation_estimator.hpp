@@ -24,13 +24,13 @@
 #include "rclcpp/rclcpp.hpp"
 #include "tf2/utils.h"
 
+#include "autoware_internal_debug_msgs/msg/float64_stamped.hpp"
 #include "autoware_vehicle_msgs/msg/velocity_report.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/twist_with_covariance_stamped.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "std_msgs/msg/float64.hpp"
-#include "tier4_debug_msgs/msg/float64_stamped.hpp"
 
 #include <iostream>
 #include <memory>
@@ -71,7 +71,7 @@ private:
 
   std::string imu_link_frame_;
 
-  std::vector<tier4_debug_msgs::msg::Float64Stamped> vx_all_;
+  std::vector<autoware_internal_debug_msgs::msg::Float64Stamped> vx_all_;
   std::vector<geometry_msgs::msg::Vector3Stamped> gyro_all_;
   std::vector<geometry_msgs::msg::PoseStamped> pose_buf_;
   std::vector<TrajectoryData> traj_data_list_for_gyro_;

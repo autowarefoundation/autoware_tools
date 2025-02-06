@@ -35,12 +35,13 @@ LateralErrorPublisher::LateralErrorPublisher(const rclcpp::NodeOptions & node_op
   sub_ground_truth_pose_ = create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
     "~/input/ground_truth_pose_with_covariance", rclcpp::QoS{1},
     std::bind(&LateralErrorPublisher::onGroundTruthPose, this, _1));
-  pub_control_lateral_error_ =
-    create_publisher<tier4_debug_msgs::msg::Float32Stamped>("~/control_lateral_error", 1);
+  pub_control_lateral_error_ = create_publisher<autoware_internal_debug_msgs::msg::Float32Stamped>(
+    "~/control_lateral_error", 1);
   pub_localization_lateral_error_ =
-    create_publisher<tier4_debug_msgs::msg::Float32Stamped>("~/localization_lateral_error", 1);
+    create_publisher<autoware_internal_debug_msgs::msg::Float32Stamped>(
+      "~/localization_lateral_error", 1);
   pub_lateral_error_ =
-    create_publisher<tier4_debug_msgs::msg::Float32Stamped>("~/lateral_error", 1);
+    create_publisher<autoware_internal_debug_msgs::msg::Float32Stamped>("~/lateral_error", 1);
 }
 
 void LateralErrorPublisher::onTrajectory(
@@ -131,17 +132,17 @@ void LateralErrorPublisher::onGroundTruthPose(
   RCLCPP_DEBUG(this->get_logger(), "localization_error: %f", lateral_error);
 
   // Publish lateral errors
-  tier4_debug_msgs::msg::Float32Stamped control_msg;
+  autoware_internal_debug_msgs::msg::Float32Stamped control_msg;
   control_msg.stamp = this->now();
   control_msg.data = static_cast<float>(control_lateral_error);
   pub_control_lateral_error_->publish(control_msg);
 
-  tier4_debug_msgs::msg::Float32Stamped localization_msg;
+  autoware_internal_debug_msgs::msg::Float32Stamped localization_msg;
   localization_msg.stamp = this->now();
   localization_msg.data = static_cast<float>(localization_lateral_error);
   pub_localization_lateral_error_->publish(localization_msg);
 
-  tier4_debug_msgs::msg::Float32Stamped sum_msg;
+  autoware_internal_debug_msgs::msg::Float32Stamped sum_msg;
   sum_msg.stamp = this->now();
   sum_msg.data = static_cast<float>(lateral_error);
   pub_lateral_error_->publish(sum_msg);
