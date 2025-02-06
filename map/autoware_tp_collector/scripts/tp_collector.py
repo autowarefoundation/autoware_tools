@@ -14,40 +14,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import argparse
-from rosbag2_py import (
-    SequentialReader,
-    StorageOptions,
-    ConverterOptions,
-    SequentialWriter,
-    BagMetadata,
-    TopicMetadata,
-    Info
-)
-
-from rclpy.serialization import deserialize_message, serialize_message
-import os
 import csv
-import yaml
-from scipy import spatial as sp
-import numpy as np
-from geometry_msgs.msg import PoseWithCovarianceStamped
-from tier4_debug_msgs.msg import Float32Stamped
+import os
+import time
+
 from builtin_interfaces.msg import Time
-import pandas as pd
-import tqdm
+from geometry_msgs.msg import PoseWithCovarianceStamped
+import numpy as np
 import open3d as o3d
-import sensor_msgs.msg as sensor_msgs
-import std_msgs.msg as std_msgs
-import sensor_msgs_py.point_cloud2 as pc2
+import pandas as pd
 import rclpy
 from rclpy.node import Node
-import time
+from rclpy.serialization import deserialize_message
+from rclpy.serialization import serialize_message
+from rosbag2_py import BagMetadata
+from rosbag2_py import ConverterOptions
+from rosbag2_py import Info
+from rosbag2_py import SequentialReader
+from rosbag2_py import SequentialWriter
+from rosbag2_py import StorageOptions
+from rosbag2_py import TopicMetadata
+from scipy import spatial as sp
+import sensor_msgs.msg as sensor_msgs
+import sensor_msgs_py.point_cloud2 as pc2
+import std_msgs.msg as std_msgs
+from tier4_debug_msgs.msg import Float32Stamped
+import tqdm
+import yaml
+
 
 class TPCollector(Node):
     def __init__(self):
-        super().__init__('tp_collector')
+        super().__init__("tp_collector")
         self.pcd_path = None
         self.yaml_path = None
         self.score_path = None
@@ -72,31 +71,36 @@ class TPCollector(Node):
     ##### Read the YAML file to get the list of PCD segments and scores #####
     def __get_pcd_segments_and_scores(self, pcd_map_dir: str):
         if not os.path.exists(pcd_map_dir):
-            print("Error: %s does not exist!"%(pcd_map_dir))
+            print("Error: %s does not exist!" % (pcd_map_dir))
             exit()
 
         self.pcd_path = os.path.join(pcd_map_dir, "pointcloud_map.pcd/")
 
         if not os.path.exists(self.pcd_path):
-            print("Error: %s does not exist!"%(self.pcd_path))
+            print("Error: %s does not exist!" % (self.pcd_path))
             exit()
 
         self.yaml_path = os.path.join(pcd_map_dir, "pointcloud_map_metadata.yaml")
 
         # Create a dataframe to record the avg tp of 2D segments
-        self.segment_df = pd.DataFrame(columns = ["x", "y", "tp", "key"])
+        self.segment_df = pd.DataFrame(columns=["x", "y", "tp", "key"])
 
         with open(self.yaml_path, "r") as f:
             for key, value in yaml.safe_load(f).items():
                 if key != "x_resolution" and key != "y_resolution":
-                    self.segment_df.loc[len(self.segment_df)] = [float(value[0]), float(value[1]), 0, key]
+                    self.segment_df.loc[len(self.segment_df)] = [
+                        float(value[0]),
+                        float(value[1]),
+                        0,
+                        key,
+                    ]
 
         # A 2D array that contains the 2D coordinates of segments
         # We'll use this to build a KDtree
-        seg_tree_nodes = np.zeros((len(self.segment_df), 2), dtype = float)
+        seg_tree_nodes = np.zeros((len(self.segment_df), 2), dtype=float)
 
         for index, row in self.segment_df.iterrows():
-            seg_tree_nodes[index,:] = [row["x"], row["y"]]
+            seg_tree_nodes[index, :] = [row["x"], row["y"]]
 
         # Create a 2D kdtree on the segment list
         self.kdtree = sp.KDTree(seg_tree_nodes)
@@ -111,8 +115,8 @@ class TPCollector(Node):
                     self.segment_df.loc[index, "tp"] = float(row[1])
         else:
             # If the score file does not exist, initialize scores to all 0
-            self.segment_df.loc[:,"tp"] = 0
-        
+            self.segment_df.loc[:, "tp"] = 0
+
     ##### Stamp search #####
     def __stamp_search(self, stamp: int, tp_df: pd.DataFrame) -> int:
         left = 0
@@ -135,9 +139,9 @@ class TPCollector(Node):
     ##### Read the input rosbag to obtain ndt pose and TP values #####
     def __collect_rosbag_tp(self, bag_path: str) -> pd.DataFrame:
         reader = SequentialReader()
-        bag_storage_options = StorageOptions(uri = bag_path, storage_id = "sqlite3")
+        bag_storage_options = StorageOptions(uri=bag_path, storage_id="sqlite3")
         bag_converter_options = ConverterOptions(
-            input_serialization_format = "cdr", output_serialization_format = "cdr"
+            input_serialization_format="cdr", output_serialization_format="cdr"
         )
         reader.open(bag_storage_options, bag_converter_options)
 
@@ -146,16 +150,18 @@ class TPCollector(Node):
         total_message_count = self.__compute_total_message_count(bag_path)
         progress_bar = tqdm.tqdm(total=total_message_count)
 
-
-        pose_df = pd.DataFrame(columns = ["stamp", "pose_msg"])
-        tp_df = pd.DataFrame(columns = ["stamp", "tp"])
+        pose_df = pd.DataFrame(columns=["stamp", "pose_msg"])
+        tp_df = pd.DataFrame(columns=["stamp", "tp"])
 
         while reader.has_next():
             progress_bar.update(1)
             (topic, data, stamp) = reader.read_next()
 
             # if topic == "/localization/pose_twist_fusion_filter/biased_pose_with_covariance":
-            if topic == "/localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias":
+            if (
+                topic
+                == "/localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias"
+            ):
                 pose_msg = deserialize_message(data, PoseWithCovarianceStamped)
                 stamp = pose_msg.header.stamp.sec * 1e9 + pose_msg.header.stamp.nanosec
                 pose_df.loc[len(pose_df)] = [stamp, pose_msg.pose.pose]
@@ -164,11 +170,11 @@ class TPCollector(Node):
                 stamp = tp_msg.stamp.sec * 1e9 + tp_msg.stamp.nanosec
 
                 tp_df.loc[len(tp_df)] = [stamp, tp_msg.data]
-        
+
         progress_bar.close()
-        
+
         # Now from the two list above build a table of estimated pose and corresponding TPs
-        ndt_res_df = pd.DataFrame(columns = ["x", "y", "tp"])
+        ndt_res_df = pd.DataFrame(columns=["x", "y", "tp"])
 
         progress_bar = tqdm.tqdm(total=len(pose_df))
 
@@ -178,10 +184,14 @@ class TPCollector(Node):
             pose = row.pose_msg
             # Find the tp whose stamp is the closest to the pose
             tid = self.__stamp_search(stamp, tp_df)
-            
+
             if tid >= 0:
-                ndt_res_df.loc[len(ndt_res_df)] = [pose.position.x, pose.position.y, tp_df["tp"][tid]]
-        
+                ndt_res_df.loc[len(ndt_res_df)] = [
+                    pose.position.x,
+                    pose.position.y,
+                    tp_df["tp"][tid],
+                ]
+
         progress_bar.close()
 
         return ndt_res_df
@@ -226,6 +236,7 @@ class TPCollector(Node):
 
         # Save the new TPs
         self.__save_tps()
+
 
 if __name__ == "__main__":
     rclpy.init()

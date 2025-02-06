@@ -15,10 +15,10 @@ endif ()
 find_package(yaml-cpp REQUIRED)
 find_package(PCL REQUIRED)
 
-install(PROGRAMS 
-  scripts/tp_collector.py 
-  scripts/tp_checker.py 
-  scripts/tp_visualizer.py 
+install(PROGRAMS
+  scripts/tp_collector.py
+  scripts/tp_checker.py
+  scripts/tp_visualizer.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
