@@ -40,6 +40,7 @@ import tqdm
 import open3d as o3d
 import sensor_msgs.msg as sensor_msgs
 import std_msgs.msg as std_msgs
+import sensor_msgs_py.point_cloud2 as pc2
 import rclpy
 from rclpy.node import Node
 import time
@@ -140,6 +141,8 @@ class TPCollector(Node):
         )
         reader.open(bag_storage_options, bag_converter_options)
 
+        print("Reading rosbag...")
+
         total_message_count = self.__compute_total_message_count(bag_path)
         progress_bar = tqdm.tqdm(total=total_message_count)
 
@@ -151,7 +154,8 @@ class TPCollector(Node):
             progress_bar.update(1)
             (topic, data, stamp) = reader.read_next()
 
-            if topic == "/localization/pose_twist_fusion_filter/biased_pose_with_covariance":
+            # if topic == "/localization/pose_twist_fusion_filter/biased_pose_with_covariance":
+            if topic == "/localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias":
                 pose_msg = deserialize_message(data, PoseWithCovarianceStamped)
                 stamp = pose_msg.header.stamp.sec * 1e9 + pose_msg.header.stamp.nanosec
                 pose_df.loc[len(pose_df)] = [stamp, pose_msg.pose.pose]
@@ -160,6 +164,8 @@ class TPCollector(Node):
                 stamp = tp_msg.stamp.sec * 1e9 + tp_msg.stamp.nanosec
 
                 tp_df.loc[len(tp_df)] = [stamp, tp_msg.data]
+        
+        progress_bar.close()
         
         # Now from the two list above build a table of estimated pose and corresponding TPs
         ndt_res_df = pd.DataFrame(columns = ["x", "y", "tp"])
@@ -175,16 +181,19 @@ class TPCollector(Node):
             
             if tid >= 0:
                 ndt_res_df.loc[len(ndt_res_df)] = [pose.position.x, pose.position.y, tp_df["tp"][tid]]
-            
+        
+        progress_bar.close()
+
         return ndt_res_df
 
     ##### Update map's TP #####
     def __update_avg_tp(self, ndt_res_df: pd.DataFrame):
-        print("UPDATE AVG TP, len of ndt_res_df = {0}".format(len(ndt_res_df)))
+        print("Updating segments' TP...")
         # Iterate on poses and the corresponding TPs
         progress_bar = tqdm.tqdm(total=len(ndt_res_df))
 
         for tp_row in ndt_res_df.itertuples():
+            progress_bar.update(1)
             # Find indices of map segments that cover the current pose
             nn_idx = self.kdtree.query_ball_point([tp_row.x, tp_row.y], 20.0)
 
@@ -194,80 +203,16 @@ class TPCollector(Node):
                 # TODO: record the average TP of segments
                 if tp_row.tp > self.segment_df.loc[idx, "tp"]:
                     self.segment_df.loc[idx, "tp"] = tp_row.tp
+        progress_bar.close()
 
     ##### Save the segment TPs #####
     def __save_tps(self):
+        print("Saving TP to files")
         with open(self.score_path, "w") as f:
+            f.write("segment,tp\n")
             for row in self.segment_df.itertuples():
-                f.write("{0}_{1},{2}\n".format(int(row.x), int(row.y), row.tp))
-
-    def __show(self):
-        ros_float_dtype = sensor_msgs.PointField.FLOAT32
-        ros_uint32_dtype = sensor_msgs.PointField.UINT32
-        dtype = np.float32
-        itemsize = np.dtype(dtype).itemsize
-
-        fields = [sensor_msgs.PointField(name = "x", offset = 0, datatype = ros_float_dtype, count = 1),
-            sensor_msgs.PointField(name = "y", offset = itemsize, datatype = ros_float_dtype, count = 1),
-            sensor_msgs.PointField(name = "z", offset = itemsize * 2, datatype = ros_float_dtype, count = 1),
-            sensor_msgs.PointField(name = "rgba", offset = itemsize * 3, datatype = ros_uint32_dtype, count = 1)]
-
-        points = []
-        pc2_width = 0
-
-        progress_bar = tqdm.tqdm(total = len(self.segment_df))
-        origin = None
-
-        for tuple in self.segment_df.itertuples():
-            progress_bar.update(1)
-            # Load the current segment
-            pcd = o3d.io.read_point_cloud(os.path.join(self.pcd_path, tuple.key))
-            np_pcd = np.asarray(pcd.points)
-            rgba = self.__set_color_based_on_score(tuple.tp)
-
-            for p in np_pcd:
-                if origin == None:
-                    origin = [p[0], p[1], p[2]]
-                pt = [p[0] - origin[0], p[1] - origin[1], p[2] - origin[2], rgba]
-                points.append(pt)
-                pc2_width += 1
-
-        header = std_msgs.Header()
-        header.frame_id = "map"
-        pc2_msg = sensor_msgs.PointCloud2(
-            header = header,
-            height = 1,
-            width = pc2_width,
-            is_dense = False,
-            is_bigendian = False,
-            fields = fields,
-            point_step = itemsize * 4,
-            row_step = itemsize * 4 * pc2_width,
-            data = np.array(points).astype(dtype).tobytes()
-        )
-
-        pcd_publisher = self.create_publisher(sensor_msgs.PointCloud2, '/autoware_tp_collector', 10)
-
-        while True:
-            pcd_publisher.publish(pc2_msg)
-            time.sleep(5)
-
-
-    def __set_color_based_on_score(self, score) -> int:
-        if score < 3.0:
-            r = 255
-            g = 0
-            b = 0 
-        else:
-            r = 255
-            g = 255
-            b = 255
-
-        # rgb = struct.unpack('I', struct.pack('BBBB', b, g, r, a))[0]
-        rgb = (r << 16) | (g << 8) | b
-
-        return rgb
-
+                f.write("{0},{1}\n".format(row.key, row.tp))
+        print("Done. Segments' TPs are saved at {0}.".format(self.score_path))
 
     def processing(self, pcd_map_dir: str, rosbag_path: str):
         # Get the segment lists and scores
@@ -281,8 +226,6 @@ class TPCollector(Node):
 
         # Save the new TPs
         self.__save_tps()
-
-        self.__show()
 
 if __name__ == "__main__":
     rclpy.init()

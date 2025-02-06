@@ -19,11 +19,7 @@ import argparse
 from rosbag2_py import (
     SequentialReader,
     StorageOptions,
-    ConverterOptions,
-    SequentialWriter,
-    BagMetadata,
-    TopicMetadata,
-    Info
+    ConverterOptions
 )
 
 from rclpy.serialization import deserialize_message, serialize_message
@@ -44,6 +40,8 @@ import tqdm
 import time
 import shutil
 import open3d as o3d
+import sensor_msgs_py.point_cloud2 as pc2
+import struct
 
 class TPChecker(Node):
 
@@ -240,6 +238,7 @@ class TPChecker(Node):
     # Save the tp and average tps to CSV file #####
     def __save_results(self: str):
         self.ndt_res_df.to_csv(self.result_csv)
+        print("The checking results are saved at {0}".format(self.result_csv))
 
     def __show(self):
         ros_float_dtype = sensor_msgs.PointField.FLOAT32
@@ -272,20 +271,12 @@ class TPChecker(Node):
                 points.append(pt)
                 pc2_width += 1
 
+        print("Publishing result...")
         header = std_msgs.Header()
+        header.stamp = self.get_clock().now().to_msg()
         header.frame_id = "map"
-        pc2_msg = sensor_msgs.PointCloud2(
-            header = header,
-            height = 1,
-            width = pc2_width,
-            is_dense = False,
-            is_bigendian = False,
-            fields = fields,
-            point_step = itemsize * 4,
-            row_step = itemsize * 4 * pc2_width,
-            data = np.array(points).astype(dtype).tobytes()
-        )
 
+        pc2_msg = pc2.create_cloud(header, fields, points)
         pcd_publisher = self.create_publisher(sensor_msgs.PointCloud2, '/autoware_tp_checker', 10)
 
         while True:
@@ -304,10 +295,12 @@ class TPChecker(Node):
             r = 255
             g = 255
             b = 255
+        a = 255
 
-        rgb = (r << 16) | (g << 8) | b
+        tmp_rgb = struct.pack('BBBB', b, g, r, a)
+        rgba = struct.unpack('I', tmp_rgb)[0]
 
-        return rgb
+        return rgba
 
     def processing(self, pcd_path: str, rosbag_path: str, result_path: str):
         if not os.path.exists(result_path):
