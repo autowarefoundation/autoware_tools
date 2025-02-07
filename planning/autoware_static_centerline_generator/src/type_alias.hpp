@@ -32,6 +32,7 @@ using autoware::route_handler::RouteHandler;
 using autoware::universe_utils::LinearRing2d;
 using autoware::universe_utils::LineString2d;
 using autoware::universe_utils::Point2d;
+using autoware_internal_planning_msgs::msg::PathWithLaneId;
 using autoware_map_msgs::msg::LaneletMapBin;
 using autoware_perception_msgs::msg::PredictedObjects;
 using autoware_planning_msgs::msg::LaneletRoute;
@@ -39,7 +40,6 @@ using autoware_planning_msgs::msg::Path;
 using autoware_planning_msgs::msg::PathPoint;
 using autoware_planning_msgs::msg::Trajectory;
 using autoware_planning_msgs::msg::TrajectoryPoint;
-using tier4_planning_msgs::msg::PathWithLaneId;
 using visualization_msgs::msg::Marker;
 using visualization_msgs::msg::MarkerArray;
 }  // namespace autoware::static_centerline_generator
