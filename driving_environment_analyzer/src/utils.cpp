@@ -15,6 +15,7 @@
 #include "driving_environment_analyzer/utils.hpp"
 
 #include "autoware/motion_utils/trajectory/trajectory.hpp"
+#include "autoware/universe_utils/geometry/geometry.hpp"
 
 #include <autoware_lanelet2_extension/regulatory_elements/Forward.hpp>
 #include <autoware_lanelet2_extension/utility/message_conversion.hpp>
