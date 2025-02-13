@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 
 int main(int argc, char * argv[])
 {
@@ -59,20 +60,32 @@ int main(int argc, char * argv[])
   if (!std::filesystem::is_regular_file(meta_config.command_line_config.mapFile)) {
     throw std::invalid_argument("Map file doesn't exist or is not a file!");
   }
-  const auto [lanelet_map_ptr, map_issue] = lanelet::autoware::validation::loadAndValidateMap(
+  const auto [lanelet_map_ptr, loading_issues] = lanelet::autoware::validation::loadAndValidateMap(
     meta_config.projector_type, meta_config.command_line_config.mapFile,
     meta_config.command_line_config.validationConfig);
 
+  if (!loading_issues[0].issues.empty()) {
+    std::cout << "Errors found on map loading." << std::endl;
+    lanelet::validation::printAllIssues(loading_issues);
+  }
+
   if (!lanelet_map_ptr) {
-    lanelet::validation::printAllIssues(map_issue);
+    throw std::invalid_argument("The map file was not possible to load!");
   } else if (!meta_config.requirements_file.empty()) {
     if (!std::filesystem::is_regular_file(meta_config.requirements_file)) {
-      throw std::invalid_argument("Input file doesn't exist or is not a file!");
+      throw std::invalid_argument("Input JSON file doesn't exist or is not a file!");
     }
     std::ifstream input_file(meta_config.requirements_file);
     json json_data;
     input_file >> json_data;
-    lanelet::autoware::validation::process_requirements(json_data, meta_config, *lanelet_map_ptr);
+    std::vector<lanelet::validation::DetectedIssues> mapping_issues =
+      lanelet::autoware::validation::process_requirements(json_data, meta_config, *lanelet_map_ptr);
+    lanelet::autoware::validation::append_map_loading_issues(json_data, loading_issues);
+    lanelet::autoware::validation::summarize_validator_results(json_data);
+    lanelet::validation::printAllIssues(mapping_issues);
+    if (!meta_config.output_file_path.empty()) {
+      lanelet::autoware::validation::export_results(json_data, meta_config);
+    }
   } else {
     const auto issues = lanelet::autoware::validation::apply_validation(
       *lanelet_map_ptr, meta_config.command_line_config.validationConfig);

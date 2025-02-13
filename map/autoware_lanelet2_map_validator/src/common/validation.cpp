@@ -283,8 +283,8 @@ lanelet::validation::ValidationConfig replace_validator(
   return temp;
 }
 
-void process_requirements(
-  json json_data, const MetaConfig & validator_config, const lanelet::LaneletMap & lanelet_map)
+std::vector<lanelet::validation::DetectedIssues> process_requirements(
+  json & json_data, const MetaConfig & validator_config, const lanelet::LaneletMap & lanelet_map)
 {
   std::vector<lanelet::validation::DetectedIssues> total_issues;
   std::regex issue_code_pattern(R"(\[(.+?)\]\s*(.+))");
@@ -357,21 +357,50 @@ void process_requirements(
     appendIssues(total_issues, issues);
   }
 
-  // Show results
-  summarize_validator_results(json_data);
-  lanelet::validation::printAllIssues(total_issues);
+  return total_issues;
+}
 
-  // Save results
-  if (!validator_config.output_file_path.empty()) {
-    if (!std::filesystem::is_directory(validator_config.output_file_path)) {
-      throw std::invalid_argument("Output path doesn't exist or is not a directory!");
-    }
-    std::filesystem::path file_directory = validator_config.output_file_path;
-    std::filesystem::path file_path = file_directory / "lanelet2_validation_results.json";
-    std::ofstream output_file(file_path);
-    output_file << std::setw(4) << json_data;
-    std::cout << "Results are output to " << file_path << std::endl;
+void export_results(json & json_data, const MetaConfig & validator_config)
+{
+  if (!std::filesystem::is_directory(validator_config.output_file_path)) {
+    throw std::invalid_argument("Output path doesn't exist or is not a directory!");
   }
+  std::filesystem::path file_directory = validator_config.output_file_path;
+  std::filesystem::path file_path = file_directory / "lanelet2_validation_results.json";
+  std::ofstream output_file(file_path);
+  output_file << std::setw(4) << json_data;
+  std::cout << "Results are output to " << file_path << std::endl;
+}
+
+void append_map_loading_issues(
+  json & json_data, const std::vector<lanelet::validation::DetectedIssues> loading_issues)
+{
+  // Default block when there is no loading issues
+  json map_loading_block = {
+    {"id", "map_loading"},
+    {"passed", true},
+    {"validators", {{{"name", "general.map_loading"}, {"passed", true}}}}};
+
+  if (!loading_issues[0].issues.empty()) {
+    map_loading_block["passed"] = false;
+    map_loading_block["validators"][0]["passed"] = false;
+
+    json issues_json;
+    for (const auto & issues : loading_issues) {
+      for (const auto & issue : issues.issues) {
+        json issue_json;
+        issue_json["severity"] = lanelet::validation::toString(issue.severity);
+        issue_json["primitive"] = lanelet::validation::toString(issue.primitive);
+        issue_json["id"] = issue.id;
+        issue_json["issue_code"] = "General.MapLoading-001";
+        issue_json["message"] = issue.message;
+        issues_json.push_back(issue_json);
+      }
+    }
+    map_loading_block["validators"][0]["issues"] = issues_json;
+  }
+
+  json_data["requirements"].push_back(map_loading_block);
 }
 
 }  // namespace lanelet::autoware::validation

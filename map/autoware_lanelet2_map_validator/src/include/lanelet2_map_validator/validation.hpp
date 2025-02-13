@@ -68,9 +68,14 @@ void summarize_validator_results(json & json_data);
 lanelet::validation::ValidationConfig replace_validator(
   const lanelet::validation::ValidationConfig & input, const std::string & validator_name);
 
-void process_requirements(
-  json json_data, const lanelet::autoware::validation::MetaConfig & validator_config,
+std::vector<lanelet::validation::DetectedIssues> process_requirements(
+  json & json_data, const lanelet::autoware::validation::MetaConfig & validator_config,
   const lanelet::LaneletMap & lanelet_map);
+
+void export_results(json & json_data, const MetaConfig & validator_config);
+
+void append_map_loading_issues(
+  json & json_data, std::vector<lanelet::validation::DetectedIssues> loading_issues);
 }  // namespace lanelet::autoware::validation
 
 #endif  // LANELET2_MAP_VALIDATOR__VALIDATION_HPP_
