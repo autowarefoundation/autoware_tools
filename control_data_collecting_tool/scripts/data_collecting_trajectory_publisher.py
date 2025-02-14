@@ -29,6 +29,7 @@ from rcl_interfaces.msg import ParameterDescriptor
 import rclpy
 from scipy.spatial.transform import Rotation as R
 from std_msgs.msg import Bool
+from std_msgs.msg import Float32
 from std_msgs.msg import Int32MultiArray
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
@@ -72,7 +73,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
 
         self.declare_parameter(
             "lateral_error_threshold",
-            2.0,
+            2.70,
             ParameterDescriptor(
                 description="Lateral error threshold where applying velocity limit [m/s]"
             ),
@@ -152,6 +153,12 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             "COLLECTING_DATA_A_MAX",
             1.0,
             ParameterDescriptor(description="Maximum velocity for data collection [m/s^2]"),
+        )
+
+        self.pedal_input_pub_ = self.create_publisher(
+            Float32,
+            "/data_collecting_pedal_input",
+            1,
         )
 
         self.trajectory_for_collecting_data_pub_ = self.create_publisher(
@@ -244,6 +251,26 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         )
         self.collected_data_counts_of_vel_steer_subscription_
 
+        self.collected_data_counts_of_vel_accel_pedal_input_subscription_ = (
+            self.create_subscription(
+                Int32MultiArray,
+                "/control_data_collecting_tools/collected_data_counts_of_vel_accel_pedal_input",
+                self.subscribe_collected_data_counts_of_vel_accel_pedal_input,
+                10,
+            )
+        )
+        self.collected_data_counts_of_vel_accel_pedal_input_subscription_
+
+        self.collected_data_counts_of_vel_brake_pedal_input_subscription_ = (
+            self.create_subscription(
+                Int32MultiArray,
+                "/control_data_collecting_tools/collected_data_counts_of_vel_brake_pedal_input",
+                self.subscribe_collected_data_counts_of_vel_brake_pedal_input,
+                10,
+            )
+        )
+        self.collected_data_counts_of_vel_brake_pedal_input_subscription_
+
         if debug_matplotlib_plot_flag:
             self.fig, self.axs = plt.subplots(4, 1, figsize=(12, 20))
             plt.ion()
@@ -257,6 +284,20 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
         rows = msg.layout.dim[0].size
         cols = msg.layout.dim[1].size
         self.collected_data_counts_of_vel_steer = np.array(msg.data).reshape((rows, cols))
+
+    def subscribe_collected_data_counts_of_vel_accel_pedal_input(self, msg):
+        rows = msg.layout.dim[0].size
+        cols = msg.layout.dim[1].size
+        self.collected_data_counts_of_vel_accel_pedal_input = np.array(msg.data).reshape(
+            (rows, cols)
+        )
+
+    def subscribe_collected_data_counts_of_vel_brake_pedal_input(self, msg):
+        rows = msg.layout.dim[0].size
+        cols = msg.layout.dim[1].size
+        self.collected_data_counts_of_vel_brake_pedal_input = np.array(msg.data).reshape(
+            (rows, cols)
+        )
 
     def onDataCollectingArea(self, msg):
         self._data_collecting_area_polygon = msg
@@ -404,22 +445,6 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
             or self.trajectory_position_data is not None
             or self.trajectory_yaw_data is not None
         ):
-            # [0] update nominal target trajectory if changing related ros2 params
-            target_longitudinal_velocity = (
-                self.get_parameter("target_longitudinal_velocity")
-                .get_parameter_value()
-                .double_value
-            )
-
-            window = self.get_parameter("mov_ave_window").get_parameter_value().integer_value
-
-            if (
-                np.abs(target_longitudinal_velocity - self.current_target_longitudinal_velocity)
-                > 1e-6
-                or window != self.current_window
-            ):
-                self.updateNominalTargetTrajectory()
-
             # [1] receive observation from topic
             present_position = np.array(
                 [
@@ -510,21 +535,49 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                 ((trajectory_position_data[index_range] - present_position[:2]) ** 2).sum(axis=1)
             )
             index_array_near = np.argsort(distance)
-            self.nearestIndex = index_range[index_array_near[0]]
-            # set target velocity
+            if self.present_operation_mode_ == 3:
+                self.nearestIndex = index_range[index_array_near[0]]
+            # set target velocity or target pedal input
             present_vel = present_linear_velocity[0]
             present_acc = self._present_acceleration.accel.accel.linear.x
             current_time = self.get_clock().now().nanoseconds / 1e9
-            target_vel = self.course.get_target_velocity(
-                self.nearestIndex,
-                current_time,
-                present_vel,
-                present_acc,
-                self.collected_data_counts_of_vel_acc,
-                self.collected_data_counts_of_vel_steer,
-                self.mask_vel_acc,
-                self.mask_vel_steer,
-            )
+
+            target_vel = 0.0
+            target_pedal_input = 0.0
+            if self.CONTROL_MODE == "acceleration_cmd":
+                target_vel = self.course.get_target_velocity(
+                    self.nearestIndex,
+                    current_time,
+                    present_vel,
+                    present_acc,
+                    self.collected_data_counts_of_vel_acc,
+                    self.collected_data_counts_of_vel_steer,
+                    self.mask_vel_acc,
+                    self.mask_vel_steer,
+                )
+            elif self.CONTROL_MODE == "actuation_cmd":
+                if self.COURSE_NAME == "reversal_loop_circle":
+                    target_pedal_input = self.course.get_target_pedal_input(
+                        self.nearestIndex,
+                        current_time,
+                        present_vel,
+                        self.collected_data_counts_of_vel_accel_pedal_input,
+                        self.collected_data_counts_of_vel_brake_pedal_input,
+                    )
+                else:
+                    msg = Bool()
+                    msg.data = True
+                    self.pub_stop_request_.publish(msg)
+                    self.get_logger().error(
+                        f"Control mode {self.CONTROL_MODE} is not supported when the course is {self.COURSE_NAME}"
+                    )
+            elif (
+                self.CONTROL_MODE == "external_acceleration_cmd"
+                or self.CONTROL_MODE == "external_actuation_cmd"
+            ):
+                pass  # do nothing
+            else:
+                self.get_logger().error(f"Invalid control mode : {self.CONTROL_MODE}")
 
             trajectory_longitudinal_velocity_data = np.array(
                 [target_vel for _ in range(len(trajectory_position_data))]
@@ -611,7 +664,12 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
                     )
 
             # [6] publish
-            # [6-1] publish trajectory
+
+            # [6-1] publish pedal input
+            if self.CONTROL_MODE == "actuation_cmd":
+                self.pedal_input_pub_.publish(Float32(data=float(target_pedal_input)))
+
+            # [6-2] publish trajectory
             if self.course.closed:
                 pub_trajectory_index = np.arange(
                     self.nearestIndex, self.nearestIndex + int(50 / self.trajectory_step)
@@ -647,10 +705,10 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
 
             self.trajectory_for_collecting_data_pub_.publish(tmp_trajectory)
 
-            # [6-2] publish marker_array
+            # [6-3] publish marker_array
             marker_array = MarkerArray()
 
-            # [6-2a] local trajectory
+            # [6-3a] local trajectory
             marker_trajectory_1 = Marker()
             marker_trajectory_1.type = 4
             marker_trajectory_1.id = 1
@@ -717,7 +775,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
 
             marker_array.markers.append(boundary_marker_trajectory_1)
 
-            # [6-2b] whole trajectory
+            # [6-3b] whole trajectory
             marker_trajectory_2 = Marker()
             marker_trajectory_2.type = 4
             marker_trajectory_2.id = 0
@@ -748,7 +806,7 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
 
             marker_array.markers.append(marker_trajectory_2)
 
-            # [6-2c] add arrow
+            # [6-3c] add arrow
             marker_arrow = Marker()
             marker_arrow.type = marker_arrow.ARROW
             marker_arrow.id = 2
@@ -793,14 +851,14 @@ class DataCollectingTrajectoryPublisher(DataCollectingBaseNode):
 
             self.data_collecting_trajectory_marker_array_pub_.publish(marker_array)
 
-            # [6-3] stop request
+            # [6-4] stop request
             # self.get_logger().info("self.course.check_in_boundary(present_position): {}".format(self.course.check_in_boundary(present_position)))
             if not self.course.check_in_boundary(present_position):
                 msg = Bool()
                 msg.data = True
                 self.pub_stop_request_.publish(msg)
 
-            # [6-4] update trajectory data if necessary
+            # [6-5] update trajectory data if necessary
             (
                 self.nearestIndex,
                 self.trajectory_position_data,

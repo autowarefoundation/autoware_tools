@@ -3,7 +3,7 @@
     # Course Specific Parameters
     trajectory_radius: 35.0
     enclosing_radius: 40.0
-    look_ahead_distance: 15.0
+    look_ahead_distance: 35.0
 
     # Data Collection Range
     COLLECTING_DATA_V_MIN: 0.5

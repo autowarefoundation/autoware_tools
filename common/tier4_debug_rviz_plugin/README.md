@@ -7,6 +7,6 @@ Note that jsk_overlay_utils.cpp and jsk_overlay_utils.hpp are BSD license.
 
 ### Float32MultiArrayStampedPieChart
 
-Pie chart from `tier4_debug_msgs::msg::Float32MultiArrayStamped`.
+Pie chart from `autoware_internal_debug_msgs::msg::Float32MultiArrayStamped`.
 
 ![float32_multi_array_stamped_pie_chart](./images/float32_multi_array_stamped_pie_chart.png)

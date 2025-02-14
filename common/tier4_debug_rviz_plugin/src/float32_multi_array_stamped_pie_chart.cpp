@@ -60,7 +60,8 @@ Float32MultiArrayStampedPieChartDisplay::Float32MultiArrayStampedPieChartDisplay
 : rviz_common::Display(), update_required_(false), first_time_(true), data_(0.0)
 {
   update_topic_property_ = new rviz_common::properties::StringProperty(
-    "Topic", "", "tier4_debug_msgs::msg::Float32MultiArrayStamped topic to subscribe to.", this,
+    "Topic", "",
+    "autoware_internal_debug_msgs::msg::Float32MultiArrayStamped topic to subscribe to.", this,
     SLOT(updateTopic()), this);
   data_index_property_ = new rviz_common::properties::IntProperty(
     "data index", 0, "data index in message to visualize", this, SLOT(updateDataIndex()));
@@ -178,7 +179,7 @@ void Float32MultiArrayStampedPieChartDisplay::update(
 }
 
 void Float32MultiArrayStampedPieChartDisplay::processMessage(
-  const tier4_debug_msgs::msg::Float32MultiArrayStamped::ConstSharedPtr msg)
+  const autoware_internal_debug_msgs::msg::Float32MultiArrayStamped::ConstSharedPtr msg)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
@@ -297,10 +298,11 @@ void Float32MultiArrayStampedPieChartDisplay::subscribe()
 
   if (topic_name.length() > 0 && topic_name != "/") {
     rclcpp::Node::SharedPtr raw_node = context_->getRosNodeAbstraction().lock()->get_raw_node();
-    sub_ = raw_node->create_subscription<tier4_debug_msgs::msg::Float32MultiArrayStamped>(
-      topic_name, 1,
-      std::bind(
-        &Float32MultiArrayStampedPieChartDisplay::processMessage, this, std::placeholders::_1));
+    sub_ =
+      raw_node->create_subscription<autoware_internal_debug_msgs::msg::Float32MultiArrayStamped>(
+        topic_name, 1,
+        std::bind(
+          &Float32MultiArrayStampedPieChartDisplay::processMessage, this, std::placeholders::_1));
   }
 }
 

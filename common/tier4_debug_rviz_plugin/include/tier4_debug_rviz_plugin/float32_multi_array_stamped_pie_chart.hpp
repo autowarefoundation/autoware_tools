@@ -60,7 +60,7 @@
 #include <rviz_common/validate_floats.hpp>
 #include <tier4_debug_rviz_plugin/jsk_overlay_utils.hpp>
 
-#include <tier4_debug_msgs/msg/float32_multi_array_stamped.hpp>
+#include <autoware_internal_debug_msgs/msg/float32_multi_array_stamped.hpp>
 
 #include <mutex>
 
@@ -87,7 +87,7 @@ protected:
   virtual void onDisable();
   virtual void onInitialize();
   virtual void processMessage(
-    const tier4_debug_msgs::msg::Float32MultiArrayStamped::ConstSharedPtr msg);
+    const autoware_internal_debug_msgs::msg::Float32MultiArrayStamped::ConstSharedPtr msg);
   virtual void drawPlot(double val);
   virtual void update(float wall_dt, float ros_dt);
   // properties
@@ -114,7 +114,7 @@ protected:
   rviz_common::properties::FloatProperty * med_color_threshold_property_;
   rviz_common::properties::BoolProperty * clockwise_rotate_property_;
 
-  rclcpp::Subscription<tier4_debug_msgs::msg::Float32MultiArrayStamped>::SharedPtr sub_;
+  rclcpp::Subscription<autoware_internal_debug_msgs::msg::Float32MultiArrayStamped>::SharedPtr sub_;
   int left_;
   int top_;
   uint16_t texture_size_;

@@ -4,7 +4,7 @@ from tier4_debug_msgs.msg import SystemUsageArray
 
 from .system_performance_plotter_base import PREDEFINED_COMPONENT_NAMES
 from .system_performance_plotter_base import SystemPerformancePlotterBase
-from .system_performance_plotter_base import create_common_argment
+from .system_performance_plotter_base import create_common_argument
 
 
 class CpuUsagePlotter(SystemPerformancePlotterBase):
@@ -43,7 +43,7 @@ class CpuUsagePlotter(SystemPerformancePlotterBase):
 
 
 def main():
-    args = create_common_argment(100)
+    args = create_common_argument(100)
     plotter = CpuUsagePlotter(args, "CPU Usage [%]", "_cpu_usage")
     plotter.run()
 

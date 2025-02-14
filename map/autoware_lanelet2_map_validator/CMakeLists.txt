@@ -31,42 +31,40 @@ target_link_libraries(autoware_lanelet2_map_validator
   autoware_lanelet2_map_validator_lib
 )
 
+install(PROGRAMS
+  template/create_new_validator.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 if(BUILD_TESTING)
-  find_package(ament_index_cpp REQUIRED)
+  file(GLOB_RECURSE test_src "test/src/test_*.cpp")
+  ament_auto_add_library(autoware_lanelet2_map_validator_test_lib ${test_src})
 
-  # test for json processing
-  ament_add_ros_isolated_gtest(
-    json_processing_test
-    test/src/test_json_processing.cpp
-  )
+  target_include_directories(autoware_lanelet2_map_validator_test_lib PUBLIC
+    test/src/include
+    src/include)
 
-  target_link_libraries(
-    json_processing_test
+  target_link_libraries(autoware_lanelet2_map_validator_test_lib
     autoware_lanelet2_map_validator_lib
-    ament_index_cpp::ament_index_cpp
   )
 
   # test for general lanelet2 map validators
-  function(add_validation_test VALIDATION_NAME)
+  function(add_validation_test TEST_FILE)
+    get_filename_component(TEST_NAME ${TEST_FILE} NAME_WE)
+    string(REPLACE "test_" "" VALIDATION_NAME ${TEST_NAME})
     ament_add_ros_isolated_gtest(
       ${VALIDATION_NAME}_test
-      test/src/test_${VALIDATION_NAME}.cpp
+      ${TEST_FILE}
     )
     target_link_libraries(
       ${VALIDATION_NAME}_test
-      autoware_lanelet2_map_validator_lib
+      autoware_lanelet2_map_validator_test_lib
     )
   endfunction()
 
-  add_validation_test(missing_regulatory_elements_for_stop_lines)
-  add_validation_test(missing_regulatory_elements_for_crosswalks)
-  add_validation_test(missing_regulatory_elements_for_traffic_lights)
-  add_validation_test(regulatory_elements_details_for_crosswalks)
-  add_validation_test(regulatory_elements_details_for_traffic_lights)
-  add_validation_test(traffic_light_facing)
-  add_validation_test(missing_referrers_for_traffic_lights)
-  add_validation_test(intersection_area_validity)
-  add_validation_test(intersection_area_segment_type)
+  foreach(TEST_FILE ${test_src})
+    add_validation_test(${TEST_FILE})
+  endforeach()
 endif()
 
 ament_auto_package(
