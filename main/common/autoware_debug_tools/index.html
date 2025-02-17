@@ -3303,6 +3303,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#frequent-log-checker" class="md-nav__link">
+    Frequent Log Checker
+  </a>
+  
+    <nav class="md-nav" aria-label="Frequent Log Checker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#usage_3" class="md-nav__link">
+    Usage
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3417,7 +3437,19 @@ ros2<span class="w"> </span>run<span class="w"> </span>autoware_debug_tools<span
 <h3 id="usage_2">Usage<a class="headerlink" href="#usage_2" title="Permanent link">#</a></h3>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_debug_tools<span class="w"> </span>rosout_log_reconstructor
 </code></pre></div>
-<p><img alt="rosout_log_example" src="images/rosout_log_example.png"></p></div>
+<p><img alt="rosout_log_example" src="images/rosout_log_example.png"></p>
+<h2 id="frequent-log-checker">Frequent Log Checker<a class="headerlink" href="#frequent-log-checker" title="Permanent link">#</a></h2>
+<p>This script shows the frequent log from the <code>launch.log</code>.
+In detail, the log which appears more than the threshold times during the duration will be list down.</p>
+<h3 id="usage_3">Usage<a class="headerlink" href="#usage_3" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_debug_tools<span class="w"> </span>frequent_log_checker<span class="w"> </span>&lt;launch-log-path&gt;
+</code></pre></div>
+<p>The command has following options.</p>
+<ul>
+<li><code>-d</code>: duration to count the number of log</li>
+<li><code>-c</code>: threshold of the log count during the duration</li>
+<li><code>-f</code>: log format. Several log formats are pre-defined in the script.</li>
+</ul></div>
 
 
 
