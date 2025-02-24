@@ -14,32 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-import csv
 import os
-import shutil
-from subprocess import call
+import argparse
+from rosbag2_py import (
+    SequentialReader,
+    StorageOptions,
+    ConverterOptions,
+    Info
+)
 
-from builtin_interfaces.msg import Time
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import PoseWithCovarianceStamped
-import numpy as np
-import rclpy
-from rclpy.node import Node
-from rclpy.serialization import deserialize_message
-from rclpy.serialization import serialize_message
-from rosbag2_py import ConverterOptions
-from rosbag2_py import Info
-from rosbag2_py import SequentialReader
-from rosbag2_py import StorageOptions
+from rclpy.serialization import deserialize_message, serialize_message
+import os
+import csv
+import yaml
 from scipy import spatial as sp
+import numpy as np
+from geometry_msgs.msg import PoseWithCovarianceStamped, Pose
+from tier4_debug_msgs.msg import Float32Stamped
+from builtin_interfaces.msg import Time
+import tqdm
 import sensor_msgs.msg as sensor_msgs
 import sensor_msgs_py.point_cloud2 as pc2
-from tier4_debug_msgs.msg import Float32Stamped
+import rclpy
+from rclpy.node import Node
+import shutil
+from subprocess import call
 import tp_utility as tpu
-import tqdm
-import yaml
-
 
 # Update the TP of a segment at index @idx, given a newly TP value
 def update_avg_tp(candidate_segments, new_tp, segment_dict, segment_df):
@@ -49,15 +49,14 @@ def update_avg_tp(candidate_segments, new_tp, segment_dict, segment_df):
             tp, counter = segment_df[i, [1, 2]]
             segment_df[i, [1, 2]] = [tp + 1.0 / (counter + 1) * (new_tp - tp), counter + 1]
 
-
 class TPCollector(Node):
     def __init__(self):
-        super().__init__("tp_collector")
+        super().__init__('tp_collector')
         self.pcd_path = None
         self.yaml_path = None
         self.score_path = None
         self.segment_df = None
-        self.segment_dict = {}  # Pairs of 2D coordinate and index
+        self.segment_dict = {}    # Pairs of 2D coordinate and index
         self.resolution = None
 
     def __initialize(self, pcd_map_dir: str, output_path: str, resolution: float):
@@ -94,19 +93,11 @@ class TPCollector(Node):
         self.yaml_path = os.path.join(self.output_path, "pointcloud_map_metadata.yaml")
 
         if not os.path.exists(self.yaml_path):
-            ds_cmd = (
-                "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml "
-                + "input_pcd_or_dir:="
-                + self.pcd_path
-                + " output_pcd_dir:="
-                + self.output_path
-                + " prefix:=test leaf_size:=0.5"
-                + " grid_size_x:="
-                + str(self.resolution)
-                + " grid_size_y:="
-                + str(self.resolution)
-            )
-            call(ds_cmd, shell=True)
+            ds_cmd = "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml " + \
+                        "input_pcd_or_dir:=" + self.pcd_path + " output_pcd_dir:=" + self.output_path + \
+                        " prefix:=test leaf_size:=0.5" + " grid_size_x:=" + str(self.resolution) + \
+                        " grid_size_y:=" + str(self.resolution) 
+            call(ds_cmd, shell = True)
             self.pcd_path = os.path.join(self.output_path, "pointcloud_map.pcd")
 
         # Now scan the downsample directory and get the segment list
@@ -117,7 +108,7 @@ class TPCollector(Node):
                     seg_key = str(value[0]) + "_" + str(value[1])
                     self.segment_dict[seg_key] = len(self.segment_df) - 1
 
-        self.segment_df = np.array(self.segment_df, dtype=object)
+        self.segment_df = np.array(self.segment_df, dtype = object)
 
         # Load the score map
         self.score_path = os.path.join(self.output_path, "scores.csv")
@@ -128,30 +119,29 @@ class TPCollector(Node):
 
                 # Skip the header
                 next(reader)
-                # Load the current maps' TPs
+                # Load the current maps' TPs 
                 for index, row in enumerate(reader):
                     self.segment_df[index, [1, 2]] = [float(row[1]), 1]
-
+   
     ##### Save the segment TPs #####
     def __save_tps(self):
         print("Saving TP to files")
         with open(self.score_path, "w") as f:
             f.write("segment,tp\n")
             print("Number of segments = {0}".format(self.segment_df.shape[0]))
-            for i in np.arange(0, self.segment_df.shape[0], dtype=int):
+            for i in np.arange(0, self.segment_df.shape[0], dtype = int):
                 f.write("{0},{1}\n".format(self.segment_df[i, 0], self.segment_df[i, 1]))
         print("Done. Segments' TPs are saved at {0}.".format(self.score_path))
 
-    def processing(
-        self,
-        pcd_map_dir: str,
-        rosbag_path: str,
-        output_path: str,
-        resolution: float,
-        pose_topic: str,
-        tp_topic: str,
-        scan_topic: str,
-    ):
+
+    def processing(self, 
+                   pcd_map_dir: str, 
+                   rosbag_path: str, 
+                   output_path: str, 
+                   resolution: float,
+                   pose_topic: str,
+                   tp_topic: str,
+                   scan_topic: str):
         # Initialize paths to directories
         self.__initialize(pcd_map_dir, output_path, resolution)
 
@@ -159,51 +149,32 @@ class TPCollector(Node):
         self.__get_pcd_segments_and_scores()
 
         # Read the rosbag and get the ndt poses and corresponding tps
-        tpu.collect_rosbag_tp(
-            rosbag_path,
-            pose_topic,
-            tp_topic,
-            scan_topic,
-            self.resolution,
-            update_avg_tp,
-            self.segment_dict,
-            self.segment_df,
-        )
+        tpu.collect_rosbag_tp(rosbag_path, pose_topic, tp_topic, scan_topic,
+                              self.resolution, update_avg_tp, 
+                              self.segment_dict, self.segment_df)
 
         # Save the new TPs
         self.__save_tps()
 
-
 if __name__ == "__main__":
     rclpy.init()
     parser = argparse.ArgumentParser()
-    parser.add_argument("map_path", help="The path to the PCD folder", type=str)
-    parser.add_argument("bag_path", help="The path to the input rosbag", type=str)
-    parser.add_argument("output", help="The path to the output directory", type=str)
-    parser.add_argument(
-        "--resolution", help="Map segment resolution", default=20, required=False, type=float
-    )
-    parser.add_argument(
-        "--pose_topic",
-        help="Pose topic",
-        default="/localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias",
-        required=False,
-        type=str,
-    )
-    parser.add_argument(
-        "--tp_topic",
-        help="TP topic",
-        default="/localization/pose_estimator/transform_probability",
-        required=False,
-        type=str,
-    )
-    parser.add_argument(
-        "--scan_topic",
-        help="Point cloud topic",
-        default="/localization/util/downsample/pointcloud",
-        required=False,
-        type=str,
-    )
+    parser.add_argument("map_path", help = "The path to the PCD folder", type = str)
+    parser.add_argument("bag_path", help = "The path to the input rosbag", type = str)
+    parser.add_argument("output", help = "The path to the output directory", type = str)
+    parser.add_argument("--resolution", help = "Map segment resolution", default = 20, required = False, type = float)
+    parser.add_argument("--pose_topic", 
+                        help = "Pose topic", 
+                        default = "/localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias", 
+                        required = False, type = str)
+    parser.add_argument("--tp_topic", 
+                        help = "TP topic", 
+                        default = "/localization/pose_estimator/transform_probability", 
+                        required = False, type = str)
+    parser.add_argument("--scan_topic",
+                        help = "Point cloud topic",
+                        default = "/localization/util/downsample/pointcloud",
+                        required = False, type = str)
 
     args = parser.parse_args()
 
@@ -218,12 +189,10 @@ if __name__ == "__main__":
 
     # Run
     tp_collector = TPCollector()
-    tp_collector.processing(
-        args.map_path,
-        args.bag_path,
-        args.output,
-        args.resolution,
-        args.pose_topic,
-        args.tp_topic,
-        args.scan_topic,
-    )
+    tp_collector.processing(args.map_path, 
+                            args.bag_path, 
+                            args.output, 
+                            args.resolution,
+                            args.pose_topic,
+                            args.tp_topic,
+                            args.scan_topic)

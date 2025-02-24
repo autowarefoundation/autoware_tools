@@ -14,34 +14,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-import csv
 import os
-import shutil
-import struct
-import time
+import argparse
+from rosbag2_py import (
+    SequentialReader,
+    StorageOptions,
+    ConverterOptions,
+    Info
+)
 
-from builtin_interfaces.msg import Time
-from geometry_msgs.msg import PoseWithCovarianceStamped
+from rclpy.serialization import deserialize_message, serialize_message
+import os
+import csv
+import yaml
+from scipy import spatial as sp
 import numpy as np
-import open3d as o3d
+from geometry_msgs.msg import PoseWithCovarianceStamped
+import sensor_msgs.msg as sensor_msgs
+import std_msgs.msg as std_msgs
 import rclpy
 from rclpy.node import Node
-from rclpy.serialization import deserialize_message
-from rclpy.serialization import serialize_message
-from rosbag2_py import ConverterOptions
-from rosbag2_py import Info
-from rosbag2_py import SequentialReader
-from rosbag2_py import StorageOptions
-from scipy import spatial as sp
-import sensor_msgs.msg as sensor_msgs
-import sensor_msgs_py.point_cloud2 as pc2
-import std_msgs.msg as std_msgs
 from tier4_debug_msgs.msg import Float32Stamped
-import tp_utility as tpu
+from builtin_interfaces.msg import Time
 import tqdm
-import yaml
-
+import time
+import shutil
+import open3d as o3d
+import sensor_msgs_py.point_cloud2 as pc2
+import struct
+import tp_utility as tpu
 
 def mark_changes(candidate_segments, rosbag_tp: float, segment_dict, segment_df):
     tp_sum = 0.0
@@ -56,50 +57,44 @@ def mark_changes(candidate_segments, rosbag_tp: float, segment_dict, segment_df)
     else:
         expected_tp = 0
 
-    if (expected_tp > 0 and abs(expected_tp - rosbag_tp) / expected_tp >= 0.2) or (
-        expected_tp == 0 and rosbag_tp > 0
-    ):
+    if (expected_tp > 0 and abs(expected_tp - rosbag_tp) / expected_tp >= 0.2) or \
+    (expected_tp == 0 and rosbag_tp > 0):
         for key in candidate_segments:
             if key in segment_dict:
                 segment_df[segment_dict[key], 2] += 1
 
-
 class TPChecker(Node):
 
     def __init__(self):
-        super().__init__("tp_checker")
+        super().__init__('tp_checker')
         self.segment_df = None  # Segment indices, TP
         self.segment_dict = {}  # key: segment name, value: index to the segment_df
-        self.pcd_path = None  # Path to the directory containing PCD segments
-        self.changed_dir = None  # A directory contains the segments that need to be examined
-        self.result_csv = None  # Path to the result CSV file
+        self.pcd_path = None    # Path to the directory containing PCD segments
+        self.changed_dir = None # A directory contains the segments that need to be examined
+        self.result_csv = None # Path to the result CSV file
         self.tp_path = None  # Path to the file that contains TPs of map segments
 
-    def __initialize(self, pcd_map_dir: str):
-        if not os.path.exists(pcd_map_dir):
-            print("Error: {0} does not exist! Abort!".format(pcd_map_dir))
+    def __initialize(self, score_dir: str):
+        if not os.path.exists(score_dir):
+            print("Error: {0} does not exist! Abort!".format(score_dir))
             exit()
 
-        self.pcd_path = os.path.join(pcd_map_dir, "pointcloud_map.pcd/")
+        self.pcd_path = os.path.join(score_dir, "pointcloud_map.pcd")
 
         if not os.path.exists(self.pcd_path):
             print("Error: {0} does not exist! Abort!".format(self.pcd_path))
             exit()
 
-        self.yaml_path = os.path.join(pcd_map_dir, "pointcloud_map_metadata.yaml")
+        self.yaml_path = os.path.join(score_dir, "pointcloud_map_metadata.yaml")
 
         if not os.path.exists(self.yaml_path):
             print("Error: A map metadata file is not found at {0}! Abort!".format(self.yaml_path))
             exit()
 
-        self.tp_path = os.path.join(pcd_map_dir, "scores.csv")
+        self.tp_path = os.path.join(score_dir, "scores.csv")
 
         if not os.path.exists(self.tp_path):
-            print(
-                "Error: A TP file, which contains the TPs of map segments, is not found at {0}! Abort!".format(
-                    self.tp_path
-                )
-            )
+            print("Error: A TP file, which contains the TPs of map segments, is not found at {0}! Abort!".format(self.tp_path))
             exit()
 
     # Read the input map directory and setup the segment dictionary
@@ -117,8 +112,8 @@ class TPChecker(Node):
                 elif key == "x_resolution":
                     self.resolution = value
 
-        self.segment_df = np.array(self.segment_df, dtype=object)
-
+        self.segment_df = np.array(self.segment_df, dtype = object)
+                    
         # Load the TPs
         with open(self.tp_path, "r") as f:
             reader = csv.reader(f)
@@ -129,33 +124,21 @@ class TPChecker(Node):
             for index, row in enumerate(reader):
                 self.segment_df[index, 1] = float(row[1])
 
-    # Save the tp and average tps to CSV file #####
-    def __save_results(self: str):
-        pass
-        # self.ndt_res_df.to_csv(self.result_csv)
-        # print("The checking results are saved at {0}".format(self.result_csv))
-
     def __show(self):
         ros_float_dtype = sensor_msgs.PointField.FLOAT32
         ros_uint32_dtype = sensor_msgs.PointField.UINT32
         dtype = np.float32
         itemsize = np.dtype(dtype).itemsize
 
-        fields = [
-            sensor_msgs.PointField(name="x", offset=0, datatype=ros_float_dtype, count=1),
-            sensor_msgs.PointField(name="y", offset=itemsize, datatype=ros_float_dtype, count=1),
-            sensor_msgs.PointField(
-                name="z", offset=itemsize * 2, datatype=ros_float_dtype, count=1
-            ),
-            sensor_msgs.PointField(
-                name="rgba", offset=itemsize * 3, datatype=ros_uint32_dtype, count=1
-            ),
-        ]
+        fields = [sensor_msgs.PointField(name = "x", offset = 0, datatype = ros_float_dtype, count = 1),
+            sensor_msgs.PointField(name = "y", offset = itemsize, datatype = ros_float_dtype, count = 1),
+            sensor_msgs.PointField(name = "z", offset = itemsize * 2, datatype = ros_float_dtype, count = 1),
+            sensor_msgs.PointField(name = "rgba", offset = itemsize * 3, datatype = ros_uint32_dtype, count = 1)]
 
         points = []
         pc2_width = 0
 
-        progress_bar = tqdm.tqdm(total=len(self.segment_df))
+        progress_bar = tqdm.tqdm(total = len(self.segment_df))
         origin = None
 
         for i in range(self.segment_df.shape[0]):
@@ -178,91 +161,68 @@ class TPChecker(Node):
         header.frame_id = "map"
 
         pc2_msg = pc2.create_cloud(header, fields, points)
-        pcd_publisher = self.create_publisher(sensor_msgs.PointCloud2, "/autoware_tp_checker", 10)
+        pcd_publisher = self.create_publisher(sensor_msgs.PointCloud2, '/autoware_tp_checker', 10)
 
         while True:
             pcd_publisher.publish(pc2_msg)
             time.sleep(5)
 
+
     def __set_color_based_on_mark(self, mark) -> int:
-        # The may-be-changed segments are colored red
-        # The may-not-be-changed segments are colored white
+        # The may-have-changed segments are colored red
+        # The may-not-have-changed segments are colored white
         if mark >= 100:
             r = 255
             g = 0
-            b = 0
+            b = 0 
         else:
             r = 255
             g = 255
             b = 255
         a = 255
 
-        tmp_rgb = struct.pack("BBBB", b, g, r, a)
-        rgba = struct.unpack("I", tmp_rgb)[0]
+        tmp_rgb = struct.pack('BBBB', b, g, r, a)
+        rgba = struct.unpack('I', tmp_rgb)[0]
 
         return rgba
 
-    def processing(
-        self,
-        pcd_path: str,
-        rosbag_path: str,
-        result_path: str,
-        pose_topic: str,
-        tp_topic: str,
-        scan_topic: str,
-    ):
-        self.__initialize(pcd_path)
+    def processing(self, 
+                   score_path: str, 
+                   rosbag_path: str,
+                   pose_topic: str,
+                   tp_topic: str,
+                   scan_topic: str):
+        self.__initialize(score_path)
         self.__get_pcd_segments_and_scores()
 
-        tpu.collect_rosbag_tp(
-            rosbag_path,
-            pose_topic,
-            tp_topic,
-            scan_topic,
-            self.resolution,
-            mark_changes,
-            self.segment_dict,
-            self.segment_df,
-        )
+        tpu.collect_rosbag_tp(rosbag_path, pose_topic, tp_topic, scan_topic, self.resolution,
+                              mark_changes, self.segment_dict, self.segment_df)
 
-        self.__save_results()
         self.__show()
-
 
 if __name__ == "__main__":
     rclpy.init()
     parser = argparse.ArgumentParser()
-    parser.add_argument("map_path", help="The path to the PCD folder")
+    parser.add_argument("score_path", help="The path to the folder containing the TP file")
     parser.add_argument("bag_path", help="The path to the input rosbag")
-    parser.add_argument("result_path", help="The path to the result folder")
-    parser.add_argument(
-        "--pose_topic",
-        help="Pose topic",
-        default="/localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias",
-        required=False,
-        type=str,
-    )
-    parser.add_argument(
-        "--tp_topic",
-        help="TP topic",
-        default="/localization/pose_estimator/transform_probability",
-        required=False,
-        type=str,
-    )
-    parser.add_argument(
-        "--scan_topic",
-        help="Point cloud topic",
-        default="/localization/util/downsample/pointcloud",
-        required=False,
-        type=str,
-    )
+    parser.add_argument("--pose_topic", 
+                        help = "Pose topic", 
+                        default = "/localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias", 
+                        required = False, type = str)
+    parser.add_argument("--tp_topic", 
+                        help = "TP topic", 
+                        default = "/localization/pose_estimator/transform_probability", 
+                        required = False, type = str)
+    parser.add_argument("--scan_topic",
+                        help = "Point cloud topic",
+                        default = "/localization/util/downsample/pointcloud",
+                        required = False, type = str)
 
     args = parser.parse_args()
 
     # Practice with string % a bit
-    print("Input PCD map at {0}".format(args.map_path))
+    print("Input PCD map at {0}".format(args.score_path))
     print("Input rosbag at {0}".format(args.bag_path))
-    print("Results are saved at {0}".format(args.result_path))
     print("Topic of NDT poses {0}".format(args.pose_topic))
     print("Topic of Transformation Probability {0}".format(args.tp_topic))
     print("Topic of scan data {0}".format(args.scan_topic))
@@ -270,12 +230,8 @@ if __name__ == "__main__":
     # Run
     checker = TPChecker()
 
-    # checker.processing(args.map_path, args.bag_path, args.result_path)
-    checker.processing(
-        args.map_path,
-        args.bag_path,
-        args.result_path,
-        args.pose_topic,
-        args.tp_topic,
-        args.scan_topic,
-    )
+    checker.processing(args.score_path, 
+                       args.bag_path,
+                       args.pose_topic,
+                       args.tp_topic,
+                       args.scan_topic)
