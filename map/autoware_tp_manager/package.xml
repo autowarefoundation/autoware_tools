@@ -14,7 +14,6 @@
   <author email="anh.nguyen.2@tier4.jp">Anh Nguyen</author>
   <author email="masahiro.sakamoto@tier4.jp">Masahiro Sakamoto</author>
 
-
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>autoware_cmake</buildtool_depend>
   <buildtool_depend>tier4_debug_msgs</buildtool_depend>
