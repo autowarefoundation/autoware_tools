@@ -14,8 +14,8 @@
   <buildtool_depend>tier4_debug_msgs</buildtool_depend>
 
   <depend>libpcl-all-dev</depend>
-  <depend>yaml-cpp</depend>
   <depend>tier4_debug_msgs</depend>
+  <depend>yaml-cpp</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
