@@ -7,8 +7,8 @@ from pathlib import Path
 from builtin_interfaces.msg import Time
 import matplotlib.pyplot as plt
 import pandas as pd
-import rosbag2_py
 from rclpy.serialization import deserialize_message
+import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
 
 
@@ -42,9 +42,7 @@ def parse_diagnostics_msgs(rosbag_path: str, target_list: list) -> dict:
     reader.open(storage_options, converter_options)
 
     topic_types = reader.get_all_topics_and_types()
-    type_map = {
-        topic_types[i].name: topic_types[i].type for i in range(len(topic_types))
-    }
+    type_map = {topic_types[i].name: topic_types[i].type for i in range(len(topic_types))}
 
     storage_filter = rosbag2_py.StorageFilter(topics=["/diagnostics"])
     reader.set_filter(storage_filter)
@@ -185,9 +183,7 @@ if __name__ == "__main__":
             continue
         df[key] = df[key].astype(float)
         key_threshold = (
-            key + "_threshold"
-            if "mahalanobis" in key
-            else key.replace("_size", "_warn_threshold")
+            key + "_threshold" if "mahalanobis" in key else key.replace("_size", "_warn_threshold")
         )
         df[key_threshold] = df[key_threshold].astype(float)
         plt.subplot(4, 1, (i + 1))
