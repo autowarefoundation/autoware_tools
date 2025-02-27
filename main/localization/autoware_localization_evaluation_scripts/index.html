@@ -3286,6 +3286,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#extract_pose_from_rosbagpy" class="md-nav__link">
+    extract_pose_from_rosbag.py
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compare_trajectoriespy" class="md-nav__link">
+    compare_trajectories.py
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3344,7 +3358,46 @@
 <span class="m">0</span><span class="w"> </span>directories,<span class="w"> </span><span class="m">10</span><span class="w"> </span>files
 </code></pre></div>
 <p>[Example : ndt_scan_matcher__scan_matching_status.png]</p>
-<p><img alt="ndt_scan_matcher__scan_matching_status.png" src="media/ndt_scan_matcher__scan_matching_status.png"></p></div>
+<p><img alt="ndt_scan_matcher__scan_matching_status.png" src="media/ndt_scan_matcher__scan_matching_status.png"></p>
+<h2 id="extract_pose_from_rosbagpy">extract_pose_from_rosbag.py<a class="headerlink" href="#extract_pose_from_rosbagpy" title="Permanent link">#</a></h2>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>extract_pose_from_rosbag.py<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>&lt;rosbag_path&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>--save_dir<span class="o">=</span>/your/path<span class="w"> </span><span class="o">(</span>default:rosbag_path/../<span class="o">)</span>
+</code></pre></div>
+<p>[Example]</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>extract_pose_from_rosbag.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/result_bag<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--target_topics<span class="w"> </span><span class="s2">"/localization/kinematic_state"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">                    </span><span class="s2">"/localization/pose_estimator/pose_with_covariance"</span>
+</code></pre></div>
+<p>This command outputs tsv files for each pose.</p>
+<p>The file names are the topic names with “/” replaced with “__”.</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>tree<span class="w"> </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv
+<span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv
+├──<span class="w"> </span>localization__kinematic_state.tsv
+└──<span class="w"> </span>localization__pose_estimator__pose_with_covariance.tsv
+
+<span class="m">0</span><span class="w"> </span>directories,<span class="w"> </span><span class="m">2</span><span class="w"> </span>files
+</code></pre></div>
+<h2 id="compare_trajectoriespy">compare_trajectories.py<a class="headerlink" href="#compare_trajectoriespy" title="Permanent link">#</a></h2>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>compare_trajectories.py<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>&lt;tsv_file_subject&gt;<span class="w"> </span>&lt;tsv_file_reference&gt;
+</code></pre></div>
+<p>[Example]</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>compare_trajectories.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state.tsv<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv/localization__pose_estimator__pose_with_covariance.tsv
+</code></pre></div>
+<p>This command outputs tsv files for each pose.</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>tree<span class="w"> </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_result
+<span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_result
+├──<span class="w"> </span>compare_trajectories.png
+├──<span class="w"> </span>relative_pose.png
+├──<span class="w"> </span>relative_pose.tsv
+└──<span class="w"> </span>relative_pose_summary.tsv
+
+<span class="m">0</span><span class="w"> </span>directories,<span class="w"> </span><span class="m">4</span><span class="w"> </span>files
+</code></pre></div></div>
 
 
 
