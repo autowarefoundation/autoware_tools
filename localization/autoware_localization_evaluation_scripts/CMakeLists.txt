@@ -5,6 +5,8 @@ find_package(autoware_cmake REQUIRED)
 autoware_package()
 
 install(PROGRAMS
+    scripts/compare_trajectories.py
+    scripts/extract_pose_from_rosbag.py
     scripts/plot_diagnostics.py
     DESTINATION lib/${PROJECT_NAME}
 )

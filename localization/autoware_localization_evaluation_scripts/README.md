@@ -59,3 +59,61 @@ $HOME/driving_log_replayer_v2/out/latest/diagnostics_result
 [Example : ndt_scan_matcher__scan_matching_status.png]
 
 ![ndt_scan_matcher__scan_matching_status.png](./media/ndt_scan_matcher__scan_matching_status.png)
+
+## extract_pose_from_rosbag.py
+
+```bash
+ros2 run autoware_localization_evaluation_scripts extract_pose_from_rosbag.py \
+   <rosbag_path> \
+   --save_dir=/your/path (default:rosbag_path/../)
+```
+
+[Example]
+
+```bash
+$ ros2 run autoware_localization_evaluation_scripts extract_pose_from_rosbag.py \
+    $HOME/driving_log_replayer_v2/out/latest/result_bag \
+    --target_topics "/localization/kinematic_state" \
+                    "/localization/pose_estimator/pose_with_covariance"
+```
+
+This command outputs tsv files for each pose.
+
+The file names are the topic names with “/” replaced with “__”.
+
+```bash
+$ tree $HOME/driving_log_replayer_v2/out/latest/pose_tsv
+$HOME/driving_log_replayer_v2/out/latest/pose_tsv
+├── localization__kinematic_state.tsv
+└── localization__pose_estimator__pose_with_covariance.tsv
+
+0 directories, 2 files
+```
+
+## compare_trajectories.py
+
+```bash
+ros2 run autoware_localization_evaluation_scripts compare_trajectories.py \
+   <tsv_file_subject> <tsv_file_reference>
+```
+
+[Example]
+
+```bash
+$ ros2 run autoware_localization_evaluation_scripts compare_trajectories.py \
+    $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state.tsv \
+    $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__pose_estimator__pose_with_covariance.tsv
+```
+
+This command outputs tsv files for each pose.
+
+```bash
+$ tree $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_result
+$HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_result
+├── compare_trajectories.png
+├── relative_pose.png
+├── relative_pose.tsv
+└── relative_pose_summary.tsv
+
+0 directories, 4 files
+```
