@@ -4,8 +4,8 @@
 import argparse
 from multiprocessing import Pool
 from pathlib import Path
-import subprocess
 
+import compare_trajectories
 import extract_pose_from_rosbag
 import plot_diagnostics
 
@@ -33,16 +33,9 @@ def process_directory(directory: Path):
         save_dir=compare_result_dir,
     )
 
-    subprocess.run(
-        [
-            "ros2",
-            "run",
-            "autoware_localization_evaluation_scripts",
-            "compare_trajectories.py",
-            str(compare_result_dir / "localization__kinematic_state.tsv"),
-            str(compare_result_dir / "localization__reference_kinematic_state.tsv"),
-        ],
-        check=True,
+    compare_trajectories.main(
+        subject_tsv=compare_result_dir / "localization__kinematic_state.tsv",
+        reference_tsv=compare_result_dir / "localization__reference_kinematic_state.tsv",
     )
 
 

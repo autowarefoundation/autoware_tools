@@ -17,11 +17,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == "__main__":
-    args = parse_args()
-    subject_tsv = args.subject_tsv
-    reference_tsv = args.reference_tsv
-
+def main(subject_tsv: Path, reference_tsv: Path) -> None:
     result_name = subject_tsv.stem
     save_dir = subject_tsv.parent / f"{result_name}_result"
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -136,3 +132,10 @@ if __name__ == "__main__":
     )
     print(f"saved to {save_dir}/relative_pose.png")
     plt.close()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    subject_tsv = args.subject_tsv
+    reference_tsv = args.reference_tsv
+    main(subject_tsv, reference_tsv)
