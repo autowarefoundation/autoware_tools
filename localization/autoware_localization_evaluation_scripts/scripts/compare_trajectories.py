@@ -57,12 +57,6 @@ def main(subject_tsv: Path, reference_tsv: Path) -> None:
 
     assert len(df_sub) == len(df_ref), f"len(df_pr)={len(df_sub)}, len(df_gt)={len(df_ref)}"
 
-    # calc mean error
-    diff_x = df_sub["position.x"].to_numpy() - df_ref["position.x"].to_numpy()
-    diff_y = df_sub["position.y"].to_numpy() - df_ref["position.y"].to_numpy()
-    diff_z = df_sub["position.z"].to_numpy() - df_ref["position.z"].to_numpy()
-    diff_meter = (diff_x**2 + diff_y**2 + diff_z**2) ** 0.5
-
     # calc relative pose
     df_relative = calc_relative_pose(df_sub, df_ref)
     df_relative.to_csv(f"{save_dir}/relative_pose.tsv", sep="\t", index=False)
