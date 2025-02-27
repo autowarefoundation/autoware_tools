@@ -2,9 +2,9 @@
 """A script to analyze rosbags in parallel."""
 
 import argparse
-import subprocess
-from pathlib import Path
 from multiprocessing import Pool
+from pathlib import Path
+import subprocess
 
 
 def parse_args() -> argparse.Namespace:
