@@ -183,7 +183,7 @@ def parse_Int32Stamped(msg):
 def parse_MarkerArray(msg):
     result_dict = {}
     result_dict["timestamp"] = parse_stamp(msg.markers[0].header.stamp)
-    result_dict["marker"] = list()
+    result_dict["marker"] = []
     for marker_msg in msg.markers:
         one_marker = {}
         one_marker["timestamp"] = parse_stamp(marker_msg.header.stamp)
