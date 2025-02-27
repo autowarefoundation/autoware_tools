@@ -118,9 +118,9 @@ $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_
 0 directories, 4 files
 ```
 
-## analyze_rosbags_parallel.sh
+## analyze_rosbags_parallel.py
 
 ```bash
 ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
-   <result_dir> <parallel_num>
+   <result_dir> --parallel_num 2
 ```
