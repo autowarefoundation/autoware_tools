@@ -5,6 +5,7 @@ find_package(autoware_cmake REQUIRED)
 autoware_package()
 
 install(PROGRAMS
+    scripts/analyze_rosbags_parallel.sh
     scripts/compare_trajectories.py
     scripts/extract_pose_from_rosbag.py
     scripts/plot_diagnostics.py
