@@ -79,7 +79,7 @@ $ ros2 run autoware_localization_evaluation_scripts extract_pose_from_rosbag.py 
 
 This command outputs tsv files for each pose.
 
-The file names are the topic names with “/” replaced with “__”.
+The file names are the topic names with “/” replaced with “\_\_”.
 
 ```bash
 $ tree $HOME/driving_log_replayer_v2/out/latest/pose_tsv

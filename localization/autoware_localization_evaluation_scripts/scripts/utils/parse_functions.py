@@ -1,13 +1,13 @@
 """The library to parse the data from rosbag file."""
 
-import sys
 from collections import defaultdict
 from pathlib import Path
+import sys
 
-import pandas as pd
-import rosbag2_py
 from cv_bridge import CvBridge
+import pandas as pd
 from rclpy.serialization import deserialize_message
+import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
 
 
@@ -29,9 +29,7 @@ def parse_rosbag(rosbag_dir: str, target_topic_list: list[str], limit: int = 0) 
     reader.open(storage_options, converter_options)
 
     topic_types = reader.get_all_topics_and_types()
-    type_map = {
-        topic_types[i].name: topic_types[i].type for i in range(len(topic_types))
-    }
+    type_map = {topic_types[i].name: topic_types[i].type for i in range(len(topic_types))}
 
     storage_filter = rosbag2_py.StorageFilter(topics=target_topic_list)
     reader.set_filter(storage_filter)
