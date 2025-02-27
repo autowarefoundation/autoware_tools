@@ -124,3 +124,15 @@ $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_
 ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
    <result_dir> --parallel_num 2
 ```
+
+[Example]
+
+```bash
+$ ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
+    $HOME/driving_log_replayer_v2/out/ \
+    --parallel_num 2 \
+    --topic_subject "/localization/kinematic_state" \
+    --topic_reference "/localization/pose_estimator/pose_with_covariance"
+```
+
+This command execute above three analysis for the target directory.
