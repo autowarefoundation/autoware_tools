@@ -5,6 +5,7 @@ import argparse
 from multiprocessing import Pool
 from pathlib import Path
 import subprocess
+import plot_diagnostics
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,16 +20,7 @@ def process_directory(directory: Path):
     compare_result_dir = directory / "compare_trajectories"
     compare_result_dir.mkdir(parents=True, exist_ok=True)
 
-    subprocess.run(
-        [
-            "ros2",
-            "run",
-            "autoware_localization_evaluation_scripts",
-            "plot_diagnostics.py",
-            str(target_rosbag),
-        ],
-        check=True,
-    )
+    plot_diagnostics.main(rosbag_path=target_rosbag)
 
     subprocess.run(
         [

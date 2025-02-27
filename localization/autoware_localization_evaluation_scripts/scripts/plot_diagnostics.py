@@ -72,11 +72,7 @@ def parse_diagnostics_msgs(rosbag_dir: str, target_list: list) -> dict:
     return data_dict
 
 
-if __name__ == "__main__":
-    args = parse_args()
-    rosbag_path = args.rosbag_path
-    save_dir = args.save_dir
-
+def main(rosbag_path: Path, save_dir: Path = None) -> None:
     if save_dir is None:
         if rosbag_path.is_dir():  # if specified directory containing db3 files
             save_dir = rosbag_path.parent / "diagnostics_result"
@@ -307,3 +303,10 @@ if __name__ == "__main__":
     plt.tight_layout()
     save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
     plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    rosbag_path = args.rosbag_path
+    save_dir = args.save_dir
+    main(rosbag_path, save_dir)
