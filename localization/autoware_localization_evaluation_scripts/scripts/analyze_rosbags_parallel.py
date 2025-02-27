@@ -6,6 +6,7 @@ from multiprocessing import Pool
 from pathlib import Path
 import subprocess
 
+import extract_pose_from_rosbag
 import plot_diagnostics
 
 
@@ -23,20 +24,13 @@ def process_directory(directory: Path):
 
     plot_diagnostics.main(rosbag_path=target_rosbag)
 
-    subprocess.run(
-        [
-            "ros2",
-            "run",
-            "autoware_localization_evaluation_scripts",
-            "extract_pose_from_rosbag.py",
-            str(target_rosbag),
-            "--save_dir",
-            str(compare_result_dir),
-            "--target_topics",
+    extract_pose_from_rosbag.main(
+        rosbag_path=target_rosbag,
+        target_topics=[
             "/localization/kinematic_state",
             "/localization/reference_kinematic_state",
         ],
-        check=True,
+        save_dir=compare_result_dir,
     )
 
     subprocess.run(
