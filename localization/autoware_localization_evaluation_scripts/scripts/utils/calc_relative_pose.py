@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.transform import Rotation
 
+# cspell: ignore rotvec
+
 
 def calc_relative_pose(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.DataFrame:
     """Calculate the relative position and orientation of df_prd with respect to df_ref."""
