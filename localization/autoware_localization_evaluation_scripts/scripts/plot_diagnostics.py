@@ -297,6 +297,7 @@ if __name__ == "__main__":
             linestyle="dashed",
         )
     plt.xlabel("time [s]")
+    plt.ylabel("gyro_bias [rad/s]")
     plt.grid()
     plt.legend()
     plt.tight_layout()
