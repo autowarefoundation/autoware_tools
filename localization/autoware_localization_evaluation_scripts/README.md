@@ -135,4 +135,4 @@ $ ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py 
     --topic_reference "/localization/pose_estimator/pose_with_covariance"
 ```
 
-This command execute above three analysis for the target directory.
+This command performs the above three analyses on the subdirectories of the target directory.
