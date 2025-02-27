@@ -15,7 +15,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("result_dir", type=Path)
     parser.add_argument("--parallel_num", type=int, default=1)
     parser.add_argument("--topic_subject", type=str, default="/localization/kinematic_state")
-    parser.add_argument("--topic_reference", type=str, default="/localization/pose_estimator/pose_with_covariance")
+    parser.add_argument(
+        "--topic_reference", type=str, default="/localization/pose_estimator/pose_with_covariance"
+    )
     return parser.parse_args()
 
 
