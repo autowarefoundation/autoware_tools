@@ -17,11 +17,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == "__main__":
-    args = parse_args()
-    subject_tsv = args.subject_tsv
-    reference_tsv = args.reference_tsv
-
+def main(subject_tsv: Path, reference_tsv: Path) -> None:
     result_name = subject_tsv.stem
     save_dir = subject_tsv.parent / f"{result_name}_result"
     save_dir.mkdir(parents=True, exist_ok=True)
@@ -60,12 +56,6 @@ if __name__ == "__main__":
     df_ref = df_ref.reset_index(drop=True)
 
     assert len(df_sub) == len(df_ref), f"len(df_pr)={len(df_sub)}, len(df_gt)={len(df_ref)}"
-
-    # calc mean error
-    diff_x = df_sub["position.x"].to_numpy() - df_ref["position.x"].to_numpy()
-    diff_y = df_sub["position.y"].to_numpy() - df_ref["position.y"].to_numpy()
-    diff_z = df_sub["position.z"].to_numpy() - df_ref["position.z"].to_numpy()
-    diff_meter = (diff_x**2 + diff_y**2 + diff_z**2) ** 0.5
 
     # calc relative pose
     df_relative = calc_relative_pose(df_sub, df_ref)
@@ -136,3 +126,10 @@ if __name__ == "__main__":
     )
     print(f"saved to {save_dir}/relative_pose.png")
     plt.close()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    subject_tsv = args.subject_tsv
+    reference_tsv = args.reference_tsv
+    main(subject_tsv, reference_tsv)
