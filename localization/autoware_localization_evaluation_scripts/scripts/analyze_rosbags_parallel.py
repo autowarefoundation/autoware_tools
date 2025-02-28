@@ -53,7 +53,7 @@ if __name__ == "__main__":
     topic_subject = args.topic_subject
     topic_reference = args.topic_reference
 
-    directories = sorted([d for d in args.result_dir.iterdir() if d.is_dir()])
+    directories = sorted([d for d in args.result_dir.iterdir() if d.is_dir() and not d.is_symlink()])
 
     with Pool(args.parallel_num) as pool:
         pool.starmap(
