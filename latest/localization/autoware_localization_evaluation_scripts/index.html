@@ -3300,6 +3300,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#analyze_rosbags_parallelpy" class="md-nav__link">
+    analyze_rosbags_parallel.py
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -3332,8 +3339,7 @@
 <h2 id="plot_diagnosticspy">plot_diagnostics.py<a class="headerlink" href="#plot_diagnosticspy" title="Permanent link">#</a></h2>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>plot_diagnostics.py<span class="w"> </span><span class="se">\</span>
 <span class="w">   </span>&lt;rosbag_path&gt;<span class="w"> </span><span class="se">\</span>
-<span class="w">   </span>--save_dir<span class="o">=</span>/your/path<span class="w"> </span><span class="o">(</span>default:rosbag_path/../<span class="o">)</span><span class="w"> </span><span class="se">\</span>
-<span class="w">   </span>--storage<span class="o">=</span>mcap<span class="w"> </span><span class="o">(</span>default:sqlite3<span class="o">)</span>
+<span class="w">   </span>--save_dir<span class="o">=</span>/your/path<span class="w"> </span><span class="o">(</span>default:rosbag_path/../<span class="o">)</span>
 </code></pre></div>
 <p>[Example]</p>
 <div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>plot_diagnostics.py<span class="w"> </span><span class="se">\</span>
@@ -3397,7 +3403,19 @@
 └──<span class="w"> </span>relative_pose_summary.tsv
 
 <span class="m">0</span><span class="w"> </span>directories,<span class="w"> </span><span class="m">4</span><span class="w"> </span>files
-</code></pre></div></div>
+</code></pre></div>
+<h2 id="analyze_rosbags_parallelpy">analyze_rosbags_parallel.py<a class="headerlink" href="#analyze_rosbags_parallelpy" title="Permanent link">#</a></h2>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>analyze_rosbags_parallel.py<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>&lt;result_dir&gt;<span class="w"> </span>--parallel_num<span class="w"> </span><span class="m">2</span>
+</code></pre></div>
+<p>[Example]</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>analyze_rosbags_parallel.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--parallel_num<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--topic_subject<span class="w"> </span><span class="s2">"/localization/kinematic_state"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--topic_reference<span class="w"> </span><span class="s2">"/localization/pose_estimator/pose_with_covariance"</span>
+</code></pre></div>
+<p>This command performs the above three analyses on the subdirectories of the target directory.</p></div>
 
 
 
