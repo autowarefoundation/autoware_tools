@@ -24,8 +24,7 @@ $HOME/driving_log_replayer_v2/out/latest/result_bag
 ```bash
 ros2 run autoware_localization_evaluation_scripts plot_diagnostics.py \
    <rosbag_path> \
-   --save_dir=/your/path (default:rosbag_path/../) \
-   --storage=mcap (default:sqlite3)
+   --save_dir=/your/path (default:rosbag_path/../)
 ```
 
 [Example]
@@ -117,3 +116,22 @@ $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_
 
 0 directories, 4 files
 ```
+
+## analyze_rosbags_parallel.py
+
+```bash
+ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
+   <result_dir> --parallel_num 2
+```
+
+[Example]
+
+```bash
+$ ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
+    $HOME/driving_log_replayer_v2/out/ \
+    --parallel_num 2 \
+    --topic_subject "/localization/kinematic_state" \
+    --topic_reference "/localization/pose_estimator/pose_with_covariance"
+```
+
+This command performs the above three analyses on the subdirectories of the target directory.

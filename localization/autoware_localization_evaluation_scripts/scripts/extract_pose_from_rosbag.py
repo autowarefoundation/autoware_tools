@@ -15,12 +15,11 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == "__main__":
-    args = parse_args()
-    rosbag_path = args.rosbag_path
-    target_topics = args.target_topics
-    save_dir = args.save_dir
+def topic_name_to_save_name(topic_name: str) -> str:
+    return "__".join(topic_name.split("/")[1:])
 
+
+def main(rosbag_path: Path, target_topics: list, save_dir: Path = None) -> None:
     if save_dir is None:
         if rosbag_path.is_dir():  # if specified directory containing db3 files
             save_dir = rosbag_path.parent / "pose_tsv"
@@ -31,7 +30,7 @@ if __name__ == "__main__":
     df_dict = parse_rosbag(str(rosbag_path), target_topics)
 
     for target_topic in target_topics:
-        save_name = "__".join(target_topic.split("/")[1:])
+        save_name = topic_name_to_save_name(target_topic)
         df = df_dict[target_topic]
         df.to_csv(
             f"{save_dir}/{save_name}.tsv",
@@ -41,3 +40,11 @@ if __name__ == "__main__":
         )
 
     print(f"Saved pose tsv files to {save_dir}")
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    rosbag_path = args.rosbag_path
+    target_topics = args.target_topics
+    save_dir = args.save_dir
+    main(rosbag_path, target_topics, save_dir)

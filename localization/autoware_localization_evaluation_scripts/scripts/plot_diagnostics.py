@@ -16,7 +16,6 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("rosbag_path", type=Path)
     parser.add_argument("--save_dir", type=Path, default=None)
-    parser.add_argument("--storage", type=str, default="sqlite3", choices=["sqlite3", "mcap"])
     return parser.parse_args()
 
 
@@ -28,11 +27,17 @@ def diag_name_to_filename(diag_name: str) -> str:
     return diag_name.replace(":", "_").replace(" ", "_")
 
 
-def parse_diagnostics_msgs(rosbag_path: str, target_list: list, storage: str) -> dict:
+def parse_diagnostics_msgs(rosbag_dir: str, target_list: list) -> dict:
     serialization_format = "cdr"
+    storage_id = None
+    if len(list(Path(rosbag_dir).rglob("*.db3"))) > 0:
+        storage_id = "sqlite3"
+    elif len(list(Path(rosbag_dir).rglob("*.mcap"))) > 0:
+        storage_id = "mcap"
+    assert storage_id is not None, f"Error: {rosbag_dir} is not a valid rosbag directory."
     storage_options = rosbag2_py.StorageOptions(
-        uri=str(rosbag_path),
-        storage_id=storage,
+        uri=str(rosbag_dir),
+        storage_id=storage_id,
     )
     converter_options = rosbag2_py.ConverterOptions(
         input_serialization_format=serialization_format,
@@ -67,12 +72,7 @@ def parse_diagnostics_msgs(rosbag_path: str, target_list: list, storage: str) ->
     return data_dict
 
 
-if __name__ == "__main__":
-    args = parse_args()
-    rosbag_path = args.rosbag_path
-    save_dir = args.save_dir
-    storage = args.storage
-
+def main(rosbag_path: Path, save_dir: Path = None) -> None:
     if save_dir is None:
         if rosbag_path.is_dir():  # if specified directory containing db3 files
             save_dir = rosbag_path.parent / "diagnostics_result"
@@ -87,7 +87,7 @@ if __name__ == "__main__":
         "gyro_bias_validator: gyro_bias_validator",
     ]
 
-    data_dict = parse_diagnostics_msgs(rosbag_path, target_list, storage)
+    data_dict = parse_diagnostics_msgs(rosbag_path, target_list)
 
     save_dir.mkdir(exist_ok=True)
     print(f"{save_dir=}")
@@ -303,3 +303,10 @@ if __name__ == "__main__":
     plt.tight_layout()
     save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
     plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    rosbag_path = args.rosbag_path
+    save_dir = args.save_dir
+    main(rosbag_path, save_dir)
