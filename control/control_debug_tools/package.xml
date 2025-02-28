@@ -6,6 +6,8 @@
   <description>The control_debug_tools package</description>
   <maintainer email="zhe.shen@tier4.jp">Zhe Shen</maintainer>
   <maintainer email="takayuki.murooka@tier4.jp">Takayuki Murooka</maintainer>
+  <maintainer email="kosuke.takeuchi@tier4.jp">Kosuke Takeuchi</maintainer>
+  <maintainer email="temkei.kem@tier4.jp">Temkei Kem</maintainer>
   <license>Apache License 2.0</license>
 
   <author email="zhe.shen@tier4.jp">Zhe Shen</author>
