@@ -1,0 +1,107 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Parameters for autoware tp manager node",
+  "type": "object",
+  "definitions": {
+    "tp_collector": {
+      "type": "object",
+      "properties": {
+        "path_to_pcd_dir": {
+          "type": "string",
+          "description": "The path to the directory containing the input PCD files",
+          "default": ""
+        },
+        "path_to_rosbag": {
+          "type": "string",
+          "description": "The path to the input rosbag",
+          "default": ""
+        },
+        "path_to_output_dir": {
+          "type": "string",
+          "description": "The path to the output directory",
+          "default": ""
+        },
+        "resolution": {
+          "type": "number",
+          "description": "Resolution to segment the input PCD. The TPs are collected on these segments.",
+          "default": "5,0"
+        },
+        "pose_topic": {
+          "type": "string",
+          "description": "Topic of poses messages in the input rosbag",
+          "default": "/localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias"
+        },
+        "tp_topic": {
+          "type": "string",
+          "description": "Topic of TPs in the input rosbag",
+          "default": "/localization/pose_estimator/transform_probability"
+        },
+        "scan_topic": {
+          "type": "string",
+          "description": "Topic of downsampled scans in the input rosbag",
+          "default": "/localization/util/downsample/pointcloud"
+        }
+      },
+      "required": ["path_to_pcd_dir", "path_to_rosbag", "path_to_output_dir"],
+      "additionalProperties": false
+    },
+    "tp_checker": {
+      "type": "object",
+      "properties": {
+        "path_to_score_dir": {
+          "type": "string",
+          "description": "The path to the directory containing the average TP file (.csv) and the downsampled PCD map. This is also the output directory of the TP collector.",
+          "default": ""
+        },
+        "path_to_rosbag": {
+          "type": "string",
+          "description": "Path to the input rosbag to be evaluated",
+          "default": ""
+        },
+        "pose_topic": {
+          "type": "string",
+          "description": "Topic of poses messages in the input rosbag",
+          "default": "/localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias"
+        },
+        "tp_topic": {
+          "type": "string",
+          "description": "Topic of TPs in the input rosbag",
+          "default": "/localization/pose_estimator/transform_probability"
+        },
+        "scan_topic": {
+          "type": "string",
+          "description": "Topic of downsampled scans in the input rosbag",
+          "default": "/localization/util/downsample/pointcloud"
+        }
+      },
+      "required": ["path_to_score_dir", "path_to_rosbag"],
+      "additionalProperties": false
+    },
+    "tp_visualizer": {
+      "type": "object",
+      "properties": {
+        "path_to_output_dir": {
+          "type": "string",
+          "description": "Path to the output directory of TP_collector",
+          "default": ""
+        }
+      },
+      "required": ["path_to_output_dir"],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/autoware_pointcloud_merger"
+        }
+      },
+      "required": ["ros__parameters"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["/**"],
+  "additionalProperties": false
+}
