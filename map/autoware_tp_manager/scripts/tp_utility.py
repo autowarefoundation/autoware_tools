@@ -23,7 +23,6 @@ from rosbag2_py import Info
 from rosbag2_py import SequentialReader
 from rosbag2_py import StorageOptions
 import sensor_msgs.msg as sensor_msgs
-import sensor_msgs_py.point_cloud2 as pc2
 from tier4_debug_msgs.msg import Float32Stamped
 import tqdm
 
@@ -113,7 +112,7 @@ def transform_p(p, trans_mat_t: np.ndarray) -> np.ndarray:
 
 
 ##### Stamp search #####
-def __stamp_search(stamp: int, ref_df: np.ndarray, search_size: int) -> int:
+def stamp_search(stamp: int, ref_df: np.ndarray, search_size: int) -> int:
     left = 0
     right = search_size - 1
     res = -1
@@ -144,53 +143,8 @@ def __get_message_count(rosbag_path: str):
     return output
 
 
-def __scan_callback(
-    scan_tuple, pose_df, pose_df_len, tp_df, tp_df_len, resolution, callback_func=None, *args
-):
-    stamp, scan = scan_tuple
-    tmp_scan = pc2.read_points(scan, skip_nans=True)
-
-    # Find the closest pose
-    pid = __stamp_search(stamp, pose_df, pose_df_len)
-
-    if pid <= 0:
-        return
-
-    # Get the transposed transformation matrix
-    closest_p_t = pose_df[pid, 1].T
-
-    # Skip some 0 poses at the beginning of the rosbag
-    if closest_p_t[3, 0] == 0 and closest_p_t[3, 1] == 0 and closest_p_t[3, 2] == 0:
-        return
-
-    # Find the closest tp
-    tid = __stamp_search(stamp, tp_df, tp_df_len)
-
-    if tid <= 0:
-        return
-
-    closest_tp = tp_df[tid, 1]
-
-    # Transform the scan and find the segments that cover the transformed points
-    # Record the segments that cover the scan
-    segment_set = set()
-
-    for p in tmp_scan:
-        tp = transform_p(p, closest_p_t)
-
-        # Hash the point to find the segment containing it
-        sx = int(tp[0] / resolution) * int(resolution)
-        sy = int(tp[1] / resolution) * int(resolution)
-        seg_idx = str(sx) + "_" + str(sy)
-
-        segment_set.add(seg_idx)
-
-    # Update/examine the segments' avg TP
-    callback_func(segment_set, closest_tp, *args)
-
-
 ##### Read the input rosbag and update map's TP #####
-def collect_rosbag_tp(bag_path: str, pose_topic: str, tp_topic: str, scan_topic: str, *args):
+def parse_rosbag(bag_path: str, pose_topic: str, tp_topic: str, scan_topic: str):
     reader = SequentialReader()
     bag_storage_options = StorageOptions(uri=bag_path, storage_id="sqlite3")
     bag_converter_options = ConverterOptions(
@@ -222,9 +176,11 @@ def collect_rosbag_tp(bag_path: str, pose_topic: str, tp_topic: str, scan_topic:
 
     pose_df = np.ndarray((msg_count_by_topic[pose_topic], 2), dtype=object)
     tp_df = np.ndarray((msg_count_by_topic[tp_topic], 2), dtype=object)
+    pose_to_publish = np.ndarray((msg_count_by_topic[pose_topic], 2), dtype=object)
+    scan_df = np.ndarray((msg_count_by_topic[scan_topic], 2), dtype=object)
     pose_df_idx = 0
     tp_df_idx = 0
-    scan_df = FixQueue()
+    scan_df_idx = 0
 
     skip_count = 0
 
@@ -232,14 +188,16 @@ def collect_rosbag_tp(bag_path: str, pose_topic: str, tp_topic: str, scan_topic:
         progress_bar.update(1)
         (topic, data, stamp) = reader.read_next()
 
-        if skip_count <= 2000:
-            skip_count += 1
-            continue
+        # Skip some initial messages, as they contains invalid data
+        # if skip_count <= 2000:
+        #     skip_count += 1
+        #     continue
 
         if topic == pose_topic:
             pose_msg = deserialize_message(data, PoseWithCovarianceStamped)
             stamp = pose_msg.header.stamp.sec * 1e9 + pose_msg.header.stamp.nanosec
             pose_df[pose_df_idx, :] = [stamp, __pose_to_mat(pose_msg.pose.pose)]
+            pose_to_publish[pose_df_idx, :] = [stamp, pose_msg.pose.pose]
             pose_df_idx += 1
 
         elif topic == tp_topic:
@@ -251,13 +209,9 @@ def collect_rosbag_tp(bag_path: str, pose_topic: str, tp_topic: str, scan_topic:
         elif topic == scan_topic:
             pc_msg = deserialize_message(data, sensor_msgs.PointCloud2)
             stamp = pc_msg.header.stamp.sec * 1e9 + pc_msg.header.stamp.nanosec
-
-            scan_df.enqueue([stamp, pc_msg])
-
-            if scan_df.is_full():
-                scan_df.drop(False, __scan_callback, pose_df, pose_df_idx, tp_df, tp_df_idx, *args)
-
-    # Process the rest of the queue
-    scan_df.drop(True, __scan_callback, pose_df, pose_df_idx, tp_df, tp_df_idx, *args)
+            scan_df[scan_df_idx, :] = [stamp, pc_msg]
+            scan_df_idx += 1
 
     progress_bar.close()
+
+    return {"mat_pose" : pose_df, "pose" : pose_to_publish, "tp" : tp_df, "scan" : scan_df}

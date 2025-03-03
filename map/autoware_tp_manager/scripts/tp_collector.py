@@ -25,16 +25,8 @@ import rclpy
 from rclpy.node import Node
 import tp_utility as tpu
 import yaml
-
-
-# Update the TP of a segment at index @idx, given a newly TP value
-def update_avg_tp(candidate_segments, new_tp, segment_dict, segment_df):
-    for key in candidate_segments:
-        if key in segment_dict:
-            i = segment_dict[key]
-            tp, counter = segment_df[i, [1, 2]]
-            segment_df[i, [1, 2]] = [tp + 1.0 / (counter + 1) * (new_tp - tp), counter + 1]
-
+import tqdm
+import sensor_msgs_py.point_cloud2 as pc2
 
 class TPCollector(Node):
     def __init__(self):
@@ -118,6 +110,51 @@ class TPCollector(Node):
                 for index, row in enumerate(reader):
                     self.segment_df[index, [1, 2]] = [float(row[1]), 1]
 
+    def __update_avg_tp(self):
+        progress_bar = tqdm.tqdm(total = self.scan_df.shape[0])
+
+        for i in range(self.scan_df.shape[0]):
+            progress_bar.update(1)
+            stamp, tmp_scan = self.scan_df[i, :]
+            scan = pc2.read_points(tmp_scan, skip_nans = True)
+
+            # Find the closest pose and tp
+            pid = tpu.stamp_search(stamp, self.pose_df, self.pose_df.shape[0])
+            tid = tpu.stamp_search(stamp, self.tp_df, self.tp_df.shape[0])
+
+            if pid < 0 or tid < 0:
+                continue
+
+            closest_pose = self.pose_df[pid, 1].T
+
+            # Skip invalid poses
+            if closest_pose[3, 0] == 0 and closest_pose[3, 1] == 0 and closest_pose[3, 2] == 0:
+                continue
+
+            closest_tp = self.tp_df[tid, 1]
+
+            # Transform the scan and find the segments that cover the transformed points
+            segment_set = set()
+
+            for p in scan:
+                tp = tpu.transform_p(p, closest_pose)
+
+                # Hash the point to find the segment containing it
+                sx = int(tp[0] / self.resolution) * int(self.resolution)
+                sy = int(tp[1] / self.resolution) * int(self.resolution)
+                seg_idx = str(sx) + "_" + str(sy)
+
+                segment_set.add(seg_idx)
+
+            for key in segment_set:
+                if key in self.segment_dict:
+                    i = self.segment_dict[key]
+                    tp, counter = self.segment_df[i, [1, 2]]
+                    self.segment_df[i, [1, 2]] = [tp + 1.0 / (counter + 1) * (closest_tp - tp), counter + 1]
+
+
+        progress_bar.close()
+
     ##### Save the segment TPs #####
     def __save_tps(self):
         print("Saving TP to files")
@@ -145,16 +182,15 @@ class TPCollector(Node):
         self.__get_pcd_segments_and_scores()
 
         # Read the rosbag and get the ndt poses and corresponding tps
-        tpu.collect_rosbag_tp(
-            rosbag_path,
-            pose_topic,
-            tp_topic,
-            scan_topic,
-            self.resolution,
-            update_avg_tp,
-            self.segment_dict,
-            self.segment_df,
-        )
+        output_dict = tpu.parse_rosbag(rosbag_path,
+                                        pose_topic,
+                                        tp_topic,
+                                        scan_topic)
+        self.pose_df = output_dict["mat_pose"]
+        self.tp_df = output_dict["tp"]
+        self.scan_df = output_dict["scan"]
+
+        self.__update_avg_tp()
 
         # Save the new TPs
         self.__save_tps()

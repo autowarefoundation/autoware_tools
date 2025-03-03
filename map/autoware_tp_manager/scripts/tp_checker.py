@@ -24,35 +24,13 @@ import numpy as np
 import open3d as o3d
 import rclpy
 from rclpy.node import Node
-from scipy import spatial as sp
 import sensor_msgs.msg as sensor_msgs
 import sensor_msgs_py.point_cloud2 as pc2
+from visualization_msgs.msg import Marker, MarkerArray
 import std_msgs.msg as std_msgs
 import tp_utility as tpu
 import tqdm
 import yaml
-
-
-def mark_changes(candidate_segments, rosbag_tp: float, segment_dict, segment_df):
-    tp_sum = 0.0
-    valid_segment_num = 0
-
-    for key in candidate_segments:
-        if key in segment_dict:
-            tp_sum += segment_df[segment_dict[key], 1]
-            valid_segment_num += 1
-    if valid_segment_num > 0:
-        expected_tp = tp_sum / float(valid_segment_num)
-    else:
-        expected_tp = 0
-
-    if (expected_tp > 0 and abs(expected_tp - rosbag_tp) / expected_tp >= 0.2) or (
-        expected_tp == 0 and rosbag_tp > 0
-    ):
-        for key in candidate_segments:
-            if key in segment_dict:
-                segment_df[segment_dict[key], 2] += 1
-
 
 class TPChecker(Node):
 
@@ -92,6 +70,8 @@ class TPChecker(Node):
             )
             exit()
 
+        self.output_path = os.path.join(score_dir, "checking_result.csv")
+
     # Read the input map directory and setup the segment dictionary
     def __get_pcd_segments_and_scores(self):
         # Read the metadata file and get the list of segments
@@ -120,6 +100,8 @@ class TPChecker(Node):
                 self.segment_df[index, 1] = float(row[1])
 
     def __show(self):
+        # Publish map
+
         ros_float_dtype = sensor_msgs.PointField.FLOAT32
         ros_uint32_dtype = sensor_msgs.PointField.UINT32
         dtype = np.float32
@@ -164,8 +146,50 @@ class TPChecker(Node):
         pc2_msg = pc2.create_cloud(header, fields, points)
         pcd_publisher = self.create_publisher(sensor_msgs.PointCloud2, "/autoware_tp_checker", 10)
 
+
+        # Publish poses
+        self.pose_pub = self.create_publisher(MarkerArray, "/pose_result", 10)
+        marker_array_msg = MarkerArray()
+
+        for i in range(self.pose_to_publish.shape[0]):
+            pose = self.pose_to_publish[i, 1]
+
+            if pose is None:
+                continue
+            marker = Marker()
+
+            marker.header.stamp = self.get_clock().now().to_msg()
+            marker.header.frame_id = 'map'
+            marker.id = i
+            marker.type = Marker.SPHERE
+            marker.action = Marker.ADD
+            marker.pose = pose
+            # Shift toward origin
+            marker.pose.position.x -= origin[0]
+            marker.pose.position.y -= origin[1]
+            marker.pose.position.z -= origin[2]
+
+            marker.scale.x = 2.0
+            marker.scale.y = 2.0
+            marker.scale.z = 2.0
+
+            marker.color.a = 1.0  
+
+            if self.mark[i] == 1:
+                marker.color.r = 255.0
+                marker.color.g = 0.0
+                marker.color.b = 0.0
+            else:
+                marker.color.r = 0.0
+                marker.color.g = 0.0
+                marker.color.b = 255.0
+
+            marker_array_msg.markers.append(marker)
+
         while True:
             pcd_publisher.publish(pc2_msg)
+            self.pose_pub.publish(marker_array_msg)
+
             time.sleep(5)
 
     def __set_color_based_on_mark(self, mark) -> int:
@@ -186,22 +210,164 @@ class TPChecker(Node):
 
         return rgba
 
+    def __mark_changed_poses(self):
+        progress_bar = tqdm.tqdm(total = self.pose_df.shape[0])
+
+        for i in range(self.pose_df.shape[0]):
+            progress_bar.update(1)
+            stamp, pose = self.pose_df[i, :]
+            # Transposed pose for multiplication, as the points are in a row-major table
+            pose = pose.T
+            # Skip invalid poses
+            # print("Pose at {0} = {1}".format(i, pose))
+            if pose is None:
+                # print("None pose. Skip!")
+                continue
+
+            if pose[3, 0] == 0 and pose[3, 1] == 0 and pose[3, 2] == 0:
+                # print("Invalid pose. Skip!")
+                continue
+
+            # Find the closest scan and tp
+            sid = tpu.stamp_search(stamp, self.scan_df, self.scan_df.shape[0])
+            tid = tpu.stamp_search(stamp, self.tp_df, self.tp_df.shape[0])
+
+            if sid < 0 or tid < 0:
+                print("No closest scan and tp were found. Skip!")
+                continue
+
+            closest_scan = pc2.read_points(self.scan_df[sid, 1], skip_nans = True)
+            closest_tp = self.tp_df[tid, 1]
+
+            # Transform the scan and find the segments that cover the transformed points
+            segment_set = set()
+
+            for p in closest_scan:
+                tp = tpu.transform_p(p, pose)
+
+                # Hash the point to find the segment containing it
+                sx = int(tp[0] / self.resolution) * int(self.resolution)
+                sy = int(tp[1] / self.resolution) * int(self.resolution)
+                seg_idx = str(sx) + "_" + str(sy)
+
+                segment_set.add(seg_idx)
+
+            tp_sum = 0.0
+            valid_segment_num = 0
+
+            for key in segment_set:
+                if key in self.segment_dict:
+                    tp_sum += self.segment_df[self.segment_dict[key], 1]
+                    valid_segment_num += 1
+            if valid_segment_num > 0:
+                expected_tp = tp_sum / float(valid_segment_num)
+            else:
+                expected_tp = 0
+
+            # If the expected tp and the actual tp is quite different, mark the pose as changed
+            if (expected_tp > 0 and abs(expected_tp - closest_tp) / expected_tp >= 0.2) \
+                or (expected_tp == 0 and closest_tp > 0):
+                self.mark[i] = 1
+
+        progress_bar.close()
+    
+    def __mark_changed_segments(self):
+        progress_bar = tqdm.tqdm(total = self.pose_df.shape[0])
+
+        for i in range(self.scan_df.shape[0]):
+            progress_bar.update(1)
+            stamp, tmp_scan = self.scan_df[i, :]
+            scan = pc2.read_points(tmp_scan, skip_nans = True)
+
+            # Find the closest pose and tp
+            pid = tpu.stamp_search(stamp, self.pose_df, self.pose_df.shape[0])
+            tid = tpu.stamp_search(stamp, self.tp_df, self.tp_df.shape[0])
+
+            if pid < 0 or tid < 0:
+                continue
+
+            closest_pose = self.pose_df[pid, 1]
+
+            # Skip invalid poses
+            if closest_pose[3, 0] == 0 and closest_pose[3, 1] == 0 and closest_pose[3, 2] == 0:
+                continue
+
+            closest_tp = self.tp_df[tid, 1]
+
+            # Transform the scan and find the segments that cover the transformed points
+            segment_set = set()
+
+            for p in scan:
+                tp = tpu.transform_p(p, closest_pose)
+
+                # Hash the point to find the segment containing it
+                sx = int(tp[0] / self.resolution) * int(self.resolution)
+                sy = int(tp[1] / self.resolution) * int(self.resolution)
+                seg_idx = str(sx) + "_" + str(sy)
+
+                segment_set.add(seg_idx)
+
+            tp_sum = 0.0
+            valid_segment_num = 0
+
+            for key in segment_set:
+                if key in self.segment_dict:
+                    tp_sum += self.segment_df[self.segment_dict[key], 1]
+                    valid_segment_num += 1
+            if valid_segment_num > 0:
+                expected_tp = tp_sum / float(valid_segment_num)
+            else:
+                expected_tp = 0
+
+            self.dual_tp[i, :] = [closest_tp, expected_tp]
+
+            if (expected_tp > 0 and abs(expected_tp - closest_tp) / expected_tp >= 0.2) or (
+                expected_tp == 0 and closest_tp > 0
+            ):
+                # Mark changed segments
+                for key in segment_set:
+                    if key in self.segment_dict:
+                        self.segment_df[self.segment_dict[key], 2] += 1
+
+        progress_bar.close()
+
+    def __save_results(self):
+        print("Saving checking results to a file {0}".format(self.output_path))
+
+        with open(self.output_path, "w") as f:
+            f.write("Actual_TP,expected_TP\n")
+            print("Number of poses = {0}".format(self.pose_df.shape[0]))
+
+            for i in range(self.pose_df.shape[0]):
+                f.write("{0},{1}\n".format(self.dual_tp[i, 0], self.dual_tp[i, 1]))
+
+        print("Done. Saved TPs at {0}".format(self.output_path))
+
+
     def processing(
-        self, score_path: str, rosbag_path: str, pose_topic: str, tp_topic: str, scan_topic: str
+        self, score_path: str, rosbag_path: str, pose_topic: str, tp_topic: str, scan_topic: str,
+        mode: str
     ):
         self.__initialize(score_path)
         self.__get_pcd_segments_and_scores()
 
-        tpu.collect_rosbag_tp(
-            rosbag_path,
-            pose_topic,
-            tp_topic,
-            scan_topic,
-            self.resolution,
-            mark_changes,
-            self.segment_dict,
-            self.segment_df,
-        )
+        output_dict = tpu.parse_rosbag(rosbag_path, pose_topic, tp_topic, scan_topic)
+        self.pose_df = output_dict["mat_pose"]
+        self.pose_to_publish = output_dict["pose"]
+        self.tp_df = output_dict["tp"]
+        self.scan_df = output_dict["scan"]
+        self.mark = np.zeros((self.pose_to_publish.shape[0], 1))
+        # Actual TP and expected TP
+        self.dual_tp = np.zeros((self.pose_df.shape[0], 2))
+
+        if mode == "check_pose":
+            self.__mark_changed_poses()
+            self.__save_results()
+        elif mode == "check_segment":
+            self.__mark_changed_segments()
+        else:            
+            print("Unrecognized mode! Exit!")
+            exit()
 
         self.__show()
 
@@ -232,19 +398,28 @@ if __name__ == "__main__":
         required=False,
         type=str,
     )
+    parser.add_argument(
+        "--mode",
+        help="Check mode",
+        default="check_pose",
+        required=False,
+        type=str,
+    )
 
     args = parser.parse_args()
 
     # Practice with string % a bit
-    print("Input PCD map at {0}".format(args.score_path))
-    print("Input rosbag at {0}".format(args.bag_path))
-    print("Topic of NDT poses {0}".format(args.pose_topic))
-    print("Topic of Transformation Probability {0}".format(args.tp_topic))
-    print("Topic of scan data {0}".format(args.scan_topic))
+    print("Input PCD map at: {0}".format(args.score_path))
+    print("Input rosbag at: {0}".format(args.bag_path))
+    print("Topic of NDT poses: {0}".format(args.pose_topic))
+    print("Topic of Transformation Probability: {0}".format(args.tp_topic))
+    print("Topic of scan data: {0}".format(args.scan_topic))
+    print("Mode of checking: {0}".format(args.mode))
 
     # Run
     checker = TPChecker()
 
     checker.processing(
-        args.score_path, args.bag_path, args.pose_topic, args.tp_topic, args.scan_topic
+        args.score_path, args.bag_path, args.pose_topic, args.tp_topic, args.scan_topic,
+        args.mode
     )
