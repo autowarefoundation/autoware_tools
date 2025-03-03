@@ -26,11 +26,13 @@ import rclpy
 from rclpy.node import Node
 import sensor_msgs.msg as sensor_msgs
 import sensor_msgs_py.point_cloud2 as pc2
-from visualization_msgs.msg import Marker, MarkerArray
 import std_msgs.msg as std_msgs
 import tp_utility as tpu
 import tqdm
+from visualization_msgs.msg import Marker
+from visualization_msgs.msg import MarkerArray
 import yaml
+
 
 class TPChecker(Node):
 
@@ -146,7 +148,6 @@ class TPChecker(Node):
         pc2_msg = pc2.create_cloud(header, fields, points)
         pcd_publisher = self.create_publisher(sensor_msgs.PointCloud2, "/autoware_tp_checker", 10)
 
-
         # Publish poses
         self.pose_pub = self.create_publisher(MarkerArray, "/pose_result", 10)
         marker_array_msg = MarkerArray()
@@ -159,7 +160,7 @@ class TPChecker(Node):
             marker = Marker()
 
             marker.header.stamp = self.get_clock().now().to_msg()
-            marker.header.frame_id = 'map'
+            marker.header.frame_id = "map"
             marker.id = i
             marker.type = Marker.SPHERE
             marker.action = Marker.ADD
@@ -173,7 +174,7 @@ class TPChecker(Node):
             marker.scale.y = 2.0
             marker.scale.z = 2.0
 
-            marker.color.a = 1.0  
+            marker.color.a = 1.0
 
             if self.mark[i] == 1:
                 marker.color.r = 255.0
@@ -211,7 +212,7 @@ class TPChecker(Node):
         return rgba
 
     def __mark_changed_poses(self):
-        progress_bar = tqdm.tqdm(total = self.pose_df.shape[0])
+        progress_bar = tqdm.tqdm(total=self.pose_df.shape[0])
 
         for i in range(self.pose_df.shape[0]):
             progress_bar.update(1)
@@ -236,7 +237,7 @@ class TPChecker(Node):
                 print("No closest scan and tp were found. Skip!")
                 continue
 
-            closest_scan = pc2.read_points(self.scan_df[sid, 1], skip_nans = True)
+            closest_scan = pc2.read_points(self.scan_df[sid, 1], skip_nans=True)
             closest_tp = self.tp_df[tid, 1]
 
             # Transform the scan and find the segments that cover the transformed points
@@ -265,19 +266,20 @@ class TPChecker(Node):
                 expected_tp = 0
 
             # If the expected tp and the actual tp is quite different, mark the pose as changed
-            if (expected_tp > 0 and abs(expected_tp - closest_tp) / expected_tp >= 0.2) \
-                or (expected_tp == 0 and closest_tp > 0):
+            if (expected_tp > 0 and abs(expected_tp - closest_tp) / expected_tp >= 0.2) or (
+                expected_tp == 0 and closest_tp > 0
+            ):
                 self.mark[i] = 1
 
         progress_bar.close()
-    
+
     def __mark_changed_segments(self):
-        progress_bar = tqdm.tqdm(total = self.pose_df.shape[0])
+        progress_bar = tqdm.tqdm(total=self.pose_df.shape[0])
 
         for i in range(self.scan_df.shape[0]):
             progress_bar.update(1)
             stamp, tmp_scan = self.scan_df[i, :]
-            scan = pc2.read_points(tmp_scan, skip_nans = True)
+            scan = pc2.read_points(tmp_scan, skip_nans=True)
 
             # Find the closest pose and tp
             pid = tpu.stamp_search(stamp, self.pose_df, self.pose_df.shape[0])
@@ -343,10 +345,14 @@ class TPChecker(Node):
 
         print("Done. Saved TPs at {0}".format(self.output_path))
 
-
     def processing(
-        self, score_path: str, rosbag_path: str, pose_topic: str, tp_topic: str, scan_topic: str,
-        mode: str
+        self,
+        score_path: str,
+        rosbag_path: str,
+        pose_topic: str,
+        tp_topic: str,
+        scan_topic: str,
+        mode: str,
     ):
         self.__initialize(score_path)
         self.__get_pcd_segments_and_scores()
@@ -365,7 +371,7 @@ class TPChecker(Node):
             self.__save_results()
         elif mode == "check_segment":
             self.__mark_changed_segments()
-        else:            
+        else:
             print("Unrecognized mode! Exit!")
             exit()
 
@@ -420,6 +426,5 @@ if __name__ == "__main__":
     checker = TPChecker()
 
     checker.processing(
-        args.score_path, args.bag_path, args.pose_topic, args.tp_topic, args.scan_topic,
-        args.mode
+        args.score_path, args.bag_path, args.pose_topic, args.tp_topic, args.scan_topic, args.mode
     )

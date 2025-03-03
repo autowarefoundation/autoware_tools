@@ -214,4 +214,4 @@ def parse_rosbag(bag_path: str, pose_topic: str, tp_topic: str, scan_topic: str)
 
     progress_bar.close()
 
-    return {"mat_pose" : pose_df, "pose" : pose_to_publish, "tp" : tp_df, "scan" : scan_df}
+    return {"mat_pose": pose_df, "pose": pose_to_publish, "tp": tp_df, "scan": scan_df}

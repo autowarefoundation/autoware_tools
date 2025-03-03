@@ -23,10 +23,11 @@ from subprocess import call
 import numpy as np
 import rclpy
 from rclpy.node import Node
-import tp_utility as tpu
-import yaml
-import tqdm
 import sensor_msgs_py.point_cloud2 as pc2
+import tp_utility as tpu
+import tqdm
+import yaml
+
 
 class TPCollector(Node):
     def __init__(self):
@@ -111,12 +112,12 @@ class TPCollector(Node):
                     self.segment_df[index, [1, 2]] = [float(row[1]), 1]
 
     def __update_avg_tp(self):
-        progress_bar = tqdm.tqdm(total = self.scan_df.shape[0])
+        progress_bar = tqdm.tqdm(total=self.scan_df.shape[0])
 
         for i in range(self.scan_df.shape[0]):
             progress_bar.update(1)
             stamp, tmp_scan = self.scan_df[i, :]
-            scan = pc2.read_points(tmp_scan, skip_nans = True)
+            scan = pc2.read_points(tmp_scan, skip_nans=True)
 
             # Find the closest pose and tp
             pid = tpu.stamp_search(stamp, self.pose_df, self.pose_df.shape[0])
@@ -150,8 +151,10 @@ class TPCollector(Node):
                 if key in self.segment_dict:
                     i = self.segment_dict[key]
                     tp, counter = self.segment_df[i, [1, 2]]
-                    self.segment_df[i, [1, 2]] = [tp + 1.0 / (counter + 1) * (closest_tp - tp), counter + 1]
-
+                    self.segment_df[i, [1, 2]] = [
+                        tp + 1.0 / (counter + 1) * (closest_tp - tp),
+                        counter + 1,
+                    ]
 
         progress_bar.close()
 
@@ -182,10 +185,7 @@ class TPCollector(Node):
         self.__get_pcd_segments_and_scores()
 
         # Read the rosbag and get the ndt poses and corresponding tps
-        output_dict = tpu.parse_rosbag(rosbag_path,
-                                        pose_topic,
-                                        tp_topic,
-                                        scan_topic)
+        output_dict = tpu.parse_rosbag(rosbag_path, pose_topic, tp_topic, scan_topic)
         self.pose_df = output_dict["mat_pose"]
         self.tp_df = output_dict["tp"]
         self.scan_df = output_dict["scan"]
