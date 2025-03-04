@@ -50,7 +50,7 @@ class TPVisualizer(Node):
             8: [51, 153, 255],
         }
 
-    # Read the YAML file to get the list of PCD segments and scores 
+    # Read the YAML file to get the list of PCD segments and scores
     def __get_pcd_segments_and_scores(self, pcd_map_dir: str):
         if not os.path.exists(pcd_map_dir):
             print("Error: the input PCD folder does not exist at {0}! Abort!".format(pcd_map_dir))

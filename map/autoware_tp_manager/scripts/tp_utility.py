@@ -111,7 +111,7 @@ def transform_p(p, trans_mat_t: np.ndarray) -> np.ndarray:
     return np.matmul(tp, trans_mat_t)
 
 
-# Stamp search 
+# Stamp search
 def stamp_search(stamp: int, ref_df: np.ndarray, search_size: int) -> int:
     left = 0
     right = search_size - 1
@@ -143,7 +143,7 @@ def __get_message_count(rosbag_path: str):
     return output
 
 
-# Parse the input rosbag and extract messages from the specified topics 
+# Parse the input rosbag and extract messages from the specified topics
 def parse_rosbag(bag_path: str, pose_topic: str, tp_topic: str, scan_topic: str):
     reader = SequentialReader()
     bag_storage_options = StorageOptions(uri=bag_path, storage_id="sqlite3")
