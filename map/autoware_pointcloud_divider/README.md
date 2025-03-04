@@ -63,15 +63,15 @@ How the PCD file is named
 
 1. Dividing point clouds without downsampling.
 
-    ```bash
-    ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=test leaf_size:=-0.1
-    ```
+   ```bash
+   ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=test leaf_size:=-0.1
+   ```
 
 1. Dividing and downsampling point clouds.
 
-    ```bash
-    ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=test 
-    ```
+   ```bash
+   ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=test
+   ```
 
 ## Metadata YAML Format
 
