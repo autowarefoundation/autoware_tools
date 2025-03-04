@@ -44,7 +44,7 @@ class TPChecker(Node):
         self.changed_dir = None  # A directory contains the segments that need to be examined
         self.result_csv = None  # Path to the result CSV file
         self.tp_path = None  # Path to the file that contains TPs of map segments
-        self.range = 50.0
+        self.query_range = 50.0
 
     def __initialize(self, score_dir: str):
         if not os.path.exists(score_dir):
@@ -237,10 +237,10 @@ class TPChecker(Node):
         else:
             segment_set = set()
             # If scans are not available, use range query
-            lx = int((t_pose[3, 0] - self.range) / self.resolution) * int(self.resolution)
-            ux = int((t_pose[3, 0] + self.range) / self.resolution) * int(self.resolution)
-            ly = int((t_pose[3, 1] - self.range) / self.resolution) * int(self.resolution)
-            uy = int((t_pose[3, 1] + self.range) / self.resolution) * int(self.resolution)
+            lx = int((t_pose[3, 0] - self.query_range) / self.resolution) * int(self.resolution)
+            ux = int((t_pose[3, 0] + self.query_range) / self.resolution) * int(self.resolution)
+            ly = int((t_pose[3, 1] - self.query_range) / self.resolution) * int(self.resolution)
+            uy = int((t_pose[3, 1] + self.query_range) / self.resolution) * int(self.resolution)
 
             for sx in range(lx, ux + 1, 1):
                 for sy in range(ly, uy + 1, 1):
@@ -380,10 +380,10 @@ class TPChecker(Node):
         tp_topic: str,
         scan_topic: str,
         mode: str,
-        range: float,
+        query_range: float,
     ):
-        if range > 0:
-            self.range = range
+        if query_range > 0:
+            self.query_range = query_range
         self.__initialize(score_path)
         self.__get_pcd_segments_and_scores()
 
@@ -442,7 +442,7 @@ if __name__ == "__main__":
         type=str,
     )
     parser.add_argument(
-        "--range",
+        "--radius",
         help="The range to query segments that cover a pose",
         default=50.0,
         required=False,
@@ -458,7 +458,7 @@ if __name__ == "__main__":
     print("Topic of Transformation Probability: {0}".format(args.tp_topic))
     print("Topic of scan data: {0}".format(args.scan_topic))
     print("Mode of checking: {0}".format(args.mode))
-    print("Range to query map segments that cover a pose: {0}".format(args.range))
+    print("Range to query map segments that cover a pose: {0}".format(args.radius))
 
     # Run
     checker = TPChecker()
@@ -470,5 +470,5 @@ if __name__ == "__main__":
         args.tp_topic,
         args.scan_topic,
         args.mode,
-        args.range,
+        args.radius,
     )
