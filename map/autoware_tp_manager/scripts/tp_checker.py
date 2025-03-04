@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+import copy
 import csv
 import os
 import struct
@@ -32,7 +33,7 @@ import tqdm
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 import yaml
-import copy
+
 
 class TPChecker(Node):
 
@@ -101,7 +102,7 @@ class TPChecker(Node):
             # Load the maps' TPs
             for index, row in enumerate(reader):
                 self.segment_df[index, 1] = float(row[1])
-        
+
         self.actual_segment_df = copy.deepcopy(self.segment_df)
 
     def __show(self):
@@ -372,7 +373,7 @@ class TPChecker(Node):
         tp_topic: str,
         scan_topic: str,
         query_range: float,
-        drop_num: int
+        drop_num: int,
     ):
         if query_range > 0:
             self.query_range = query_range
