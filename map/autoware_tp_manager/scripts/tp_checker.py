@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2024 TIER IV, Inc. All rights reserved.
+# Copyright 10024 TIER IV, Inc. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import tqdm
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 import yaml
-
+import copy
 
 class TPChecker(Node):
 
@@ -101,6 +101,8 @@ class TPChecker(Node):
             # Load the maps' TPs
             for index, row in enumerate(reader):
                 self.segment_df[index, 1] = float(row[1])
+        
+        self.actual_segment_df = copy.deepcopy(self.segment_df)
 
     def __show(self):
         # Publish map
@@ -132,7 +134,7 @@ class TPChecker(Node):
             # Load the current segment
             pcd = o3d.io.read_point_cloud(os.path.join(self.pcd_path, self.segment_df[i, 0]))
             np_pcd = np.asarray(pcd.points)
-            rgba = self.__set_color_based_on_mark(self.segment_df[i, 2])
+            rgba = self.__set_color_based_on_mark(i)
 
             for p in np_pcd:
                 if origin is None:
@@ -152,19 +154,44 @@ class TPChecker(Node):
         # Publish poses
         self.pose_pub = self.create_publisher(MarkerArray, "/pose_result", 10)
         marker_array_msg = MarkerArray()
+        invalid_pose_count = 0
+
+        # Delete the current markers on rviz2
+        dummy_marker = Marker()
+        dummy_marker.header.stamp = self.get_clock().now().to_msg()
+        dummy_marker.header.frame_id = "map"
+        dummy_marker.id = i
+        dummy_marker.type = Marker.SPHERE
+        dummy_marker.action = Marker.DELETEALL
+
+        marker_array_msg.markers.append(dummy_marker)
+
+        self.pose_pub.publish(marker_array_msg)
+
+        # Now publish the poses
+        marker_array_msg = MarkerArray()
 
         for i in range(self.pose_to_publish.shape[0]):
             pose = self.pose_to_publish[i, 1]
 
             if pose is None:
                 continue
+
+            if self.valid_pose_mark[i] == 1:
+                invalid_pose_count += 1
+
+                if invalid_pose_count == self.drop_num:
+                    break
+            else:
+                invalid_pose_count = 0
+
             marker = Marker()
 
             marker.header.stamp = self.get_clock().now().to_msg()
             marker.header.frame_id = "map"
             marker.id = i
             marker.type = Marker.SPHERE
-            marker.action = Marker.ADD
+            marker.action = Marker.MODIFY
             marker.pose = pose
             # Shift toward origin
             marker.pose.position.x -= origin[0]
@@ -194,10 +221,13 @@ class TPChecker(Node):
 
             time.sleep(5)
 
-    def __set_color_based_on_mark(self, mark) -> int:
+    def __set_color_based_on_mark(self, index: int) -> int:
         # The may-have-changed segments are colored red
         # The may-not-have-changed segments are colored white
-        if mark >= 100:
+        expected_seg_tp = self.segment_df[index, 1]
+        actual_seg_tp = self.actual_segment_df[index, 1]
+
+        if abs(expected_seg_tp - actual_seg_tp) > expected_seg_tp * 0.2:
             r = 255
             g = 0
             b = 0
@@ -248,8 +278,10 @@ class TPChecker(Node):
 
             return segment_set
 
-    def __mark_changed_poses(self):
+    def __mark_changes(self):
         progress_bar = tqdm.tqdm(total=self.pose_df.shape[0])
+
+        invalid_pose_count = 0
 
         for i in range(self.pose_df.shape[0]):
             progress_bar.update(1)
@@ -257,7 +289,6 @@ class TPChecker(Node):
             # Transposed pose for multiplication, as the points are in a row-major table
             pose = pose.T
             # Skip invalid poses
-            # print("Pose at {0} = {1}".format(i, pose))
             if pose is None:
                 # print("None pose. Skip!")
                 continue
@@ -274,12 +305,26 @@ class TPChecker(Node):
                 continue
             closest_tp = self.tp_df[tid, 1]
 
+            # Mark the pose if the tp is too low
+            if closest_tp < 1.0:
+                self.valid_pose_mark[i] = 1
+                invalid_pose_count += 1
+
+                # If there are too many consecutive low-TP poses, stop checking,
+                # because the localization is not reliable anymore
+                if invalid_pose_count == self.drop_num:
+                    break
+            else:
+                invalid_pose_count = 0
+
             # Find the candidate segments that cover the pose
             segment_set = self.__find_candidate_segments(stamp, pose)
 
             if segment_set is None:
                 continue
 
+            # if check_pose:
+            # Mark poses whose TP is quite different from expected TP
             tp_sum = 0.0
             valid_segment_num = 0
 
@@ -293,70 +338,17 @@ class TPChecker(Node):
                 expected_tp = 0
 
             # If the expected tp and the actual tp is quite different, mark the pose as changed
-            if (expected_tp > 0 and abs(expected_tp - closest_tp) / expected_tp >= 0.2) or (
-                expected_tp == 0 and closest_tp > 0
-            ):
+            if abs(expected_tp - closest_tp) > expected_tp * 0.2:
                 self.mark[i] = 1
-
-        progress_bar.close()
-
-    def __mark_changed_segments(self):
-        progress_bar = tqdm.tqdm(total=self.pose_df.shape[0])
-
-        for i in range(self.scan_df.shape[0]):
-            progress_bar.update(1)
-            stamp, tmp_scan = self.scan_df[i, :]
-            scan = pc2.read_points(tmp_scan, skip_nans=True)
-
-            # Find the closest pose and tp
-            pid = tpu.stamp_search(stamp, self.pose_df, self.pose_df.shape[0])
-            tid = tpu.stamp_search(stamp, self.tp_df, self.tp_df.shape[0])
-
-            if pid < 0 or tid < 0:
-                continue
-
-            closest_pose = self.pose_df[pid, 1]
-
-            # Skip invalid poses
-            if closest_pose[3, 0] == 0 and closest_pose[3, 1] == 0 and closest_pose[3, 2] == 0:
-                continue
-
-            closest_tp = self.tp_df[tid, 1]
-
-            # Transform the scan and find the segments that cover the transformed points
-            segment_set = set()
-
-            for p in scan:
-                tp = tpu.transform_p(p, closest_pose)
-
-                # Hash the point to find the segment containing it
-                sx = int(tp[0] / self.resolution) * int(self.resolution)
-                sy = int(tp[1] / self.resolution) * int(self.resolution)
-                seg_idx = str(sx) + "_" + str(sy)
-
-                segment_set.add(seg_idx)
-
-            tp_sum = 0.0
-            valid_segment_num = 0
-
+            # Update segments TP
             for key in segment_set:
                 if key in self.segment_dict:
-                    tp_sum += self.segment_df[self.segment_dict[key], 1]
-                    valid_segment_num += 1
-            if valid_segment_num > 0:
-                expected_tp = tp_sum / float(valid_segment_num)
-            else:
-                expected_tp = 0
-
-            self.dual_tp[i, :] = [closest_tp, expected_tp]
-
-            if (expected_tp > 0 and abs(expected_tp - closest_tp) / expected_tp >= 0.2) or (
-                expected_tp == 0 and closest_tp > 0
-            ):
-                # Mark changed segments
-                for key in segment_set:
-                    if key in self.segment_dict:
-                        self.segment_df[self.segment_dict[key], 2] += 1
+                    i = self.segment_dict[key]
+                    tp, counter = self.actual_segment_df[i, [1, 2]]
+                    self.actual_segment_df[i, [1, 2]] = [
+                        tp + 1.0 / (counter + 1) * (closest_tp - tp),
+                        counter + 1,
+                    ]
 
         progress_bar.close()
 
@@ -379,32 +371,28 @@ class TPChecker(Node):
         pose_topic: str,
         tp_topic: str,
         scan_topic: str,
-        mode: str,
         query_range: float,
+        drop_num: int
     ):
         if query_range > 0:
             self.query_range = query_range
+        if drop_num > 0:
+            self.drop_num = drop_num
         self.__initialize(score_path)
         self.__get_pcd_segments_and_scores()
 
         output_dict = tpu.parse_rosbag(rosbag_path, pose_topic, tp_topic, scan_topic)
         self.pose_df = output_dict["mat_pose"]
         self.pose_to_publish = output_dict["pose"]
+        self.valid_pose_mark = np.zeros((self.pose_to_publish.shape[0], 1))
         self.tp_df = output_dict["tp"]
         self.scan_df = output_dict["scan"]
         self.mark = np.zeros((self.pose_to_publish.shape[0], 1))
         # Actual TP and expected TP
         self.dual_tp = np.zeros((self.pose_df.shape[0], 2))
 
-        if mode == "check_pose":
-            self.__mark_changed_poses()
-            self.__save_results()
-        elif mode == "check_segment":
-            self.__mark_changed_segments()
-        else:
-            print("Unrecognized mode! Exit!")
-            exit()
-
+        self.__mark_changes()
+        self.__save_results()
         self.__show()
 
 
@@ -435,16 +423,16 @@ if __name__ == "__main__":
         type=str,
     )
     parser.add_argument(
-        "--mode",
-        help="Check mode",
-        default="check_pose",
-        required=False,
-        type=str,
-    )
-    parser.add_argument(
         "--radius",
         help="The range to query segments that cover a pose",
-        default=50.0,
+        default=5.0,
+        required=False,
+        type=float,
+    )
+    parser.add_argument(
+        "--drop_num",
+        help="If the number of consecutive low-TP poses exceeds this number, stop checking because the localization is not reliable anymore",
+        default=500,
         required=False,
         type=float,
     )
@@ -457,8 +445,8 @@ if __name__ == "__main__":
     print("Topic of NDT poses: {0}".format(args.pose_topic))
     print("Topic of Transformation Probability: {0}".format(args.tp_topic))
     print("Topic of scan data: {0}".format(args.scan_topic))
-    print("Mode of checking: {0}".format(args.mode))
     print("Range to query map segments that cover a pose: {0}".format(args.radius))
+    print("Drop when the number of consecutive low-TP poses exceed: {0}".format(args.drop_num))
 
     # Run
     checker = TPChecker()
@@ -469,6 +457,6 @@ if __name__ == "__main__":
         args.pose_topic,
         args.tp_topic,
         args.scan_topic,
-        args.mode,
         args.radius,
+        args.drop_num,
     )
