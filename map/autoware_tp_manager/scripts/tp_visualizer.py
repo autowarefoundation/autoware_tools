@@ -24,7 +24,6 @@ import open3d as o3d
 import pandas as pd
 import rclpy
 from rclpy.node import Node
-from scipy import spatial as sp
 import sensor_msgs.msg as sensor_msgs
 import sensor_msgs_py.point_cloud2 as pc2
 import std_msgs.msg as std_msgs
@@ -51,7 +50,7 @@ class TPVisualizer(Node):
             8: [51, 153, 255],
         }
 
-    ##### Read the YAML file to get the list of PCD segments and scores #####
+    # Read the YAML file to get the list of PCD segments and scores 
     def __get_pcd_segments_and_scores(self, pcd_map_dir: str):
         if not os.path.exists(pcd_map_dir):
             print("Error: the input PCD folder does not exist at {0}! Abort!".format(pcd_map_dir))
@@ -95,16 +94,16 @@ class TPVisualizer(Node):
         progress_bar = tqdm.tqdm(total=len(self.segment_df))
         origin = None
 
-        for tuple in self.segment_df.itertuples():
+        for seg in self.segment_df.itertuples():
             progress_bar.update(1)
             # Load the current segment
-            seg_path = self.pcd_path + "/" + tuple.segment
+            seg_path = self.pcd_path + "/" + seg.segment
             pcd = o3d.io.read_point_cloud(seg_path)
             np_pcd = np.asarray(pcd.points)
-            rgba = self.__set_color_based_on_score(tuple.tp)
+            rgba = self.__set_color_based_on_score(seg.tp)
 
             for p in np_pcd:
-                if origin == None:
+                if origin is None:
                     origin = [p[0], p[1], p[2]]
                 pt = [p[0] - origin[0], p[1] - origin[1], p[2] - origin[2], rgba]
                 points.append(pt)

@@ -63,7 +63,7 @@ class TPCollector(Node):
             print("Error: {0} does not exist!".format(self.pcd_path))
             exit()
 
-    ##### Read the YAML file to get the list of PCD segments and scores #####
+    # Read the YAML file to get the list of PCD segments and scores 
     def __get_pcd_segments_and_scores(self):
         # Downsample the input PCDs to make it lighter so it can be published to rviz
         # Create a dataframe to record the avg tp of 2D segments
@@ -158,7 +158,7 @@ class TPCollector(Node):
 
         progress_bar.close()
 
-    ##### Save the segment TPs #####
+    # Save the segment TPs 
     def __save_tps(self):
         print("Saving TP to files")
         with open(self.score_path, "w") as f:

@@ -1,7 +1,7 @@
 <launch>
   <arg name="config_file_path" default="$(find-pkg-share autoware_pointcloud_divider)/config/pointcloud_divider.param.yaml" description="Path to the configuration YAML file"/>
   <arg name="use_large_grid" default="false" description="True: group PCD files into folders"/>
-  <arg name="leaf_size" default="-0.1" description="Downsampling resolution"/>
+  <arg name="leaf_size" default="0.2" description="Downsampling resolution"/>
   <arg name="grid_size_x" default="20.0" description="The X size of a segment"/>
   <arg name="grid_size_y" default="20.0" description="The Y size of a segment"/>
   <arg name="input_pcd_or_dir" description="The path to the folder containing the input PCD files or the input PCD file"/>

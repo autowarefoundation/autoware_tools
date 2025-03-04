@@ -134,7 +134,7 @@ class TPChecker(Node):
             rgba = self.__set_color_based_on_mark(self.segment_df[i, 2])
 
             for p in np_pcd:
-                if origin == None:
+                if origin is None:
                     origin = [p[0], p[1], p[2]]
                 pt = [p[0] - origin[0], p[1] - origin[1], p[2] - origin[2], rgba]
                 points.append(pt)
