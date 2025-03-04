@@ -26,6 +26,7 @@ import sensor_msgs.msg as sensor_msgs
 from tier4_debug_msgs.msg import Float32Stamped
 import tqdm
 
+
 # Some utility functions that is shared by both the tp collector and tp checker
 # Convert a pose to a 4x4 transformation matrix
 def __pose_to_mat(pose: Pose) -> np.array:
@@ -99,7 +100,7 @@ def parse_rosbag(bag_path: str, pose_topic: str, tp_topic: str, scan_topic: str)
     msg_count_by_topic = __get_message_count(bag_path)
     progress_bar = tqdm.tqdm(total=msg_count_by_topic["total"])
 
-    if not(pose_topic in msg_count_by_topic) or (msg_count_by_topic[pose_topic] == 0):
+    if not (pose_topic in msg_count_by_topic) or (msg_count_by_topic[pose_topic] == 0):
         print(
             "Error: the input rosbag contains no message from the topic {0}. Exit!".format(
                 pose_topic
@@ -111,7 +112,7 @@ def parse_rosbag(bag_path: str, pose_topic: str, tp_topic: str, scan_topic: str)
         pose_df = np.ndarray((msg_count_by_topic[pose_topic], 2), dtype=object)
         pose_to_publish = np.ndarray((msg_count_by_topic[pose_topic], 2), dtype=object)
 
-    if not(tp_topic in msg_count_by_topic) or (msg_count_by_topic[tp_topic] == 0):
+    if not (tp_topic in msg_count_by_topic) or (msg_count_by_topic[tp_topic] == 0):
         print(
             "Error: the input rosbag contains no message from the topic {0}. Exit!".format(tp_topic)
         )
@@ -119,16 +120,12 @@ def parse_rosbag(bag_path: str, pose_topic: str, tp_topic: str, scan_topic: str)
     else:
         tp_df = np.ndarray((msg_count_by_topic[tp_topic], 2), dtype=object)
 
-    if not(scan_topic in msg_count_by_topic) or (msg_count_by_topic[scan_topic] == 0):
-        print(
-            "The input rosbag contains no message from the topic {0}.!".format(
-                scan_topic
-            )
-        )
+    if not (scan_topic in msg_count_by_topic) or (msg_count_by_topic[scan_topic] == 0):
+        print("The input rosbag contains no message from the topic {0}.!".format(scan_topic))
         scan_df = None
     else:
         scan_df = np.ndarray((msg_count_by_topic[scan_topic], 2), dtype=object)
-    
+
     pose_df_idx = 0
     tp_df_idx = 0
     scan_df_idx = 0

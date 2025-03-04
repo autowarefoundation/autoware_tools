@@ -211,14 +211,14 @@ class TPChecker(Node):
         rgba = struct.unpack("I", tmp_rgb)[0]
 
         return rgba
-    
+
     def __find_candidate_segments(self, stamp, t_pose):
-        if not(self.scan_df is None) and self.scan_df.shape[0] > 0:
+        if not (self.scan_df is None) and self.scan_df.shape[0] > 0:
             sid = tpu.stamp_search(stamp, self.scan_df, self.scan_df.shape[0])
 
             if sid < 0:
                 return None
-            
+
             closest_scan = pc2.read_points(self.scan_df[sid, 1], skip_nans=True)
 
             segment_set = set()
@@ -232,11 +232,11 @@ class TPChecker(Node):
                 seg_idx = str(sx) + "_" + str(sy)
 
                 segment_set.add(seg_idx)
-            
+
             return segment_set
         else:
             segment_set = set()
-            # If scans are not available, use range query 
+            # If scans are not available, use range query
             lx = int((t_pose[3, 0] - self.range) / self.resolution) * int(self.resolution)
             ux = int((t_pose[3, 0] + self.range) / self.resolution) * int(self.resolution)
             ly = int((t_pose[3, 1] - self.range) / self.resolution) * int(self.resolution)
@@ -247,7 +247,6 @@ class TPChecker(Node):
                     segment_set.add(str(sx) + "_" + str(sy))
 
             return segment_set
-
 
     def __mark_changed_poses(self):
         progress_bar = tqdm.tqdm(total=self.pose_df.shape[0])
@@ -280,7 +279,7 @@ class TPChecker(Node):
 
             if segment_set is None:
                 continue
-            
+
             tp_sum = 0.0
             valid_segment_num = 0
 
@@ -381,7 +380,7 @@ class TPChecker(Node):
         tp_topic: str,
         scan_topic: str,
         mode: str,
-        range: float
+        range: float,
     ):
         if range > 0:
             self.range = range
@@ -465,5 +464,11 @@ if __name__ == "__main__":
     checker = TPChecker()
 
     checker.processing(
-        args.score_path, args.bag_path, args.pose_topic, args.tp_topic, args.scan_topic, args.mode, args.range
+        args.score_path,
+        args.bag_path,
+        args.pose_topic,
+        args.tp_topic,
+        args.scan_topic,
+        args.mode,
+        args.range,
     )

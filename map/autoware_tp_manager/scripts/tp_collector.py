@@ -115,7 +115,7 @@ class TPCollector(Node):
 
             if sid < 0:
                 return None
-            
+
             closest_scan = pc2.read_points(self.scan_df[sid, 1], skip_nans=True)
 
             segment_set = set()
@@ -129,21 +129,21 @@ class TPCollector(Node):
                 seg_idx = str(sx) + "_" + str(sy)
 
                 segment_set.add(seg_idx)
-            
+
             return segment_set
         else:
-            # If scans are not available, use range query 
+            # If scans are not available, use range query
             lx = int((t_pose[3, 0] - 50.0) / self.resolution) * int(self.resolution)
             ux = int((t_pose[3, 0] + 50.0) / self.resolution) * int(self.resolution)
             ly = int((t_pose[3, 1] - 50.0) / self.resolution) * int(self.resolution)
             uy = int((t_pose[3, 1] + 50.0) / self.resolution) * int(self.resolution)
 
-            for sx in range(start = lx, stop = ux, step = 1):
-                for sy in range(start = ly, stop = uy, step = 1):
+            for sx in range(start=lx, stop=ux, step=1):
+                for sy in range(start=ly, stop=uy, step=1):
                     segment_set.add(str(sx) + "_" + str(sy))
 
             return segment_set
-        
+
     def __update_tp_by_scan(self):
         progress_bar = tqdm.tqdm(total=self.scan_df.shape[0])
 
@@ -232,7 +232,7 @@ class TPCollector(Node):
 
             if segment_set is None:
                 continue
-            
+
             for key in segment_set:
                 if key in self.segment_dict:
                     i = self.segment_dict[key]
@@ -246,7 +246,7 @@ class TPCollector(Node):
 
     def __update_avg_tp(self):
 
-        if not(self.scan_df is None) and self.scan_df.shape[0] > 0:
+        if not (self.scan_df is None) and self.scan_df.shape[0] > 0:
             self.__update_tp_by_scan()
         else:
             self.__update_tp_by_pose()
