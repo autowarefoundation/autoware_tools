@@ -26,64 +26,6 @@ import sensor_msgs.msg as sensor_msgs
 from tier4_debug_msgs.msg import Float32Stamped
 import tqdm
 
-
-class FixQueue:
-    def __init__(self):
-        self.queue_limit = 100  # Max number of items in the queue
-        self.data_queue = None  # Queue of data
-        self.head = 0  # Index to append a new item (enqueue index)
-        self.tail = 0  # Index to start remove/process items (dequeue index)
-        self.current_size = 0  # Number of items in the queue
-
-    def enqueue(self, item):
-        if self.is_full():
-            print("Cannot add new item. Queue is full!")
-            return False
-
-        if self.is_empty() or self.data_queue.shape[1] != len(item):
-            self.data_queue = np.ndarray((self.queue_limit, len(item)), dtype=object)
-        self.data_queue[self.tail, :] = item
-        self.tail += 1
-
-        if self.tail == self.queue_limit:
-            self.tail = 0
-
-        self.current_size += 1
-
-        return True
-
-    def drop(self, limitless=False, callback_func=None, *args):
-        if limitless:
-            end_id = self.tail
-        else:
-            end_id = self.head + int(self.queue_limit / 2)
-
-        if self.head < end_id:
-            drop_list = np.arange(self.head, end_id)
-        else:
-            drop_list = np.arange(self.head, end_id + self.queue_limit) % self.queue_limit
-
-        for i in drop_list:
-            # Process the item at index i
-            callback_func(self.data_queue[i], *args)
-
-        self.current_size -= len(drop_list)
-        self.head = end_id
-
-        if self.head == self.queue_limit:
-            self.head = 0
-
-    def is_full(self) -> bool:
-        if self.current_size == self.queue_limit:
-            return True
-        return False
-
-    def is_empty(self) -> bool:
-        if self.current_size == 0:
-            return True
-        return False
-
-
 # Some utility functions that is shared by both the tp collector and tp checker
 # Convert a pose to a 4x4 transformation matrix
 def __pose_to_mat(pose: Pose) -> np.array:
@@ -157,27 +99,36 @@ def parse_rosbag(bag_path: str, pose_topic: str, tp_topic: str, scan_topic: str)
     msg_count_by_topic = __get_message_count(bag_path)
     progress_bar = tqdm.tqdm(total=msg_count_by_topic["total"])
 
-    if msg_count_by_topic[pose_topic] == 0:
+    if not(pose_topic in msg_count_by_topic) or (msg_count_by_topic[pose_topic] == 0):
         print(
             "Error: the input rosbag contains no message from the topic {0}. Exit!".format(
                 pose_topic
             )
         )
-    if msg_count_by_topic[tp_topic] == 0:
+        pose_df = None
+        pose_to_publish = None
+    else:
+        pose_df = np.ndarray((msg_count_by_topic[pose_topic], 2), dtype=object)
+        pose_to_publish = np.ndarray((msg_count_by_topic[pose_topic], 2), dtype=object)
+
+    if not(tp_topic in msg_count_by_topic) or (msg_count_by_topic[tp_topic] == 0):
         print(
             "Error: the input rosbag contains no message from the topic {0}. Exit!".format(tp_topic)
         )
-    if msg_count_by_topic[scan_topic] == 0:
+        tp_df = None
+    else:
+        tp_df = np.ndarray((msg_count_by_topic[tp_topic], 2), dtype=object)
+
+    if not(scan_topic in msg_count_by_topic) or (msg_count_by_topic[scan_topic] == 0):
         print(
-            "Error: the input rosbag contains no message from the topic {0}. Exit!".format(
+            "The input rosbag contains no message from the topic {0}.!".format(
                 scan_topic
             )
         )
-
-    pose_df = np.ndarray((msg_count_by_topic[pose_topic], 2), dtype=object)
-    tp_df = np.ndarray((msg_count_by_topic[tp_topic], 2), dtype=object)
-    pose_to_publish = np.ndarray((msg_count_by_topic[pose_topic], 2), dtype=object)
-    scan_df = np.ndarray((msg_count_by_topic[scan_topic], 2), dtype=object)
+        scan_df = None
+    else:
+        scan_df = np.ndarray((msg_count_by_topic[scan_topic], 2), dtype=object)
+    
     pose_df_idx = 0
     tp_df_idx = 0
     scan_df_idx = 0

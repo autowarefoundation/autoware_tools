@@ -51,8 +51,6 @@ class TPCollector(Node):
         self.output_path = output_path
         self.resolution = resolution
 
-        print("Type resolution = {0}".format(type(self.resolution)))
-
         if not os.path.exists(pcd_map_dir):
             print("Error: {0} does not exist!".format(pcd_map_dir))
             exit()
@@ -111,7 +109,42 @@ class TPCollector(Node):
                 for index, row in enumerate(reader):
                     self.segment_df[index, [1, 2]] = [float(row[1]), 1]
 
-    def __update_avg_tp(self):
+    def __find_candidate_segments(self, stamp, t_pose):
+        if self.scan_df.shape[0] > 0:
+            sid = tpu.stamp_search(stamp, self.scan_df, self.scan_df.shape[0])
+
+            if sid < 0:
+                return None
+            
+            closest_scan = pc2.read_points(self.scan_df[sid, 1], skip_nans=True)
+
+            segment_set = set()
+
+            for p in closest_scan:
+                tp = tpu.transform_p(p, t_pose)
+
+                # Hash the point to find the segment containing it
+                sx = int(tp[0] / self.resolution) * int(self.resolution)
+                sy = int(tp[1] / self.resolution) * int(self.resolution)
+                seg_idx = str(sx) + "_" + str(sy)
+
+                segment_set.add(seg_idx)
+            
+            return segment_set
+        else:
+            # If scans are not available, use range query 
+            lx = int((t_pose[3, 0] - 50.0) / self.resolution) * int(self.resolution)
+            ux = int((t_pose[3, 0] + 50.0) / self.resolution) * int(self.resolution)
+            ly = int((t_pose[3, 1] - 50.0) / self.resolution) * int(self.resolution)
+            uy = int((t_pose[3, 1] + 50.0) / self.resolution) * int(self.resolution)
+
+            for sx in range(start = lx, stop = ux, step = 1):
+                for sy in range(start = ly, stop = uy, step = 1):
+                    segment_set.add(str(sx) + "_" + str(sy))
+
+            return segment_set
+        
+    def __update_tp_by_scan(self):
         progress_bar = tqdm.tqdm(total=self.scan_df.shape[0])
 
         for i in range(self.scan_df.shape[0]):
@@ -157,6 +190,66 @@ class TPCollector(Node):
                     ]
 
         progress_bar.close()
+
+    def __update_tp_by_pose(self):
+        # If scans are not available, examine pose and update TPs of segments in vicinity
+        progress_bar = tqdm.tqdm(total=self.pose_df.shape[0])
+
+        for i in range(self.pose_df.shape[0]):
+            progress_bar.update(1)
+            stamp, pose = self.pose_df[i, :]
+            # Transposed pose for multiplication, as the points are in a row-major table
+            pose = pose.T
+            # Skip invalid poses
+            # print("Pose at {0} = {1}".format(i, pose))
+            if pose is None:
+                # print("None pose. Skip!")
+                continue
+
+            if pose[3, 0] == 0 and pose[3, 1] == 0 and pose[3, 2] == 0:
+                # print("Invalid pose. Skip!")
+                continue
+
+            # Find the closest tp
+            tid = tpu.stamp_search(stamp, self.tp_df, self.tp_df.shape[0])
+
+            if tid < 0:
+                print("No closest tp were found. Skip!")
+                continue
+            closest_tp = self.tp_df[tid, 1]
+
+            # Use range query to find segments that cover the current pose
+            segment_set = set()
+
+            lx = int((pose[3, 0] - 50.0) / self.resolution) * int(self.resolution)
+            ux = int((pose[3, 0] + 50.0) / self.resolution) * int(self.resolution)
+            ly = int((pose[3, 1] - 50.0) / self.resolution) * int(self.resolution)
+            uy = int((pose[3, 1] + 50.0) / self.resolution) * int(self.resolution)
+
+            for sx in range(lx, ux + 1):
+                for sy in range(ly, uy + 1, 1):
+                    segment_set.add(str(sx) + "_" + str(sy))
+
+            if segment_set is None:
+                continue
+            
+            for key in segment_set:
+                if key in self.segment_dict:
+                    i = self.segment_dict[key]
+                    tp, counter = self.segment_df[i, [1, 2]]
+                    self.segment_df[i, [1, 2]] = [
+                        tp + 1.0 / (counter + 1) * (closest_tp - tp),
+                        counter + 1,
+                    ]
+
+        progress_bar.close()
+
+    def __update_avg_tp(self):
+
+        if not(self.scan_df is None) and self.scan_df.shape[0] > 0:
+            self.__update_tp_by_scan()
+        else:
+            self.__update_tp_by_pose()
 
     # Save the segment TPs
     def __save_tps(self):
