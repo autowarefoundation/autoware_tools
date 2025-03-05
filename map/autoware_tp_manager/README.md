@@ -59,14 +59,14 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
   ros2 run autoware_tp_manager tp_checker.py <path_to_score_dir> <path_to_rosbag> [--pose_topic <topic_of_poses>] [--tp_topic <topic_of_TPs>] [--scan_topic <topic_of_scans>] [--radius <radius>] [--drop_num <drop_num>]
   ```
 
-  | Name              | Description                                                                                                               |
-  | ----------------- | ------------------------------------------------------------------------------------------------------------------------- |
-  | path_to_score_dir | Directory that contains the TP file (.csv) and the downsampled PCD map. This is the output directory of the tp_collector. |
-  | path_to_rosbag    | Path to the input rosbag to be evaluated                                                                                  |
-  | topic_of_poses    | Topic of poses in the evaluation rosbag                                                                                   |
-  | topic_of_TPs      | Topic of TPs in the evaluation rosbag                                                                                     |
-  | topic_of_scans    | Topic of scans in the evaluation rosbag                                                                                   |
-  | radius            | The radius to query map segments in vicinity of poses. This is used when scan data is not available in the rosbag.       |
+  | Name              | Description                                                                                                                              |
+  | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+  | path_to_score_dir | Directory that contains the TP file (.csv) and the downsampled PCD map. This is the output directory of the tp_collector.                |
+  | path_to_rosbag    | Path to the input rosbag to be evaluated                                                                                                 |
+  | topic_of_poses    | Topic of poses in the evaluation rosbag                                                                                                  |
+  | topic_of_TPs      | Topic of TPs in the evaluation rosbag                                                                                                    |
+  | topic_of_scans    | Topic of scans in the evaluation rosbag                                                                                                  |
+  | radius            | The radius to query map segments in vicinity of poses. This is used when scan data is not available in the rosbag.                       |
   | drop_num          | When the number of continuous low-TP poses exceeds this number, the tool stops checking because the localization is not reliable anymore |
 
   The results of checking are published to the topic /autoware_tp_checker, and can also be displayed on Rviz2. The red points
