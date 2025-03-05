@@ -20,7 +20,7 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
 - Collect the average TPs per segment from a map by TP_collector
 
   ```bash
-  ros2 run autoware_tp_manager tp_collector.py <path_to_pcd_dir> <path_to_rosbag> <path_to_output_dir> [--resolution:=<resolution>] [--pose_topic:=<topic_of_poses>] [--tp_topic:=<topic_of_TPs>] [--scan_topic:=<topic_of_scans>]
+  ros2 run autoware_tp_manager tp_collector.py <path_to_pcd_dir> <path_to_rosbag> <path_to_output_dir> [--resolution <resolution>] [--pose_topic <topic_of_poses>] [--tp_topic <topic_of_TPs>] [--scan_topic <topic_of_scans>]
   ```
 
   | Name               | Description                                                                  |
@@ -56,7 +56,7 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
 - Compare a rosbags' TPs with a map's TPs by TP_checker
 
   ```bash
-  ros2 run autoware_tp_manager tp_checker.py <path_to_score_dir> <path_to_rosbag> [--pose_topic:=<topic_of_poses>] [--tp_topic:=<topic_of_TPs>] [--scan_topic:=<topic_of_scans>]
+  ros2 run autoware_tp_manager tp_checker.py <path_to_score_dir> <path_to_rosbag> [--pose_topic <topic_of_poses>] [--tp_topic <topic_of_TPs>] [--scan_topic <topic_of_scans>] [--radius <radius>] [--drop_num <drop_num>]
   ```
 
   | Name              | Description                                                                                                               |
@@ -66,11 +66,13 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
   | topic_of_poses    | Topic of poses in the evaluation rosbag                                                                                   |
   | topic_of_TPs      | Topic of TPs in the evaluation rosbag                                                                                     |
   | topic_of_scans    | Topic of scans in the evaluation rosbag                                                                                   |
+  | radius            | The radius to query map segments in vicinity of poses. This is used when scan data is not available in the rosbag.       |
+  | drop_num          | When the number of continuous low-TP poses exceeds this number, the tool stops checking because the localization is not reliable anymore |
 
   The results of checking are published to the topic /autoware_tp_checker, and can also be displayed on Rviz2. The red points
 
-- The rosbags used to both TP collector and TP checker is created by running Autoware's logging simulator and record the following three topics:
-  - /localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias
+- The rosbags used for both TP collector and TP checker is created by running Autoware's logging simulator and record the following three topics:
+  - /localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias [optional]
   - /localization/pose_estimator/transform_probability
   - /localization/util/downsample/pointcloud
 
