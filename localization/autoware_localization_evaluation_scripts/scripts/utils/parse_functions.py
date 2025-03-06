@@ -58,7 +58,6 @@ def parse_stamp(stamp):
 def parse_msg(msg, msg_type):
     class_name = msg_type.__class__.__name__.replace("Metaclass_", "")
     try:
-        # parse_ + クラス名 の関数を動的に取得して実行
         parser = globals()[f"parse_{class_name}"]
         return parser(msg)
     except KeyError:
