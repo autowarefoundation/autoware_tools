@@ -22,7 +22,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def process_directory(directory: Path, topic_subject: str, topic_reference: str, save_dir_relative: str) -> None:
+def process_directory(
+    directory: Path, topic_subject: str, topic_reference: str, save_dir_relative: str
+) -> None:
     target_rosbag = directory / "result_bag"
     save_dir = directory if save_dir_relative == "" else directory / save_dir_relative
     compare_result_dir = save_dir / "compare_trajectories"
