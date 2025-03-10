@@ -165,6 +165,7 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
     plt.tight_layout()
     save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
     plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
+    plt.close()
 
     #################
     # ekf_localizer #
@@ -198,6 +199,7 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
     plt.tight_layout()
     save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
     plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
+    plt.close()
 
     #############################
     # pose_instability_detector #
@@ -242,6 +244,7 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
     plt.tight_layout()
     save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
     plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
+    plt.close()
 
     ##############################
     # localization_error_monitor #
@@ -267,6 +270,7 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
     plt.tight_layout()
     save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
     plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
+    plt.close()
 
     #######################
     # gyro_bias_validator #
@@ -303,6 +307,7 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
     plt.tight_layout()
     save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
     plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
+    plt.close()
 
 
 if __name__ == "__main__":
