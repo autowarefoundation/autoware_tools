@@ -4,7 +4,7 @@ This package provides tools for debugging Autoware.
 
 ## Processing Time Visualizer
 
-This tool visualizes `tier4_debug_msgs/msg/ProcessingTimeTree` messages.
+This tool visualizes `autoware_internal_debug_msgs/msg/ProcessingTimeTree` messages.
 
 ### Usage
 

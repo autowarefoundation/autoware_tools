@@ -9,7 +9,7 @@ import pyperclip
 import rclpy
 import rclpy.executors
 from rclpy.node import Node
-from tier4_debug_msgs.msg import ProcessingTimeTree as ProcessingTimeTreeMsg
+from autoware_internal_debug_msgs.msg import ProcessingTimeTree as ProcessingTimeTreeMsg
 
 from .print_tree import print_trees
 from .topic_selector import select_topic
@@ -40,7 +40,7 @@ class ProcessingTimeVisualizer(Node):
             for topic_name, topic_types in self.get_topic_names_and_types():
                 if (
                     topic_name == self.topic_name
-                    and "tier4_debug_msgs/msg/ProcessingTimeTree" in topic_types
+                    and "autoware_internal_debug_msgs/msg/ProcessingTimeTree" in topic_types
                 ):
                     topic_found = True
                     break
@@ -63,7 +63,7 @@ class ProcessingTimeVisualizer(Node):
                 for topic_name, topic_types in self.get_topic_names_and_types():
                     for topic_type in topic_types:
                         if (
-                            topic_type == "tier4_debug_msgs/msg/ProcessingTimeTree"
+                            topic_type == "autoware_internal_debug_msgs/msg/ProcessingTimeTree"
                             and topic_name not in topics
                         ):
                             topics.append(topic_name)

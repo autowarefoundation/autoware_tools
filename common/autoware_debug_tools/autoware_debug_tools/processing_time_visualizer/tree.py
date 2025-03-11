@@ -1,6 +1,6 @@
 from typing import Dict
 
-from tier4_debug_msgs.msg import ProcessingTimeTree as ProcessingTimeTreeMsg
+from autoware_internal_debug_msgs.msg import ProcessingTimeTree as ProcessingTimeTreeMsg
 
 
 class ProcessingTimeTree:
