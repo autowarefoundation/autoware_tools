@@ -18,15 +18,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--topic_reference", type=str, default="/localization/pose_estimator/pose_with_covariance"
     )
+    parser.add_argument("--save_dir_relative", type=str, default="")
     return parser.parse_args()
 
 
-def process_directory(directory: Path, topic_subject: str, topic_reference: str) -> None:
+def process_directory(
+    directory: Path, topic_subject: str, topic_reference: str, save_dir_relative: str
+) -> None:
     target_rosbag = directory / "result_bag"
-    compare_result_dir = directory / "compare_trajectories"
+    save_dir = directory if save_dir_relative == "" else directory / save_dir_relative
+    compare_result_dir = save_dir / "compare_trajectories"
     compare_result_dir.mkdir(parents=True, exist_ok=True)
+    diagnostics_result_dir = save_dir / "diagnostics_result"
 
-    plot_diagnostics.main(rosbag_path=target_rosbag)
+    plot_diagnostics.main(rosbag_path=target_rosbag, save_dir=diagnostics_result_dir)
 
     save_name_subject = extract_pose_from_rosbag.topic_name_to_save_name(topic_subject)
     save_name_reference = extract_pose_from_rosbag.topic_name_to_save_name(topic_reference)
@@ -52,13 +57,16 @@ if __name__ == "__main__":
     parallel_num = args.parallel_num
     topic_subject = args.topic_subject
     topic_reference = args.topic_reference
+    save_dir_relative = args.save_dir_relative
 
-    directories = sorted(
-        [d for d in args.result_dir.iterdir() if d.is_dir() and not d.is_symlink()]
-    )
+    target_rosbags = list(result_dir.glob("**/*.db3")) + list(result_dir.glob("**/*.mcap"))
+    directories = [path.parent.parent for path in target_rosbags]
+    directories = list(set(directories))
+    directories = [d for d in directories if not d.is_symlink()]
+    directories = sorted(directories)
 
     with Pool(args.parallel_num) as pool:
         pool.starmap(
             process_directory,
-            [(d, topic_subject, topic_reference) for d in directories],
+            [(d, topic_subject, topic_reference, save_dir_relative) for d in directories],
         )
