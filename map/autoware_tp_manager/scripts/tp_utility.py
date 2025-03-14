@@ -23,7 +23,7 @@ from rosbag2_py import Info
 from rosbag2_py import SequentialReader
 from rosbag2_py import StorageOptions
 import sensor_msgs.msg as sensor_msgs
-from tier4_debug_msgs.msg import Float32Stamped
+from autoware_internal_debug_msgs.msg import Float32Stamped
 import tqdm
 
 

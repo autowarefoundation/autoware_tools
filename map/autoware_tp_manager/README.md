@@ -1,6 +1,6 @@
 # autoware_tp_manager
 
-Here are some tools for collecting average TPs of PCD maps. Currently, we consider the decrease of TPs as a sign of map decay. However, we don't know what TPs are 'abnormal', e.g. in some areas the TPs range around 2.0 ~ 3.0, while in others TPs float around 5.0. This package provides some tools to check it, including:
+Here are some Python tools for collecting average TPs of PCD maps. Currently, we consider the decrease of TPs as a sign of map decay. However, we don't know what TPs are 'abnormal', e.g. in some areas the TPs range around 2.0 ~ 3.0, while in others TPs float around 5.0. This package provides some tools to check it, including:
 
 - TP collector: collect the average TPs per segment of a PCD map
 - TP checker: compare a rosbag's TPs with a map's TPs and highlight the map areas where the rosbag's TPs differ significantly from the map's TPs.
@@ -12,7 +12,7 @@ cd <PATH_TO_pilot-auto.*> # OR <PATH_TO_autoware>
 cd src/
 git clone git@github.com:autowarefoundation/autoware_tools.git
 cd ..
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-tests --symlink-install --packages-up-to autoware_pointcloud_merger
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-tests --symlink-install --packages-up-to autoware_tp_manager
 ```
 
 ## Usage
