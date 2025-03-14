@@ -32,7 +32,7 @@ from rclpy.node import Node
 from tf2_ros import LookupException
 from tf2_ros.buffer import Buffer
 from tf2_ros.transform_listener import TransformListener
-from tier4_planning_msgs.msg import VelocityLimit
+from autoware_internal_planning_msgs.msg import VelocityLimit
 
 REF_LINK = "map"
 SELF_LINK = "base_link"
