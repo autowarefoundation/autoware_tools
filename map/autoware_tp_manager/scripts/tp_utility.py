@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from autoware_internal_debug_msgs.msg import Float32Stamped
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseWithCovarianceStamped
 import numpy as np
@@ -23,7 +24,6 @@ from rosbag2_py import Info
 from rosbag2_py import SequentialReader
 from rosbag2_py import StorageOptions
 import sensor_msgs.msg as sensor_msgs
-from autoware_internal_debug_msgs.msg import Float32Stamped
 import tqdm
 
 
