@@ -27,10 +27,10 @@ class ProcessingTimeVisualizer(Node):
         self.trees: Dict[str, ProcessingTimeTree] = {}
         self.worst_case_tree: Dict[str, ProcessingTimeTree] = {}
         self.total_tree: Dict[str, ProcessingTimeTree] = {}
-        self.stdcscr = init_curses()
+        self.stdscr = init_curses()
         self.show_comment = False
         self.summarize_output = True
-        print_trees("🌲 Processing Time Tree 🌲", self.topic_name, self.trees, self.stdcscr)
+        print_trees("🌲 Processing Time Tree 🌲", self.topic_name, self.trees, self.stdscr)
 
         self.create_timer(0.1, self.update_screen)
 
@@ -87,7 +87,7 @@ class ProcessingTimeVisualizer(Node):
         return subscriber
 
     def update_screen(self):
-        key = self.stdcscr.getch()
+        key = self.stdscr.getch()
 
         self.show_comment = not self.show_comment if key == ord("c") else self.show_comment
         self.summarize_output = (
@@ -97,7 +97,7 @@ class ProcessingTimeVisualizer(Node):
             "🌲 Processing Time Tree 🌲",
             self.topic_name,
             self.trees.values(),
-            self.stdcscr,
+            self.stdscr,
             self.show_comment,
             self.summarize_output,
         )
