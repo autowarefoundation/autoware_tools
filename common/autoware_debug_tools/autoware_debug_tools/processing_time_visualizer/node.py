@@ -5,11 +5,11 @@ import time
 from typing import Dict
 import uuid
 
+from autoware_internal_debug_msgs.msg import ProcessingTimeTree as ProcessingTimeTreeMsg
 import pyperclip
 import rclpy
 import rclpy.executors
 from rclpy.node import Node
-from tier4_debug_msgs.msg import ProcessingTimeTree as ProcessingTimeTreeMsg
 
 from .print_tree import print_trees
 from .topic_selector import select_topic
@@ -27,10 +27,10 @@ class ProcessingTimeVisualizer(Node):
         self.trees: Dict[str, ProcessingTimeTree] = {}
         self.worst_case_tree: Dict[str, ProcessingTimeTree] = {}
         self.total_tree: Dict[str, ProcessingTimeTree] = {}
-        self.stdcscr = init_curses()
+        self.stdscr = init_curses()
         self.show_comment = False
         self.summarize_output = True
-        print_trees("🌲 Processing Time Tree 🌲", self.topic_name, self.trees, self.stdcscr)
+        print_trees("🌲 Processing Time Tree 🌲", self.topic_name, self.trees, self.stdscr)
 
         self.create_timer(0.1, self.update_screen)
 
@@ -40,7 +40,7 @@ class ProcessingTimeVisualizer(Node):
             for topic_name, topic_types in self.get_topic_names_and_types():
                 if (
                     topic_name == self.topic_name
-                    and "tier4_debug_msgs/msg/ProcessingTimeTree" in topic_types
+                    and "autoware_internal_debug_msgs/msg/ProcessingTimeTree" in topic_types
                 ):
                     topic_found = True
                     break
@@ -63,7 +63,7 @@ class ProcessingTimeVisualizer(Node):
                 for topic_name, topic_types in self.get_topic_names_and_types():
                     for topic_type in topic_types:
                         if (
-                            topic_type == "tier4_debug_msgs/msg/ProcessingTimeTree"
+                            topic_type == "autoware_internal_debug_msgs/msg/ProcessingTimeTree"
                             and topic_name not in topics
                         ):
                             topics.append(topic_name)
@@ -87,7 +87,7 @@ class ProcessingTimeVisualizer(Node):
         return subscriber
 
     def update_screen(self):
-        key = self.stdcscr.getch()
+        key = self.stdscr.getch()
 
         self.show_comment = not self.show_comment if key == ord("c") else self.show_comment
         self.summarize_output = (
@@ -97,7 +97,7 @@ class ProcessingTimeVisualizer(Node):
             "🌲 Processing Time Tree 🌲",
             self.topic_name,
             self.trees.values(),
-            self.stdcscr,
+            self.stdscr,
             self.show_comment,
             self.summarize_output,
         )
