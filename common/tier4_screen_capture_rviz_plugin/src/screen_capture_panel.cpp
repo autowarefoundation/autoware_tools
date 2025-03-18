@@ -72,12 +72,43 @@ AutowareScreenCapturePanel::AutowareScreenCapturePanel(QWidget * parent)
     video_cap_layout->addWidget(new QLabel(" [Hz]"));
   }
 
+  // buffer settings
+  auto * buffer_layout = new QHBoxLayout;
+  {
+    buffer_layout->addWidget(new QLabel("Buffer Size: "));
+
+    pre_buffer_size_ = new QSpinBox();
+    pre_buffer_size_->setRange(1, 300);  // Maximum 300 seconds pre-buffer
+    pre_buffer_size_->setValue(10);      // Default 10 seconds pre-buffer
+    pre_buffer_size_->setSingleStep(1);
+    buffer_layout->addWidget(pre_buffer_size_);
+    buffer_layout->addWidget(new QLabel("sec before, "));
+
+    post_buffer_size_ = new QSpinBox();
+    post_buffer_size_->setRange(1, 300);  // Maximum 300 seconds post-buffer
+    post_buffer_size_->setValue(5);       // Default 5 seconds post-buffer
+    post_buffer_size_->setSingleStep(1);
+    buffer_layout->addWidget(post_buffer_size_);
+    buffer_layout->addWidget(new QLabel("sec after"));
+
+    connect(
+      pre_buffer_size_, SIGNAL(valueChanged(const int)), this,
+      SLOT(on_pre_buffer_size_change(const int)));
+    connect(
+      post_buffer_size_, SIGNAL(valueChanged(const int)), this,
+      SLOT(on_post_buffer_size_change(const int)));
+  }
+
   // consider layout
   {
     v_layout->addLayout(cap_layout);
     v_layout->addLayout(video_cap_layout);
+    v_layout->addLayout(buffer_layout);
     setLayout(v_layout);
   }
+
+  // Initialize buffer sizes
+  update_buffer_sizes();
 }
 
 void AutowareScreenCapturePanel::onInitialize()
@@ -99,7 +130,34 @@ void AutowareScreenCapturePanel::on_rate_change([[maybe_unused]] const int rate)
 {
   timer_->cancel();
   create_timer();
+  update_buffer_sizes();
   RCLCPP_INFO_STREAM(raw_node_->get_logger(), "RATE:" << rate_->value());
+}
+
+void AutowareScreenCapturePanel::on_pre_buffer_size_change(const int seconds)
+{
+  update_buffer_sizes();
+  RCLCPP_INFO_STREAM(
+    raw_node_->get_logger(),
+    "PRE BUFFER SIZE: " << seconds << "s (" << pre_buffer_size_frames_ << " frames)");
+}
+
+void AutowareScreenCapturePanel::on_post_buffer_size_change(const int seconds)
+{
+  update_buffer_sizes();
+  RCLCPP_INFO_STREAM(
+    raw_node_->get_logger(),
+    "POST BUFFER SIZE: " << seconds << "s (" << post_buffer_size_frames_ << " frames)");
+}
+
+void AutowareScreenCapturePanel::update_buffer_sizes()
+{
+  // Calculate buffer sizes in frames
+  pre_buffer_size_frames_ = pre_buffer_size_->value() * rate_->value();
+  post_buffer_size_frames_ = post_buffer_size_->value() * rate_->value();
+
+  // Update maximum buffer size
+  total_buffer_size_frames_ = pre_buffer_size_frames_ + post_buffer_size_frames_;
 }
 
 void AutowareScreenCapturePanel::on_timer()
@@ -124,7 +182,11 @@ void AutowareScreenCapturePanel::on_timer()
 
   if (is_buffering_) {
     buffer_.push_back(image.clone());
-    if (buffer_.size() > buffer_size_) {
+    // Maintain buffer at pre-buffer size when not recording
+    if (!is_recording_ && buffer_.size() > pre_buffer_size_frames_) {
+      buffer_.pop_front();
+    } else if (is_recording_ && buffer_.size() > total_buffer_size_frames_) {
+      // For combined pre+post buffer when recording
       buffer_.pop_front();
     }
   }
@@ -166,6 +228,26 @@ void AutowareScreenCapturePanel::callback(
 
   if (req->action == Capture::Request::SAVE_BUFFER) {
     res->success = save_buffer(req->file_name);
+    return;
+  }
+
+  if (req->action == Capture::Request::SET_PRE_BUFFER) {
+    if (req->buffer_seconds > 0) {
+      pre_buffer_size_->setValue(req->buffer_seconds);
+      res->success = true;
+    } else {
+      res->success = false;
+    }
+    return;
+  }
+
+  if (req->action == Capture::Request::SET_POST_BUFFER) {
+    if (req->buffer_seconds > 0) {
+      post_buffer_size_->setValue(req->buffer_seconds);
+      res->success = true;
+    } else {
+      res->success = false;
+    }
     return;
   }
 
@@ -237,7 +319,9 @@ bool AutowareScreenCapturePanel::start_buffering()
 
   if (!main_window_) return false;
 
-  RCLCPP_INFO_STREAM(raw_node_->get_logger(), "START BUFFERING.");
+  RCLCPP_INFO_STREAM(
+    raw_node_->get_logger(),
+    "START BUFFERING WITH " << pre_buffer_size_->value() << "s PRE BUFFER.");
 
   buffer_.clear();
   is_buffering_ = true;
@@ -263,8 +347,8 @@ bool AutowareScreenCapturePanel::save_movie(const std::string & file_name)
 
   save(movie_, file_name);
 
-  capture_to_mp4_button_ptr_->setText("waiting for capture");
-  capture_to_mp4_button_ptr_->setStyleSheet("background-color: #00FF00;");
+  capture_to_mp4_button_ptr_->setText("Capture Screen");
+  capture_to_mp4_button_ptr_->setStyleSheet("");
 
   is_recording_ = false;
 
@@ -279,7 +363,10 @@ bool AutowareScreenCapturePanel::save_buffer(const std::string & file_name)
 
   if (!is_buffering_) return false;
 
-  RCLCPP_INFO_STREAM(raw_node_->get_logger(), "SAVE BUFFERED MOVIE.");
+  RCLCPP_INFO_STREAM(
+    raw_node_->get_logger(), "SAVE BUFFERED MOVIE WITH "
+                               << pre_buffer_size_->value() << "s PRE AND "
+                               << post_buffer_size_->value() << "s POST BUFFER.");
 
   save(buffer_, file_name + "_buffered");
 

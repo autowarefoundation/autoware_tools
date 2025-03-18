@@ -74,8 +74,9 @@ public Q_SLOTS:
   void on_click_video_capture();
 
   void on_prefix_change() {}
-
   void on_rate_change(const int rate);
+  void on_pre_buffer_size_change(const int seconds);
+  void on_post_buffer_size_change(const int seconds);
 
 private:
   void create_timer();
@@ -97,23 +98,26 @@ private:
   void on_timer();
 
   void save(const std::deque<cv::Mat> & images, const std::string & file_name);
+  void update_buffer_sizes();
 
   QLabel * ros_time_label_;
   QPushButton * screen_capture_button_ptr_;
   QPushButton * capture_to_mp4_button_ptr_;
   QLineEdit * file_prefix_;
   QSpinBox * rate_;
+  QSpinBox * pre_buffer_size_;   // Buffer before trigger in seconds
+  QSpinBox * post_buffer_size_;  // Buffer after trigger in seconds
   QMainWindow * main_window_{nullptr};
 
   cv::Size size_;
 
   std::deque<cv::Mat> movie_;
-
   std::deque<cv::Mat> buffer_;
 
-  // Size of the frame buffer (number of frames to keep in memory)
-  // At 10 Hz capture rate, 100 frames correspond to approximately 10 seconds of video
-  const size_t buffer_size_ = 100;
+  // Buffer sizes in frames, calculated from seconds and framerate
+  size_t pre_buffer_size_frames_ = 100;    // Default 10s at 10Hz
+  size_t post_buffer_size_frames_ = 50;    // Default 5s at 10Hz
+  size_t total_buffer_size_frames_ = 150;  // Total buffer size in frames
 
   bool is_buffering_{false};
   bool is_recording_{false};
