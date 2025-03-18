@@ -183,10 +183,7 @@ void AutowareScreenCapturePanel::on_timer()
   if (is_buffering_) {
     buffer_.push_back(image.clone());
     // Maintain buffer at pre-buffer size when not recording
-    if (!is_recording_ && buffer_.size() > pre_buffer_size_frames_) {
-      buffer_.pop_front();
-    } else if (is_recording_ && buffer_.size() > total_buffer_size_frames_) {
-      // For combined pre+post buffer when recording
+    if (buffer_.size() > total_buffer_size_frames_) {
       buffer_.pop_front();
     }
   }
@@ -195,7 +192,27 @@ void AutowareScreenCapturePanel::on_timer()
     movie_.push_back(image.clone());
   }
 
+  if (delayed_save_) {
+    delayed_buffer_.push_back(image.clone());
+
+    if (--remaining_post_frames_ <= 0) {
+      save_combined_buffer(delayed_filename_);
+      delayed_save_ = false;
+    }
+  }
+
   cv::waitKey(0);
+}
+
+void AutowareScreenCapturePanel::save_combined_buffer(const std::string & file_name)
+{
+  std::deque<cv::Mat> combined_buffer;
+  combined_buffer.insert(combined_buffer.end(), buffer_.begin(), buffer_.end());
+  combined_buffer.insert(combined_buffer.end(), delayed_buffer_.begin(), delayed_buffer_.end());
+
+  save(combined_buffer, file_name);
+
+  delayed_buffer_.clear();
 }
 
 void AutowareScreenCapturePanel::callback(
@@ -368,7 +385,9 @@ bool AutowareScreenCapturePanel::save_buffer(const std::string & file_name)
                                << pre_buffer_size_->value() << "s PRE AND "
                                << post_buffer_size_->value() << "s POST BUFFER.");
 
-  save(buffer_, file_name + "_buffered");
+  delayed_save_ = true;
+  delayed_filename_ = file_name + "_buffered";
+  remaining_post_frames_ = post_buffer_size_frames_;
 
   return true;
 }

@@ -97,6 +97,8 @@ private:
 
   void on_timer();
 
+  void save_combined_buffer(const std::string & file_name);
+
   void save(const std::deque<cv::Mat> & images, const std::string & file_name);
   void update_buffer_sizes();
 
@@ -121,6 +123,11 @@ private:
 
   bool is_buffering_{false};
   bool is_recording_{false};
+
+  bool delayed_save_ = false;
+  std::deque<cv::Mat> delayed_buffer_;
+  std::string delayed_filename_;
+  int remaining_post_frames_ = 0;
 
   rclcpp::Service<Capture>::SharedPtr srv_;
   rclcpp::Node::SharedPtr raw_node_;
