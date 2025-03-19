@@ -338,6 +338,8 @@ class TPChecker(Node):
             else:
                 expected_tp = 0
 
+            self.dual_tp[i, :] = [closest_tp, expected_tp]
+            
             # If the expected tp and the actual tp is quite different, mark the pose as changed
             if abs(expected_tp - closest_tp) > expected_tp * 0.2:
                 self.mark[i] = 1
