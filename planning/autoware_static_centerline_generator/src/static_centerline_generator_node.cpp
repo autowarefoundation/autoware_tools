@@ -14,7 +14,7 @@
 
 #include "static_centerline_generator_node.hpp"
 
-#include "autoware/map_loader/lanelet2_map_loader_node.hpp"
+#include "autoware/map_loader/lanelet2_map_loader_utils.hpp"
 #include "autoware/map_projection_loader/load_info_from_lanelet2_map.hpp"
 #include "autoware/map_projection_loader/map_projection_loader.hpp"
 #include "autoware/motion_utils/resample/resample.hpp"
@@ -361,7 +361,7 @@ void StaticCenterlineGeneratorNode::load_map(const std::string & lanelet2_input_
     // load map
     map_projector_info_ = std::make_unique<MapProjectorInfo>(
       autoware::map_projection_loader::load_info_from_lanelet2_map(lanelet2_input_file_path));
-    const auto map_ptr = autoware::map_loader::Lanelet2MapLoaderNode::load_map(
+    const auto map_ptr = autoware::map_loader::utils::load_map(
       lanelet2_input_file_path, *map_projector_info_);
     if (!map_ptr) {
       return nullptr;
@@ -369,7 +369,7 @@ void StaticCenterlineGeneratorNode::load_map(const std::string & lanelet2_input_
 
     // NOTE: The original map is stored here since the centerline will be added to all the
     //       lanelet when lanelet::utils::overwriteLaneletCenterline is called.
-    original_map_ptr_ = autoware::map_loader::Lanelet2MapLoaderNode::load_map(
+    original_map_ptr_ = autoware::map_loader::utils::load_map(
       lanelet2_input_file_path, *map_projector_info_);
 
     // overwrite more dense centerline
@@ -377,7 +377,7 @@ void StaticCenterlineGeneratorNode::load_map(const std::string & lanelet2_input_
     lanelet::utils::overwriteLaneletsCenterline(map_ptr, 5.0, false);
 
     // create map bin msg
-    const auto map_bin_msg = autoware::map_loader::Lanelet2MapLoaderNode::create_map_bin_msg(
+    const auto map_bin_msg = autoware::map_loader::utils::create_map_bin_msg(
       map_ptr, lanelet2_input_file_path, now());
 
     return std::make_shared<LaneletMapBin>(map_bin_msg);
