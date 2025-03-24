@@ -2,8 +2,8 @@
 Changelog for package autoware_localization_evaluation_scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2025-03-24)
+------------------
 * Added plt.close() (`#221 <https://github.com/autowarefoundation/autoware_tools/issues/221>`_)
 * fix: set save dir (`#220 <https://github.com/autowarefoundation/autoware_tools/issues/220>`_)
   * fix: set save dir

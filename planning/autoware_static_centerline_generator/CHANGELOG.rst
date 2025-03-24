@@ -2,8 +2,8 @@
 Changelog for package autoware_static_centerline_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2025-03-24)
+------------------
 * fix static_centerline parameter path (`#218 <https://github.com/autowarefoundation/autoware_tools/issues/218>`_)
 * fix(autoware_static_centerline_generator): changes to support modifications made to autoware.core (`#225 <https://github.com/autowarefoundation/autoware_tools/issues/225>`_)
 * feat!: replace tier4_planning_msgs/PathWithLaneId with autoware_internal_planning_msgs/PathWithLaneId (`#206 <https://github.com/autowarefoundation/autoware_tools/issues/206>`_)

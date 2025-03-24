@@ -2,8 +2,8 @@
 Changelog for package driving_environment_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2025-03-24)
+------------------
 * fix(driving_environment_analyzer): add missing include files for autoware_universe_utils (`#212 <https://github.com/autowarefoundation/autoware_tools/issues/212>`_)
 * Contributors: Ryohsuke Mitsudome
 

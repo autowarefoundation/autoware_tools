@@ -2,8 +2,8 @@
 Changelog for package autoware_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2025-03-24)
+------------------
 * fix(autoware_debug_tools): time keeper does not work with the old message type (`#224 <https://github.com/autowarefoundation/autoware_tools/issues/224>`_)
   * fix(autoware_debug_tools): TimeKeeper does not work with the old message type
   * fix typo
