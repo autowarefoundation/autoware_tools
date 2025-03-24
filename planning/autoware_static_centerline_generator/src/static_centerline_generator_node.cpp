@@ -361,24 +361,24 @@ void StaticCenterlineGeneratorNode::load_map(const std::string & lanelet2_input_
     // load map
     map_projector_info_ = std::make_unique<MapProjectorInfo>(
       autoware::map_projection_loader::load_info_from_lanelet2_map(lanelet2_input_file_path));
-    const auto map_ptr = autoware::map_loader::utils::load_map(
-      lanelet2_input_file_path, *map_projector_info_);
+    const auto map_ptr =
+      autoware::map_loader::utils::load_map(lanelet2_input_file_path, *map_projector_info_);
     if (!map_ptr) {
       return nullptr;
     }
 
     // NOTE: The original map is stored here since the centerline will be added to all the
     //       lanelet when lanelet::utils::overwriteLaneletCenterline is called.
-    original_map_ptr_ = autoware::map_loader::utils::load_map(
-      lanelet2_input_file_path, *map_projector_info_);
+    original_map_ptr_ =
+      autoware::map_loader::utils::load_map(lanelet2_input_file_path, *map_projector_info_);
 
     // overwrite more dense centerline
     // NOTE: overwriteLaneletsCenterlineWithWaypoints is used only in real time calculation.
     lanelet::utils::overwriteLaneletsCenterline(map_ptr, 5.0, false);
 
     // create map bin msg
-    const auto map_bin_msg = autoware::map_loader::utils::create_map_bin_msg(
-      map_ptr, lanelet2_input_file_path, now());
+    const auto map_bin_msg =
+      autoware::map_loader::utils::create_map_bin_msg(map_ptr, lanelet2_input_file_path, now());
 
     return std::make_shared<LaneletMapBin>(map_bin_msg);
   }();
