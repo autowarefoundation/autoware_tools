@@ -2,6 +2,9 @@
 Changelog for package simulator_compatibility_test
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.0 (2025-01-28)
 ------------------
 * fix: autoware_msgs (`#68 <https://github.com/autowarefoundation/autoware_tools/issues/68>`_)

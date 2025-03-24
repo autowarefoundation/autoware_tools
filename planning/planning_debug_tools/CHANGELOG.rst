@@ -2,6 +2,13 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(planning_debug_tools)!: replace VelocityLimit messages to autoware_internal_planning_msgs (`#223 <https://github.com/autowarefoundation/autoware_tools/issues/223>`_)
+* feat!: replace tier4_planning_msgs/PathWithLaneId with autoware_internal_planning_msgs/PathWithLaneId (`#206 <https://github.com/autowarefoundation/autoware_tools/issues/206>`_)
+  * feat!: replace tier4_planning_msgs/PathWithLaneId with autoware_internal_planning_msgs/PathWithLaneId
+* Contributors: Ryohsuke Mitsudome
+
 0.1.0 (2025-01-28)
 ------------------
 * unify version to 0.0.0

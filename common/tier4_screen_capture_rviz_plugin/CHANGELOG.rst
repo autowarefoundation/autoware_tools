@@ -2,6 +2,9 @@
 Changelog for package tier4_screen_capture_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.0 (2025-01-28)
 ------------------
 * chore: sync files (`#11 <https://github.com/autowarefoundation/autoware_tools/issues/11>`_)

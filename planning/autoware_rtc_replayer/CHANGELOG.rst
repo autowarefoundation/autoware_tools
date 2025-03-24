@@ -2,6 +2,9 @@
 Changelog for package autoware_rtc_replayer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.0 (2025-01-28)
 ------------------
 * unify version to 0.0.0

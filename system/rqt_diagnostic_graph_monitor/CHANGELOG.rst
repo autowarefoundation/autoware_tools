@@ -2,6 +2,9 @@
 Changelog for package rqt_diagnostic_graph_monitor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.1.0 (2025-01-28)
 ------------------
 * unify version to 0.0.0
