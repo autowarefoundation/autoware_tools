@@ -2,6 +2,20 @@
 Changelog for package autoware_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.2.0 (2025-03-24)
+------------------
+* fix(autoware_debug_tools): time keeper does not work with the old message type (`#224 <https://github.com/autowarefoundation/autoware_tools/issues/224>`_)
+  * fix(autoware_debug_tools): TimeKeeper does not work with the old message type
+  * fix typo
+  ---------
+* feat(autoware_debug_tools): add frequent_log_checker.py (`#172 <https://github.com/autowarefoundation/autoware_tools/issues/172>`_)
+  * feat(autoware_debug_tools): add frequent_log_checker.py
+  * minor change
+  * minor fix
+  ---------
+  Co-authored-by: SakodaShintaro <rgbygscrsedppbwg@gmail.com>
+* Contributors: Takayuki Murooka
+
 0.1.0 (2025-01-28)
 ------------------
 * feat: use autoware_internal_debug_msgs in processing_time_plotter.py (`#184 <https://github.com/autowarefoundation/autoware_tools/issues/184>`_)

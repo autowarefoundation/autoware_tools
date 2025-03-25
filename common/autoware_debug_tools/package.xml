@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>autoware_debug_tools</name>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <description>The autoware_debug_tools package</description>
   <maintainer email="yhisaki31@gmail.com">Yukinari Hisaki</maintainer>
   <maintainer email="satoshi.ota@tier4.jp">Satoshi Ota</maintainer>

@@ -2,6 +2,9 @@
 Changelog for package rtc_manager_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.2.0 (2025-03-24)
+------------------
+
 0.1.0 (2025-01-28)
 ------------------
 * chore: sync files (`#11 <https://github.com/autowarefoundation/autoware_tools/issues/11>`_)
