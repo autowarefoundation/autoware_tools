@@ -37,7 +37,7 @@ class Log:
 
 def check(log_file, duration_to_count, log_count_threshold, log_format):
     recent_log_list = []
-    unique_frequent_log_list = []
+    unique_frequent_log_list = {}
 
     with open(log_file, "r") as f:
         for full_message in f.readlines():
@@ -62,12 +62,9 @@ def check(log_file, duration_to_count, log_count_threshold, log_format):
             except ValueError:
                 continue
 
-            # skip if the log is already considered as frequent
-            if recent_log.is_in(unique_frequent_log_list):
-                continue
             recent_log_list.append(recent_log)
 
-            # remove obsolete or already frequent log
+            # remove obsolete log
             for log in recent_log_list[:]:
                 duration = timestamp - log.timestamp
                 if duration_to_count < duration:
@@ -76,9 +73,6 @@ def check(log_file, duration_to_count, log_count_threshold, log_format):
             # extract duplicated (= frequent) log
             for i in range(len(recent_log_list)):
                 log_count = 0
-                if recent_log_list[i].is_in(unique_frequent_log_list):
-                    continue
-
                 for j in range(len(recent_log_list)):
                     if i <= j:
                         continue
@@ -86,7 +80,20 @@ def check(log_file, duration_to_count, log_count_threshold, log_format):
                         log_count += 1
 
                 if log_count_threshold <= log_count:
-                    unique_frequent_log_list.append(recent_log_list[i])
+                    contained_frequent_log = None
+                    for frequent_log in unique_frequent_log_list:
+                        if frequent_log.is_same(recent_log_list[i]):
+                            contained_frequent_log = frequent_log
+                            break
+
+                    if contained_frequent_log:
+                        # update the existing value
+                        unique_frequent_log_list[contained_frequent_log] = max(
+                            unique_frequent_log_list[contained_frequent_log], log_count
+                        )
+                    else:
+                        # add a new key and value
+                        unique_frequent_log_list[recent_log_list[i]] = log_count
 
     if len(unique_frequent_log_list) == 0:
         print(
@@ -94,14 +101,17 @@ def check(log_file, duration_to_count, log_count_threshold, log_format):
         )
     else:
         for frequent_log in unique_frequent_log_list:
-            print(frequent_log.full_message)
+            log_count = unique_frequent_log_list[frequent_log]
+            print(f"{frequent_log.full_message[:-1]}\t{log_count}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="frequent log checker")
     parser.add_argument("log_file", help="launch log file")
-    parser.add_argument("-d", "--log-duration", default=1.0, help="duration to count log")
-    parser.add_argument("-c", "--log-count", default=2, help="log count threshold")
+    parser.add_argument(
+        "-d", "--log-duration", default=2.0, type=float, help="duration to count log"
+    )
+    parser.add_argument("-c", "--log-count", default=5, type=int, help="log count threshold")
     parser.add_argument("-f", "--log-format", default="1", help="log format")
     args = parser.parse_args()
 
