@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from rqt_autoware_manual_controller.parts.adapi import Adapi
+from rqt_autoware_manual_controller.modules.adapi import Adapi
 from rqt_autoware_manual_controller.widget import ControllerWidget
 from rqt_gui_py.plugin import Plugin
 
@@ -27,7 +27,8 @@ class ControllerPlugin(Plugin):
         self.widget.shutdown()
 
     def save_settings(self, plugin_settings, instance_settings):
-        pass
+        plugin_settings.set_value("SplitterState", self.widget.saveState())
 
     def restore_settings(self, plugin_settings, instance_settings):
-        pass
+        if plugin_settings.contains("SplitterState"):
+            self.widget.restoreState(plugin_settings.value("SplitterState"))

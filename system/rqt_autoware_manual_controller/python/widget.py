@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from python_qt_binding import QtCore
 from python_qt_binding import QtWidgets
-from rqt_autoware_manual_controller.parts.adapi import Adapi
-from rqt_autoware_manual_controller.parts.mode_select import ManualModeSelect
-from rqt_autoware_manual_controller.parts.mode_select import ManualModeStatus
+from rqt_autoware_manual_controller.modules.adapi import Adapi
+from rqt_autoware_manual_controller.modules.gear import GearControl
+from rqt_autoware_manual_controller.modules.hazard_lights import HazardLightsControl
+from rqt_autoware_manual_controller.modules.heartbeat import HeartbeatControl
+from rqt_autoware_manual_controller.modules.mode_select import ManualModeSelect
+from rqt_autoware_manual_controller.modules.mode_select import ManualModeStatus
+from rqt_autoware_manual_controller.modules.mouse_control import MouseControl
+from rqt_autoware_manual_controller.modules.turn_indicators import TurnIndicatorsControl
 
 
 class ControllerWidget(QtWidgets.QSplitter):
@@ -25,51 +29,63 @@ class ControllerWidget(QtWidgets.QSplitter):
         self.adapi = adapi
         self.mode_select = ManualModeSelect(self.adapi)
         self.mode_status = ManualModeStatus(self.adapi)
-
+        self.mouse = MouseControl(self.adapi)
+        self.gear = GearControl(self.adapi)
+        self.turn_indicators = TurnIndicatorsControl(self.adapi)
+        self.hazard_lights = HazardLightsControl(self.adapi)
+        self.heartbeat = HeartbeatControl(self.adapi)
+        row = 0
         layout = QtWidgets.QGridLayout()
-        layout.addWidget(QtWidgets.QLabel("Item"), 0, 0)
-        layout.addWidget(QtWidgets.QLabel("Status"), 0, 1)
-        layout.addWidget(QtWidgets.QLabel("Command"), 0, 2)
-        layout.addWidget(QtWidgets.QLabel("Mode"), 1, 0)
-        layout.addWidget(self.mode_status, 1, 1)
-        layout.addLayout(self.mode_select, 1, 2)
-        layout.addWidget(QtWidgets.QLabel("Accel Pedal"), 2, 0)
-        layout.addWidget(QtWidgets.QLabel("Brake Pedal"), 3, 0)
-        layout.addWidget(QtWidgets.QLabel("Steering"), 4, 0)
-        layout.addWidget(QtWidgets.QLabel("Gear"), 5, 0)
-        layout.addWidget(QtWidgets.QLabel("Turn Indicator"), 6, 0)
-        layout.addWidget(QtWidgets.QLabel("Hazard Lights"), 7, 0)
-        layout.setRowStretch(8, 1)
+        layout.addWidget(QtWidgets.QLabel("Item"), row, 0)
+        layout.addWidget(QtWidgets.QLabel("Status"), row, 1)
+        layout.addWidget(QtWidgets.QLabel("Command"), row, 2)
+        row += 1
+        layout.addWidget(QtWidgets.QLabel("Mode"), row, 0)
+        layout.addWidget(self.mode_status, row, 1)
+        layout.addLayout(self.mode_select, row, 2)
+        row += 1
+        layout.addWidget(QtWidgets.QLabel("Velocity"), row, 0)
+        layout.addWidget(QtWidgets.QLabel("---"), row, 1)
+        layout.addWidget(QtWidgets.QLabel("---"), row, 2)
+        row += 1
+        layout.addWidget(QtWidgets.QLabel("Acceleration"), row, 0)
+        layout.addWidget(QtWidgets.QLabel("---"), row, 1)
+        layout.addWidget(QtWidgets.QLabel("---"), row, 2)
+        row += 1
+        layout.addWidget(QtWidgets.QLabel("Throttle"), row, 0)
+        layout.addWidget(QtWidgets.QLabel("---"), row, 1)
+        layout.addWidget(self.mouse.accel, row, 2)
+        row += 1
+        layout.addWidget(QtWidgets.QLabel("Brake"), row, 0)
+        layout.addWidget(QtWidgets.QLabel("---"), row, 1)
+        layout.addWidget(self.mouse.brake, row, 2)
+        row += 1
+        layout.addWidget(QtWidgets.QLabel("Steering"), row, 0)
+        layout.addWidget(QtWidgets.QLabel("---"), row, 1)
+        layout.addWidget(self.mouse.steer, row, 2)
+        row += 1
+        layout.addWidget(QtWidgets.QLabel("Gear"), row, 0)
+        layout.addWidget(self.gear.status, row, 1)
+        layout.addLayout(self.gear.command, row, 2)
+        row += 1
+        layout.addWidget(QtWidgets.QLabel("Turn Indicator"), row, 0)
+        layout.addWidget(self.turn_indicators.status, row, 1)
+        layout.addLayout(self.turn_indicators.command, row, 2)
+        row += 1
+        layout.addWidget(QtWidgets.QLabel("Hazard Lights"), row, 0)
+        layout.addWidget(self.hazard_lights.status, row, 1)
+        layout.addLayout(self.hazard_lights.command, row, 2)
+        row += 1
+        layout.addWidget(QtWidgets.QLabel("Heartbeat"), row, 0)
+        layout.addWidget(self.heartbeat.status, row, 1)
+        layout.addLayout(self.heartbeat.command, row, 2)
+        row += 1
+        layout.setRowStretch(row, 1)
+
         widget = QtWidgets.QWidget()
         widget.setLayout(layout)
-
-        self.mouse = MouseCapture(self.adapi)
-        self.addWidget(self.mouse)
+        self.addWidget(self.mouse.capture)
         self.addWidget(widget)
 
     def shutdown(self):
         pass
-
-
-class MouseCapture(QtWidgets.QLabel):
-    def __init__(self, adapi: Adapi):
-        super().__init__()
-        self.adapi = adapi
-        self.setText("+")
-        self.setAlignment(QtCore.Qt.AlignCenter)
-        self.setStyleSheet("background-color: gray;")
-        self.setMouseTracking(False)
-
-    def mouseMoveEvent(self, event):
-        w = self.size().width() / 2
-        h = self.size().height() / 2
-        x = (event.pos().x() - w) / w
-        y = (event.pos().y() - h) / h
-        x = -max(-1.0, min(1.0, x))
-        y = -max(-1.0, min(1.0, y))
-        steer = x
-        accel = max(0.0, +y)
-        brake = max(0.0, -y)
-        print("accel", accel, "brake", brake, "steer", steer)
-        self.adapi.set_pedals(accel, brake)
-        self.adapi.set_steering(steer)

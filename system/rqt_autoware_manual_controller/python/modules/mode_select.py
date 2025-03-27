@@ -13,14 +13,14 @@
 # limitations under the License.
 
 from python_qt_binding import QtWidgets
-from rqt_autoware_manual_controller.parts.adapi import Adapi
-from rqt_autoware_manual_controller.parts.adapi import ManualMode
+from rqt_autoware_manual_controller.modules.adapi import Adapi
+from rqt_autoware_manual_controller.modules.adapi import ManualMode
 
 
 class ManualModeSelect(QtWidgets.QVBoxLayout):
     def __init__(self, adapi: Adapi):
         super().__init__()
-        adapi.on_mode_list = self.on_mode_list
+        adapi.set_on_mode_list(self.on_mode_list)
         self.adapi = adapi
         self.buttons = {mode: QtWidgets.QPushButton(mode.name) for mode in ManualMode}
         for mode, button in self.buttons.items():
@@ -37,7 +37,7 @@ class ManualModeStatus(QtWidgets.QLabel):
     def __init__(self, adapi: Adapi):
         super().__init__()
         self.setText("Unknown")
-        adapi.on_mode_status = self.on_status
+        adapi.set_on_mode_status(self.on_mode_status)
 
-    def on_status(self, mode: ManualMode):
+    def on_mode_status(self, mode: ManualMode):
         self.setText(mode.name)
