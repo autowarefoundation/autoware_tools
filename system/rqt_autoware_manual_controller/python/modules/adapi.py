@@ -78,12 +78,12 @@ class Adapi:
         self._cli_mode_list        = node.create_client(ListManualControlMode,         f"/api/manual/{target}/control_mode/list")                                            # noqa: E221
         self._cli_mode_select      = node.create_client(SelectManualControlMode,       f"/api/manual/{target}/control_mode/select")                                          # noqa: E221
         self._sub_mode_status      = node.create_subscription(ManualControlModeStatus, f"/api/manual/{target}/control_mode/status", self._on_mode_status, qos_notification)  # noqa: E221
-        self._pub_pedals           = node.create_publisher(PedalsCommand,              f"/api/manual/{target}/command/pedals", 1)                                            # noqa: E221
-        self._pub_steering         = node.create_publisher(SteeringCommand,            f"/api/manual/{target}/command/steering", 1)                                          # noqa: E221
-        self._pub_gear             = node.create_publisher(GearCommand,                f"/api/manual/{target}/command/gear", qos_notification)                               # noqa: E221
+        self._pub_pedals           = node.create_publisher(PedalsCommand,              f"/api/manual/{target}/command/pedals",          qos_realtime)                        # noqa: E221
+        self._pub_steering         = node.create_publisher(SteeringCommand,            f"/api/manual/{target}/command/steering",        qos_realtime)                        # noqa: E221
+        self._pub_gear             = node.create_publisher(GearCommand,                f"/api/manual/{target}/command/gear",            qos_notification)                    # noqa: E221
         self._pub_turn_indicators  = node.create_publisher(TurnIndicatorsCommand,      f"/api/manual/{target}/command/turn_indicators", qos_notification)                    # noqa: E221
-        self._pub_hazard_lights    = node.create_publisher(HazardLightsCommand,        f"/api/manual/{target}/command/hazard_lights", qos_notification)                      # noqa: E221
-        self._pub_heartbeat        = node.create_publisher(ManualOperatorHeartbeat,    f"/api/manual/{target}/operator/heartbeat", qos_realtime)                             # noqa: E221
+        self._pub_hazard_lights    = node.create_publisher(HazardLightsCommand,        f"/api/manual/{target}/command/hazard_lights",   qos_notification)                    # noqa: E221
+        self._pub_heartbeat        = node.create_publisher(ManualOperatorHeartbeat,    f"/api/manual/{target}/operator/heartbeat",      qos_realtime)                        # noqa: E221
         self._sub_vehicle_status   = node.create_subscription(VehicleStatus,            "/api/vehicle/status", self._on_vehicle_status, qos_realtime)                        # noqa: E221
         # fmt: on
         self._timer = node.create_timer(1.0, self._on_timer)
