@@ -1,5 +1,7 @@
 #! /usr/bin/python3
+import rclpy
 import pandas as pd
+import math
 import numpy as np
 import torch
 import torch.nn as nn
@@ -16,7 +18,9 @@ class NeuralNetworkThrottle(Node):
     class NeuralNetwork(nn.Module):
         def __init__(self):
             super(NeuralNetworkThrottle.NeuralNetwork, self).__init__()
-            self.fc1 = nn.Linear(2, 128)  # Input layer with 2 neurons, hidden layer with n neurons
+            self.fc1 = nn.Linear(
+                2, 128
+            )  # Input layer with 2 neurons, hidden layer with n neurons
             self.relu1 = nn.ReLU()
             self.fc2 = nn.Linear(128, 32)
             self.relu2 = nn.ReLU()
@@ -71,16 +75,22 @@ class NeuralNetworkThrottle(Node):
         dataa["Throttling"] = (dataa["Throttling"] - mean1) / std1
 
         data = data[abs(data["Throttling"] - mean1) <= std1 * self.FILTER_CMD_THROTTLE]
-        dataa = dataa[abs(dataa["Throttling"] - mean1) <= std1 * self.FILTER_CMD_THROTTLE]
+        dataa = dataa[
+            abs(dataa["Throttling"] - mean1) <= std1 * self.FILTER_CMD_THROTTLE
+        ]
 
         mean2 = data["Acceleration_measured"].mean()
         std2 = data["Acceleration_measured"].std()
         data["Acceleration_measured"] = (data["Acceleration_measured"] - mean2) / std2
         dataa["Acceleration_measured"] = (dataa["Acceleration_measured"] - mean2) / std2
 
-        data = data[abs(data["Acceleration_measured"] - mean2) <= std2 * self.FILTER_ACC_THROTTLE]
+        data = data[
+            abs(data["Acceleration_measured"] - mean2)
+            <= std2 * self.FILTER_ACC_THROTTLE
+        ]
         dataa = dataa[
-            abs(dataa["Acceleration_measured"] - mean2) <= std2 * self.FILTER_ACC_THROTTLE
+            abs(dataa["Acceleration_measured"] - mean2)
+            <= std2 * self.FILTER_ACC_THROTTLE
         ]
 
         # Split the data into input features (velocity and throttle) and target (acceleration) and test/train
@@ -88,7 +98,9 @@ class NeuralNetworkThrottle(Node):
         X = data[["Velocity", "Throttling"]].values
         y = data["Acceleration_measured"].values
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
 
         # Convert NumPy arrays to PyTorch tensors
         X_train = torch.tensor(X_train, dtype=torch.float32)
@@ -97,7 +109,9 @@ class NeuralNetworkThrottle(Node):
         y_test = torch.tensor(y_test, dtype=torch.float32)
 
         criterion = nn.MSELoss()
-        optimizer = optim.Adam(self.model.parameters(), lr=0.001)  # , weight_decay=0.001)
+        optimizer = optim.Adam(
+            self.model.parameters(), lr=0.001
+        )  # , weight_decay=0.001)
 
         # Training loop
         num_epochs = 100
@@ -114,12 +128,6 @@ class NeuralNetworkThrottle(Node):
 
         with torch.no_grad():
             test_outputs = self.model(X_test)
-<<<<<<< HEAD
-            test_loss = criterion(test_outputs, y_test.view(-1, 1))
-            # print(f"Mean Squared Error on Test Data: {test_loss.item()}")
-=======
-
->>>>>>> eafb808 (Fix markdownlint, flake8-ros, and shellcheck issues)
 
         # Visualization
 
@@ -128,7 +136,9 @@ class NeuralNetworkThrottle(Node):
         throttling_range = np.linspace(0, (X[:, 1] * std1 + mean1).max(), 20)
         V, A = np.meshgrid(velocity_range, throttling_range)
 
-        input_grid = np.column_stack(((V.flatten() - mean0) / std0, (A.flatten() - mean1) / std1))
+        input_grid = np.column_stack(
+            ((V.flatten() - mean0) / std0, (A.flatten() - mean1) / std1)
+        )
         input_grid = torch.tensor(input_grid, dtype=torch.float32)
 
         with torch.no_grad():
@@ -158,11 +168,7 @@ class NeuralNetworkThrottle(Node):
 
         # we normalize throttling values between 0 and 1
         throttling_range /= 100
-<<<<<<< HEAD
-        throttling_headers = ["Throttling {:.2f}".format(a) for a in throttling_range]
-=======
         # throttling_headers = ['Throttling {:.2f}'.format(a) for a in throttling_range]
->>>>>>> eafb808 (Fix markdownlint, flake8-ros, and shellcheck issues)
 
         headers = [""] + velocity_headers
 
@@ -185,8 +191,8 @@ class NeuralNetworkThrottle(Node):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
 
-        ax.scatter3D(xdata, ydata, zdata, c=zdata, marker='o')
-        surf = ax.plot_surface(V, A, commands_new, cmap='viridis')
+        ax.scatter3D(xdata, ydata, zdata, c=zdata, marker="o")
+        surf = ax.plot_surface(V, A, commands_new, cmap="viridis")
 
         ax.set_xlabel("Velocity")
         ax.set_zlabel("Acceleration")
@@ -209,7 +215,9 @@ class NeuralNetworkThrottle(Node):
 
         # Plot the distribution of 'Acceleration_measured'
         plt.subplot(3, 1, 3)
-        plt.hist(ush["Acceleration_measured"], bins=20, color="lightgreen", edgecolor="black")
+        plt.hist(
+            ush["Acceleration_measured"], bins=20, color="lightgreen", edgecolor="black"
+        )
         plt.title("Distribution of Acceleration")
         plt.xlabel("Acceleration")
         plt.ylabel("Frequency")

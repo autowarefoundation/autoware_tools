@@ -3,7 +3,6 @@ import launch
 from launch.actions import OpaqueFunction
 import launch.substitutions
 import launch_ros.actions
-from launch_ros.actions import Node
 
 
 def launch_data_monitor(context):
@@ -42,7 +41,9 @@ def generate_launch_description():
                 description="Percentage of throttle deadzone",
             ),
             launch.actions.DeclareLaunchArgument(
-                name="brake_deadzone", default_value="5", description="Percentage of break deadzone"
+                name="brake_deadzone",
+                default_value="5",
+                description="Percentage of break deadzone",
             ),
             launch.actions.DeclareLaunchArgument(
                 name="max_velocity",
@@ -115,7 +116,11 @@ def generate_launch_description():
                 output="screen",
                 parameters=[
                     {"max_data": launch.substitutions.LaunchConfiguration("max_data")},
-                    {"num_of_queue": launch.substitutions.LaunchConfiguration("num_of_queue")},
+                    {
+                        "num_of_queue": launch.substitutions.LaunchConfiguration(
+                            "num_of_queue"
+                        )
+                    },
                     {
                         "speed_threshold": launch.substitutions.LaunchConfiguration(
                             "speed_threshold"
@@ -131,8 +136,16 @@ def generate_launch_description():
                             "throttle_deadzone"
                         )
                     },
-                    {"brake_deadzone": launch.substitutions.LaunchConfiguration("brake_deadzone")},
-                    {"max_velocity": launch.substitutions.LaunchConfiguration("max_velocity")},
+                    {
+                        "brake_deadzone": launch.substitutions.LaunchConfiguration(
+                            "brake_deadzone"
+                        )
+                    },
+                    {
+                        "max_velocity": launch.substitutions.LaunchConfiguration(
+                            "max_velocity"
+                        )
+                    },
                     {
                         "throttle_threshold1": launch.substitutions.LaunchConfiguration(
                             "throttle_threshold1"
@@ -158,7 +171,11 @@ def generate_launch_description():
                             "consistency_threshold"
                         )
                     },
-                    {"pitch_topic": launch.substitutions.LaunchConfiguration("pitch_topic")},
+                    {
+                        "pitch_topic": launch.substitutions.LaunchConfiguration(
+                            "pitch_topic"
+                        )
+                    },
                     {
                         "actuation_status_topic": launch.substitutions.LaunchConfiguration(
                             "actuation_status_topic"
@@ -174,8 +191,16 @@ def generate_launch_description():
                             "velocity_status_topic"
                         )
                     },
-                    {"imu_topic": launch.substitutions.LaunchConfiguration("imu_topic")},
-                    {"Recovery_Mode": launch.substitutions.LaunchConfiguration("Recovery_Mode")},
+                    {
+                        "imu_topic": launch.substitutions.LaunchConfiguration(
+                            "imu_topic"
+                        )
+                    },
+                    {
+                        "Recovery_Mode": launch.substitutions.LaunchConfiguration(
+                            "Recovery_Mode"
+                        )
+                    },
                 ],
             ),
         ]

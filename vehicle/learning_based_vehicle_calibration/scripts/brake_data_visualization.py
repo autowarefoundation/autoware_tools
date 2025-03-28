@@ -17,7 +17,8 @@ model = LinearRegression().fit(X, zdata)
 
 
 x_grid, y_grid = np.meshgrid(
-    np.linspace(xdata.min(), xdata.max(), 100), np.linspace(ydata.min(), ydata.max(), 100)
+    np.linspace(xdata.min(), xdata.max(), 100),
+    np.linspace(ydata.min(), ydata.max(), 100),
 )
 
 
