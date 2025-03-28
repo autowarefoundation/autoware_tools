@@ -1,7 +1,5 @@
 import os
-
 import launch
-from launch import LaunchDescription
 from launch.actions import OpaqueFunction
 import launch.substitutions
 import launch_ros.actions

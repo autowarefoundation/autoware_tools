@@ -6,13 +6,13 @@
 
 Download the repository and move inside the folder:
 
-```
+```bash
 git clone https://github.com/pixmoving-moveit/learning_based_vehicle_calibration.git && cd learning_based_vehicle_calibration
 ```
 
 Install the required libraries:
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -22,7 +22,7 @@ Make sure to place this package correcly inside your workspace, colcon build it 
 
 To start collecting data, launch in your workspace:
 
-```
+```bash
 ros2 launch learning_based_vehicle_calibration calibration_launch.py
 ```
 
@@ -34,7 +34,7 @@ You can visualize the collection process from the terminal.
 
 Otherwise, we built some custom messages for representing the progress that are being published on the following topics:
 
-```
+```bash
 /scenarios_collection_longitudinal_throttling
 
 /scenarios_collection_longitudinal_braking
@@ -42,7 +42,7 @@ Otherwise, we built some custom messages for representing the progress that are 
 
 Once you have collected the data, in order to train and build your black box models, for both throttling and braking scenarios, launch:
 
-```
+```bash
 ros2 launch learning_based_vehicle_calibration neural_network_launch.py
 ```
 
@@ -60,14 +60,13 @@ Here we present the software structure, data collection, data preprocessing and 
 ## Input Data Software
 
 Launch Autoware as follows:
-
-```
+```bash
 ./autoware.sh
 ```
 
 It is recommended to record the topics we need to collect in order to train our model. The data we need to record are the pitch angle, the linear acceleration, the velocity, the braking and throttling values and the steering angle (make sure to modify the name of the topics according to your vehicle):
 
-```
+```bash
 ros2 bag record /sensing/gnss/chc/pitch /vehicle/status/actuation_status /vehicle/status/steering_status /vehicle/status/velocity_status /vehicle/status/imu
 ```
 
@@ -75,7 +74,7 @@ ros2 bag record /sensing/gnss/chc/pitch /vehicle/status/actuation_status /vehicl
 
 Data's values and units of measure are as follows:
 
-```
+```bash
 # brake paddle value (frome 0 to 1, float)
 /vehicle/status/actuation_status -> status.brake_status
 # throttle paddle value (frome 0 to 1, float)
@@ -104,9 +103,11 @@ You can have a look at the following examples:
 
 ![data_monitor_error](./imgs/data_monitor_error.png)
 
-# 1. Longitudinal Dynamics
 
-## Record Data Software Case
+
+## 1. Longitudinal Dynamics
+
+### Record Data Software Case
 
 Since our goal is to build a data-driven model, the first step is to collect enough data suitable for training a neural network model.
 
@@ -158,7 +159,7 @@ where real_acc is the real longitudinal acceleration we want to collect, acc_imu
 
 These are the rules we adopted for collecting data in an efficient way. But raw data are often affected by noise so before the training stage we should preprocess them.
 
-## Data Preprocessing
+### Data Preprocessing
 
 Since raw data collected by human are noisy and non-uniform, preprocessing is an essential step to ensure high quality data.
 
@@ -166,7 +167,7 @@ First, we applied a mean filter to smooth data with a window size of 20 (which c
 
 After having collected the data and having saved them in csv format, you can visualize them by launching the following scrips:
 
-```
+```bash
 python3 throttle_data_visualization.py
 
 python3 brake_data_visualization.py
@@ -180,7 +181,7 @@ This way, we can have an idea about the distribution of our data.
 
 As expected, they are noisy and with several outliers, so we need to standardize and normalize them in order to remove outliers and to prepare them for the training stage.
 
-## Neural Network Training and Visualization
+### Neural Network Training and Visualization
 
 In order to find the relationship between velocity, acceleration and throttle/brake commands, we first need to define our neural network structure and its inputs and output.
 
@@ -198,7 +199,7 @@ We chose the ReLu function as the activation function, mean square error as the 
 
 To start the training of the throttling and braking models and visualize their shapes and metrics, we can launch:
 
-```
+```bash
 ros2 launch learning_based_vehicle_calibration neural_network_launch.py
 ```
 
@@ -216,7 +217,9 @@ Finally, the script will also plot the distribution of velocity, throttling/brak
 
 ![dioss](./imgs/dioss.png)
 
-## Evaluation and Results
+
+
+### Evaluation and Results
 
 In order to evaluate our calibration table for the longitudinal dynamic, we are going to check the speed error of the vehicle while driving in autonomous driving mode.
 
