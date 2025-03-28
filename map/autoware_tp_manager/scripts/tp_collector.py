@@ -158,7 +158,7 @@ class TPCollector(Node):
             # Skip invalid poses
             if pose[3, 0] == 0 and pose[3, 1] == 0 and pose[3, 2] == 0:
                 continue
-            
+
             # Find the closest tp
             tid = tpu.stamp_search(stamp, self.tp_df, self.tp_df.shape[0])
 
@@ -297,6 +297,7 @@ class TPCollector(Node):
 
         # Save the new TPs
         self.__save_tps()
+
 
 if __name__ == "__main__":
     rclpy.init()
