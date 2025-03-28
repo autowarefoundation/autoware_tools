@@ -28,7 +28,7 @@ ros2 launch learning_based_vehicle_calibration calibration_launch.py
 
 Inside this launch file there is a variable called 'Recovery_Mode', set to False by default. If while you were collecting data the software stopped for some reasons or something happened causing the interruption of your collection process, you can collect data recovering from previous breaking points by setting the variable to True. This way it will update the csv tables you have already started to collect without the need to start from scratch.
 
-You can visualize the collection process from the terminal. 
+You can visualize the collection process from the terminal.
 
 ![data_collection1](./imgs/data_collection1.png)
 
@@ -40,9 +40,6 @@ Otherwise, we built some custom messages for representing the progress that are 
 /scenarios_collection_longitudinal_braking
 ```
 
-
-
-
 Once you have collected the data, in order to train and build your black box models, for both throttling and braking scenarios, launch:
 
 ```
@@ -53,19 +50,17 @@ You will obtain the acceleration and braking calibration maps and visualize how 
 
 ![NN_throttle](./imgs/NN_throttle.png)
 
-
-
-
 ## Overview
 
-Here we present the software structure, data collection, data preprocessing and neural network training and visualization about the end-to-end calibration of a vehicle, in two different scenarios: 
+Here we present the software structure, data collection, data preprocessing and neural network training and visualization about the end-to-end calibration of a vehicle, in two different scenarios:
+
 - **Normal driving conditions (longitudinal dynamics);**
 - **Parking conditions (steering dynamics).**
 
 ## Input Data Software
 
-
 Launch Autoware as follows:
+
 ```
 ./autoware.sh
 ```
@@ -75,9 +70,6 @@ It is recommended to record the topics we need to collect in order to train our 
 ```
 ros2 bag record /sensing/gnss/chc/pitch /vehicle/status/actuation_status /vehicle/status/steering_status /vehicle/status/velocity_status /vehicle/status/imu
 ```
-
-
-
 
 - **data_field: rosbag should contains brake_paddle, throttle_paddle, velocity, steering, imu and pitch**
 
@@ -98,9 +90,6 @@ Data's values and units of measure are as follows:
 /sensing/gnss/chc/pitch -> data
 ```
 
-
-
-
 When you run the calibration, data_monitor script is launched automatically.
 
 Thanks to data_monitor script, we can make sure that we are receiving all the topics correctly, without any delay and any problem.
@@ -115,17 +104,16 @@ You can have a look at the following examples:
 
 ![data_monitor_error](./imgs/data_monitor_error.png)
 
-
-
 # 1. Longitudinal Dynamics
 
 ## Record Data Software Case
 
-Since our goal is to build a data-driven model, the first step is to collect enough data suitable for training a neural network model. 
+Since our goal is to build a data-driven model, the first step is to collect enough data suitable for training a neural network model.
 
 Every data is classified according to its speed and throttling/braking information. This way, we can check if we have collected enough data for every case scenario. In order to do so, we have built a software with a simple if-else logic so that it is able to detect and classify the data recorded in its scenario. This stage is very important because this way we can make sure that we have a balanced dataset and that we have enough data to train our neural network model for every conditions. We will start collecting 3000 triplet (velocity, acceleration, throttling/braking) of data per scenario. For each timestamp, if the steering angle is greater than a threshold (2 degrees), that data will be discarded and not classified (since so far we are just interested in the longitudinal dynamic so we should avoid steering):
 
 - **LOW SPEED SCENARIO (0 - 10km/h)**: in this scenario we have 8 different throttling/braking conditions.
+
 0. Brake 0 - deadzone
 1. Brake deadzone - 15%
 2. Brake 15% - 25%
@@ -136,6 +124,7 @@ Every data is classified according to its speed and throttling/braking informati
 7. Throttle > 55%
 
 - **HIGH SPEED SCENARIO ( > 10km/h)**: in this scenario we have 8 different throttling/braking conditions.
+
 0. Brake 0 - deadzone
 1. Brake deadzone - 15%
 2. Brake 15% - 25%
@@ -151,7 +140,6 @@ As already stated, if the steering angle is greater than 2 degrees, data will no
 2. If the velocity is equal to 0km/h, we are not collecting data;
 3. We need to ensure data consistency. In order to do that, we need to check the values of two consecutive throttle/brake commands: if their difference is greater than a certain threshold, we don't collect those data.
 
-
 This is how you will visualize the data that are being recorded. This visualization tool updates itself in real time based on the data we are collecting:
 
 ![data_collection1](./imgs/data_collection1.png)
@@ -160,17 +148,15 @@ This is how you will visualize the data that are being recorded. This visualizat
 
 This way, while we are manually controlling the vehicle, we can have an idea on how to control it and which maneuver to do in order to fill the entire dataset. Once a case scenario reaches the MAX_DATA threshold, the data in that scenario will not be recorded anymore.
 
-
 Another important consideration is the pitch compensation:
 
 the longitudinal acceleration we measure from the IMU is not the real longitudinal acceleration. Even if we choose a flat road to collect data, it’s almost impossible to avoid some ground irregularities which are going to create some bumps in the vehicle. These bumps introduce a gravitational acceleration component which disturbs the longitudinal one. Luckily, by measuring the pitch angle, we can remove this disturbance according to the following formula:
 
-real_acc = acc_imu – g * sin(pitch_angle)
+real_acc = acc_imu – g \* sin(pitch_angle)
 
 where real_acc is the real longitudinal acceleration we want to collect, acc_imu is the longitudinal acceleration measured by the IMU sensor, g is the gravitational acceleration and pitch_angle is the pitch angle measured by the sensor, converted into radians.
 
-
-These are the rules we adopted for collecting data in an efficient way. But raw data are often affected by noise so before the training stage we should preprocess them. 
+These are the rules we adopted for collecting data in an efficient way. But raw data are often affected by noise so before the training stage we should preprocess them.
 
 ## Data Preprocessing
 
@@ -186,12 +172,11 @@ python3 throttle_data_visualization.py
 python3 brake_data_visualization.py
 ```
 
-This way, we can have an idea about the distribution of our data. 
+This way, we can have an idea about the distribution of our data.
 
 ![throttle_data](./imgs/throttle_data.png)
 
 ![brake_data](./imgs/brake_data.png)
-
 
 As expected, they are noisy and with several outliers, so we need to standardize and normalize them in order to remove outliers and to prepare them for the training stage.
 
@@ -221,19 +206,15 @@ ros2 launch learning_based_vehicle_calibration neural_network_launch.py
 
 ![NN_brake](./imgs/NN_brake.png)
 
-
 When you launch these scripts, the training stage begins and when it is done, the software automatically saves the trained model in a zip file.
 
 This way, when you want to use the neural network model, you can avoid to train it everytime from scratch, but you can just train it once and then load it, according to the following scripts:
-
 
 These scripts will also create the acceleration and braking offline tables.
 
 Finally, the script will also plot the distribution of velocity, throttling/braking levels and acceleration data:
 
 ![dioss](./imgs/dioss.png)
-
-
 
 ## Evaluation and Results
 
@@ -243,13 +224,12 @@ We have tested the vehicle in different road conditions with different slopes, a
 
 ![evaluation](./imgs/evaluation.png)
 
-The blue line is the speed error [m/s] and the red line is the pitch angle [degrees]. 
+The blue line is the speed error [m/s] and the red line is the pitch angle [degrees].
 
 As you can see, the speed error is bounded between ± 0.3m/s, which is pretty good considering that the pitch angle is not constant during the test.
 
 We can also visualize the setpoint (blue line) compared to the measured velocity (red line):
 
 ![evaluation1](./imgs/evaluation1.png)
-
 
 We are now ready for the steering calibration tables.
