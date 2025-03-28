@@ -30,14 +30,18 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
 - Select directory, process all files found with `find $INPUT_DIR -name "*.pcd"`.
 
   ```bash
-  ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=<PREFIX>
+  ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=<PREFIX> [use_large_grid:=true/false] [leaf_size:=<LEAF_SIZE>] [grid_size_x:=<GRID_SIZE_X>] [grid_size_y:=<GRID_SIZE_Y>]
   ```
 
-  | Name       | Description                           |
-  | ---------- | ------------------------------------- |
-  | INPUT_DIR  | Directory that contains all PCD files |
-  | OUTPUT_DIR | Output directory name                 |
-  | PREFIX     | Prefix of output PCD file name        |
+  | Name           | Description                                                                                                                      |
+  | -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+  | INPUT_DIR      | Directory that contains all PCD files                                                                                            |
+  | OUTPUT_DIR     | Output directory name                                                                                                            |
+  | PREFIX         | Prefix of output PCD file name                                                                                                   |
+  | use_large_grid | If true, group PCD segments to groups of larger grids. Default false.                                                            |
+  | LEAF_SIZE      | The resolution (m) to downsample output PCD files. If negative, no downsampling is applied on the output PCD files. Default 0.2. |
+  | GRID_SIZE_X    | The X size (m) of the output PCD segments. Default 20.0.                                                                         |
+  | GRID_SIZE_Y    | The Y size (m) of the output PCD segments. Default 20.0.                                                                         |
 
 `INPUT_DIR` and `OUTPUT_DIR` should be specified as **absolute paths**.
 
@@ -57,27 +61,21 @@ How the PCD file is named
 
 ### Parameter example
 
-1. Dividing point clouds without downsampling
+1. Dividing point clouds without downsampling.
 
-   ```yaml
-   use_large_grid: false
-   leaf_size: -1.0 # any negative number
-   grid_size_x: 20
-   grid_size_y: 20
+   ```bash
+   ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=test leaf_size:=-0.1
    ```
 
-2. Dividing and downsampling point clouds
+2. Dividing and downsampling point clouds.
 
-   ```yaml
-   use_large_grid: false
-   leaf_size: 0.2
-   grid_size_x: 20
-   grid_size_y: 20
+   ```bash
+   ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=test
    ```
 
 ## Metadata YAML Format
 
-The metadata file should be named `metadata.yaml`. It contains the following fields:
+The metadata file is named `pointcloud_data_metadata.yaml`. It contains the following fields:
 
 - `x_resolution`: The resolution along the X-axis.
 - `y_resolution`: The resolution along the Y-axis.
