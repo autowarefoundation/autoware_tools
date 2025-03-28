@@ -1,19 +1,15 @@
 #! /usr/bin/python3
-import math
-import os
-
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-import rclpy
-from rclpy.node import Node
-from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import r2_score
-from sklearn.model_selection import train_test_split
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score
+from sklearn.model_selection import train_test_split
+from rclpy.node import Node
 
 
 class NeuralNetworkThrottle(Node):
@@ -118,8 +114,12 @@ class NeuralNetworkThrottle(Node):
 
         with torch.no_grad():
             test_outputs = self.model(X_test)
+<<<<<<< HEAD
             test_loss = criterion(test_outputs, y_test.view(-1, 1))
             # print(f"Mean Squared Error on Test Data: {test_loss.item()}")
+=======
+
+>>>>>>> eafb808 (Fix markdownlint, flake8-ros, and shellcheck issues)
 
         # Visualization
 
@@ -158,7 +158,11 @@ class NeuralNetworkThrottle(Node):
 
         # we normalize throttling values between 0 and 1
         throttling_range /= 100
+<<<<<<< HEAD
         throttling_headers = ["Throttling {:.2f}".format(a) for a in throttling_range]
+=======
+        # throttling_headers = ['Throttling {:.2f}'.format(a) for a in throttling_range]
+>>>>>>> eafb808 (Fix markdownlint, flake8-ros, and shellcheck issues)
 
         headers = [""] + velocity_headers
 
@@ -181,8 +185,8 @@ class NeuralNetworkThrottle(Node):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
 
-        scatter = ax.scatter3D(xdata, ydata, zdata, c=zdata, marker="o")
-        surf = ax.plot_surface(V, A, commands_new, cmap="viridis")
+        ax.scatter3D(xdata, ydata, zdata, c=zdata, marker='o')
+        surf = ax.plot_surface(V, A, commands_new, cmap='viridis')
 
         ax.set_xlabel("Velocity")
         ax.set_zlabel("Acceleration")
