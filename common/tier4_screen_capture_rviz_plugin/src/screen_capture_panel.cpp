@@ -157,9 +157,6 @@ void AutowareScreenCapturePanel::on_timer()
     static_cast<size_t>(q_image.bytesPerLine()));
 
   size_ = size;
-  std::cerr << "buffer_size_frames_: " << buffer_size_frames_ << std::endl;
-  std::cerr << "image size: " << image.size() << std::endl;
-  std::cerr << "buffer size: " << buffer_.size() << std::endl;
 
   if (is_buffering_) {
     buffer_.push_back(image.clone());
