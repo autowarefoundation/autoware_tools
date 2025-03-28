@@ -2,6 +2,9 @@
 Changelog for package mission_planner_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.2.0 (2025-03-24)
+------------------
+
 0.1.0 (2025-01-28)
 ------------------
 * chore(rviz_plugin): move peripheral rviz plugin (`#27 <https://github.com/autowarefoundation/autoware_tools/issues/27>`_)

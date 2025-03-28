@@ -2,6 +2,9 @@
 Changelog for package vehicle_cmd_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.2.0 (2025-03-24)
+------------------
+
 0.1.0 (2025-01-28)
 ------------------
 * feat(vehicle_cmd_analyzer)!: replace tier4_debug_msgs with tier4_internal_debug_msgs (`#204 <https://github.com/autowarefoundation/autoware_tools/issues/204>`_)
