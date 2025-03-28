@@ -72,12 +72,32 @@ AutowareScreenCapturePanel::AutowareScreenCapturePanel(QWidget * parent)
     video_cap_layout->addWidget(new QLabel(" [Hz]"));
   }
 
+  // buffer size setting
+  auto * buffer_size_layout = new QHBoxLayout;
+  {
+    buffer_size_layout->addWidget(new QLabel("Buffer Size: "));
+
+    buffer_size_ = new QSpinBox();
+    buffer_size_->setRange(1, 300);  // Maximum 300 seconds buffer
+    buffer_size_->setValue(10);      // Default 10 seconds buffer
+    buffer_size_->setSingleStep(1);
+    buffer_size_layout->addWidget(buffer_size_);
+    buffer_size_layout->addWidget(new QLabel(" [sec]"));
+
+    connect(
+      buffer_size_, SIGNAL(valueChanged(const int)), this, SLOT(on_buffer_size_change(const int)));
+  }
+
   // consider layout
   {
     v_layout->addLayout(cap_layout);
     v_layout->addLayout(video_cap_layout);
+    v_layout->addLayout(buffer_size_layout);
     setLayout(v_layout);
   }
+
+  // Initialize buffer sizes
+  update_buffer_size();
 }
 
 void AutowareScreenCapturePanel::onInitialize()
@@ -99,7 +119,22 @@ void AutowareScreenCapturePanel::on_rate_change([[maybe_unused]] const int rate)
 {
   timer_->cancel();
   create_timer();
+  update_buffer_size();
   RCLCPP_INFO_STREAM(raw_node_->get_logger(), "RATE:" << rate_->value());
+}
+
+void AutowareScreenCapturePanel::on_buffer_size_change(const int buffer_size)
+{
+  update_buffer_size();
+  RCLCPP_INFO_STREAM(
+    raw_node_->get_logger(),
+    "BUFFER SIZE: " << buffer_size << " [sec] with " << buffer_size_frames_ << " frames)");
+}
+
+void AutowareScreenCapturePanel::update_buffer_size()
+{
+  // Calculate buffer sizes in frames
+  buffer_size_frames_ = buffer_size_->value() * rate_->value();
 }
 
 void AutowareScreenCapturePanel::on_timer()
@@ -124,7 +159,7 @@ void AutowareScreenCapturePanel::on_timer()
 
   if (is_buffering_) {
     buffer_.push_back(image.clone());
-    if (buffer_.size() > buffer_size_) {
+    while (buffer_.size() > buffer_size_frames_) {
       buffer_.pop_front();
     }
   }
@@ -166,6 +201,16 @@ void AutowareScreenCapturePanel::callback(
 
   if (req->action == Capture::Request::SAVE_BUFFER) {
     res->success = save_buffer(req->file_name);
+    return;
+  }
+
+  if (req->action == Capture::Request::SET_BUFFER) {
+    if (req->buffer_seconds > 0) {
+      buffer_size_->setValue(req->buffer_seconds);
+      res->success = true;
+    } else {
+      res->success = false;
+    }
     return;
   }
 
