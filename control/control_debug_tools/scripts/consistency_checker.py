@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright 2024 TIER IV, Inc.
+# Copyright 2025 TIER IV, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ class Condition:
         self.fail_msg = fail_msg
         self.op = op
 
-    def eval(self, sources):
+    def evaluate(self, sources):
         val1 = sources[self.source1][self.param1]
         val2 = sources[self.source2][self.param2]
         if not self.op(val1, val2):
@@ -217,6 +217,6 @@ if __name__ == "__main__":
     ]
 
     for condition in conditions:
-        fail_msg = condition.eval(sources)
+        fail_msg = condition.evaluate(sources)
         if fail_msg:
             print(f"\033[91m{fail_msg}\033[0m")
