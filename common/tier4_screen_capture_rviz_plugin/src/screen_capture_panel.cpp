@@ -139,7 +139,6 @@ void AutowareScreenCapturePanel::update_buffer_size()
 
 void AutowareScreenCapturePanel::on_timer()
 {
-  // update_buffer_size();
   setFormatDate(ros_time_label_, rclcpp::Clock().now().seconds());
 
   if (!main_window_) return;
