@@ -2,6 +2,9 @@
 Changelog for package tier4_string_viewer_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.2.0 (2025-03-24)
+------------------
+
 0.1.0 (2025-01-28)
 ------------------
 * feat(tier4_xxx_rviz_plugin): use StringStamped in autoware_internal_debug_msgs (`#181 <https://github.com/autowarefoundation/autoware_tools/issues/181>`_)
