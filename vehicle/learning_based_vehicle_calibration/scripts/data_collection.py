@@ -48,27 +48,17 @@ class primotest(rclpy.node.Node):
         self.declare_parameter("brake_threshold2", 25)
         self.declare_parameter("consistency_threshold", 20)
         self.declare_parameter("pitch_topic", "/sensing/gnss/chc/pitch")
-        self.declare_parameter(
-            "actuation_status_topic", "/vehicle/status/actuation_status"
-        )
-        self.declare_parameter(
-            "steering_status_topic", "/vehicle/status/steering_status"
-        )
-        self.declare_parameter(
-            "velocity_status_topic", "/vehicle/status/velocity_status"
-        )
+        self.declare_parameter("actuation_status_topic", "/vehicle/status/actuation_status")
+        self.declare_parameter("steering_status_topic", "/vehicle/status/steering_status")
+        self.declare_parameter("velocity_status_topic", "/vehicle/status/velocity_status")
         self.declare_parameter("imu_topic", "/sensing/gnss/chc/imu")
 
         self.declare_parameter("Recovery_Mode", False)
 
         # Load params from launch file
 
-        self.MAX_DATA = (
-            self.get_parameter("max_data").get_parameter_value().integer_value
-        )
-        self.NUM_OF_QUEUE = (
-            self.get_parameter("num_of_queue").get_parameter_value().integer_value
-        )
+        self.MAX_DATA = self.get_parameter("max_data").get_parameter_value().integer_value
+        self.NUM_OF_QUEUE = self.get_parameter("num_of_queue").get_parameter_value().integer_value
         self.SPEED_THRESHOLD = (
             self.get_parameter("speed_threshold").get_parameter_value().double_value
         )
@@ -81,18 +71,12 @@ class primotest(rclpy.node.Node):
         self.BRAKE_DEADZONE = (
             self.get_parameter("brake_deadzone").get_parameter_value().integer_value
         )
-        self.MAX_VELOCITY = (
-            self.get_parameter("max_velocity").get_parameter_value().double_value
-        )
+        self.MAX_VELOCITY = self.get_parameter("max_velocity").get_parameter_value().double_value
         self.THROTTLE_THRESHOLD1 = (
-            self.get_parameter("throttle_threshold1")
-            .get_parameter_value()
-            .integer_value
+            self.get_parameter("throttle_threshold1").get_parameter_value().integer_value
         )
         self.THROTTLE_THRESHOLD2 = (
-            self.get_parameter("throttle_threshold2")
-            .get_parameter_value()
-            .integer_value
+            self.get_parameter("throttle_threshold2").get_parameter_value().integer_value
         )
         self.BRAKE_THRESHOLD1 = (
             self.get_parameter("brake_threshold1").get_parameter_value().integer_value
@@ -101,36 +85,22 @@ class primotest(rclpy.node.Node):
             self.get_parameter("brake_threshold2").get_parameter_value().integer_value
         )
         self.CONSISTENCY_THRESHOLD = (
-            self.get_parameter("consistency_threshold")
-            .get_parameter_value()
-            .integer_value
+            self.get_parameter("consistency_threshold").get_parameter_value().integer_value
         )
         # Get topic names from parameters
-        self.pitch_topic = (
-            self.get_parameter("pitch_topic").get_parameter_value().string_value
-        )
+        self.pitch_topic = self.get_parameter("pitch_topic").get_parameter_value().string_value
         self.actuation_status_topic = (
-            self.get_parameter("actuation_status_topic")
-            .get_parameter_value()
-            .string_value
+            self.get_parameter("actuation_status_topic").get_parameter_value().string_value
         )
         self.steering_status_topic = (
-            self.get_parameter("steering_status_topic")
-            .get_parameter_value()
-            .string_value
+            self.get_parameter("steering_status_topic").get_parameter_value().string_value
         )
         self.velocity_status_topic = (
-            self.get_parameter("velocity_status_topic")
-            .get_parameter_value()
-            .string_value
+            self.get_parameter("velocity_status_topic").get_parameter_value().string_value
         )
-        self.imu_topic = (
-            self.get_parameter("imu_topic").get_parameter_value().string_value
-        )
+        self.imu_topic = self.get_parameter("imu_topic").get_parameter_value().string_value
 
-        self.RECOVERY_MODE = (
-            self.get_parameter("Recovery_Mode").get_parameter_value().bool_value
-        )
+        self.RECOVERY_MODE = self.get_parameter("Recovery_Mode").get_parameter_value().bool_value
 
         if self.RECOVERY_MODE:
             df_existing1 = pd.read_csv("throttling.csv")
@@ -165,23 +135,7 @@ class primotest(rclpy.node.Node):
             self.pitch2 = df_existing2["Pitch_angle"].tolist()
 
         else:
-            self.i = (
-                self.j
-            ) = (
-                self.h
-            ) = (
-                self.k
-            ) = (
-                self.a
-            ) = (
-                self.b
-            ) = (
-                self.c
-            ) = (
-                self.d
-            ) = (
-                self.d
-            ) = (
+            self.i = self.j = self.h = self.k = self.a = self.b = self.c = self.d = self.d = (
                 self.ii
             ) = self.jj = self.hh = self.kk = self.aa = self.bb = self.cc = self.dd = 0
             self.vel = []
@@ -200,12 +154,8 @@ class primotest(rclpy.node.Node):
         self.long_progress_brake_msg = [LongitudinalProgress() for _ in range(8)]
         self.long_processes_throttle_msg = LongitudinalProcesses()
         self.long_processes_brake_msg = LongitudinalProcesses()
-        self.long_processes_throttle_msg.processes = [
-            LongitudinalProgress() for _ in range(8)
-        ]
-        self.long_processes_brake_msg.processes = [
-            LongitudinalProgress() for _ in range(8)
-        ]
+        self.long_processes_throttle_msg.processes = [LongitudinalProgress() for _ in range(8)]
+        self.long_processes_brake_msg.processes = [LongitudinalProgress() for _ in range(8)]
 
         self.long_processes_throttle_msg.header.frame_id = "Throttle scenario"
         self.long_processes_brake_msg.header.frame_id = "Brake scenario"
@@ -214,9 +164,7 @@ class primotest(rclpy.node.Node):
         self.long_progress_throttle_msg[0].pedal_value_end = self.THROTTLE_DEADZONE
         self.long_progress_throttle_msg[0].velocity_start = 0.0
         self.long_progress_throttle_msg[0].velocity_end = self.SPEED_THRESHOLD
-        self.long_processes_throttle_msg.processes[0] = self.long_progress_throttle_msg[
-            0
-        ]
+        self.long_processes_throttle_msg.processes[0] = self.long_progress_throttle_msg[0]
         self.long_progress_brake_msg[0].pedal_value_start = 0
         self.long_progress_brake_msg[0].pedal_value_end = self.BRAKE_DEADZONE
         self.long_progress_brake_msg[0].velocity_start = 0.0
@@ -231,9 +179,7 @@ class primotest(rclpy.node.Node):
         self.long_progress_throttle_msg[1].pedal_value_end = self.THROTTLE_THRESHOLD1
         self.long_progress_throttle_msg[1].velocity_start = 0.0
         self.long_progress_throttle_msg[1].velocity_end = self.SPEED_THRESHOLD
-        self.long_processes_throttle_msg.processes[1] = self.long_progress_throttle_msg[
-            1
-        ]
+        self.long_processes_throttle_msg.processes[1] = self.long_progress_throttle_msg[1]
         self.long_progress_brake_msg[1].pedal_value_start = self.BRAKE_DEADZONE
         self.long_progress_brake_msg[1].pedal_value_end = self.BRAKE_THRESHOLD1
         self.long_progress_brake_msg[1].velocity_start = 0.0
@@ -248,9 +194,7 @@ class primotest(rclpy.node.Node):
         self.long_progress_throttle_msg[2].pedal_value_end = self.THROTTLE_THRESHOLD2
         self.long_progress_throttle_msg[2].velocity_start = 0.0
         self.long_progress_throttle_msg[2].velocity_end = self.SPEED_THRESHOLD
-        self.long_processes_throttle_msg.processes[2] = self.long_progress_throttle_msg[
-            2
-        ]
+        self.long_processes_throttle_msg.processes[2] = self.long_progress_throttle_msg[2]
         self.long_progress_brake_msg[2].pedal_value_start = self.BRAKE_THRESHOLD1
         self.long_progress_brake_msg[2].pedal_value_end = self.BRAKE_THRESHOLD2
         self.long_progress_brake_msg[2].velocity_start = 0.0
@@ -265,9 +209,7 @@ class primotest(rclpy.node.Node):
         self.long_progress_throttle_msg[3].pedal_value_end = 100
         self.long_progress_throttle_msg[3].velocity_start = 0.0
         self.long_progress_throttle_msg[3].velocity_end = self.SPEED_THRESHOLD
-        self.long_processes_throttle_msg.processes[3] = self.long_progress_throttle_msg[
-            3
-        ]
+        self.long_processes_throttle_msg.processes[3] = self.long_progress_throttle_msg[3]
         self.long_progress_brake_msg[3].pedal_value_start = self.BRAKE_THRESHOLD2
         self.long_progress_brake_msg[3].pedal_value_end = 100
         self.long_progress_brake_msg[3].velocity_start = 0.0
@@ -282,9 +224,7 @@ class primotest(rclpy.node.Node):
         self.long_progress_throttle_msg[4].pedal_value_end = self.THROTTLE_DEADZONE
         self.long_progress_throttle_msg[4].velocity_start = self.SPEED_THRESHOLD
         self.long_progress_throttle_msg[4].velocity_end = self.MAX_VELOCITY
-        self.long_processes_throttle_msg.processes[4] = self.long_progress_throttle_msg[
-            4
-        ]
+        self.long_processes_throttle_msg.processes[4] = self.long_progress_throttle_msg[4]
         self.long_progress_brake_msg[4].pedal_value_start = 0
         self.long_progress_brake_msg[4].pedal_value_end = self.BRAKE_DEADZONE
         self.long_progress_brake_msg[4].velocity_start = self.SPEED_THRESHOLD
@@ -299,9 +239,7 @@ class primotest(rclpy.node.Node):
         self.long_progress_throttle_msg[5].pedal_value_end = self.THROTTLE_THRESHOLD1
         self.long_progress_throttle_msg[5].velocity_start = self.SPEED_THRESHOLD
         self.long_progress_throttle_msg[5].velocity_end = self.MAX_VELOCITY
-        self.long_processes_throttle_msg.processes[5] = self.long_progress_throttle_msg[
-            5
-        ]
+        self.long_processes_throttle_msg.processes[5] = self.long_progress_throttle_msg[5]
         self.long_progress_brake_msg[5].pedal_value_start = self.BRAKE_DEADZONE
         self.long_progress_brake_msg[5].pedal_value_end = self.BRAKE_THRESHOLD1
         self.long_progress_brake_msg[5].velocity_start = self.SPEED_THRESHOLD
@@ -316,9 +254,7 @@ class primotest(rclpy.node.Node):
         self.long_progress_throttle_msg[6].pedal_value_end = self.THROTTLE_THRESHOLD2
         self.long_progress_throttle_msg[6].velocity_start = self.SPEED_THRESHOLD
         self.long_progress_throttle_msg[6].velocity_end = self.MAX_VELOCITY
-        self.long_processes_throttle_msg.processes[6] = self.long_progress_throttle_msg[
-            6
-        ]
+        self.long_processes_throttle_msg.processes[6] = self.long_progress_throttle_msg[6]
         self.long_progress_brake_msg[6].pedal_value_start = self.BRAKE_THRESHOLD1
         self.long_progress_brake_msg[6].pedal_value_end = self.BRAKE_THRESHOLD2
         self.long_progress_brake_msg[6].velocity_start = self.SPEED_THRESHOLD
@@ -333,9 +269,7 @@ class primotest(rclpy.node.Node):
         self.long_progress_throttle_msg[7].pedal_value_end = 100
         self.long_progress_throttle_msg[7].velocity_start = self.SPEED_THRESHOLD
         self.long_progress_throttle_msg[7].velocity_end = self.MAX_VELOCITY
-        self.long_processes_throttle_msg.processes[7] = self.long_progress_throttle_msg[
-            7
-        ]
+        self.long_processes_throttle_msg.processes[7] = self.long_progress_throttle_msg[7]
         self.long_progress_brake_msg[7].pedal_value_start = self.BRAKE_THRESHOLD2
         self.long_progress_brake_msg[7].pedal_value_end = 100
         self.long_progress_brake_msg[7].velocity_start = self.SPEED_THRESHOLD
@@ -474,9 +408,7 @@ class primotest(rclpy.node.Node):
             dynamic_ncols=True,
         )
 
-        self.create_subscription(
-            Float32, self.pitch_topic, self.pitch_topic_callback, 1
-        )
+        self.create_subscription(Float32, self.pitch_topic, self.pitch_topic_callback, 1)
         self.create_subscription(
             ActuationStatusStamped,
             self.actuation_status_topic,
@@ -632,22 +564,16 @@ class primotest(rclpy.node.Node):
     def throttle_message_publish(self, count: int, index: int):
 
         self.long_progress_throttle_msg[index].data_count = count
-        self.long_progress_throttle_msg[index].progress = int(
-            count * 100 / self.MAX_DATA
-        )
+        self.long_progress_throttle_msg[index].progress = int(count * 100 / self.MAX_DATA)
         self.long_processes_throttle_msg.header.stamp = self.get_clock().now().to_msg()
-        self.long_processes_throttle_msg.processes[
-            index
-        ] = self.long_progress_throttle_msg[index]
+        self.long_processes_throttle_msg.processes[index] = self.long_progress_throttle_msg[index]
 
     def brake_message_publish(self, count: int, index: int):
 
         self.long_progress_brake_msg[index].data_count = count
         self.long_progress_brake_msg[index].progress = int(count * 100 / self.MAX_DATA)
         self.long_processes_brake_msg.header.stamp = self.get_clock().now().to_msg()
-        self.long_processes_brake_msg.processes[index] = self.long_progress_brake_msg[
-            index
-        ]
+        self.long_processes_brake_msg.processes[index] = self.long_progress_brake_msg[index]
 
     def test_callback(self):
 
@@ -680,9 +606,7 @@ class primotest(rclpy.node.Node):
                         self.throttle_message_publish(self.k, 0)
 
                     elif (
-                        self.THROTTLE_DEADZONE
-                        < self.throttling
-                        <= self.THROTTLE_THRESHOLD1
+                        self.THROTTLE_DEADZONE < self.throttling <= self.THROTTLE_THRESHOLD1
                         and self.i < self.MAX_DATA
                     ):
 
@@ -694,9 +618,7 @@ class primotest(rclpy.node.Node):
                         self.throttle_message_publish(self.i, 1)
 
                     elif (
-                        self.THROTTLE_THRESHOLD1
-                        < self.throttling
-                        <= self.THROTTLE_THRESHOLD2
+                        self.THROTTLE_THRESHOLD1 < self.throttling <= self.THROTTLE_THRESHOLD2
                         and self.j < self.MAX_DATA
                     ):
 
@@ -707,10 +629,7 @@ class primotest(rclpy.node.Node):
 
                         self.throttle_message_publish(self.j, 2)
 
-                    elif (
-                        self.throttling > self.THROTTLE_THRESHOLD2
-                        and self.h < self.MAX_DATA
-                    ):
+                    elif self.throttling > self.THROTTLE_THRESHOLD2 and self.h < self.MAX_DATA:
 
                         self.collection_throttling()
                         self.progress_bar3.update(1)
@@ -736,9 +655,7 @@ class primotest(rclpy.node.Node):
                         self.throttle_message_publish(self.d, 4)
 
                     elif (
-                        self.THROTTLE_DEADZONE
-                        < self.throttling
-                        <= self.THROTTLE_THRESHOLD1
+                        self.THROTTLE_DEADZONE < self.throttling <= self.THROTTLE_THRESHOLD1
                         and self.a < self.MAX_DATA
                     ):
 
@@ -750,9 +667,7 @@ class primotest(rclpy.node.Node):
                         self.throttle_message_publish(self.a, 5)
 
                     elif (
-                        self.THROTTLE_THRESHOLD1
-                        < self.throttling
-                        <= self.THROTTLE_THRESHOLD2
+                        self.THROTTLE_THRESHOLD1 < self.throttling <= self.THROTTLE_THRESHOLD2
                         and self.b < self.MAX_DATA
                     ):
 
@@ -763,10 +678,7 @@ class primotest(rclpy.node.Node):
 
                         self.throttle_message_publish(self.b, 6)
 
-                    elif (
-                        self.throttling > self.THROTTLE_THRESHOLD2
-                        and self.c < self.MAX_DATA
-                    ):
+                    elif self.throttling > self.THROTTLE_THRESHOLD2 and self.c < self.MAX_DATA:
 
                         self.collection_throttling()
                         self.progress_bar7.update(1)
@@ -780,8 +692,7 @@ class primotest(rclpy.node.Node):
             if (
                 self.throttling == 0
                 and abs(self.steering) < self.STEERING_THRESHOLD
-                and abs(self.braking_prec - mean(self.queue_braking))
-                <= self.CONSISTENCY_THRESHOLD
+                and abs(self.braking_prec - mean(self.queue_braking)) <= self.CONSISTENCY_THRESHOLD
             ):
 
                 # low velocity scenario
@@ -824,9 +735,7 @@ class primotest(rclpy.node.Node):
 
                         self.brake_message_publish(self.jj, 2)
 
-                    elif (
-                        self.braking > self.BRAKE_THRESHOLD2 and self.hh < self.MAX_DATA
-                    ):
+                    elif self.braking > self.BRAKE_THRESHOLD2 and self.hh < self.MAX_DATA:
 
                         self.collection_braking()
                         self.progress_bar11.update(1)
@@ -875,9 +784,7 @@ class primotest(rclpy.node.Node):
 
                         self.brake_message_publish(self.bb, 6)
 
-                    elif (
-                        self.braking > self.BRAKE_THRESHOLD2 and self.cc < self.MAX_DATA
-                    ):
+                    elif self.braking > self.BRAKE_THRESHOLD2 and self.cc < self.MAX_DATA:
 
                         self.collection_braking()
                         self.progress_bar15.update(1)

@@ -60,6 +60,7 @@ Here we present the software structure, data collection, data preprocessing and 
 ## Input Data Software
 
 Launch Autoware as follows:
+
 ```bash
 ./autoware.sh
 ```
@@ -102,8 +103,6 @@ You can have a look at the following examples:
 - if instead one or more topics are not published or received correctly, or they are delayed, the script is going to warn you by printing to terminal for example the following text
 
 ![data_monitor_error](./imgs/data_monitor_error.png)
-
-
 
 ## 1. Longitudinal Dynamics
 
@@ -216,8 +215,6 @@ These scripts will also create the acceleration and braking offline tables.
 Finally, the script will also plot the distribution of velocity, throttling/braking levels and acceleration data:
 
 ![dioss](./imgs/dioss.png)
-
-
 
 ### Evaluation and Results
 
