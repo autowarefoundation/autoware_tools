@@ -1,19 +1,15 @@
 #! /usr/bin/python3
-import math
-import os
-
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-import rclpy
-from rclpy.node import Node
-from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import r2_score
-from sklearn.model_selection import train_test_split
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import matplotlib.pyplot as plt
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score
+from sklearn.model_selection import train_test_split
+from rclpy.node import Node
 
 
 class NeuralNetworkBrake(Node):
@@ -117,8 +113,6 @@ class NeuralNetworkBrake(Node):
         # Evaluate the model on the test data
         with torch.no_grad():
             test_outputs = self.model(X_test)
-            test_loss = criterion(test_outputs, y_test.view(-1, 1))
-            # print(f"Mean Squared Error on Test Data: {test_loss.item()}")
 
         # Visualization
 
@@ -159,7 +153,7 @@ class NeuralNetworkBrake(Node):
 
         # we normalize braking values from 0 to 1
         braking_range /= 100
-        braking_headers = ["Throttling {:.2f}".format(a) for a in braking_range]
+        # braking_headers = ['Throttling {:.2f}'.format(a) for a in braking_range]
 
         headers = [""] + velocity_headers
 
@@ -183,8 +177,8 @@ class NeuralNetworkBrake(Node):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
 
-        scatter = ax.scatter3D(xdata, ydata, zdata, c=zdata, marker="o")
-        surf = ax.plot_surface(V, A, commands_new, cmap="viridis")
+        ax.scatter3D(xdata, ydata, zdata, c=zdata, marker='o')
+        surf = ax.plot_surface(V, A, commands_new, cmap='viridis')
 
         ax.set_xlabel("Velocity")
         ax.set_zlabel("Acceleration")
