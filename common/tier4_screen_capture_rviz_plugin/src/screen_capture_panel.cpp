@@ -123,12 +123,12 @@ void AutowareScreenCapturePanel::on_rate_change([[maybe_unused]] const int rate)
   RCLCPP_INFO_STREAM(raw_node_->get_logger(), "RATE:" << rate_->value());
 }
 
-void AutowareScreenCapturePanel::on_buffer_size_change(const int seconds)
+void AutowareScreenCapturePanel::on_buffer_size_change(const int buffer_size)
 {
   update_buffer_size();
   RCLCPP_INFO_STREAM(
     raw_node_->get_logger(),
-    "BUFFER SIZE: " << seconds << "s (" << buffer_size_frames_ << " frames)");
+    "BUFFER SIZE: " << buffer_size << " [sec] with " << buffer_size_frames_ << " frames)");
 }
 
 void AutowareScreenCapturePanel::update_buffer_size()
@@ -139,6 +139,7 @@ void AutowareScreenCapturePanel::update_buffer_size()
 
 void AutowareScreenCapturePanel::on_timer()
 {
+  // update_buffer_size();
   setFormatDate(ros_time_label_, rclcpp::Clock().now().seconds());
 
   if (!main_window_) return;
@@ -156,10 +157,13 @@ void AutowareScreenCapturePanel::on_timer()
     static_cast<size_t>(q_image.bytesPerLine()));
 
   size_ = size;
+  std::cerr << "buffer_size_frames_: " << buffer_size_frames_ << std::endl;
+  std::cerr << "image size: " << image.size() << std::endl;
+  std::cerr << "buffer size: " << buffer_.size() << std::endl;
 
   if (is_buffering_) {
     buffer_.push_back(image.clone());
-    if (buffer_.size() > buffer_size_frames_) {
+    while (buffer_.size() > buffer_size_frames_) {
       buffer_.pop_front();
     }
   }

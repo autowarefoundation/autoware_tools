@@ -77,7 +77,7 @@ public Q_SLOTS:
 
   void on_rate_change(const int rate);
 
-  void on_buffer_size_change(const int seconds);
+  void on_buffer_size_change(const int buffer_size);
 
 private:
   void create_timer();
