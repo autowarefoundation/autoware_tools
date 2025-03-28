@@ -15,40 +15,73 @@
 # limitations under the License.
 
 
+import sys
 import argparse
 import math
+import operator
 
 from ament_index_python.packages import get_package_share_directory
 import yaml
 
+# Indicate the source of a parameter
+class Source:
+    MPC=0
+    PID=1
+    SIM=2
+
+    def to_string(source):
+        match source:
+            case Source.MPC: return "MPC"
+            case Source.PID: return "PID"
+            case Source.SIM: return "Simulator model"
+            case _: return "Unknown source"
+
+# Condition between 2 parameters
+class Condition:
+    def __init__(self, param1, source1, param2, source2, fail_msg, op):
+        self.param1 = param1
+        self.param2 = param2
+        self.source1 = source1
+        self.source2 = source2
+        self.fail_msg = fail_msg
+        self.op = op
+
+    def eval(self, sources):
+        val1 = sources[self.source1][self.param1]
+        val2 = sources[self.source2][self.param2]
+        if(not self.op(val1, val2)):
+            return "{}[{}] = {} {} {}[{}] = {}".format(Source.to_string(self.source1), self.param1, val1, self.fail_msg, Source.to_string(self.source2), self.param2, val2)
+        return None
 
 def read_yaml(file_path):
     """Read YAML file and return the data."""
     with open(file_path, "r") as file:
         return yaml.safe_load(file)
 
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Process the parameters of the controllers and simulator."
+    )
 
-parser = argparse.ArgumentParser(
-    description="Process the parameters of the controllers and simulator."
-)
-
-parser.add_argument(
-    "--vehicle_description",
-    help="Specify the vehicle description package name",
-    default="sample_vehicle_description",
-)
-parser.add_argument("--mpc_param_file", help="Override the default MPC parameter file path")
-parser.add_argument("--pid_param_file", help="Override the default PID parameter file path")
-parser.add_argument(
-    "--simulator_model_param_file", help="Override the default simulator model parameter file path"
-)
-
-
-def main():
+    parser.add_argument(
+        "--vehicle_description",
+        help="Specify the vehicle description package name",
+        default="sample_vehicle_description",
+    )
+    parser.add_argument("--mpc_param_file", help="Override the default MPC parameter file path")
+    parser.add_argument("--pid_param_file", help="Override the default PID parameter file path")
+    parser.add_argument(
+        "--simulator_model_param_file", help="Override the default simulator model parameter file path"
+    )
     args = parser.parse_args()
 
-    autoware_launch_path = get_package_share_directory("autoware_launch")
-    vehicle_description_path = get_package_share_directory(args.vehicle_description)
+    try:
+        autoware_launch_path = get_package_share_directory("autoware_launch")
+        vehicle_description_path = get_package_share_directory(args.vehicle_description)
+    except Exception as e:
+        print(e)
+        print("make sure your Autoware workspace is sourced")
+        sys.exit(-1)
 
     mpc_param_file_path = (
         args.mpc_param_file
@@ -66,97 +99,24 @@ def main():
         else f"{vehicle_description_path}/config/simulator_model.param.yaml"
     )
 
-    mpc_params = read_yaml(mpc_param_file_path)["/**"]["ros__parameters"]
-    pid_params = read_yaml(pid_param_file_path)["/**"]["ros__parameters"]
-    simulator_model_params = read_yaml(simulator_model_param_file_path)["/**"]["ros__parameters"]
-
-    results = [
-        (
-            "[MPC] steer_delay_difference: {}, (controller: {}, simulator: {})".format(
-                simulator_model_params["steer_time_delay"] - mpc_params["input_delay"],
-                mpc_params["input_delay"],
-                simulator_model_params["steer_time_delay"],
-            )
-        ),
-        (
-            "[MPC] steer_time_constant_difference: {}, (controller: {}, simulator: {})".format(
-                simulator_model_params["steer_time_constant"]
-                - mpc_params["vehicle_model_steer_tau"],
-                mpc_params["vehicle_model_steer_tau"],
-                simulator_model_params["steer_time_constant"],
-            )
-        ),
-        (
-            "[MPC] acceleration_limit_difference: {}, (controller: {}, simulator: {})".format(
-                simulator_model_params["vel_rate_lim"] - mpc_params["acceleration_limit"],
-                mpc_params["acceleration_limit"],
-                simulator_model_params["vel_rate_lim"],
-            )
-        ),
-        (
-            "[MPC] max_steer_rate_lim_difference_by_curvature: {}, (controller: {}, simulator: {})".format(
-                simulator_model_params["steer_rate_lim"]
-                - max(mpc_params["steer_rate_lim_dps_list_by_curvature"]) * (math.pi / 180),
-                max(mpc_params["steer_rate_lim_dps_list_by_curvature"]) * (math.pi / 180),
-                simulator_model_params["steer_rate_lim"],
-            )
-        ),
-        (
-            "[MPC] max_steer_rate_lim_difference_by_velocity: {}, (controller: {}, simulator: {})".format(
-                simulator_model_params["steer_rate_lim"]
-                - max(mpc_params["steer_rate_lim_dps_list_by_velocity"]) * (math.pi / 180),
-                max(mpc_params["steer_rate_lim_dps_list_by_velocity"]) * (math.pi / 180),
-                simulator_model_params["steer_rate_lim"],
-            )
-        ),
-        (
-            "[PID] max_acc_difference: {}, (controller: {}, simulator: {})".format(
-                simulator_model_params["vel_rate_lim"] - pid_params["max_acc"],
-                pid_params["max_acc"],
-                simulator_model_params["vel_rate_lim"],
-            )
-        ),
-        (
-            "[PID] min_acc_difference: {}, (controller: {}, simulator: {})".format(
-                -simulator_model_params["vel_rate_lim"] - pid_params["min_acc"],
-                pid_params["min_acc"],
-                -simulator_model_params["vel_rate_lim"],
-            )
-        ),
-        (
-            "[PID] accelerate_delay_difference: {}, (controller: {}, simulator: {})".format(
-                simulator_model_params["acc_time_delay"] - pid_params["delay_compensation_time"],
-                pid_params["delay_compensation_time"],
-                simulator_model_params["acc_time_delay"],
-            )
-        ),
+    sources = {}
+    sources[Source.MPC] = read_yaml(mpc_param_file_path)["/**"]["ros__parameters"]
+    sources[Source.PID] = read_yaml(pid_param_file_path)["/**"]["ros__parameters"]
+    sources[Source.SIM] = read_yaml(simulator_model_param_file_path)["/**"]["ros__parameters"]
+    conditions = [
+        # Equality conditions
+        Condition("input_delay", Source.MPC, "steer_time_delay", Source.SIM, "should be identical to", operator.eq),
+        Condition("delay_compensation_time", Source.PID, "acc_time_delay", Source.SIM, "should be identical to", operator.eq),
+        Condition("acceleration_limit", Source.MPC, "vel_rate_lim", Source.SIM, "should be identical to", operator.eq),
+        Condition("keep_steer_control_until_converged", Source.MPC, "enable_keep_stopped_until_steer_convergence", Source.PID, "should be identical to", operator.eq),
+        # Lower than conditions
+        Condition("steer_rate_lim_dps_list_by_curvature", Source.MPC, "steer_rate_lim", Source.SIM, "should be lower than", lambda mpc, sim: max(mpc) * (math.pi / 180.0) < sim),
+        Condition("steer_rate_lim_dps_list_by_velocity", Source.MPC, "steer_rate_lim", Source.SIM, "should be lower than", lambda mpc, sim: max(mpc) * (math.pi / 180.0) < sim),
+        Condition("max_acc", Source.PID, "vel_rate_lim", Source.SIM, "should be lower than", operator.lt),
+        Condition("min_acc", Source.PID, "vel_rate_lim", Source.SIM, "(absolute) should be lower than", lambda pid, sim: abs(pid) < sim),
     ]
 
-    for item in results:
-        description = item.split(",")[0]
-        value = float(description.split(":")[1].strip())
-        error_message = ""
-        if (
-            "steer_delay_difference" in item
-            or "steer_time_constant_difference" in item
-            or "accelerate_delay_difference" in item
-        ):
-            if value != 0.0:
-                error_message = "[ERROR] The parameters of the controller and simulator should be identical.\033[0m"
-        if (
-            "acceleration_limit_difference" in item
-            or "max_steer_rate_lim_difference_by_curvature" in item
-            or "max_steer_rate_lim_difference_by_velocity" in item
-            or "max_acc_difference" in item
-        ):
-            if value < 0:
-                error_message = "[ERROR] The parameter of the controller should be smaller than the parameter of the simulator.\033[0m"
-        if "min_acc_difference" in item and value > 0:
-            error_message = "[ERROR] The parameter of the controller should be bigger than the parameter of the simulator.\033[0m"
-        print(f"{item}")
-        if error_message:
-            print(f"\033[91m{error_message}\033[0m\n")
-
-
-if __name__ == "__main__":
-    main()
+    for condition in conditions:
+        fail_msg = condition.eval(sources)
+        if(fail_msg):
+            print(f"\033[91m{fail_msg}\033[0m")
