@@ -39,15 +39,15 @@ class TPVisualizer(Node):
         self.score_path = None
         # Color based on rounded TP
         self.color = {
-            0: [255, 255, 255],
-            1: [230, 255, 255],
-            2: [204, 255, 255],
-            3: [179, 255, 255],
-            4: [153, 204, 255],
-            5: [255, 205, 204],
-            6: [255, 102, 102],
-            7: [255, 102, 102],
-            8: [255, 102, 102],
+            0: [255, 255, 255],  # White
+            1: [255, 255, 204],  # Light Yellow
+            2: [204, 255, 204],  # Light Green
+            3: [204, 204, 255],  # Light Blue
+            4: [255, 204, 255],  # Light Purple
+            5: [255, 204, 204],  # Light Pink
+            6: [255, 0, 0],  # Red
+            7: [255, 0, 0], 
+            8: [255, 0, 0],
         }
 
     # Read the YAML file to get the list of PCD segments and scores

@@ -178,7 +178,7 @@ class TPChecker(Node):
             if pose is None:
                 continue
 
-            if self.valid_pose_mark[i] == 1:
+            if self.invalid_pose_mark[i] == 1:
                 invalid_pose_count += 1
 
                 if invalid_pose_count == self.drop_num:
@@ -199,9 +199,9 @@ class TPChecker(Node):
             marker.pose.position.y -= origin[1]
             marker.pose.position.z -= origin[2]
 
-            marker.scale.x = 2.0
-            marker.scale.y = 2.0
-            marker.scale.z = 2.0
+            marker.scale.x = 10.0
+            marker.scale.y = 10.0
+            marker.scale.z = 10.0
 
             marker.color.a = 1.0
 
@@ -229,6 +229,11 @@ class TPChecker(Node):
         actual_seg_tp = self.actual_segment_df[index, 1]
 
         if abs(expected_seg_tp - actual_seg_tp) > expected_seg_tp * 0.2:
+            if index == 3241:
+                print("Expected/actual = {0}/{1}, index = {2}, key = {3}".format(expected_seg_tp, actual_seg_tp, index, self.segment_df[index, 0]))
+                print("Count = {0}".format(self.actual_segment_df[index, 2]))
+                exit()
+            
             r = 255
             g = 0
             b = 0
@@ -306,9 +311,9 @@ class TPChecker(Node):
                 continue
             closest_tp = self.tp_df[tid, 1]
 
-            # Mark the pose if the tp is too low
+            # Mark the pose as invalid if its tp is too low
             if closest_tp < 1.0:
-                self.valid_pose_mark[i] = 1
+                self.invalid_pose_mark[i] = 1
                 invalid_pose_count += 1
 
                 # If there are too many consecutive low-TP poses, stop checking,
@@ -387,7 +392,7 @@ class TPChecker(Node):
         output_dict = tpu.parse_rosbag(rosbag_path, pose_topic, tp_topic, scan_topic)
         self.pose_df = output_dict["mat_pose"]
         self.pose_to_publish = output_dict["pose"]
-        self.valid_pose_mark = np.zeros((self.pose_to_publish.shape[0], 1))
+        self.invalid_pose_mark = np.zeros((self.pose_to_publish.shape[0], 1))
         self.tp_df = output_dict["tp"]
         self.scan_df = output_dict["scan"]
         self.mark = np.zeros((self.pose_to_publish.shape[0], 1))

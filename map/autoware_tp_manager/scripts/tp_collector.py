@@ -145,33 +145,42 @@ class TPCollector(Node):
             return segment_set
 
     def __update_tp_by_scan(self):
-        progress_bar = tqdm.tqdm(total=self.scan_df.shape[0])
+        progress_bar = tqdm.tqdm(total=self.pose_df.shape[0])
 
-        for i in range(self.scan_df.shape[0]):
+        for i in range(self.pose_df.shape[0]):
             progress_bar.update(1)
-            stamp, tmp_scan = self.scan_df[i, :]
-            scan = pc2.read_points(tmp_scan, skip_nans=True)
+            stamp, pose = self.pose_df[i, :]
+            pose = pose.T
 
-            # Find the closest pose and tp
-            pid = tpu.stamp_search(stamp, self.pose_df, self.pose_df.shape[0])
-            tid = tpu.stamp_search(stamp, self.tp_df, self.tp_df.shape[0])
-
-            if pid < 0 or tid < 0:
+            if pose is None:
                 continue
 
-            closest_pose = self.pose_df[pid, 1].T
-
             # Skip invalid poses
-            if closest_pose[3, 0] == 0 and closest_pose[3, 1] == 0 and closest_pose[3, 2] == 0:
+            if pose[3, 0] == 0 and pose[3, 1] == 0 and pose[3, 2] == 0:
+                continue
+            
+            # Find the closest tp
+            tid = tpu.stamp_search(stamp, self.tp_df, self.tp_df.shape[0])
+
+            if tid < 0:
                 continue
 
             closest_tp = self.tp_df[tid, 1]
+
+            # Find the closest scan
+            sid = tpu.stamp_search(stamp, self.scan_df, self.scan_df.shape[0])
+
+            if sid < 0:
+                continue
+
+            tmp_scan = self.scan_df[sid, 1]
+            scan = pc2.read_points(tmp_scan, skip_nans=True)
 
             # Transform the scan and find the segments that cover the transformed points
             segment_set = set()
 
             for p in scan:
-                tp = tpu.transform_p(p, closest_pose)
+                tp = tpu.transform_p(p, pose)
 
                 # Hash the point to find the segment containing it
                 sx = int(tp[0] / self.resolution) * int(self.resolution)
@@ -198,10 +207,11 @@ class TPCollector(Node):
         for i in range(self.pose_df.shape[0]):
             progress_bar.update(1)
             stamp, pose = self.pose_df[i, :]
-            # Transposed pose for multiplication, as the points are in a row-major table
+
+            # Transpose pose for multiplication, as the points are in a row-major table
             pose = pose.T
+
             # Skip invalid poses
-            # print("Pose at {0} = {1}".format(i, pose))
             if pose is None:
                 # print("None pose. Skip!")
                 continue
@@ -287,7 +297,6 @@ class TPCollector(Node):
 
         # Save the new TPs
         self.__save_tps()
-
 
 if __name__ == "__main__":
     rclpy.init()
