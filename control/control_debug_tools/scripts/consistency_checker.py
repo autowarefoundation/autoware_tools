@@ -15,28 +15,35 @@
 # limitations under the License.
 
 
-import sys
 import argparse
 import math
 import operator
+import sys
 
 from ament_index_python.packages import get_package_share_directory
 import yaml
 
+
 # Indicate the source of a parameter
 class Source:
-    MPC=0
-    PID=1
-    SIM=2
-    GATE=3
+    MPC = 0
+    PID = 1
+    SIM = 2
+    GATE = 3
 
     def to_string(source):
         match source:
-            case Source.MPC: return "MPC"
-            case Source.PID: return "PID"
-            case Source.SIM: return "Simulator model"
-            case Source.GATE: return "Vehicle command gate"
-            case _: return "Unknown source"
+            case Source.MPC:
+                return "MPC"
+            case Source.PID:
+                return "PID"
+            case Source.SIM:
+                return "Simulator model"
+            case Source.GATE:
+                return "Vehicle command gate"
+            case _:
+                return "Unknown source"
+
 
 # Condition between 2 parameters
 class Condition:
@@ -51,9 +58,18 @@ class Condition:
     def eval(self, sources):
         val1 = sources[self.source1][self.param1]
         val2 = sources[self.source2][self.param2]
-        if(not self.op(val1, val2)):
-            return "{}[{}] = {} {} {}[{}] = {}".format(Source.to_string(self.source1), self.param1, val1, self.fail_msg, Source.to_string(self.source2), self.param2, val2)
+        if not self.op(val1, val2):
+            return "{}[{}] = {} {} {}[{}] = {}".format(
+                Source.to_string(self.source1),
+                self.param1,
+                val1,
+                self.fail_msg,
+                Source.to_string(self.source2),
+                self.param2,
+                val2,
+            )
         return None
+
 
 def read_yaml(file_path):
     """Read YAML file and return the data."""
@@ -63,6 +79,7 @@ def read_yaml(file_path):
     except Exception as e:
         print(e)
         sys.exit(-1)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -77,13 +94,17 @@ if __name__ == "__main__":
     parser.add_argument("--mpc_param_file", help="Override the default MPC parameter file path")
     parser.add_argument("--pid_param_file", help="Override the default PID parameter file path")
     parser.add_argument(
-        "--simulator_model_param_file", help="Override the default simulator model parameter file path"
+        "--simulator_model_param_file",
+        help="Override the default simulator model parameter file path",
     )
     parser.add_argument(
-        "--vehicle_cmd_gate_param_file", help="Override the default vehicle command gate parameter file path"
+        "--vehicle_cmd_gate_param_file",
+        help="Override the default vehicle command gate parameter file path",
     )
     parser.add_argument(
-        "--vehicle_id", help="Specify the id to get vehicle specific parameter files (MPC/PID)", default=None
+        "--vehicle_id",
+        help="Specify the id to get vehicle specific parameter files (MPC/PID)",
+        default=None,
     )
     args = parser.parse_args()
 
@@ -117,7 +138,14 @@ if __name__ == "__main__":
     )
 
     print("Comparing the following parameter files:")
-    print("\t{}\n\t{}\n\t{}\n\t{}\n".format(mpc_param_file_path, pid_param_file_path, simulator_model_param_file_path, vehicle_command_gate_param_file_path))
+    print(
+        "\t{}\n\t{}\n\t{}\n\t{}\n".format(
+            mpc_param_file_path,
+            pid_param_file_path,
+            simulator_model_param_file_path,
+            vehicle_command_gate_param_file_path,
+        )
+    )
 
     sources = {}
     sources[Source.MPC] = read_yaml(mpc_param_file_path)["/**"]["ros__parameters"]
@@ -126,18 +154,69 @@ if __name__ == "__main__":
     sources[Source.GATE] = read_yaml(vehicle_command_gate_param_file_path)["/**"]["ros__parameters"]
     conditions = [
         # Equality conditions
-        Condition("input_delay", Source.MPC, "steer_time_delay", Source.SIM, "should be identical to", operator.eq),
-        Condition("delay_compensation_time", Source.PID, "acc_time_delay", Source.SIM, "should be identical to", operator.eq),
-        Condition("acceleration_limit", Source.MPC, "vel_rate_lim", Source.SIM, "should be identical to", operator.eq),
-        Condition("keep_steer_control_until_converged", Source.MPC, "enable_keep_stopped_until_steer_convergence", Source.PID, "should be identical to", operator.eq),
+        Condition(
+            "input_delay",
+            Source.MPC,
+            "steer_time_delay",
+            Source.SIM,
+            "should be identical to",
+            operator.eq,
+        ),
+        Condition(
+            "delay_compensation_time",
+            Source.PID,
+            "acc_time_delay",
+            Source.SIM,
+            "should be identical to",
+            operator.eq,
+        ),
+        Condition(
+            "acceleration_limit",
+            Source.MPC,
+            "vel_rate_lim",
+            Source.SIM,
+            "should be identical to",
+            operator.eq,
+        ),
+        Condition(
+            "keep_steer_control_until_converged",
+            Source.MPC,
+            "enable_keep_stopped_until_steer_convergence",
+            Source.PID,
+            "should be identical to",
+            operator.eq,
+        ),
         # Lower than conditions
-        Condition("steer_rate_lim_dps_list_by_curvature", Source.MPC, "steer_rate_lim", Source.SIM, "should be lower than", lambda mpc, sim: max(mpc) * (math.pi / 180.0) < sim),
-        Condition("steer_rate_lim_dps_list_by_velocity", Source.MPC, "steer_rate_lim", Source.SIM, "should be lower than", lambda mpc, sim: max(mpc) * (math.pi / 180.0) < sim),
-        Condition("max_acc", Source.PID, "vel_rate_lim", Source.SIM, "should be lower than", operator.lt),
-        Condition("min_acc", Source.PID, "vel_rate_lim", Source.SIM, "(absolute) should be lower than", lambda pid, sim: abs(pid) < sim),
+        Condition(
+            "steer_rate_lim_dps_list_by_curvature",
+            Source.MPC,
+            "steer_rate_lim",
+            Source.SIM,
+            "should be lower than",
+            lambda mpc, sim: max(mpc) * (math.pi / 180.0) < sim,
+        ),
+        Condition(
+            "steer_rate_lim_dps_list_by_velocity",
+            Source.MPC,
+            "steer_rate_lim",
+            Source.SIM,
+            "should be lower than",
+            lambda mpc, sim: max(mpc) * (math.pi / 180.0) < sim,
+        ),
+        Condition(
+            "max_acc", Source.PID, "vel_rate_lim", Source.SIM, "should be lower than", operator.lt
+        ),
+        Condition(
+            "min_acc",
+            Source.PID,
+            "vel_rate_lim",
+            Source.SIM,
+            "(absolute) should be lower than",
+            lambda pid, sim: abs(pid) < sim,
+        ),
     ]
 
     for condition in conditions:
         fail_msg = condition.eval(sources)
-        if(fail_msg):
+        if fail_msg:
             print(f"\033[91m{fail_msg}\033[0m")
