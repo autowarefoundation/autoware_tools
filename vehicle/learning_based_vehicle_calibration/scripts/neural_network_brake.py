@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import rclpy
 import pandas as pd
 import numpy as np
 import torch
@@ -16,7 +17,9 @@ class NeuralNetworkBrake(Node):
     class NeuralNetwork(nn.Module):
         def __init__(self):
             super(NeuralNetworkBrake.NeuralNetwork, self).__init__()
-            self.fc1 = nn.Linear(2, 128)  # Input layer with 2 neurons, hidden layer with n neurons
+            self.fc1 = nn.Linear(
+                2, 128
+            )  # Input layer with 2 neurons, hidden layer with n neurons
             self.relu1 = nn.ReLU()
             self.fc2 = nn.Linear(128, 32)
             self.relu2 = nn.ReLU()
@@ -78,15 +81,21 @@ class NeuralNetworkBrake(Node):
         data["Acceleration_measured"] = (data["Acceleration_measured"] - mean2) / std2
         dataa["Acceleration_measured"] = (dataa["Acceleration_measured"] - mean2) / std2
 
-        data = data[abs(data["Acceleration_measured"] - mean2) <= std2 * self.FILTER_ACC_BRAKE]
-        dataa = dataa[abs(dataa["Acceleration_measured"] - mean2) <= std2 * self.FILTER_ACC_BRAKE]
+        data = data[
+            abs(data["Acceleration_measured"] - mean2) <= std2 * self.FILTER_ACC_BRAKE
+        ]
+        dataa = dataa[
+            abs(dataa["Acceleration_measured"] - mean2) <= std2 * self.FILTER_ACC_BRAKE
+        ]
 
         # Split the data into input features (velocity and braking) and target (acceleration)
 
         X = data[["Velocity", "Braking"]].values
         y = data["Acceleration_measured"].values
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
 
         # Convert NumPy arrays to PyTorch tensors
         X_train = torch.tensor(X_train, dtype=torch.float32)
@@ -123,7 +132,9 @@ class NeuralNetworkBrake(Node):
         braking_range = np.linspace((X[:, 1] * std1 + mean1).min(), 80, 20)
         V, A = np.meshgrid(velocity_range, braking_range)
 
-        input_grid = np.column_stack(((V.flatten() - mean0) / std0, (A.flatten() - mean1) / std1))
+        input_grid = np.column_stack(
+            ((V.flatten() - mean0) / std0, (A.flatten() - mean1) / std1)
+        )
         input_grid = torch.tensor(input_grid, dtype=torch.float32)
 
         with torch.no_grad():
@@ -177,8 +188,8 @@ class NeuralNetworkBrake(Node):
         fig = plt.figure()
         ax = fig.add_subplot(111, projection="3d")
 
-        ax.scatter3D(xdata, ydata, zdata, c=zdata, marker='o')
-        surf = ax.plot_surface(V, A, commands_new, cmap='viridis')
+        ax.scatter3D(xdata, ydata, zdata, c=zdata, marker="o")
+        surf = ax.plot_surface(V, A, commands_new, cmap="viridis")
 
         ax.set_xlabel("Velocity")
         ax.set_zlabel("Acceleration")
@@ -201,7 +212,9 @@ class NeuralNetworkBrake(Node):
 
         # Plot the distribution of 'Acceleration_measured'
         plt.subplot(3, 1, 3)
-        plt.hist(ush["Acceleration_measured"], bins=20, color="lightgreen", edgecolor="black")
+        plt.hist(
+            ush["Acceleration_measured"], bins=20, color="lightgreen", edgecolor="black"
+        )
         plt.title("Distribution of Acceleration")
         plt.xlabel("Acceleration")
         plt.ylabel("Frequency")

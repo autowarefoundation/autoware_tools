@@ -16,7 +16,8 @@ X = np.column_stack((xdata, ydata))
 model = LinearRegression().fit(X, zdata)
 
 x_grid, y_grid = np.meshgrid(
-    np.linspace(xdata.min(), xdata.max(), 100), np.linspace(ydata.min(), ydata.max(), 100)
+    np.linspace(xdata.min(), xdata.max(), 100),
+    np.linspace(ydata.min(), ydata.max(), 100),
 )
 
 z_grid = model.predict(np.column_stack((x_grid.ravel(), y_grid.ravel())))
