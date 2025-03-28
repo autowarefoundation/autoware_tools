@@ -28,12 +28,14 @@ class Source:
     MPC=0
     PID=1
     SIM=2
+    GATE=3
 
     def to_string(source):
         match source:
             case Source.MPC: return "MPC"
             case Source.PID: return "PID"
             case Source.SIM: return "Simulator model"
+            case Source.GATE: return "Vehicle command gate"
             case _: return "Unknown source"
 
 # Condition between 2 parameters
@@ -55,8 +57,12 @@ class Condition:
 
 def read_yaml(file_path):
     """Read YAML file and return the data."""
-    with open(file_path, "r") as file:
-        return yaml.safe_load(file)
+    try:
+        with open(file_path, "r") as file:
+            return yaml.safe_load(file)
+    except Exception as e:
+        print(e)
+        sys.exit(-1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -73,6 +79,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--simulator_model_param_file", help="Override the default simulator model parameter file path"
     )
+    parser.add_argument(
+        "--vehicle_cmd_gate_param_file", help="Override the default vehicle command gate parameter file path"
+    )
+    parser.add_argument(
+        "--vehicle_id", help="Specify the id to get vehicle specific parameter files (MPC/PID)", default=None
+    )
     args = parser.parse_args()
 
     try:
@@ -86,23 +98,32 @@ if __name__ == "__main__":
     mpc_param_file_path = (
         args.mpc_param_file
         if args.mpc_param_file
-        else f"{autoware_launch_path}/config/control/trajectory_follower/lateral/mpc.param.yaml"
+        else f"{autoware_launch_path}/config/control/trajectory_follower/{'' if args.vehicle_id is None else '/'+args.vehicle_id+'/'}lateral/mpc.param.yaml"
     )
     pid_param_file_path = (
         args.pid_param_file
         if args.pid_param_file
-        else f"{autoware_launch_path}/config/control/trajectory_follower/longitudinal/pid.param.yaml"
+        else f"{autoware_launch_path}/config/control/trajectory_follower/{'' if args.vehicle_id is None else '/'+args.vehicle_id+'/'}longitudinal/pid.param.yaml"
     )
     simulator_model_param_file_path = (
         args.simulator_model_param_file
         if args.simulator_model_param_file
         else f"{vehicle_description_path}/config/simulator_model.param.yaml"
     )
+    vehicle_command_gate_param_file_path = (
+        args.vehicle_cmd_gate_param_file
+        if args.vehicle_cmd_gate_param_file
+        else f"{autoware_launch_path}/config/control/vehicle_cmd_gate/vehicle_cmd_gate.param.yaml"
+    )
+
+    print("Comparing the following parameter files:")
+    print("\t{}\n\t{}\n\t{}\n\t{}\n".format(mpc_param_file_path, pid_param_file_path, simulator_model_param_file_path, vehicle_command_gate_param_file_path))
 
     sources = {}
     sources[Source.MPC] = read_yaml(mpc_param_file_path)["/**"]["ros__parameters"]
     sources[Source.PID] = read_yaml(pid_param_file_path)["/**"]["ros__parameters"]
     sources[Source.SIM] = read_yaml(simulator_model_param_file_path)["/**"]["ros__parameters"]
+    sources[Source.GATE] = read_yaml(vehicle_command_gate_param_file_path)["/**"]["ros__parameters"]
     conditions = [
         # Equality conditions
         Condition("input_delay", Source.MPC, "steer_time_delay", Source.SIM, "should be identical to", operator.eq),
