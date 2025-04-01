@@ -77,6 +77,8 @@ public Q_SLOTS:
 
   void on_rate_change(const int rate);
 
+  void on_buffer_size_change(const int buffer_size);
+
 private:
   void create_timer();
 
@@ -98,11 +100,14 @@ private:
 
   void save(const std::deque<cv::Mat> & images, const std::string & file_name);
 
+  void update_buffer_size();
+
   QLabel * ros_time_label_;
   QPushButton * screen_capture_button_ptr_;
   QPushButton * capture_to_mp4_button_ptr_;
   QLineEdit * file_prefix_;
   QSpinBox * rate_;
+  QSpinBox * buffer_size_;
   QMainWindow * main_window_{nullptr};
 
   cv::Size size_;
@@ -113,7 +118,7 @@ private:
 
   // Size of the frame buffer (number of frames to keep in memory)
   // At 10 Hz capture rate, 100 frames correspond to approximately 10 seconds of video
-  const size_t buffer_size_ = 100;
+  size_t buffer_size_frames_{0};
 
   bool is_buffering_{false};
   bool is_recording_{false};
