@@ -19,6 +19,7 @@ import os
 import struct
 import time
 
+from geometry_msgs.msg import Pose
 import numpy as np
 import open3d as o3d
 import pandas as pd
@@ -31,7 +32,6 @@ import tqdm
 from visualization_msgs.msg import Marker
 from visualization_msgs.msg import MarkerArray
 import yaml
-from geometry_msgs.msg import Pose
 
 
 class TPVisualizer(Node):
@@ -50,7 +50,7 @@ class TPVisualizer(Node):
             3: [0, 0, 255],  # Blue 3 <= tp < 4
             4: [255, 255, 0],  # Yellow 4 <= tp < 5
             5: [0, 255, 255],  # Cyan 5 <= tp < 6
-            6: [255, 0, 255],  # Magenta 6 <= tp 
+            6: [255, 0, 255],  # Magenta 6 <= tp
             7: [255, 0, 255],
             8: [255, 0, 255],
         }
@@ -132,7 +132,7 @@ class TPVisualizer(Node):
 
         print("Reading trajectory...")
 
-        progress_bar = tqdm.tqdm(total = len(self.trajectory))
+        progress_bar = tqdm.tqdm(total=len(self.trajectory))
 
         # Publish poses
         self.pose_pub = self.create_publisher(MarkerArray, "/trajectory", 10)
@@ -178,7 +178,7 @@ class TPVisualizer(Node):
             marker.color.g = 169.0
             marker.color.b = 169.0
             marker_array_msg.markers.append(marker)
-            
+
         progress_bar.close()
 
         print("Publishing result...")
