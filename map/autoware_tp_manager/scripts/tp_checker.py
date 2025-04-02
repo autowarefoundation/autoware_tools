@@ -161,7 +161,7 @@ class TPChecker(Node):
         dummy_marker = Marker()
         dummy_marker.header.stamp = self.get_clock().now().to_msg()
         dummy_marker.header.frame_id = "map"
-        dummy_marker.id = i
+        dummy_marker.id = 0
         dummy_marker.type = Marker.SPHERE
         dummy_marker.action = Marker.DELETEALL
 
@@ -199,9 +199,9 @@ class TPChecker(Node):
             marker.pose.position.y -= origin[1]
             marker.pose.position.z -= origin[2]
 
-            marker.scale.x = 10.0
-            marker.scale.y = 10.0
-            marker.scale.z = 10.0
+            marker.scale.x = self.resolution / 2.0
+            marker.scale.y = self.resolution / 2.0
+            marker.scale.z = self.resolution / 2.0
 
             marker.color.a = 1.0
 

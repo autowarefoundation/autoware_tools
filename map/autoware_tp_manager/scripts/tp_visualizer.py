@@ -28,6 +28,10 @@ import sensor_msgs.msg as sensor_msgs
 import sensor_msgs_py.point_cloud2 as pc2
 import std_msgs.msg as std_msgs
 import tqdm
+from visualization_msgs.msg import Marker
+from visualization_msgs.msg import MarkerArray
+import yaml
+from geometry_msgs.msg import Pose
 
 
 class TPVisualizer(Node):
@@ -37,17 +41,18 @@ class TPVisualizer(Node):
         self.pcd_path = None
         self.yaml_path = None
         self.score_path = None
+        self.trajectory_path = None
         # Color based on rounded TP
         self.color = {
-            0: [255, 255, 255],  # White
-            1: [255, 255, 204],  # Light Yellow
-            2: [204, 255, 204],  # Light Green
-            3: [204, 204, 255],  # Light Blue
-            4: [255, 204, 255],  # Light Purple
-            5: [255, 204, 204],  # Light Pink
-            6: [255, 0, 0],  # Red
-            7: [255, 0, 0],
-            8: [255, 0, 0],
+            0: [255, 255, 255],  # White 0 <= tp < 1
+            1: [255, 0, 0],  # Red 1 <= tp < 2
+            2: [0, 255, 0],  # Green 2 <= tp < 3
+            3: [0, 0, 255],  # Blue 3 <= tp < 4
+            4: [255, 255, 0],  # Yellow 4 <= tp < 5
+            5: [0, 255, 255],  # Cyan 5 <= tp < 6
+            6: [255, 0, 255],  # Magenta 6 <= tp 
+            7: [255, 0, 255],
+            8: [255, 0, 255],
         }
 
     # Read the YAML file to get the list of PCD segments and scores
@@ -63,6 +68,17 @@ class TPVisualizer(Node):
             print("Error: no PCD file was found at {0}! Abort!".format(self.pcd_path))
             exit()
 
+        self.yaml_path = os.path.join(pcd_map_dir, "pointcloud_map_metadata.yaml")
+
+        if not os.path.exists(self.yaml_path):
+            print("Error: no PCD metadata file was found at {0}".format(self.yaml_path))
+            exit()
+        else:
+            with open(self.yaml_path, "r") as f:
+                for key, value in yaml.safe_load(f).items():
+                    if key == "x_resolution":
+                        self.map_resolution = value
+
         self.score_path = os.path.join(pcd_map_dir, "scores.csv")
 
         if not os.path.exists(self.score_path):
@@ -70,6 +86,8 @@ class TPVisualizer(Node):
             exit()
 
         self.segment_df = pd.read_csv(self.score_path)
+        self.trajectory_path = os.path.join(pcd_map_dir, "trajectory.csv")
+        self.trajectory = pd.read_csv(self.trajectory_path)
 
     def __show(self):
         ros_float_dtype = sensor_msgs.PointField.FLOAT32
@@ -94,6 +112,7 @@ class TPVisualizer(Node):
         progress_bar = tqdm.tqdm(total=len(self.segment_df))
         origin = None
 
+        print("Reading map data...")
         for seg in self.segment_df.itertuples():
             progress_bar.update(1)
             # Load the current segment
@@ -111,6 +130,57 @@ class TPVisualizer(Node):
 
         progress_bar.close()
 
+        print("Reading trajectory...")
+
+        progress_bar = tqdm.tqdm(total = len(self.trajectory))
+
+        # Publish poses
+        self.pose_pub = self.create_publisher(MarkerArray, "/trajectory", 10)
+        marker_array_msg = MarkerArray()
+
+        # Delete the current markers on rviz2
+        dummy_marker = Marker()
+        dummy_marker.header.stamp = self.get_clock().now().to_msg()
+        dummy_marker.header.frame_id = "map"
+        dummy_marker.id = 0
+        dummy_marker.type = Marker.SPHERE
+        dummy_marker.action = Marker.DELETEALL
+
+        marker_array_msg.markers.append(dummy_marker)
+
+        self.pose_pub.publish(marker_array_msg)
+
+        marker_array_msg = MarkerArray()
+
+        for i, pose in self.trajectory.iterrows():
+            progress_bar.update(1)
+
+            marker = Marker()
+
+            marker.header.stamp = self.get_clock().now().to_msg()
+            marker.header.frame_id = "map"
+            marker.id = i
+            marker.type = Marker.SPHERE
+            marker.action = Marker.MODIFY
+            marker.pose = Pose()
+            # Shift toward origin
+            marker.pose.position.x = pose[0] - origin[0]
+            marker.pose.position.y = pose[1] - origin[1]
+            marker.pose.position.z = pose[2] - origin[2]
+
+            marker.scale.x = self.map_resolution / 2.0
+            marker.scale.y = self.map_resolution / 2.0
+            marker.scale.z = self.map_resolution / 2.0
+
+            marker.color.a = 1.0
+
+            marker.color.r = 169.0
+            marker.color.g = 169.0
+            marker.color.b = 169.0
+            marker_array_msg.markers.append(marker)
+            
+        progress_bar.close()
+
         print("Publishing result...")
         header = std_msgs.Header()
         header.stamp = self.get_clock().now().to_msg()
@@ -123,6 +193,7 @@ class TPVisualizer(Node):
 
         while True:
             pcd_publisher.publish(pc2_msg)
+            self.pose_pub.publish(marker_array_msg)
             time.sleep(1)
 
     def __set_color_based_on_score(self, score) -> int:
