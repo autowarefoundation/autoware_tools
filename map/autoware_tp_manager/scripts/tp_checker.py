@@ -229,15 +229,6 @@ class TPChecker(Node):
         actual_seg_tp = self.actual_segment_df[index, 1]
 
         if abs(expected_seg_tp - actual_seg_tp) > expected_seg_tp * 0.2:
-            if index == 3241:
-                print(
-                    "Expected/actual = {0}/{1}, index = {2}, key = {3}".format(
-                        expected_seg_tp, actual_seg_tp, index, self.segment_df[index, 0]
-                    )
-                )
-                print("Count = {0}".format(self.actual_segment_df[index, 2]))
-                exit()
-
             r = 255
             g = 0
             b = 0

@@ -306,7 +306,7 @@ if __name__ == "__main__":
     parser.add_argument("bag_path", help="The path to the input rosbag", type=str)
     parser.add_argument("output", help="The path to the output directory", type=str)
     parser.add_argument(
-        "--resolution", help="Map segment resolution", default=20, required=False, type=float
+        "--resolution", help="Map segment resolution", default=20.0, required=False, type=float
     )
     parser.add_argument(
         "--pose_topic",
