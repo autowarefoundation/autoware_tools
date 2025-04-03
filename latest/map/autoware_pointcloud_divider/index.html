@@ -1807,6 +1807,8 @@
         
           
         
+          
+        
       
       
         <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
@@ -2509,6 +2511,54 @@
         <label class="md-nav__title" for="__nav_9_4">
           <span class="md-nav__icon md-icon"></span>
           Autoware pointcloud merger
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+      
+      
+      
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_5" >
+      
+      
+        
+          
+            
+          
+        
+      
+      
+        
+        
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../autoware_tp_manager/">Autoware tp manager</a>
+          
+        </div>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_5_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_9_5">
+          <span class="md-nav__icon md-icon"></span>
+          Autoware tp manager
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -3377,7 +3427,7 @@ colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span cla
 <ul>
 <li>
 <p>Select directory, process all files found with <code>find $INPUT_DIR -name "*.pcd"</code>.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_pointcloud_divider<span class="w"> </span>pointcloud_divider.launch.xml<span class="w"> </span>input_pcd_or_dir:<span class="o">=</span>&lt;INPUT_DIR&gt;<span class="w"> </span>output_pcd_dir:<span class="o">=</span>&lt;OUTPUT_DIR&gt;<span class="w"> </span>prefix:<span class="o">=</span>&lt;PREFIX&gt;
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_pointcloud_divider<span class="w"> </span>pointcloud_divider.launch.xml<span class="w"> </span>input_pcd_or_dir:<span class="o">=</span>&lt;INPUT_DIR&gt;<span class="w"> </span>output_pcd_dir:<span class="o">=</span>&lt;OUTPUT_DIR&gt;<span class="w"> </span>prefix:<span class="o">=</span>&lt;PREFIX&gt;<span class="w"> </span><span class="o">[</span>use_large_grid:<span class="o">=</span>true/false<span class="o">]</span><span class="w"> </span><span class="o">[</span>leaf_size:<span class="o">=</span>&lt;LEAF_SIZE&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>grid_size_x:<span class="o">=</span>&lt;GRID_SIZE_X&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>grid_size_y:<span class="o">=</span>&lt;GRID_SIZE_Y&gt;<span class="o">]</span>
 </code></pre></div>
 <table>
 <thead>
@@ -3398,6 +3448,22 @@ colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span cla
 <tr>
 <td>PREFIX</td>
 <td>Prefix of output PCD file name</td>
+</tr>
+<tr>
+<td>use_large_grid</td>
+<td>If true, group PCD segments to groups of larger grids. Default false.</td>
+</tr>
+<tr>
+<td>LEAF_SIZE</td>
+<td>The resolution (m) to downsample output PCD files. If negative, no downsampling is applied on the output PCD files. Default 0.2.</td>
+</tr>
+<tr>
+<td>GRID_SIZE_X</td>
+<td>The X size (m) of the output PCD segments. Default 20.0.</td>
+</tr>
+<tr>
+<td>GRID_SIZE_Y</td>
+<td>The Y size (m) of the output PCD segments. Default 20.0.</td>
 </tr>
 </tbody>
 </table>
@@ -3482,24 +3548,18 @@ colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span cla
 <h3 id="parameter-example">Parameter example<a class="headerlink" href="#parameter-example" title="Permanent link">#</a></h3>
 <ol>
 <li>
-<p>Dividing point clouds without downsampling</p>
-<div class="highlight"><pre><span></span><code><span class="nt">use_large_grid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="nt">leaf_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1.0</span><span class="w"> </span><span class="c1"># any negative number</span>
-<span class="nt">grid_size_x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
-<span class="nt">grid_size_y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<p>Dividing point clouds without downsampling.</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_pointcloud_divider<span class="w"> </span>pointcloud_divider.launch.xml<span class="w"> </span>input_pcd_or_dir:<span class="o">=</span>&lt;INPUT_DIR&gt;<span class="w"> </span>output_pcd_dir:<span class="o">=</span>&lt;OUTPUT_DIR&gt;<span class="w"> </span>prefix:<span class="o">=</span><span class="nb">test</span><span class="w"> </span>leaf_size:<span class="o">=</span>-0.1
 </code></pre></div>
 </li>
 <li>
-<p>Dividing and downsampling point clouds</p>
-<div class="highlight"><pre><span></span><code><span class="nt">use_large_grid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="nt">leaf_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.2</span>
-<span class="nt">grid_size_x</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
-<span class="nt">grid_size_y</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20</span>
+<p>Dividing and downsampling point clouds.</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_pointcloud_divider<span class="w"> </span>pointcloud_divider.launch.xml<span class="w"> </span>input_pcd_or_dir:<span class="o">=</span>&lt;INPUT_DIR&gt;<span class="w"> </span>output_pcd_dir:<span class="o">=</span>&lt;OUTPUT_DIR&gt;<span class="w"> </span>prefix:<span class="o">=</span><span class="nb">test</span>
 </code></pre></div>
 </li>
 </ol>
 <h2 id="metadata-yaml-format">Metadata YAML Format<a class="headerlink" href="#metadata-yaml-format" title="Permanent link">#</a></h2>
-<p>The metadata file should be named <code>metadata.yaml</code>. It contains the following fields:</p>
+<p>The metadata file is named <code>pointcloud_data_metadata.yaml</code>. It contains the following fields:</p>
 <ul>
 <li><code>x_resolution</code>: The resolution along the X-axis.</li>
 <li><code>y_resolution</code>: The resolution along the Y-axis.</li>
