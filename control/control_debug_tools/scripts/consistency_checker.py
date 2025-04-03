@@ -89,7 +89,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--vehicle_description",
         help="Specify the vehicle description package name",
-        default="autoware_sample_vehicle_description",
+        default="sample_vehicle_description",
     )
     parser.add_argument("--mpc_param_file", help="Override the default MPC parameter file path")
     parser.add_argument("--pid_param_file", help="Override the default PID parameter file path")
