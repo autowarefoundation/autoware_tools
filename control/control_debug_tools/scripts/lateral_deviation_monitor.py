@@ -18,11 +18,11 @@ import time
 
 from autoware_control_msgs.msg import Control
 from autoware_vehicle_msgs.msg import SteeringReport
-from diagnostic_msgs.msg import DiagnosticArray
 import matplotlib.pyplot as plt
 import rclpy
 from rclpy.node import Node
 from termcolor import colored
+from tier4_metric_msgs.msg import MetricArray
 
 
 class SteeringAndLateralDeviationMonitor(Node):
@@ -38,7 +38,7 @@ class SteeringAndLateralDeviationMonitor(Node):
         )
 
         self.create_subscription(
-            DiagnosticArray, "/control/control_evaluator/metrics", self.metrics_callback, 10
+            MetricArray, "/control/control_evaluator/metrics", self.metrics_callback, 10
         )
 
         self.control_steering_angle = None
@@ -77,14 +77,11 @@ class SteeringAndLateralDeviationMonitor(Node):
         self.update_steering_diff()
         self.update_max_values()
 
-    def metrics_callback(self, msg):
-        for status in msg.status:
-            if status.name == "lateral_deviation":
-                for value in status.values:
-                    if value.key == "metric_value":
-                        self.lateral_deviation = float(value.value)
-                        self.update_max_values()
-                        break
+    def metrics_callback(self, msgs):
+        for msg in msgs.metric_array:
+            if msg.name == "lateral_deviation":
+                self.lateral_deviation = float(msg.value)
+                self.update_max_values()
 
     def update_steering_diff(self):
         if self.control_steering_angle is not None and self.vehicle_steering_angle is not None:
