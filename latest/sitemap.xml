@@ -96,6 +96,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://autowarefoundation.github.io/autoware-tools-documentation/latest/control/control_debug_tools/scripts/</loc>
+         <lastmod>2025-04-03</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://autowarefoundation.github.io/autoware-tools-documentation/latest/control/vehicle_cmd_analyzer/</loc>
          <lastmod>2025-04-03</lastmod>
          <changefreq>daily</changefreq>
