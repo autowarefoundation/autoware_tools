@@ -60,10 +60,12 @@ TEST_F(JsonProcessingTest, ParseValidatorsWithValidInput)
     validators["parsing.valid_input.no_prerequisites2"].prereq_with_forgive_warnings.size(), 0);
   EXPECT_EQ(
     validators["parsing.valid_input.with_prerequisites1"].prereq_with_forgive_warnings.size(), 2);
-  EXPECT_TRUE(validators["parsing.valid_input.with_prerequisites1"]
-                .prereq_with_forgive_warnings["parsing.valid_input.no_prerequisites1"]);
-  EXPECT_FALSE(validators["parsing.valid_input.with_prerequisites1"]
-                 .prereq_with_forgive_warnings["parsing.valid_input.no_prerequisites2"]);
+  EXPECT_TRUE(
+    validators["parsing.valid_input.with_prerequisites1"]
+      .prereq_with_forgive_warnings["parsing.valid_input.no_prerequisites1"]);
+  EXPECT_FALSE(
+    validators["parsing.valid_input.with_prerequisites1"]
+      .prereq_with_forgive_warnings["parsing.valid_input.no_prerequisites2"]);
 }
 
 TEST_F(JsonProcessingTest, CreateValidationQueueNoCycles)
