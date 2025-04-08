@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>autoware_evaluate_position_error_using_line_rviz_plugin</name>
+  <version>0.1.0</version>
+  <description>The autoware_evaluate_position_error_using_line_rviz_plugin package</description>
+  <maintainer email="yamato.ando@tier4.jp">Yamato Ando</maintainer>
+  <license>Apache License 2.0</license>
+  <author email="yamato.ando@tier4.jp">Yamato Ando</author>
+
+  <buildtool_depend>ament_cmake_auto</buildtool_depend>
+  <buildtool_depend>autoware_cmake</buildtool_depend>
+
+  <build_depend>qtbase5-dev</build_depend>
+
+  <depend>rclcpp</depend>
+  <depend>rviz_common</depend>
+  <depend>yaml-cpp</depend>
+  <depend>rviz_default_plugins</depend>
+  <depend>rviz_ogre_vendor</depend>
+  <depend>autoware_map_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+
+  <exec_depend>libqt5-core</exec_depend>
+  <exec_depend>libqt5-gui</exec_depend>
+  <exec_depend>libqt5-opengl</exec_depend>
+  <exec_depend>libqt5-widgets</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>autoware_lint_common</test_depend>
+
+  <depend>autoware_utils</depend>
+  <depend>autoware_lanelet2_extension</depend>
+  <depend>lanelet2_core</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <rviz plugin="${prefix}/plugins/plugin_description.xml"/>
+  </export>
+</package>
