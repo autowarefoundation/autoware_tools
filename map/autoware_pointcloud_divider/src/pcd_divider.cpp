@@ -55,10 +55,9 @@
 #include <utility>
 #include <vector>
 
-
 // For debug
 #ifndef timeDiff
-#define timeDiff(start, end)  ((end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec)
+#define timeDiff(start, end) ((end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec)
 #endif
 // End
 
@@ -184,27 +183,26 @@ void PCDDivider<PointT>::multi_stage_run(const std::vector<std::string> & pcd_na
 
       segment_map[grid_key].push_back(i);
     }
-    
+
     // Save segments to files
     for (auto & item : segment_map) {
       PclCloudType seg;
 
       seg.reserve(item.second.size());
-      
+
       // Generate the PCD file
       for (auto & i : item.second) {
         seg.push_back((*cloud)[i]);
       }
 
       // Save to file
-      std::string save_path = pcd_output_dir + file_prefix_ + "_" + std::to_string(item.first.ix)
-               + "_" + std::to_string(item.first.iy) + ".pcd";
+      std::string save_path = pcd_output_dir + file_prefix_ + "_" + std::to_string(item.first.ix) +
+                              "_" + std::to_string(item.first.iy) + ".pcd";
 
       savePCD(save_path, seg);
     }
   }
 }
-
 
 template <class PointT>
 void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
@@ -260,7 +258,8 @@ void PCDDivider<PointT>::checkOutputDirectoryValidity()
 }
 
 template <class PointT>
-typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(const std::string & pcd_name, bool load_all)
+typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(
+  const std::string & pcd_name, bool load_all)
 {
   if (pcd_name != reader_.get_path()) {
     reader_.setInput(pcd_name);
@@ -282,11 +281,15 @@ typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(const std::str
       RCLCPP_INFO(logger_, "Copy segment %d", seg_count++);
       size_t read_size = reader_.readABlock(tmp_cloud);
 
-      RCLCPP_INFO(logger_, "Read size (bytes/points) = %lu/%lu, tmp size = %lu, cloud size = %lu, total pnum = %lu", 
-                    read_size, read_size / sizeof(PointT), tmp_cloud.size(), cloud_ptr->size(), total_point_num);
+      RCLCPP_INFO(
+        logger_,
+        "Read size (bytes/points) = %lu/%lu, tmp size = %lu, cloud size = %lu, total pnum = %lu",
+        read_size, read_size / sizeof(PointT), tmp_cloud.size(), cloud_ptr->size(),
+        total_point_num);
 
       if (read_size > 0) {
-        if (!std::memcpy(cloud_ptr->data() + copy_loc, tmp_cloud.data(), tmp_cloud.size() * sizeof(PointT))) {
+        if (!std::memcpy(
+              cloud_ptr->data() + copy_loc, tmp_cloud.data(), tmp_cloud.size() * sizeof(PointT))) {
           RCLCPP_ERROR(logger_, "Error: Failed to copy points from tmp buffer to cloud");
           exit(EXIT_FAILURE);
         }

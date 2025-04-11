@@ -54,8 +54,8 @@
 #ifndef AUTOWARE__POINTCLOUD_DIVIDER__SCD_IO_READER_HPP_
 #define AUTOWARE__POINTCLOUD_DIVIDER__SCD_IO_READER_HPP_
 
-#include "utility.hpp"
 #include "grid_info.hpp"
+#include "utility.hpp"
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_cloud.h>
@@ -124,9 +124,9 @@ private:
   size_t readASegmentBinary(std::ifstream & input, PclCloudType & output);
   size_t readASegmentASCII(std::ifstream & input, PclCloudType & output);
 
-  size_t readASegment(std::ifstream & input, PclCloudType & output, const GridInfo<2>& key);
-  size_t readASegmentBinary(std::ifstream & input, PclCloudType & output, const GridInfo<2>& key);
-  size_t readASegmentASCII(std::ifstream & input, PclCloudType & output, const GridInfo<2>& key);
+  size_t readASegment(std::ifstream & input, PclCloudType & output, const GridInfo<2> & key);
+  size_t readASegmentBinary(std::ifstream & input, PclCloudType & output, const GridInfo<2> & key);
+  size_t readASegmentASCII(std::ifstream & input, PclCloudType & output, const GridInfo<2> & key);
 
   void clear()
   {
@@ -350,11 +350,13 @@ void SCDReader<PointT>::readHeader(std::ifstream & input)
       }
 
       if (vals[0] == "SEGMENTS") {
-        // A list of 4 numbers (segment index x, segment index y, offset in the file, and number of points in the segment)
+        // A list of 4 numbers (segment index x, segment index y, offset in the file, and number of
+        // points in the segment)
         for (size_t i = 1; i < vals.size(); i += 4) {
           GridInfo<2> key(std::stoi(vals[i], std::stoi(vals[i + 1])));
 
-          segment_map_[key] = std::pair<int64_t, size_t>(std::stol(vals[i + 2]), std::stoll(vals[i + 3])); 
+          segment_map_[key] =
+            std::pair<int64_t, size_t>(std::stol(vals[i + 2]), std::stoll(vals[i + 3]));
         }
       }
 
@@ -649,7 +651,8 @@ size_t SCDReader<PointT>::readASegment(std::ifstream & input, PclCloudType & out
 }
 
 template <typename PointT>
-size_t SCDReader<PointT>::readASegment(std::ifstream & input, PclCloudType & output, const GridInfo<2> & key)
+size_t SCDReader<PointT>::readASegment(
+  std::ifstream & input, PclCloudType & output, const GridInfo<2> & key)
 {
   if (binary_) {
     return readASegmentBinary(input, output, key);
@@ -660,4 +663,4 @@ size_t SCDReader<PointT>::readASegment(std::ifstream & input, PclCloudType & out
 
 }  // namespace autoware::pointcloud_divider
 
-#endif  // AUTOWARE__POINTCLOUD_DIVIDER__PCD_IO_READER_HPP_
+#endif  // AUTOWARE__POINTCLOUD_DIVIDER__SCD_IO_READER_HPP_
