@@ -55,6 +55,13 @@
 #include <utility>
 #include <vector>
 
+
+// For debug
+#ifndef timeDiff
+#define timeDiff(start, end)  ((end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec)
+#endif
+// End
+
 namespace fs = std::filesystem;
 
 namespace autoware::pointcloud_divider
@@ -107,8 +114,97 @@ void PCDDivider<PointT>::run()
   auto pcd_list = discoverPCDs(input_pcd_or_dir_);
 
   // Process pcd files
-  run(pcd_list);
+  // run(pcd_list);
+  multi_stage_run(pcd_list);
 }
+
+template <class PointT>
+void PCDDivider<PointT>::multi_stage_run(const std::vector<std::string> & pcd_names)
+{
+  // Segmentation by a enlarged resolution
+  double backup_grid_size_x = grid_size_x_;
+  double backup_grid_size_y = grid_size_y_;
+  double backup_leaf_size_ = leaf_size_;
+  std::string backup_output_dir = output_dir_;
+  std::string backup_tmp_dir = tmp_dir_;
+
+  grid_size_x_ *= 400.0;
+  grid_size_y_ *= 400.0;
+  leaf_size_ = 0.0;
+  output_dir_ = output_dir_ + "/large_cloud/";
+  tmp_dir_ = output_dir_ + "/tmp/";
+
+  run(pcd_names);
+
+  // Now divide each segments in-memory
+  // Read the metadata at output_dir/pointcloud_map_metadata.
+  std::string large_metadata = output_dir_ + "/pointcloud_map_metadata.yaml";
+  std::list<std::string> pcd_list;
+
+  try {
+    YAML::Node conf = YAML::LoadFile(large_metadata);
+
+    for (auto item : conf) {
+      std::string str_key = item.first.as<std::string>();
+
+      if (str_key != "x_resolution" && str_key != "y_resolution") {
+        pcd_list.push_back(output_dir_ + "/pointcloud_map.pcd/" + str_key);
+      }
+    }
+  } catch (YAML::Exception & e) {
+    RCLCPP_ERROR(logger_, "YAML Error: %s", e.what());
+    rclcpp::shutdown();
+    exit(EXIT_FAILURE);
+  }
+
+  // Reset the resolution
+  grid_size_x_ = backup_grid_size_x;
+  grid_size_y_ = backup_grid_size_y;
+  leaf_size_ = backup_leaf_size_;
+  output_dir_ = backup_output_dir;
+  tmp_dir_ = backup_tmp_dir;
+
+  std::string pcd_output_dir = output_dir_ + "/pointcloud_map.pcd/";
+
+  if (!fs::exists(pcd_output_dir)) {
+    fs::create_directory(pcd_output_dir);
+  }
+
+  for (auto & segment_path : pcd_list) {
+    RCLCPP_INFO(logger_, "Checking segment %s", segment_path.c_str());
+    // Distribute points to segments
+    std::unordered_map<GridInfo<2>, std::list<size_t>> segment_map;
+    // Load the enlarged segment
+    auto cloud = loadPCD(segment_path, true);
+
+    RCLCPP_INFO(logger_, "Segment size = %lu", cloud->size());
+
+    for (size_t i = 0; i < cloud->size(); ++i) {
+      auto grid_key = pointToGrid2(cloud->at(i), grid_size_x_, grid_size_y_);
+
+      segment_map[grid_key].push_back(i);
+    }
+    
+    // Save segments to files
+    for (auto & item : segment_map) {
+      PclCloudType seg;
+
+      seg.reserve(item.second.size());
+      
+      // Generate the PCD file
+      for (auto & i : item.second) {
+        seg.push_back((*cloud)[i]);
+      }
+
+      // Save to file
+      std::string save_path = pcd_output_dir + file_prefix_ + "_" + std::to_string(item.first.ix)
+               + "_" + std::to_string(item.first.iy) + ".pcd";
+
+      savePCD(save_path, seg);
+    }
+  }
+}
+
 
 template <class PointT>
 void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
@@ -164,7 +260,7 @@ void PCDDivider<PointT>::checkOutputDirectoryValidity()
 }
 
 template <class PointT>
-typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(const std::string & pcd_name)
+typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(const std::string & pcd_name, bool load_all)
 {
   if (pcd_name != reader_.get_path()) {
     reader_.setInput(pcd_name);
@@ -172,7 +268,35 @@ typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(const std::str
 
   PclCloudPtr cloud_ptr(new PclCloudType);
 
-  reader_.readABlock(*cloud_ptr);
+  if (load_all) {
+    size_t total_point_num = reader_.point_num();
+    size_t copy_loc = 0;
+
+    PclCloudType tmp_cloud;
+
+    cloud_ptr->resize(total_point_num);
+
+    int seg_count = 0;
+
+    while (reader_.good() && rclcpp::ok()) {
+      RCLCPP_INFO(logger_, "Copy segment %d", seg_count++);
+      size_t read_size = reader_.readABlock(tmp_cloud);
+
+      RCLCPP_INFO(logger_, "Read size (bytes/points) = %lu/%lu, tmp size = %lu, cloud size = %lu, total pnum = %lu", 
+                    read_size, read_size / sizeof(PointT), tmp_cloud.size(), cloud_ptr->size(), total_point_num);
+
+      if (read_size > 0) {
+        if (!std::memcpy(cloud_ptr->data() + copy_loc, tmp_cloud.data(), tmp_cloud.size() * sizeof(PointT))) {
+          RCLCPP_ERROR(logger_, "Error: Failed to copy points from tmp buffer to cloud");
+          exit(EXIT_FAILURE);
+        }
+      }
+
+      copy_loc += tmp_cloud.size();
+    }
+  } else {
+    reader_.readABlock(*cloud_ptr);
+  }
 
   return cloud_ptr;
 }
@@ -200,12 +324,12 @@ void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
       exit(EXIT_SUCCESS);
     }
 
-    auto tmp = pointToGrid2(p, grid_size_x_, grid_size_y_);
-    auto it = grid_to_cloud_.find(tmp);
+    auto grid_key = pointToGrid2(p, grid_size_x_, grid_size_y_);
+    auto it = grid_to_cloud_.find(grid_key);
 
     // If the grid has not existed yet, create a new one
     if (it == grid_to_cloud_.end()) {
-      auto & new_grid = grid_to_cloud_[tmp];
+      auto & new_grid = grid_to_cloud_[grid_key];
 
       std::get<0>(new_grid).reserve(max_block_size_);
 
@@ -227,11 +351,11 @@ void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
         // Otherwise, update the seg_by_size_ if the change of size is significant
         if (cloud.size() - prev_size >= 10000) {
           prev_size = cloud.size();
-          auto seg_to_size_it = seg_to_size_itr_map_.find(tmp);
+          auto seg_to_size_it = seg_to_size_itr_map_.find(grid_key);
 
           if (seg_to_size_it == seg_to_size_itr_map_.end()) {
             auto size_it = seg_by_size_.insert(std::make_pair(prev_size, it));
-            seg_to_size_itr_map_[tmp] = size_it;
+            seg_to_size_itr_map_[grid_key] = size_it;
           } else {
             seg_by_size_.erase(seg_to_size_it->second);
             auto new_size_it = seg_by_size_.insert(std::make_pair(prev_size, it));

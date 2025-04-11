@@ -122,6 +122,8 @@ public:
 
   void run();
   void run(const std::vector<std::string> & pcd_names);
+  // Two stages segmentation
+  void multi_stage_run(const std::vector<std::string> & pcd_names);
 
 private:
   std::string input_pcd_or_dir_, output_dir_, file_prefix_, config_file_;
@@ -159,7 +161,7 @@ private:
 
   std::string makeFileName(const GridInfo<2> & grid) const;
 
-  PclCloudPtr loadPCD(const std::string & pcd_name);
+  PclCloudPtr loadPCD(const std::string & pcd_name, bool load_all = false);
   void savePCD(const std::string & pcd_name, const pcl::PointCloud<PointT> & cloud);
   void dividePointCloud(const PclCloudPtr & cloud_ptr);
   void paramInitialize();
