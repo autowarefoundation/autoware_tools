@@ -67,7 +67,7 @@ Only `path_generator` or `fixed_goal_planner` can be entered for `<goal_method>`
 If used in `fixed_goal_planner`, `refine_goal_search_radius_range` cna be entered from `search-radius-range`.
 
 > [!WARNING]
-> If the start pose is off the center of the lane, it is necessary to manually embed a centerline that smoothly connects the start pose and the start lane in advance using VMB, etc. 
+> If the start pose is off the center of the lane, it is necessary to manually embed a centerline that smoothly connects the start pose and the start lane in advance using VMB, etc.
 
 ## Visualization
 

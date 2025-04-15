@@ -31,7 +31,8 @@ namespace autoware::static_centerline_generator
 namespace utils
 {
 geometry_msgs::msg::Pose createPose(
-  const double px, const double py, const double pz, const double qx, const double qy, const double qz, const double qw);
+  const double px, const double py, const double pz, const double qx, const double qy,
+  const double qz, const double qw);
 
 nav_msgs::msg::Odometry::ConstSharedPtr convert_to_odometry(const geometry_msgs::msg::Pose & pose);
 

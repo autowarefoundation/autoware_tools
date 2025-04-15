@@ -52,7 +52,8 @@ lanelet::Point3d createPoint3d(const double x, const double y, const double z)
 namespace utils
 {
 geometry_msgs::msg::Pose createPose(
-  const double px, const double py, const double pz, const double qx, const double qy, const double qz, const double qw)
+  const double px, const double py, const double pz, const double qx, const double qy,
+  const double qz, const double qw)
 {
   geometry_msgs::msg::Pose pose;
   pose.position.x = px;
