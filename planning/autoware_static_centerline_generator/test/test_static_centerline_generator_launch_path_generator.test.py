@@ -53,7 +53,10 @@ def generate_test_description():
             ),
             DeclareLaunchArgument("rviz", default_value="false"),
             DeclareLaunchArgument("start_lanelet_id", default_value="215"),
+            DeclareLaunchArgument("start_pose", default_value="[89775.5, 43115.8, 6.0, 0.0, 0.0, 0.2876, 0.9575]"),
             DeclareLaunchArgument("end_lanelet_id", default_value="216"),
+            DeclareLaunchArgument("end_pose", default_value="[89853.8, 43164.8, 6.2, 0.0, 0.0, 0.2876, 0.9575]"),
+            DeclareLaunchArgument("goal_method", default_value="path_generator"),
             DeclareLaunchArgument(
                 "map_loader_param",
                 default_value=os.path.join(

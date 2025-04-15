@@ -16,7 +16,6 @@
 
 #include "autoware/behavior_path_planner_common/data_manager.hpp"
 #include "autoware/behavior_path_planner_common/utils/drivable_area_expansion/static_drivable_area.hpp"
-#include "autoware/universe_utils/geometry/geometry.hpp"
 #include "autoware/universe_utils/ros/marker_helper.hpp"
 
 #include <lanelet2_core/LaneletMap.h>
@@ -32,13 +31,6 @@ namespace autoware::static_centerline_generator
 {
 namespace
 {
-nav_msgs::msg::Odometry::ConstSharedPtr convert_to_odometry(const geometry_msgs::msg::Pose & pose)
-{
-  auto odometry_ptr = std::make_shared<nav_msgs::msg::Odometry>();
-  odometry_ptr->pose.pose = pose;
-  return odometry_ptr;
-}
-
 lanelet::Point3d createPoint3d(const double x, const double y, const double z)
 {
   lanelet::Point3d point(lanelet::utils::getId());
@@ -59,6 +51,27 @@ lanelet::Point3d createPoint3d(const double x, const double y, const double z)
 
 namespace utils
 {
+geometry_msgs::msg::Pose createPose(
+  const double px, const double py, const double pz, const double qx, const double qy, const double qz, const double qw)
+{
+  geometry_msgs::msg::Pose pose;
+  pose.position.x = px;
+  pose.position.y = py;
+  pose.position.z = pz;
+  pose.orientation.x = qx;
+  pose.orientation.y = qy;
+  pose.orientation.z = qz;
+  pose.orientation.w = qw;
+  return pose;
+}
+
+nav_msgs::msg::Odometry::ConstSharedPtr convert_to_odometry(const geometry_msgs::msg::Pose & pose)
+{
+  auto odometry_ptr = std::make_shared<nav_msgs::msg::Odometry>();
+  odometry_ptr->pose.pose = pose;
+  return odometry_ptr;
+}
+
 rclcpp::QoS create_transient_local_qos()
 {
   return rclcpp::QoS{1}.transient_local();

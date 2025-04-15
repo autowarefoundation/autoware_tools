@@ -16,6 +16,7 @@
   <build_depend>rosidl_default_generators</build_depend>
 
   <depend>autoware_behavior_path_planner_common</depend>
+  <depend>autoware_behavior_path_goal_planner_module</depend>
   <depend>autoware_geography_utils</depend>
   <depend>autoware_interpolation</depend>
   <depend>autoware_lanelet2_extension</depend>
@@ -26,6 +27,7 @@
   <depend>autoware_motion_utils</depend>
   <depend>autoware_osqp_interface</depend>
   <depend>autoware_path_optimizer</depend>
+  <depend>autoware_path_generator</depend>
   <depend>autoware_path_smoother</depend>
   <depend>autoware_perception_msgs</depend>
   <depend>autoware_planning_msgs</depend>

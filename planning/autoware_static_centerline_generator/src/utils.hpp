@@ -15,6 +15,7 @@
 #ifndef UTILS_HPP_
 #define UTILS_HPP_
 
+#include "autoware/behavior_path_planner_common/data_manager.hpp"
 #include "autoware/route_handler/route_handler.hpp"
 #include "type_alias.hpp"
 
@@ -29,6 +30,11 @@ namespace autoware::static_centerline_generator
 {
 namespace utils
 {
+geometry_msgs::msg::Pose createPose(
+  const double px, const double py, const double pz, const double qx, const double qy, const double qz, const double qw);
+
+nav_msgs::msg::Odometry::ConstSharedPtr convert_to_odometry(const geometry_msgs::msg::Pose & pose);
+
 rclcpp::QoS create_transient_local_qos();
 
 lanelet::ConstLanelets get_lanelets_from_ids(
