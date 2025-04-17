@@ -14,8 +14,7 @@
   <arg name="start_pose" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
   <arg name="end_lanelet_id" default=""/>
   <arg name="end_pose" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
-  <arg name="goal_method" default=""/>
-  <arg name="search_radius_range" default="-1.0"/>
+  <arg name="goal_method" default="None"/>
 
   <!-- mandatory arguments when mode is GUI -->
   <arg name="bag_filename" default="bag.db3"/>
@@ -75,7 +74,6 @@
     <param name="end_lanelet_id" value="$(var end_lanelet_id)"/>
     <param name="end_pose" value="$(var end_pose)"/>
     <param name="goal_method" value="$(var goal_method)"/>
-    <param name="search_radius_range" value="$(var search_radius_range)"/>
     <!-- common param -->
     <param from="$(var common_param)"/>
     <param from="$(var nearest_search_param)"/>

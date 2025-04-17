@@ -60,7 +60,7 @@ def generate_test_description():
             DeclareLaunchArgument(
                 "end_pose", default_value="[89853.8, 43164.8, 6.2, 0.0, 0.0, 0.2876, 0.9575]"
             ),
-            DeclareLaunchArgument("goal_method", default_value="fixed_goal_planner"),
+            DeclareLaunchArgument("goal_method", default_value="behavior_path_planner"),
             DeclareLaunchArgument(
                 "map_loader_param",
                 default_value=os.path.join(
