@@ -49,7 +49,7 @@ private:
   rclcpp::Publisher<Path>::SharedPtr pub_raw_path_{nullptr};
 
   // data required for goal method
-  void getGoalPlanPlameters(
+  void getGoalPlanParameters(
     rclcpp::Node & node, const RouteHandler & route_handler,
     const std::vector<lanelet::Id> & route_lane_ids);
   std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute_<std::allocator<void>>> createRoutePtr(

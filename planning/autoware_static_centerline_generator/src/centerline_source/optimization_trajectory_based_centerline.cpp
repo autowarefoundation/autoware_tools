@@ -103,7 +103,7 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
     node, "refine_goal_search_radius_range");
 
   // get start pose, goal pose, and goal method
-  getGoalPlanPlameters(node, *route_handler_ptr, route_lane_ids);
+  getGoalPlanParameters(node, *route_handler_ptr, route_lane_ids);
 
   // extract path with lane id from lanelets
   const auto raw_path_with_lane_id = [&]() {
@@ -177,7 +177,7 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
         .pose;
 
     // create path_with_lane_id by goal_method
-    const PathWithLaneId path_with_lane_id_poins = goalPathGenerate(
+    const PathWithLaneId path_with_lane_id_points = goalPathGenerate(
       raw_path_with_lane_id, raw_path, route_handler_ptr, map_bin_ptr, virtual_ego_pose);
 
     // convert trajectory
@@ -222,7 +222,7 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
   return whole_optimized_traj_points;
 }
 
-void OptimizationTrajectoryBasedCenterline::getGoalPlanPlameters(
+void OptimizationTrajectoryBasedCenterline::getGoalPlanParameters(
   rclcpp::Node & node, const RouteHandler & route_handler,
   const std::vector<lanelet::Id> & route_lane_ids)
 {
@@ -260,7 +260,6 @@ OptimizationTrajectoryBasedCenterline::createRoutePtr(
   for (size_t i = 1; i < raw_path.points.size(); i++) {
     const auto start_point = raw_path.points.at(i - 1);
     const auto goal_point = raw_path.points.at(i);
-    // std::cerr << "iketa goal_pose" << goal_point.pose.position.x << std::endl;
     lanelet::ConstLanelets path_lanelets;
     if (!route_handler_ptr->planPathLaneletsBetweenCheckpoints(
           start_point.pose, goal_point.pose, &path_lanelets)) { /* do nothing */
@@ -276,7 +275,7 @@ OptimizationTrajectoryBasedCenterline::createRoutePtr(
   std::vector<autoware_planning_msgs::msg::LaneletSegment> route_sections =
     route_handler_ptr->createMapSegments(all_lanelets);
 
-  // set nessary data
+  // set necessary data
   route_ptr_->header.frame_id = "map";
   route_ptr_->set__start_pose(start_pose);
   route_ptr_->set__goal_pose(goal_pose);
