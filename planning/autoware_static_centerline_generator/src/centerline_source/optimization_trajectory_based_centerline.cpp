@@ -105,7 +105,7 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
 
   // update route_handler
   const auto route_lanelets = utils::get_lanelets_from_ids(*route_handler_ptr, route_lane_ids);
-  route_ptr = create_route(route_handler_ptr, start_pose, goal_pose);
+  auto route_ptr = create_route(route_handler_ptr, start_pose, goal_pose);
   route_handler_ptr->setRouteLanelets(route_lanelets);
   route_handler_ptr->setRoute(*route_ptr);
 

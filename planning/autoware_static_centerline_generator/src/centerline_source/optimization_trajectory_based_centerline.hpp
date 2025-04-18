@@ -71,7 +71,6 @@ private:
     std::shared_ptr<RouteHandler> & route_handler_ptr, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
     const Pose & start_pose, const Pose & goal_pose) const;
 
-  std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute> route_ptr;
   std::string goal_method;
   double refine_goal_search_radius_range;
 };
