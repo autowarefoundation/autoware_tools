@@ -5,7 +5,7 @@
   <version>2.0.0</version>
   <description>E2E vehicle dynamics calibration using neural network</description>
 
-  <maintainer email="cristian@pixmovingt.net">Cristian Gariboldi</maintainer>
+  <maintainer email="gariboldicristian@gmail.com">Cristian Gariboldi</maintainer>
 
   <license>BSD</license>
 
