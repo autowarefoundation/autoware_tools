@@ -16,7 +16,7 @@ Install the required libraries:
 pip install -r requirements.txt
 ```
 
-Make sure to place this package correcly inside your workspace, colcon build it and source it.
+Make sure to place this package correctly inside your workspace, colcon build it and source it.
 
 ### 2. Longitudinal Dynamics
 
@@ -209,7 +209,7 @@ ros2 launch learning_based_vehicle_calibration neural_network_launch.py
 
 When you launch these scripts, the training stage begins and when it is done, the software automatically saves the trained model in a zip file.
 
-This way, when you want to use the neural network model, you can avoid to train it everytime from scratch, but you can just train it once and then load it, according to the following scripts:
+This way, when you want to use the neural network model, you can avoid to train it every time from scratch, but you can just train it once and then load it, according to the following scripts:
 
 These scripts will also create the acceleration and braking offline tables.
 
