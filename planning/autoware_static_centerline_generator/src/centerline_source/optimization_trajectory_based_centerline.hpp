@@ -52,13 +52,13 @@ private:
   // data required for goal method
   std::pair<Pose, Pose> get_start_and_goal_pose(
     rclcpp::Node & node, const RouteHandler & route_handler,
-    const std::vector<lanelet::Id> & route_lane_ids);
-  std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute_<std::allocator<void>>> create_route(
-    const Path & raw_path, std::shared_ptr<RouteHandler> & route_handler_ptr) const;
+    const std::vector<lanelet::Id> & route_lane_ids) const;
+  std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute> create_route(
+    std::shared_ptr<RouteHandler> & route_handler_ptr,
+    const geometry_msgs::msg::Pose & start_pose, const geometry_msgs::msg::Pose & goal_pose) const;
   std::shared_ptr<autoware::path_generator::PathGenerator> create_path_generator_node(
     const geometry_msgs::msg::Pose current_pose, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
-    std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute_<std::allocator<void>>> & route_ptr)
-    const;
+    std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute> route_ptr) const;
   std::shared_ptr<autoware::behavior_path_planner::PlannerData> create_behavior_path_planner_data(
     std::shared_ptr<RouteHandler> & route_handler_ptr) const;
   std::shared_ptr<autoware::behavior_path_planner::DefaultFixedGoalPlanner> create_fixed_goal_planner(
@@ -71,7 +71,7 @@ private:
     std::shared_ptr<RouteHandler> & route_handler_ptr, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
   const Pose & start_pose, const Pose & goal_pose) const;
 
-  std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute> route_ptr_;
+  std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute> route_ptr;
   std::string goal_method;
   double refine_goal_search_radius_range;
 };
