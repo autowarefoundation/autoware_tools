@@ -65,8 +65,19 @@ class TPVisualizer(Node):
         self.pcd_path = os.path.join(pcd_map_dir, "pointcloud_map.pcd/")
 
         if not os.path.exists(self.pcd_path):
-            print("Error: no PCD file was found at {0}! Abort!".format(self.pcd_path))
+            print("Warning: no PCD file was found at {0}! Abort".format(self.pcd_path))
             exit()
+
+        # Look for the PCD map files
+        self.map_list = []
+        for fname in os.listdir(self.pcd_path):
+            full_name = os.path.join(self.pcd_path, fname)
+            
+            if os.path.isfile(full_name):
+                name, ext = os.splitext(fname)
+
+                if ext == ".PCD" or ext == ".pcd":
+                    self.map_list.append(full_name)
 
         self.yaml_path = os.path.join(pcd_map_dir, "pointcloud_map_metadata.yaml")
 
@@ -85,7 +96,7 @@ class TPVisualizer(Node):
             print("Error: a score file does not exist at {0}".format(self.score_path))
             exit()
 
-        self.segment_df = pd.read_csv(self.score_path)
+        self.segment_df = pd.read_csv(self.score_path).to_dict("segment")
         self.trajectory_path = os.path.join(pcd_map_dir, "trajectory.csv")
         self.trajectory = pd.read_csv(self.trajectory_path)
 
@@ -109,21 +120,30 @@ class TPVisualizer(Node):
         points = []
         pc2_width = 0
 
-        progress_bar = tqdm.tqdm(total=len(self.segment_df))
+        progress_bar = tqdm.tqdm(total=len(self.map_list))
         origin = None
 
         print("Reading map data...")
-        for seg in self.segment_df.itertuples():
+        # for seg in self.segment_df.itertuples():
+        for seg_path in self.map_list:
             progress_bar.update(1)
             # Load the current segment
-            seg_path = self.pcd_path + "/" + seg.segment
+            # seg_path = self.pcd_path + "/" + seg.segment
             pcd = o3d.io.read_point_cloud(seg_path)
             np_pcd = np.asarray(pcd.points)
-            rgba = self.__set_color_based_on_score(seg.tp)
 
             for p in np_pcd:
                 if origin is None:
                     origin = [p[0], p[1], p[2]]
+
+                # Find the TP segments that contain the point @p
+                sx = int(p[0] / self.map_resolution) * int(self.map_resolution)
+                sy = int(p[1] / self.map_resolution) * int(self.map_resolution)
+
+                # Create a key to look for the segment
+                key = str(sx) + "_" + str(sy)
+                rgba = self.__set_color_based_on_score(self.segment_df[key])
+
                 pt = [p[0] - origin[0], p[1] - origin[1], p[2] - origin[2], rgba]
                 points.append(pt)
                 pc2_width += 1

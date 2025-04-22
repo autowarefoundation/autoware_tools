@@ -120,10 +120,8 @@ public:
     return std::pair<double, double>(grid_size_x_, grid_size_y_);
   }
 
-  void run();
+  void run(bool meta_gen = false);
   void run(const std::vector<std::string> & pcd_names);
-  // Two stages segmentation
-  void multi_stage_run(const std::vector<std::string> & pcd_names);
 
 private:
   std::string input_pcd_or_dir_, output_dir_, file_prefix_, config_file_;
@@ -173,6 +171,8 @@ private:
   void mergeAndDownsample();
   void mergeAndDownsample(
     const std::string & dir_path, std::list<std::string> & pcd_list, size_t total_point_num);
+
+  void meta_generator(const std::vector<std::string> & pcd_names);
 };
 
 }  // namespace autoware::pointcloud_divider

@@ -75,18 +75,33 @@ class TPCollector(Node):
         self.yaml_path = os.path.join(self.output_path, "pointcloud_map_metadata.yaml")
 
         if not os.path.exists(self.yaml_path):
-            ds_cmd = (
-                "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml "
-                + "input_pcd_or_dir:="
-                + self.pcd_path
-                + " output_pcd_dir:="
-                + self.output_path
-                + " prefix:=test leaf_size:=0.5"
-                + " grid_size_x:="
-                + str(self.resolution)
-                + " grid_size_y:="
-                + str(self.resolution)
-            )
+            if self.resolution >= 5.0:
+                ds_cmd = (
+                    "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml "
+                    + "input_pcd_or_dir:="
+                    + self.pcd_path
+                    + " output_pcd_dir:="
+                    + self.output_path
+                    + " prefix:=test leaf_size:=0.5"
+                    + " grid_size_x:="
+                    + str(self.resolution)
+                    + " grid_size_y:="
+                    + str(self.resolution)
+                )
+            else:
+                ds_cmd = (
+                    "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml "
+                    + "input_pcd_or_dir:="
+                    + self.pcd_path
+                    + " output_pcd_dir:="
+                    + self.output_path
+                    + " prefix:=test leaf_size:=0.5"
+                    + " grid_size_x:="
+                    + str(self.resolution)
+                    + " grid_size_y:="
+                    + str(self.resolution)
+                    + " metadata_generate:=true"
+                )
             call(ds_cmd, shell=True)
             self.pcd_path = os.path.join(self.output_path, "pointcloud_map.pcd")
 
