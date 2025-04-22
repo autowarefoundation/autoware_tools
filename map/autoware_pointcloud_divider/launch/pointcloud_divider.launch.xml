@@ -1,9 +1,25 @@
 <launch>
   <arg name="config_file_path" default="$(find-pkg-share autoware_pointcloud_divider)/config/pointcloud_divider.param.yaml" description="Path to the configuration YAML file"/>
+  <arg name="use_large_grid" default="false" description="True: group PCD files into folders"/>
+  <arg name="leaf_size" default="0.2" description="Downsampling resolution"/>
+  <arg name="grid_size_x" default="20.0" description="The X size of a segment"/>
+  <arg name="grid_size_y" default="20.0" description="The Y size of a segment"/>
+  <arg name="input_pcd_or_dir" description="The path to the folder containing the input PCD files or the input PCD file"/>
+  <arg name="output_pcd_dir" description="The path to the folder containing the output PCD files and metadata files"/>
+  <arg name="prefix" default="" description="The prefix for output PCD files"/>
+  <arg name="point_type" default="point_xyzi" description="The type of map points"/>
 
   <group>
     <node pkg="autoware_pointcloud_divider" exec="autoware_pointcloud_divider_node" name="pointcloud_divider" output="screen">
       <param from="$(var config_file_path)" allow_substs="true"/>
+      <param name="use_large_grid" value="$(var use_large_grid)"/>
+      <param name="leaf_size" value="$(var leaf_size)"/>
+      <param name="grid_size_x" value="$(var grid_size_x)"/>
+      <param name="grid_size_y" value="$(var grid_size_y)"/>
+      <param name="input_pcd_or_dir" value="$(var input_pcd_or_dir)"/>
+      <param name="output_pcd_dir" value="$(var output_pcd_dir)"/>
+      <param name="prefix" value="$(var prefix)"/>
+      <param name="point_type" value="$(var point_type)"/>
     </node>
   </group>
 </launch>
