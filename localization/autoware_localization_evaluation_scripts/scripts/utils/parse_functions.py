@@ -167,7 +167,6 @@ def parse_AccelWithCovarianceStamped(msg):
         "angular.x": msg.accel.accel.angular.x,
         "angular.y": msg.accel.accel.angular.y,
         "angular.z": msg.accel.accel.angular.z,
-        "angular.w": msg.accel.accel.angular.w,
         "covariance_accel_pos.xx": msg.accel.covariance[0],
         "covariance_accel_pos.xy": msg.accel.covariance[1],
         "covariance_accel_pos.xz": msg.accel.covariance[2],
