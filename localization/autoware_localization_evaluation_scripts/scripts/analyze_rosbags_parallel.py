@@ -6,7 +6,7 @@ from multiprocessing import Pool
 from pathlib import Path
 
 import compare_trajectories
-import extract_pose_from_rosbag
+import extract_values_from_rosbag
 import plot_diagnostics
 
 
@@ -33,10 +33,10 @@ def process_directory(
 
     plot_diagnostics.main(rosbag_path=target_rosbag, save_dir=diagnostics_result_dir)
 
-    save_name_subject = extract_pose_from_rosbag.topic_name_to_save_name(topic_subject)
-    save_name_reference = extract_pose_from_rosbag.topic_name_to_save_name(topic_reference)
+    save_name_subject = extract_values_from_rosbag.topic_name_to_save_name(topic_subject)
+    save_name_reference = extract_values_from_rosbag.topic_name_to_save_name(topic_reference)
 
-    extract_pose_from_rosbag.main(
+    extract_values_from_rosbag.main(
         rosbag_path=target_rosbag,
         target_topics=[
             topic_subject,
