@@ -158,6 +158,30 @@ def parse_Odometry(msg):
     }
 
 
+def parse_AccelWithCovarianceStamped(msg):
+    return {
+        "timestamp": parse_stamp(msg.header.stamp),
+        "linear.x": msg.accel.accel.linear.x,
+        "linear.y": msg.accel.accel.linear.y,
+        "linear.z": msg.accel.accel.linear.z,
+        "angular.x": msg.accel.accel.angular.x,
+        "angular.y": msg.accel.accel.angular.y,
+        "angular.z": msg.accel.accel.angular.z,
+        "covariance_accel_pos.xx": msg.accel.covariance[0],
+        "covariance_accel_pos.xy": msg.accel.covariance[1],
+        "covariance_accel_pos.xz": msg.accel.covariance[2],
+        "covariance_accel_pos.yx": msg.accel.covariance[6],
+        "covariance_accel_pos.yy": msg.accel.covariance[7],
+        "covariance_accel_pos.yz": msg.accel.covariance[8],
+        "covariance_accel_pos.zx": msg.accel.covariance[12],
+        "covariance_accel_pos.zy": msg.accel.covariance[13],
+        "covariance_accel_pos.zz": msg.accel.covariance[14],
+        "covariance_accel_angle.x": msg.accel.covariance[21],
+        "covariance_accel_angle.y": msg.accel.covariance[28],
+        "covariance_accel_angle.z": msg.accel.covariance[35],
+    }
+
+
 def parse_Float32Stamped(msg):
     return {
         "timestamp": parse_stamp(msg.stamp),

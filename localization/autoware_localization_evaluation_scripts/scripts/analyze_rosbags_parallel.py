@@ -6,7 +6,7 @@ from multiprocessing import Pool
 from pathlib import Path
 
 import compare_trajectories
-import extract_pose_from_rosbag
+import extract_values_from_rosbag
 import plot_diagnostics
 
 
@@ -31,12 +31,13 @@ def process_directory(
     compare_result_dir.mkdir(parents=True, exist_ok=True)
     diagnostics_result_dir = save_dir / "diagnostics_result"
 
+    # (1) Plot diagnostics
     plot_diagnostics.main(rosbag_path=target_rosbag, save_dir=diagnostics_result_dir)
 
-    save_name_subject = extract_pose_from_rosbag.topic_name_to_save_name(topic_subject)
-    save_name_reference = extract_pose_from_rosbag.topic_name_to_save_name(topic_reference)
-
-    extract_pose_from_rosbag.main(
+    # (2) Extract values from rosbag
+    save_name_subject = extract_values_from_rosbag.topic_name_to_save_name(topic_subject)
+    save_name_reference = extract_values_from_rosbag.topic_name_to_save_name(topic_reference)
+    extract_values_from_rosbag.main(
         rosbag_path=target_rosbag,
         target_topics=[
             topic_subject,
@@ -45,9 +46,28 @@ def process_directory(
         save_dir=compare_result_dir,
     )
 
+    # (3) Compare trajectories
     compare_trajectories.main(
         subject_tsv=compare_result_dir / f"{save_name_subject}.tsv",
         reference_tsv=compare_result_dir / f"{save_name_reference}.tsv",
+    )
+
+    # (4) Extract twist
+    twist_result_dir = save_dir / "result_twist"
+    twist_result_dir.mkdir(parents=True, exist_ok=True)
+    extract_values_from_rosbag.main(
+        rosbag_path=target_rosbag,
+        target_topics=["/localization/kinematic_state"],
+        save_dir=twist_result_dir,
+    )
+
+    # (5) Extract acceleration
+    acceleration_result_dir = save_dir / "result_acceleration"
+    acceleration_result_dir.mkdir(parents=True, exist_ok=True)
+    extract_values_from_rosbag.main(
+        rosbag_path=target_rosbag,
+        target_topics=["/localization/acceleration"],
+        save_dir=acceleration_result_dir,
     )
 
 

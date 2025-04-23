@@ -22,9 +22,9 @@ def topic_name_to_save_name(topic_name: str) -> str:
 def main(rosbag_path: Path, target_topics: list, save_dir: Path = None) -> None:
     if save_dir is None:
         if rosbag_path.is_dir():  # if specified directory containing db3 files
-            save_dir = rosbag_path.parent / "pose_tsv"
+            save_dir = rosbag_path.parent / "tsv"
         else:  # if specified db3 file directly
-            save_dir = rosbag_path.parent.parent / "pose_tsv"
+            save_dir = rosbag_path.parent.parent / "tsv"
     save_dir.mkdir(parents=True, exist_ok=True)
 
     df_dict = parse_rosbag(str(rosbag_path), target_topics)
