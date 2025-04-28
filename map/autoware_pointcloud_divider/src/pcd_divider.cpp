@@ -111,7 +111,7 @@ void PCDDivider<PointT>::run(bool meta_gen)
     // Only generate a metadata file
     meta_generator(pcd_list);
   } else {
-    // Do the segmentation 
+    // Do the segmentation
     run(pcd_list);
   }
 }
@@ -545,8 +545,8 @@ void PCDDivider<PointT>::meta_generator(const std::vector<std::string> & pcd_lis
   output_metadata << "y_resolution: " << grid_size_y_ << std::endl;
 
   for (auto & it : segment_set) {
-    output_metadata << file_prefix_ << "_" << it.ix << "_" << it.iy 
-                    << ".pcd: [" << it.ix << ", " << it.iy << "]" << std::endl;
+    output_metadata << file_prefix_ << "_" << it.ix << "_" << it.iy << ".pcd: [" << it.ix << ", "
+                    << it.iy << "]" << std::endl;
   }
 }
 

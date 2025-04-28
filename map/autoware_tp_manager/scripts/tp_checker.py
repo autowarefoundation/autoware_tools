@@ -55,21 +55,25 @@ class TPChecker(Node):
         map_path_file = os.path.join(score_dir, "map_path.txt")
 
         if not os.path.exists(map_path_file):
-            print("Error: the file containing the path to the PCD folder does not exist at {0}! Abort!".format(map_path_file))
+            print(
+                "Error: the file containing the path to the PCD folder does not exist at {0}! Abort!".format(
+                    map_path_file
+                )
+            )
             exit()
-        
+
         with open(map_path_file, "r") as f:
             self.pcd_path = f.read()
 
         if not os.path.exists(self.pcd_path):
             print("Error: {0} does not exist! Abort!".format(self.pcd_path))
             exit()
-        
+
         # Look for the PCD map files
         self.map_list = []
         for fname in os.listdir(self.pcd_path):
             full_name = os.path.join(self.pcd_path, fname)
-            
+
             if os.path.isfile(full_name):
                 name, ext = os.path.splitext(fname)
 

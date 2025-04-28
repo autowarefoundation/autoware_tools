@@ -122,7 +122,6 @@ class TPCollector(Node):
                 call(meta_gen, shell=True)
             self.pcd_path = os.path.join(self.output_path, "pointcloud_map.pcd")
 
-
         # Now scan the downsample directory and get the segment list
         with open(self.yaml_path, "r") as f:
             for key, value in yaml.safe_load(f).items():
