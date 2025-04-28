@@ -101,13 +101,19 @@ std::vector<std::string> PCDDivider<PointT>::discoverPCDs(const std::string & in
 }
 
 template <class PointT>
-void PCDDivider<PointT>::run()
+void PCDDivider<PointT>::run(bool meta_gen)
 {
   // Discover PCD files
   auto pcd_list = discoverPCDs(input_pcd_or_dir_);
 
   // Process pcd files
-  run(pcd_list);
+  if (meta_gen) {
+    // Only generate a metadata file
+    meta_generator(pcd_list);
+  } else {
+    // Do the segmentation 
+    run(pcd_list);
+  }
 }
 
 template <class PointT>
@@ -164,7 +170,8 @@ void PCDDivider<PointT>::checkOutputDirectoryValidity()
 }
 
 template <class PointT>
-typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(const std::string & pcd_name)
+typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(
+  const std::string & pcd_name, bool load_all)
 {
   if (pcd_name != reader_.get_path()) {
     reader_.setInput(pcd_name);
@@ -172,7 +179,39 @@ typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(const std::str
 
   PclCloudPtr cloud_ptr(new PclCloudType);
 
-  reader_.readABlock(*cloud_ptr);
+  if (load_all) {
+    size_t total_point_num = reader_.point_num();
+    size_t copy_loc = 0;
+
+    PclCloudType tmp_cloud;
+
+    cloud_ptr->resize(total_point_num);
+
+    int seg_count = 0;
+
+    while (reader_.good() && rclcpp::ok()) {
+      RCLCPP_INFO(logger_, "Copy segment %d", seg_count++);
+      size_t read_size = reader_.readABlock(tmp_cloud);
+
+      RCLCPP_INFO(
+        logger_,
+        "Read size (bytes/points) = %lu/%lu, tmp size = %lu, cloud size = %lu, total pnum = %lu",
+        read_size, read_size / sizeof(PointT), tmp_cloud.size(), cloud_ptr->size(),
+        total_point_num);
+
+      if (read_size > 0) {
+        if (!std::memcpy(
+              cloud_ptr->data() + copy_loc, tmp_cloud.data(), tmp_cloud.size() * sizeof(PointT))) {
+          RCLCPP_ERROR(logger_, "Error: Failed to copy points from tmp buffer to cloud");
+          exit(EXIT_FAILURE);
+        }
+      }
+
+      copy_loc += tmp_cloud.size();
+    }
+  } else {
+    reader_.readABlock(*cloud_ptr);
+  }
 
   return cloud_ptr;
 }
@@ -200,12 +239,12 @@ void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
       exit(EXIT_SUCCESS);
     }
 
-    auto tmp = pointToGrid2(p, grid_size_x_, grid_size_y_);
-    auto it = grid_to_cloud_.find(tmp);
+    auto grid_key = pointToGrid2(p, grid_size_x_, grid_size_y_);
+    auto it = grid_to_cloud_.find(grid_key);
 
     // If the grid has not existed yet, create a new one
     if (it == grid_to_cloud_.end()) {
-      auto & new_grid = grid_to_cloud_[tmp];
+      auto & new_grid = grid_to_cloud_[grid_key];
 
       std::get<0>(new_grid).reserve(max_block_size_);
 
@@ -227,11 +266,11 @@ void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
         // Otherwise, update the seg_by_size_ if the change of size is significant
         if (cloud.size() - prev_size >= 10000) {
           prev_size = cloud.size();
-          auto seg_to_size_it = seg_to_size_itr_map_.find(tmp);
+          auto seg_to_size_it = seg_to_size_itr_map_.find(grid_key);
 
           if (seg_to_size_it == seg_to_size_itr_map_.end()) {
             auto size_it = seg_by_size_.insert(std::make_pair(prev_size, it));
-            seg_to_size_itr_map_[tmp] = size_it;
+            seg_to_size_itr_map_[grid_key] = size_it;
           } else {
             seg_by_size_.erase(seg_to_size_it->second);
             auto new_size_it = seg_by_size_.insert(std::make_pair(prev_size, it));
@@ -473,6 +512,42 @@ void PCDDivider<PointT>::saveGridInfoToYAML(const std::string & yaml_file_path)
   }
 
   yaml_file.close();
+}
+
+template <class PointT>
+void PCDDivider<PointT>::meta_generator(const std::vector<std::string> & pcd_list)
+{
+  std::string yaml_file_path = output_dir_ + "/pointcloud_map_metadata.yaml";
+  std::unordered_set<GridInfo<2>> segment_set;
+
+  for (auto & pcd_name : pcd_list) {
+    RCLCPP_ERROR(logger_, "pcd_name = %s", pcd_name.c_str());
+    do {
+      auto cloud_ptr = loadPCD(pcd_name);
+
+      for (auto & p : *cloud_ptr) {
+        if (!rclcpp::ok()) {
+          exit(0);
+        }
+
+        auto seg_key = pointToGrid2(p, grid_size_x_, grid_size_y_);
+
+        if (segment_set.find(seg_key) == segment_set.end()) {
+          segment_set.insert(seg_key);
+        }
+      }
+    } while (reader_.good() && rclcpp::ok());
+  }
+
+  std::ofstream output_metadata(yaml_file_path);
+
+  output_metadata << "x_resolution: " << grid_size_x_ << std::endl;
+  output_metadata << "y_resolution: " << grid_size_y_ << std::endl;
+
+  for (auto & it : segment_set) {
+    output_metadata << file_prefix_ << "_" << it.ix << "_" << it.iy 
+                    << ".pcd: [" << it.ix << ", " << it.iy << "]" << std::endl;
+  }
 }
 
 template class PCDDivider<pcl::PointXYZ>;
