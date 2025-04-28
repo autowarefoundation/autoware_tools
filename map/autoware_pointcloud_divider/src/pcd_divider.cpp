@@ -54,6 +54,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_set>
 
 namespace fs = std::filesystem;
 
