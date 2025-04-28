@@ -37,7 +37,6 @@ import yaml
 class TPVisualizer(Node):
     def __init__(self):
         super().__init__("tp_visualizer")
-        self.pcd_map_dir = None
         self.pcd_path = None
         self.yaml_path = None
         self.score_path = None
@@ -56,13 +55,19 @@ class TPVisualizer(Node):
         }
 
     # Read the YAML file to get the list of PCD segments and scores
-    def __get_pcd_segments_and_scores(self, pcd_map_dir: str):
-        if not os.path.exists(pcd_map_dir):
-            print("Error: the input PCD folder does not exist at {0}! Abort!".format(pcd_map_dir))
+    def __get_pcd_segments_and_scores(self, result_path: str):
+        if not os.path.exists(result_path):
+            print("Error: the result folder does not exist at {0}! Abort!".format(result_path))
             exit()
 
-        self.pcd_map_dir = pcd_map_dir
-        self.pcd_path = os.path.join(pcd_map_dir, "pointcloud_map.pcd/")
+        map_path_file = os.path.join(result_path, "map_path.txt")
+
+        if not os.path.exists(map_path_file):
+            print("Error: the file containing the path to the PCD folder does not exist at {0}! Abort!".format(map_path_file))
+            exit()
+
+        with open(map_path_file, "r") as f:
+            self.pcd_path = f.read()
 
         if not os.path.exists(self.pcd_path):
             print("Warning: no PCD file was found at {0}! Abort".format(self.pcd_path))
@@ -74,12 +79,12 @@ class TPVisualizer(Node):
             full_name = os.path.join(self.pcd_path, fname)
             
             if os.path.isfile(full_name):
-                name, ext = os.splitext(fname)
+                name, ext = os.path.splitext(fname)
 
                 if ext == ".PCD" or ext == ".pcd":
                     self.map_list.append(full_name)
 
-        self.yaml_path = os.path.join(pcd_map_dir, "pointcloud_map_metadata.yaml")
+        self.yaml_path = os.path.join(result_path, "pointcloud_map_metadata.yaml")
 
         if not os.path.exists(self.yaml_path):
             print("Error: no PCD metadata file was found at {0}".format(self.yaml_path))
@@ -89,15 +94,16 @@ class TPVisualizer(Node):
                 for key, value in yaml.safe_load(f).items():
                     if key == "x_resolution":
                         self.map_resolution = value
+                        break
 
-        self.score_path = os.path.join(pcd_map_dir, "scores.csv")
+        self.score_path = os.path.join(result_path, "scores.csv")
 
         if not os.path.exists(self.score_path):
             print("Error: a score file does not exist at {0}".format(self.score_path))
             exit()
 
-        self.segment_df = pd.read_csv(self.score_path).to_dict("segment")
-        self.trajectory_path = os.path.join(pcd_map_dir, "trajectory.csv")
+        self.segment_df = pd.read_csv(self.score_path).set_index("segment")["tp"].to_dict()
+        self.trajectory_path = os.path.join(result_path, "trajectory.csv")
         self.trajectory = pd.read_csv(self.trajectory_path)
 
     def __show(self):
@@ -120,10 +126,11 @@ class TPVisualizer(Node):
         points = []
         pc2_width = 0
 
+        print("Reading map data...")
+
         progress_bar = tqdm.tqdm(total=len(self.map_list))
         origin = None
 
-        print("Reading map data...")
         # for seg in self.segment_df.itertuples():
         for seg_path in self.map_list:
             progress_bar.update(1)
@@ -225,9 +232,9 @@ class TPVisualizer(Node):
 
         return rgba
 
-    def processing(self, pcd_map_dir: str):
+    def processing(self, result_path: str):
         # Get the segment lists and scores
-        self.__get_pcd_segments_and_scores(pcd_map_dir)
+        self.__get_pcd_segments_and_scores(result_path)
         # Publish to rviz
         self.__show()
 
@@ -235,13 +242,13 @@ class TPVisualizer(Node):
 if __name__ == "__main__":
     rclpy.init()
     parser = argparse.ArgumentParser()
-    parser.add_argument("map_path", help="The path to the result folder")
+    parser.add_argument("result_path", help="The path to the result folder")
 
     args = parser.parse_args()
 
     # Practice with string % a bit
-    print("Input PCD map at %s" % (args.map_path))
+    print("Input PCD map at %s" % (args.result_path))
 
     # Run
     tp_collector = TPVisualizer()
-    tp_collector.processing(args.map_path)
+    tp_collector.processing(args.result_path)

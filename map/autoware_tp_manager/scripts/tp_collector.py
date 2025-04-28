@@ -35,6 +35,7 @@ class TPCollector(Node):
         self.pcd_path = None
         self.yaml_path = None
         self.score_path = None
+        self.map_path_file = None
         self.segment_df = None
         self.segment_dict = {}  # Pairs of 2D coordinate and index
         self.resolution = None
@@ -51,6 +52,7 @@ class TPCollector(Node):
                 os.makedirs(output_path)
 
         self.output_path = output_path
+        self.map_path_file = os.path.join(output_path, "map_path.txt")
         self.resolution = resolution
 
         if not os.path.exists(pcd_map_dir):
@@ -88,8 +90,23 @@ class TPCollector(Node):
                     + " grid_size_y:="
                     + str(self.resolution)
                 )
+                call(ds_cmd, shell=True)
             else:
                 ds_cmd = (
+                    "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml "
+                    + "input_pcd_or_dir:="
+                    + self.pcd_path
+                    + " output_pcd_dir:="
+                    + self.output_path
+                    + " prefix:=test leaf_size:=0.5"
+                    + " grid_size_x:="
+                    + str(50.0)
+                    + " grid_size_y:="
+                    + str(50.0)
+                )
+                call(ds_cmd, shell=True)
+
+                meta_gen = (
                     "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml "
                     + "input_pcd_or_dir:="
                     + self.pcd_path
@@ -102,15 +119,16 @@ class TPCollector(Node):
                     + str(self.resolution)
                     + " metadata_generate:=true"
                 )
-            call(ds_cmd, shell=True)
+                call(meta_gen, shell=True)
             self.pcd_path = os.path.join(self.output_path, "pointcloud_map.pcd")
+
 
         # Now scan the downsample directory and get the segment list
         with open(self.yaml_path, "r") as f:
             for key, value in yaml.safe_load(f).items():
                 if key != "x_resolution" and key != "y_resolution":
-                    self.segment_df.append([key, 0, 0])
                     seg_key = str(value[0]) + "_" + str(value[1])
+                    self.segment_df.append([seg_key, 0, 0])
                     self.segment_dict[seg_key] = len(self.segment_df) - 1
 
         self.segment_df = np.array(self.segment_df, dtype=object)
@@ -220,6 +238,11 @@ class TPCollector(Node):
                 p = self.output_pose[i]
                 f.write("{0},{1},{2}\n".format(p[3, 0], p[3, 1], p[3, 2]))
         print("Done. Poses are saved at {0}".format(self.trajectory_path))
+
+        print("Saving a path to the map")
+        with open(self.map_path_file, "w") as f:
+            f.write(self.pcd_path)
+        print("Done. The map path is saved at {0}".format(self.map_path_file))
 
     def processing(
         self,

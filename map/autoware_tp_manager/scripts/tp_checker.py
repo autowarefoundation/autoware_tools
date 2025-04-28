@@ -52,11 +52,29 @@ class TPChecker(Node):
             print("Error: {0} does not exist! Abort!".format(score_dir))
             exit()
 
-        self.pcd_path = os.path.join(score_dir, "pointcloud_map.pcd")
+        map_path_file = os.path.join(score_dir, "map_path.txt")
+
+        if not os.path.exists(map_path_file):
+            print("Error: the file containing the path to the PCD folder does not exist at {0}! Abort!".format(map_path_file))
+            exit()
+        
+        with open(map_path_file, "r") as f:
+            self.pcd_path = f.read()
 
         if not os.path.exists(self.pcd_path):
             print("Error: {0} does not exist! Abort!".format(self.pcd_path))
             exit()
+        
+        # Look for the PCD map files
+        self.map_list = []
+        for fname in os.listdir(self.pcd_path):
+            full_name = os.path.join(self.pcd_path, fname)
+            
+            if os.path.isfile(full_name):
+                name, ext = os.path.splitext(fname)
+
+                if ext == ".PCD" or ext == ".pcd":
+                    self.map_list.append(full_name)
 
         self.yaml_path = os.path.join(score_dir, "pointcloud_map_metadata.yaml")
 
@@ -79,14 +97,14 @@ class TPChecker(Node):
     # Read the input map directory and setup the segment dictionary
     def __get_pcd_segments_and_scores(self):
         # Read the metadata file and get the list of segments
-        print("Loading the PCD maps...")
+        print("Loading the segments...")
         self.segment_df = []
 
         with open(self.yaml_path, "r") as f:
             for key, value in yaml.safe_load(f).items():
                 if key != "x_resolution" and key != "y_resolution":
-                    self.segment_df.append([key, 0, 0])
                     seg_key = str(value[0]) + "_" + str(value[1])
+                    self.segment_df.append([seg_key, 0, 0])
                     self.segment_dict[seg_key] = len(self.segment_df) - 1
                 elif key == "x_resolution":
                     self.resolution = value
@@ -127,17 +145,26 @@ class TPChecker(Node):
         points = []
         pc2_width = 0
 
-        progress_bar = tqdm.tqdm(total=len(self.segment_df))
+        progress_bar = tqdm.tqdm(total=len(self.map_list))
         origin = None
 
-        for i in range(self.segment_df.shape[0]):
+        # for i in range(self.segment_df.shape[0]):
+        for seg_path in self.map_list:
             progress_bar.update(1)
             # Load the current segment
-            pcd = o3d.io.read_point_cloud(os.path.join(self.pcd_path, self.segment_df[i, 0]))
+            pcd = o3d.io.read_point_cloud(seg_path)
             np_pcd = np.asarray(pcd.points)
-            rgba = self.__set_color_based_on_mark(i)
 
             for p in np_pcd:
+                # Find the TP segments that contain the point @p
+                sx = int(p[0] / self.resolution) * int(self.resolution)
+                sy = int(p[1] / self.resolution) * int(self.resolution)
+
+                # Create a key to look for the segment
+                key = str(sx) + "_" + str(sy)
+                # Jump to the index of the segment and set the color for the point
+                rgba = self.__set_color_based_on_mark(self.segment_dict[key])
+
                 if origin is None:
                     origin = [p[0], p[1], p[2]]
                 pt = [p[0] - origin[0], p[1] - origin[1], p[2] - origin[2], rgba]
