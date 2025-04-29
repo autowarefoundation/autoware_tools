@@ -258,6 +258,52 @@ Visualization Manager:
             Constant Color: false
             Scale: 0.30000001192092896
             Value: true
+        - Class: rviz_plugins/Path
+          Color Border Vel Max: 3
+          Enabled: true
+          Name: Iterative Path
+          Topic:
+            Depth: 5
+            Durability Policy: Transient Local
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /static_centerline_generator/debug/iterative_path
+          Value: false
+          View Drivable Area:
+            Alpha: 0.9990000128746033
+            Color: 0; 148; 205
+            Value: false
+            Width: 0.30000001192092896
+          View Footprint:
+            Alpha: 1
+            Color: 230; 130; 130
+            Offset from BaseLink: 0
+            Rear Overhang: 1.0299999713897705
+            Value: true
+            Vehicle Length: 4.769999980926514
+            Vehicle Width: 1.8300000429153442
+          View Path:
+            Alpha: 1
+            Color: 0; 0; 0
+            Constant Color: false
+            Value: false
+            Width: 2
+          View Point:
+            Alpha: 1
+            Color: 0; 60; 255
+            Offset: 0
+            Radius: 0.10000000149011612
+            Value: false
+          View Text Velocity:
+            Scale: 0.30000001192092896
+            Value: false
+          View Velocity:
+            Alpha: 1
+            Color: 0; 0; 0
+            Constant Color: false
+            Scale: 0.30000001192092896
+            Value: false
         - Class: rviz_plugins/Trajectory
           Color Border Vel Max: 3
           Enabled: true
