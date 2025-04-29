@@ -24,10 +24,7 @@
 
 #include <algorithm>
 #include <chrono>
-#include <memory>
-#include <string>
 #include <thread>
-#include <utility>
 #include <vector>
 
 namespace autoware::static_centerline_generator
@@ -143,13 +140,11 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     autoware::universe_utils::getOrDeclareParameter<int>(
       node, "debug.wait_time_during_planning_iteration");
 
-  // create path_with_lane_id by goal_method
-  const PathWithLaneId path_with_lane_id_points = raw_path_with_lane_id;
-  // modify_goal_connection(
-  // node, raw_path_with_lane_id, raw_path, route_handler_ptr, map_bin_ptr, start_pose, goal_pose);
-
-  // convert trajectory
-  const auto traj_points = convert_to_trajectory_points(path_with_lane_id_points);
+  // convert to trajectory points
+  const auto raw_traj_points = [&]() {
+    const auto raw_traj = convert_to_trajectory(raw_path);
+    return autoware::motion_utils::convertToTrajectoryPointArray(raw_traj);
+  }();
 
   // create an instance of elastic band and model predictive trajectory.
   const auto eb_path_smoother_ptr =
