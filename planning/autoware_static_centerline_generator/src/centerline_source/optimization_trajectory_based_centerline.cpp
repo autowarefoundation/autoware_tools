@@ -19,6 +19,7 @@
 #include "autoware/path_optimizer/node.hpp"
 #include "autoware/path_smoother/elastic_band_smoother.hpp"
 #include "autoware/universe_utils/ros/parameter.hpp"
+#include "autoware_utils_geometry/pose_deviation.hpp"
 #include "static_centerline_generator_node.hpp"
 #include "utils.hpp"
 
@@ -75,14 +76,14 @@ std_msgs::msg::Header create_header(const rclcpp::Time & now)
 
 OptimizationTrajectoryBasedCenterline::OptimizationTrajectoryBasedCenterline(rclcpp::Node & node)
 {
-  pub_raw_path_with_lane_id_ =
-    node.create_publisher<PathWithLaneId>("input_centerline", utils::create_transient_local_qos());
+  pub_raw_path_with_lane_id_ = node.create_publisher<PathWithLaneId>(
+    "~/input_centerline", utils::create_transient_local_qos());
   pub_raw_path_ =
-    node.create_publisher<Path>("debug/raw_centerline", utils::create_transient_local_qos());
+    node.create_publisher<Path>("~/debug/raw_centerline", utils::create_transient_local_qos());
   pub_iterative_smoothed_traj_ = node.create_publisher<Trajectory>(
-    "debug/iterative_smoothed_trajectory", utils::create_transient_local_qos());
+    "~/debug/iterative_smoothed_trajectory", utils::create_transient_local_qos());
   pub_iterative_optimized_traj_ = node.create_publisher<Trajectory>(
-    "debug/iterative_optimized_trajectory", utils::create_transient_local_qos());
+    "~/debug/iterative_optimized_trajectory", utils::create_transient_local_qos());
 }
 
 std::vector<TrajectoryPoint>
@@ -125,7 +126,7 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
   RCLCPP_INFO(node.get_logger(), "Converted to path and published.");
 
   // smooth trajectory and road collision avoidance
-  const auto optimized_traj_points = optimize_trajectory(raw_path);
+  const auto optimized_traj_points = optimize_trajectory(node, raw_path);
   RCLCPP_INFO(
     node.get_logger(),
     "Smoothed trajectory and made it collision free with the road and published.");
@@ -134,7 +135,7 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
 }
 
 std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_trajectory(
-  const Path & raw_path) const
+  rclcpp::Node & node, const Path & raw_path) const
 {
   const int wait_time_during_planning_iteration =
     autoware::universe_utils::getOrDeclareParameter<int>(
@@ -194,7 +195,9 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     for (size_t j = 0; j < whole_optimized_traj_points.size(); ++j) {
       const double dist = autoware::universe_utils::calcDistance2d(
         whole_optimized_traj_points.at(j), optimized_traj_points->front());
-      if (dist < 0.5) {
+      const double yaw = autoware_utils_geometry::calc_yaw_deviation(
+        whole_optimized_traj_points.at(j).pose, optimized_traj_points->front().pose);
+      if (dist < 0.5 && std::abs(yaw) < 0.17) {
         const std::vector<TrajectoryPoint> extracted_whole_optimized_traj_points{
           whole_optimized_traj_points.begin(),
           whole_optimized_traj_points.begin() + std::max(j, 1UL) - 1};
