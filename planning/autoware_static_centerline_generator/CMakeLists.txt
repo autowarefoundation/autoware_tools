@@ -7,6 +7,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(glog REQUIRED)
 
 rosidl_generate_interfaces(
   autoware_static_centerline_generator
