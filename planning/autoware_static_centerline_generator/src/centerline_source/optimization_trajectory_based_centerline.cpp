@@ -23,6 +23,11 @@
 #include "utils.hpp"
 
 #include <algorithm>
+#include <chrono>
+#include <memory>
+#include <string>
+#include <thread>
+#include <utility>
 #include <vector>
 
 namespace autoware::static_centerline_generator
@@ -61,6 +66,14 @@ Trajectory convert_to_trajectory(const Path & path)
   }
   return traj;
 }
+
+std_msgs::msg::Header create_header(const rclcpp::Time & now)
+{
+  std_msgs::msg::Header header;
+  header.frame_id = "map";
+  header.stamp = now;
+  return header;
+}
 }  // namespace
 
 OptimizationTrajectoryBasedCenterline::OptimizationTrajectoryBasedCenterline(rclcpp::Node & node)
@@ -69,6 +82,10 @@ OptimizationTrajectoryBasedCenterline::OptimizationTrajectoryBasedCenterline(rcl
     node.create_publisher<PathWithLaneId>("input_centerline", utils::create_transient_local_qos());
   pub_raw_path_ =
     node.create_publisher<Path>("debug/raw_centerline", utils::create_transient_local_qos());
+  pub_iterative_smoothed_traj_ = node.create_publisher<Trajectory>(
+    "debug/iterative_smoothed_trajectory", utils::create_transient_local_qos());
+  pub_iterative_optimized_traj_ = node.create_publisher<Trajectory>(
+    "debug/iterative_optimized_trajectory", utils::create_transient_local_qos());
 }
 
 std::vector<TrajectoryPoint>
@@ -122,11 +139,17 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
 std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_trajectory(
   const Path & raw_path) const
 {
-  // convert to trajectory points
-  const auto raw_traj_points = [&]() {
-    const auto raw_traj = convert_to_trajectory(raw_path);
-    return autoware::motion_utils::convertToTrajectoryPointArray(raw_traj);
-  }();
+  const int wait_time_during_planning_iteration =
+    autoware::universe_utils::getOrDeclareParameter<int>(
+      node, "debug.wait_time_during_planning_iteration");
+
+  // create path_with_lane_id by goal_method
+  const PathWithLaneId path_with_lane_id_points = raw_path_with_lane_id;
+  // modify_goal_connection(
+  // node, raw_path_with_lane_id, raw_path, route_handler_ptr, map_bin_ptr, start_pose, goal_pose);
+
+  // convert trajectory
+  const auto traj_points = convert_to_trajectory_points(path_with_lane_id_points);
 
   // create an instance of elastic band and model predictive trajectory.
   const auto eb_path_smoother_ptr =
@@ -157,6 +180,8 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     // smooth trajectory by elastic band in the autoware_path_smoother package
     const auto smoothed_traj_points =
       eb_path_smoother_ptr->smoothTrajectory(raw_traj_points, virtual_ego_pose);
+    pub_iterative_smoothed_traj_->publish(autoware::motion_utils::convertToTrajectory(
+      smoothed_traj_points, create_header(node.get_clock()->now())));
 
     // road collision avoidance by model predictive trajectory in the autoware_path_optimizer
     // package
@@ -164,10 +189,11 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
       raw_path.header, smoothed_traj_points, raw_path.left_bound, raw_path.right_bound,
       virtual_ego_pose};
     const auto optimized_traj_points = mpt_optimizer_ptr->optimizeTrajectory(planner_data);
-
     if (!optimized_traj_points) {
       return whole_optimized_traj_points;
     }
+    pub_iterative_optimized_traj_->publish(autoware::motion_utils::convertToTrajectory(
+      *optimized_traj_points, create_header(node.get_clock()->now())));
 
     // connect the previously and currently optimized trajectory points
     for (size_t j = 0; j < whole_optimized_traj_points.size(); ++j) {
@@ -184,7 +210,18 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     for (size_t j = 0; j < optimized_traj_points->size(); ++j) {
       whole_optimized_traj_points.push_back(optimized_traj_points->at(j));
     }
+
+    // wait for debugging purpose to visualize the iteration.
+    if (1e-5 < static_cast<double>(wait_time_during_planning_iteration)) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(wait_time_during_planning_iteration));
+    }
   }
+
+  // remove the visualization of iterative trajectories
+  Trajectory empty_traj;
+  empty_traj.header = create_header(node.get_clock()->now());
+  pub_iterative_smoothed_traj_->publish(empty_traj);
+  pub_iterative_optimized_traj_->publish(empty_traj);
 
   return whole_optimized_traj_points;
 }
