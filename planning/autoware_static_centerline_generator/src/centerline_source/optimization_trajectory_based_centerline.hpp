@@ -32,7 +32,8 @@ public:
     const std::vector<lanelet::Id> & route_lane_ids);
 
 private:
-  std::vector<TrajectoryPoint> optimize_trajectory(const Path & raw_path) const;
+  std::vector<TrajectoryPoint> optimize_trajectory(
+    rclcpp::Node & node, const Path & raw_path) const;
 
   rclcpp::Publisher<PathWithLaneId>::SharedPtr pub_raw_path_with_lane_id_{nullptr};
   rclcpp::Publisher<Path>::SharedPtr pub_raw_path_{nullptr};
