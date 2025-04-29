@@ -44,7 +44,7 @@ using autoware_static_centerline_generator::srv::PlanRoute;
 struct CenterlineWithRoute
 {
   std::vector<TrajectoryPoint> centerline{};
-  std::vector<lanelet::Id> route_lane_ids{};
+  LaneletRoute route{};
 };
 struct CenterlineHandler
 {
@@ -64,12 +64,12 @@ struct CenterlineHandler
     return std::vector<TrajectoryPoint>(
       centerline_begin + start_index, centerline_begin + end_index + 1);
   }
-  std::vector<lanelet::Id> get_route_lane_ids() const
+  LaneletRoute get_route() const
   {
     if (!whole_centerline_with_route) {
-      return std::vector<lanelet::Id>{};
+      return LaneletRoute{};
     }
-    return whole_centerline_with_route->route_lane_ids;
+    return whole_centerline_with_route->route;
   }
   bool is_valid() const { return whole_centerline_with_route && start_index < end_index; }
   bool update_start_index(const int arg_start_index)
@@ -115,9 +115,9 @@ private:
     const LoadMap::Request::SharedPtr request, const LoadMap::Response::SharedPtr response);
 
   // plan route
-  std::vector<lanelet::Id> plan_route_by_lane_ids(
+  LaneletRoute plan_route_by_lane_ids(
     const lanelet::Id start_lanelet_id, const lanelet::Id end_lanelet_id);
-  std::vector<lanelet::Id> plan_route(
+  LaneletRoute plan_route(
     const geometry_msgs::msg::Pose & start_center_pose,
     const geometry_msgs::msg::Pose & end_center_pose);
 
@@ -182,7 +182,6 @@ private:
 
   // vehicle info
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
-  LaneletRoute route_;
 };
 }  // namespace autoware::static_centerline_generator
 #endif  // STATIC_CENTERLINE_GENERATOR_NODE_HPP_

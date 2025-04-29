@@ -89,6 +89,18 @@ lanelet::ConstLanelets get_lanelets_from_ids(
   return lanelets;
 }
 
+lanelet::ConstLanelets get_lanelets_from_route(
+  const RouteHandler & route_handler, const LaneletRoute & route)
+{
+  lanelet::ConstLanelets lanelets;
+  for (const auto & segment : route.segments) {
+    const auto lane_id = segment.preferred_primitive.id;
+    const auto lanelet = route_handler.getLaneletsFromId(lane_id);
+    lanelets.push_back(lanelet);
+  }
+  return lanelets;
+}
+
 geometry_msgs::msg::Pose get_center_pose(
   const RouteHandler & route_handler, const size_t lanelet_id)
 {

@@ -73,20 +73,6 @@ std::vector<TrajectoryPoint> convert_to_trajectory_points(const PathWithLaneId &
   return autoware::motion_utils::convertToTrajectoryPointArray(traj);
 }
 
-/*
-PathWithLaneId convert_to_path_with_lane_id(const std::vector<PathPointWithLaneId> & path_points,
-const std_msgs::msg::Header & header = std_msgs::msg::Header{})
-{
-  PathWithLaneId path;
-  path.header = header;
-
-  for (const auto & point : path_points) {
-    path.points.push_back(point);
-  }
-  return path;
-}
-*/
-
 std_msgs::msg::Header create_header(const rclcpp::Time & now)
 {
   std_msgs::msg::Header header;
@@ -113,11 +99,8 @@ OptimizationTrajectoryBasedCenterline::OptimizationTrajectoryBasedCenterline(rcl
 std::vector<TrajectoryPoint>
 OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
   rclcpp::Node & node, std::shared_ptr<RouteHandler> & route_handler_ptr,
-  const std::vector<lanelet::Id> & route_lane_ids, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
-  const LaneletRoute & route)
+  LaneletMapBin::ConstSharedPtr & map_bin_ptr, const LaneletRoute & route)
 {
-  route_ = route;
-
   // get ego nearest search parameters and resample interval in behavior_path_planner
   const double ego_nearest_dist_threshold =
     autoware::universe_utils::getOrDeclareParameter<double>(node, "ego_nearest_dist_threshold");
@@ -128,20 +111,16 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
   const double behavior_vel_interval =
     autoware::universe_utils::getOrDeclareParameter<double>(node, "behavior_output_path_interval");
 
-  // get start pose and goal pose
-  const auto start_pose = get_pose(node, *route_handler_ptr, route_lane_ids, "start_pose");
-  const auto goal_pose = get_pose(node, *route_handler_ptr, route_lane_ids, "end_pose");
-
   // update route_handler for the behavior_path_planner
-  const auto route_lanelets = utils::get_lanelets_from_ids(*route_handler_ptr, route_lane_ids);
+  const auto route_lanelets = utils::get_lanelets_from_route(*route_handler_ptr, route);
   // auto route_ptr = create_route(route_handler_ptr, start_pose, goal_pose);
-  route_handler_ptr->setRouteLanelets(route_lanelets);
+  route_handler_ptr->setRoute(route);
   // route_handler_ptr->setRoute(*route_ptr);
 
   // extract path with lane id from lanelets
   const auto raw_path_with_lane_id = [&]() {
     const auto non_resampled_path_with_lane_id = utils::get_path_with_lane_id(
-      *route_handler_ptr, route_lanelets, start_pose, ego_nearest_dist_threshold,
+      *route_handler_ptr, route_lanelets, route.start_pose, ego_nearest_dist_threshold,
       ego_nearest_yaw_threshold);
     return autoware::motion_utils::resamplePath(
       non_resampled_path_with_lane_id, behavior_path_interval);
@@ -159,7 +138,7 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
 
   // smooth trajectory and road collision avoidance
   const auto optimized_traj_points = optimize_trajectory(
-    node, raw_path_with_lane_id, raw_path, route_handler_ptr, map_bin_ptr, start_pose, goal_pose);
+    node, raw_path_with_lane_id, raw_path, route_handler_ptr, map_bin_ptr, route);
   RCLCPP_INFO(
     node.get_logger(),
     "Smoothed trajectory and made it collision free with the road and published.");
@@ -170,7 +149,7 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
 std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_trajectory(
   rclcpp::Node & node, const PathWithLaneId & raw_path_with_lane_id, const Path & raw_path,
   std::shared_ptr<RouteHandler> & route_handler_ptr, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
-  const Pose & start_pose, const Pose & goal_pose) const
+  const LaneletRoute & route) const
 {
   const int wait_time_during_planning_iteration =
     autoware::universe_utils::getOrDeclareParameter<int>(
@@ -185,7 +164,7 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
   // create path_with_lane_id by goal_method
   const PathWithLaneId path_with_lane_id_points = raw_path_with_lane_id;
   // modify_goal_connection(
-  // node, raw_path_with_lane_id, raw_path, route_handler_ptr, map_bin_ptr, start_pose, goal_pose);
+  // node, raw_path_with_lane_id, route_handler_ptr, map_bin_ptr, start_pose);
 
   // convert trajectory
   const auto traj_points = convert_to_trajectory_points(path_with_lane_id_points);
@@ -218,8 +197,7 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
 
     // create path_with_lane_id by goal_method
     auto path_with_lane_id = modify_goal_connection(
-      node, raw_path_with_lane_id, raw_path, route_handler_ptr, map_bin_ptr, virtual_ego_pose,
-      goal_pose);
+      node, raw_path_with_lane_id, route_handler_ptr, map_bin_ptr, route, virtual_ego_pose);
     auto path = convert_to_path(path_with_lane_id);
     path.header = create_header(node.get_clock()->now());
     pub_iterative_path_->publish(path);
@@ -282,29 +260,6 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
   return whole_optimized_traj_points;
 }
 
-Pose OptimizationTrajectoryBasedCenterline::get_pose(
-  rclcpp::Node & node, const RouteHandler & route_handler,
-  const std::vector<lanelet::Id> & route_lane_ids, const std::string dec_param) const
-{
-  // get pose
-  const std::vector<double> input =
-    autoware::universe_utils::getOrDeclareParameter<std::vector<double>>(node, dec_param);
-  const bool default_check =
-    std::all_of(input.begin(), input.end(), [](double x) { return x == 0.0; });
-
-  if (!default_check) {
-    return utils::create_pose(input[0], input[1], input[2], input[3], input[4], input[5], input[6]);
-  }
-  if (dec_param == "start_pose") {
-    return utils::get_center_pose(route_handler, route_lane_ids.front());
-  }
-  if (dec_param == "end_pose") {
-    return utils::get_center_pose(route_handler, route_lane_ids.back());
-  }
-  throw std::logic_error(
-    "The goal_method is not supported in autoware_static_centerline_generator.");
-}
-
 std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute>
 OptimizationTrajectoryBasedCenterline::create_route(
   std::shared_ptr<RouteHandler> & route_handler_ptr, const geometry_msgs::msg::Pose & start_pose,
@@ -337,7 +292,7 @@ OptimizationTrajectoryBasedCenterline::create_route(
 
 void OptimizationTrajectoryBasedCenterline::init_path_generator_node(
   const geometry_msgs::msg::Pose current_pose, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
-  std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute> route_ptr) const
+  const LaneletRoute & route) const
 {
   autoware::path_generator::PathGenerator::InputData path_generator_input;
 
@@ -346,7 +301,7 @@ void OptimizationTrajectoryBasedCenterline::init_path_generator_node(
     path_generator_node_ =
       std::make_shared<autoware::path_generator::PathGenerator>(create_node_options());
     path_generator_input.lanelet_map_bin_ptr = map_bin_ptr;
-    path_generator_input.route_ptr = route_ptr;
+    path_generator_input.route_ptr = std::make_shared<LaneletRoute>(route);
   }
 
   path_generator_input.odometry_ptr = utils::convert_to_odometry(current_pose);
@@ -382,18 +337,10 @@ OptimizationTrajectoryBasedCenterline::create_fixed_goal_planner(
   return behavior_path_planner;
 }
 
-path_generator::Params OptimizationTrajectoryBasedCenterline::create_params() const
-{
-  // create params
-  const auto param_listener_ = std::make_shared<::path_generator::ParamListener>(
-    path_generator_node_->get_node_parameters_interface());
-  return param_listener_->get_params();
-}
-
 PathWithLaneId OptimizationTrajectoryBasedCenterline::modify_goal_connection(
-  rclcpp::Node & node, const PathWithLaneId & raw_path_with_lane_id, const Path & raw_path,
+  rclcpp::Node & node, const PathWithLaneId & raw_path_with_lane_id,
   std::shared_ptr<RouteHandler> & route_handler_ptr, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
-  const Pose & current_pose, const Pose & goal_pose) const
+  const LaneletRoute & route, const Pose & current_pose) const
 {
   const auto goal_method =
     autoware::universe_utils::getOrDeclareParameter<std::string>(node, "goal_method");
@@ -404,11 +351,10 @@ PathWithLaneId OptimizationTrajectoryBasedCenterline::modify_goal_connection(
 
   // NOTE: The route pointer has to be created to reflect start pose and goal pose
   if (goal_method == "path_generator") {
-    init_path_generator_node(
-      current_pose, map_bin_ptr,
-      std::make_shared<autoware_planning_msgs::msg::LaneletRoute>(route_));
-    const auto params = create_params();
-    return *(path_generator_node_->generate_path(current_pose, params));
+    init_path_generator_node(current_pose, map_bin_ptr, route);
+    const auto param_listener = std::make_shared<::path_generator::ParamListener>(
+      path_generator_node_->get_node_parameters_interface());
+    return *(path_generator_node_->generate_path(current_pose, param_listener->get_params()));
   }
   if (goal_method == "behavior_path_planner") {
     const auto planner_data = create_behavior_path_planner_data(node, route_handler_ptr);

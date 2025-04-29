@@ -328,16 +328,15 @@ CenterlineWithRoute StaticCenterlineGeneratorNode::generate_whole_centerline_wit
     if (centerline_source_ == CenterlineSource::OptimizationTrajectoryBase) {
       const lanelet::Id start_lanelet_id = declare_parameter<int64_t>("start_lanelet_id");
       const lanelet::Id end_lanelet_id = declare_parameter<int64_t>("end_lanelet_id");
-      const auto route_lane_ids = plan_route_by_lane_ids(start_lanelet_id, end_lanelet_id);
+      const auto route = plan_route_by_lane_ids(start_lanelet_id, end_lanelet_id);
       const auto optimized_centerline =
         optimization_trajectory_based_centerline_.generate_centerline_with_optimization(
-          *this, route_handler_ptr_, route_lane_ids, map_bin_ptr_, route_);
-      return CenterlineWithRoute{optimized_centerline, route_lane_ids};
+          *this, route_handler_ptr_, map_bin_ptr_, route);
+      return CenterlineWithRoute{optimized_centerline, route};
     } else if (centerline_source_ == CenterlineSource::BagEgoTrajectoryBase) {
       const auto bag_centerline = generate_centerline_with_bag(*this);
-      const auto route_lane_ids =
-        plan_route(bag_centerline.front().pose, bag_centerline.back().pose);
-      return CenterlineWithRoute{bag_centerline, route_lane_ids};
+      const auto route = plan_route(bag_centerline.front().pose, bag_centerline.back().pose);
+      return CenterlineWithRoute{bag_centerline, route};
     }
     throw std::logic_error(
       "The centerline source is not supported in autoware_static_centerline_generator.");
@@ -427,62 +426,72 @@ void StaticCenterlineGeneratorNode::on_load_map(
   response->message = "InvalidMapFormat";
 }
 
-std::vector<lanelet::Id> StaticCenterlineGeneratorNode::plan_route_by_lane_ids(
+LaneletRoute StaticCenterlineGeneratorNode::plan_route_by_lane_ids(
   const lanelet::Id start_lanelet_id, const lanelet::Id end_lanelet_id)
 {
   if (!route_handler_ptr_) {
     RCLCPP_ERROR(get_logger(), "Map or route handler is not ready. Return empty lane ids.");
-    return std::vector<lanelet::Id>{};
+    return LaneletRoute{};
   }
 
-  const auto start_center_pose = utils::get_center_pose(*route_handler_ptr_, start_lanelet_id);
-  const auto end_center_pose = utils::get_center_pose(*route_handler_ptr_, end_lanelet_id);
-  return plan_route(start_center_pose, end_center_pose);
+  // calculate start pose
+  const auto start_pose_param =
+    autoware::universe_utils::getOrDeclareParameter<std::vector<double>>(*this, "start_pose");
+  const bool is_start_pose_param_invalid = std::all_of(
+    start_pose_param.begin(), start_pose_param.end(), [](double x) { return x == 0.0; });
+  const auto start_pose = [&]() {
+    if (is_start_pose_param_invalid) {
+      return utils::get_center_pose(*route_handler_ptr_, start_lanelet_id);
+    }
+    return utils::create_pose(
+      start_pose_param[0], start_pose_param[1], start_pose_param[2], start_pose_param[3],
+      start_pose_param[4], start_pose_param[5], start_pose_param[6]);
+  }();
+
+  // calculate end pose
+  const auto end_pose_param =
+    autoware::universe_utils::getOrDeclareParameter<std::vector<double>>(*this, "end_pose");
+  const bool is_end_pose_param_invalid =
+    std::all_of(end_pose_param.begin(), end_pose_param.end(), [](double x) { return x == 0.0; });
+  const auto end_pose = [&]() {
+    if (is_end_pose_param_invalid) {
+      return utils::get_center_pose(*route_handler_ptr_, end_lanelet_id);
+    }
+    return utils::create_pose(
+      end_pose_param[0], end_pose_param[1], end_pose_param[2], end_pose_param[3], end_pose_param[4],
+      end_pose_param[5], end_pose_param[6]);
+  }();
+
+  // plan route
+  return plan_route(start_pose, end_pose);
 }
 
-std::vector<lanelet::Id> StaticCenterlineGeneratorNode::plan_route(
+LaneletRoute StaticCenterlineGeneratorNode::plan_route(
   const geometry_msgs::msg::Pose & start_center_pose,
   const geometry_msgs::msg::Pose & end_center_pose)
 {
   if (!map_bin_ptr_) {
     RCLCPP_ERROR(get_logger(), "Map or route handler is not ready. Return empty lane ids.");
-    return std::vector<lanelet::Id>{};
+    return LaneletRoute{};
   }
 
-  // plan route by the mission_planner package
-  const auto route = [&]() {
-    // calculate check points
-    RCLCPP_INFO(get_logger(), "Calculated check points.");
-    const auto check_points =
-      std::vector<geometry_msgs::msg::Pose>{start_center_pose, end_center_pose};
+  // calculate check points
+  RCLCPP_INFO(get_logger(), "Calculated check points.");
+  const auto check_points =
+    std::vector<geometry_msgs::msg::Pose>{start_center_pose, end_center_pose};
 
-    // create mission_planner plugin
-    auto plugin_loader = pluginlib::ClassLoader<autoware::mission_planner_universe::PlannerPlugin>(
-      "autoware_mission_planner_universe", "autoware::mission_planner_universe::PlannerPlugin");
-    auto mission_planner = plugin_loader.createSharedInstance(
-      "autoware::mission_planner_universe::lanelet2::DefaultPlanner");
+  // create mission_planner plugin
+  auto plugin_loader = pluginlib::ClassLoader<autoware::mission_planner_universe::PlannerPlugin>(
+    "autoware_mission_planner_universe", "autoware::mission_planner_universe::PlannerPlugin");
+  auto mission_planner = plugin_loader.createSharedInstance(
+    "autoware::mission_planner_universe::lanelet2::DefaultPlanner");
 
-    // initialize mission_planner
-    auto node = rclcpp::Node("mission_planner");
-    mission_planner->initialize(&node, map_bin_ptr_);
+  // initialize mission_planner
+  auto node = rclcpp::Node("mission_planner");
+  mission_planner->initialize(&node, map_bin_ptr_);
 
-    // plan route
-    const auto route = mission_planner->plan(check_points);
-
-    route_ = route;
-    return route;
-  }();
-
-  // get lanelets
-  const auto route_lane_ids = get_lane_ids_from_route(route);
-
-  std::string route_lane_ids_str = "";
-  for (const lanelet::Id route_lane_id : route_lane_ids) {
-    route_lane_ids_str += std::to_string(route_lane_id) + ",";
-  }
-  RCLCPP_INFO_STREAM(get_logger(), "Planned route. (" << route_lane_ids_str << ")");
-
-  return route_lane_ids;
+  // plan route
+  return mission_planner->plan(check_points);
 }
 
 void StaticCenterlineGeneratorNode::on_plan_route(
@@ -498,8 +507,8 @@ void StaticCenterlineGeneratorNode::on_plan_route(
   const lanelet::Id end_lanelet_id = request->end_lane_id;
 
   // plan route
-  const auto route_lane_ids = plan_route_by_lane_ids(start_lanelet_id, end_lanelet_id);
-  const auto route_lanelets = utils::get_lanelets_from_ids(*route_handler_ptr_, route_lane_ids);
+  const auto route = plan_route_by_lane_ids(start_lanelet_id, end_lanelet_id);
+  const auto route_lanelets = utils::get_lanelets_from_route(*route_handler_ptr_, route);
 
   // extract lane ids
   std::vector<lanelet::Id> lane_ids;
@@ -531,6 +540,17 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   const auto route_lane_ids = request->route;
   const auto route_lanelets = utils::get_lanelets_from_ids(*route_handler_ptr_, route_lane_ids);
 
+  // create route
+  LaneletRoute route;
+  route.start_pose;  // TODO(murooka)
+  route.goal_pose;   // TODO(murooka)
+  std::vector<lanelet::Id> lane_ids;
+  for (const auto route_lane_id : route_lane_ids) {
+    LaneletSegment segment;
+    segment.preferred_primitive.id = route_lane_id;
+    route.segments.push_back(segment);
+  }
+
   // check if input route lanelets are connected to each other.
   const auto unconnected_lane_ids = check_lanelet_connection(*route_handler_ptr_, route_lanelets);
   if (!unconnected_lane_ids.empty()) {
@@ -543,7 +563,7 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   // plan path
   const auto optimized_traj_points =
     optimization_trajectory_based_centerline_.generate_centerline_with_optimization(
-      *this, route_handler_ptr_, route_lane_ids, map_bin_ptr_, route_);
+      *this, route_handler_ptr_, map_bin_ptr_, route);
 
   // check calculation result
   if (optimized_traj_points.empty()) {
@@ -552,8 +572,7 @@ void StaticCenterlineGeneratorNode::on_plan_path(
     return;
   }
 
-  centerline_handler_ =
-    CenterlineHandler(CenterlineWithRoute{optimized_traj_points, route_lane_ids});
+  centerline_handler_ = CenterlineHandler(CenterlineWithRoute{optimized_traj_points, route});
 
   // publish unsafe_footprints
   validate();
@@ -601,9 +620,9 @@ void StaticCenterlineGeneratorNode::validate()
                "##############################################"
             << std::endl;
 
-  const auto & centerline = centerline_handler_.get_selected_centerline();
-  const auto & route_lane_ids = centerline_handler_.get_route_lane_ids();
-  const auto route_lanelets = utils::get_lanelets_from_ids(*route_handler_ptr_, route_lane_ids);
+  const auto centerline = centerline_handler_.get_selected_centerline();
+  const auto route = centerline_handler_.get_route();
+  const auto route_lanelets = utils::get_lanelets_from_route(*route_handler_ptr_, route);
 
   const double dist_thresh_to_road_border =
     getRosParameter<double>("validation.dist_threshold_to_road_border");
@@ -753,12 +772,11 @@ void StaticCenterlineGeneratorNode::save_map()
     return;
   }
 
-  const auto & centerline = centerline_handler_.get_selected_centerline();
-  const auto & route_lane_ids = centerline_handler_.get_route_lane_ids();
+  const auto centerline = centerline_handler_.get_selected_centerline();
+  const auto route = centerline_handler_.get_route();
+  const auto route_lanelets = utils::get_lanelets_from_route(*route_handler_ptr_, route);
 
   const auto lanelet2_output_file_path = getRosParameter<std::string>("lanelet2_output_file_path");
-
-  const auto route_lanelets = utils::get_lanelets_from_ids(*route_handler_ptr_, route_lane_ids);
 
   // update centerline in map
   utils::update_centerline(original_map_ptr_, route_lanelets, centerline);
