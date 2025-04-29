@@ -331,7 +331,7 @@ CenterlineWithRoute StaticCenterlineGeneratorNode::generate_whole_centerline_wit
       const auto route_lane_ids = plan_route_by_lane_ids(start_lanelet_id, end_lanelet_id);
       const auto optimized_centerline =
         optimization_trajectory_based_centerline_.generate_centerline_with_optimization(
-          *this, route_handler_ptr_, route_lane_ids, map_bin_ptr_);
+          *this, route_handler_ptr_, route_lane_ids, map_bin_ptr_, route_);
       return CenterlineWithRoute{optimized_centerline, route_lane_ids};
     } else if (centerline_source_ == CenterlineSource::BagEgoTrajectoryBase) {
       const auto bag_centerline = generate_centerline_with_bag(*this);
@@ -469,6 +469,7 @@ std::vector<lanelet::Id> StaticCenterlineGeneratorNode::plan_route(
     // plan route
     const auto route = mission_planner->plan(check_points);
 
+    route_ = route;
     return route;
   }();
 
@@ -542,7 +543,7 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   // plan path
   const auto optimized_traj_points =
     optimization_trajectory_based_centerline_.generate_centerline_with_optimization(
-      *this, route_handler_ptr_, route_lane_ids, map_bin_ptr_);
+      *this, route_handler_ptr_, route_lane_ids, map_bin_ptr_, route_);
 
   // check calculation result
   if (optimized_traj_points.empty()) {

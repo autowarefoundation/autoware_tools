@@ -182,6 +182,7 @@ private:
 
   // vehicle info
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
+  LaneletRoute route_;
 };
 }  // namespace autoware::static_centerline_generator
 #endif  // STATIC_CENTERLINE_GENERATOR_NODE_HPP_

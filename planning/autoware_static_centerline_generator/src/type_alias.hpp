@@ -33,6 +33,7 @@ using autoware::universe_utils::LinearRing2d;
 using autoware::universe_utils::LineString2d;
 using autoware::universe_utils::Point2d;
 using autoware_internal_planning_msgs::msg::PathWithLaneId;
+// using autoware_internal_planning_msgs::msg::PathPointWithLaneId;
 using autoware_map_msgs::msg::LaneletMapBin;
 using autoware_perception_msgs::msg::PredictedObjects;
 using autoware_planning_msgs::msg::LaneletRoute;
