@@ -95,7 +95,12 @@ geometry_msgs::msg::Pose get_center_pose(
   // get middle idx of the lanelet
   const auto lanelet = route_handler.getLaneletsFromId(lanelet_id);
   const auto center_line = lanelet.centerline();
-  const size_t middle_point_idx = std::floor(center_line.size() / 2.0);
+  if (center_line.size() < 2) {
+    throw std::invalid_argument("center_line's size is less than 2.");
+  }
+
+  // Note: -1 operation is added considering that the size is 2.
+  const size_t middle_point_idx = std::floor((center_line.size() - 1) / 2.0);
 
   // get middle position of the lanelet
   geometry_msgs::msg::Point middle_pos;

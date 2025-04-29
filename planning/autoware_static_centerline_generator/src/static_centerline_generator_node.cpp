@@ -43,6 +43,7 @@
 #include <boost/geometry/algorithms/correct.hpp>
 #include <boost/geometry/algorithms/distance.hpp>
 
+#include <glog/logging.h>
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_core/geometry/Lanelet.h>
 #include <lanelet2_io/Io.h>
@@ -197,6 +198,12 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
   const rclcpp::NodeOptions & node_options)
 : Node("static_centerline_generator", node_options)
 {
+  // glog for debug
+  if (!google::IsGoogleLoggingInitialized()) {
+    google::InitGoogleLogging("multi_object_tracker");
+    google::InstallFailureSignalHandler();
+  }
+
   // publishers
   pub_map_bin_ =
     create_publisher<LaneletMapBin>("lanelet2_map_topic", utils::create_transient_local_qos());
