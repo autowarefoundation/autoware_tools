@@ -36,6 +36,8 @@ private:
 
   rclcpp::Publisher<PathWithLaneId>::SharedPtr pub_raw_path_with_lane_id_{nullptr};
   rclcpp::Publisher<Path>::SharedPtr pub_raw_path_{nullptr};
+  rclcpp::Publisher<Trajectory>::SharedPtr pub_iterative_smoothed_traj_{nullptr};
+  rclcpp::Publisher<Trajectory>::SharedPtr pub_iterative_optimized_traj_{nullptr};
 };
 }  // namespace autoware::static_centerline_generator
 // clang-format off
