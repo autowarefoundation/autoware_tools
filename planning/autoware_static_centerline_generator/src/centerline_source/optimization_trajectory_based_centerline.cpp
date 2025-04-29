@@ -164,8 +164,9 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
   // }();
 
   // create path_with_lane_id by goal_method
-  const PathWithLaneId path_with_lane_id_points = modify_goal_connection(
-    node, raw_path_with_lane_id, raw_path, route_handler_ptr, map_bin_ptr, start_pose, goal_pose);
+  const PathWithLaneId path_with_lane_id_points = raw_path_with_lane_id;
+  // modify_goal_connection(
+  // node, raw_path_with_lane_id, raw_path, route_handler_ptr, map_bin_ptr, start_pose, goal_pose);
 
   // convert trajectory
   const auto traj_points = convert_to_trajectory_points(path_with_lane_id_points);
