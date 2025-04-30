@@ -261,17 +261,22 @@ Marker create_text_marker(
   return marker;
 }
 
-Marker create_points_marker(
-  const std::string & ns, const std::vector<geometry_msgs::msg::Point> & points, const double width,
-  const double r, const double g, const double b, const double a, const rclcpp::Time & now)
+void create_points_marker(
+  MarkerArray & marker_array, const std::string & ns,
+  const std::vector<std::vector<geometry_msgs::msg::Point>> & points_vec, const double width,
+  const rclcpp::Time & now)
 {
-  auto marker = autoware::universe_utils::createDefaultMarker(
-    "map", now, ns, 1, Marker::LINE_STRIP,
-    autoware::universe_utils::createMarkerScale(width, 0.0, 0.0),
-    autoware::universe_utils::createMarkerColor(r, g, b, a));
-  marker.lifetime = rclcpp::Duration(0, 0);
-  marker.points = points;
-  return marker;
+  for (size_t i = 0; i < points_vec.size(); ++i) {
+    const auto color = (i % 2 == 0)
+                         ? autoware::universe_utils::createMarkerColor(0.8, 0.5, 1.0, 0.8)
+                         : autoware::universe_utils::createMarkerColor(1.0, 0.3, 0.5, 0.8);
+    auto marker = autoware::universe_utils::createDefaultMarker(
+      "map", now, ns, i, Marker::LINE_STRIP,
+      autoware::universe_utils::createMarkerScale(width, 0.0, 0.0), color);
+    marker.lifetime = rclcpp::Duration(0, 0);
+    marker.points = points_vec.at(i);
+    marker_array.markers.push_back(marker);
+  }
 }
 
 MarkerArray create_delete_all_marker_array(

@@ -64,9 +64,10 @@ Marker create_text_marker(
   const std::string & ns, const geometry_msgs::msg::Pose & pose, const double value, const double r,
   const double g, const double b, const double a, const rclcpp::Time & now, const size_t idx);
 
-Marker create_points_marker(
-  const std::string & ns, const std::vector<geometry_msgs::msg::Point> & points, const double width,
-  const double r, const double g, const double b, const double a, const rclcpp::Time & now);
+void create_points_marker(
+  MarkerArray & marker_array, const std::string & ns,
+  const std::vector<std::vector<geometry_msgs::msg::Point>> & points_vec, const double width,
+  const rclcpp::Time & now);
 
 MarkerArray create_delete_all_marker_array(
   const std::vector<std::string> & ns_vec, const rclcpp::Time & now);
