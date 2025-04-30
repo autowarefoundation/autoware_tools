@@ -88,10 +88,14 @@ struct CenterlineHandler
     }
     return false;
   }
+  void clear_centerline_lane_ids() { centerline_lane_ids.clear(); }
+  void add_centerline_lane_id(const size_t lane_id) { centerline_lane_ids.push_back(lane_id); }
+  std::vector<size_t> get_centerline_lane_ids() const { return centerline_lane_ids; }
 
   std::optional<CenterlineWithRoute> whole_centerline_with_route{std::nullopt};
   int start_index{};
   int end_index{};
+  std::vector<size_t> centerline_lane_ids;
 };
 
 struct RoadBounds
@@ -105,7 +109,8 @@ class StaticCenterlineGeneratorNode : public rclcpp::Node
 public:
   explicit StaticCenterlineGeneratorNode(const rclcpp::NodeOptions & node_options);
   void generate_centerline();
-  void validate();
+  void connect_centerline_to_lanelet();
+  void validate_centerline();
   void save_map();
 
 private:
@@ -169,7 +174,6 @@ private:
   rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr sub_traj_end_index_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr sub_save_map_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr sub_validate_;
-  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_traj_resample_interval_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_footprint_margin_for_road_bound_;
 
   // service

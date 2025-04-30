@@ -55,6 +55,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -181,16 +182,21 @@ std::vector<TrajectoryPoint> resample_trajectory_points(
   return autoware::motion_utils::convertToTrajectoryPointArray(resampled_input_traj);
 }
 
-std::vector<geometry_msgs::msg::Point> convertToGeometryPoints(const LineString2d & lanelet_points)
+std::vector<std::vector<geometry_msgs::msg::Point>> convert_to_geometry_points_vector(
+  const std::map<size_t, LineString2d> & lanelet_points_map)
 {
-  std::vector<geometry_msgs::msg::Point> points;
-  for (const auto & lanelet_point : lanelet_points) {
-    geometry_msgs::msg::Point point;
-    point.x = lanelet_point.x();
-    point.y = lanelet_point.y();
-    points.push_back(point);
+  std::vector<std::vector<geometry_msgs::msg::Point>> points_vec;
+  for (const auto & lanelet_points : lanelet_points_map) {
+    points_vec.push_back(std::vector<geometry_msgs::msg::Point>{});
+    for (const auto & lanelet_point : lanelet_points.second) {
+      geometry_msgs::msg::Point point;
+      point.x = lanelet_point.x();
+      point.y = lanelet_point.y();
+      points_vec.back().push_back(point);
+    }
   }
-  return points;
+
+  return points_vec;
 }
 }  // namespace
 
@@ -249,7 +255,7 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
     });
   sub_validate_ = create_subscription<std_msgs::msg::Empty>(
     "/static_centerline_generator/validate", rclcpp::QoS{1},
-    [this]([[maybe_unused]] const std_msgs::msg::Empty & msg) { validate(); });
+    [this]([[maybe_unused]] const std_msgs::msg::Empty & msg) { validate_centerline(); });
 
   // services
   callback_group_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -575,7 +581,7 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   centerline_handler_ = CenterlineHandler(CenterlineWithRoute{optimized_traj_points, route});
 
   // publish unsafe_footprints
-  validate();
+  validate_centerline();
 
   // create output data
   auto target_traj_point = optimized_traj_points.cbegin();
@@ -613,7 +619,84 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   response->message = "";
 }
 
-void StaticCenterlineGeneratorNode::validate()
+void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
+{
+  centerline_handler_.clear_centerline_lane_ids();
+
+  const auto centerline = centerline_handler_.get_selected_centerline();
+  if (centerline.empty()) {
+    return;
+  }
+  const auto route = centerline_handler_.get_route();
+  const auto route_lanelets = utils::get_lanelets_from_route(*route_handler_ptr_, route);
+
+  // check if the centerline's front is before the route_lanelets or not.
+  const bool is_centerline_front_before_route_lanelets = [&]() {
+    if (
+      0 < route_lanelets.size() &&
+      lanelet::geometry::inside(
+        route_lanelets.at(0), convert_to_lanelet_point(centerline.front().pose.position))) {
+      return false;
+    }
+    if (
+      1 < route_lanelets.size() &&
+      lanelet::geometry::inside(
+        route_lanelets.at(1), convert_to_lanelet_point(centerline.front().pose.position))) {
+      return false;
+    }
+    return true;
+  }();
+
+  // create output data
+  size_t centerline_idx = 0;
+  bool is_end_lanelet = false;
+  bool was_once_inside_lanelet = false;
+  for (const auto & lanelet : route_lanelets) {
+    std::cerr << lanelet.id() << std::endl;
+
+    // check if target point is inside the lanelet
+    while (true) {
+      const bool is_inside = lanelet::geometry::inside(
+        lanelet, convert_to_lanelet_point(centerline.at(centerline_idx).pose.position));
+      if (is_inside) {
+        was_once_inside_lanelet = true;
+      }
+
+      const bool is_target_lanelet = [&]() {
+        if (is_centerline_front_before_route_lanelets && !was_once_inside_lanelet) {
+          return true;
+        }
+        return is_inside;
+      }();
+      if (!is_target_lanelet) {
+        break;
+      }
+
+      std::cerr << "PO " << lanelet.id() << std::endl;
+      // memorize points inside the lanelet
+      centerline_handler_.add_centerline_lane_id(lanelet.id());
+      centerline_idx++;
+
+      if (centerline_idx == centerline.size()) {
+        is_end_lanelet = true;
+        break;
+      }
+    }
+
+    if (is_end_lanelet) {
+      break;
+    }
+  }
+
+  if (centerline.size() != centerline_handler_.get_centerline_lane_ids().size()) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "The size of the centerline and its lanelets is not the same. "
+                      << centerline.size() << " "
+                      << centerline_handler_.get_centerline_lane_ids().size());
+  }
+}
+
+void StaticCenterlineGeneratorNode::validate_centerline()
 {
   std::cerr << std::endl
             << "############################################## Validation Results "
@@ -621,8 +704,7 @@ void StaticCenterlineGeneratorNode::validate()
             << std::endl;
 
   const auto centerline = centerline_handler_.get_selected_centerline();
-  const auto route = centerline_handler_.get_route();
-  const auto route_lanelets = utils::get_lanelets_from_route(*route_handler_ptr_, route);
+  const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
 
   const double dist_thresh_to_road_border =
     getRosParameter<double>("validation.dist_threshold_to_road_border");
@@ -642,15 +724,28 @@ void StaticCenterlineGeneratorNode::validate()
     return boost::none;
   };
 
-  // create right/left bound
-  LineString2d lanelet_right_bound;
-  LineString2d lanelet_left_bound;
-  for (const auto & lanelet : route_lanelets) {
+  // create right/left bound for each lanelet
+  std::map<size_t, LineString2d> lanelet_right_bound_map;
+  std::map<size_t, LineString2d> lanelet_left_bound_map;
+  for (size_t centerline_idx = 0; centerline_idx < centerline_lane_ids.size(); ++centerline_idx) {
+    const size_t centerline_lane_id = centerline_lane_ids.at(centerline_idx);
+    std::cerr << centerline_lane_id << std::endl;
+    if (0 < lanelet_right_bound_map.count(centerline_lane_id)) {
+      continue;
+    }
+
+    lanelet_right_bound_map.emplace(centerline_lane_id, LineString2d{});
+    lanelet_left_bound_map.emplace(centerline_lane_id, LineString2d{});
+
+    const auto lanelet = route_handler_ptr_->getLaneletsFromId(centerline_lane_id);
     for (const auto & point : lanelet.rightBound()) {
-      boost::geometry::append(lanelet_right_bound, Point2d(point.x(), point.y()));
+      std::cerr << "p1" << std::endl;
+      boost::geometry::append(
+        lanelet_right_bound_map.at(centerline_lane_id), Point2d(point.x(), point.y()));
     }
     for (const auto & point : lanelet.leftBound()) {
-      boost::geometry::append(lanelet_left_bound, Point2d(point.x(), point.y()));
+      boost::geometry::append(
+        lanelet_left_bound_map.at(centerline_lane_id), Point2d(point.x(), point.y()));
     }
   }
 
@@ -664,11 +759,15 @@ void StaticCenterlineGeneratorNode::validate()
   double max_curvature = std::numeric_limits<double>::min();
   for (size_t i = 0; i < centerline.size(); ++i) {
     const auto & traj_point = centerline.at(i);
+    const size_t centerline_lane_id = centerline_lane_ids.at(i);
 
     const auto footprint_poly = create_vehicle_footprint(traj_point.pose, vehicle_info_);
 
-    const double dist_to_right = boost::geometry::distance(footprint_poly, lanelet_right_bound);
-    const double dist_to_left = boost::geometry::distance(footprint_poly, lanelet_left_bound);
+    std::cerr << lanelet_right_bound_map.at(centerline_lane_id).size() << std::endl;
+    const double dist_to_right =
+      boost::geometry::distance(footprint_poly, lanelet_right_bound_map.at(centerline_lane_id));
+    const double dist_to_left =
+      boost::geometry::distance(footprint_poly, lanelet_left_bound_map.at(centerline_lane_id));
     const double min_dist_to_bound = std::min(dist_to_right, dist_to_left);
 
     if (min_dist_to_bound < min_dist) {
@@ -706,13 +805,11 @@ void StaticCenterlineGeneratorNode::validate()
   const double max_steer_angle = vehicle_info_.calcSteerAngleFromCurvature(max_curvature);
 
   // publish road boundaries
-  const auto left_bound = convertToGeometryPoints(lanelet_left_bound);
-  const auto right_bound = convertToGeometryPoints(lanelet_right_bound);
+  const auto left_bound_vec = convert_to_geometry_points_vector(lanelet_left_bound_map);
+  const auto right_bound_vec = convert_to_geometry_points_vector(lanelet_right_bound_map);
 
-  marker_array.markers.push_back(
-    utils::create_points_marker("left_bound", left_bound, 0.05, 0.0, 0.6, 0.8, 0.8, now()));
-  marker_array.markers.push_back(
-    utils::create_points_marker("right_bound", right_bound, 0.05, 0.0, 0.6, 0.8, 0.8, now()));
+  utils::create_points_marker(marker_array, "left_bound", left_bound_vec, 0.05, now());
+  utils::create_points_marker(marker_array, "right_bound", right_bound_vec, 0.05, now());
   pub_debug_markers_->publish(marker_array);
 
   // show the validation results
