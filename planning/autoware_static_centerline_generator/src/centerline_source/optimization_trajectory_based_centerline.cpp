@@ -112,9 +112,7 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
 
   // update route_handler for the behavior_path_planner
   const auto route_lanelets = utils::get_lanelets_from_route(*route_handler_ptr, route);
-  // auto route_ptr = create_route(route_handler_ptr, start_pose, goal_pose);
   route_handler_ptr->setRoute(route);
-  // route_handler_ptr->setRoute(*route_ptr);
 
   // extract path with lane id from lanelets
   const auto raw_path_with_lane_id = [&]() {
