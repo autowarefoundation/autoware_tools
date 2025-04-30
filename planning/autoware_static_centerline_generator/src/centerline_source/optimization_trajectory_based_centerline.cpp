@@ -128,7 +128,9 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
   pub_raw_path_with_lane_id_->publish(raw_path_with_lane_id);
   RCLCPP_INFO(node.get_logger(), "Calculated raw path with lane id and published.");
 
-  // convert path with lane id to path
+  // visualize path
+  // NOTE: path_with_lane_id is not used since the tier4_planning_rviz_plugin has an issue
+  //       to die.
   const auto raw_path = [&]() {
     const auto non_resampled_path = convert_to_path(raw_path_with_lane_id);
     return autoware::motion_utils::resamplePath(non_resampled_path, behavior_vel_interval);
@@ -137,8 +139,8 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
   RCLCPP_INFO(node.get_logger(), "Converted to path and published.");
 
   // smooth trajectory and road collision avoidance
-  const auto optimized_traj_points = optimize_trajectory(
-    node, raw_path_with_lane_id, raw_path, route_handler_ptr, map_bin_ptr, route);
+  const auto optimized_traj_points =
+    optimize_trajectory(node, raw_path_with_lane_id, route_handler_ptr, map_bin_ptr, route);
   RCLCPP_INFO(
     node.get_logger(),
     "Smoothed trajectory and made it collision free with the road and published.");
@@ -147,7 +149,7 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
 }
 
 std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_trajectory(
-  rclcpp::Node & node, const PathWithLaneId & raw_path_with_lane_id, const Path & raw_path,
+  rclcpp::Node & node, const PathWithLaneId & raw_path_with_lane_id,
   std::shared_ptr<RouteHandler> & route_handler_ptr, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
   const LaneletRoute & route) const
 {
@@ -155,55 +157,45 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     autoware::universe_utils::getOrDeclareParameter<int>(
       node, "debug.wait_time_during_planning_iteration");
 
-  // convert to trajectory points
-  // const auto raw_traj_points = [&]() {
-  //   const auto raw_traj = convert_to_trajectory(raw_path);
-  //   return autoware::motion_utils::convertToTrajectoryPointArray(raw_traj);
-  // }();
-
-  // create path_with_lane_id by goal_method
-  const PathWithLaneId path_with_lane_id_points = raw_path_with_lane_id;
-  // modify_goal_connection(
-  // node, raw_path_with_lane_id, route_handler_ptr, map_bin_ptr, start_pose);
-
-  // convert trajectory
-  const auto traj_points = convert_to_trajectory_points(path_with_lane_id_points);
-
   // create an instance of elastic band and model predictive trajectory.
   const auto eb_path_smoother_ptr =
     autoware::path_smoother::ElasticBandSmoother(create_node_options()).getElasticBandSmoother();
   const auto mpt_optimizer_ptr =
     autoware::path_optimizer::PathOptimizer(create_node_options()).getMPTOptimizer();
 
-  // NOTE: The optimization is executed every valid_optimized_traj_points_num points.
-  constexpr int valid_optimized_traj_points_num = 5;
-  const int traj_segment_num = traj_points.size() / valid_optimized_traj_points_num;
+  // NOTE: The optimization is executed every following number of points.
+  constexpr int virtual_ego_pose_lon_shift_points_num = 1;
 
   // NOTE: num_initial_optimization exists to make the both optimizations stable since they may use
   // warm start.
-  constexpr int num_initial_optimization = 2;
+  constexpr int num_initial_optimization = -2;
 
+  // move the virtual_ego_pose forward following the raw_path_with_lane_id every cycle
+  // and plan an optimized trajectory
   std::vector<TrajectoryPoint> whole_optimized_traj_points;
-  for (int virtual_ego_pose_idx = -num_initial_optimization;
-       virtual_ego_pose_idx < traj_segment_num; ++virtual_ego_pose_idx) {
+  for (int virtual_ego_pose_idx = num_initial_optimization;
+       virtual_ego_pose_idx < static_cast<int>(raw_path_with_lane_id.points.size());
+       virtual_ego_pose_idx += virtual_ego_pose_lon_shift_points_num) {
     // calculate virtual ego pose for the optimization
-    constexpr int virtual_ego_pose_offset_idx = 1;
     const auto virtual_ego_pose =
-      traj_points
-        .at(
-          valid_optimized_traj_points_num * std::max(virtual_ego_pose_idx, 0) +
-          virtual_ego_pose_offset_idx)
-        .pose;
+      raw_path_with_lane_id.points.at(static_cast<size_t>(std::max(virtual_ego_pose_idx, 0)))
+        .point.pose;
 
     // create path_with_lane_id by goal_method
-    auto path_with_lane_id = modify_goal_connection(
+    const auto path_with_lane_id_with_goal_connection = modify_goal_connection(
       node, raw_path_with_lane_id, route_handler_ptr, map_bin_ptr, route, virtual_ego_pose);
-    auto path = convert_to_path(path_with_lane_id);
+    if (path_with_lane_id_with_goal_connection.points.empty()) {
+      continue;
+    }
+
+    // NOTE: path_with_lane_id is not used for the visualizationsince the tier4_planning_rviz_plugin
+    //       has an issue to die.
+    auto path = convert_to_path(path_with_lane_id_with_goal_connection);
     path.header = create_header(node.get_clock()->now());
     pub_iterative_path_->publish(path);
 
     // convert trajectory
-    const auto traj_points = convert_to_trajectory_points(path_with_lane_id);
+    const auto traj_points = convert_to_trajectory_points(path_with_lane_id_with_goal_connection);
 
     // smooth trajectory by elastic band in the autoware_path_smoother package
     const auto smoothed_traj_points =
@@ -214,8 +206,8 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     // road collision avoidance by model predictive trajectory in the autoware_path_optimizer
     // package
     const autoware::path_optimizer::PlannerData planner_data{
-      raw_path.header, smoothed_traj_points, raw_path.left_bound, raw_path.right_bound,
-      virtual_ego_pose};
+      raw_path_with_lane_id.header, smoothed_traj_points, raw_path_with_lane_id.left_bound,
+      raw_path_with_lane_id.right_bound, virtual_ego_pose};
     const auto optimized_traj_points = mpt_optimizer_ptr->optimizeTrajectory(planner_data);
     if (!optimized_traj_points) {
       return whole_optimized_traj_points;
@@ -224,21 +216,48 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
       *optimized_traj_points, create_header(node.get_clock()->now())));
 
     // connect the previously and currently optimized trajectory points
-    for (size_t j = 0; j < whole_optimized_traj_points.size(); ++j) {
-      const double dist = autoware::universe_utils::calcDistance2d(
-        whole_optimized_traj_points.at(j), optimized_traj_points->front());
-      const double yaw = autoware_utils_geometry::calc_yaw_deviation(
-        whole_optimized_traj_points.at(j).pose, optimized_traj_points->front().pose);
-      if (dist < 0.5 && std::abs(yaw) < 0.17) {
-        const std::vector<TrajectoryPoint> extracted_whole_optimized_traj_points{
-          whole_optimized_traj_points.begin(),
-          whole_optimized_traj_points.begin() + std::max(j, 1UL) - 1};
-        whole_optimized_traj_points = extracted_whole_optimized_traj_points;
-        break;
+    // TODO(murooka) update comment
+    // 1. generate valid optimized_traj_points
+    // NOTE: We assume that the last one third is invalid since the points close to the end
+    //       may not be able to consider the road boundary constraint.
+    const auto valid_optimized_traj_points = [&]() {
+      if (virtual_ego_pose_idx <= 0) {
+        return *optimized_traj_points;
+      }
+      // TODO(murooka) param
+      const size_t nearest_idx =
+        autoware::motion_utils::findFirstNearestSegmentIndexWithSoftConstraints(
+          *optimized_traj_points, virtual_ego_pose, 1.0, 0.3);
+      return std::vector<TrajectoryPoint>(
+        optimized_traj_points->begin() + nearest_idx, optimized_traj_points->end());
+    }();
+
+    // 2. fill whole_optimized_traj_points if it is empty.
+    if (whole_optimized_traj_points.empty()) {
+      whole_optimized_traj_points = valid_optimized_traj_points;
+    }
+
+    // 3. the whole_optimized_traj_points close to the valid_optimized_traj_points is removed, and
+    // will be updated.
+    if (!valid_optimized_traj_points.empty()) {
+      for (size_t j = 0; j < whole_optimized_traj_points.size(); ++j) {
+        const double dist = autoware::universe_utils::calcDistance2d(
+          whole_optimized_traj_points.at(j), valid_optimized_traj_points.front());
+        const double yaw = autoware_utils_geometry::calc_yaw_deviation(
+          whole_optimized_traj_points.at(j).pose, valid_optimized_traj_points.front().pose);
+        if (dist < 0.5 && std::abs(yaw) < 0.17) {
+          const std::vector<TrajectoryPoint> extracted_whole_optimized_traj_points{
+            whole_optimized_traj_points.begin(),
+            whole_optimized_traj_points.begin() + std::max(j, 1UL) - 1};
+          whole_optimized_traj_points = extracted_whole_optimized_traj_points;
+          break;
+        }
       }
     }
-    for (size_t j = 0; j < optimized_traj_points->size(); ++j) {
-      whole_optimized_traj_points.push_back(optimized_traj_points->at(j));
+
+    // 4. register the half of optimized_traj_points
+    for (const auto & valid_optimized_traj_point : valid_optimized_traj_points) {
+      whole_optimized_traj_points.push_back(valid_optimized_traj_point);
     }
 
     // wait for debugging purpose to visualize the iteration.
@@ -300,6 +319,8 @@ void OptimizationTrajectoryBasedCenterline::init_path_generator_node(
     // initialize node, lanelet map and route
     path_generator_node_ =
       std::make_shared<autoware::path_generator::PathGenerator>(create_node_options());
+
+    // NOTE: no need to register every time
     path_generator_input.lanelet_map_bin_ptr = map_bin_ptr;
     path_generator_input.route_ptr = std::make_shared<LaneletRoute>(route);
   }
@@ -354,7 +375,12 @@ PathWithLaneId OptimizationTrajectoryBasedCenterline::modify_goal_connection(
     init_path_generator_node(current_pose, map_bin_ptr, route);
     const auto param_listener = std::make_shared<::path_generator::ParamListener>(
       path_generator_node_->get_node_parameters_interface());
-    return *(path_generator_node_->generate_path(current_pose, param_listener->get_params()));
+    const auto generated_path =
+      path_generator_node_->generate_path(current_pose, param_listener->get_params());
+    if (generated_path) {
+      return *generated_path;
+    }
+    return PathWithLaneId{};
   }
   if (goal_method == "behavior_path_planner") {
     const auto planner_data = create_behavior_path_planner_data(node, route_handler_ptr);

@@ -41,7 +41,7 @@ public:
 
 private:
   std::vector<TrajectoryPoint> optimize_trajectory(
-    rclcpp::Node & node, const PathWithLaneId & raw_path_with_lane_id, const Path & raw_path,
+    rclcpp::Node & node, const PathWithLaneId & raw_path_with_lane_id,
     std::shared_ptr<RouteHandler> & route_handler_ptr, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
     const LaneletRoute & route) const;
 
