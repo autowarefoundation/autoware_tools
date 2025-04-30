@@ -260,6 +260,13 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
       whole_optimized_traj_points.push_back(valid_optimized_traj_point);
     }
 
+    // 5. finish if the valid_optimized_traj_point contains the goal.
+    const double dist_to_goal =
+      autoware::universe_utils::calcDistance2d(valid_optimized_traj_points.back(), route.goal_pose);
+    if (dist_to_goal < 0.1) {
+      break;
+    }
+
     // wait for debugging purpose to visualize the iteration.
     if (1e-5 < static_cast<double>(wait_time_during_planning_iteration)) {
       std::this_thread::sleep_for(std::chrono::milliseconds(wait_time_during_planning_iteration));
