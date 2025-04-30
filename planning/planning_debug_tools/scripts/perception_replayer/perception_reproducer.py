@@ -99,7 +99,8 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             self.pointcloud_pub.publish(pointcloud_msg)
 
         if not self.ego_odom:
-            print("No ego odom found.")
+            print("No ego odom found. Setting initial pose from the first recorded ego pose.")
+            self.publish_initial_ego_pose(self.rosbag_ego_odom_data[0][1])
             return
 
         ego_pose = self.ego_odom.pose.pose

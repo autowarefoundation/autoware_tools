@@ -21,7 +21,6 @@ import sys
 
 from PyQt5.QtWidgets import QApplication
 from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import PoseWithCovarianceStamped
 from perception_replayer_common import PerceptionReplayerCommon
 import rclpy
 from time_manager_widget import TimeManagerWidget
@@ -118,51 +117,7 @@ class PerceptionReplayer(PerceptionReplayerCommon):
         ego_odom = self.find_ego_odom_by_timestamp(self.bag_timestamp)
         if not ego_odom:
             return
-
-        recorded_ego_pose = PoseWithCovarianceStamped()
-        recorded_ego_pose.header.stamp = self.get_clock().now().to_msg()
-        recorded_ego_pose.header.frame_id = "map"
-        recorded_ego_pose.pose.pose = ego_odom.pose.pose
-        recorded_ego_pose.pose.covariance = [
-            0.25,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.25,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.0,
-            0.06853892326654787,
-        ]
-
-        self.recorded_ego_pub_as_initialpose.publish(recorded_ego_pose)
+        self.publish_initial_ego_pose(ego_odom)
         print("Published recorded ego pose as /initialpose")
 
     def publish_goal(self):
