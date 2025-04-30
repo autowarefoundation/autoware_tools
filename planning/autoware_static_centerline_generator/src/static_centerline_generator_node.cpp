@@ -656,8 +656,6 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
   bool is_end_lanelet = false;
   bool was_once_inside_lanelet = false;
   for (const auto & lanelet : route_lanelets) {
-    std::cerr << lanelet.id() << std::endl;
-
     // check if target point is inside the lanelet
     while (true) {
       const bool is_inside = lanelet::geometry::inside(
@@ -676,7 +674,6 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
         break;
       }
 
-      std::cerr << "PO " << lanelet.id() << std::endl;
       // memorize points inside the lanelet
       centerline_handler_.add_centerline_lane_id(lanelet.id());
       centerline_idx++;
@@ -733,7 +730,6 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   std::map<size_t, LineString2d> lanelet_left_bound_map;
   for (size_t centerline_idx = 0; centerline_idx < centerline_lane_ids.size(); ++centerline_idx) {
     const size_t centerline_lane_id = centerline_lane_ids.at(centerline_idx);
-    std::cerr << centerline_lane_id << std::endl;
     if (0 < lanelet_right_bound_map.count(centerline_lane_id)) {
       continue;
     }
@@ -743,7 +739,6 @@ void StaticCenterlineGeneratorNode::validate_centerline()
 
     const auto lanelet = route_handler_ptr_->getLaneletsFromId(centerline_lane_id);
     for (const auto & point : lanelet.rightBound()) {
-      std::cerr << "p1" << std::endl;
       boost::geometry::append(
         lanelet_right_bound_map.at(centerline_lane_id), Point2d(point.x(), point.y()));
     }
@@ -767,7 +762,6 @@ void StaticCenterlineGeneratorNode::validate_centerline()
 
     const auto footprint_poly = create_vehicle_footprint(traj_point.pose, vehicle_info_);
 
-    std::cerr << lanelet_right_bound_map.at(centerline_lane_id).size() << std::endl;
     const double dist_to_right =
       boost::geometry::distance(footprint_poly, lanelet_right_bound_map.at(centerline_lane_id));
     const double dist_to_left =
