@@ -24,6 +24,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -163,54 +164,49 @@ PathWithLaneId get_path_with_lane_id(
 }
 
 void update_centerline(
-  lanelet::LaneletMapPtr lanelet_map_ptr, const lanelet::ConstLanelets & lanelets,
-  const std::vector<TrajectoryPoint> & new_centerline)
+  lanelet::LaneletMapPtr lanelet_map_ptr, const std::vector<TrajectoryPoint> & new_centerline,
+  const std::vector<size_t> & centerline_lane_ids)
 {
   // get lanelet as reference to update centerline
-  lanelet::Lanelets lanelets_ref;
-  for (const auto & lanelet : lanelets) {
+  std::unordered_map<size_t, lanelet::Lanelet> lanelet_ref_map;
+  for (const size_t centerline_lane_id : centerline_lane_ids) {
+    if (!lanelet_ref_map.count(centerline_lane_id) == 0) {
+      continue;
+    }
     for (auto & lanelet_ref : lanelet_map_ptr->laneletLayer) {
-      if (lanelet_ref.id() == lanelet.id()) {
-        lanelets_ref.push_back(lanelet_ref);
+      if (lanelet_ref.id() == centerline_lane_id) {
+        lanelet_ref_map.emplace(centerline_lane_id, lanelet_ref);
+        break;
       }
     }
   }
 
-  // store new centerline in lanelets
-  size_t lanelet_idx = 0;
-  lanelet::LineString3d centerline(lanelet::utils::getId());
+  // create new centerline
+  std::unordered_map<size_t, lanelet::LineString3d> centerline_map;
   for (size_t traj_idx = 0; traj_idx < new_centerline.size(); ++traj_idx) {
     const auto & traj_pos = new_centerline.at(traj_idx).pose.position;
+    const lanelet::BasicPoint2d point(traj_pos.x, traj_pos.y);
+    const size_t centerline_lane_id = centerline_lane_ids.at(traj_idx);
+    auto & lanelet_ref = lanelet_ref_map.at(centerline_lane_id);
 
-    for (; lanelet_idx < lanelets_ref.size(); ++lanelet_idx) {
-      auto & lanelet_ref = lanelets_ref.at(lanelet_idx);
-
-      const lanelet::BasicPoint2d point(traj_pos.x, traj_pos.y);
-      // TODO(murooka) This does not work with L-crank map.
-      const bool is_inside = lanelet::geometry::inside(lanelet_ref, point);
-      if (is_inside) {
-        const auto center_point = createPoint3d(traj_pos.x, traj_pos.y, traj_pos.z);
-
-        // set center point
-        centerline.push_back(center_point);
-        lanelet_map_ptr->add(center_point);
-        break;
-      }
-
-      if (!centerline.empty()) {
-        // set centerline
-        lanelet_map_ptr->add(centerline);
-        lanelet_ref.setCenterline(centerline);
-
-        // prepare new centerline
-        centerline = lanelet::LineString3d(lanelet::utils::getId());
-      }
+    if (centerline_map.count(centerline_lane_id) == 0) {
+      centerline_map.emplace(centerline_lane_id, lanelet::LineString3d{lanelet::utils::getId()});
     }
 
-    if (traj_idx == new_centerline.size() - 1 && !centerline.empty()) {
-      auto & lanelet_ref = lanelets_ref.at(lanelet_idx);
+    // already checked by connect_centerline_to_lanelet, but double check.
+    const bool is_inside = lanelet::geometry::inside(lanelet_ref, point);
+    if (is_inside) {
+      const auto center_point = createPoint3d(traj_pos.x, traj_pos.y, traj_pos.z);
 
-      // set centerline
+      // set center point
+      centerline_map.at(centerline_lane_id).push_back(center_point);
+      lanelet_map_ptr->add(center_point);
+    }
+
+    if (
+      traj_idx == new_centerline.size() - 1 ||
+      centerline_lane_id != centerline_lane_ids.at(traj_idx + 1)) {
+      const auto & centerline = centerline_map.at(centerline_lane_id);
       lanelet_map_ptr->add(centerline);
       lanelet_ref.setCenterline(centerline);
     }

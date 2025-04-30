@@ -255,7 +255,10 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
     });
   sub_validate_ = create_subscription<std_msgs::msg::Empty>(
     "/static_centerline_generator/validate", rclcpp::QoS{1},
-    [this]([[maybe_unused]] const std_msgs::msg::Empty & msg) { validate_centerline(); });
+    [this]([[maybe_unused]] const std_msgs::msg::Empty & msg) {
+      connect_centerline_to_lanelet();
+      validate_centerline();
+    });
 
   // services
   callback_group_ = create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -581,6 +584,7 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   centerline_handler_ = CenterlineHandler(CenterlineWithRoute{optimized_traj_points, route});
 
   // publish unsafe_footprints
+  connect_centerline_to_lanelet();
   validate_centerline();
 
   // create output data
@@ -870,13 +874,12 @@ void StaticCenterlineGeneratorNode::save_map()
   }
 
   const auto centerline = centerline_handler_.get_selected_centerline();
-  const auto route = centerline_handler_.get_route();
-  const auto route_lanelets = utils::get_lanelets_from_route(*route_handler_ptr_, route);
+  const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
 
   const auto lanelet2_output_file_path = getRosParameter<std::string>("lanelet2_output_file_path");
 
   // update centerline in map
-  utils::update_centerline(original_map_ptr_, route_lanelets, centerline);
+  utils::update_centerline(original_map_ptr_, centerline, centerline_lane_ids);
   RCLCPP_INFO(get_logger(), "Updated centerline in map.");
 
   // save map with modified center line
