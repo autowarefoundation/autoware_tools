@@ -542,8 +542,8 @@ void StaticCenterlineGeneratorNode::on_plan_path(
 
   // create route
   LaneletRoute route;
-  route.start_pose;  // TODO(murooka)
-  route.goal_pose;   // TODO(murooka)
+  route.start_pose = utils::get_center_pose(*route_handler_ptr_, route_lane_ids.front());
+  route.goal_pose = utils::get_center_pose(*route_handler_ptr_, route_lane_ids.back());
   std::vector<lanelet::Id> lane_ids;
   for (const auto route_lane_id : route_lane_ids) {
     LaneletSegment segment;
