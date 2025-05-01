@@ -55,9 +55,9 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
-#include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #define RESET_TEXT "\x1B[0m"
@@ -120,14 +120,14 @@ LinearRing2d create_vehicle_footprint(
 
 geometry_msgs::msg::Pose get_text_pose(
   const geometry_msgs::msg::Pose & pose,
-  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info, const double x_offset = 0.0)
 {
   const auto & i = vehicle_info;
 
   const double x_front = i.front_overhang_m + i.wheel_base_m;
   const double y_left = i.wheel_tread_m / 2.0 + i.left_overhang_m + 0.5;
 
-  return autoware::universe_utils::calcOffsetPose(pose, x_front, y_left, 0.0);
+  return autoware::universe_utils::calcOffsetPose(pose, x_front + x_offset, y_left, 0.0);
 }
 
 std::array<double, 3> convert_hex_string_to_decimal(const std::string & hex_str_color)
@@ -183,16 +183,38 @@ std::vector<TrajectoryPoint> resample_trajectory_points(
 }
 
 std::vector<std::vector<geometry_msgs::msg::Point>> convert_to_geometry_points_vector(
-  const std::map<size_t, LineString2d> & lanelet_points_map)
+  const std::unordered_map<size_t, LineString2d> & lanelet_points_map,
+  const std::vector<size_t> & centerline_lane_id_map_order)
 {
   std::vector<std::vector<geometry_msgs::msg::Point>> points_vec;
-  for (const auto & lanelet_points : lanelet_points_map) {
+  for (const size_t centerline_lane_id : centerline_lane_id_map_order) {
     points_vec.push_back(std::vector<geometry_msgs::msg::Point>{});
-    for (const auto & lanelet_point : lanelet_points.second) {
+    for (const auto & lanelet_point : lanelet_points_map.at(centerline_lane_id)) {
       geometry_msgs::msg::Point point;
       point.x = lanelet_point.x();
       point.y = lanelet_point.y();
       points_vec.back().push_back(point);
+    }
+  }
+
+  return points_vec;
+}
+
+std::vector<std::vector<geometry_msgs::msg::Point>> convert_to_geometry_points_vector(
+  const std::vector<TrajectoryPoint> & centerline, const std::vector<size_t> & centerline_lane_ids)
+{
+  std::vector<std::vector<geometry_msgs::msg::Point>> points_vec;
+  std::vector<geometry_msgs::msg::Point> points;
+  for (size_t i = 0; i < centerline.size(); ++i) {
+    points.push_back(centerline.at(i).pose.position);
+
+    if (i == centerline.size() - 1) {
+      points_vec.push_back(points);
+      break;
+    }
+    if (centerline_lane_ids.at(i) != centerline_lane_ids.at(i + 1)) {
+      points_vec.push_back(points);
+      points.clear();
     }
   }
 
@@ -726,8 +748,9 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   };
 
   // create right/left bound for each lanelet
-  std::map<size_t, LineString2d> lanelet_right_bound_map;
-  std::map<size_t, LineString2d> lanelet_left_bound_map;
+  std::unordered_map<size_t, LineString2d> lanelet_right_bound_map;
+  std::unordered_map<size_t, LineString2d> lanelet_left_bound_map;
+  std::vector<size_t> centerline_lane_id_map_order;
   for (size_t centerline_idx = 0; centerline_idx < centerline_lane_ids.size(); ++centerline_idx) {
     const size_t centerline_lane_id = centerline_lane_ids.at(centerline_idx);
     if (0 < lanelet_right_bound_map.count(centerline_lane_id)) {
@@ -736,6 +759,7 @@ void StaticCenterlineGeneratorNode::validate_centerline()
 
     lanelet_right_bound_map.emplace(centerline_lane_id, LineString2d{});
     lanelet_left_bound_map.emplace(centerline_lane_id, LineString2d{});
+    centerline_lane_id_map_order.push_back(centerline_lane_id);
 
     const auto lanelet = route_handler_ptr_->getLaneletsFromId(centerline_lane_id);
     for (const auto & point : lanelet.rightBound()) {
@@ -792,8 +816,9 @@ void StaticCenterlineGeneratorNode::validate_centerline()
     }
 
     const double curvature = curvature_vec.at(i);
-    const auto text_marker =
-      utils::create_text_marker("curvature", text_pose, curvature, 0.05, 0.05, 0.0, 0.9, now(), i);
+    const auto curvature_text_pose = get_text_pose(traj_point.pose, vehicle_info_, -0.4);
+    const auto text_marker = utils::create_text_marker(
+      "curvature", curvature_text_pose, curvature, 1.0, 1.0, 1.0, 0.8, now(), i);
     marker_array.markers.push_back(text_marker);
 
     if (max_curvature < std::abs(curvature)) {
@@ -803,9 +828,13 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   const double max_steer_angle = vehicle_info_.calcSteerAngleFromCurvature(max_curvature);
 
   // publish road boundaries
-  const auto left_bound_vec = convert_to_geometry_points_vector(lanelet_left_bound_map);
-  const auto right_bound_vec = convert_to_geometry_points_vector(lanelet_right_bound_map);
+  const auto centerline_vec = convert_to_geometry_points_vector(centerline, centerline_lane_ids);
+  const auto left_bound_vec =
+    convert_to_geometry_points_vector(lanelet_left_bound_map, centerline_lane_id_map_order);
+  const auto right_bound_vec =
+    convert_to_geometry_points_vector(lanelet_right_bound_map, centerline_lane_id_map_order);
 
+  utils::create_points_marker(marker_array, "centerline", centerline_vec, 0.05, now());
   utils::create_points_marker(marker_array, "left_bound", left_bound_vec, 0.05, now());
   utils::create_points_marker(marker_array, "right_bound", right_bound_vec, 0.05, now());
   pub_debug_markers_->publish(marker_array);
