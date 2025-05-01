@@ -8,7 +8,6 @@ find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(glog REQUIRED)
-find_package(launch_testing_ament_cmake REQUIRED)
 
 rosidl_generate_interfaces(
   autoware_static_centerline_generator
