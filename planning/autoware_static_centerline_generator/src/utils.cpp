@@ -214,12 +214,11 @@ void update_centerline(
 }
 
 Marker create_footprint_marker(
-  const LinearRing2d & footprint_poly, const double width, const double r, const double g,
-  const double b, const double a, const rclcpp::Time & now, const size_t idx)
+  const std::string & ns, const LinearRing2d & footprint_poly, const double width, const double r,
+  const double g, const double b, const double a, const rclcpp::Time & now, const size_t idx)
 {
   auto marker = autoware::universe_utils::createDefaultMarker(
-    "map", rclcpp::Clock().now(), "unsafe_footprints", idx,
-    visualization_msgs::msg::Marker::LINE_STRIP,
+    "map", rclcpp::Clock().now(), ns, idx, visualization_msgs::msg::Marker::LINE_STRIP,
     autoware::universe_utils::createMarkerScale(width, 0.0, 0.0),
     autoware::universe_utils::createMarkerColor(r, g, b, a));
   marker.header.stamp = now;
