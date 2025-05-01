@@ -46,15 +46,26 @@ The optimized centerline can be generated from the command line interface by des
 - `<input-osm-path>`
 - `<output-osm-path>` (not mandatory)
 - `<start-lanelet-id>`
+- `<start-pose>` (not mandatory)
 - `<end-lanelet-id>`
+- `<end-pose>` (not mandatory)
 - `<vehicle-model>`
+- `<goal-method>` (not mandatory, `path_generator` or `behavior_path_planner` only)
 
 ```sh
-ros2 launch autoware_static_centerline_generator static_centerline_generator.launch.xml run_backgrond:=false lanelet2_input_file_path:=<input-osm-path> lanelet2_output_file_path:=<output-osm-path> start_lanelet_id:=<start-lane-id> end_lanelet_id:=<end-lane-id> vehicle_model:=<vehicle-model>
+ros2 launch autoware_static_centerline_generator static_centerline_generator.launch.xml run_backgrond:=false lanelet2_input_file_path:=<input-osm-path> lanelet2_output_file_path:=<output-osm-path> start_lanelet_id:=<start-lane-id> start_pose:=<start-pose> end_lanelet_id:=<end-lane-id> goal_pose:=<goal-pose> vehicle_model:=<vehicle-model> goal_method:=<goal-method>
 ```
 
 The default output map path containing the optimized centerline locates `/tmp/lanelet2_map.osm`.
 If you want to change the output map path, you can remap the path by designating `<output-osm-path>`.
+
+By specifying `start-pose`, `goal-pose`, and `goal-method`, the centerline from `start-pose` to `goal-pose` can be embedded.
+`<start-pose>`, `<goal-pose>` are entered like `[position.x, position.y, position.z, orientation.x, orientation.y, orientation.z, orientation.w]` with double type.
+In order to run smoothly to the goal pose, `goal-method` is used.
+Only `path_generator` or `behavior_path_planner` can be entered for `<goal_method>`.
+
+> [!WARNING]
+> If the start pose is off the center of the lane, it is necessary to manually embed a centerline that smoothly connects the start pose and the start lane in advance using VMB, etc.
 
 ## Visualization
 

@@ -54,7 +54,15 @@ if(BUILD_TESTING)
     TIMEOUT "30"
   )
   add_launch_test(
-    test/test_static_centerline_generator_launch.test.py
+    test/test_static_centerline_generator_default_launch.test.py
+    TIMEOUT "30"
+  )
+  add_launch_test(
+    test/test_static_centerline_generator_path_generator_launch.test.py
+    TIMEOUT "30"
+  )
+  add_launch_test(
+    test/test_static_centerline_generator_fixed_goal_planner_launch.test.py
     TIMEOUT "30"
   )
   install(DIRECTORY
