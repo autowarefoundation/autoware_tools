@@ -3461,6 +3461,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#architecture" class="md-nav__link">
+    Architecture
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#visualization" class="md-nav__link">
     Visualization
   </a>
@@ -3552,6 +3559,8 @@ Only <code>path_generator</code> or <code>behavior_path_planner</code> can be en
 <p>[!WARNING]
 If the start pose is off the center of the lane, it is necessary to manually embed a centerline that smoothly connects the start pose and the start lane in advance using VMB, etc.</p>
 </blockquote>
+<h2 id="architecture">Architecture<a class="headerlink" href="#architecture" title="Permanent link">#</a></h2>
+<p><img alt="static_centerline_generator_architecture" src="media/static_centerline_generator_architecture.drawio.svg"></p>
 <h2 id="visualization">Visualization<a class="headerlink" href="#visualization" title="Permanent link">#</a></h2>
 <p>When launching the path planning server, rviz is launched as well as follows.
 <img alt="rviz" src="media/rviz.png"></p>
