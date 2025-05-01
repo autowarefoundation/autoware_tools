@@ -214,17 +214,15 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
       *optimized_traj_points, create_header(node.get_clock()->now())));
 
     // connect the previously and currently optimized trajectory points
-    // TODO(murooka) update comment
-    // 1. generate valid optimized_traj_points
-    // NOTE: We assume that the last one third is invalid since the points close to the end
-    //       may not be able to consider the road boundary constraint.
+    // 1. generate valid_optimized_traj_points
+    // NOTE: We assume that the trajectory before the ego pose is not valid
+    //       since it tens to be inner curve due to the bug
     const auto valid_optimized_traj_points = [&]() {
       if (virtual_ego_pose_idx <= 0) {
         return *optimized_traj_points;
       }
-      // TODO(murooka) param
       const size_t nearest_idx = autoware::motion_utils::findFirstNearestIndexWithSoftConstraints(
-        *optimized_traj_points, virtual_ego_pose, 1.0, 0.3);
+        *optimized_traj_points, virtual_ego_pose, 1.0, 0.35);
       return std::vector<TrajectoryPoint>(
         optimized_traj_points->begin() + nearest_idx, optimized_traj_points->end());
     }();
@@ -239,7 +237,7 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     if (!valid_optimized_traj_points.empty()) {
       const size_t nearest_segment_idx =
         autoware::motion_utils::findFirstNearestSegmentIndexWithSoftConstraints(
-          whole_optimized_traj_points, valid_optimized_traj_points.front().pose, 1.0, 0.3);
+          whole_optimized_traj_points, valid_optimized_traj_points.front().pose, 1.0, 0.35);
 
       const std::vector<TrajectoryPoint> extracted_whole_optimized_traj_points{
         whole_optimized_traj_points.begin(),
@@ -247,7 +245,7 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
       whole_optimized_traj_points = extracted_whole_optimized_traj_points;
     }
 
-    // 4. register the half of optimized_traj_points
+    // 4. register valid_optimized_traj_points
     for (const auto & valid_optimized_traj_point : valid_optimized_traj_points) {
       whole_optimized_traj_points.push_back(valid_optimized_traj_point);
     }
@@ -257,11 +255,6 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
       autoware::universe_utils::calcDistance2d(valid_optimized_traj_points.back(), route.goal_pose);
     if (dist_to_goal < 0.1) {
       break;
-    }
-
-    // wait for debugging purpose to visualize the iteration.
-    if (1e-5 < static_cast<double>(wait_time_during_planning_iteration)) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(wait_time_during_planning_iteration));
     }
 
     // wait for debugging purpose to visualize the iteration.
