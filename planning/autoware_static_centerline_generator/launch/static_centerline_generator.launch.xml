@@ -94,9 +94,9 @@
   </node>
 
   <!-- GUI to select the range of centerline -->
-  <!-- <group if="$(eval &quot;'$(var mode)'=='GUI'&quot;)"> -->
-  <!--   <node pkg="autoware_static_centerline_generator" exec="centerline_updater_helper.py" name="centerline_updater_helper"/> -->
-  <!-- </group> -->
+  <group if="$(eval &quot;'$(var mode)'=='GUI'&quot;)">
+    <node pkg="autoware_static_centerline_generator" exec="centerline_updater_helper.py" name="centerline_updater_helper"/>
+  </group>
 
   <!-- rviz -->
   <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(find-pkg-share autoware_static_centerline_generator)/rviz/static_centerline_generator.rviz" if="$(var rviz)" respawn="true"/>
