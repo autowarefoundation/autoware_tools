@@ -11,7 +11,10 @@
   <arg name="lanelet2_input_file_path" default=""/>
   <arg name="lanelet2_output_file_path" default="/tmp/autoware_static_centerline_generator/lanelet2_map.osm"/>
   <arg name="start_lanelet_id" default=""/>
+  <arg name="start_pose" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
   <arg name="end_lanelet_id" default=""/>
+  <arg name="end_pose" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
+  <arg name="goal_method" default="None"/>
 
   <!-- mandatory arguments when mode is GUI -->
   <arg name="bag_filename" default="bag.db3"/>
@@ -33,6 +36,7 @@
     name="behavior_velocity_planner_param"
     default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/behavior_velocity_planner.param.yaml"
   />
+  <arg name="path_generator_param" default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/lane_driving/behavior_planning/path_generator/path_generator.param.yaml"/>
   <arg name="path_smoother_param" default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/lane_driving/motion_planning/path_smoother/elastic_band_smoother.param.yaml"/>
   <arg name="path_optimizer_param" default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/lane_driving/motion_planning/autoware_path_optimizer/path_optimizer.param.yaml"/>
   <arg name="mission_planner_param" default="$(find-pkg-share autoware_launch)/config/planning/mission_planning/mission_planner/mission_planner.param.yaml"/>
@@ -66,7 +70,10 @@
     <param name="lanelet2_input_file_path" value="$(var lanelet2_input_file_path)"/>
     <param name="lanelet2_output_file_path" value="$(var lanelet2_output_file_path)"/>
     <param name="start_lanelet_id" value="$(var start_lanelet_id)"/>
+    <param name="start_pose" value="$(var start_pose)"/>
     <param name="end_lanelet_id" value="$(var end_lanelet_id)"/>
+    <param name="end_pose" value="$(var end_pose)"/>
+    <param name="goal_method" value="$(var goal_method)"/>
     <!-- common param -->
     <param from="$(var common_param)"/>
     <param from="$(var nearest_search_param)"/>
@@ -74,6 +81,7 @@
     <param from="$(var map_loader_param)"/>
     <param from="$(var behavior_path_planner_param)"/>
     <param from="$(var behavior_velocity_planner_param)"/>
+    <param from="$(var path_generator_param)"/>
     <param from="$(var path_smoother_param)"/>
     <param from="$(var path_optimizer_param)"/>
     <param from="$(var mission_planner_param)"/>
@@ -91,5 +99,5 @@
   </group>
 
   <!-- rviz -->
-  <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(find-pkg-share autoware_static_centerline_generator)/rviz/static_centerline_generator.rviz" if="$(var rviz)"/>
+  <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(find-pkg-share autoware_static_centerline_generator)/rviz/static_centerline_generator.rviz" if="$(var rviz)" respawn="true"/>
 </launch>
