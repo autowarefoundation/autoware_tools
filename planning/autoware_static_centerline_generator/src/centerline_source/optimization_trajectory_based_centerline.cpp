@@ -187,7 +187,8 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
       continue;
     }
 
-    // NOTE: path_with_lane_id is not used for the visualizationsince the tier4_planning_rviz_plugin
+    // NOTE: path_with_lane_id is not used for the visualization since the
+    // tier4_planning_rviz_plugin
     //       has an issue to die.
     auto path = convert_to_path(path_with_lane_id_with_goal_connection);
     path.header = create_header(node.get_clock()->now());

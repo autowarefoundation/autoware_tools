@@ -68,17 +68,6 @@ namespace autoware::static_centerline_generator
 {
 namespace
 {
-std::vector<lanelet::Id> get_lane_ids_from_route(const LaneletRoute & route)
-{
-  std::vector<lanelet::Id> lane_ids;
-  for (const auto & segment : route.segments) {
-    const auto & target_lanelet_id = segment.preferred_primitive.id;
-    lane_ids.push_back(target_lanelet_id);
-  }
-
-  return lane_ids;
-}
-
 lanelet::BasicPoint2d convert_to_lanelet_point(const geometry_msgs::msg::Point & geom_point)
 {
   lanelet::BasicPoint2d point(geom_point.x, geom_point.y);
