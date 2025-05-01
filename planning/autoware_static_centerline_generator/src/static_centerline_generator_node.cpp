@@ -728,6 +728,7 @@ void StaticCenterlineGeneratorNode::validate_centerline()
 
   const auto centerline = centerline_handler_.get_selected_centerline();
   const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
+  const auto route = centerline_handler_.get_route();
 
   const double dist_thresh_to_road_border =
     getRosParameter<double>("validation.dist_threshold_to_road_border");
@@ -804,8 +805,8 @@ void StaticCenterlineGeneratorNode::validate_centerline()
 
       // add footprint marker
       const auto footprint_marker = utils::create_footprint_marker(
-        footprint_poly, 0.05, marker_color.at(0), marker_color.at(1), marker_color.at(2), 0.7,
-        now(), i);
+        "unsafe_footprints", footprint_poly, 0.05, marker_color.at(0), marker_color.at(1),
+        marker_color.at(2), 0.7, now(), i);
       marker_array.markers.push_back(footprint_marker);
 
       // add text of distance to bounds marker
@@ -827,12 +828,22 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   }
   const double max_steer_angle = vehicle_info_.calcSteerAngleFromCurvature(max_curvature);
 
-  // publish road boundaries
+  // add centerline and road boundaries to debug markers
   const auto centerline_vec = convert_to_geometry_points_vector(centerline, centerline_lane_ids);
   const auto left_bound_vec =
     convert_to_geometry_points_vector(lanelet_left_bound_map, centerline_lane_id_map_order);
   const auto right_bound_vec =
     convert_to_geometry_points_vector(lanelet_right_bound_map, centerline_lane_id_map_order);
+
+  // add start/goal pose to debug markers
+  const auto start_footprint_poly = create_vehicle_footprint(route.start_pose, vehicle_info_);
+  const auto goal_footprint_poly = create_vehicle_footprint(route.goal_pose, vehicle_info_);
+  const auto start_footprint_marker = utils::create_footprint_marker(
+    "start_pose", start_footprint_poly, 0.1, 0.0, 0.8, 1.0, 0.3, now(), 0);
+  const auto goal_footprint_marker = utils::create_footprint_marker(
+    "goal_pose", goal_footprint_poly, 0.1, 0.0, 0.8, 1.0, 0.3, now(), 0);
+  marker_array.markers.push_back(start_footprint_marker);
+  marker_array.markers.push_back(goal_footprint_marker);
 
   utils::create_points_marker(marker_array, "centerline", centerline_vec, 0.05, now());
   utils::create_points_marker(marker_array, "left_bound", left_bound_vec, 0.05, now());

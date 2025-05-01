@@ -57,8 +57,8 @@ void update_centerline(
   const std::vector<size_t> & centerline_lane_ids);
 
 Marker create_footprint_marker(
-  const LinearRing2d & footprint_poly, const double width, const double r, const double g,
-  const double b, const double a, const rclcpp::Time & now, const size_t idx);
+  const std::string & ns, const LinearRing2d & footprint_poly, const double width, const double r,
+  const double g, const double b, const double a, const rclcpp::Time & now, const size_t idx);
 
 Marker create_text_marker(
   const std::string & ns, const geometry_msgs::msg::Pose & pose, const double value, const double r,
