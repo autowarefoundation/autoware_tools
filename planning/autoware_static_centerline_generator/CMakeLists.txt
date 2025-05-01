@@ -7,6 +7,7 @@ find_package(builtin_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(glog REQUIRED)
 
 rosidl_generate_interfaces(
   autoware_static_centerline_generator
@@ -33,7 +34,7 @@ if(${rosidl_cmake_VERSION} VERSION_LESS 2.5.0)
 else()
     rosidl_get_typesupport_target(
             cpp_typesupport_target autoware_static_centerline_generator "rosidl_typesupport_cpp")
-    target_link_libraries(main "${cpp_typesupport_target}")
+    target_link_libraries(main "${cpp_typesupport_target}" glog::glog)
 endif()
 
 ament_auto_package(
