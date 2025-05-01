@@ -16,20 +16,20 @@ jobs:
   build-and-test-differential:
     needs: prevent-no-label-execution
     if: ${{ needs.prevent-no-label-execution.outputs.run == 'true' }}
-    runs-on: ubuntu-22.04
-    container: ${{ matrix.container }}${{ matrix.container-suffix }}
+    runs-on: ${{ matrix.runner }}
+    container: ghcr.io/autowarefoundation/autoware:universe-devel${{ matrix.container-suffix }}
     strategy:
       fail-fast: false
       matrix:
-        rosdistro:
-          - humble
         container-suffix:
           - ""
           - -cuda
         include:
-          - rosdistro: humble
-            container: ghcr.io/autowarefoundation/autoware:latest-prebuilt
-            build-depends-repos: build_depends.repos
+          - container-suffix: ""
+            runner: ubuntu-22.04
+          - container-suffix: -cuda
+            runner: codebuild-autoware-us-east-1-${{ github.run_id }}-${{ github.run_attempt }}-ubuntu-7.0-large
+
     steps:
       - name: Set PR fetch depth
         run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> "${GITHUB_ENV}"
@@ -54,18 +54,18 @@ jobs:
         if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
         uses: autowarefoundation/autoware-github-actions/colcon-build@v1
         with:
-          rosdistro: ${{ matrix.rosdistro }}
+          rosdistro: humble
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
+          build-depends-repos: build_depends.repos
 
       - name: Test
         id: test
         if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
         uses: autowarefoundation/autoware-github-actions/colcon-test@v1
         with:
-          rosdistro: ${{ matrix.rosdistro }}
+          rosdistro: humble
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
+          build-depends-repos: build_depends.repos
 
       - name: Upload coverage to CodeCov
         if: ${{ steps.test.outputs.coverage-report-files != '' }}
