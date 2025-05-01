@@ -79,14 +79,6 @@ std_msgs::msg::Header create_header(const rclcpp::Time & now)
   header.stamp = now;
   return header;
 }
-
-std_msgs::msg::Header create_header(const rclcpp::Time & now)
-{
-  std_msgs::msg::Header header;
-  header.frame_id = "map";
-  header.stamp = now;
-  return header;
-}
 }  // namespace
 
 OptimizationTrajectoryBasedCenterline::OptimizationTrajectoryBasedCenterline(rclcpp::Node & node)
