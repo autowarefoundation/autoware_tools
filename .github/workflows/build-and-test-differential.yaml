@@ -21,6 +21,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        rosdistro:
+          - humble
         container-suffix:
           - ""
           - -cuda
@@ -54,7 +56,7 @@ jobs:
         if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
         uses: autowarefoundation/autoware-github-actions/colcon-build@v1
         with:
-          rosdistro: humble
+          rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
           build-depends-repos: build_depends.repos
 
@@ -63,7 +65,7 @@ jobs:
         if: ${{ steps.get-modified-packages.outputs.modified-packages != '' }}
         uses: autowarefoundation/autoware-github-actions/colcon-test@v1
         with:
-          rosdistro: humble
+          rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
           build-depends-repos: build_depends.repos
 
