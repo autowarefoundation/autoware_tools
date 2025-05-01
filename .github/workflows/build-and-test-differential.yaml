@@ -17,7 +17,7 @@ jobs:
     needs: prevent-no-label-execution
     if: ${{ needs.prevent-no-label-execution.outputs.run == 'true' }}
     runs-on: ${{ matrix.runner }}
-    container: ghcr.io/autowarefoundation/autoware:universe-devel
+    container: ghcr.io/autowarefoundation/autoware:universe-devel${{ matrix.container-suffix }}
     strategy:
       fail-fast: false
       matrix:
