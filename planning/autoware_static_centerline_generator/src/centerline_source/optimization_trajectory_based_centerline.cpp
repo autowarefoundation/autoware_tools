@@ -22,7 +22,6 @@
 #include "autoware/path_optimizer/node.hpp"
 #include "autoware/path_smoother/elastic_band_smoother.hpp"
 #include "autoware/universe_utils/ros/parameter.hpp"
-#include "autoware_lanelet2_extension/utility/query.hpp"
 #include "autoware_utils_geometry/pose_deviation.hpp"
 #include "static_centerline_generator_node.hpp"
 #include "utils.hpp"
@@ -71,6 +70,14 @@ std::vector<TrajectoryPoint> convert_to_trajectory_points(const PathWithLaneId &
   }
 
   return autoware::motion_utils::convertToTrajectoryPointArray(traj);
+}
+
+std_msgs::msg::Header create_header(const rclcpp::Time & now)
+{
+  std_msgs::msg::Header header;
+  header.frame_id = "map";
+  header.stamp = now;
+  return header;
 }
 
 std_msgs::msg::Header create_header(const rclcpp::Time & now)
@@ -265,6 +272,11 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
       autoware::universe_utils::calcDistance2d(valid_optimized_traj_points.back(), route.goal_pose);
     if (dist_to_goal < 0.1) {
       break;
+    }
+
+    // wait for debugging purpose to visualize the iteration.
+    if (1e-5 < static_cast<double>(wait_time_during_planning_iteration)) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(wait_time_during_planning_iteration));
     }
 
     // wait for debugging purpose to visualize the iteration.
