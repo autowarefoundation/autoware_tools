@@ -73,7 +73,7 @@ class PerceptionReplayerCommon(Node):
         self.pointcloud_pub = self.create_publisher(
             PointCloud2, "/perception/obstacle_segmentation/pointcloud", 1
         )
-        self.recorded_ego_pub_as_initialpose = self.create_publisher(
+        self.initial_ego_pose_publisher = self.create_publisher(
             PoseWithCovarianceStamped, "/initialpose", 1
         )
 
@@ -222,3 +222,48 @@ class PerceptionReplayerCommon(Node):
 
     def find_ego_odom_by_timestamp(self, timestamp):
         return self.binary_search(self.rosbag_ego_odom_data, timestamp)
+
+    def publish_initial_ego_pose(self, ego_odom):
+        initial_pose = PoseWithCovarianceStamped()
+        initial_pose.header.stamp = self.get_clock().now().to_msg()
+        initial_pose.header.frame_id = "map"
+        initial_pose.pose.pose = ego_odom.pose.pose
+        initial_pose.pose.covariance = [
+            0.25,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.25,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.06853892326654787,
+        ]
+        self.initial_ego_pose_publisher.publish(initial_pose)
