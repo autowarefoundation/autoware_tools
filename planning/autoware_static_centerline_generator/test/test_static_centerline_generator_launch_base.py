@@ -15,20 +15,17 @@
 # limitations under the License.
 
 import os
-import unittest
 
 from ament_index_python import get_package_share_directory
-import launch
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
+from launch.actions import TimerAction
 from launch.launch_description_sources import AnyLaunchDescriptionSource
 import launch_testing
-import pytest
 
 
-@pytest.mark.launch_test
-def generate_test_description():
+def generate_test_description_impl(start_pose=None, end_pose=None, goal_method=None):
     test_static_centerline_generator_launch_file = os.path.join(
         get_package_share_directory("autoware_static_centerline_generator"),
         "launch",
@@ -39,8 +36,17 @@ def generate_test_description():
         AnyLaunchDescriptionSource(test_static_centerline_generator_launch_file),
     )
 
+    launch_description = []
+    if start_pose:
+        launch_description.append(DeclareLaunchArgument("start_pose", default_value=start_pose))
+    if end_pose:
+        launch_description.append(DeclareLaunchArgument("end_pose", default_value=end_pose))
+    if goal_method:
+        launch_description.append(DeclareLaunchArgument("goal_method", default_value=goal_method))
+
     return LaunchDescription(
-        [
+        launch_description
+        + [
             DeclareLaunchArgument(
                 "lanelet2_input_file_path",
                 default_value=os.path.join(
@@ -53,14 +59,7 @@ def generate_test_description():
             ),
             DeclareLaunchArgument("rviz", default_value="false"),
             DeclareLaunchArgument("start_lanelet_id", default_value="215"),
-            DeclareLaunchArgument(
-                "start_pose", default_value="[89775.5, 43115.8, 6.0, 0.0, 0.0, 0.2876, 0.9575]"
-            ),
             DeclareLaunchArgument("end_lanelet_id", default_value="216"),
-            DeclareLaunchArgument(
-                "end_pose", default_value="[89853.8, 43164.8, 6.2, 0.0, 0.0, 0.2876, 0.9575]"
-            ),
-            DeclareLaunchArgument("goal_method", default_value="path_generator"),
             DeclareLaunchArgument(
                 "map_loader_param",
                 default_value=os.path.join(
@@ -125,14 +124,7 @@ def generate_test_description():
                 ),
             ),
             static_centerline_generator,
-            # Start test after 1s - gives time for the autoware_static_centerline_generator to finish initialization
-            launch.actions.TimerAction(period=1.0, actions=[launch_testing.actions.ReadyToTest()]),
+            # Start test after 3s - gives time for the autoware_static_centerline_generator to finish initialization
+            TimerAction(period=3.0, actions=[launch_testing.actions.ReadyToTest()]),
         ]
     )
-
-
-@launch_testing.post_shutdown_test()
-class TestProcessOutput(unittest.TestCase):
-    def test_exit_code(self, proc_info):
-        # Check that process exits with code 0: no error
-        launch_testing.asserts.assertExitCodes(proc_info)

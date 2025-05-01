@@ -98,9 +98,9 @@ def generate_test_description():
         LaunchDescription(
             [
                 static_centerline_generator_node,
-                # Start test after 1s - gives time for the autoware_static_centerline_generator to finish initialization
+                # Start test after 3s - gives time for the autoware_static_centerline_generator to finish initialization
                 launch.actions.TimerAction(
-                    period=10.0, actions=[launch_testing.actions.ReadyToTest()]
+                    period=3.0, actions=[launch_testing.actions.ReadyToTest()]
                 ),
             ]
         ),

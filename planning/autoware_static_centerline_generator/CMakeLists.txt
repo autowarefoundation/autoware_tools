@@ -8,6 +8,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(glog REQUIRED)
+find_package(launch_testing_ament_cmake REQUIRED)
 
 rosidl_generate_interfaces(
   autoware_static_centerline_generator
@@ -54,15 +55,15 @@ if(BUILD_TESTING)
     TIMEOUT "30"
   )
   add_launch_test(
-    test/test_static_centerline_generator_launch.test.py
+    test/test_static_centerline_generator_default_launch.test.py
     TIMEOUT "30"
   )
   add_launch_test(
-    test/test_static_centerline_generator_launch_path_generator.test.py
+    test/test_static_centerline_generator_path_generator_launch.test.py
     TIMEOUT "30"
   )
   add_launch_test(
-    test/test_static_centerline_generator_launch_fixed_goal_planner.test.py
+    test/test_static_centerline_generator_fixed_goal_planner_launch.test.py
     TIMEOUT "30"
   )
   install(DIRECTORY
