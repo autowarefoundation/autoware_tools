@@ -118,8 +118,8 @@ def generate_test_description():
                 ),
             ),
             static_centerline_generator,
-            # Start test after 10s - gives time for the autoware_static_centerline_generator to finish initialization
-            launch.actions.TimerAction(period=10.0, actions=[launch_testing.actions.ReadyToTest()]),
+            # Start test after 1s - gives time for the autoware_static_centerline_generator to finish initialization
+            launch.actions.TimerAction(period=1.0, actions=[launch_testing.actions.ReadyToTest()]),
         ]
     )
 
