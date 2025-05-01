@@ -45,7 +45,7 @@ lanelet::ConstLanelets get_lanelets_from_route(
   const RouteHandler & route_handler, const LaneletRoute & route);
 
 geometry_msgs::msg::Pose get_center_pose(
-  const RouteHandler & route_handler, const size_t lanelet_id);
+  const RouteHandler & route_handler, const lanelet::Id lanelet_id);
 
 PathWithLaneId get_path_with_lane_id(
   const RouteHandler & route_handler, const lanelet::ConstLanelets lanelets,
@@ -54,7 +54,7 @@ PathWithLaneId get_path_with_lane_id(
 
 void update_centerline(
   lanelet::LaneletMapPtr lanelet_map_ptr, const std::vector<TrajectoryPoint> & new_centerline,
-  const std::vector<size_t> & centerline_lane_ids);
+  const std::vector<lanelet::Id> & centerline_lane_ids);
 
 Marker create_footprint_marker(
   const std::string & ns, const LinearRing2d & footprint_poly, const double width, const double r,

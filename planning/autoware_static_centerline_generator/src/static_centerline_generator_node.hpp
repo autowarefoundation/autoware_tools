@@ -89,13 +89,13 @@ struct CenterlineHandler
     return false;
   }
   void clear_centerline_lane_ids() { centerline_lane_ids.clear(); }
-  void add_centerline_lane_id(const size_t lane_id) { centerline_lane_ids.push_back(lane_id); }
-  std::vector<size_t> get_centerline_lane_ids() const { return centerline_lane_ids; }
+  void add_centerline_lane_id(const lanelet::Id lane_id) { centerline_lane_ids.push_back(lane_id); }
+  std::vector<lanelet::Id> get_centerline_lane_ids() const { return centerline_lane_ids; }
 
   std::optional<CenterlineWithRoute> whole_centerline_with_route{std::nullopt};
   int start_index{};
   int end_index{};
-  std::vector<size_t> centerline_lane_ids;
+  std::vector<lanelet::Id> centerline_lane_ids;
 };
 
 struct RoadBounds

@@ -172,11 +172,11 @@ std::vector<TrajectoryPoint> resample_trajectory_points(
 }
 
 std::vector<std::vector<geometry_msgs::msg::Point>> convert_to_geometry_points_vector(
-  const std::unordered_map<size_t, LineString2d> & lanelet_points_map,
-  const std::vector<size_t> & centerline_lane_id_map_order)
+  const std::unordered_map<lanelet::Id, LineString2d> & lanelet_points_map,
+  const std::vector<lanelet::Id> & centerline_lane_id_map_order)
 {
   std::vector<std::vector<geometry_msgs::msg::Point>> points_vec;
-  for (const size_t centerline_lane_id : centerline_lane_id_map_order) {
+  for (const lanelet::Id centerline_lane_id : centerline_lane_id_map_order) {
     points_vec.push_back(std::vector<geometry_msgs::msg::Point>{});
     for (const auto & lanelet_point : lanelet_points_map.at(centerline_lane_id)) {
       geometry_msgs::msg::Point point;
@@ -190,7 +190,8 @@ std::vector<std::vector<geometry_msgs::msg::Point>> convert_to_geometry_points_v
 }
 
 std::vector<std::vector<geometry_msgs::msg::Point>> convert_to_geometry_points_vector(
-  const std::vector<TrajectoryPoint> & centerline, const std::vector<size_t> & centerline_lane_ids)
+  const std::vector<TrajectoryPoint> & centerline,
+  const std::vector<lanelet::Id> & centerline_lane_ids)
 {
   std::vector<std::vector<geometry_msgs::msg::Point>> points_vec;
   std::vector<geometry_msgs::msg::Point> points;
@@ -733,11 +734,11 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   };
 
   // create right/left bound for each lanelet
-  std::unordered_map<size_t, LineString2d> lanelet_right_bound_map;
-  std::unordered_map<size_t, LineString2d> lanelet_left_bound_map;
-  std::vector<size_t> centerline_lane_id_map_order;
+  std::unordered_map<lanelet::Id, LineString2d> lanelet_right_bound_map;
+  std::unordered_map<lanelet::Id, LineString2d> lanelet_left_bound_map;
+  std::vector<lanelet::Id> centerline_lane_id_map_order;
   for (size_t centerline_idx = 0; centerline_idx < centerline_lane_ids.size(); ++centerline_idx) {
-    const size_t centerline_lane_id = centerline_lane_ids.at(centerline_idx);
+    const lanelet::Id centerline_lane_id = centerline_lane_ids.at(centerline_idx);
     if (0 < lanelet_right_bound_map.count(centerline_lane_id)) {
       continue;
     }
@@ -767,7 +768,7 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   double max_curvature = std::numeric_limits<double>::min();
   for (size_t i = 0; i < centerline.size(); ++i) {
     const auto & traj_point = centerline.at(i);
-    const size_t centerline_lane_id = centerline_lane_ids.at(i);
+    const lanelet::Id centerline_lane_id = centerline_lane_ids.at(i);
 
     const auto footprint_poly = create_vehicle_footprint(traj_point.pose, vehicle_info_);
 

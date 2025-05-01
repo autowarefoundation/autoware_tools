@@ -103,7 +103,7 @@ lanelet::ConstLanelets get_lanelets_from_route(
 }
 
 geometry_msgs::msg::Pose get_center_pose(
-  const RouteHandler & route_handler, const size_t lanelet_id)
+  const RouteHandler & route_handler, const lanelet::Id lanelet_id)
 {
   // get middle idx of the lanelet
   const auto lanelet = route_handler.getLaneletsFromId(lanelet_id);
@@ -165,16 +165,16 @@ PathWithLaneId get_path_with_lane_id(
 
 void update_centerline(
   lanelet::LaneletMapPtr lanelet_map_ptr, const std::vector<TrajectoryPoint> & new_centerline,
-  const std::vector<size_t> & centerline_lane_ids)
+  const std::vector<lanelet::Id> & centerline_lane_ids)
 {
   // get lanelet as reference to update centerline
-  std::unordered_map<size_t, lanelet::Lanelet> lanelet_ref_map;
-  for (const size_t centerline_lane_id : centerline_lane_ids) {
+  std::unordered_map<lanelet::Id, lanelet::Lanelet> lanelet_ref_map;
+  for (const lanelet::Id centerline_lane_id : centerline_lane_ids) {
     if (!lanelet_ref_map.count(centerline_lane_id) == 0) {
       continue;
     }
     for (auto & lanelet_ref : lanelet_map_ptr->laneletLayer) {
-      if (lanelet_ref.id() == centerline_lane_id) {
+      if (lanelet_ref.id() == static_cast<int>(centerline_lane_id)) {
         lanelet_ref_map.emplace(centerline_lane_id, lanelet_ref);
         break;
       }
@@ -182,11 +182,11 @@ void update_centerline(
   }
 
   // create new centerline
-  std::unordered_map<size_t, lanelet::LineString3d> centerline_map;
+  std::unordered_map<lanelet::Id, lanelet::LineString3d> centerline_map;
   for (size_t traj_idx = 0; traj_idx < new_centerline.size(); ++traj_idx) {
     const auto & traj_pos = new_centerline.at(traj_idx).pose.position;
     const lanelet::BasicPoint2d point(traj_pos.x, traj_pos.y);
-    const size_t centerline_lane_id = centerline_lane_ids.at(traj_idx);
+    const lanelet::Id centerline_lane_id = centerline_lane_ids.at(traj_idx);
     auto & lanelet_ref = lanelet_ref_map.at(centerline_lane_id);
 
     if (centerline_map.count(centerline_lane_id) == 0) {
