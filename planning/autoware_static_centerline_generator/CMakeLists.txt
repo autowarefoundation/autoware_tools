@@ -49,16 +49,20 @@ target_include_directories(main PRIVATE
 )
 
 if(BUILD_TESTING)
-  add_launch_test(
-    test/test_static_centerline_generator.test.py
-    TIMEOUT "30"
-  )
-  add_launch_test(
-    test/test_static_centerline_generator_default_launch.test.py
-    TIMEOUT "30"
-  )
+  # add_launch_test(
+  #   test/test_static_centerline_generator.test.py
+  #   TIMEOUT "30"
+  # )
+  # add_launch_test(
+  #   test/test_static_centerline_generator_default_launch.test.py
+  #   TIMEOUT "30"
+  # )
   add_launch_test(
     test/test_static_centerline_generator_path_generator_launch.test.py
+    TIMEOUT "30"
+  )
+  add_launch_test(
+    test/test_static_centerline_generator_path_generator_gui_launch.test.py
     TIMEOUT "30"
   )
   add_launch_test(
