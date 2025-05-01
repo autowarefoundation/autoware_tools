@@ -67,6 +67,10 @@ Only `path_generator` or `behavior_path_planner` can be entered for `<goal_metho
 > [!WARNING]
 > If the start pose is off the center of the lane, it is necessary to manually embed a centerline that smoothly connects the start pose and the start lane in advance using VMB, etc.
 
+## Architecture
+
+![static_centerline_generator_architecture](./media/static_centerline_generator_architecture.drawio.svg)
+
 ## Visualization
 
 When launching the path planning server, rviz is launched as well as follows.
