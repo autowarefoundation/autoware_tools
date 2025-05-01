@@ -710,11 +710,6 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
 
 void StaticCenterlineGeneratorNode::validate_centerline()
 {
-  std::cerr << std::endl
-            << "############################################## Validation Results "
-               "##############################################"
-            << std::endl;
-
   const auto centerline = centerline_handler_.get_selected_centerline();
   const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
   const auto route = centerline_handler_.get_route();
@@ -840,6 +835,11 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   pub_debug_markers_->publish(marker_array);
 
   // show the validation results
+  std::cerr << std::endl
+            << "############################################## Validation Results "
+               "##############################################"
+            << std::endl;
+
   // 1. distance from footprints to road boundaries
   const bool are_footprints_inside_lanelets = [&]() {
     std::cerr << "1. Footprints inside Lanelets:" << std::endl;

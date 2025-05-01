@@ -223,9 +223,8 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
         return *optimized_traj_points;
       }
       // TODO(murooka) param
-      const size_t nearest_idx =
-        autoware::motion_utils::findFirstNearestSegmentIndexWithSoftConstraints(
-          *optimized_traj_points, virtual_ego_pose, 1.0, 0.3);
+      const size_t nearest_idx = autoware::motion_utils::findFirstNearestIndexWithSoftConstraints(
+        *optimized_traj_points, virtual_ego_pose, 1.0, 0.3);
       return std::vector<TrajectoryPoint>(
         optimized_traj_points->begin() + nearest_idx, optimized_traj_points->end());
     }();
@@ -238,19 +237,14 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     // 3. the whole_optimized_traj_points close to the valid_optimized_traj_points is removed, and
     // will be updated.
     if (!valid_optimized_traj_points.empty()) {
-      for (size_t j = 0; j < whole_optimized_traj_points.size(); ++j) {
-        const double dist = autoware::universe_utils::calcDistance2d(
-          whole_optimized_traj_points.at(j), valid_optimized_traj_points.front());
-        const double yaw = autoware_utils_geometry::calc_yaw_deviation(
-          whole_optimized_traj_points.at(j).pose, valid_optimized_traj_points.front().pose);
-        if (dist < 0.5 && std::abs(yaw) < 0.17) {
-          const std::vector<TrajectoryPoint> extracted_whole_optimized_traj_points{
-            whole_optimized_traj_points.begin(),
-            whole_optimized_traj_points.begin() + std::max(j, 1UL) - 1};
-          whole_optimized_traj_points = extracted_whole_optimized_traj_points;
-          break;
-        }
-      }
+      const size_t nearest_segment_idx =
+        autoware::motion_utils::findFirstNearestSegmentIndexWithSoftConstraints(
+          whole_optimized_traj_points, valid_optimized_traj_points.front().pose, 1.0, 0.3);
+
+      const std::vector<TrajectoryPoint> extracted_whole_optimized_traj_points{
+        whole_optimized_traj_points.begin(),
+        whole_optimized_traj_points.begin() + nearest_segment_idx};
+      whole_optimized_traj_points = extracted_whole_optimized_traj_points;
     }
 
     // 4. register the half of optimized_traj_points
