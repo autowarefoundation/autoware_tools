@@ -42,8 +42,11 @@ def generate_test_description():
                 )
             },
             {"lanelet2_output_file_path": "/tmp/lanelet2_map.osm"},
-            {"start_lanelet_id": "215"},
-            {"end_lanelet_id": "216"},
+            {"start_pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]},
+            {"start_lanelet_id": 215},
+            {"end_pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]},
+            {"end_lanelet_id": 216},
+            {"goal_method": "None"},
             os.path.join(
                 get_package_share_directory("autoware_mission_planner_universe"),
                 "config",
