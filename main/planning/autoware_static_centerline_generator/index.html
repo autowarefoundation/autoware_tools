@@ -3534,13 +3534,24 @@ Currently there is no documentation about Vector Map Builder's operation for thi
 <li><code>&lt;input-osm-path&gt;</code></li>
 <li><code>&lt;output-osm-path&gt;</code> (not mandatory)</li>
 <li><code>&lt;start-lanelet-id&gt;</code></li>
+<li><code>&lt;start-pose&gt;</code> (not mandatory)</li>
 <li><code>&lt;end-lanelet-id&gt;</code></li>
+<li><code>&lt;end-pose&gt;</code> (not mandatory)</li>
 <li><code>&lt;vehicle-model&gt;</code></li>
+<li><code>&lt;goal-method&gt;</code> (not mandatory, <code>path_generator</code> or <code>behavior_path_planner</code> only)</li>
 </ul>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_static_centerline_generator<span class="w"> </span>static_centerline_generator.launch.xml<span class="w"> </span>run_backgrond:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>lanelet2_input_file_path:<span class="o">=</span>&lt;input-osm-path&gt;<span class="w"> </span>lanelet2_output_file_path:<span class="o">=</span>&lt;output-osm-path&gt;<span class="w"> </span>start_lanelet_id:<span class="o">=</span>&lt;start-lane-id&gt;<span class="w"> </span>end_lanelet_id:<span class="o">=</span>&lt;end-lane-id&gt;<span class="w"> </span>vehicle_model:<span class="o">=</span>&lt;vehicle-model&gt;
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_static_centerline_generator<span class="w"> </span>static_centerline_generator.launch.xml<span class="w"> </span>run_backgrond:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>lanelet2_input_file_path:<span class="o">=</span>&lt;input-osm-path&gt;<span class="w"> </span>lanelet2_output_file_path:<span class="o">=</span>&lt;output-osm-path&gt;<span class="w"> </span>start_lanelet_id:<span class="o">=</span>&lt;start-lane-id&gt;<span class="w"> </span>start_pose:<span class="o">=</span>&lt;start-pose&gt;<span class="w"> </span>end_lanelet_id:<span class="o">=</span>&lt;end-lane-id&gt;<span class="w"> </span>goal_pose:<span class="o">=</span>&lt;goal-pose&gt;<span class="w"> </span>vehicle_model:<span class="o">=</span>&lt;vehicle-model&gt;<span class="w"> </span>goal_method:<span class="o">=</span>&lt;goal-method&gt;
 </code></pre></div>
 <p>The default output map path containing the optimized centerline locates <code>/tmp/lanelet2_map.osm</code>.
 If you want to change the output map path, you can remap the path by designating <code>&lt;output-osm-path&gt;</code>.</p>
+<p>By specifying <code>start-pose</code>, <code>goal-pose</code>, and <code>goal-method</code>, the centerline from <code>start-pose</code> to <code>goal-pose</code> can be embedded.
+<code>&lt;start-pose&gt;</code>, <code>&lt;goal-pose&gt;</code> are entered like <code>[position.x, position.y, position.z, orientation.x, orientation.y, orientation.z, orientation.w]</code> with double type.
+In order to run smoothly to the goal pose, <code>goal-method</code> is used.
+Only <code>path_generator</code> or <code>behavior_path_planner</code> can be entered for <code>&lt;goal_method&gt;</code>.</p>
+<blockquote>
+<p>[!WARNING]
+If the start pose is off the center of the lane, it is necessary to manually embed a centerline that smoothly connects the start pose and the start lane in advance using VMB, etc.</p>
+</blockquote>
 <h2 id="visualization">Visualization<a class="headerlink" href="#visualization" title="Permanent link">#</a></h2>
 <p>When launching the path planning server, rviz is launched as well as follows.
 <img alt="rviz" src="media/rviz.png"></p>
