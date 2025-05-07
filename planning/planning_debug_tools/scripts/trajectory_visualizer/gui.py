@@ -77,6 +77,7 @@ class TkinterApp:
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
+        self.msg_per_topic = {}
         self.refresh_topic_list()
 
     def refresh_topic_list(self):
@@ -85,20 +86,16 @@ class TkinterApp:
         for topic in self.topics :
             self.listbox.insert(tk.END, topic)
 
-    def update(self, topic, trajectory: Trajectory, x_axis_fn, y_axis_fn):
-        self.plots_per_topics[topic].set_xdata(x_axis_fn(trajectory))
-        self.plots_per_topics[topic].set_ydata(y_axis_fn(trajectory))
+    def update(self, topic, trajectory: Trajectory):
+        self.msg_per_topic[topic] = trajectory
     
     def plot(self):
-        # update axis
         x_axis_selection = self.current_x_axis_selection.get()
         y_axis_selection = self.current_y_axis_selection.get()
-        x_axis_fn = self.axis_options[x_axis_selection]
-        y_axis_fn = self.axis_options[y_axis_selection]
         for topic in self.plots_per_topics.keys():
             self.ros_interface.remove_callback(topic)
         self.plots_per_topics.clear()
-        self.ax.clear() # Clear previous plot
+        self.ax.clear()
         self.ax.grid(True)
         self.ax.set_xlabel(x_axis_selection)
         self.ax.set_ylabel(y_axis_selection)
@@ -110,10 +107,20 @@ class TkinterApp:
         self.ax.set_prop_cycle(color=[colormap(i) for i in range(len(selected_topics))])
         for topic in selected_topics:
             self.plots_per_topics[topic], = self.ax.plot([], [], marker='o', linestyle='-', label=topic)
-            self.ros_interface.add_callback(topic, Trajectory, lambda msg, captured_topic=topic: self.update(captured_topic, msg, x_axis_fn, y_axis_fn))
+            self.ros_interface.add_callback(topic, Trajectory, lambda msg, captured_topic=topic: self.update(captured_topic, msg))
         self.ax.legend()
 
     def replot(self):
+        x_axis_selection = self.current_x_axis_selection.get()
+        y_axis_selection = self.current_y_axis_selection.get()
+        x_axis_fn = self.axis_options[x_axis_selection]
+        y_axis_fn = self.axis_options[y_axis_selection]
+        # TODO: align x-axis data
+        #select_start_point
+        #calc x-axis value of start point and shift by that value
+        for topic, traj in self.msg_per_topic:
+            self.plots_per_topics[topic].set_xdata(x_axis_fn(traj))
+            self.plots_per_topics[topic].set_ydata(y_axis_fn(traj))
         self.ax.relim()
         self.ax.autoscale_view()
         self.canvas.draw_idle()

@@ -13,7 +13,6 @@ class ROS2Interface(Node):
     def __init__(self, node_name: str = "ros2_interface_node"):
         super().__init__(node_name)
         self._subs = {} # Stores active subscriptions: {topic_name: subscription_object}
-        self._msg_buffer = {} # Stores last received message for each subscription
 
     def get_trajectory_topics(self) -> List[Tuple[str, str]]:
         topic_names_and_types = self.get_topic_names_and_types()
@@ -38,7 +37,6 @@ class ROS2Interface(Node):
         if topic_name in self._subs:
             self.destroy_subscription(self._subs[topic_name])
             del self._subs[topic_name]
-            del self._msg_buffer[topic_name]
 
         try:
             subscription = self.create_subscription(
@@ -48,7 +46,6 @@ class ROS2Interface(Node):
                 qos_profile
             )
             self._subs[topic_name] = subscription
-            self._msg_buffer[topic_name] = None
         except Exception as e:
             self.get_logger().error(f"Failed to create subscription for topic '{topic_name}': {e}")
 
@@ -62,7 +59,6 @@ class ROS2Interface(Node):
         if topic_name in self._subs:
             self.destroy_subscription(self._subs[topic_name])
             del self._subs[topic_name]
-            del self._msg_buffer[topic_name]
             self.get_logger().info(f"Unsubscribed from topic '{topic_name}'.")
 
     def cleanup(self):
