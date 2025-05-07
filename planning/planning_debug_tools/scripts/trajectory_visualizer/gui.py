@@ -1,0 +1,123 @@
+import tkinter as tk
+from tkinter import ttk
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from trajectory_data import get_data_functions
+from ros2_interface import ROS2Interface
+from autoware_planning_msgs.msg import Trajectory
+
+class TkinterApp:
+    def __init__(self, root, ros_interface_node : ROS2Interface):
+        self.root = root
+        self.root.title("Autoware Trajectory Visualizer")
+        self.root.geometry("800x600")
+        self.ros_interface = ros_interface_node
+        self.topics = []
+        self.plots_per_topics = {}
+
+        # Predetermined list for the dropdown
+        self.axis_options = get_data_functions()
+        self.current_x_axis_selection = tk.StringVar()
+        self.current_y_axis_selection = tk.StringVar()
+
+        # --- Main Frames ---
+        self.left_frame = ttk.Frame(self.root, padding="10")
+        self.left_frame.grid(row=0, column=0, sticky="nswe", padx=5, pady=5)
+        self.right_frame = ttk.Frame(self.root, padding="10")
+        self.right_frame.grid(row=0, column=1, sticky="nswe", padx=5, pady=5)
+
+        self.root.grid_columnconfigure(0, weight=1)
+        self.root.grid_columnconfigure(1, weight=3) # Give more weight to the plot area
+        self.root.grid_rowconfigure(0, weight=1)
+
+        # --- Left Frame Widgets ---
+        axis_option_keys = [str(key) for key in self.axis_options.keys()]
+        # Dropdown List (Combobox)
+        ttk.Label(self.left_frame, text="X-axis:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.x_axis_dropdown = ttk.Combobox(self.left_frame, textvariable=self.current_x_axis_selection, values=axis_option_keys, state="readonly")
+        self.x_axis_dropdown.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
+        if self.axis_options:
+            self.x_axis_dropdown.current(0) # Set default selection
+        # Dropdown List (Combobox)
+        ttk.Label(self.left_frame, text="Y-axis:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        self.y_axis_dropdown = ttk.Combobox(self.left_frame, textvariable=self.current_y_axis_selection, values=axis_option_keys, state="readonly")
+        self.y_axis_dropdown.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
+        if self.axis_options:
+            self.y_axis_dropdown.current(1) # Set default selection
+
+        # Listbox with Multiple Selection
+        ttk.Label(self.left_frame, text="Select Items:").grid(row=4, column=0, padx=5, pady=5, sticky="w")
+        self.listbox_frame = ttk.Frame(self.left_frame)
+        self.listbox_frame.grid(row=5, column=0, padx=5, pady=5, sticky="nsew")
+
+        self.listbox_scrollbar = ttk.Scrollbar(self.listbox_frame, orient=tk.VERTICAL)
+        self.listbox = tk.Listbox(self.listbox_frame, selectmode=tk.MULTIPLE, yscrollcommand=self.listbox_scrollbar.set, exportselection=False)
+        self.listbox_scrollbar.config(command=self.listbox.yview)
+
+        self.listbox_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        self.left_frame.grid_rowconfigure(3, weight=1) # Allow listbox to expand
+
+        # Button to Refresh List
+        self.refresh_button = ttk.Button(self.left_frame, text="Refresh List", command=self.refresh_list_items)
+        self.refresh_button.grid(row=6, column=0, padx=5, pady=10, sticky="ew")
+        # Button to plot current config
+        self.refresh_button = ttk.Button(self.left_frame, text="Plot", command=self.plot)
+        self.refresh_button.grid(row=7, column=0, padx=5, pady=10, sticky="ew")
+
+        # --- Right Frame Widgets ---
+        # Matplotlib Plot Area
+        ttk.Label(self.right_frame, text="Matplotlib Plot:").pack(pady=5)
+
+        self.fig, self.ax = plt.subplots()
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.right_frame)
+        self.canvas_widget = self.canvas.get_tk_widget()
+        self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+        self.ax.set_xlabel("X-axis")
+        self.ax.set_ylabel("Y-axis")
+
+        self.refresh_list_items()
+
+    def refresh_list_items(self):
+        self.listbox.delete(0, tk.END) # Clear existing items
+        self.topics = self.ros_interface.get_trajectory_topics()
+        for topic in self.topics :
+            self.listbox.insert(tk.END, topic)
+
+    def update(self, topic, trajectory: Trajectory, x_axis_fn, y_axis_fn):
+        self.plots_per_topics[topic][0].set_xdata(x_axis_fn(trajectory))
+        self.plots_per_topics[topic][0].set_ydata(y_axis_fn(trajectory))
+    
+    def plot(self):
+        # update axis
+        x_axis_selection = self.current_x_axis_selection.get()
+        y_axis_selection = self.current_y_axis_selection.get()
+        x_axis_fn = self.axis_options[x_axis_selection]
+        y_axis_fn = self.axis_options[y_axis_selection]
+        for topic in self.plots_per_topics.keys():
+            self.ros_interface.remove_callback(topic)
+        self.plots_per_topics.clear()
+        self.ax.clear() # Clear previous plot
+        self.ax.set_prop_cycle(color=['red', 'green', 'blue'])
+        self.ax.grid(True)
+        self.ax.set_xlabel(x_axis_selection)
+        self.ax.set_ylabel(y_axis_selection)
+
+        topic_indexes = self.listbox.curselection()
+        selected_topics = [self.topics[i] for i in topic_indexes]
+        for topic in selected_topics:
+            self.plots_per_topics[topic] = self.ax.plot([], [], marker='o', linestyle='-', label=topic)
+            self.ros_interface.add_callback(topic, Trajectory, lambda msg, captured_topic=topic: self.update(captured_topic, msg, x_axis_fn, y_axis_fn))
+        self.ax.legend()
+
+    def replot(self):
+        self.ax.relim()
+        self.ax.autoscale_view()
+        self.canvas.draw_idle()
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TkinterApp(root)
+    root.mainloop()
