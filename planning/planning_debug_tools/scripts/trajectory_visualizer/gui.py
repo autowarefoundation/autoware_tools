@@ -40,55 +40,54 @@ class TkinterApp:
         if self.axis_options:
             self.x_axis_dropdown.current(0) # Set default selection
         # Dropdown List (Combobox)
-        ttk.Label(self.left_frame, text="Y-axis:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        ttk.Label(self.left_frame, text="Y-axis:").grid(row=0, column=1, padx=5, pady=5, sticky="w")
         self.y_axis_dropdown = ttk.Combobox(self.left_frame, textvariable=self.current_y_axis_selection, values=axis_option_keys, state="readonly")
-        self.y_axis_dropdown.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
+        self.y_axis_dropdown.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         if self.axis_options:
             self.y_axis_dropdown.current(1) # Set default selection
 
         # Listbox with Multiple Selection
-        ttk.Label(self.left_frame, text="Select Items:").grid(row=4, column=0, padx=5, pady=5, sticky="w")
+        ttk.Label(self.left_frame, text="Topics:").grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky="w")
         self.listbox_frame = ttk.Frame(self.left_frame)
-        self.listbox_frame.grid(row=5, column=0, padx=5, pady=5, sticky="nsew")
+        self.listbox_frame.grid(row=3, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
-        self.listbox_scrollbar = ttk.Scrollbar(self.listbox_frame, orient=tk.VERTICAL)
-        self.listbox = tk.Listbox(self.listbox_frame, selectmode=tk.MULTIPLE, yscrollcommand=self.listbox_scrollbar.set, exportselection=False)
-        self.listbox_scrollbar.config(command=self.listbox.yview)
+        self.listbox_scrollbar_y = ttk.Scrollbar(self.listbox_frame, orient=tk.VERTICAL)
+        self.listbox_scrollbar_x = ttk.Scrollbar(self.listbox_frame, orient=tk.HORIZONTAL)
+        self.listbox = tk.Listbox(self.listbox_frame, selectmode=tk.MULTIPLE, yscrollcommand=self.listbox_scrollbar_y.set, xscrollcommand=self.listbox_scrollbar_x.set, exportselection=False)
+        self.listbox_scrollbar_y.config(command=self.listbox.yview)
+        self.listbox_scrollbar_x.config(command=self.listbox.xview)
 
-        self.listbox_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.listbox_scrollbar_y.pack(side=tk.RIGHT, fill=tk.Y)
+        self.listbox_scrollbar_x.pack(side=tk.BOTTOM, fill=tk.X)
         self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         self.left_frame.grid_rowconfigure(3, weight=1) # Allow listbox to expand
 
         # Button to Refresh List
-        self.refresh_button = ttk.Button(self.left_frame, text="Refresh List", command=self.refresh_list_items)
-        self.refresh_button.grid(row=6, column=0, padx=5, pady=10, sticky="ew")
+        self.refresh_button = ttk.Button(self.left_frame, text="Refresh List", command=self.refresh_topic_list)
+        self.refresh_button.grid(row=4, column=0, padx=5, pady=10, sticky="ew")
         # Button to plot current config
         self.refresh_button = ttk.Button(self.left_frame, text="Plot", command=self.plot)
-        self.refresh_button.grid(row=7, column=0, padx=5, pady=10, sticky="ew")
+        self.refresh_button.grid(row=4, column=1, padx=5, pady=10, sticky="ew")
 
         # --- Right Frame Widgets ---
         # Matplotlib Plot Area
-        ttk.Label(self.right_frame, text="Matplotlib Plot:").pack(pady=5)
-
         self.fig, self.ax = plt.subplots()
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.right_frame)
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
-        self.ax.set_xlabel("X-axis")
-        self.ax.set_ylabel("Y-axis")
 
-        self.refresh_list_items()
+        self.refresh_topic_list()
 
-    def refresh_list_items(self):
+    def refresh_topic_list(self):
         self.listbox.delete(0, tk.END) # Clear existing items
         self.topics = self.ros_interface.get_trajectory_topics()
         for topic in self.topics :
             self.listbox.insert(tk.END, topic)
 
     def update(self, topic, trajectory: Trajectory, x_axis_fn, y_axis_fn):
-        self.plots_per_topics[topic][0].set_xdata(x_axis_fn(trajectory))
-        self.plots_per_topics[topic][0].set_ydata(y_axis_fn(trajectory))
+        self.plots_per_topics[topic].set_xdata(x_axis_fn(trajectory))
+        self.plots_per_topics[topic].set_ydata(y_axis_fn(trajectory))
     
     def plot(self):
         # update axis
@@ -100,15 +99,17 @@ class TkinterApp:
             self.ros_interface.remove_callback(topic)
         self.plots_per_topics.clear()
         self.ax.clear() # Clear previous plot
-        self.ax.set_prop_cycle(color=['red', 'green', 'blue'])
         self.ax.grid(True)
         self.ax.set_xlabel(x_axis_selection)
         self.ax.set_ylabel(y_axis_selection)
 
         topic_indexes = self.listbox.curselection()
         selected_topics = [self.topics[i] for i in topic_indexes]
+        # WARN: this colormap is limited to 10 colors
+        colormap = plt.cm.get_cmap('tab10', len(selected_topics))
+        self.ax.set_prop_cycle(color=[colormap(i) for i in range(len(selected_topics))])
         for topic in selected_topics:
-            self.plots_per_topics[topic] = self.ax.plot([], [], marker='o', linestyle='-', label=topic)
+            self.plots_per_topics[topic], = self.ax.plot([], [], marker='o', linestyle='-', label=topic)
             self.ros_interface.add_callback(topic, Trajectory, lambda msg, captured_topic=topic: self.update(captured_topic, msg, x_axis_fn, y_axis_fn))
         self.ax.legend()
 
