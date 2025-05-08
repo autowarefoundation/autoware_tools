@@ -65,7 +65,7 @@ private:
   std::shared_ptr<autoware::behavior_path_planner::PlannerData> create_behavior_path_planner_data(
     rclcpp::Node & node, std::shared_ptr<RouteHandler> & route_handler_ptr) const;
   std::shared_ptr<autoware::behavior_path_planner::DefaultFixedGoalPlanner>
-  create_fixed_goal_planner(const PathWithLaneId & raw_path_with_lane_id) const;
+  create_behavior_path_fixed_goal_planner(const PathWithLaneId & raw_path_with_lane_id) const;
 
   PathWithLaneId modify_goal_connection(
     rclcpp::Node & node, const PathWithLaneId & raw_path_with_lane_id,

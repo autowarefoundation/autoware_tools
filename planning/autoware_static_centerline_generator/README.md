@@ -56,7 +56,9 @@ The optimized centerline can be generated from the command line interface by des
 ros2 launch autoware_static_centerline_generator static_centerline_generator.launch.xml run_backgrond:=false lanelet2_input_file_path:=<input-osm-path> lanelet2_output_file_path:=<output-osm-path> start_lanelet_id:=<start-lane-id> start_pose:=<start-pose> end_lanelet_id:=<end-lane-id> goal_pose:=<goal-pose> vehicle_model:=<vehicle-model> goal_method:=<goal-method>
 ```
 
-The default output map path containing the optimized centerline locates `/tmp/lanelet2_map.osm`.
+**Note that `<goal-method>:=behavior_path_planner` is not currently supported.**
+
+The default output map path containing the optimized centerline locates `/tmp/autoware_static_centerline_generator/lanelet2_map.osm`.
 If you want to change the output map path, you can remap the path by designating `<output-osm-path>`.
 
 By specifying `start-pose`, `goal-pose`, and `goal-method`, the centerline from `start-pose` to `goal-pose` can be embedded.

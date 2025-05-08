@@ -25,7 +25,17 @@ from launch.launch_description_sources import AnyLaunchDescriptionSource
 import launch_testing
 
 
-def generate_test_description_impl(start_pose=None, end_pose=None, goal_method=None):
+def generate_test_description_impl(
+    mode=None,
+    map_path=None,
+    centerline_source=None,
+    bag_file=None,
+    start_lanelet_id=None,
+    start_pose=None,
+    end_lanelet_id=None,
+    end_pose=None,
+    goal_method=None,
+):
     test_static_centerline_generator_launch_file = os.path.join(
         get_package_share_directory("autoware_static_centerline_generator"),
         "launch",
@@ -37,8 +47,28 @@ def generate_test_description_impl(start_pose=None, end_pose=None, goal_method=N
     )
 
     launch_description = []
+    if mode:
+        launch_description.append(DeclareLaunchArgument("mode", default_value=mode))
+    if map_path:
+        launch_description.append(
+            DeclareLaunchArgument("lanelet2_input_file_path", default_value=map_path)
+        )
+    if centerline_source:
+        launch_description.append(
+            DeclareLaunchArgument("centerline_source", default_value=centerline_source)
+        )
+    if bag_file:
+        launch_description.append(DeclareLaunchArgument("bag_filename", default_value=bag_file))
+    if start_lanelet_id:
+        launch_description.append(
+            DeclareLaunchArgument("start_lanelet_id", default_value=start_lanelet_id)
+        )
     if start_pose:
         launch_description.append(DeclareLaunchArgument("start_pose", default_value=start_pose))
+    if end_lanelet_id:
+        launch_description.append(
+            DeclareLaunchArgument("end_lanelet_id", default_value=end_lanelet_id)
+        )
     if end_pose:
         launch_description.append(DeclareLaunchArgument("end_pose", default_value=end_pose))
     if goal_method:
@@ -47,19 +77,7 @@ def generate_test_description_impl(start_pose=None, end_pose=None, goal_method=N
     return LaunchDescription(
         launch_description
         + [
-            DeclareLaunchArgument(
-                "lanelet2_input_file_path",
-                default_value=os.path.join(
-                    get_package_share_directory("autoware_static_centerline_generator"),
-                    "test/data/lanelet2_map.osm",
-                ),
-            ),
-            DeclareLaunchArgument(
-                "lanelet2_output_file_path", default_value="/tmp/lanelet2_map.osm"
-            ),
             DeclareLaunchArgument("rviz", default_value="false"),
-            DeclareLaunchArgument("start_lanelet_id", default_value="215"),
-            DeclareLaunchArgument("end_lanelet_id", default_value="216"),
             DeclareLaunchArgument(
                 "map_loader_param",
                 default_value=os.path.join(

@@ -229,6 +229,8 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
     create_publisher<Trajectory>("~/output/whole_centerline", utils::create_transient_local_qos());
   pub_centerline_ =
     create_publisher<Trajectory>("~/output/centerline", utils::create_transient_local_qos());
+  pub_map_saved_ = create_publisher<std_msgs::msg::Empty>(
+    "~/output/map_saved", utils::create_transient_local_qos());
 
   // debug publishers
   pub_validation_results_ =
@@ -268,6 +270,11 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
   sub_validate_ = create_subscription<std_msgs::msg::Empty>(
     "/static_centerline_generator/validate", rclcpp::QoS{1},
     [this]([[maybe_unused]] const std_msgs::msg::Empty & msg) {
+      // update the route
+      const auto centerline = centerline_handler_.whole_centerline_with_route->centerline;
+      const auto route = plan_route(centerline.front().pose, centerline.back().pose);
+      centerline_handler_.whole_centerline_with_route->route = route;
+
       connect_centerline_to_lanelet();
       validate_centerline();
     });
@@ -328,6 +335,9 @@ void StaticCenterlineGeneratorNode::generate_centerline()
 {
   // declare planning setting parameters
   const auto lanelet2_input_file_path = declare_parameter<std::string>("lanelet2_input_file_path");
+  if (lanelet2_input_file_path == "") {
+    throw std::invalid_argument("The `lanelet2_input_file_path` is empty.");
+  }
 
   // process
   load_map(lanelet2_input_file_path);
@@ -648,6 +658,8 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
 
   // check if the centerline's front is before the route_lanelets or not.
   const bool is_centerline_front_before_route_lanelets = [&]() {
+    // NOTE: Assuming that the centerline's front is before the route_lanelets if it is not
+    //       in the first two lanes of route_lanelets.
     if (
       0 < route_lanelets.size() &&
       lanelet::geometry::inside(
@@ -663,13 +675,13 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
     return true;
   }();
 
-  // create output data
+  // update centerline_lane_ids in centerline_handler_
   size_t centerline_idx = 0;
   bool is_end_lanelet = false;
   bool was_once_inside_lanelet = false;
   for (const auto & lanelet : route_lanelets) {
-    // check if target point is inside the lanelet
     while (true) {
+      // check if target point is inside the lanelet
       const bool is_inside = lanelet::geometry::inside(
         lanelet, convert_to_lanelet_point(centerline.at(centerline_idx).pose.position));
       if (is_inside) {
@@ -678,6 +690,8 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
 
       const bool is_target_lanelet = [&]() {
         if (is_centerline_front_before_route_lanelets && !was_once_inside_lanelet) {
+          // If the centerline's front is before the route_lanelets, use the first
+          // lane in the route_lanelets as a target.
           return true;
         }
         return is_inside;
@@ -686,7 +700,7 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
         break;
       }
 
-      // memorize points inside the lanelet
+      // register the lane of the centerline point.
       centerline_handler_.add_centerline_lane_id(lanelet.id());
       centerline_idx++;
 
@@ -713,7 +727,6 @@ void StaticCenterlineGeneratorNode::validate_centerline()
 {
   const auto centerline = centerline_handler_.get_selected_centerline();
   const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
-  const auto route = centerline_handler_.get_route();
 
   const double dist_thresh_to_road_border =
     getRosParameter<double>("validation.dist_threshold_to_road_border");
@@ -821,6 +834,7 @@ void StaticCenterlineGeneratorNode::validate_centerline()
     convert_to_geometry_points_vector(lanelet_right_bound_map, centerline_lane_id_map_order);
 
   // add start/goal pose to debug markers
+  const auto route = centerline_handler_.get_route();
   const auto start_footprint_poly = create_vehicle_footprint(route.start_pose, vehicle_info_);
   const auto goal_footprint_poly = create_vehicle_footprint(route.goal_pose, vehicle_info_);
   const auto start_footprint_marker = utils::create_footprint_marker(
@@ -830,9 +844,12 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   marker_array.markers.push_back(start_footprint_marker);
   marker_array.markers.push_back(goal_footprint_marker);
 
+  // add centerline and left/right bounds to debug markers
   utils::create_points_marker(marker_array, "centerline", centerline_vec, 0.05, now());
   utils::create_points_marker(marker_array, "left_bound", left_bound_vec, 0.05, now());
   utils::create_points_marker(marker_array, "right_bound", right_bound_vec, 0.05, now());
+
+  // publish debug markers
   pub_debug_markers_->publish(marker_array);
 
   // show the validation results
@@ -920,5 +937,8 @@ void StaticCenterlineGeneratorNode::save_map()
   std::filesystem::copy(
     lanelet2_output_file_path, debug_output_file_dir + "lanelet2_map.osm",
     std::filesystem::copy_options::overwrite_existing);
+
+  std_msgs::msg::Empty empty_msg;
+  pub_map_saved_->publish(empty_msg);
 }
 }  // namespace autoware::static_centerline_generator

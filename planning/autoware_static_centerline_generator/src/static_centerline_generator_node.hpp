@@ -165,6 +165,7 @@ private:
   rclcpp::Publisher<LaneletMapBin>::SharedPtr pub_map_bin_{nullptr};
   rclcpp::Publisher<Trajectory>::SharedPtr pub_whole_centerline_{nullptr};
   rclcpp::Publisher<Trajectory>::SharedPtr pub_centerline_{nullptr};
+  rclcpp::Publisher<std_msgs::msg::Empty>::SharedPtr pub_map_saved_{nullptr};
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_validation_results_{nullptr};
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_debug_ego_footprint_bounds_{nullptr};
   rclcpp::Publisher<MarkerArray>::SharedPtr pub_debug_markers_{nullptr};
