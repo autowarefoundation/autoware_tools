@@ -229,6 +229,8 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
     create_publisher<Trajectory>("~/output/whole_centerline", utils::create_transient_local_qos());
   pub_centerline_ =
     create_publisher<Trajectory>("~/output/centerline", utils::create_transient_local_qos());
+  pub_map_saved_ = create_publisher<std_msgs::msg::Empty>(
+    "~/output/map_saved", utils::create_transient_local_qos());
 
   // debug publishers
   pub_validation_results_ =
@@ -268,6 +270,11 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
   sub_validate_ = create_subscription<std_msgs::msg::Empty>(
     "/static_centerline_generator/validate", rclcpp::QoS{1},
     [this]([[maybe_unused]] const std_msgs::msg::Empty & msg) {
+      // update the route
+      const auto centerline = centerline_handler_.whole_centerline_with_route->centerline;
+      const auto route = plan_route(centerline.front().pose, centerline.back().pose);
+      centerline_handler_.whole_centerline_with_route->route = route;
+
       connect_centerline_to_lanelet();
       validate_centerline();
     });
@@ -328,6 +335,9 @@ void StaticCenterlineGeneratorNode::generate_centerline()
 {
   // declare planning setting parameters
   const auto lanelet2_input_file_path = declare_parameter<std::string>("lanelet2_input_file_path");
+  if (lanelet2_input_file_path == "") {
+    throw std::invalid_argument("The `lanelet2_input_file_path` is empty.");
+  }
 
   // process
   load_map(lanelet2_input_file_path);
@@ -927,5 +937,8 @@ void StaticCenterlineGeneratorNode::save_map()
   std::filesystem::copy(
     lanelet2_output_file_path, debug_output_file_dir + "lanelet2_map.osm",
     std::filesystem::copy_options::overwrite_existing);
+
+  std_msgs::msg::Empty empty_msg;
+  pub_map_saved_->publish(empty_msg);
 }
 }  // namespace autoware::static_centerline_generator

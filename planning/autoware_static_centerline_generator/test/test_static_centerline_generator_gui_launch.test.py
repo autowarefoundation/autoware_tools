@@ -25,10 +25,10 @@ from std_msgs.msg import Empty
 from std_msgs.msg import Int32
 
 sys.path.append(os.path.dirname(__file__))
-from test_static_centerline_generator_launch_base import generate_test_description_impl  # noqa
-from test_utils import TestBase  # noqa
-from test_utils import is_centerline_connected_to_goal  # noqa
-from test_utils import validate_map_centerline_lane_ids  # noqa
+from utils.test_static_centerline_generator_launch_base import (  # noqa
+    generate_test_description_impl,
+)
+from utils.test_utils import TestBase  # noqa
 
 
 def create_Int32(idx):
@@ -40,62 +40,54 @@ def create_Int32(idx):
 @pytest.mark.launch_test
 def generate_test_description():
     mode = "GUI"
-    map_path = "/home/takayuki/autoware_map/sample_map/lanelet2_map.osm"  # get_package_share_directory("autoware_static_centerline_generator") + "/test/data/lanelet2_map.osm"
+    map_path = (
+        get_package_share_directory("autoware_static_centerline_generator")
+        + "/test/data/cargo_transport_map.osm"
+    )
     centerline_source = "bag_ego_trajectory_base"
     bag_file = (
         get_package_share_directory("autoware_static_centerline_generator")
-        + "/test/data/bag_ego_trajectory_turn-right.db3"
+        + "/test/data/bag_ego_trajectory.db3"
     )
     return generate_test_description_impl(mode, map_path, centerline_source, bag_file)
 
 
-class TestAutoOperation(TestBase):
-    def callback(self, msg):
-        self.centerline = msg
-
+class TestGuiOperation(TestBase):
     def test(self):
         # traj start idx
-        self.pub_traj_start_idx = self.test_node.create_publisher(
+        self.pub_traj_start_idx = self.traj_sub_node.create_publisher(
             Int32, "/static_centerline_generator/traj_start_index", 1
         )
-        self.pub_traj_start_idx.publish(create_Int32(2))
+        self.pub_traj_start_idx.publish(create_Int32(50))
 
         # traj end idx
-        self.pub_traj_end_idx = self.test_node.create_publisher(
+        self.pub_traj_end_idx = self.traj_sub_node.create_publisher(
             Int32, "/static_centerline_generator/traj_end_index", 1
         )
-        self.pub_traj_end_idx.publish(create_Int32(5))
+        self.pub_traj_end_idx.publish(create_Int32(150))
+
+        rclpy.spin_once(self.traj_sub_node, timeout_sec=10.0)
 
         # validate
-        time.sleep(2)
-        self.pub_validate = self.test_node.create_publisher(
+        self.pub_validate = self.traj_sub_node.create_publisher(
             Empty, "/static_centerline_generator/validate", 1
         )
         self.pub_validate.publish(Empty())
 
         # save map
-        time.sleep(5)
-        self.pub_save_map = self.test_node.create_publisher(
+        time.sleep(3)  # wait for validation
+        self.pub_save_map = self.traj_sub_node.create_publisher(
             Empty, "/static_centerline_generator/save_map", 1
         )
         self.pub_save_map.publish(Empty())
 
         # subscribe the centerline
-        rclpy.spin_once(self.test_node, timeout_sec=10.0)
+        rclpy.spin_once(self.map_saved_sub_node, timeout_sec=10.0)
 
         # check if the subscription is successful
         self.assertIsNotNone(self.centerline)
-
-        """
-        # check if the centerline's back is close to the goal
-        dist_to_goal = is_centerline_connected_to_goal(self.centerline, GOAL_POSE)
-        self.assertLessEqual(dist_to_goal, 0.1)
-
         # check if the centerline is in the lanelet2_map.osm
-        map_centerline_lane_ids = validate_map_centerline_lane_ids()
-        expected_map_centerline_lane_ids = ["113", "115", "22"]
-        self.assertEqual(sorted(map_centerline_lane_ids), sorted(expected_map_centerline_lane_ids))
-        """
+        self.validate_map_centerline_lane_ids(["661"])
 
 
 # NOTE: The following test will fail due to centerline_updater_helper

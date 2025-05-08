@@ -24,10 +24,11 @@ import rclpy
 from rclpy.qos import QoSDurabilityPolicy
 from rclpy.qos import QoSHistoryPolicy
 from rclpy.qos import QoSProfile
+from std_msgs.msg import Empty
 
 
 def is_centerline_connected_to_goal(centerline, goal_pose):
-    goal_pose_list = goal_pose.split("[")[1].split("]")[0].split(", ")
+    goal_pose_list = goal_pose.split("[")[1].split("]")[0].split(",")
     centerline_end_point = centerline.points[-1].pose.position
 
     return math.hypot(
@@ -36,7 +37,7 @@ def is_centerline_connected_to_goal(centerline, goal_pose):
     )
 
 
-def validate_map_centerline_lane_ids():
+def get_map_centerline_lane_ids():
     tree = ET.parse("/tmp/autoware_static_centerline_generator/lanelet2_map.osm")
     root = tree.getroot()
 
@@ -58,8 +59,15 @@ class TestBase(unittest.TestCase):
     def tearDownClass(cls):
         rclpy.shutdown()
 
+    def callbackTrajectory(self, msg):
+        self.centerline = msg
+
+    def callbackMapSaved(self, msg):
+        pass
+
     def setUp(self):
-        self.test_node = rclpy.create_node("test_node")
+        self.traj_sub_node = rclpy.create_node("traj_sub_node")
+        self.map_saved_sub_node = rclpy.create_node("map_saved_sub_node")
         self.centerline = None
 
         qos_profile = QoSProfile(
@@ -67,9 +75,33 @@ class TestBase(unittest.TestCase):
             history=QoSHistoryPolicy.KEEP_LAST,
             durability=QoSDurabilityPolicy.TRANSIENT_LOCAL,
         )
-        self.test_node.create_subscription(
-            Trajectory, "/static_centerline_generator/output/centerline", self.callback, qos_profile
+
+        # subscribe the centerline
+        self.traj_sub_node.create_subscription(
+            Trajectory,
+            "/static_centerline_generator/output/centerline",
+            self.callbackTrajectory,
+            qos_profile,
         )
+        rclpy.spin_once(self.traj_sub_node, timeout_sec=10.0)
+
+        # subscribe the map_saved flag
+        self.map_saved_sub_node.create_subscription(
+            Empty,
+            "/static_centerline_generator/output/map_saved",
+            self.callbackMapSaved,
+            qos_profile,
+        )
+        rclpy.spin_once(self.map_saved_sub_node, timeout_sec=10.0)
 
     def tearDown(self):
-        self.test_node.destroy_node()
+        self.traj_sub_node.destroy_node()
+        self.map_saved_sub_node.destroy_node()
+
+    def validate_goal_pose(self, goal_pose):
+        dist_to_goal = is_centerline_connected_to_goal(self.centerline, goal_pose)
+        self.assertLessEqual(dist_to_goal, 0.2)
+
+    def validate_map_centerline_lane_ids(self, expected_map_centerline_lane_ids):
+        map_centerline_lane_ids = get_map_centerline_lane_ids()
+        self.assertEqual(sorted(map_centerline_lane_ids), sorted(expected_map_centerline_lane_ids))

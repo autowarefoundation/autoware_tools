@@ -341,7 +341,7 @@ OptimizationTrajectoryBasedCenterline::create_behavior_path_planner_data(
 }
 
 std::shared_ptr<autoware::behavior_path_planner::DefaultFixedGoalPlanner>
-OptimizationTrajectoryBasedCenterline::create_fixed_goal_planner(
+OptimizationTrajectoryBasedCenterline::create_behavior_path_fixed_goal_planner(
   const PathWithLaneId & raw_path_with_lane_id) const
 {
   // create behavior_path_planner
@@ -381,8 +381,9 @@ PathWithLaneId OptimizationTrajectoryBasedCenterline::modify_goal_connection(
   }
   if (goal_method == "behavior_path_planner") {
     const auto planner_data = create_behavior_path_planner_data(node, route_handler_ptr);
-    auto fixed_goal_planner = create_fixed_goal_planner(raw_path_with_lane_id);
-    return fixed_goal_planner->plan(planner_data).path;
+    auto behavior_path_fixed_goal_planner =
+      create_behavior_path_fixed_goal_planner(raw_path_with_lane_id);
+    return behavior_path_fixed_goal_planner->plan(planner_data).path;
   }
   throw std::logic_error(
     "The goal_method is not supported in autoware_static_centerline_generator.");

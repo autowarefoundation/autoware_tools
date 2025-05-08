@@ -77,9 +77,6 @@ def generate_test_description_impl(
     return LaunchDescription(
         launch_description
         + [
-            DeclareLaunchArgument(
-                "lanelet2_output_file_path", default_value="/tmp/lanelet2_map.osm"
-            ),
             DeclareLaunchArgument("rviz", default_value="false"),
             DeclareLaunchArgument(
                 "map_loader_param",
