@@ -42,8 +42,11 @@ def generate_test_description():
                 )
             },
             {"lanelet2_output_file_path": "/tmp/lanelet2_map.osm"},
+            {"start_pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]},
             {"start_lanelet_id": 215},
+            {"end_pose": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]},
             {"end_lanelet_id": 216},
+            {"goal_method": "None"},
             os.path.join(
                 get_package_share_directory("autoware_mission_planner_universe"),
                 "config",
@@ -60,6 +63,10 @@ def generate_test_description():
             os.path.join(
                 get_package_share_directory("autoware_behavior_velocity_planner"),
                 "config/behavior_velocity_planner.param.yaml",
+            ),
+            os.path.join(
+                get_package_share_directory("autoware_path_generator"),
+                "config/path_generator.param.yaml",
             ),
             os.path.join(
                 get_package_share_directory("autoware_path_smoother"),
@@ -94,9 +101,9 @@ def generate_test_description():
         LaunchDescription(
             [
                 static_centerline_generator_node,
-                # Start test after 1s - gives time for the autoware_static_centerline_generator to finish initialization
+                # Start test after 3s - gives time for the autoware_static_centerline_generator to finish initialization
                 launch.actions.TimerAction(
-                    period=1.0, actions=[launch_testing.actions.ReadyToTest()]
+                    period=3.0, actions=[launch_testing.actions.ReadyToTest()]
                 ),
             ]
         ),

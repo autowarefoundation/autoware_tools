@@ -44,7 +44,7 @@ using autoware_static_centerline_generator::srv::PlanRoute;
 struct CenterlineWithRoute
 {
   std::vector<TrajectoryPoint> centerline{};
-  std::vector<lanelet::Id> route_lane_ids{};
+  LaneletRoute route{};
 };
 struct CenterlineHandler
 {
@@ -64,12 +64,12 @@ struct CenterlineHandler
     return std::vector<TrajectoryPoint>(
       centerline_begin + start_index, centerline_begin + end_index + 1);
   }
-  std::vector<lanelet::Id> get_route_lane_ids() const
+  LaneletRoute get_route() const
   {
     if (!whole_centerline_with_route) {
-      return std::vector<lanelet::Id>{};
+      return LaneletRoute{};
     }
-    return whole_centerline_with_route->route_lane_ids;
+    return whole_centerline_with_route->route;
   }
   bool is_valid() const { return whole_centerline_with_route && start_index < end_index; }
   bool update_start_index(const int arg_start_index)
@@ -88,10 +88,14 @@ struct CenterlineHandler
     }
     return false;
   }
+  void clear_centerline_lane_ids() { centerline_lane_ids.clear(); }
+  void add_centerline_lane_id(const lanelet::Id lane_id) { centerline_lane_ids.push_back(lane_id); }
+  std::vector<lanelet::Id> get_centerline_lane_ids() const { return centerline_lane_ids; }
 
   std::optional<CenterlineWithRoute> whole_centerline_with_route{std::nullopt};
   int start_index{};
   int end_index{};
+  std::vector<lanelet::Id> centerline_lane_ids;
 };
 
 struct RoadBounds
@@ -105,7 +109,8 @@ class StaticCenterlineGeneratorNode : public rclcpp::Node
 public:
   explicit StaticCenterlineGeneratorNode(const rclcpp::NodeOptions & node_options);
   void generate_centerline();
-  void validate();
+  void connect_centerline_to_lanelet();
+  void validate_centerline();
   void save_map();
 
 private:
@@ -115,9 +120,9 @@ private:
     const LoadMap::Request::SharedPtr request, const LoadMap::Response::SharedPtr response);
 
   // plan route
-  std::vector<lanelet::Id> plan_route_by_lane_ids(
+  LaneletRoute plan_route_by_lane_ids(
     const lanelet::Id start_lanelet_id, const lanelet::Id end_lanelet_id);
-  std::vector<lanelet::Id> plan_route(
+  LaneletRoute plan_route(
     const geometry_msgs::msg::Pose & start_center_pose,
     const geometry_msgs::msg::Pose & end_center_pose);
 
@@ -169,7 +174,6 @@ private:
   rclcpp::Subscription<std_msgs::msg::Int32>::SharedPtr sub_traj_end_index_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr sub_save_map_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr sub_validate_;
-  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_traj_resample_interval_;
   rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_footprint_margin_for_road_bound_;
 
   // service

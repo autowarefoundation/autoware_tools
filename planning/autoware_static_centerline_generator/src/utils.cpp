@@ -16,7 +16,6 @@
 
 #include "autoware/behavior_path_planner_common/data_manager.hpp"
 #include "autoware/behavior_path_planner_common/utils/drivable_area_expansion/static_drivable_area.hpp"
-#include "autoware/universe_utils/geometry/geometry.hpp"
 #include "autoware/universe_utils/ros/marker_helper.hpp"
 
 #include <lanelet2_core/LaneletMap.h>
@@ -25,6 +24,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -32,13 +32,6 @@ namespace autoware::static_centerline_generator
 {
 namespace
 {
-nav_msgs::msg::Odometry::ConstSharedPtr convert_to_odometry(const geometry_msgs::msg::Pose & pose)
-{
-  auto odometry_ptr = std::make_shared<nav_msgs::msg::Odometry>();
-  odometry_ptr->pose.pose = pose;
-  return odometry_ptr;
-}
-
 lanelet::Point3d createPoint3d(const double x, const double y, const double z)
 {
   lanelet::Point3d point(lanelet::utils::getId());
@@ -59,6 +52,28 @@ lanelet::Point3d createPoint3d(const double x, const double y, const double z)
 
 namespace utils
 {
+geometry_msgs::msg::Pose create_pose(
+  const double px, const double py, const double pz, const double qx, const double qy,
+  const double qz, const double qw)
+{
+  geometry_msgs::msg::Pose pose;
+  pose.position.x = px;
+  pose.position.y = py;
+  pose.position.z = pz;
+  pose.orientation.x = qx;
+  pose.orientation.y = qy;
+  pose.orientation.z = qz;
+  pose.orientation.w = qw;
+  return pose;
+}
+
+nav_msgs::msg::Odometry::ConstSharedPtr convert_to_odometry(const geometry_msgs::msg::Pose & pose)
+{
+  auto odometry_ptr = std::make_shared<nav_msgs::msg::Odometry>();
+  odometry_ptr->pose.pose = pose;
+  return odometry_ptr;
+}
+
 rclcpp::QoS create_transient_local_qos()
 {
   return rclcpp::QoS{1}.transient_local();
@@ -75,13 +90,30 @@ lanelet::ConstLanelets get_lanelets_from_ids(
   return lanelets;
 }
 
+lanelet::ConstLanelets get_lanelets_from_route(
+  const RouteHandler & route_handler, const LaneletRoute & route)
+{
+  lanelet::ConstLanelets lanelets;
+  for (const auto & segment : route.segments) {
+    const auto lane_id = segment.preferred_primitive.id;
+    const auto lanelet = route_handler.getLaneletsFromId(lane_id);
+    lanelets.push_back(lanelet);
+  }
+  return lanelets;
+}
+
 geometry_msgs::msg::Pose get_center_pose(
-  const RouteHandler & route_handler, const size_t lanelet_id)
+  const RouteHandler & route_handler, const lanelet::Id lanelet_id)
 {
   // get middle idx of the lanelet
   const auto lanelet = route_handler.getLaneletsFromId(lanelet_id);
   const auto center_line = lanelet.centerline();
-  const size_t middle_point_idx = std::floor(center_line.size() / 2.0);
+  if (center_line.size() < 2) {
+    throw std::invalid_argument("center_line's size is less than 2.");
+  }
+
+  // Note: -1 operation is added considering that the size is 2.
+  const size_t middle_point_idx = std::floor((center_line.size() - 1) / 2.0);
 
   // get middle position of the lanelet
   geometry_msgs::msg::Point middle_pos;
@@ -132,54 +164,49 @@ PathWithLaneId get_path_with_lane_id(
 }
 
 void update_centerline(
-  lanelet::LaneletMapPtr lanelet_map_ptr, const lanelet::ConstLanelets & lanelets,
-  const std::vector<TrajectoryPoint> & new_centerline)
+  lanelet::LaneletMapPtr lanelet_map_ptr, const std::vector<TrajectoryPoint> & new_centerline,
+  const std::vector<lanelet::Id> & centerline_lane_ids)
 {
   // get lanelet as reference to update centerline
-  lanelet::Lanelets lanelets_ref;
-  for (const auto & lanelet : lanelets) {
+  std::unordered_map<lanelet::Id, lanelet::Lanelet> lanelet_ref_map;
+  for (const lanelet::Id centerline_lane_id : centerline_lane_ids) {
+    if (!lanelet_ref_map.count(centerline_lane_id) == 0) {
+      continue;
+    }
     for (auto & lanelet_ref : lanelet_map_ptr->laneletLayer) {
-      if (lanelet_ref.id() == lanelet.id()) {
-        lanelets_ref.push_back(lanelet_ref);
+      if (lanelet_ref.id() == static_cast<int>(centerline_lane_id)) {
+        lanelet_ref_map.emplace(centerline_lane_id, lanelet_ref);
+        break;
       }
     }
   }
 
-  // store new centerline in lanelets
-  size_t lanelet_idx = 0;
-  lanelet::LineString3d centerline(lanelet::utils::getId());
+  // create new centerline
+  std::unordered_map<lanelet::Id, lanelet::LineString3d> centerline_map;
   for (size_t traj_idx = 0; traj_idx < new_centerline.size(); ++traj_idx) {
     const auto & traj_pos = new_centerline.at(traj_idx).pose.position;
+    const lanelet::BasicPoint2d point(traj_pos.x, traj_pos.y);
+    const lanelet::Id centerline_lane_id = centerline_lane_ids.at(traj_idx);
+    auto & lanelet_ref = lanelet_ref_map.at(centerline_lane_id);
 
-    for (; lanelet_idx < lanelets_ref.size(); ++lanelet_idx) {
-      auto & lanelet_ref = lanelets_ref.at(lanelet_idx);
-
-      const lanelet::BasicPoint2d point(traj_pos.x, traj_pos.y);
-      // TODO(murooka) This does not work with L-crank map.
-      const bool is_inside = lanelet::geometry::inside(lanelet_ref, point);
-      if (is_inside) {
-        const auto center_point = createPoint3d(traj_pos.x, traj_pos.y, traj_pos.z);
-
-        // set center point
-        centerline.push_back(center_point);
-        lanelet_map_ptr->add(center_point);
-        break;
-      }
-
-      if (!centerline.empty()) {
-        // set centerline
-        lanelet_map_ptr->add(centerline);
-        lanelet_ref.setCenterline(centerline);
-
-        // prepare new centerline
-        centerline = lanelet::LineString3d(lanelet::utils::getId());
-      }
+    if (centerline_map.count(centerline_lane_id) == 0) {
+      centerline_map.emplace(centerline_lane_id, lanelet::LineString3d{lanelet::utils::getId()});
     }
 
-    if (traj_idx == new_centerline.size() - 1 && !centerline.empty()) {
-      auto & lanelet_ref = lanelets_ref.at(lanelet_idx);
+    // already checked by connect_centerline_to_lanelet, but double check.
+    const bool is_inside = lanelet::geometry::inside(lanelet_ref, point);
+    if (is_inside) {
+      const auto center_point = createPoint3d(traj_pos.x, traj_pos.y, traj_pos.z);
 
-      // set centerline
+      // set center point
+      centerline_map.at(centerline_lane_id).push_back(center_point);
+      lanelet_map_ptr->add(center_point);
+    }
+
+    if (
+      traj_idx == new_centerline.size() - 1 ||
+      centerline_lane_id != centerline_lane_ids.at(traj_idx + 1)) {
+      const auto & centerline = centerline_map.at(centerline_lane_id);
       lanelet_map_ptr->add(centerline);
       lanelet_ref.setCenterline(centerline);
     }
@@ -187,12 +214,11 @@ void update_centerline(
 }
 
 Marker create_footprint_marker(
-  const LinearRing2d & footprint_poly, const double width, const double r, const double g,
-  const double b, const double a, const rclcpp::Time & now, const size_t idx)
+  const std::string & ns, const LinearRing2d & footprint_poly, const double width, const double r,
+  const double g, const double b, const double a, const rclcpp::Time & now, const size_t idx)
 {
   auto marker = autoware::universe_utils::createDefaultMarker(
-    "map", rclcpp::Clock().now(), "unsafe_footprints", idx,
-    visualization_msgs::msg::Marker::LINE_STRIP,
+    "map", rclcpp::Clock().now(), ns, idx, visualization_msgs::msg::Marker::LINE_STRIP,
     autoware::universe_utils::createMarkerScale(width, 0.0, 0.0),
     autoware::universe_utils::createMarkerColor(r, g, b, a));
   marker.header.stamp = now;
@@ -230,17 +256,22 @@ Marker create_text_marker(
   return marker;
 }
 
-Marker create_points_marker(
-  const std::string & ns, const std::vector<geometry_msgs::msg::Point> & points, const double width,
-  const double r, const double g, const double b, const double a, const rclcpp::Time & now)
+void create_points_marker(
+  MarkerArray & marker_array, const std::string & ns,
+  const std::vector<std::vector<geometry_msgs::msg::Point>> & points_vec, const double width,
+  const rclcpp::Time & now)
 {
-  auto marker = autoware::universe_utils::createDefaultMarker(
-    "map", now, ns, 1, Marker::LINE_STRIP,
-    autoware::universe_utils::createMarkerScale(width, 0.0, 0.0),
-    autoware::universe_utils::createMarkerColor(r, g, b, a));
-  marker.lifetime = rclcpp::Duration(0, 0);
-  marker.points = points;
-  return marker;
+  for (size_t i = 0; i < points_vec.size(); ++i) {
+    const auto color = (i % 2 == 0)
+                         ? autoware::universe_utils::createMarkerColor(0.8, 0.5, 1.0, 0.8)
+                         : autoware::universe_utils::createMarkerColor(1.0, 0.3, 0.5, 0.8);
+    auto marker = autoware::universe_utils::createDefaultMarker(
+      "map", now, ns, i, Marker::LINE_STRIP,
+      autoware::universe_utils::createMarkerScale(width, 0.0, 0.0), color);
+    marker.lifetime = rclcpp::Duration(0, 0);
+    marker.points = points_vec.at(i);
+    marker_array.markers.push_back(marker);
+  }
 }
 
 MarkerArray create_delete_all_marker_array(
