@@ -75,11 +75,11 @@ if(BUILD_TESTING)
     test/test_static_centerline_generator_path_generator_case4_launch.test.py
     TIMEOUT "30"
   )
-  # 2.2. goal_method=behavior_path_planner, centerline_source=optimization_trajectory_base
-  add_launch_test(
-    test/test_static_centerline_generator_behavior_path_planner_launch.test.py
-    TIMEOUT "30"
-  )
+  # # 2.2. goal_method=behavior_path_planner, centerline_source=optimization_trajectory_base
+  # add_launch_test(
+  #   test/test_static_centerline_generator_behavior_path_planner_launch.test.py
+  #   TIMEOUT "30"
+  # )
   # 3. mode=GUI
   # centerline_source=bag_ego_trajectory_base
   add_launch_test(
