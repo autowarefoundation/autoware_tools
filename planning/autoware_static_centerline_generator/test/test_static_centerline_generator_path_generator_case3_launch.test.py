@@ -60,6 +60,7 @@ def generate_test_description():
 
 class TestAutoOperation(TestBase):
     def test(self):
+        print("test")
         # check if the subscription is successful
         self.assertIsNotNone(self.centerline)
         # check if the centerline's back is close to the goal

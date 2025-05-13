@@ -60,12 +60,15 @@ class TestBase(unittest.TestCase):
         rclpy.shutdown()
 
     def callbackTrajectory(self, msg):
+        print("callbackTrajectory")
         self.centerline = msg
 
     def callbackMapSaved(self, msg):
+        print("callbackMapSaved")
         pass
 
     def setUp(self):
+        print("setUp")
         self.traj_sub_node = rclpy.create_node("traj_sub_node")
         self.map_saved_sub_node = rclpy.create_node("map_saved_sub_node")
         self.centerline = None
@@ -83,7 +86,9 @@ class TestBase(unittest.TestCase):
             self.callbackTrajectory,
             qos_profile,
         )
+        print("self.traj_sub_node1")
         rclpy.spin_once(self.traj_sub_node, timeout_sec=10.0)
+        print("self.traj_sub_node2")
 
         # subscribe the map_saved flag
         self.map_saved_sub_node.create_subscription(
@@ -92,7 +97,9 @@ class TestBase(unittest.TestCase):
             self.callbackMapSaved,
             qos_profile,
         )
+        print("self.map_saved_sub_node1")
         rclpy.spin_once(self.map_saved_sub_node, timeout_sec=10.0)
+        print("self.map_saved_sub_node2")
 
     def tearDown(self):
         self.traj_sub_node.destroy_node()
