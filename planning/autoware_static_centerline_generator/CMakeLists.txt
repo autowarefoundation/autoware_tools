@@ -76,7 +76,7 @@ if(BUILD_TESTING)
     TIMEOUT "30"
   )
   # # 2.2. goal_method=behavior_path_planner, centerline_source=optimization_trajectory_base
-  # # Commented out since goal_method=behavior_path_planner is not supported.
+  # # NOTE: Commented out since goal_method=behavior_path_planner is not supported.
   # add_launch_test(
   #   test/test_static_centerline_generator_behavior_path_planner_launch.test.py
   #   TIMEOUT "30"
