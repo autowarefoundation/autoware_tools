@@ -270,11 +270,6 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
   sub_validate_ = create_subscription<std_msgs::msg::Empty>(
     "/static_centerline_generator/validate", rclcpp::QoS{1},
     [this]([[maybe_unused]] const std_msgs::msg::Empty & msg) {
-      // update the route
-      const auto centerline = centerline_handler_.whole_centerline_with_route->centerline;
-      const auto route = plan_route(centerline.front().pose, centerline.back().pose);
-      centerline_handler_.whole_centerline_with_route->route = route;
-
       connect_centerline_to_lanelet();
       validate_centerline();
     });
@@ -656,30 +651,26 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
   const auto route = centerline_handler_.get_route();
   const auto route_lanelets = utils::get_lanelets_from_route(*route_handler_ptr_, route);
 
-  // check if the centerline's front is before the route_lanelets or not.
-  const bool is_centerline_front_before_route_lanelets = [&]() {
-    // NOTE: Assuming that the centerline's front is before the route_lanelets if it is not
-    //       in the first two lanes of route_lanelets.
-    if (
-      0 < route_lanelets.size() &&
-      lanelet::geometry::inside(
-        route_lanelets.at(0), convert_to_lanelet_point(centerline.front().pose.position))) {
-      return false;
+  // 1. calculate the lanelet of the centerline's front.
+  std::optional<size_t> centerline_front_lanelet_idx{std::nullopt};
+  for (size_t i = 0; i < route_lanelets.size(); ++i) {
+    const auto & lanelet = route_lanelets.at(i);
+    const bool is_inside =
+      lanelet::geometry::inside(lanelet, convert_to_lanelet_point(centerline.at(0).pose.position));
+    if (is_inside) {
+      centerline_front_lanelet_idx = i;
+      break;
     }
-    if (
-      1 < route_lanelets.size() &&
-      lanelet::geometry::inside(
-        route_lanelets.at(1), convert_to_lanelet_point(centerline.front().pose.position))) {
-      return false;
-    }
-    return true;
-  }();
+  }
 
-  // update centerline_lane_ids in centerline_handler_
+  // 2. update centerline_lane_ids in centerline_handler_
   size_t centerline_idx = 0;
   bool is_end_lanelet = false;
   bool was_once_inside_lanelet = false;
-  for (const auto & lanelet : route_lanelets) {
+  for (size_t lanelet_idx = centerline_front_lanelet_idx ? centerline_front_lanelet_idx.value() : 0;
+       lanelet_idx < route_lanelets.size(); ++lanelet_idx) {
+    const auto & lanelet = route_lanelets.at(lanelet_idx);
+
     while (true) {
       // check if target point is inside the lanelet
       const bool is_inside = lanelet::geometry::inside(
@@ -689,7 +680,7 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
       }
 
       const bool is_target_lanelet = [&]() {
-        if (is_centerline_front_before_route_lanelets && !was_once_inside_lanelet) {
+        if (!centerline_front_lanelet_idx && !was_once_inside_lanelet) {
           // If the centerline's front is before the route_lanelets, use the first
           // lane in the route_lanelets as a target.
           return true;

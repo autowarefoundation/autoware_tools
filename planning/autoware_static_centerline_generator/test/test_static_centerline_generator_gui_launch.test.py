@@ -81,13 +81,13 @@ class TestGuiOperation(TestBase):
         )
         self.pub_save_map.publish(Empty())
 
-        # subscribe the centerline
+        # subscribe the map_saved
         rclpy.spin_once(self.map_saved_sub_node, timeout_sec=10.0)
 
         # check if the subscription is successful
         self.assertIsNotNone(self.centerline)
         # check if the centerline is in the lanelet2_map.osm
-        self.validate_map_centerline_lane_ids(["661"])
+        self.validate_map_centerline_lane_ids(["432", "73", "780", "86"])
 
 
 # NOTE: The following test will fail due to centerline_updater_helper
