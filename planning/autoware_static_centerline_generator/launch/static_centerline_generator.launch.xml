@@ -10,9 +10,9 @@
   <!-- mandatory arguments when mode is AUTO -->
   <arg name="lanelet2_input_file_path" default=""/>
   <arg name="lanelet2_output_file_path" default="/tmp/autoware_static_centerline_generator/lanelet2_map.osm"/>
-  <arg name="start_lanelet_id" default=""/>
+  <arg name="start_lanelet_id" default="0"/>
   <arg name="start_pose" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
-  <arg name="end_lanelet_id" default=""/>
+  <arg name="end_lanelet_id" default="0"/>
   <arg name="end_pose" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
   <arg name="goal_method" default="None"/>
 

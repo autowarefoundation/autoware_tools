@@ -9,4 +9,4 @@
       max_steer_angle_margin: 0.0 # [rad] NOTE: Positive value makes max steer angle threshold to decrease.
 
     debug:
-      wait_time_during_planning_iteration: 10 # [ms]
+      wait_time_during_planning_iteration: 0 # [ms]
