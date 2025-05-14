@@ -1,3 +1,4 @@
+# cspell:disable
 import tkinter as tk
 
 from gui import TkinterApp

@@ -1,3 +1,4 @@
+# cspell:disable
 import matplotlib.pyplot as plt
 
 

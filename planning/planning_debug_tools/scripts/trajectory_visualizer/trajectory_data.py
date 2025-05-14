@@ -1,3 +1,4 @@
+# cspell:disable
 from angles import shortest_angular_distance
 from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
