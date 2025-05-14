@@ -302,10 +302,10 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
       autoware_utils::alt::Point2d(seg_end_.x, seg_end_.y));
 
     if (line_type == LINE_TYPE::LANE) {
-     std::cout << "x_error:" << "none" << "[m], y_error: " << std::abs(distance_selfpose_to_line - distance_selfpose_to_lane) << "[m], yaw_error:  " << yaw/M_PI*180.0 << "[deg] " << std::endl;
+     std::cout << "x_error:" << "none" << "[m], y_error: " << distance_selfpose_to_line - distance_selfpose_to_lane << "[m], yaw_error:  " << yaw/M_PI*180.0 << "[deg] " << std::endl;
     }
     else {
-     std::cout << "x_error:" << std::abs(distance_selfpose_to_line - distance_selfpose_to_lane) << "[m], y_error: " << "none" << "[m], yaw_error:  " << yaw/M_PI*180.0 << "[deg] " << std::endl;
+     std::cout << "x_error:" << distance_selfpose_to_line - distance_selfpose_to_lane << "[m], y_error: " << "none" << "[m], yaw_error:  " << yaw/M_PI*180.0 << "[deg] " << std::endl;
     }
 
  
