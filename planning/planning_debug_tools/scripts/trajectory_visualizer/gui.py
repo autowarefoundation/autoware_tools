@@ -86,11 +86,7 @@ class TkinterApp:
         self.refresh_button = ttk.Button(
             self.left_frame, text="Refresh List", command=self.refresh_topic_list
         )
-        self.refresh_button.grid(row=4, column=0, padx=5, pady=10, sticky="ew")
-        # Button to plot current config
-        self.plot_button = ttk.Button(self.left_frame, text="Plot", command=self.plot)
-        self.plot_button.grid(row=4, column=1, padx=5, pady=10, sticky="ew")
-
+        self.refresh_button.grid(row=4, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
         # --- Right Frame Widgets ---
         # Matplotlib Plot Area
         self.plotter = Plotter()
