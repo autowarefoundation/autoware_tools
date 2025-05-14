@@ -8,6 +8,7 @@
   <arg name="output_pcd_dir" description="The path to the folder containing the output PCD files and metadata files"/>
   <arg name="prefix" default="" description="The prefix for output PCD files"/>
   <arg name="point_type" default="point_xyzi" description="The type of map points"/>
+  <arg name="metadata_generate" default="false" description="Generate a metadata file without segmentation the PCDs"/>
 
   <group>
     <node pkg="autoware_pointcloud_divider" exec="autoware_pointcloud_divider_node" name="pointcloud_divider" output="screen">
@@ -20,6 +21,7 @@
       <param name="output_pcd_dir" value="$(var output_pcd_dir)"/>
       <param name="prefix" value="$(var prefix)"/>
       <param name="point_type" value="$(var point_type)"/>
+      <param name="metadata_generate" value="$(var metadata_generate)"/>
     </node>
   </group>
 </launch>
