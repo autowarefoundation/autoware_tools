@@ -106,8 +106,8 @@ Visualization Manager:
           Namespaces:
             center_lane_line: true
             center_line_arrows: true
-            lane_start_bound: false
-            lanelet_id: false
+            lane_start_bound: true
+            lanelet_id: true
             left_lane_bound: true
             right_lane_bound: true
             road_lanelets: false
