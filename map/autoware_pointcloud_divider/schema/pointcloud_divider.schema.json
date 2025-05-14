@@ -45,6 +45,11 @@
           "type": "string",
           "description": "Type of the point when processing PCD files. Could be point_xyz or point_xyzi",
           "default": "point_xyzi"
+        },
+        "metadata_generate": {
+          "type": "boolean",
+          "description": "If true only generate a metadata file. Otherwise perform PCD segmentation.",
+          "default": "false"
         }
       },
       "required": ["grid_size_x", "grid_size_y", "input_pcd_or_dir", "output_pcd_dir", "prefix"],
