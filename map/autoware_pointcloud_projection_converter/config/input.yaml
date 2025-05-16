@@ -1,3 +1,3 @@
-# input.yaml
-projector_type: "MGRS"
-mgrs_grid: "54SUE"
+projector_type: MGRS
+vertical_datum: WGS84
+mgrs_grid: 54SUE
