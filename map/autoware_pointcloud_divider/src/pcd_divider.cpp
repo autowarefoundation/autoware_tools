@@ -52,6 +52,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -101,13 +102,19 @@ std::vector<std::string> PCDDivider<PointT>::discoverPCDs(const std::string & in
 }
 
 template <class PointT>
-void PCDDivider<PointT>::run()
+void PCDDivider<PointT>::run(bool meta_gen)
 {
   // Discover PCD files
   auto pcd_list = discoverPCDs(input_pcd_or_dir_);
 
   // Process pcd files
-  run(pcd_list);
+  if (meta_gen) {
+    // Only generate a metadata file
+    meta_generator(pcd_list);
+  } else {
+    // Do the segmentation
+    run(pcd_list);
+  }
 }
 
 template <class PointT>
@@ -200,12 +207,12 @@ void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
       exit(EXIT_SUCCESS);
     }
 
-    auto tmp = pointToGrid2(p, grid_size_x_, grid_size_y_);
-    auto it = grid_to_cloud_.find(tmp);
+    auto grid_key = pointToGrid2(p, grid_size_x_, grid_size_y_);
+    auto it = grid_to_cloud_.find(grid_key);
 
     // If the grid has not existed yet, create a new one
     if (it == grid_to_cloud_.end()) {
-      auto & new_grid = grid_to_cloud_[tmp];
+      auto & new_grid = grid_to_cloud_[grid_key];
 
       std::get<0>(new_grid).reserve(max_block_size_);
 
@@ -227,11 +234,11 @@ void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
         // Otherwise, update the seg_by_size_ if the change of size is significant
         if (cloud.size() - prev_size >= 10000) {
           prev_size = cloud.size();
-          auto seg_to_size_it = seg_to_size_itr_map_.find(tmp);
+          auto seg_to_size_it = seg_to_size_itr_map_.find(grid_key);
 
           if (seg_to_size_it == seg_to_size_itr_map_.end()) {
             auto size_it = seg_by_size_.insert(std::make_pair(prev_size, it));
-            seg_to_size_itr_map_[tmp] = size_it;
+            seg_to_size_itr_map_[grid_key] = size_it;
           } else {
             seg_by_size_.erase(seg_to_size_it->second);
             auto new_size_it = seg_by_size_.insert(std::make_pair(prev_size, it));
@@ -473,6 +480,44 @@ void PCDDivider<PointT>::saveGridInfoToYAML(const std::string & yaml_file_path)
   }
 
   yaml_file.close();
+}
+
+template <class PointT>
+void PCDDivider<PointT>::meta_generator(const std::vector<std::string> & pcd_list)
+{
+  std::string yaml_file_path = output_dir_ + "/pointcloud_map_metadata.yaml";
+  std::unordered_set<GridInfo<2>> segment_set;
+
+  for (auto & pcd_name : pcd_list) {
+    RCLCPP_INFO(logger_, "pcd_name = %s", pcd_name.c_str());
+    do {
+      auto cloud_ptr = loadPCD(pcd_name);
+
+      for (auto & p : *cloud_ptr) {
+        if (!rclcpp::ok()) {
+          exit(0);
+        }
+
+        auto seg_key = pointToGrid2(p, grid_size_x_, grid_size_y_);
+
+        if (segment_set.find(seg_key) == segment_set.end()) {
+          segment_set.insert(seg_key);
+        }
+      }
+    } while (reader_.good() && rclcpp::ok());
+  }
+
+  std::ofstream output_metadata(yaml_file_path);
+
+  output_metadata << "x_resolution: " << grid_size_x_ << std::endl;
+  output_metadata << "y_resolution: " << grid_size_y_ << std::endl;
+
+  for (auto & it : segment_set) {
+    output_metadata << file_prefix_ << "_" << it.ix << "_" << it.iy << ".pcd: [" << it.ix << ", "
+                    << it.iy << "]" << std::endl;
+  }
+
+  RCLCPP_INFO(logger_, "A metadata file is saved at %s", yaml_file_path.c_str());
 }
 
 template class PCDDivider<pcl::PointXYZ>;
