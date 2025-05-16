@@ -159,7 +159,7 @@ private:
 
   std::string makeFileName(const GridInfo<2> & grid) const;
 
-  PclCloudPtr loadPCD(const std::string & pcd_name, bool load_all = false);
+  PclCloudPtr loadPCD(const std::string & pcd_name);
   void savePCD(const std::string & pcd_name, const pcl::PointCloud<PointT> & cloud);
   void dividePointCloud(const PclCloudPtr & cloud_ptr);
   void paramInitialize();
