@@ -65,19 +65,21 @@ loadAndValidateMap(
     if (!projector) {
       errors.push_back("No valid map projection type specified!");
     } else {
-      map = lanelet::load(map_file, *projector, &errors);
+      map = lanelet::load(map_file, "autoware_validator_osm_handler", *projector, &errors);
     }
     if (!map) {
-      errors.push_back("Failed to load map!");
+      errors.push_back("Failed to load the entire map!");
     }
     issues.emplace_back("general", utils::transform(errors, [](auto & error) {
                           return lanelet::validation::Issue(
-                            lanelet::validation::Severity::Error, error);
+                            lanelet::validation::Severity::Error,
+                            lanelet::validation::Primitive::Primitive, lanelet::InvalId, error);
                         }));
   } catch (lanelet::LaneletError & err) {
     issues.emplace_back("general", utils::transform(errors, [](auto & error) {
                           return lanelet::validation::Issue(
-                            lanelet::validation::Severity::Error, error);
+                            lanelet::validation::Severity::Error,
+                            lanelet::validation::Primitive::Primitive, lanelet::InvalId, error);
                         }));
   }
 
