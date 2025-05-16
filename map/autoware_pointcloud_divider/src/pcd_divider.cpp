@@ -171,8 +171,7 @@ void PCDDivider<PointT>::checkOutputDirectoryValidity()
 }
 
 template <class PointT>
-typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(
-  const std::string & pcd_name, bool load_all)
+typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(const std::string & pcd_name)
 {
   if (pcd_name != reader_.get_path()) {
     reader_.setInput(pcd_name);
@@ -180,39 +179,7 @@ typename pcl::PointCloud<PointT>::Ptr PCDDivider<PointT>::loadPCD(
 
   PclCloudPtr cloud_ptr(new PclCloudType);
 
-  if (load_all) {
-    size_t total_point_num = reader_.point_num();
-    size_t copy_loc = 0;
-
-    PclCloudType tmp_cloud;
-
-    cloud_ptr->resize(total_point_num);
-
-    int seg_count = 0;
-
-    while (reader_.good() && rclcpp::ok()) {
-      RCLCPP_INFO(logger_, "Copy segment %d", seg_count++);
-      size_t read_size = reader_.readABlock(tmp_cloud);
-
-      RCLCPP_INFO(
-        logger_,
-        "Read size (bytes/points) = %lu/%lu, tmp size = %lu, cloud size = %lu, total pnum = %lu",
-        read_size, read_size / sizeof(PointT), tmp_cloud.size(), cloud_ptr->size(),
-        total_point_num);
-
-      if (read_size > 0) {
-        if (!std::memcpy(
-              cloud_ptr->data() + copy_loc, tmp_cloud.data(), tmp_cloud.size() * sizeof(PointT))) {
-          RCLCPP_ERROR(logger_, "Error: Failed to copy points from tmp buffer to cloud");
-          exit(EXIT_FAILURE);
-        }
-      }
-
-      copy_loc += tmp_cloud.size();
-    }
-  } else {
-    reader_.readABlock(*cloud_ptr);
-  }
+  reader_.readABlock(*cloud_ptr);
 
   return cloud_ptr;
 }
