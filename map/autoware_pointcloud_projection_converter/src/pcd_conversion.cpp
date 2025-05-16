@@ -14,24 +14,28 @@
 
 // The original code was written by Koji Minoda
 
+#include "converter_from_llh.hpp"
+#include "converter_to_llh.hpp"
+#include "lat_lon_alt.hpp"
+
+#include <GeographicLib/MGRS.hpp>
+
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <yaml-cpp/yaml.h>
+
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <string>
 
-#include <GeographicLib/MGRS.hpp>
-#include <pcl/io/pcd_io.h>
-#include <pcl/point_types.h>
-#include <yaml-cpp/yaml.h>
-
-#include "converter_from_llh.hpp"
-#include "converter_to_llh.hpp"
-#include "lat_lon_alt.hpp"
-
-int main(int argc, char **argv) {
+int main(int argc, char ** argv)
+{
   if (argc != 5) {
-    std::cerr << "Usage: ros2 run autoware_pointcloud_projection_converter pointcloud_projection_converter input_yaml output_yaml "
-                 "input_pcd output_pcd" << std::endl;
+    std::cerr << "Usage: ros2 run autoware_pointcloud_projection_converter "
+                 "pointcloud_projection_converter input_yaml output_yaml "
+                 "input_pcd output_pcd"
+              << std::endl;
     std::exit(EXIT_FAILURE);
   }
 
@@ -55,7 +59,7 @@ int main(int argc, char **argv) {
 
 #pragma omp parallel for
   for (size_t i = 0; i < n_points; ++i) {
-    auto &point = cloud->points[i];
+    auto & point = cloud->points[i];
     autoware::pointcloud_projection_converter::LatLonAlt llh = to_llh.convert(point);
     point = from_llh.convert(llh);
   }

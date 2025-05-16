@@ -19,28 +19,30 @@
 namespace autoware::pointcloud_projection_converter
 {
 
-ConverterFromLLH::ConverterFromLLH(const YAML::Node &config) {
+ConverterFromLLH::ConverterFromLLH(const YAML::Node & config)
+{
   projector_type_ = config["projector_type"].as<std::string>();
 
   if (projector_type_ == "TransverseMercator") {
     central_meridian_ = config["map_origin"]["longitude"].as<double>();
 
     // Calculate origin in Transverse Mercator coordinate
-    const GeographicLib::TransverseMercatorExact &proj =
-        GeographicLib::TransverseMercatorExact::UTM();
+    const GeographicLib::TransverseMercatorExact & proj =
+      GeographicLib::TransverseMercatorExact::UTM();
     double x, y;
-    proj.Forward(central_meridian_,
-                 config["map_origin"]["latitude"].as<double>(),
-                 config["map_origin"]["longitude"].as<double>(), x, y);
+    proj.Forward(
+      central_meridian_, config["map_origin"]["latitude"].as<double>(),
+      config["map_origin"]["longitude"].as<double>(), x, y);
     origin_xy_ = std::pair<double, double>(x, y);
   }
 }
 
-pcl::PointXYZI ConverterFromLLH::convert(const LatLonAlt &llh) {
+pcl::PointXYZI ConverterFromLLH::convert(const LatLonAlt & llh)
+{
   pcl::PointXYZI xyz;
   if (projector_type_ == "TransverseMercator") {
-    const GeographicLib::TransverseMercatorExact &proj =
-        GeographicLib::TransverseMercatorExact::UTM();
+    const GeographicLib::TransverseMercatorExact & proj =
+      GeographicLib::TransverseMercatorExact::UTM();
 
     // Variables to hold the results
     double x, y;
@@ -54,8 +56,7 @@ pcl::PointXYZI ConverterFromLLH::convert(const LatLonAlt &llh) {
   } else {
     std::cerr << "Only conversion to "
                  "TransverseMercator is supported currently.\n";
-    std::cerr << "Not supported projector type: " << projector_type_
-              << std::endl;
+    std::cerr << "Not supported projector type: " << projector_type_ << std::endl;
     throw std::runtime_error("");
   }
   return xyz;

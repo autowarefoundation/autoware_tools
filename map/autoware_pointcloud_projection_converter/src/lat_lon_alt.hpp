@@ -14,13 +14,14 @@
 
 // The original code was written by Koji Minoda
 
-#ifndef POINTCLOUD_PROJECTION_CONVERTER__LAT_LON_ALT_HPP
-#define POINTCLOUD_PROJECTION_CONVERTER__LAT_LON_ALT_HPP
+#ifndef LAT_LON_ALT_HPP_
+#define LAT_LON_ALT_HPP_
 
 namespace autoware::pointcloud_projection_converter
 {
 
-struct LatLonAlt {
+struct LatLonAlt
+{
   double lat;
   double lon;
   double alt;
@@ -28,4 +29,4 @@ struct LatLonAlt {
 
 }  // namespace autoware::pointcloud_projection_converter
 
-#endif // POINTCLOUD_PROJECTION_CONVERTER__LAT_LON_ALT_HPP
+#endif  // LAT_LON_ALT_HPP_

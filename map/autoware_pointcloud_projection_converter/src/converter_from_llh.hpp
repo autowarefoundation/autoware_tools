@@ -14,26 +14,28 @@
 
 // The original code was written by Koji Minoda
 
-#ifndef POINTCLOUD_PROJECTION_CONVERTER__CONVERTER_FROM_LLH_HPP
-#define POINTCLOUD_PROJECTION_CONVERTER__CONVERTER_FROM_LLH_HPP
+#ifndef CONVERTER_FROM_LLH_HPP_
+#define CONVERTER_FROM_LLH_HPP_
 
-#include <utility>
+#include "lat_lon_alt.hpp"
 
 #include <GeographicLib/MGRS.hpp>
 #include <GeographicLib/TransverseMercatorExact.hpp>
-#include <iostream>
+
 #include <pcl/point_types.h>
 #include <yaml-cpp/yaml.h>
 
-#include "lat_lon_alt.hpp"
+#include <iostream>
+#include <utility>
 
 namespace autoware::pointcloud_projection_converter
 {
 
-class ConverterFromLLH {
+class ConverterFromLLH
+{
 public:
-  ConverterFromLLH(const YAML::Node &config);
-  pcl::PointXYZI convert(const LatLonAlt &xyz);
+  ConverterFromLLH(const YAML::Node & config);
+  pcl::PointXYZI convert(const LatLonAlt & xyz);
 
 private:
   std::string projector_type_;
@@ -43,4 +45,4 @@ private:
 
 }  // namespace autoware::pointcloud_projection_converter
 
-#endif // POINTCLOUD_PROJECTION_CONVERTER__CONVERTER_FROM_LLH_HPP
+#endif  // CONVERTER_FROM_LLH_HPP_

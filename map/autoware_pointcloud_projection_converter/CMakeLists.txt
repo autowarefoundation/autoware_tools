@@ -36,6 +36,6 @@ ament_auto_add_executable(pointcloud_projection_converter "src/pcd_conversion.cp
 target_link_libraries(converter_lib yaml-cpp ${PCL_LIBRARIES} ${GeographicLib_LIBRARIES})
 target_link_libraries(pointcloud_projection_converter converter_lib yaml-cpp ${PCL_LIBRARIES} ${GeographicLib_LIBRARIES})
 
-ament_auto_package(INSTALL_TO_SHARE    
+ament_auto_package(INSTALL_TO_SHARE
     config
 )
