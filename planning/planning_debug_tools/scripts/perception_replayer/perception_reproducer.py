@@ -298,7 +298,11 @@ if __name__ == "__main__":
         "-t", "--tracked-object", help="publish tracked object", action="store_true"
     )
     parser.add_argument(
-        "-f", "--rosbag-format", help="rosbag data format (default is db3)", default="db3"
+        "-f",
+        "--rosbag-format",
+        help="rosbag data format (default is sqlite3)",
+        default="sqlite3",
+        choices=["sqlite3", "mcap"],
     )
     parser.add_argument(
         "-v", "--verbose", help="output debug data", action="store_true", default=False
@@ -331,7 +335,7 @@ if __name__ == "__main__":
     rclpy.init()
 
     if args.pub_route:
-        pub_route(args.bag)
+        pub_route(args.bag, args.rosbag_format)
 
     node = PerceptionReproducer(args)
 
