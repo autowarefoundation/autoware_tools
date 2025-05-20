@@ -172,8 +172,6 @@ private:
   void mergeAndDownsample();
   void mergeAndDownsample(
     const std::string & dir_path, std::list<std::string> & pcd_list, size_t total_point_num);
-
-  void meta_generator(const std::vector<std::string> & pcd_names);
 };
 
 }  // namespace autoware::pointcloud_divider
