@@ -121,7 +121,7 @@ public:
   }
 
   void run();
-  void run(const std::vector<std::string> & pcd_names, bool meta_gen);
+  void run(const std::vector<std::string> & pcd_names, bool meta_gen = false);
   void meta_generator();
 
 private:
