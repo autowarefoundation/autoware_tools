@@ -35,7 +35,6 @@ PointCloudDivider::PointCloudDivider(const rclcpp::NodeOptions & node_options)
   std::string output_pcd_dir = declare_parameter<std::string>("output_pcd_dir");
   std::string file_prefix = declare_parameter<std::string>("prefix");
   std::string point_type = declare_parameter<std::string>("point_type");
-  bool meta_gen = declare_parameter<bool>("metadata_generate", false);
   // Enter a new line and clear it
   // This is to get rid of the prefix of RCLCPP_INFO
   std::string line_breaker(102, ' ');
@@ -74,7 +73,7 @@ PointCloudDivider::PointCloudDivider(const rclcpp::NodeOptions & node_options)
     pcd_divider_exe.setOutputDir(output_pcd_dir);
     pcd_divider_exe.setPrefix(file_prefix);
 
-    pcd_divider_exe.run(meta_gen);
+    pcd_divider_exe.run();
   } else if (point_type == "point_xyzi") {
     autoware::pointcloud_divider::PCDDivider<pcl::PointXYZI> pcd_divider_exe(get_logger());
 
@@ -85,7 +84,7 @@ PointCloudDivider::PointCloudDivider(const rclcpp::NodeOptions & node_options)
     pcd_divider_exe.setOutputDir(output_pcd_dir);
     pcd_divider_exe.setPrefix(file_prefix);
 
-    pcd_divider_exe.run(meta_gen);
+    pcd_divider_exe.run();
   }
 
   rclcpp::shutdown();

@@ -102,23 +102,17 @@ std::vector<std::string> PCDDivider<PointT>::discoverPCDs(const std::string & in
 }
 
 template <class PointT>
-void PCDDivider<PointT>::run(bool meta_gen)
+void PCDDivider<PointT>::run()
 {
   // Discover PCD files
   auto pcd_list = discoverPCDs(input_pcd_or_dir_);
 
   // Process pcd files
-  if (meta_gen) {
-    // Only generate a metadata file
-    meta_generator(pcd_list);
-  } else {
-    // Do the segmentation
-    run(pcd_list);
-  }
+  run(pcd_list, false);
 }
 
 template <class PointT>
-void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
+void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names, bool meta_gen)
 {
   checkOutputDirectoryValidity();
 
@@ -136,16 +130,18 @@ void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
     do {
       auto cloud_ptr = loadPCD(pcd_name);
 
-      dividePointCloud(cloud_ptr);
+      dividePointCloud(cloud_ptr, meta_gen);
     } while (reader_.good() && rclcpp::ok());
   }
 
-  saveTheRest();
+  if (!meta_gen) {
+    saveTheRest();
 
-  RCLCPP_INFO(logger_, "Merge and downsampling... ");
+    RCLCPP_INFO(logger_, "Merge and downsampling... ");
 
-  // Now merge and downsample
-  mergeAndDownsample();
+    // Now merge and downsample
+    mergeAndDownsample();
+  }
 
   std::string yaml_file_path = output_dir_ + "/pointcloud_map_metadata.yaml";
   saveGridInfoToYAML(yaml_file_path);
@@ -195,7 +191,7 @@ void PCDDivider<PointT>::savePCD(const std::string & path, const pcl::PointCloud
 }
 
 template <class PointT>
-void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
+void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr, bool meta_gen)
 {
   if (!cloud_ptr || cloud_ptr->size() <= 0) {
     return;
@@ -208,6 +204,15 @@ void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
     }
 
     auto grid_key = pointToGrid2(p, grid_size_x_, grid_size_y_);
+
+    grid_set_.insert(grid_key);
+
+    // If only want to generate metadata file, move to the next point
+    if (meta_gen) {
+      continue;
+    }
+
+    // Otherwise, distribute the point to the appropriate segment
     auto it = grid_to_cloud_.find(grid_key);
 
     // If the grid has not existed yet, create a new one
@@ -483,41 +488,12 @@ void PCDDivider<PointT>::saveGridInfoToYAML(const std::string & yaml_file_path)
 }
 
 template <class PointT>
-void PCDDivider<PointT>::meta_generator(const std::vector<std::string> & pcd_list)
+void PCDDivider<PointT>::meta_generator()
 {
-  std::string yaml_file_path = output_dir_ + "/pointcloud_map_metadata.yaml";
-  std::unordered_set<GridInfo<2>> segment_set;
+  // Discover PCD files
+  auto pcd_list = discoverPCDs(input_pcd_or_dir_);
 
-  for (auto & pcd_name : pcd_list) {
-    RCLCPP_INFO(logger_, "pcd_name = %s", pcd_name.c_str());
-    do {
-      auto cloud_ptr = loadPCD(pcd_name);
-
-      for (auto & p : *cloud_ptr) {
-        if (!rclcpp::ok()) {
-          exit(0);
-        }
-
-        auto seg_key = pointToGrid2(p, grid_size_x_, grid_size_y_);
-
-        if (segment_set.find(seg_key) == segment_set.end()) {
-          segment_set.insert(seg_key);
-        }
-      }
-    } while (reader_.good() && rclcpp::ok());
-  }
-
-  std::ofstream output_metadata(yaml_file_path);
-
-  output_metadata << "x_resolution: " << grid_size_x_ << std::endl;
-  output_metadata << "y_resolution: " << grid_size_y_ << std::endl;
-
-  for (auto & it : segment_set) {
-    output_metadata << file_prefix_ << "_" << it.ix << "_" << it.iy << ".pcd: [" << it.ix << ", "
-                    << it.iy << "]" << std::endl;
-  }
-
-  RCLCPP_INFO(logger_, "A metadata file is saved at %s", yaml_file_path.c_str());
+  run(pcd_list, true);
 }
 
 template class PCDDivider<pcl::PointXYZ>;
