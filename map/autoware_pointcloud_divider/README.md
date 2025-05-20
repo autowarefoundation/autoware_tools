@@ -30,7 +30,7 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
 - Select directory, process all files found with `find $INPUT_DIR -name "*.pcd"`.
 
   ```bash
-  ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=<PREFIX> [use_large_grid:=true/false] [leaf_size:=<LEAF_SIZE>] [grid_size_x:=<GRID_SIZE_X>] [grid_size_y:=<GRID_SIZE_Y>] [metadata_generate:=<META_VALUE>]
+  ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=<INPUT_DIR> output_pcd_dir:=<OUTPUT_DIR> prefix:=<PREFIX> [use_large_grid:=true/false] [leaf_size:=<LEAF_SIZE>] [grid_size_x:=<GRID_SIZE_X>] [grid_size_y:=<GRID_SIZE_Y>] 
   ```
 
   | Name           | Description                                                                                                                       |
@@ -42,7 +42,6 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
   | LEAF_SIZE      | The resolution (m) to downsample output PCD files. If negative, no downsampling is applied on the output PCD files. Default 0.2.  |
   | GRID_SIZE_X    | The X size (m) of the output PCD segments. Default 20.0.                                                                          |
   | GRID_SIZE_Y    | The Y size (m) of the output PCD segments. Default 20.0.                                                                          |
-  | META_VALUE     | A boolean value to indicate whether to generate a metadata file only (true), or actual divide the PCD map (false). Default false. |
 
 `INPUT_DIR` and `OUTPUT_DIR` should be specified as **absolute paths**.
 

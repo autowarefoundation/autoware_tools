@@ -120,8 +120,9 @@ public:
     return std::pair<double, double>(grid_size_x_, grid_size_y_);
   }
 
-  void run(bool meta_gen = false);
-  void run(const std::vector<std::string> & pcd_names);
+  void run();
+  void run(const std::vector<std::string> & pcd_names, bool meta_gen);
+  void meta_generator();
 
 private:
   std::string input_pcd_or_dir_, output_dir_, file_prefix_, config_file_;
@@ -161,7 +162,7 @@ private:
 
   PclCloudPtr loadPCD(const std::string & pcd_name);
   void savePCD(const std::string & pcd_name, const pcl::PointCloud<PointT> & cloud);
-  void dividePointCloud(const PclCloudPtr & cloud_ptr);
+  void dividePointCloud(const PclCloudPtr & cloud_ptr, bool meta_gen);
   void paramInitialize();
   void saveGridInfoToYAML(const std::string & yaml_file_path);
   void checkOutputDirectoryValidity();
