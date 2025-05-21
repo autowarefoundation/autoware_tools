@@ -30,7 +30,7 @@ jobs:
           - container-suffix: ""
             runner: ubuntu-22.04
           - container-suffix: -cuda
-            runner: codebuild-autoware-us-east-1-${{ github.run_id }}-${{ github.run_attempt }}-ubuntu-7.0-large
+            runner: [self-hosted, Linux, X64]
 
     steps:
       - name: Set PR fetch depth
