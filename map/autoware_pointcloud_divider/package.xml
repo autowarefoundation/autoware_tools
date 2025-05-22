@@ -17,6 +17,7 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
   <depend>yaml-cpp</depend>
+  <depend>pcl_conversions</depend>
 
   <exec_depend>ros2launch</exec_depend>
 
