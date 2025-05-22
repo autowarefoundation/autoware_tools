@@ -31,7 +31,6 @@ import sys
 
 # Add the path to the compiled pybind11 module (.so)
 import sys
-# sys.path.append('/home/anh/Work/autoware/install/autoware_tp_manager/lib')
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -117,6 +116,8 @@ class TPCollector(Node):
 
             # Move the metadata file back to the output_dir, overwrite the current metadata file
             shutil.move(os.path.join(tmp_path, "pointcloud_map_metadata.yaml"), os.path.join(self.output_path, "pointcloud_map_metadata.yaml"))
+            # Remove the tmp folder
+            shutil.rmtree(tmp_path)
 
             self.pcd_path = os.path.join(self.output_path, "pointcloud_map.pcd")
 
