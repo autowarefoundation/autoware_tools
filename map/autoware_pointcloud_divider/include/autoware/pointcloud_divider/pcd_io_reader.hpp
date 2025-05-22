@@ -84,8 +84,6 @@ public:
     clear();
   }
 
-
-
   // Set a file to reading
   void setInput(const std::string & pcd_path);
   // Read a block of points from the input stream
