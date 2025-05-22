@@ -81,12 +81,21 @@ class PCDDivider
 
 public:
   explicit PCDDivider(const rclcpp::Logger & logger) : logger_(logger) {}
+  explicit PCDDivider(const std::string & logger_name) : logger_(rclcpp::get_logger(logger_name))
+  {}
 
   // Functions to set input parameters
-  void setInput(const std::string & input_pcd_or_dir) { input_pcd_or_dir_ = input_pcd_or_dir; }
+  void setInput(const std::string & input_pcd_or_dir) 
+  { 
+    // Reset the PCD reader
+    reader_.clear();
+
+    input_pcd_or_dir_ = input_pcd_or_dir; 
+  }
 
   void setOutputDir(const std::string & output_dir)
   {
+    RCLCPP_INFO(logger_, "Output PCD directory: %s", output_dir.c_str());
     output_dir_ = output_dir;
     tmp_dir_ = output_dir + "/tmp/";
   }
@@ -111,7 +120,11 @@ public:
 
   void setLargeGridMode(bool use_large_grid) { use_large_grid_ = use_large_grid; }
 
-  void setLeafSize(float leaf_size) { leaf_size_ = leaf_size; }
+  void setLeafSize(float leaf_size) { 
+    RCLCPP_INFO(logger_, "Leaf size: %f", leaf_size);
+
+    leaf_size_ = leaf_size;  
+  }
 
   void setDebugMode(bool mode) { debug_mode_ = mode; }
 
