@@ -120,17 +120,20 @@ void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names, bool me
 
   for (const std::string & pcd_name : pcd_names) {
     if (!rclcpp::ok()) {
+      RCLCPP_INFO(logger_, "Quit");
+
       return;
     }
 
-    if (debug_mode_) {
-      RCLCPP_INFO(logger_, "Dividing file %s", pcd_name.c_str());
-    }
+    // if (debug_mode_) {
+    RCLCPP_INFO(logger_, "Dividing file %s", pcd_name.c_str());
+    // }
 
     do {
       auto cloud_ptr = loadPCD(pcd_name);
 
       dividePointCloud(cloud_ptr, meta_gen);
+      RCLCPP_ERROR(logger_, "Checking a segment");
     } while (reader_.good() && rclcpp::ok());
   }
 
@@ -194,7 +197,10 @@ template <class PointT>
 void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr, bool meta_gen)
 {
   if (!cloud_ptr || cloud_ptr->size() <= 0) {
+    RCLCPP_ERROR(logger_, "Empty cloud input");
     return;
+  } else {
+    RCLCPP_ERROR(logger_, "Size of the input cloud = %lu", cloud_ptr->size());
   }
 
   for (const PointT p : *cloud_ptr) {
@@ -485,6 +491,8 @@ void PCDDivider<PointT>::saveGridInfoToYAML(const std::string & yaml_file_path)
   }
 
   yaml_file.close();
+
+  RCLCPP_INFO(logger_, "Save a yaml file at %s", yaml_file_path.c_str());
 }
 
 template <class PointT>
