@@ -94,7 +94,6 @@ public:
 
   void setOutputDir(const std::string & output_dir)
   {
-    RCLCPP_INFO(logger_, "Output PCD directory: %s", output_dir.c_str());
     output_dir_ = output_dir;
     tmp_dir_ = output_dir + "/tmp/";
   }
@@ -121,8 +120,6 @@ public:
 
   void setLeafSize(float leaf_size)
   {
-    RCLCPP_INFO(logger_, "Leaf size: %f", leaf_size);
-
     leaf_size_ = leaf_size;
   }
 
