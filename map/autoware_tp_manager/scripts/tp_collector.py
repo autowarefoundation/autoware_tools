@@ -20,6 +20,9 @@ import os
 import shutil
 from subprocess import call
 
+# Add the path to the compiled pybind11 module (.so)
+import sys
+
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -27,10 +30,6 @@ import sensor_msgs_py.point_cloud2 as pc2
 import tp_utility as tpu
 import tqdm
 import yaml
-import sys
-
-# Add the path to the compiled pybind11 module (.so)
-import sys
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -38,7 +37,7 @@ sys.path.append(os.path.abspath(script_dir))
 
 print(f"Current path {os.path.abspath(script_dir)}")
 
-import pcd_divider_wrapper 
+import pcd_divider_wrapper
 
 
 class TPCollector(Node):
@@ -115,7 +114,10 @@ class TPCollector(Node):
             pcd_divider_wrapper.shutdown_ros()
 
             # Move the metadata file back to the output_dir, overwrite the current metadata file
-            shutil.move(os.path.join(tmp_path, "pointcloud_map_metadata.yaml"), os.path.join(self.output_path, "pointcloud_map_metadata.yaml"))
+            shutil.move(
+                os.path.join(tmp_path, "pointcloud_map_metadata.yaml"),
+                os.path.join(self.output_path, "pointcloud_map_metadata.yaml"),
+            )
             # Remove the tmp folder
             shutil.rmtree(tmp_path)
 

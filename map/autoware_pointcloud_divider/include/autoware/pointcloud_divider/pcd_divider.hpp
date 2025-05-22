@@ -118,10 +118,7 @@ public:
 
   void setLargeGridMode(bool use_large_grid) { use_large_grid_ = use_large_grid; }
 
-  void setLeafSize(float leaf_size)
-  {
-    leaf_size_ = leaf_size;
-  }
+  void setLeafSize(float leaf_size) { leaf_size_ = leaf_size; }
 
   void setDebugMode(bool mode) { debug_mode_ = mode; }
 
