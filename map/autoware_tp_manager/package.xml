@@ -21,6 +21,7 @@
   <depend>autoware_internal_debug_msgs</depend>
   <depend>libpcl-all-dev</depend>
   <depend>yaml-cpp</depend>
+  <depend>autoware_pointcloud_divider</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

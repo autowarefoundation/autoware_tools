@@ -27,6 +27,19 @@ import sensor_msgs_py.point_cloud2 as pc2
 import tp_utility as tpu
 import tqdm
 import yaml
+import sys
+
+# Add the path to the compiled pybind11 module (.so)
+import sys
+# sys.path.append('/home/anh/Work/autoware/install/autoware_tp_manager/lib')
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+sys.path.append(os.path.abspath(script_dir))
+
+print(f"Current path {os.path.abspath(script_dir)}")
+
+import pcd_divider_wrapper 
 
 
 class TPCollector(Node):
@@ -77,49 +90,34 @@ class TPCollector(Node):
         self.yaml_path = os.path.join(self.output_path, "pointcloud_map_metadata.yaml")
 
         if not os.path.exists(self.yaml_path):
-            if self.resolution >= 5.0:
-                ds_cmd = (
-                    "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml "
-                    + "input_pcd_or_dir:="
-                    + self.pcd_path
-                    + " output_pcd_dir:="
-                    + self.output_path
-                    + " prefix:=test leaf_size:=0.5"
-                    + " grid_size_x:="
-                    + str(self.resolution)
-                    + " grid_size_y:="
-                    + str(self.resolution)
-                )
-                call(ds_cmd, shell=True)
-            else:
-                ds_cmd = (
-                    "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml "
-                    + "input_pcd_or_dir:="
-                    + self.pcd_path
-                    + " output_pcd_dir:="
-                    + self.output_path
-                    + " prefix:=test leaf_size:=0.5"
-                    + " grid_size_x:="
-                    + str(50.0)
-                    + " grid_size_y:="
-                    + str(50.0)
-                )
-                call(ds_cmd, shell=True)
+            pcd_divider_wrapper.init_ros()
 
-                meta_gen = (
-                    "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml "
-                    + "input_pcd_or_dir:="
-                    + self.pcd_path
-                    + " output_pcd_dir:="
-                    + self.output_path
-                    + " prefix:=test leaf_size:=0.5"
-                    + " grid_size_x:="
-                    + str(self.resolution)
-                    + " grid_size_y:="
-                    + str(self.resolution)
-                    + " metadata_generate:=true"
-                )
-                call(meta_gen, shell=True)
+            pcd_divider = pcd_divider_wrapper.PCDDivider("tp_collector_log")
+            pcd_divider.setInput(self.pcd_path)
+            pcd_divider.setOutputDir(self.output_path)
+            pcd_divider.setLeafSize(0.5)
+            pcd_divider.setPrefix("test")
+
+            if self.resolution >= 5.0:
+                pcd_divider.setGridSize(self.resolution, self.resolution)
+            else:
+                pcd_divider.setGridSize(50.0, 50.0)
+
+            pcd_divider.divide_pcd()
+
+            # Generate a metadata file
+            tmp_path = os.path.join(self.output_path, "tmp_metadata")
+            pcd_divider.setInput(self.pcd_path)
+            pcd_divider.setOutputDir(tmp_path)
+            pcd_divider.setGridSize(self.resolution, self.resolution)
+            # The metadata file is at the tmp_path
+            pcd_divider.meta_generator()
+
+            pcd_divider_wrapper.shutdown_ros()
+
+            # Move the metadata file back to the output_dir, overwrite the current metadata file
+            shutil.move(os.path.join(tmp_path, "pointcloud_map_metadata.yaml"), os.path.join(self.output_path, "pointcloud_map_metadata.yaml"))
+
             self.pcd_path = os.path.join(self.output_path, "pointcloud_map.pcd")
 
         # Now scan the downsample directory and get the segment list
