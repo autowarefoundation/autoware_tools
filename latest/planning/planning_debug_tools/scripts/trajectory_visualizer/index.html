@@ -8,27 +8,27 @@
       
       
       
-        <link rel="canonical" href="https://autowarefoundation.github.io/autoware-tools-documentation/latest/map/autoware_lanelet2_map_validator/">
+        <link rel="canonical" href="https://autowarefoundation.github.io/autoware-tools-documentation/latest/planning/planning_debug_tools/scripts/trajectory_visualizer/">
       
       
-        <link rel="prev" href="../autoware_lanelet2_map_utils/">
+        <link rel="prev" href="../../doc-stop-reason-visualizer/">
       
       
-        <link rel="next" href="docs/how_to_contribute/">
+        <link rel="next" href="../../../../simulator/simulator_compatibility_test/">
       
-      <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
+      <link rel="icon" href="../../../../docs/assets/images/autoware-foundation.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.20">
     
     
       
-        <title>autoware_lanelet2_map_validator - Autoware Tools Documentation</title>
+        <title>Trajectory Visualizer - Autoware Tools Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.eebd395e.min.css">
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.eebd395e.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ecc896b0.min.css">
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ecc896b0.min.css">
       
       
 
@@ -44,11 +44,11 @@
       
     
     
-      <link rel="stylesheet" href="../../docs/assets/css/extra.css">
+      <link rel="stylesheet" href="../../../../docs/assets/css/extra.css">
     
       <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#autoware_lanelet2_map_validator" class="md-skip">
+        <a href="#trajectory-visualizer" class="md-skip">
           Skip to content
         </a>
       
@@ -97,7 +97,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Autoware Tools Documentation" class="md-header__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
+    <a href="../../../.." title="Autoware Tools Documentation" class="md-header__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4zm-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-48H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              autoware_lanelet2_map_validator
+              Trajectory Visualizer
             
           </span>
         </div>
@@ -214,7 +214,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../autoware_dependency_checker/" class="md-tabs__link">
+      <a href="../../../../autoware_dependency_checker/" class="md-tabs__link">
         Autoware dependency checker
       </a>
     </li>
@@ -230,7 +230,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../bag2lanelet/" class="md-tabs__link">
+      <a href="../../../../bag2lanelet/" class="md-tabs__link">
         Bag2lanelet
       </a>
     </li>
@@ -251,7 +251,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../common/autoware_debug_tools/" class="md-tabs__link">
+      <a href="../../../../common/autoware_debug_tools/" class="md-tabs__link">
         Common
       </a>
     </li>
@@ -279,7 +279,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../control/control_debug_tools/scripts/" class="md-tabs__link">
+      <a href="../../../../control/control_debug_tools/scripts/" class="md-tabs__link">
         Control
       </a>
     </li>
@@ -299,7 +299,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../control_data_collecting_tool/" class="md-tabs__link">
+      <a href="../../../../control_data_collecting_tool/" class="md-tabs__link">
         Control data collecting tool
       </a>
     </li>
@@ -315,7 +315,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../driving_environment_analyzer/" class="md-tabs__link">
+      <a href="../../../../driving_environment_analyzer/" class="md-tabs__link">
         Driving environment analyzer
       </a>
     </li>
@@ -336,7 +336,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
+      <a href="../../../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
         Evaluation
       </a>
     </li>
@@ -359,7 +359,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../localization/autoware_localization_evaluation_scripts/" class="md-tabs__link">
+      <a href="../../../../localization/autoware_localization_evaluation_scripts/" class="md-tabs__link">
         Localization
       </a>
     </li>
@@ -371,8 +371,6 @@
         
   
   
-    
-  
 
 
   
@@ -384,7 +382,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../autoware_lanelet2_map_utils/" class="md-tabs__link md-tabs__link--active">
+      <a href="../../../../map/autoware_lanelet2_map_utils/" class="md-tabs__link">
         Map
       </a>
     </li>
@@ -396,6 +394,8 @@
         
   
   
+    
+  
 
 
   
@@ -407,7 +407,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../planning/autoware_planning_data_analyzer/" class="md-tabs__link">
+      <a href="../../../autoware_planning_data_analyzer/" class="md-tabs__link md-tabs__link--active">
         Planning
       </a>
     </li>
@@ -430,7 +430,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../simulator/simulator_compatibility_test/" class="md-tabs__link">
+      <a href="../../../../simulator/simulator_compatibility_test/" class="md-tabs__link">
         Simulator
       </a>
     </li>
@@ -453,7 +453,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
+      <a href="../../../../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
         System
       </a>
     </li>
@@ -476,7 +476,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../vehicle/calibration_adapter/" class="md-tabs__link">
+      <a href="../../../../vehicle/calibration_adapter/" class="md-tabs__link">
         Vehicle
       </a>
     </li>
@@ -512,7 +512,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Autoware Tools Documentation" class="md-nav__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
+    <a href="../../../.." title="Autoware Tools Documentation" class="md-nav__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4zm-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-48H96v48c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2zM128 288a32 32 0 1 0-64 0 32 32 0 1 0 64 0zm288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/></svg>
@@ -563,7 +563,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../autoware_dependency_checker/">Autoware dependency checker</a>
+          <a href="../../../../autoware_dependency_checker/">Autoware dependency checker</a>
           
         </div>
       
@@ -610,7 +610,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../bag2lanelet/">Bag2lanelet</a>
+          <a href="../../../../bag2lanelet/">Bag2lanelet</a>
           
         </div>
       
@@ -716,7 +716,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/autoware_debug_tools/">Autoware debug tools</a>
+          <a href="../../../../common/autoware_debug_tools/">Autoware debug tools</a>
           
             <label for="__nav_3_1">
               <span class="md-nav__icon md-icon"></span>
@@ -805,7 +805,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../common/autoware_debug_tools/autoware_debug_tools/topic_connection_checker/readme/" class="md-nav__link">
+      <a href="../../../../common/autoware_debug_tools/autoware_debug_tools/topic_connection_checker/readme/" class="md-nav__link">
         Topic Connection Checker
       </a>
     </li>
@@ -862,7 +862,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/mission_planner_rviz_plugin/">Mission planner rviz plugin</a>
+          <a href="../../../../common/mission_planner_rviz_plugin/">Mission planner rviz plugin</a>
           
         </div>
       
@@ -910,7 +910,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/rtc_manager_rviz_plugin/">Rtc manager rviz plugin</a>
+          <a href="../../../../common/rtc_manager_rviz_plugin/">Rtc manager rviz plugin</a>
           
         </div>
       
@@ -958,7 +958,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_automatic_goal_rviz_plugin/">Tier4 automatic goal rviz plugin</a>
+          <a href="../../../../common/tier4_automatic_goal_rviz_plugin/">Tier4 automatic goal rviz plugin</a>
           
         </div>
       
@@ -1006,7 +1006,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_control_rviz_plugin/">Tier4 control rviz plugin</a>
+          <a href="../../../../common/tier4_control_rviz_plugin/">Tier4 control rviz plugin</a>
           
         </div>
       
@@ -1054,7 +1054,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_debug_rviz_plugin/">Tier4 debug rviz plugin</a>
+          <a href="../../../../common/tier4_debug_rviz_plugin/">Tier4 debug rviz plugin</a>
           
         </div>
       
@@ -1102,7 +1102,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_debug_tools/">Tier4 debug tools</a>
+          <a href="../../../../common/tier4_debug_tools/">Tier4 debug tools</a>
           
         </div>
       
@@ -1150,7 +1150,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_logging_level_configure_rviz_plugin/">Tier4 logging level configure rviz plugin</a>
+          <a href="../../../../common/tier4_logging_level_configure_rviz_plugin/">Tier4 logging level configure rviz plugin</a>
           
         </div>
       
@@ -1198,7 +1198,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_screen_capture_rviz_plugin/">Tier4 screen capture rviz plugin</a>
+          <a href="../../../../common/tier4_screen_capture_rviz_plugin/">Tier4 screen capture rviz plugin</a>
           
         </div>
       
@@ -1246,7 +1246,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_simulated_clock_rviz_plugin/">Tier4 simulated clock rviz plugin</a>
+          <a href="../../../../common/tier4_simulated_clock_rviz_plugin/">Tier4 simulated clock rviz plugin</a>
           
         </div>
       
@@ -1294,7 +1294,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_string_viewer_rviz_plugin/">Tier4 string viewer rviz plugin</a>
+          <a href="../../../../common/tier4_string_viewer_rviz_plugin/">Tier4 string viewer rviz plugin</a>
           
         </div>
       
@@ -1342,7 +1342,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../common/tier4_target_object_type_rviz_plugin/">Tier4 target object type rviz plugin</a>
+          <a href="../../../../common/tier4_target_object_type_rviz_plugin/">Tier4 target object type rviz plugin</a>
           
         </div>
       
@@ -1466,7 +1466,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../control/control_debug_tools/scripts/">Scripts</a>
+          <a href="../../../../control/control_debug_tools/scripts/">Scripts</a>
           
         </div>
       
@@ -1521,7 +1521,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../control/vehicle_cmd_analyzer/">Vehicle cmd analyzer</a>
+          <a href="../../../../control/vehicle_cmd_analyzer/">Vehicle cmd analyzer</a>
           
         </div>
       
@@ -1575,7 +1575,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../control_data_collecting_tool/">Control data collecting tool</a>
+          <a href="../../../../control_data_collecting_tool/">Control data collecting tool</a>
           
         </div>
       
@@ -1622,7 +1622,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../driving_environment_analyzer/">Driving environment analyzer</a>
+          <a href="../../../../driving_environment_analyzer/">Driving environment analyzer</a>
           
         </div>
       
@@ -1704,7 +1704,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../evaluation/tier4_metrics_rviz_plugin/">Tier4 metrics rviz plugin</a>
+          <a href="../../../../evaluation/tier4_metrics_rviz_plugin/">Tier4 metrics rviz plugin</a>
           
         </div>
       
@@ -1795,7 +1795,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../localization/autoware_localization_evaluation_scripts/">Autoware localization evaluation scripts</a>
+          <a href="../../../../localization/autoware_localization_evaluation_scripts/">Autoware localization evaluation scripts</a>
           
         </div>
       
@@ -1856,7 +1856,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
+      <a href="../../../../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
         deviation_estimation_tools
       </a>
     </li>
@@ -1883,16 +1883,16 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
       
       
         
@@ -1913,7 +1913,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_9">
           <span class="md-nav__icon md-icon"></span>
           Map
@@ -1948,7 +1948,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../autoware_lanelet2_map_utils/">Autoware lanelet2 map utils</a>
+          <a href="../../../../map/autoware_lanelet2_map_utils/">Autoware lanelet2 map utils</a>
           
         </div>
       
@@ -1972,18 +1972,18 @@
               
   
   
-    
-  
   
     
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_2" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9_2" >
       
       
         
@@ -1999,8 +1999,8 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index md-nav__link--active">
-          <a href="./">Autoware lanelet2 map validator</a>
+        <div class="md-nav__link md-nav__link--index ">
+          <a href="../../../../map/autoware_lanelet2_map_validator/">Autoware lanelet2 map validator</a>
           
             <label for="__nav_9_2">
               <span class="md-nav__icon md-icon"></span>
@@ -2008,7 +2008,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_2_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_9_2">
           <span class="md-nav__icon md-icon"></span>
           Autoware lanelet2 map validator
@@ -2066,7 +2066,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/how_to_contribute/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/how_to_contribute/" class="md-nav__link">
         How to contribute to autoware_lanelet2_map_validator
       </a>
     </li>
@@ -2115,7 +2115,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/crosswalk/missing_regulatory_elements_for_crosswalk/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/crosswalk/missing_regulatory_elements_for_crosswalk/" class="md-nav__link">
         missing_regulator_elements_for_crosswalk
       </a>
     </li>
@@ -2129,7 +2129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/crosswalk/regulatory_element_details_for_crosswalks/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/crosswalk/regulatory_element_details_for_crosswalks/" class="md-nav__link">
         regulatory_element_details_for_crosswalks
       </a>
     </li>
@@ -2189,7 +2189,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/intersection/intersection_area_dangling_reference/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/intersection/intersection_area_dangling_reference/" class="md-nav__link">
         intersection_area_dangling_reference
       </a>
     </li>
@@ -2203,7 +2203,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/intersection/intersection_area_segment_type/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/intersection/intersection_area_segment_type/" class="md-nav__link">
         intersection_area_segment_type
       </a>
     </li>
@@ -2217,7 +2217,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/intersection/intersection_area_validity/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/intersection/intersection_area_validity/" class="md-nav__link">
         intersection_area_validity
       </a>
     </li>
@@ -2231,7 +2231,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/intersection/turn_direction_tagging/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/intersection/turn_direction_tagging/" class="md-nav__link">
         turn_direction_tagging
       </a>
     </li>
@@ -2285,7 +2285,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/lane/local_coordinates_declaration/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/lane/local_coordinates_declaration/" class="md-nav__link">
         local_coordinates_declaration
       </a>
     </li>
@@ -2339,7 +2339,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/stop_line/missing_regulatory_elements_for_stop_lines/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/stop_line/missing_regulatory_elements_for_stop_lines/" class="md-nav__link">
         missing_regulator_elements_for_stop_lines
       </a>
     </li>
@@ -2399,7 +2399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/traffic_light/missing_referrers_for_traffic_lights/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/traffic_light/missing_referrers_for_traffic_lights/" class="md-nav__link">
         missing_referrers_for_traffic_lights
       </a>
     </li>
@@ -2413,7 +2413,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/traffic_light/missing_regulatory_elements_for_traffic_lights/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/traffic_light/missing_regulatory_elements_for_traffic_lights/" class="md-nav__link">
         missing_regulator_elements_for_traffic_lights
       </a>
     </li>
@@ -2427,7 +2427,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/traffic_light/regulatory_element_details_for_traffic_lights/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/traffic_light/regulatory_element_details_for_traffic_lights/" class="md-nav__link">
         regulatory_element_details_for_traffic_lights
       </a>
     </li>
@@ -2441,7 +2441,7 @@
   
   
     <li class="md-nav__item">
-      <a href="docs/traffic_light/traffic_light_facing/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/docs/traffic_light/traffic_light_facing/" class="md-nav__link">
         traffic_light_facing
       </a>
     </li>
@@ -2502,7 +2502,7 @@
   
   
     <li class="md-nav__item">
-      <a href="template/validator_template/" class="md-nav__link">
+      <a href="../../../../map/autoware_lanelet2_map_validator/template/validator_template/" class="md-nav__link">
         validator_template
       </a>
     </li>
@@ -2552,7 +2552,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../autoware_pointcloud_divider/">Autoware pointcloud divider</a>
+          <a href="../../../../map/autoware_pointcloud_divider/">Autoware pointcloud divider</a>
           
         </div>
       
@@ -2600,7 +2600,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../autoware_pointcloud_merger/">Autoware pointcloud merger</a>
+          <a href="../../../../map/autoware_pointcloud_merger/">Autoware pointcloud merger</a>
           
         </div>
       
@@ -2648,7 +2648,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../autoware_tp_manager/">Autoware tp manager</a>
+          <a href="../../../../map/autoware_tp_manager/">Autoware tp manager</a>
           
         </div>
       
@@ -2680,16 +2680,16 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" checked>
       
       
         
@@ -2710,7 +2710,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_10">
           <span class="md-nav__icon md-icon"></span>
           Planning
@@ -2745,7 +2745,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/autoware_planning_data_analyzer/">Autoware planning data analyzer</a>
+          <a href="../../../autoware_planning_data_analyzer/">Autoware planning data analyzer</a>
           
         </div>
       
@@ -2793,7 +2793,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/autoware_route_client/">Autoware route client</a>
+          <a href="../../../autoware_route_client/">Autoware route client</a>
           
         </div>
       
@@ -2841,7 +2841,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/autoware_rtc_replayer/">Autoware rtc replayer</a>
+          <a href="../../../autoware_rtc_replayer/">Autoware rtc replayer</a>
           
         </div>
       
@@ -2889,7 +2889,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/autoware_static_centerline_generator/">Autoware static centerline generator</a>
+          <a href="../../../autoware_static_centerline_generator/">Autoware static centerline generator</a>
           
         </div>
       
@@ -2913,18 +2913,18 @@
               
   
   
+    
+  
   
     
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_5" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10_5" checked>
       
       
         
@@ -2941,7 +2941,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/planning_debug_tools/">Planning debug tools</a>
+          <a href="../../">Planning debug tools</a>
           
             <label for="__nav_10_5">
               <span class="md-nav__icon md-icon"></span>
@@ -2949,7 +2949,7 @@
           
         </div>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_5_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_5_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_10_5">
           <span class="md-nav__icon md-icon"></span>
           Planning debug tools
@@ -2964,7 +2964,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
+      <a href="../../doc-stop-reason-visualizer/" class="md-nav__link">
         Doc stop reason visualizer
       </a>
     </li>
@@ -2976,16 +2976,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_5_3" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10_5_3" checked>
       
       
         
@@ -2998,7 +2998,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_5_3_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_5_3_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_10_5_3">
           <span class="md-nav__icon md-icon"></span>
           Scripts
@@ -3009,16 +3009,16 @@
               
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
       
       
-        
-      
-      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_5_3_1" >
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10_5_3_1" checked>
       
       
         
@@ -3030,12 +3030,12 @@
       
         
         
-        <div class="md-nav__link md-nav__link--index ">
-          <a href="../../planning/planning_debug_tools/scripts/trajectory_visualizer/">Trajectory visualizer</a>
+        <div class="md-nav__link md-nav__link--index md-nav__link--active">
+          <a href="./">Trajectory visualizer</a>
           
         </div>
       
-      <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_10_5_3_1_label" aria-expanded="false">
+      <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_10_5_3_1_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_10_5_3_1">
           <span class="md-nav__icon md-icon"></span>
           Trajectory visualizer
@@ -3134,7 +3134,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../simulator/simulator_compatibility_test/">Simulator compatibility test</a>
+          <a href="../../../../simulator/simulator_compatibility_test/">Simulator compatibility test</a>
           
         </div>
       
@@ -3223,7 +3223,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../system/rqt_diagnostic_graph_monitor/">Rqt diagnostic graph monitor</a>
+          <a href="../../../../system/rqt_diagnostic_graph_monitor/">Rqt diagnostic graph monitor</a>
           
         </div>
       
@@ -3318,7 +3318,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/calibration_adapter/">Calibration adapter</a>
+          <a href="../../../../vehicle/calibration_adapter/">Calibration adapter</a>
           
         </div>
       
@@ -3366,7 +3366,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/parameter_estimator/">Parameter estimator</a>
+          <a href="../../../../vehicle/parameter_estimator/">Parameter estimator</a>
           
         </div>
       
@@ -3414,7 +3414,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/pitch_checker/">Pitch checker</a>
+          <a href="../../../../vehicle/pitch_checker/">Pitch checker</a>
           
         </div>
       
@@ -3462,7 +3462,7 @@
         
         
         <div class="md-nav__link md-nav__link--index ">
-          <a href="../../vehicle/time_delay_estimator/">Time delay estimator</a>
+          <a href="../../../../vehicle/time_delay_estimator/">Time delay estimator</a>
           
         </div>
       
@@ -3515,70 +3515,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#design-concept" class="md-nav__link">
-    Design concept
+  <a href="#how-to-use-visualizerpy" class="md-nav__link">
+    How to use visualizer.py
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-use" class="md-nav__link">
-    How to use
-  </a>
-  
-    <nav class="md-nav" aria-label="How to use">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#run-all-validators" class="md-nav__link">
-    Run ALL validators
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#run-a-specific-validator" class="md-nav__link">
-    Run a specific validator
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#run-with-a-requirement-set" class="md-nav__link">
-    Run with a requirement set
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#available-command-options" class="md-nav__link">
-    Available command options
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#available-validators" class="md-nav__link">
-    Available validators
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-add-a-new-validator" class="md-nav__link">
-    How to add a new validator
+  <a href="#code-structure" class="md-nav__link">
+    Code structure
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#relationship-between-requirements-and-validators" class="md-nav__link">
-    Relationship between requirements and validators
+  <a href="#how-to-add-new-properties-to-plot" class="md-nav__link">
+    How to add new properties to plot
   </a>
   
 </li>
@@ -3601,585 +3553,45 @@
   
 
 
-<div><h1 id="autoware_lanelet2_map_validator">autoware_lanelet2_map_validator<a class="headerlink" href="#autoware_lanelet2_map_validator" title="Permanent link">#</a></h1>
-<p><code>autoware_lanelet2_map_validator</code> is a tool to validate Lanelet2 maps to ensure that Autoware can work properly with it.</p>
-<p>This validation tool is an extension of <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation">lanelet2_validation</a> so that Autoware specific rules can be applied. As you can see from the codes in the <code>src/validators</code> directory, the group of validators belong to this tool inherits the <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2/blob/master/lanelet2_validation/include/lanelet2_validation/BasicValidator.h#L17">lanelet::validation::MapValidator class</a> from the original <code>lanelet2_validation</code>. Therefore, we believe that reading the source code of the <code>lanelet2_validation</code> will help you understand this tool better.</p>
-<p><strong>Note that this validator is still on construction that there are only a few rules and a template to define those rules.</strong></p>
-<p>The official Autoware requirements for lanelet2 maps are described in <a href="https://autowarefoundation.github.io/autoware-documentation/main/design/autoware-architecture/map/map-requirements/vector-map-requirements-overview/">Vector Map creation requirement specifications (in Autoware Documentation)</a>.</p>
-<h2 id="design-concept">Design concept<a class="headerlink" href="#design-concept" title="Permanent link">#</a></h2>
-<p>The <code>autoware_lanelet2_map_validator</code> is designed to validate <code>.osm</code> map files by using and extending the <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation">lanelet2_validation</a> package for Autoware.</p>
-<p><code>autoware_lanelet2_map_validator</code> takes the lanelet2 map (.osm file) and requirement set (JSON file, optional) as the input, and output validation results to the console.</p>
-<p>If a requirement set is given, <code>autoware_lanelet2_map_validator</code> also outputs validation results reflecting the input requirement set.
-See <a href="#run-with-a-requirement-set">"Run with a requirement set"</a> for further information, <a href="#input-file">"Input file"</a> to understand the input format, and <a href="#output-file">"Output file"</a> to understand the output format.</p>
-<p><img alt="autoware_lanelet2_map_validator_architecture" src="media/autoware_lanelet2_map_validator_architecture.drawio.svg"></p>
-<h2 id="how-to-use">How to use<a class="headerlink" href="#how-to-use" title="Permanent link">#</a></h2>
-<p>Basically, you can use the following command to execute <code>autoware_lanelet2_map_validator</code>. However, note that <code>autoware_lanelet2_map_validator</code> is a ROS/rclcpp free tool, so you can just run the built executable whatever way.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator
+<div><h1 id="trajectory-visualizer">Trajectory Visualizer<a class="headerlink" href="#trajectory-visualizer" title="Permanent link">#</a></h1>
+<p>This tool allow the visualization of Autoware trajectory messages (<code>autoware_planning_msgs::msg::Trajectory</code>).</p>
+<h2 id="how-to-use-visualizerpy">How to use <code>visualizer.py</code><a class="headerlink" href="#how-to-use-visualizerpy" title="Permanent link">#</a></h2>
+<ol>
+<li><strong>Source an Autoware workspace:</strong> the workspace needs to contain the <code>autoware_planning_msgs</code> package.</li>
+<li>
+<p><strong>Run the script:</strong></p>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>visualizer.py
 </code></pre></div>
-<h3 id="run-all-validators">Run ALL validators<a class="headerlink" href="#run-all-validators" title="Permanent link">#</a></h3>
-<p>You can use <code>autoware_lanelet2_map_validator</code> with the following command. This will run all validators including the default built-in validators in the <a href="https://github.com/fzi-forschungszentrum-informatik/Lanelet2/tree/master/lanelet2_validation">lanelet2_validation</a>.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--map_file<span class="w"> </span>&lt;absolute_or_relative_path/to_your/lanelet2_map.osm&gt;<span class="w"> </span>--projector<span class="w"> </span>mgrs
-</code></pre></div>
-<h3 id="run-a-specific-validator">Run a specific validator<a class="headerlink" href="#run-a-specific-validator" title="Permanent link">#</a></h3>
-<p><code>autoware_lanelet2_map_validator</code> consists of multiple small validators in order to realize complex requirements with a combination of them.
-If you want to call a few validators, you can select them with the <code>--validator, -v</code> option.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--map_file<span class="w"> </span>path/to_your/lanelet2_map.osm<span class="w"> </span>--projector<span class="w"> </span>mgrs<span class="w"> </span>--validator<span class="w"> </span>mapping.traffic_light.missing_regulatory_elements
-</code></pre></div>
-<p>You can get a list of available validators with the <code>--print</code> option.
-(<code>-p</code> is for <code>--projector</code>)</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--print
-</code></pre></div>
-<h3 id="run-with-a-requirement-set">Run with a requirement set<a class="headerlink" href="#run-with-a-requirement-set" title="Permanent link">#</a></h3>
-<p><code>autoware_lanelet2_map_validator</code> can manage to run a group of validators by a list of validator names.
-<code>autoware_lanelet2_map_validator</code> will scan through the input JSON file given by the <code>--input_requirements, -i</code> option, and output the validation results to the directory given by the <code>--output_directory, -o</code> option.
-The output filename will be <code>lanelet2_validation_results.json</code>.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>--map_file<span class="w"> </span>&lt;absolute_or_relative_path/to_your/lanelet2_map.osm&gt;<span class="w"> </span>--projector<span class="w"> </span>mgrs<span class="w"> </span>--input_requirements<span class="w"> </span>&lt;absolute_or_relative_path_to_autoware_requirement_set.json&gt;<span class="w"> </span>--output_directory<span class="w"> </span>./
-</code></pre></div>
-<p>(Short version)</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>autoware_lanelet2_map_validator<span class="w"> </span>-m<span class="w"> </span>&lt;absolute_or_relative_path/to_your/lanelet2_map.osm&gt;<span class="w"> </span>-p<span class="w"> </span>mgrs<span class="w"> </span>-i<span class="w"> </span>&lt;absolute_or_relative_path_to_autoware_requirement_set.json&gt;<span class="w"> </span>-o<span class="w"> </span>./
-</code></pre></div>
-<h4 id="input-file">Input file<a class="headerlink" href="#input-file" title="Permanent link">#</a></h4>
-<p>The JSON file input should follow the structure like this example.</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"requirements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-02-02"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.stop_line.missing_regulatory_elements"</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-04-01"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.missing_regulatory_elements"</span>
-<span class="w">        </span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.regulatory_element_details"</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"prerequisites"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.missing_regulatory_elements"</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">          </span><span class="p">]</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-05-01"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.missing_regulatory_elements"</span>
-<span class="w">        </span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.regulatory_element_details"</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"prerequisites"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.missing_regulatory_elements"</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">          </span><span class="p">]</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
+</li>
+<li>
+<p><strong>A window will pop up:</strong> This window will be used to visualize trajectories.</p>
+</li>
+<li>
+<p><strong>Choose what to plot:</strong></p>
 <ul>
-<li>MUST have a single <code>requirements</code> field.</li>
-<li>The <code>requirements</code> field MUST be a list of requirements. A requirement MUST have<ul>
-<li><code>id</code> : The id of the requirement. Its name is arbitrary.</li>
-<li><code>validators</code> : A list of validators that structures the requirement.<ul>
-<li>A validator MUST be given with its name on the <code>name</code> field.</li>
-<li>The name list of available validators can be obtained from the <code>--print</code> option.</li>
-<li>You can add a list of <code>prerequisites</code> to each validator. Then, the validator will only be run when the prerequisites pass the validation.</li>
-<li>In the <code>prerequisites</code> field, you can add <code>forgive_warnings: true</code> in order to run the validator even if the prerequisites output warning issues. (Error issues from prerequisites will still skip the validation.). Note that NOT writing the <code>forgive_warnings</code> field and writing <code>forgive_warnings: false</code> means the same.</li>
+<li><strong>X-axis and Y-axis:</strong> Use the dropdown menus at the top left to select what data you want on the X and Y axes of the graph (e.g., "Time" vs. "Velocity").</li>
+<li><strong>Topics:</strong> The list in the middle left shows available trajectory topics. Check the boxes to select which trajectories you want to see on the plot.</li>
+<li><strong>Refresh List:</strong> Press the "Refresh List" button to update the list of available topics. This is useful if new trajectory data becomes available.</li>
 </ul>
 </li>
-</ul>
+<li>
+<p><strong>See the plot:</strong> The right side of the window shows the plot of the selected trajectory data.</p>
 </li>
-<li>The user can write any other field (like <code>version</code>) besides <code>requirements</code>.</li>
-</ul>
-<h4 id="output-file">Output file<a class="headerlink" href="#output-file" title="Permanent link">#</a></h4>
-<p>When the <code>input_requirements</code> is thrown to <code>autoware_lanelet2_map_validator</code>, it will output a <code>lanelet2_validation_results.json</code> file which looks like the following example.</p>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-<span class="w">  </span><span class="nt">"requirements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-02-02"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.stop_line.missing_regulatory_elements"</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-04-01"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"issues"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">163</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"issue_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Crosswalk.MissingRegulatoryElements-001"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"No regulatory element refers to this crosswalk."</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lanelet"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
-<span class="w">            </span><span class="p">},</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">164</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"issue_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Crosswalk.MissingRegulatoryElements-001"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"No regulatory element refers to this crosswalk."</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lanelet"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
-<span class="w">            </span><span class="p">},</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">165</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"issue_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Crosswalk.MissingRegulatoryElements-001"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"No regulatory element refers to this crosswalk."</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lanelet"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
-<span class="w">            </span><span class="p">},</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">166</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"issue_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Crosswalk.MissingRegulatoryElements-001"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"No regulatory element refers to this crosswalk."</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lanelet"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">          </span><span class="p">],</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.missing_regulatory_elements"</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<span class="w">        </span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"issues"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"issue_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"General.PrerequisitesFailure-001"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Prerequisites didn't pass"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"primitive"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">          </span><span class="p">],</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.regulatory_element_details"</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"prerequisites"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.crosswalk.missing_regulatory_elements"</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">          </span><span class="p">]</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">      </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"vm-05-01"</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">      </span><span class="nt">"validators"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.missing_regulatory_elements"</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-<span class="w">        </span><span class="p">},</span>
-<span class="w">        </span><span class="p">{</span>
-<span class="w">          </span><span class="nt">"issues"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">9896</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"issue_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TrafficLight.MissingRegulatoryElements-001"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Regulatory element of traffic light must have a stop line(ref_line)."</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"regulatory element"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
-<span class="w">            </span><span class="p">},</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">9918</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"issue_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TrafficLight.MissingRegulatoryElements-001"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Regulatory element of traffic light must have a stop line(ref_line)."</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"regulatory element"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
-<span class="w">            </span><span class="p">},</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">9838</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"issue_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TrafficLight.MissingRegulatoryElements-001"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Regulatory element of traffic light must have a stop line(ref_line)."</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"regulatory element"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
-<span class="w">            </span><span class="p">},</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">9874</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"issue_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"TrafficLight.MissingRegulatoryElements-001"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Regulatory element of traffic light must have a stop line(ref_line)."</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"primitive"</span><span class="p">:</span><span class="w"> </span><span class="s2">"regulatory element"</span><span class="p">,</span>
-<span class="w">              </span><span class="nt">"severity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Error"</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">          </span><span class="p">],</span>
-<span class="w">          </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.regulatory_element_details"</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">          </span><span class="nt">"prerequisites"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">            </span><span class="p">{</span>
-<span class="w">              </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mapping.traffic_light.missing_regulatory_elements"</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">          </span><span class="p">]</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">      </span><span class="p">]</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">  </span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
+</ol>
+<h2 id="code-structure">Code structure<a class="headerlink" href="#code-structure" title="Permanent link">#</a></h2>
 <ul>
-<li><code>lanelet2_validation_results.json</code> inherits the JSON file of <code>input_requirements</code> and add results to it.<ul>
-<li>So additional input information not related to this validator also remains in the output.</li>
+<li><code>visualizer.py</code>: This is the main script that starts the visualizer. It sets up the ROS 2 connection and the graphical interface.</li>
+<li><code>gui.py</code>: This file creates the graphical user interface (GUI) using Tkinter. It handles the buttons, dropdown menus, lists, and the plot area.</li>
+<li><code>plotter.py</code>: This file uses Matplotlib to create the plots. It draws the trajectory data on the graph.</li>
+<li><code>ros2_interface.py</code>: This file handles the communication with ROS 2. It gets the trajectory data from ROS 2 topics.</li>
+<li><code>trajectory_data.py</code>: This file calculates different properties of the trajectory, like velocity, curvature, etc. It provides the data that can be plotted.</li>
 </ul>
-</li>
-<li><code>autoware_lanelet2_map_validator</code> adds a boolean <code>passed</code> field to each requirement. If all validators of the requirement have been passed, the <code>passed</code> field of the requirement will be <code>true</code> (<code>false</code> if not).</li>
-<li>The <code>passed</code> field is also given to each validator. If the validator found any issues the <code>passed</code> field will turn to be <code>false</code> (<code>true</code> if not), and adds an <code>issues</code> field which is a list of issues found. Each issue contains information of <code>severity</code>, <code>primitive</code>, <code>id</code>, <code>message</code> and <code>issue_code</code>.</li>
-</ul>
-<h3 id="available-command-options">Available command options<a class="headerlink" href="#available-command-options" title="Permanent link">#</a></h3>
-<table>
-<thead>
-<tr>
-<th>option</th>
-<th>description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>-h, --help</code></td>
-<td>Explains about this tool and show a list of options</td>
-</tr>
-<tr>
-<td><code>--print</code></td>
-<td>Print all available checker without running them</td>
-</tr>
-<tr>
-<td><code>-m, --map_file</code></td>
-<td>Path to the map to be validated</td>
-</tr>
-<tr>
-<td><code>-i, --input_requirements</code></td>
-<td>Path to the JSON file where the list of requirements and validations is written</td>
-</tr>
-<tr>
-<td><code>-o, --output_directory</code></td>
-<td>Directory to save the list of validation results in a JSON format</td>
-</tr>
-<tr>
-<td><code>-v, --validator</code></td>
-<td>Comma separated list of regexes to filter the applicable validators. Will run all validators by default. Example: <code>mapping.*</code> to run all checks for the mapping</td>
-</tr>
-<tr>
-<td><code>-p, --projector</code></td>
-<td>Projector used for loading lanelet map. Available projectors are: <code>mgrs</code>, <code>utm</code>, and <code>transverse_mercator</code>.</td>
-</tr>
-<tr>
-<td><code>-l, --location</code></td>
-<td>Location of the map (for instantiating the traffic rules), e.g. de for Germany</td>
-</tr>
-<tr>
-<td><code>--participants</code></td>
-<td>Participants for which the routing graph will be instantiated (default: vehicle)</td>
-</tr>
-<tr>
-<td><code>--lat</code></td>
-<td>latitude coordinate of map origin. This is required for the transverse mercator and utm projector.</td>
-</tr>
-<tr>
-<td><code>--lon</code></td>
-<td>longitude coordinate of map origin. This is required for the transverse mercator and utm projector.</td>
-</tr>
-</tbody>
-</table>
-<h3 id="available-validators">Available validators<a class="headerlink" href="#available-validators" title="Permanent link">#</a></h3>
-<p>Since there will be hundreds of validators in the future, the documents for each validator should categorized in the docs file.
-The directory structure should be the same to that of the <code>src/validators</code> directory.</p>
-<h4 id="stop-line">Stop Line<a class="headerlink" href="#stop-line" title="Permanent link">#</a></h4>
-<ul>
-<li><a href="docs/stop_line/missing_regulatory_elements_for_stop_lines/">mapping.stop_line.missing_regulatory_elements</a></li>
-</ul>
-<h4 id="traffic-light">Traffic Light<a class="headerlink" href="#traffic-light" title="Permanent link">#</a></h4>
-<ul>
-<li><a href="docs/traffic_light/missing_regulatory_elements_for_traffic_lights/">mapping.traffic_light.missing_regulatory_elements</a></li>
-<li><a href="docs/traffic_light/regulatory_element_details_for_traffic_lights/">mapping.traffic_light.regulatory_element_details</a></li>
-</ul>
-<h4 id="crosswalk">Crosswalk<a class="headerlink" href="#crosswalk" title="Permanent link">#</a></h4>
-<ul>
-<li><a href="docs/crosswalk/missing_regulatory_elements_for_crosswalk/">mapping.crosswalk.missing_regulatory_elements</a></li>
-<li><a href="docs/crosswalk/regulatory_element_details_for_crosswalks/">mapping.crosswalk.regulatory_element_details</a></li>
-</ul>
-<h2 id="how-to-add-a-new-validator">How to add a new validator<a class="headerlink" href="#how-to-add-a-new-validator" title="Permanent link">#</a></h2>
-<p>If you want to contribute to <code>autoware_lanelet2_map_validator</code>, please check out the <a href="docs/how_to_contribute/">how_to_contribute</a> first.</p>
-<h2 id="relationship-between-requirements-and-validators">Relationship between requirements and validators<a class="headerlink" href="#relationship-between-requirements-and-validators" title="Permanent link">#</a></h2>
-<p>This is a table describing the correspondence between the validators that each requirement consists of.
-The "Validators" column will be blank if it hasn't be implemented.</p>
-<table>
-<thead>
-<tr>
-<th>ID</th>
-<th>Requirements</th>
-<th>Validators</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>vm-01-01</td>
-<td>Lanelet basics</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-02</td>
-<td>Allowance for lane changes</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-03</td>
-<td>Linestring sharing</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-04</td>
-<td>Sharing of the centerline of lanes for opposing traffic</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-05</td>
-<td>Lane geometry</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-06</td>
-<td>Line position (1)</td>
-<td>(Not possible to validate because real-world correspondence cannot be determined programmatically.)</td>
-</tr>
-<tr>
-<td>vm-01-07</td>
-<td>Line position (2)</td>
-<td>(Not possible to validate because real-world correspondence cannot be determined programmatically.)</td>
-</tr>
-<tr>
-<td>vm-01-08</td>
-<td>Line position (3)</td>
-<td>(Not possible to validate because real-world correspondence cannot be determined programmatically.)</td>
-</tr>
-<tr>
-<td>vm-01-09</td>
-<td>Speed limits</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-10</td>
-<td>Centerline</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-11</td>
-<td>Centerline connection (1)</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-12</td>
-<td>Centerline connection (2)</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-13</td>
-<td>Roads with no centerline (1)</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-14</td>
-<td>Roads with no centerline (2)</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-15</td>
-<td>Road shoulder</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-16</td>
-<td>Road shoulder Linestring sharing</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-17</td>
-<td>Side strip</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-18</td>
-<td>Side strip Linestring sharing</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-01-19</td>
-<td>Walkway</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-02-01</td>
-<td>Stop line alignment</td>
-<td>(Not possible to validate because real-world correspondence cannot be determined programmatically.)</td>
-</tr>
-<tr>
-<td>vm-02-02</td>
-<td>Stop sign</td>
-<td><a href="docs/stop_line/missing_regulatory_elements_for_stop_lines/">mapping.stop_line.missing_regulatory_elements</a></td>
-</tr>
-<tr>
-<td>vm-03-01</td>
-<td>Intersection criteria</td>
-<td><a href="docs/intersection/intersection_area_dangling_reference/">mapping.intersection.intersection_area_dangling_reference</a></td>
-</tr>
-<tr>
-<td>vm-03-02</td>
-<td>Lanelet's turn direction and virtual</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-03</td>
-<td>Lanelet width in the intersection</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-04</td>
-<td>Lanelet creation in the intersection</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-05</td>
-<td>Lanelet division in the intersection</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-06</td>
-<td>Guide lines in the intersection</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-07</td>
-<td>Multiple lanelets in the intersection</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-08</td>
-<td>Intersection Area range</td>
-<td><a href="docs/intersection/intersection_area_validity/">mapping.intersection.intersection_area_validity</a>, <a href="docs/intersection/intersection_area_segment_type/">mapping.intersection.intersection_area_segment_type</a></td>
-</tr>
-<tr>
-<td>vm-03-09</td>
-<td>Range of Lanelet in the intersection</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-10</td>
-<td>Right of way (with signal)</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-11</td>
-<td>Right of way (without signal)</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-12</td>
-<td>Right of way supplements</td>
-<td>(Nothing to validate.)</td>
-</tr>
-<tr>
-<td>vm-03-13</td>
-<td>Merging from private area, sidewalk</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-14</td>
-<td>Road marking</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-03-15</td>
-<td>Exclusive bicycle lane</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-04-01</td>
-<td>Traffic light basics</td>
-<td><a href="docs/traffic_light/missing_regulatory_elements_for_traffic_lights/">mapping.traffic_light.missing_regulatory_elements</a>, <a href="docs/traffic_light/regulatory_element_details_for_traffic_lights/">mapping.traffic_light.regulatory_element_details</a>, <a href="docs/traffic_light/missing_referrers_for_traffic_lights/">mapping.traffic_light.missing_referrers</a></td>
-</tr>
-<tr>
-<td>vm-04-02</td>
-<td>Traffic light position and size</td>
-<td><a href="docs/traffic_light/traffic_light_facing/">mapping.traffic_light.correct_facing</a> (TODO: Compare the light_bulb direction and traffic_light direction.)</td>
-</tr>
-<tr>
-<td>vm-04-03</td>
-<td>Traffic light lamps</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-05-01</td>
-<td>Crosswalks across the road</td>
-<td><a href="docs/crosswalk/missing_regulatory_elements_for_crosswalk/">mapping.crosswalk.missing_regulatory_elements</a>, <a href="docs/crosswalk/regulatory_element_details_for_crosswalks/">mapping.crosswalk.regulatory_element_details</a> (TODO: handle cases against missing referrers)</td>
-</tr>
-<tr>
-<td>vm-05-02</td>
-<td>Crosswalks with pedestrian signals</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-05-03</td>
-<td>Deceleration for safety at crosswalks</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-05-04</td>
-<td>Fences</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-06-01</td>
-<td>Buffer Zone</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-06-02</td>
-<td>No parking signs</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-06-03</td>
-<td>No stopping signs</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-06-04</td>
-<td>No stopping sections</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-06-05</td>
-<td>Detection area</td>
-<td></td>
-</tr>
-<tr>
-<td>vm-07-01</td>
-<td>Vector Map creation range</td>
-<td>(Not possible to validate because real-world correspondence cannot be determined programmatically?)</td>
-</tr>
-<tr>
-<td>vm-07-02</td>
-<td>Range of detecting pedestrians who enter the road</td>
-<td>(Not possible to validate because real-world correspondence cannot be determined programmatically.)</td>
-</tr>
-<tr>
-<td>vm-07-03</td>
-<td>Guardrails, guard pipes, fences</td>
-<td>(Not possible to validate because real-world correspondence cannot be determined programmatically.)</td>
-</tr>
-<tr>
-<td>vm-07-04</td>
-<td>Ellipsoidal height</td>
-<td>(Not possible to validate because real-world correspondence cannot be determined programmatically?)</td>
-</tr>
-</tbody>
-</table></div>
+<h2 id="how-to-add-new-properties-to-plot">How to add new properties to plot<a class="headerlink" href="#how-to-add-new-properties-to-plot" title="Permanent link">#</a></h2>
+<ol>
+<li>Open <code>trajectory_data.py</code>.</li>
+<li>Write a new function taking a <code>Trajectory</code> object as input and returning a list of values (one for each point in the trajectory).</li>
+<li>Add your function to the dictionary returned by <code>get_data_functions()</code>. The key should be a string that describes the property (this is what will show up in the dropdown menu in the GUI) and the value should be the function you created.</li>
+</ol></div>
 
 
 
@@ -4206,7 +3618,7 @@ The "Validators" column will be blank if it hasn't be implemented.</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../autoware_lanelet2_map_utils/" class="md-footer__link md-footer__link--prev" aria-label="Previous: autoware_lanelet2_map_utils" rel="prev">
+          <a href="../../doc-stop-reason-visualizer/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Doc stop reason visualizer" rel="prev">
             <div class="md-footer__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
             </div>
@@ -4215,20 +3627,20 @@ The "Validators" column will be blank if it hasn't be implemented.</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                autoware_lanelet2_map_utils
+                Doc stop reason visualizer
               </div>
             </div>
           </a>
         
         
           
-          <a href="docs/how_to_contribute/" class="md-footer__link md-footer__link--next" aria-label="Next: How to contribute to autoware_lanelet2_map_validator" rel="next">
+          <a href="../../../../simulator/simulator_compatibility_test/" class="md-footer__link md-footer__link--next" aria-label="Next: simulator_compatibility_test" rel="next">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                How to contribute to autoware_lanelet2_map_validator
+                simulator_compatibility_test
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -4264,13 +3676,13 @@ The "Validators" column will be blank if it hasn't be implemented.</p>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../../../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.220ee61c.min.js"></script>
+      <script src="../../../../assets/javascripts/bundle.220ee61c.min.js"></script>
       
         
-          <script src="../../docs/assets/js/mathjax.js"></script>
+          <script src="../../../../docs/assets/js/mathjax.js"></script>
         
       
         
