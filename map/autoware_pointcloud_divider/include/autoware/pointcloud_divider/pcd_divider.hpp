@@ -81,9 +81,16 @@ class PCDDivider
 
 public:
   explicit PCDDivider(const rclcpp::Logger & logger) : logger_(logger) {}
+  explicit PCDDivider(const std::string & logger_name) : logger_(rclcpp::get_logger(logger_name)) {}
 
   // Functions to set input parameters
-  void setInput(const std::string & input_pcd_or_dir) { input_pcd_or_dir_ = input_pcd_or_dir; }
+  void setInput(const std::string & input_pcd_or_dir)
+  {
+    // Reset the PCD reader
+    reader_.clear();
+
+    input_pcd_or_dir_ = input_pcd_or_dir;
+  }
 
   void setOutputDir(const std::string & output_dir)
   {
@@ -121,7 +128,8 @@ public:
   }
 
   void run();
-  void run(const std::vector<std::string> & pcd_names);
+  void run(const std::vector<std::string> & pcd_names, bool meta_gen = false);
+  void meta_generator();
 
 private:
   std::string input_pcd_or_dir_, output_dir_, file_prefix_, config_file_;
@@ -161,7 +169,7 @@ private:
 
   PclCloudPtr loadPCD(const std::string & pcd_name);
   void savePCD(const std::string & pcd_name, const pcl::PointCloud<PointT> & cloud);
-  void dividePointCloud(const PclCloudPtr & cloud_ptr);
+  void dividePointCloud(const PclCloudPtr & cloud_ptr, bool meta_gen);
   void paramInitialize();
   void saveGridInfoToYAML(const std::string & yaml_file_path);
   void checkOutputDirectoryValidity();
