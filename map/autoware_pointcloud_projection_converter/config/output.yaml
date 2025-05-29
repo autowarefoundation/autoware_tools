@@ -1,0 +1,6 @@
+projector_type: TransverseMercator
+vertical_datum: WGS84
+map_origin:
+  latitude: 35.61739731
+  longitude: 139.7797546
+scale_factor: 0.9996
