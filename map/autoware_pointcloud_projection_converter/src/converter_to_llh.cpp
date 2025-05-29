@@ -18,6 +18,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <string>
 
 namespace autoware::pointcloud_projection_converter
 {

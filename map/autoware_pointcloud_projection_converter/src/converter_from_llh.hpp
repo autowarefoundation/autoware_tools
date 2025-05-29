@@ -27,6 +27,7 @@
 
 #include <iostream>
 #include <utility>
+#include <string>
 
 namespace autoware::pointcloud_projection_converter
 {
@@ -34,7 +35,7 @@ namespace autoware::pointcloud_projection_converter
 class ConverterFromLLH
 {
 public:
-  ConverterFromLLH(const YAML::Node & config);
+  explicit ConverterFromLLH(const YAML::Node & config);
   pcl::PointXYZI convert(const LatLonAlt & xyz);
 
 private:
