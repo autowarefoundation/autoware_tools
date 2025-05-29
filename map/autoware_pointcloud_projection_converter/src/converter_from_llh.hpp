@@ -26,8 +26,8 @@
 #include <yaml-cpp/yaml.h>
 
 #include <iostream>
-#include <utility>
 #include <string>
+#include <utility>
 
 namespace autoware::pointcloud_projection_converter
 {
