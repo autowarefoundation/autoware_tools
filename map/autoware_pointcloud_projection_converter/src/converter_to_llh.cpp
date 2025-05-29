@@ -36,16 +36,16 @@ LatLonAlt ConverterToLLH::convert(const pcl::PointXYZI & xyz)
   if (projector_type_ == "MGRS") {
     try {
       int zone;
-      bool northp;
+      bool northern_hemisphere;
       double mgrs_base_x, mgrs_base_y;
       int prec = 8;
       bool longpath = false;
       GeographicLib::MGRS::Reverse(
-        mgrs_grid_, zone, northp, mgrs_base_x, mgrs_base_y, prec, longpath);
+        mgrs_grid_, zone, northern_hemisphere, mgrs_base_x, mgrs_base_y, prec, longpath);
 
       // Convert UTM to LLH
       GeographicLib::UTMUPS::Reverse(
-        zone, northp, xyz.x + mgrs_base_x, xyz.y + mgrs_base_y, llh.lat, llh.lon);
+        zone, northern_hemisphere, xyz.x + mgrs_base_x, xyz.y + mgrs_base_y, llh.lat, llh.lon);
 
       llh.alt = xyz.z;
     } catch (const std::exception & e) {
