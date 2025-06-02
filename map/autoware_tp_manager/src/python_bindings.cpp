@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
-
 #include <autoware/pointcloud_divider/pcd_divider.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <pybind11/pybind11.h>
+
+#include <string>
 
 using PCDDividerWrapper = autoware::pointcloud_divider::PCDDivider<pcl::PointXYZI>;
 

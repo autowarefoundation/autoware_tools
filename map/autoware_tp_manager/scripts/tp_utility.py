@@ -26,6 +26,7 @@ from rosbag2_py import StorageOptions
 import sensor_msgs.msg as sensor_msgs
 import tqdm
 
+
 # Some utility functions that is shared by both the tp collector and tp checker
 # Convert a pose to a 4x4 transformation matrix
 def __pose_to_mat(pose: Pose) -> np.array:

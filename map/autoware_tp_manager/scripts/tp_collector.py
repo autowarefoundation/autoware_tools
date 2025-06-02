@@ -16,8 +16,12 @@
 
 import argparse
 import csv
-import shutil
 import os
+import shutil
+
+# Add the path to the compiled pybind11 module (.so)
+import sys
+
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -26,14 +30,12 @@ import tp_utility as tpu
 import tqdm
 import yaml
 
-# Add the path to the compiled pybind11 module (.so)
-import sys
-
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.append(os.path.abspath(script_dir))
 
 print(f"Current path {os.path.abspath(script_dir)}")
+
 
 class TPCollector(Node):
     def __init__(self):
