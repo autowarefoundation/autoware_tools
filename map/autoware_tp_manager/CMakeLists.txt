@@ -11,8 +11,7 @@ find_package(Python3 COMPONENTS Development REQUIRED)
 # So I just used ament_auto_add_library
 ament_auto_add_library(pcd_divider_wrapper MODULE src/python_bindings.cpp)
 # This remove the prefix 'lib' of pcd_divider_wrapper
-# Without this, the module is named libpcd_divider_wrapper.so
-# It is not able to be import by the Python code
+# It cannot be import by the Python code
 set_target_properties(pcd_divider_wrapper PROPERTIES PREFIX "")
 # This is to fix "Python.h not found"
 target_include_directories(pcd_divider_wrapper PRIVATE ${Python3_INCLUDE_DIRS})

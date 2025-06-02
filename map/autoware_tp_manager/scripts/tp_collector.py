@@ -16,13 +16,8 @@
 
 import argparse
 import csv
-import os
 import shutil
-from subprocess import call
-
-# Add the path to the compiled pybind11 module (.so)
-import sys
-
+import os
 import numpy as np
 import rclpy
 from rclpy.node import Node
@@ -31,14 +26,14 @@ import tp_utility as tpu
 import tqdm
 import yaml
 
+# Add the path to the compiled pybind11 module (.so)
+import sys
+
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.append(os.path.abspath(script_dir))
 
 print(f"Current path {os.path.abspath(script_dir)}")
-
-import pcd_divider_wrapper
-
 
 class TPCollector(Node):
     def __init__(self):
@@ -86,6 +81,9 @@ class TPCollector(Node):
 
         # Downsample the input clouds if necessary
         self.yaml_path = os.path.join(self.output_path, "pointcloud_map_metadata.yaml")
+
+        # Call the PCD divider wrapper
+        import pcd_divider_wrapper
 
         if not os.path.exists(self.yaml_path):
             pcd_divider_wrapper.init_ros()
