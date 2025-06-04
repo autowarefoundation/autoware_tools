@@ -55,7 +55,7 @@ int main(int argc, char ** argv)
   autoware::pointcloud_projection_converter::ConverterFromLLH from_llh(output_config);
 
   // Convert points
-  size_t n_points = cloud->points.size();
+  const size_t n_points = cloud->points.size();
 
 #pragma omp parallel for
   for (size_t i = 0; i < n_points; ++i) {
