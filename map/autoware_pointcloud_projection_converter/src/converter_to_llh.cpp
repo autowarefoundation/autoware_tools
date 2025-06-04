@@ -40,7 +40,7 @@ LatLonAlt ConverterToLLH::convert(const pcl::PointXYZI & xyz)
       bool northern_hemisphere;
       double mgrs_base_x, mgrs_base_y;
       int prec = 8;
-      bool longpath = false;
+      constexpr bool longpath = false;
       GeographicLib::MGRS::Reverse(
         mgrs_grid_, zone, northern_hemisphere, mgrs_base_x, mgrs_base_y, prec, longpath);
 
