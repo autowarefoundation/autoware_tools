@@ -24,6 +24,8 @@ map_origin:
 
 - PCL (Point Cloud Library) 1.3 or higher
 - yaml-cpp
+- GeographicLib
+- OpenMP
 
 ## Usage
 
