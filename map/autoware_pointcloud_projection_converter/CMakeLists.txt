@@ -27,20 +27,11 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
-# Add the sub.cpp file as a library
-add_library(converter_lib "src/converter_from_llh.cpp" "src/converter_to_llh.cpp")
+ament_auto_add_library(converter_lib src/converter_from_llh.cpp src/converter_to_llh.cpp)
+target_link_libraries(converter_lib ${GeographicLib_LIBRARIES} ${PCL_LIBRARIES})
 
-# Create executables
-target_include_directories(converter_lib
-  SYSTEM PUBLIC
-  ${PCL_INCLUDE_DIRS}
-)
-ament_auto_add_executable(pointcloud_projection_converter "src/pcd_conversion.cpp")
-
-
-# Link the libraries
-target_link_libraries(converter_lib yaml-cpp ${PCL_LIBRARIES} ${GeographicLib_LIBRARIES})
-target_link_libraries(pointcloud_projection_converter converter_lib yaml-cpp ${PCL_LIBRARIES} ${GeographicLib_LIBRARIES})
+ament_auto_add_executable(pointcloud_projection_converter src/pcd_conversion.cpp)
+target_link_libraries(pointcloud_projection_converter converter_lib yaml-cpp)
 
 ament_auto_package(INSTALL_TO_SHARE
     config
