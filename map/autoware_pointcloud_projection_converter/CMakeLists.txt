@@ -6,6 +6,12 @@ project(autoware_pointcloud_projection_converter)
 find_package(autoware_cmake REQUIRED)
 autoware_package()
 
+if (${CMAKE_VERSION} VERSION_LESS "3.1.0")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+else ()
+  set(CMAKE_CXX_STANDARD 17)
+endif ()
+
 find_package(PkgConfig)
 find_path(GeographicLib_INCLUDE_DIR GeographicLib/Config.h
   PATH_SUFFIXES GeographicLib
