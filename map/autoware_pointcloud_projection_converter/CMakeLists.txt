@@ -22,11 +22,6 @@ find_library(GeographicLib_LIBRARIES NAMES Geographic)
 find_package(OpenMP REQUIRED)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 
-find_package(PCL REQUIRED)
-include_directories(
-  ${PCL_INCLUDE_DIRS}
-)
-
 ament_auto_add_library(converter_lib src/converter_from_llh.cpp src/converter_to_llh.cpp)
 target_link_libraries(converter_lib ${GeographicLib_LIBRARIES} ${PCL_LIBRARIES})
 
