@@ -106,8 +106,8 @@ Visualization Manager:
           Namespaces:
             center_lane_line: true
             center_line_arrows: true
-            lane_start_bound: false
-            lanelet_id: false
+            lane_start_bound: true
+            lanelet_id: true
             left_lane_bound: true
             right_lane_bound: true
             road_lanelets: false
@@ -258,6 +258,152 @@ Visualization Manager:
             Constant Color: false
             Scale: 0.30000001192092896
             Value: true
+        - Class: rviz_plugins/Path
+          Color Border Vel Max: 3
+          Enabled: true
+          Name: Iterative Path
+          Topic:
+            Depth: 5
+            Durability Policy: Transient Local
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /static_centerline_generator/debug/iterative_path
+          Value: false
+          View Drivable Area:
+            Alpha: 0.9990000128746033
+            Color: 0; 148; 205
+            Value: false
+            Width: 0.30000001192092896
+          View Footprint:
+            Alpha: 1
+            Color: 230; 130; 130
+            Offset from BaseLink: 0
+            Rear Overhang: 1.0299999713897705
+            Value: true
+            Vehicle Length: 4.769999980926514
+            Vehicle Width: 1.8300000429153442
+          View Path:
+            Alpha: 1
+            Color: 0; 0; 0
+            Constant Color: false
+            Value: false
+            Width: 2
+          View Point:
+            Alpha: 1
+            Color: 0; 60; 255
+            Offset: 0
+            Radius: 0.10000000149011612
+            Value: false
+          View Text Velocity:
+            Scale: 0.30000001192092896
+            Value: false
+          View Velocity:
+            Alpha: 1
+            Color: 0; 0; 0
+            Constant Color: false
+            Scale: 0.30000001192092896
+            Value: false
+        - Class: rviz_plugins/Trajectory
+          Color Border Vel Max: 3
+          Enabled: true
+          Name: Iterative Smoothed Trajectory
+          Topic:
+            Depth: 5
+            Durability Policy: Transient Local
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /static_centerline_generator/debug/iterative_smoothed_trajectory
+          Value: true
+          View Footprint:
+            Alpha: 1
+            Color: 230; 200; 120
+            Offset from BaseLink: 0
+            Rear Overhang: 0.375
+            Value: true
+            Vehicle Length: 2.240000009536743
+            Vehicle Width: 1.100000023841858
+          View Path:
+            Alpha: 1
+            Constant Width: false
+            Fade Out Distance: 0
+            Max Velocity Color: 0; 230; 120
+            Mid Velocity Color: 32; 138; 174
+            Min Velocity Color: 63; 46; 227
+            Value: false
+            Width: 2
+          View Point:
+            Alpha: 1
+            Color: 0; 60; 255
+            Offset: 0
+            Radius: 0.10000000149011612
+            Value: false
+          View Text Slope:
+            Scale: 0.30000001192092896
+            Value: false
+          View Text Time:
+            Scale: 0.30000001192092896
+            Value: false
+          View Text Velocity:
+            Scale: 0.30000001192092896
+            Value: false
+          View Velocity:
+            Alpha: 1
+            Color: 0; 0; 0
+            Constant Color: false
+            Scale: 0.30000001192092896
+            Value: false
+        - Class: rviz_plugins/Trajectory
+          Color Border Vel Max: 3
+          Enabled: true
+          Name: Iterative Optimized Trajectory
+          Topic:
+            Depth: 5
+            Durability Policy: Transient Local
+            Filter size: 10
+            History Policy: Keep Last
+            Reliability Policy: Reliable
+            Value: /static_centerline_generator/debug/iterative_optimized_trajectory
+          Value: true
+          View Footprint:
+            Alpha: 1
+            Color: 100; 150; 230
+            Offset from BaseLink: 0
+            Rear Overhang: 0.375
+            Value: true
+            Vehicle Length: 2.240000009536743
+            Vehicle Width: 1.100000023841858
+          View Path:
+            Alpha: 1
+            Constant Width: false
+            Fade Out Distance: 0
+            Max Velocity Color: 0; 230; 120
+            Mid Velocity Color: 32; 138; 174
+            Min Velocity Color: 63; 46; 227
+            Value: false
+            Width: 2
+          View Point:
+            Alpha: 1
+            Color: 0; 60; 255
+            Offset: 0
+            Radius: 0.10000000149011612
+            Value: false
+          View Text Slope:
+            Scale: 0.30000001192092896
+            Value: false
+          View Text Time:
+            Scale: 0.30000001192092896
+            Value: false
+          View Text Velocity:
+            Scale: 0.30000001192092896
+            Value: false
+          View Velocity:
+            Alpha: 1
+            Color: 0; 0; 0
+            Constant Color: false
+            Scale: 0.30000001192092896
+            Value: false
         - Class: rviz_default_plugins/MarkerArray
           Enabled: true
           Name: MarkerArray

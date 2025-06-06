@@ -133,7 +133,11 @@ class PerceptionReplayerCommon(Node):
         while reader.has_next():
             (topic, data, stamp) = reader.read_next()
             msg_type = get_message(type_map[topic])
-            msg = deserialize_message(data, msg_type)
+            try:
+                msg = deserialize_message(data, msg_type)
+            except Exception as e:
+                print(f"msg_type: {msg_type}  --  msg: {e} ")
+                continue
             if topic == objects_topic:
                 if not isinstance(msg, self.objects_pub.msg_type):
                     # convert old autoware_auto_perception_msgs to new autoware_perception_msgs

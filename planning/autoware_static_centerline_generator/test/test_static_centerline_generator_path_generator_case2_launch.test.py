@@ -28,17 +28,33 @@ from utils.test_static_centerline_generator_launch_base import (  # noqa
 )
 from utils.test_utils import TestBase  # noqa
 
+GOAL_POSE = "[986.2,1003.5,100.0,0.0,0.0,-0.011,0.999]"
+
 
 @pytest.mark.launch_test
 def generate_test_description():
+    mode = "AUTO"
     map_path = (
         get_package_share_directory("autoware_static_centerline_generator")
         + "/test/data/cargo_transport_map.osm"
     )
-    start_lanelet_id = "633"
-    end_lanelet_id = "279"
+    centerline_source = "optimization_trajectory_base"
+    bag_file = None
+    start_lanelet_id = "279"
+    start_pose = "[1112.4,1229.5,100.0,0.0,0.0,0.701,0.713]"
+    end_lanelet_id = "633"
+    end_pose = GOAL_POSE
+    goal_method = "path_generator"
     return generate_test_description_impl(
-        map_path=map_path, start_lanelet_id=start_lanelet_id, end_lanelet_id=end_lanelet_id
+        mode,
+        map_path,
+        centerline_source,
+        bag_file,
+        start_lanelet_id,
+        start_pose,
+        end_lanelet_id,
+        end_pose,
+        goal_method,
     )
 
 
@@ -46,25 +62,37 @@ class TestAutoOperation(TestBase):
     def test(self):
         # check if the subscription is successful
         self.assertIsNotNone(self.centerline)
+        # check if the centerline's back is close to the goal
+        self.validate_goal_pose(GOAL_POSE)
         # check if the centerline is in the lanelet2_map.osm
         self.validate_map_centerline_lane_ids(
             [
-                "25",
-                "30",
-                "40",
-                "53",
-                "68",
-                "73",
-                "86",
-                "201",
-                "211",
-                "216",
-                "236",
-                "249",
-                "254",
-                "270",
                 "279",
-                "432",
+                "288",
+                "295",
+                "300",
+                "305",
+                "314",
+                "328",
+                "338",
+                "343",
+                "348",
+                "359",
+                "364",
+                "447",
+                "452",
+                "459",
+                "468",
+                "475",
+                "558",
+                "563",
+                "574",
+                "579",
+                "600",
+                "605",
+                "610",
+                "621",
+                "626",
                 "633",
             ]
         )
