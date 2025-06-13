@@ -1,13 +1,13 @@
 """A script to interpolate poses to match the timestamp in target_timestamp."""
+
 # cspell:ignore rotvec
 
 import pandas as pd
-from scipy.spatial.transform import Rotation, Slerp
+from scipy.spatial.transform import Rotation
+from scipy.spatial.transform import Slerp
 
 
-def interpolate_pose(
-    df_pose: pd.DataFrame, target_timestamp: pd.Series
-) -> pd.DataFrame:
+def interpolate_pose(df_pose: pd.DataFrame, target_timestamp: pd.Series) -> pd.DataFrame:
     """Interpolate each pose in df_pose to match the timestamp in target_timestamp."""
     # check monotonicity
     assert df_pose["timestamp"].is_monotonic_increasing
