@@ -127,7 +127,11 @@ def process_directory(
         # filter out WARNs before activation
         df = df[df["message"] != "[WARN]process is not activated; [WARN]initial pose is not set"]
         not_ok_num = len(df[df["level"] != 0])
-        not_ok_percentage = not_ok_num / len(df) * 100
+        if len(df) == 0:
+            not_ok_percentage = 0
+        else:
+            not_ok_num = len(df[df["level"] != 0])
+            not_ok_percentage = not_ok_num / len(df) * 100
         if not_ok_percentage > 1:
             final_success = False
             final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%] is too large."
