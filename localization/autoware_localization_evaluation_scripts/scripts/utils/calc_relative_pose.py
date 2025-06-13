@@ -52,13 +52,17 @@ def calc_relative_pose(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.DataFra
     df_relative["angle.norm"] = np.linalg.norm(r.as_rotvec(), axis=1)
 
     # Add linear velocity
-    df_relative[linear_velocity_keys] = df_prd[linear_velocity_keys].to_numpy() - df_ref[linear_velocity_keys].to_numpy()
+    df_relative[linear_velocity_keys] = (
+        df_prd[linear_velocity_keys].to_numpy() - df_ref[linear_velocity_keys].to_numpy()
+    )
     df_relative["linear_velocity.norm"] = np.linalg.norm(
         df_relative[linear_velocity_keys].values,
         axis=1,
     )
     # Add angular velocity
-    df_relative[angular_velocity_keys] = df_prd[angular_velocity_keys].to_numpy() - df_ref[angular_velocity_keys].to_numpy()
+    df_relative[angular_velocity_keys] = (
+        df_prd[angular_velocity_keys].to_numpy() - df_ref[angular_velocity_keys].to_numpy()
+    )
     df_relative["angular_velocity.norm"] = np.linalg.norm(
         df_relative[angular_velocity_keys].values,
         axis=1,

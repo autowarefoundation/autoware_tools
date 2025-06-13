@@ -67,13 +67,17 @@ def interpolate_pose(df_pose: pd.DataFrame, target_timestamp: pd.Series) -> pd.D
 
         curr_linear_velocity = df_pose.iloc[df_index][linear_velocity_keys]
         next_linear_velocity = df_pose.iloc[df_index + 1][linear_velocity_keys]
-        target_linear_velocity = curr_linear_velocity * curr_weight + next_linear_velocity * next_weight
+        target_linear_velocity = (
+            curr_linear_velocity * curr_weight + next_linear_velocity * next_weight
+        )
 
         curr_angular_velocity = df_pose.iloc[df_index][angular_velocity_keys]
         next_angular_velocity = df_pose.iloc[df_index + 1][angular_velocity_keys]
         curr_r_ang_vel = Rotation.from_rotvec(curr_angular_velocity)
         next_r_ang_vel = Rotation.from_rotvec(next_angular_velocity)
-        slerp_ang_vel = Slerp([curr_time, next_time], Rotation.concatenate([curr_r_ang_vel, next_r_ang_vel]))
+        slerp_ang_vel = Slerp(
+            [curr_time, next_time], Rotation.concatenate([curr_r_ang_vel, next_r_ang_vel])
+        )
         target_angular_velocity = slerp_ang_vel([target_time]).as_rotvec()[0]
 
         data_dict["timestamp"].append(target_time)

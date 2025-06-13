@@ -2,14 +2,14 @@
 """A script to analyze rosbags in parallel."""
 
 import argparse
+import json
 from multiprocessing import Pool
 from pathlib import Path
 
 import compare_trajectories
 import extract_values_from_rosbag
-import plot_diagnostics
 import pandas as pd
-import json
+import plot_diagnostics
 
 
 def parse_args() -> argparse.Namespace:
@@ -78,8 +78,7 @@ def process_directory(
 
     ## (6-1) relative pose
     relative_pose_tsv = (
-        save_dir
-        / "compare_trajectories/localization__kinematic_state_result/relative_pose.tsv"
+        save_dir / "compare_trajectories/localization__kinematic_state_result/relative_pose.tsv"
     )
     df = pd.read_csv(relative_pose_tsv, sep="\t")
     mean_position_norm = df["position.norm"].mean()
@@ -123,14 +122,10 @@ def process_directory(
         "ndt_scan_matcher__scan_matching_status",
     ]
     for target_tsv in target_tsv_list:
-        localization_ekf_diagnostics_tsv = (
-            diagnostics_result_dir / f"{target_tsv}.tsv"
-        )
+        localization_ekf_diagnostics_tsv = diagnostics_result_dir / f"{target_tsv}.tsv"
         df = pd.read_csv(localization_ekf_diagnostics_tsv, sep="\t")
         # filter out WARNs before activation
-        df = df[
-            df["message"] != "[WARN]process is not activated; [WARN]initial pose is not set"
-        ]
+        df = df[df["message"] != "[WARN]process is not activated; [WARN]initial pose is not set"]
         not_ok_num = len(df[df["level"] != 0])
         not_ok_percentage = not_ok_num / len(df) * 100
         if not_ok_percentage > 1:
