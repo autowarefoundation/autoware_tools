@@ -1,11 +1,13 @@
 """A script to interpolate poses to match the timestamp in target_timestamp."""
+# cspell:ignore rotvec
 
 import pandas as pd
-from scipy.spatial.transform import Rotation
-from scipy.spatial.transform import Slerp
+from scipy.spatial.transform import Rotation, Slerp
 
 
-def interpolate_pose(df_pose: pd.DataFrame, target_timestamp: pd.Series) -> pd.DataFrame:
+def interpolate_pose(
+    df_pose: pd.DataFrame, target_timestamp: pd.Series
+) -> pd.DataFrame:
     """Interpolate each pose in df_pose to match the timestamp in target_timestamp."""
     # check monotonicity
     assert df_pose["timestamp"].is_monotonic_increasing
@@ -26,8 +28,16 @@ def interpolate_pose(df_pose: pd.DataFrame, target_timestamp: pd.Series) -> pd.D
         "orientation.z",
         "orientation.w",
     ]
-    linear_velocity_keys = ["linear_velocity.x", "linear_velocity.y", "linear_velocity.z"]
-    angular_velocity_keys = ["angular_velocity.x", "angular_velocity.y", "angular_velocity.z"]
+    linear_velocity_keys = [
+        "linear_velocity.x",
+        "linear_velocity.y",
+        "linear_velocity.z",
+    ]
+    angular_velocity_keys = [
+        "angular_velocity.x",
+        "angular_velocity.y",
+        "angular_velocity.z",
+    ]
 
     df_pose = df_pose.reset_index(drop=True)
     target_timestamp = target_timestamp.reset_index(drop=True)
@@ -76,7 +86,8 @@ def interpolate_pose(df_pose: pd.DataFrame, target_timestamp: pd.Series) -> pd.D
         curr_r_ang_vel = Rotation.from_rotvec(curr_angular_velocity)
         next_r_ang_vel = Rotation.from_rotvec(next_angular_velocity)
         slerp_ang_vel = Slerp(
-            [curr_time, next_time], Rotation.concatenate([curr_r_ang_vel, next_r_ang_vel])
+            [curr_time, next_time],
+            Rotation.concatenate([curr_r_ang_vel, next_r_ang_vel]),
         )
         target_angular_velocity = slerp_ang_vel([target_time]).as_rotvec()[0]
 
