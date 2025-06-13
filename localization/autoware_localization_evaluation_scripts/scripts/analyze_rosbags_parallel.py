@@ -84,6 +84,8 @@ def process_directory(
     df = pd.read_csv(relative_pose_tsv, sep="\t")
     mean_position_norm = df["position.norm"].mean()
     mean_angle_norm = df["angle.norm"].mean()
+    mean_linear_velocity_norm = df["linear_velocity.norm"].mean()
+    mean_angular_velocity_norm = df["angular_velocity.norm"].mean()
 
     THRESHOLD_MEAN_POSITION_NORM = 0.5
     if mean_position_norm > THRESHOLD_MEAN_POSITION_NORM:
@@ -98,6 +100,20 @@ def process_directory(
         final_summary += f"|{mean_angle_norm=:.3f} [deg] is too large."
     else:
         final_summary += f"|{mean_angle_norm=:.3f} [deg]"
+
+    THRESHOLD_MEAN_LINEAR_VELOCITY_NORM = 0.05
+    if mean_linear_velocity_norm > THRESHOLD_MEAN_LINEAR_VELOCITY_NORM:
+        final_success = False
+        final_summary += f"|{mean_linear_velocity_norm=:.3f} [m/s] is too large."
+    else:
+        final_summary += f"|{mean_linear_velocity_norm=:.3f} [m/s]"
+
+    THRESHOLD_MEAN_ANGULAR_VELOCITY_NORM = 0.05
+    if mean_angular_velocity_norm > THRESHOLD_MEAN_ANGULAR_VELOCITY_NORM:
+        final_success = False
+        final_summary += f"|{mean_angular_velocity_norm=:.3f} [rad/s] is too large."
+    else:
+        final_summary += f"|{mean_angular_velocity_norm=:.3f} [rad/s]"
 
     with open(save_dir / "summary.json", "w") as f:
         json.dump(
