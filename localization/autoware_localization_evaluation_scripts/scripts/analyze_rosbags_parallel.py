@@ -8,6 +8,8 @@ from pathlib import Path
 import compare_trajectories
 import extract_values_from_rosbag
 import plot_diagnostics
+import pandas as pd
+import json
 
 
 def parse_args() -> argparse.Namespace:
@@ -69,6 +71,45 @@ def process_directory(
         target_topics=["/localization/acceleration"],
         save_dir=acceleration_result_dir,
     )
+
+    # (6) Create summary
+    final_success = True
+    final_summary = ""
+
+    ## (6-1) relative pose
+    relative_pose_tsv = (
+        save_dir
+        / "compare_trajectories/localization__kinematic_state_result/relative_pose.tsv"
+    )
+    df = pd.read_csv(relative_pose_tsv, sep="\t")
+    mean_position_norm = df["position.norm"].mean()
+    mean_angle_norm = df["angle.norm"].mean()
+
+    THRESHOLD_MEAN_POSITION_NORM = 0.5
+    if mean_position_norm > THRESHOLD_MEAN_POSITION_NORM:
+        final_success = False
+        final_summary += f"{mean_position_norm=:.3f} [m] is too large."
+    else:
+        final_summary += f"{mean_position_norm=:.3f} [m]"
+
+    THRESHOLD_MEAN_ANGLE_NORM = 0.5
+    if mean_angle_norm > THRESHOLD_MEAN_ANGLE_NORM:
+        final_success = False
+        final_summary += f"|{mean_angle_norm=:.3f} [deg] is too large."
+    else:
+        final_summary += f"|{mean_angle_norm=:.3f} [deg]"
+
+    with open(save_dir / "summary.json", "w") as f:
+        json.dump(
+            {
+                "Result": {
+                    "Success": final_success,
+                    "Summary": final_summary,
+                }
+            },
+            f,
+            indent=2,
+        )
 
 
 if __name__ == "__main__":
