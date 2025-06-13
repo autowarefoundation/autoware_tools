@@ -115,6 +115,30 @@ def process_directory(
     else:
         final_summary += f"|{mean_angular_velocity_norm=:.3f} [rad/s]"
 
+    ## (6-2) diagnostics
+    target_tsv_list = [
+        "localization__ekf_localizer",
+        "localization__pose_instability_detector",
+        "localization_error_monitor__ellipse_error_status",
+        "ndt_scan_matcher__scan_matching_status",
+    ]
+    for target_tsv in target_tsv_list:
+        localization_ekf_diagnostics_tsv = (
+            diagnostics_result_dir / f"{target_tsv}.tsv"
+        )
+        df = pd.read_csv(localization_ekf_diagnostics_tsv, sep="\t")
+        # filter out WARNs before activation
+        df = df[
+            df["message"] != "[WARN]process is not activated; [WARN]initial pose is not set"
+        ]
+        not_ok_num = len(df[df["level"] != 0])
+        not_ok_percentage = not_ok_num / len(df) * 100
+        if not_ok_percentage > 1:
+            final_success = False
+            final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%] is too large."
+        else:
+            final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%]"
+
     with open(save_dir / "summary.json", "w") as f:
         json.dump(
             {
