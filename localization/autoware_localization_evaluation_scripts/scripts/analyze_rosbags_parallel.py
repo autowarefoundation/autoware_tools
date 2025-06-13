@@ -76,7 +76,7 @@ def process_directory(
     final_success = True
     final_summary = ""
 
-    ## (6-1) relative pose
+    # (6-1) relative pose
     relative_pose_tsv = (
         save_dir / "compare_trajectories/localization__kinematic_state_result/relative_pose.tsv"
     )
@@ -114,7 +114,7 @@ def process_directory(
     else:
         final_summary += f"|{mean_angular_velocity_norm=:.3f} [rad/s]"
 
-    ## (6-2) diagnostics
+    # (6-2) diagnostics
     target_tsv_list = [
         "localization__ekf_localizer",
         "localization__pose_instability_detector",
