@@ -16,6 +16,8 @@ def calc_relative_pose(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.DataFra
         "orientation.z",
         "orientation.w",
     ]
+    linear_velocity_keys = ["linear_velocity.x", "linear_velocity.y", "linear_velocity.z"]
+    angular_velocity_keys = ["angular_velocity.x", "angular_velocity.y", "angular_velocity.z"]
     assert len(df_prd) == len(df_ref)
 
     df_relative = df_prd.copy()
@@ -49,6 +51,23 @@ def calc_relative_pose(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.DataFra
     df_relative["angle.z"] = euler[:, 2]
     df_relative["angle.norm"] = np.linalg.norm(r.as_rotvec(), axis=1)
 
+    # Add linear velocity
+    df_relative[linear_velocity_keys] = (
+        df_prd[linear_velocity_keys].to_numpy() - df_ref[linear_velocity_keys].to_numpy()
+    )
+    df_relative["linear_velocity.norm"] = np.linalg.norm(
+        df_relative[linear_velocity_keys].values,
+        axis=1,
+    )
+    # Add angular velocity
+    df_relative[angular_velocity_keys] = (
+        df_prd[angular_velocity_keys].to_numpy() - df_ref[angular_velocity_keys].to_numpy()
+    )
+    df_relative["angular_velocity.norm"] = np.linalg.norm(
+        df_relative[angular_velocity_keys].values,
+        axis=1,
+    )
+
     # Arrange the order of columns
     return df_relative[
         [
@@ -60,5 +79,9 @@ def calc_relative_pose(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.DataFra
             "angle.y",
             "angle.z",
             "angle.norm",
+            *linear_velocity_keys,
+            "linear_velocity.norm",
+            *angular_velocity_keys,
+            "angular_velocity.norm",
         ]
     ]
