@@ -201,6 +201,18 @@ def relative_angles(trajectory: Trajectory):
     return angles
 
 
+def x_values(trajectory: Trajectory):
+    return [p.pose.position.x for p in trajectory.points]
+
+
+def y_values(trajectory: Trajectory):
+    return [p.pose.position.y for p in trajectory.points]
+
+
+def yaws(trajectory: Trajectory):
+    return [_get_yaw_from_quaternion(p.pose.orientation) for p in trajectory.points]
+
+
 def get_data_functions() -> dict:
     return {
         "Arc Length [m]": get_arc_lengths,
@@ -210,4 +222,7 @@ def get_data_functions() -> dict:
         "Curvature (Menger) [m⁻¹]": calculate_menger_curvature,
         "Acceleration [m/s²]": get_accelerations,
         "Relative angles [rad]": relative_angles,
+        "X values": x_values,
+        "Y values": y_values,
+        "Yaws [rad]": yaws,
     }
