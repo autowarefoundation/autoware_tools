@@ -17,6 +17,7 @@
 from angles import shortest_angular_distance
 from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
+from nav_msgs.msg import Odometry
 import numpy as np
 from rclpy import time
 from shapely import LineString
@@ -39,8 +40,16 @@ def _triangle_area(p1: TrajectoryPoint, p2: TrajectoryPoint, p3: TrajectoryPoint
     )
 
 
+def zero_fn(_: Odometry):
+    return 0.0
+
+
 def get_velocites(trajectory: Trajectory):
     return [p.longitudinal_velocity_mps for p in trajectory.points]
+
+
+def get_velocity(odom: Odometry):
+    return odom.twist.twist.linear.x
 
 
 def get_arc_lengths(trajectory: Trajectory, zero_pose=None):
@@ -201,13 +210,51 @@ def relative_angles(trajectory: Trajectory):
     return angles
 
 
+def x_values(trajectory: Trajectory):
+    return [p.pose.position.x for p in trajectory.points]
+
+
+def x_value(odom: Odometry):
+    return odom.pose.pose.position.x
+
+
+def y_values(trajectory: Trajectory):
+    return [p.pose.position.y for p in trajectory.points]
+
+
+def y_value(odom: Odometry):
+    return odom.pose.pose.position.y
+
+
+def yaws(trajectory: Trajectory):
+    return [_get_yaw_from_quaternion(p.pose.orientation) for p in trajectory.points]
+
+
+def yaw(odom: Odometry):
+    return _get_yaw_from_quaternion(odom.pose.pose.orientation)
+
+
+class DataFunction:
+    def __init__(self, trajectory_fn, ego_fn):
+        self.trajectory_fn = trajectory_fn
+        self.ego_fn = ego_fn
+
+
+"""
+return a dictionnary where the key is the name of the function and the value is a pair of the function
+"""
+
+
 def get_data_functions() -> dict:
     return {
-        "Arc Length [m]": get_arc_lengths,
-        "Velocity [m/s]": get_velocites,
-        "Times [s]": get_times,
-        "Curvature (derivatives) [m⁻¹]": calculate_curvature_2d,
-        "Curvature (Menger) [m⁻¹]": calculate_menger_curvature,
-        "Acceleration [m/s²]": get_accelerations,
-        "Relative angles [rad]": relative_angles,
+        "Arc Length [m]": DataFunction(get_arc_lengths, zero_fn),
+        "Velocity [m/s]": DataFunction(get_velocites, get_velocity),
+        "Times [s]": DataFunction(get_times, zero_fn),
+        "Curvature (derivatives) [m⁻¹]": DataFunction(calculate_curvature_2d, zero_fn),
+        "Curvature (Menger) [m⁻¹]": DataFunction(calculate_menger_curvature, zero_fn),
+        "Acceleration [m/s²]": DataFunction(get_accelerations, zero_fn),  # TODO: get accel
+        "Relative angles [rad]": DataFunction(relative_angles, zero_fn),
+        "X values": DataFunction(x_values, x_value),
+        "Y values": DataFunction(y_values, y_value),
+        "Yaws [rad]": DataFunction(yaws, yaw),
     }
