@@ -63,7 +63,6 @@ class NodeUnit(BaseUnit):
 class DiagUnit(BaseUnit):
     def __init__(self, struct):
         super().__init__()
-        self._path = struct.path
         self._name = struct.name
         self._type = "diag"
 
@@ -104,9 +103,7 @@ class Graph:
         self._units = self._nodes + self._diags
         self._links = []
         for struct in msg.links:
-            units = self._diags if struct.is_leaf else self._nodes
-            nodes = self._nodes
-            self._links.append(UnitLink(nodes[struct.parent], units[struct.child]))
+            self._links.append(UnitLink(self._nodes[struct.parent], self._nodes[struct.child]))
 
     def update(self, msg):
         if msg.id == self._id:
@@ -119,8 +116,8 @@ class Graph:
                 link.update(status)
 
     @property
-    def units(self):
-        return self._units
+    def nodes(self):
+        return self._nodes
 
     @property
     def links(self):
