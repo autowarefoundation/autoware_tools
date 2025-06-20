@@ -54,10 +54,10 @@ class MonitorWidget(QtWidgets.QSplitter):
 
     def build_graph(self, graph: Graph):
         self.graph = graph
-        root_units = filter(self.is_root_unit, self.graph.units)
-        tree_units = filter(self.is_tree_unit, self.graph.units)
-        root_items = [MonitorItem(None, unit) for unit in root_units]
-        tree_items = [MonitorItem(None, unit) for unit in tree_units]
+        root_nodes = filter(self.is_root_unit, self.graph.nodes)
+        tree_nodes = filter(self.is_tree_unit, self.graph.nodes)
+        root_items = [MonitorItem(None, unit) for unit in root_nodes]
+        tree_items = [MonitorItem(None, unit) for unit in tree_nodes]
         link_items = [MonitorItem(link, link.child) for link in self.graph.links]
         self.items = root_items + tree_items + link_items
 
