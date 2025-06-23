@@ -5,10 +5,10 @@ from scipy.interpolate import interp1d
 
 def calc_acceleration_diff(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.DataFrame:
     """Calculate the difference in linear acceleration between two DataFrames.
+
     df_prd has ["timestamp", "linear.x", "linear.y", "linear.z"] (acceleration)
     df_ref has ["timestamp", "linear_velocity.x", "linear_velocity.y", "linear_velocity.z"]
     """
-
     df_prd_acc = df_prd[["timestamp", "linear.x", "linear.y", "linear.z"]]
     df_ref_vel = df_ref[
         ["timestamp", "linear_velocity.x", "linear_velocity.y", "linear_velocity.z"]

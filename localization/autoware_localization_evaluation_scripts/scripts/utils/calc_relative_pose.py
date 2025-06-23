@@ -9,7 +9,6 @@ from scipy.spatial.transform import Rotation
 
 def calc_relative_pose(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.DataFrame:
     """Calculate the relative position and orientation of df_prd with respect to df_ref."""
-
     position_keys = ["position.x", "position.y", "position.z"]
     orientation_keys = [
         "orientation.x",
