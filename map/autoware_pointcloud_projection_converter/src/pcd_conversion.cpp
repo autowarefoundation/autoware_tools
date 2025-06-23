@@ -31,7 +31,7 @@
 
 int main(int argc, char ** argv)
 {
-  if (argc != 5) {
+  if (argc < 5) {
     std::cerr << "Usage: ros2 run autoware_pointcloud_projection_converter "
                  "pointcloud_projection_converter input_pcd output_pcd "
                  "input_yaml output_yaml"
