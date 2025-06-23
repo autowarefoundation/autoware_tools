@@ -33,7 +33,7 @@ def calc_acceleration_diff(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.Dat
 
     # Calculate acceleration from reference velocity (numerical differentiation)
     df_ref_vel = df_ref_vel.sort_values("timestamp")
-    dt = (df_ref_vel["timestamp"].diff() / 1e9)  # Convert to seconds
+    dt = df_ref_vel["timestamp"].diff() / 1e9  # Convert to seconds
 
     # Protect against division by zero and very small time differences
     MIN_DT_THRESHOLD = 1e-6  # Minimum time difference threshold (1 microsecond)
