@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 from scipy.interpolate import interp1d
 
 
@@ -35,23 +35,17 @@ def calc_acceleration_diff(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.Dat
     # Interpolate reference acceleration to match timestamp of measured acceleration
 
     # Remove duplicate timestamps and sort
-    df_ref_acc = df_ref_acc.drop_duplicates(subset=["timestamp"]).sort_values(
-        "timestamp"
-    )
-    df_prd_acc = df_prd_acc.drop_duplicates(subset=["timestamp"]).sort_values(
-        "timestamp"
-    )
+    df_ref_acc = df_ref_acc.drop_duplicates(subset=["timestamp"]).sort_values("timestamp")
+    df_prd_acc = df_prd_acc.drop_duplicates(subset=["timestamp"]).sort_values("timestamp")
 
     min_timestamp = max(df_ref_acc["timestamp"].min(), df_prd_acc["timestamp"].min())
     max_timestamp = min(df_ref_acc["timestamp"].max(), df_prd_acc["timestamp"].max())
 
     df_ref_acc = df_ref_acc[
-        (min_timestamp <= df_ref_acc["timestamp"])
-        & (df_ref_acc["timestamp"] <= max_timestamp)
+        (min_timestamp <= df_ref_acc["timestamp"]) & (df_ref_acc["timestamp"] <= max_timestamp)
     ]
     df_prd_acc = df_prd_acc[
-        (min_timestamp <= df_prd_acc["timestamp"])
-        & (df_prd_acc["timestamp"] <= max_timestamp)
+        (min_timestamp <= df_prd_acc["timestamp"]) & (df_prd_acc["timestamp"] <= max_timestamp)
     ]
 
     # Create interpolation functions for each axis
@@ -87,8 +81,6 @@ def calc_acceleration_diff(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.Dat
     df_result["diff.y"] = df_prd_acc["linear.y"] - df_result["reference.linear.y"]
     df_result["diff.z"] = df_prd_acc["linear.z"] - df_result["reference.linear.z"]
     df_result["diff.norm"] = np.sqrt(
-        df_result["diff.x"] ** 2
-        + df_result["diff.y"] ** 2
-        + df_result["diff.z"] ** 2
+        df_result["diff.x"] ** 2 + df_result["diff.y"] ** 2 + df_result["diff.z"] ** 2
     )
     return df_result
