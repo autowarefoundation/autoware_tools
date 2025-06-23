@@ -30,10 +30,10 @@ map_origin:
 ## Usage
 
 ```bash
-ros2 run autoware_pointcloud_projection_converter pointcloud_projection_converter path_to_input_yaml path_to_output_yaml path_to_input_pcd_file path_to_output_pcd_file
+ros2 run autoware_pointcloud_projection_converter pointcloud_projection_converter path_to_input_pcd_file path_to_output_pcd_file path_to_input_yaml path_to_output_yaml
 ```
 
-Replace `path_to_input_yaml`, `path_to_output_yaml`, `path_to_pointcloud_file`, and `path_to_output_pcd_file` with the paths to your input YAML configuration file, output YAML configuration file, and PCD file, respectively.
+Replace `path_to_pointcloud_file`, `path_to_output_pcd_file`, `path_to_input_yaml`, and `path_to_output_yaml` with the paths to your input YAML configuration file, output YAML configuration file, and PCD file, respectively.
 
 ## Special thanks
 

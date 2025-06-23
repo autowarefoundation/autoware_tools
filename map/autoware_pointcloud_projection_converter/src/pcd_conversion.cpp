@@ -33,22 +33,22 @@ int main(int argc, char ** argv)
 {
   if (argc != 5) {
     std::cerr << "Usage: ros2 run autoware_pointcloud_projection_converter "
-                 "pointcloud_projection_converter input_yaml output_yaml "
-                 "input_pcd output_pcd"
+                 "pointcloud_projection_converter input_pcd output_pcd "
+                 "input_yaml output_yaml"
               << std::endl;
     std::exit(EXIT_FAILURE);
   }
 
-  // Parse YAML configuration files
-  YAML::Node input_config = YAML::LoadFile(argv[1]);
-  YAML::Node output_config = YAML::LoadFile(argv[2]);
-
   // Load point cloud data from file
   pcl::PointCloud<pcl::PointXYZI>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZI>);
-  if (pcl::io::loadPCDFile<pcl::PointXYZI>(argv[3], *cloud) == -1) {
-    std::cerr << "Couldn't read file " << argv[3] << std::endl;
+  if (pcl::io::loadPCDFile<pcl::PointXYZI>(argv[1], *cloud) == -1) {
+    std::cerr << "Couldn't read file " << argv[1] << std::endl;
     std::exit(EXIT_FAILURE);
   }
+
+  // Parse YAML configuration files
+  YAML::Node input_config = YAML::LoadFile(argv[3]);
+  YAML::Node output_config = YAML::LoadFile(argv[4]);
 
   // Define converters
   autoware::pointcloud_projection_converter::ConverterToLLH to_llh(input_config);
@@ -65,7 +65,7 @@ int main(int argc, char ** argv)
   }
 
   // Save converted point cloud to file
-  pcl::io::savePCDFileBinary(argv[4], *cloud);
+  pcl::io::savePCDFileBinary(argv[2], *cloud);
 
   std::cout << "Point cloud projection conversion completed successfully" << std::endl;
 
