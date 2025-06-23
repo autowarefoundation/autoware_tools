@@ -21,6 +21,8 @@ def interpolate_pose(df_pose: pd.DataFrame, target_timestamp: pd.Series) -> pd.D
     assert df_pose.iloc[0]["timestamp"] <= target_timestamp.iloc[0]
     assert target_timestamp.iloc[-1] <= df_pose.iloc[-1]["timestamp"]
 
+    has_velocity = "linear_velocity.x" in df_pose.columns
+
     position_keys = ["position.x", "position.y", "position.z"]
     orientation_keys = [
         "orientation.x",
@@ -48,9 +50,12 @@ def interpolate_pose(df_pose: pd.DataFrame, target_timestamp: pd.Series) -> pd.D
         "timestamp": [],
         **{key: [] for key in position_keys},
         **{key: [] for key in orientation_keys},
-        **{key: [] for key in linear_velocity_keys},
-        **{key: [] for key in angular_velocity_keys},
     }
+    if has_velocity:
+        data_dict.update(
+            **{key: [] for key in linear_velocity_keys},
+            **{key: [] for key in angular_velocity_keys},
+        )
     while df_index < len(df_pose) - 1 and target_index < len(target_timestamp):
         curr_time = df_pose.iloc[df_index]["timestamp"]
         next_time = df_pose.iloc[df_index + 1]["timestamp"]
@@ -75,22 +80,6 @@ def interpolate_pose(df_pose: pd.DataFrame, target_timestamp: pd.Series) -> pd.D
         slerp = Slerp([curr_time, next_time], Rotation.concatenate([curr_r, next_r]))
         target_orientation = slerp([target_time]).as_quat()[0]
 
-        curr_linear_velocity = df_pose.iloc[df_index][linear_velocity_keys]
-        next_linear_velocity = df_pose.iloc[df_index + 1][linear_velocity_keys]
-        target_linear_velocity = (
-            curr_linear_velocity * curr_weight + next_linear_velocity * next_weight
-        )
-
-        curr_angular_velocity = df_pose.iloc[df_index][angular_velocity_keys]
-        next_angular_velocity = df_pose.iloc[df_index + 1][angular_velocity_keys]
-        curr_r_ang_vel = Rotation.from_rotvec(curr_angular_velocity)
-        next_r_ang_vel = Rotation.from_rotvec(next_angular_velocity)
-        slerp_ang_vel = Slerp(
-            [curr_time, next_time],
-            Rotation.concatenate([curr_r_ang_vel, next_r_ang_vel]),
-        )
-        target_angular_velocity = slerp_ang_vel([target_time]).as_rotvec()[0]
-
         data_dict["timestamp"].append(target_time)
         data_dict[position_keys[0]].append(target_position[0])
         data_dict[position_keys[1]].append(target_position[1])
@@ -99,11 +88,29 @@ def interpolate_pose(df_pose: pd.DataFrame, target_timestamp: pd.Series) -> pd.D
         data_dict[orientation_keys[1]].append(target_orientation[1])
         data_dict[orientation_keys[2]].append(target_orientation[2])
         data_dict[orientation_keys[3]].append(target_orientation[3])
-        data_dict[linear_velocity_keys[0]].append(target_linear_velocity[0])
-        data_dict[linear_velocity_keys[1]].append(target_linear_velocity[1])
-        data_dict[linear_velocity_keys[2]].append(target_linear_velocity[2])
-        data_dict[angular_velocity_keys[0]].append(target_angular_velocity[0])
-        data_dict[angular_velocity_keys[1]].append(target_angular_velocity[1])
-        data_dict[angular_velocity_keys[2]].append(target_angular_velocity[2])
+
+        if has_velocity:
+            curr_linear_velocity = df_pose.iloc[df_index][linear_velocity_keys]
+            next_linear_velocity = df_pose.iloc[df_index + 1][linear_velocity_keys]
+            target_linear_velocity = (
+                curr_linear_velocity * curr_weight + next_linear_velocity * next_weight
+            )
+
+            curr_angular_velocity = df_pose.iloc[df_index][angular_velocity_keys]
+            next_angular_velocity = df_pose.iloc[df_index + 1][angular_velocity_keys]
+            curr_r_ang_vel = Rotation.from_rotvec(curr_angular_velocity)
+            next_r_ang_vel = Rotation.from_rotvec(next_angular_velocity)
+            slerp_ang_vel = Slerp(
+                [curr_time, next_time],
+                Rotation.concatenate([curr_r_ang_vel, next_r_ang_vel]),
+            )
+            target_angular_velocity = slerp_ang_vel([target_time]).as_rotvec()[0]
+            data_dict[linear_velocity_keys[0]].append(target_linear_velocity[0])
+            data_dict[linear_velocity_keys[1]].append(target_linear_velocity[1])
+            data_dict[linear_velocity_keys[2]].append(target_linear_velocity[2])
+            data_dict[angular_velocity_keys[0]].append(target_angular_velocity[0])
+            data_dict[angular_velocity_keys[1]].append(target_angular_velocity[1])
+            data_dict[angular_velocity_keys[2]].append(target_angular_velocity[2])
+
         target_index += 1
     return pd.DataFrame(data_dict)
