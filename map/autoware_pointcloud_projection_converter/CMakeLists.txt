@@ -32,4 +32,5 @@ target_link_libraries(pointcloud_projection_converter converter_lib yaml-cpp)
 
 ament_auto_package(INSTALL_TO_SHARE
     config
+    launch
 )
