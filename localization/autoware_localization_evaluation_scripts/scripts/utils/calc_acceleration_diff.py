@@ -6,22 +6,44 @@ from scipy.interpolate import interp1d
 def calc_acceleration_diff(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.DataFrame:
     """Calculate the difference in linear acceleration between two DataFrames.
 
-    df_prd has ["timestamp", "linear.x", "linear.y", "linear.z"] (acceleration)
-    df_ref has ["timestamp", "linear_velocity.x", "linear_velocity.y", "linear_velocity.z"]
+    Args:
+        df_prd: DataFrame with ["timestamp", "linear.x", "linear.y", "linear.z"] (acceleration)
+        df_ref: DataFrame with ["timestamp", "linear_velocity.x", "linear_velocity.y", "linear_velocity.z"]
+
+    Returns:
+        DataFrame with difference calculations including "diff.norm" column
+
+    Raises:
+        ValueError: If input data is insufficient or missing required columns
     """
-    df_prd_acc = df_prd[["timestamp", "linear.x", "linear.y", "linear.z"]]
-    df_ref_vel = df_ref[
-        ["timestamp", "linear_velocity.x", "linear_velocity.y", "linear_velocity.z"]
-    ]
+    # Validate input data
+    required_prd_cols = ["timestamp", "linear.x", "linear.y", "linear.z"]
+    required_ref_cols = ["timestamp", "linear_velocity.x", "linear_velocity.y", "linear_velocity.z"]
+
+    if not all(col in df_prd.columns for col in required_prd_cols):
+        missing = [col for col in required_prd_cols if col not in df_prd.columns]
+        raise ValueError(f"Missing required columns in predicted data: {missing}")
+
+    if not all(col in df_ref.columns for col in required_ref_cols):
+        missing = [col for col in required_ref_cols if col not in df_ref.columns]
+        raise ValueError(f"Missing required columns in reference data: {missing}")
+
+    df_prd_acc = df_prd[required_prd_cols].copy()
+    df_ref_vel = df_ref[required_ref_cols].copy()
 
     # Calculate acceleration from reference velocity (numerical differentiation)
     df_ref_vel = df_ref_vel.sort_values("timestamp")
-    dt = (df_ref_vel["timestamp"].diff() / 1e9).fillna(0)  # Convert to seconds
+    dt = (df_ref_vel["timestamp"].diff() / 1e9)  # Convert to seconds
+
+    # Protect against division by zero and very small time differences
+    MIN_DT_THRESHOLD = 1e-6  # Minimum time difference threshold (1 microsecond)
+    dt = dt.where(dt.abs() > MIN_DT_THRESHOLD, np.nan)
+
     df_ref_acc = df_ref_vel.copy()
     df_ref_acc["linear_velocity.x"] = df_ref_vel["linear_velocity.x"].diff() / dt
     df_ref_acc["linear_velocity.y"] = df_ref_vel["linear_velocity.y"].diff() / dt
     df_ref_acc["linear_velocity.z"] = df_ref_vel["linear_velocity.z"].diff() / dt
-    df_ref_acc = df_ref_acc.dropna()  # Remove first row with NaN
+    df_ref_acc = df_ref_acc.dropna()  # Remove rows with NaN
 
     # Rename columns to match acceleration data
     df_ref_acc = df_ref_acc.rename(
@@ -48,8 +70,17 @@ def calc_acceleration_diff(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.Dat
         (min_timestamp <= df_prd_acc["timestamp"]) & (df_prd_acc["timestamp"] <= max_timestamp)
     ]
 
-    # Create interpolation functions for each axis
-    assert len(df_ref_acc) > 1 and len(df_prd_acc) > 1
+    # Validate data availability for interpolation
+    if len(df_ref_acc) <= 1:
+        raise ValueError(
+            f"Insufficient reference acceleration data points: {len(df_ref_acc)}. "
+            "Need at least 2 points for interpolation."
+        )
+    if len(df_prd_acc) <= 1:
+        raise ValueError(
+            f"Insufficient predicted acceleration data points: {len(df_prd_acc)}. "
+            "Need at least 2 points for interpolation."
+        )
 
     interp_x = interp1d(
         df_ref_acc["timestamp"],
