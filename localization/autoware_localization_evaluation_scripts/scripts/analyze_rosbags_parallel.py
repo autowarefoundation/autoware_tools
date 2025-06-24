@@ -152,10 +152,11 @@ def process_directory(
         "ndt_scan_matcher__scan_matching_status",
     ]
     for target_tsv in target_tsv_list:
-        localization_ekf_diagnostics_tsv = diagnostics_result_dir / f"{target_tsv}.tsv"
-        df = pd.read_csv(localization_ekf_diagnostics_tsv, sep="\t")
+        diagnostics_tsv = diagnostics_result_dir / f"{target_tsv}.tsv"
+        df = pd.read_csv(diagnostics_tsv, sep="\t")
         # filter out WARNs before activation
         df = df[df["message"] != "[WARN]process is not activated; [WARN]initial pose is not set"]
+        df = df[df["message"] != "Node is not activated."]
         not_ok_num = len(df[df["level"] != 0])
         if len(df) == 0:
             not_ok_percentage = 0
