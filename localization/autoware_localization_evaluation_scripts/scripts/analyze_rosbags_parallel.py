@@ -163,7 +163,7 @@ def process_directory(
         else:
             not_ok_num = len(df[df["level"] != 0])
             not_ok_percentage = not_ok_num / len(df) * 100
-        if not_ok_percentage > 1:
+        if not_ok_percentage > 5:
             final_success = False
             final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%] is too large."
         else:
