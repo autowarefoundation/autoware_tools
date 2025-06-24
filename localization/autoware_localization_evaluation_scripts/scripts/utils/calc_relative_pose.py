@@ -51,7 +51,7 @@ def calc_relative_pose(df_prd: pd.DataFrame, df_ref: pd.DataFrame) -> pd.DataFra
     df_relative["angle.z"] = euler[:, 2]
     df_relative["angle.norm"] = np.linalg.norm(r.as_rotvec(), axis=1)
 
-    if "linear_velocity.x" not in df_prd.columns:
+    if "linear_velocity.x" not in df_prd.columns or "linear_velocity.x" not in df_ref.columns:
         # If linear_velocity is not in the DataFrame, return the relative pose without it
         return df_relative[
             [
