@@ -161,7 +161,6 @@ def process_directory(
         if len(df) == 0:
             not_ok_percentage = 0
         else:
-            not_ok_num = len(df[df["level"] != 0])
             not_ok_percentage = not_ok_num / len(df) * 100
         if not_ok_percentage > 5:
             final_success = False
