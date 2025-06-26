@@ -21,6 +21,7 @@ class Plotter:
     def __init__(self):
         self.fig, self.ax = plt.subplots()
         self.plots = {}
+        (self.ego_plot,) = self.ax.plot([], [], marker="x", label="ego", alpha=0.7, color="black")
 
     def init_plot(self, x_label: str, y_label: str, plot_names: list[str]):
         cmap = "tab10" if len(plot_names) <= 10 else "tab20"
@@ -36,12 +37,16 @@ class Plotter:
             (self.plots[name],) = self.ax.plot(
                 [], [], marker="o", linestyle="-", label=name, alpha=0.6
             )
+        (self.ego_plot,) = self.ax.plot([], [], marker="x", label="ego", alpha=1.0, color="black")
 
     def update_data(self, name, x_data, y_data):
         if name not in self.plots:
             print(f"{name} plot not found")
             return
         self.plots[name].set_data(x_data, y_data)
+
+    def update_ego_data(self, x_data, y_data):
+        self.ego_plot.set_data([x_data], [y_data])
 
     def replot(self):
         self.ax.relim()

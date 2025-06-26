@@ -139,16 +139,19 @@ class TkinterApp:
     def replot(self):
         x_axis_selection = self.current_x_axis_selection.get()
         y_axis_selection = self.current_y_axis_selection.get()
-        x_axis_fn = self.axis_options[x_axis_selection]
-        y_axis_fn = self.axis_options[y_axis_selection]
+        x_axis_fns = self.axis_options[x_axis_selection]
+        y_axis_fns = self.axis_options[y_axis_selection]
         shift_x_data = "Arc Length" in x_axis_selection
+        ego_odom = self.ros_interface.ego_odom
         for topic, traj in self.msg_per_topic.items():
             if shift_x_data:
-                x_data = x_axis_fn(traj, self.ros_interface.ego_odom)
+                x_data = x_axis_fns.trajectory_fn(traj, ego_odom)
             else:
-                x_data = x_axis_fn(traj)
-            y_data = y_axis_fn(traj)
+                x_data = x_axis_fns.trajectory_fn(traj)
+            y_data = y_axis_fns.trajectory_fn(traj)
             self.plotter.update_data(topic, x_data, y_data)
+        if ego_odom is not None:
+            self.plotter.update_ego_data(x_axis_fns.ego_fn(ego_odom), y_axis_fns.ego_fn(ego_odom))
         self.plotter.replot()
         self.canvas.draw_idle()
 

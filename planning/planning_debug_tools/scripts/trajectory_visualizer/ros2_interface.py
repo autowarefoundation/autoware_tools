@@ -39,6 +39,9 @@ class ROS2Interface(Node):
         self._ego_odom_sub = self.create_subscription(
             Odometry, self.EGO_ODOM_TOPIC, self.ego_odom_cb, 1
         )
+        self._ego_odom_sub = self.create_subscription(
+            Odometry, self.EGO_ODOM_TOPIC, self.ego_odom_cb, 1
+        )
         self.ego_odom = None
 
     def get_trajectory_topics(self) -> List[Tuple[str, str]]:
