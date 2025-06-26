@@ -91,16 +91,22 @@ class PerceptionReplayerCommon(Node):
 
         # load rosbag
         print("Stared loading rosbag")
+
+        file_ext = {
+            "mcap": "mcap",
+            "sqlite3": "db3",
+        }
+
         if os.path.isdir(args.bag):
             bags = [
                 os.path.join(args.bag, base_name)
                 for base_name in os.listdir(args.bag)
-                if base_name.endswith(args.rosbag_format)
+                if base_name.endswith(file_ext[args.rosbag_format])
             ]
-            for bag_file in sorted(bags, key=get_starting_time):
-                self.load_rosbag(bag_file)
+            for bag_file in sorted(bags, key=lambda b: get_starting_time(b, args.rosbag_format)):
+                self.load_rosbag(bag_file, args.rosbag_format)
         else:
-            self.load_rosbag(args.bag)
+            self.load_rosbag(args.bag, args.rosbag_format)
         print("Ended loading rosbag")
 
         # wait for ready to publish/subscribe
@@ -109,8 +115,8 @@ class PerceptionReplayerCommon(Node):
     def on_odom(self, odom):
         self.ego_odom = odom
 
-    def load_rosbag(self, rosbag2_path: str):
-        reader = open_reader(str(rosbag2_path))
+    def load_rosbag(self, rosbag2_path: str, rosbag2_format: str):
+        reader = open_reader(str(rosbag2_path), rosbag2_format)
 
         topic_types = reader.get_all_topics_and_types()
         # Create a map for quicker lookup
