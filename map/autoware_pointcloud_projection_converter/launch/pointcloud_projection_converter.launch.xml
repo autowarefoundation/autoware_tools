@@ -4,7 +4,11 @@
   <arg name="input_config_file" default="$(find-pkg-share autoware_pointcloud_projection_converter)/config/input.yaml" description="Path to the input configuration YAML file"/>
   <arg name="output_config_file" default="$(find-pkg-share autoware_pointcloud_projection_converter)/config/output.yaml" description="Path to the output configuration YAML file"/>
 
-  <node pkg="autoware_pointcloud_projection_converter" exec="pointcloud_projection_converter" name="autoware_pointcloud_projection_converter" output="both"
-    args="$(var input_pcd_file) $(var output_pcd_file) $(var input_config_file) $(var output_config_file)">
-  </node>
+  <node
+    pkg="autoware_pointcloud_projection_converter"
+    exec="pointcloud_projection_converter"
+    name="autoware_pointcloud_projection_converter"
+    output="both"
+    args="$(var input_pcd_file) $(var output_pcd_file) $(var input_config_file) $(var output_config_file)"
+  />
 </launch>
