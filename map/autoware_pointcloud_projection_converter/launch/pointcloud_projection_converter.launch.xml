@@ -1,6 +1,6 @@
 <launch>
-  <arg name="input_pcd_file" default="/home/yamato_ando/Downloads/map/pointcloud_map.pcd" description="Path to the input pcd file"/>
-  <arg name="output_pcd_file" default="/home/yamato_ando/Downloads/map/pointcloud_map_out3.pcd" description="Path to the output pcd file"/>
+  <arg name="input_pcd_file" description="Path to the input pcd file"/>
+  <arg name="output_pcd_file" description="Path to the output pcd file"/>
   <arg name="input_config_file" default="$(find-pkg-share autoware_pointcloud_projection_converter)/config/input.yaml" description="Path to the input configuration YAML file"/>
   <arg name="output_config_file" default="$(find-pkg-share autoware_pointcloud_projection_converter)/config/output.yaml" description="Path to the output configuration YAML file"/>
 
