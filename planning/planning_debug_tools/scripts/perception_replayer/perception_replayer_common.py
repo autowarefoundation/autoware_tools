@@ -91,11 +91,17 @@ class PerceptionReplayerCommon(Node):
 
         # load rosbag
         print("Stared loading rosbag")
+
+        file_ext = {
+            "mcap": "mcap",
+            "sqlite3": "db3",
+        }
+
         if os.path.isdir(args.bag):
             bags = [
                 os.path.join(args.bag, base_name)
                 for base_name in os.listdir(args.bag)
-                if base_name.endswith(args.rosbag_format)
+                if base_name.endswith(file_ext[args.rosbag_format])
             ]
             for bag_file in sorted(bags, key=lambda b: get_starting_time(b, args.rosbag_format)):
                 self.load_rosbag(bag_file, args.rosbag_format)
