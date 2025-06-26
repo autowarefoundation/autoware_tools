@@ -86,9 +86,7 @@ class PerceptionReplayerCommon(Node):
         )
 
         self.traffic_signals_pub = self.create_publisher(
-            TrafficLightGroupArray,
-            "/perception/traffic_light_recognition/traffic_signals",
-            1,
+            TrafficLightGroupArray, "/perception/traffic_light_recognition/traffic_signals", 1
         )
 
         # load rosbag
@@ -105,9 +103,7 @@ class PerceptionReplayerCommon(Node):
                 for base_name in os.listdir(args.bag)
                 if base_name.endswith(file_ext[args.rosbag_format])
             ]
-            for bag_file in sorted(
-                bags, key=lambda b: get_starting_time(b, args.rosbag_format)
-            ):
+            for bag_file in sorted(bags, key=lambda b: get_starting_time(b, args.rosbag_format)):
                 self.load_rosbag(bag_file, args.rosbag_format)
         else:
             self.load_rosbag(args.bag, args.rosbag_format)
@@ -124,9 +120,7 @@ class PerceptionReplayerCommon(Node):
 
         topic_types = reader.get_all_topics_and_types()
         # Create a map for quicker lookup
-        type_map = {
-            topic_types[i].name: topic_types[i].type for i in range(len(topic_types))
-        }
+        type_map = {topic_types[i].name: topic_types[i].type for i in range(len(topic_types))}
 
         objects_topic = (
             "/perception/object_recognition/detection/objects"
@@ -139,9 +133,7 @@ class PerceptionReplayerCommon(Node):
         )
         ego_odom_topic = "/localization/kinematic_state"
         traffic_signals_topic = "/perception/traffic_light_recognition/traffic_signals"
-        topic_filter = StorageFilter(
-            topics=[objects_topic, ego_odom_topic, traffic_signals_topic]
-        )
+        topic_filter = StorageFilter(topics=[objects_topic, ego_odom_topic, traffic_signals_topic])
         reader.set_filter(topic_filter)
 
         while reader.has_next():
@@ -180,21 +172,11 @@ class PerceptionReplayerCommon(Node):
                             )
                             for traffic_signal_element in traffic_signal.elements:
                                 traffic_light_element = TrafficLightElement()
-                                traffic_light_element.color = (
-                                    traffic_signal_element.color
-                                )
-                                traffic_light_element.shape = (
-                                    traffic_signal_element.shape
-                                )
-                                traffic_light_element.status = (
-                                    traffic_signal_element.status
-                                )
-                                traffic_light_element.confidence = (
-                                    traffic_signal_element.confidence
-                                )
-                                traffic_light_group.elements.append(
-                                    traffic_light_element
-                                )
+                                traffic_light_element.color = traffic_signal_element.color
+                                traffic_light_element.shape = traffic_signal_element.shape
+                                traffic_light_element.status = traffic_signal_element.status
+                                traffic_light_element.confidence = traffic_signal_element.confidence
+                                traffic_light_group.elements.append(traffic_light_element)
                             new_msg.traffic_light_groups.append(traffic_light_group)
                     else:
                         raise AssertionError(f"Unsupported conversion from {type(msg)}")
@@ -245,9 +227,7 @@ class PerceptionReplayerCommon(Node):
 
     def find_topics_by_timestamp(self, timestamp):
         objects_data = self.binary_search(self.rosbag_objects_data, timestamp)
-        traffic_signals_data = self.binary_search(
-            self.rosbag_traffic_signals_data, timestamp
-        )
+        traffic_signals_data = self.binary_search(self.rosbag_traffic_signals_data, timestamp)
         return objects_data, traffic_signals_data
 
     def find_ego_odom_by_timestamp(self, timestamp):
