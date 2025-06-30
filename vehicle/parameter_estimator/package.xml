@@ -19,7 +19,6 @@
   <depend>sensor_msgs</depend>
   <depend>tier4_calibration_msgs</depend>
   <exec_depend>plotjuggler</exec_depend>
-  <exec_depend>plotjuggler_ros</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>autoware_lint_common</test_depend>
