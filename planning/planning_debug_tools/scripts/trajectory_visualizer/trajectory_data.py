@@ -54,7 +54,12 @@ def get_velocity(odom: Odometry):
 
 def get_arc_lengths(trajectory: Trajectory, zero_pose=None):
     arc_lengths = [0.0]
-    if zero_pose is not None and len(trajectory.points) > 0:
+
+    # Early return for empty list or single element
+    if len(trajectory.points) <= 1:
+        return arc_lengths
+
+    if zero_pose is not None and len(trajectory.points) > 1:
         ls = LineString([(p.pose.position.x, p.pose.position.y) for p in trajectory.points])
         p = Point(zero_pose.pose.pose.position.x, zero_pose.pose.pose.position.y)
         arc_lengths = [-ls.project(p)]
