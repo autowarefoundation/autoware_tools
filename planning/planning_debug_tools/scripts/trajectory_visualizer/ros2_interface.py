@@ -25,12 +25,17 @@ from rclpy.qos import DurabilityPolicy
 from rclpy.qos import HistoryPolicy
 from rclpy.qos import QoSProfile
 from rclpy.qos import ReliabilityPolicy
+from autoware_internal_planning_msgs.msg import PathWithLaneId
 
 
 class ROS2Interface(Node):
     """Class to interface with ROS 2."""
 
-    TARGET_MSG_TYPE_STR = "autoware_planning_msgs/msg/Trajectory"
+    TARGET_MSG_TYPE_STRS = [
+        "autoware_planning_msgs/msg/Trajectory",
+        "autoware_internal_planning_msgs/msg/PathWithLaneId",
+        "autoware_planning_msgs/msg/Path",
+    ]
     EGO_ODOM_TOPIC = "/localization/kinematic_state"
 
     def __init__(self, node_name: str = "ros2_interface_node"):
@@ -44,13 +49,13 @@ class ROS2Interface(Node):
         )
         self.ego_odom = None
 
-    def get_trajectory_topics(self) -> List[Tuple[str, str]]:
+    def get_trajectory_topics(self) -> list:
         topic_names_and_types = self.get_topic_names_and_types()
-
         trajectory_topics = []
         for topic_name, msg_types in topic_names_and_types:
-            if self.TARGET_MSG_TYPE_STR in msg_types:
-                trajectory_topics.append(topic_name)
+            for target_type in self.TARGET_MSG_TYPE_STRS:
+                if target_type in msg_types:
+                    trajectory_topics.append((topic_name, target_type))
         return trajectory_topics
 
     def add_callback(

@@ -18,6 +18,8 @@ import tkinter as tk
 from tkinter import ttk
 
 from autoware_planning_msgs.msg import Trajectory
+from autoware_internal_planning_msgs.msg import PathWithLaneId
+from autoware_planning_msgs.msg import Path
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from plotter import Plotter
 from ros2_interface import ROS2Interface
@@ -116,11 +118,11 @@ class TkinterApp:
     def refresh_topic_list(self):
         self.listbox.delete(0, tk.END)  # Clear existing items
         self.topics = self.ros_interface.get_trajectory_topics()
-        for topic in self.topics:
-            self.listbox.insert(tk.END, topic)
+        for topic, msg_type in self.topics:
+            self.listbox.insert(tk.END, f"{topic} [{msg_type.split('/')[-1]}")
 
-    def update(self, topic, trajectory: Trajectory):
-        self.msg_per_topic[topic] = trajectory
+    def update(self, topic, msg):
+        self.msg_per_topic[topic] = msg
 
     def plot(self, topic_indexes):
         self.ros_interface.remove_callbacks()
@@ -128,13 +130,20 @@ class TkinterApp:
         x_axis_selection = self.current_x_axis_selection.get()
         y_axis_selection = self.current_y_axis_selection.get()
         selected_topics = [self.topics[i] for i in topic_indexes]
-        self.plotter.init_plot(x_axis_selection, y_axis_selection, selected_topics)
-        for topic in selected_topics:
-            self.ros_interface.add_callback(
-                topic,
-                Trajectory,
-                lambda msg, captured_topic=topic: self.update(captured_topic, msg),
-            )
+        self.plotter.init_plot(x_axis_selection, y_axis_selection, [t[0] for t in selected_topics])
+        for topic, msg_type in selected_topics:
+            if msg_type.endswith("Trajectory"):
+                self.ros_interface.add_callback(
+                    topic, Trajectory, lambda msg, captured_topic=topic: self.update(captured_topic, msg)
+                )
+            elif msg_type.endswith("PathWithLaneId"):
+                self.ros_interface.add_callback(
+                    topic, PathWithLaneId, lambda msg, captured_topic=topic: self.update(captured_topic, msg)
+                )
+            elif msg_type.endswith("Path"):
+                self.ros_interface.add_callback(
+                    topic, Path, lambda msg, captured_topic=topic: self.update(captured_topic, msg)
+                )
 
     def replot(self):
         x_axis_selection = self.current_x_axis_selection.get()
