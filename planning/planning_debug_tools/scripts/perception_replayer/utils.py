@@ -39,7 +39,7 @@ from sensor_msgs.msg import PointField
 from std_msgs.msg import Header
 from tf_transformations import euler_from_quaternion
 from tf_transformations import quaternion_from_euler
-from tier4_localization_msgs.srv import InitializeLocalization
+from autoware_localization_msgs.srv import InitializeLocalization
 
 
 def get_starting_time(uri: str, storage_id: str):
