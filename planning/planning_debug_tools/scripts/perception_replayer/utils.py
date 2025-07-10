@@ -19,6 +19,7 @@ import time
 from typing import Tuple
 
 from autoware_adapi_v1_msgs.srv import SetRoutePoints
+from autoware_localization_msgs.srv import InitializeLocalization
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseWithCovariance
@@ -39,7 +40,6 @@ from sensor_msgs.msg import PointField
 from std_msgs.msg import Header
 from tf_transformations import euler_from_quaternion
 from tf_transformations import quaternion_from_euler
-from autoware_localization_msgs.srv import InitializeLocalization
 
 
 def get_starting_time(uri: str, storage_id: str):
