@@ -272,12 +272,16 @@ def y_value(odom: Odometry):
 
 def yaws(msg):
     points = _get_points(msg)
-    # PathPoint型はheading_rate_rpsはあるがyawはpose.orientationから取得
     return [_get_yaw_from_quaternion(p.pose.orientation) for p in points]
 
 
 def yaw(odom: Odometry):
     return _get_yaw_from_quaternion(odom.pose.pose.orientation)
+
+
+def index_values(msg):
+    points = _get_points(msg)
+    return list(range(len(points)))
 
 
 class DataFunction:
@@ -293,6 +297,7 @@ return a dictionnary where the key is the name of the function and the value is 
 
 def get_data_functions() -> dict:
     return {
+        "Index": DataFunction(index_values, zero_fn),
         "Arc Length [m]": DataFunction(get_arc_lengths, zero_fn),
         "Velocity [m/s]": DataFunction(get_velocites, get_velocity),
         "Times [s]": DataFunction(get_times, zero_fn),
