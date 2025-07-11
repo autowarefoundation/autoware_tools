@@ -207,8 +207,10 @@ void update_centerline(
       traj_idx == new_centerline.size() - 1 ||
       centerline_lane_id != centerline_lane_ids.at(traj_idx + 1)) {
       const auto & centerline = centerline_map.at(centerline_lane_id);
-      lanelet_map_ptr->add(centerline);
-      lanelet_ref.setCenterline(centerline);
+      if (centerline.size() > 1) {
+        lanelet_map_ptr->add(centerline);
+        lanelet_ref.setCenterline(centerline);
+      }
     }
   }
 }
