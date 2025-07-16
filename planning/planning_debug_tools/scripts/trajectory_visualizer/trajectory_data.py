@@ -15,9 +15,6 @@
 # limitations under the License.
 # cspell:disable
 from angles import shortest_angular_distance
-from autoware_internal_planning_msgs.msg import PathPointWithLaneId
-from autoware_internal_planning_msgs.msg import PathWithLaneId
-from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
 from nav_msgs.msg import Odometry
 import numpy as np
@@ -25,7 +22,6 @@ from rclpy import time
 from shapely import LineString
 from shapely import Point
 from tf_transformations import euler_from_quaternion
-from tier4_planning_msgs.msg import PathPoint
 
 
 def _dist(p1: TrajectoryPoint, p2: TrajectoryPoint):
