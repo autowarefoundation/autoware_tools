@@ -17,9 +17,9 @@
 import tkinter as tk
 from tkinter import ttk
 
-from autoware_planning_msgs.msg import Trajectory
 from autoware_internal_planning_msgs.msg import PathWithLaneId
 from autoware_planning_msgs.msg import Path
+from autoware_planning_msgs.msg import Trajectory
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from plotter import Plotter
 from ros2_interface import ROS2Interface
@@ -41,12 +41,16 @@ class TkinterApp:
 
         # --- Main Frames ---
         self.left_frame = ttk.Frame(self.root, padding="10")
-        self.left_frame.grid(row=0, column=0, sticky="nswe", padx=5, pady=5)
+        self.left_frame.grid(row=0, column=0, sticky="nswe", padx=0, pady=0)
+        self.mid_frame = ttk.Frame(self.root, padding="0", width=1)
+        self.mid_frame.grid_propagate(False)
+        self.mid_frame.grid(row=0, column=1, sticky="nswe", padx=0, pady=0)
         self.right_frame = ttk.Frame(self.root, padding="10")
-        self.right_frame.grid(row=0, column=1, sticky="nswe", padx=5, pady=5)
+        self.right_frame.grid(row=0, column=2, sticky="nswe", padx=0, pady=0)
 
         self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_columnconfigure(1, weight=3)  # Give more weight to the plot area
+        self.root.grid_columnconfigure(1, weight=0)  # Never resize the middle frame
+        self.root.grid_columnconfigure(2, weight=3)  # Give more weight to the plot area
         self.root.grid_rowconfigure(0, weight=1)
 
         # --- Left Frame Widgets ---
@@ -98,13 +102,22 @@ class TkinterApp:
         self.listbox_scrollbar_x.pack(side=tk.BOTTOM, fill=tk.X)
         self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        self.left_frame.grid_rowconfigure(3, weight=1)  # Allow listbox to expand
+        # Allow listbox to expand
+        self.left_frame.grid_rowconfigure(3, weight=1)
+        self.left_frame.grid_columnconfigure(0, weight=1)
+        self.left_frame.grid_columnconfigure(1, weight=1)
 
         # Button to Refresh List
         self.refresh_button = ttk.Button(
             self.left_frame, text="Refresh List", command=self.refresh_topic_list
         )
         self.refresh_button.grid(row=4, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
+        # --- Mid Frame --- Button to hide/show the left frame
+        self.hide_button = ttk.Button(
+            self.mid_frame, text="<", command=self.hide_show_left_frame, width=1
+        )
+        self.hide_button.pack(fill="both", expand=True)
+        self.left_hidden = False
         # --- Right Frame Widgets ---
         # Matplotlib Plot Area
         self.plotter = Plotter()
@@ -114,6 +127,17 @@ class TkinterApp:
 
         self.msg_per_topic = {}
         self.refresh_topic_list()
+
+    def hide_show_left_frame(self):
+        if self.left_hidden:
+            self.left_frame.grid(row=0, column=0, sticky="nswe", padx=5, pady=5)
+            self.hide_button.config(text="<")
+            self.root.grid_columnconfigure(0, weight=1)
+        else:
+            self.left_frame.grid_forget()
+            self.hide_button.config(text=">")
+            self.root.grid_columnconfigure(0, weight=0)
+        self.left_hidden = not self.left_hidden
 
     def refresh_topic_list(self):
         self.listbox.delete(0, tk.END)  # Clear existing items
@@ -134,11 +158,15 @@ class TkinterApp:
         for topic, msg_type in selected_topics:
             if msg_type.endswith("Trajectory"):
                 self.ros_interface.add_callback(
-                    topic, Trajectory, lambda msg, captured_topic=topic: self.update(captured_topic, msg)
+                    topic,
+                    Trajectory,
+                    lambda msg, captured_topic=topic: self.update(captured_topic, msg),
                 )
             elif msg_type.endswith("PathWithLaneId"):
                 self.ros_interface.add_callback(
-                    topic, PathWithLaneId, lambda msg, captured_topic=topic: self.update(captured_topic, msg)
+                    topic,
+                    PathWithLaneId,
+                    lambda msg, captured_topic=topic: self.update(captured_topic, msg),
                 )
             elif msg_type.endswith("Path"):
                 self.ros_interface.add_callback(
