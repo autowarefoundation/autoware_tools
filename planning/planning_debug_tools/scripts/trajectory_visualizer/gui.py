@@ -17,9 +17,9 @@
 import tkinter as tk
 from tkinter import ttk
 
-from autoware_planning_msgs.msg import Trajectory
 from autoware_internal_planning_msgs.msg import PathWithLaneId
 from autoware_planning_msgs.msg import Path
+from autoware_planning_msgs.msg import Trajectory
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from plotter import Plotter
 from ros2_interface import ROS2Interface
@@ -134,11 +134,15 @@ class TkinterApp:
         for topic, msg_type in selected_topics:
             if msg_type.endswith("Trajectory"):
                 self.ros_interface.add_callback(
-                    topic, Trajectory, lambda msg, captured_topic=topic: self.update(captured_topic, msg)
+                    topic,
+                    Trajectory,
+                    lambda msg, captured_topic=topic: self.update(captured_topic, msg),
                 )
             elif msg_type.endswith("PathWithLaneId"):
                 self.ros_interface.add_callback(
-                    topic, PathWithLaneId, lambda msg, captured_topic=topic: self.update(captured_topic, msg)
+                    topic,
+                    PathWithLaneId,
+                    lambda msg, captured_topic=topic: self.update(captured_topic, msg),
                 )
             elif msg_type.endswith("Path"):
                 self.ros_interface.add_callback(

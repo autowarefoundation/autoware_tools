@@ -15,16 +15,17 @@
 # limitations under the License.
 # cspell:disable
 from angles import shortest_angular_distance
+from autoware_internal_planning_msgs.msg import PathPointWithLaneId
+from autoware_internal_planning_msgs.msg import PathWithLaneId
 from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
-from autoware_internal_planning_msgs.msg import PathWithLaneId, PathPointWithLaneId
-from tier4_planning_msgs.msg import PathPoint
 from nav_msgs.msg import Odometry
 import numpy as np
 from rclpy import time
 from shapely import LineString
 from shapely import Point
 from tf_transformations import euler_from_quaternion
+from tier4_planning_msgs.msg import PathPoint
 
 
 def _dist(p1: TrajectoryPoint, p2: TrajectoryPoint):
@@ -50,15 +51,19 @@ def _get_points(msg):
     # Trajectory: msg.points (TrajectoryPoint)
     # PathWithLaneId: msg.points (PathPointWithLaneId) → .point (PathPoint)
     # Path: msg.points (PathPoint)
-    if hasattr(msg, 'points') and len(msg.points) > 0:
+    if hasattr(msg, "points") and len(msg.points) > 0:
         # TrajectoryPoint: pose, twist, accel
-        if hasattr(msg.points[0], 'pose') and hasattr(msg.points[0], 'twist') and hasattr(msg.points[0], 'accel'):
+        if (
+            hasattr(msg.points[0], "pose")
+            and hasattr(msg.points[0], "twist")
+            and hasattr(msg.points[0], "accel")
+        ):
             return msg.points
         # PathPointWithLaneId: .point
-        elif hasattr(msg.points[0], 'point'):
+        elif hasattr(msg.points[0], "point"):
             return [p.point for p in msg.points]
         # PathPoint: pose, longitudinal_velocity_mps
-        elif hasattr(msg.points[0], 'pose') and hasattr(msg.points[0], 'longitudinal_velocity_mps'):
+        elif hasattr(msg.points[0], "pose") and hasattr(msg.points[0], "longitudinal_velocity_mps"):
             return msg.points
     return []
 
@@ -67,10 +72,10 @@ def get_velocites(msg):
     points = _get_points(msg)
     if len(points) == 0:
         return []
-    if hasattr(points[0], 'longitudinal_velocity_mps'):
-        return [getattr(p, 'longitudinal_velocity_mps', 0.0) for p in points]
-    elif hasattr(points[0], 'twist'):
-        return [getattr(p.twist, 'linear', type('obj', (), {'x':0})).x for p in points]
+    if hasattr(points[0], "longitudinal_velocity_mps"):
+        return [getattr(p, "longitudinal_velocity_mps", 0.0) for p in points]
+    elif hasattr(points[0], "twist"):
+        return [getattr(p.twist, "linear", type("obj", (), {"x": 0})).x for p in points]
     return []
 
 
@@ -229,10 +234,10 @@ def get_accelerations(msg):
     points = _get_points(msg)
     if len(points) == 0:
         return []
-    if hasattr(points[0], 'acceleration_mps2'):
-        return [getattr(p, 'acceleration_mps2', 0.0) for p in points]
-    elif hasattr(points[0], 'accel'):
-        return [getattr(p.accel, 'linear', type('obj', (), {'x':0})).x for p in points]
+    if hasattr(points[0], "acceleration_mps2"):
+        return [getattr(p, "acceleration_mps2", 0.0) for p in points]
+    elif hasattr(points[0], "accel"):
+        return [getattr(p.accel, "linear", type("obj", (), {"x": 0})).x for p in points]
     return []
 
 
