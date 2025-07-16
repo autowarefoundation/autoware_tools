@@ -16,10 +16,7 @@
 # cspell:disable
 from typing import Any
 from typing import Callable
-from typing import List
-from typing import Tuple
 
-from autoware_internal_planning_msgs.msg import PathWithLaneId
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy
