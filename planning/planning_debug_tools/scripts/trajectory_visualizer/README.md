@@ -14,7 +14,6 @@ This tool allow the visualization of Autoware trajectory messages (`autoware_pla
 2. **A window will pop up:** This window will be used to visualize trajectories.
 
 3. **Choose what to plot:**
-
    - **X-axis and Y-axis:** Use the dropdown menus at the top left to select what data you want on the X and Y axes of the graph (e.g., "Time" vs. "Velocity").
    - **Topics:** The list in the middle left shows available trajectory topics. Check the boxes to select which trajectories you want to see on the plot.
    - **Refresh List:** Press the "Refresh List" button to update the list of available topics. This is useful if new trajectory data becomes available.
