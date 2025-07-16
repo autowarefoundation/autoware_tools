@@ -27,12 +27,12 @@ from trajectory_data import get_data_functions
 
 
 class TkinterApp:
-    def __init__(self, root, ros_interface_node: ROS2Interface):
+    def __init__(self, root, ros_interface_node: ROS2Interface, config):
         self.root = root
         self.root.title("Autoware Trajectory Visualizer")
         self.root.geometry("800x600")
         self.ros_interface = ros_interface_node
-        self.topics = []
+        self.topics = config["initial_topics"]
 
         # Predetermined list for the dropdown
         self.axis_options = get_data_functions()
@@ -55,6 +55,7 @@ class TkinterApp:
 
         # --- Left Frame Widgets ---
         axis_option_keys = [str(key) for key in self.axis_options.keys()]
+
         # Dropdown List (Combobox)
         ttk.Label(self.left_frame, text="X-axis:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.x_axis_dropdown = ttk.Combobox(
@@ -64,8 +65,7 @@ class TkinterApp:
             state="readonly",
         )
         self.x_axis_dropdown.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-        if self.axis_options:
-            self.x_axis_dropdown.current(0)  # Set default selection
+        self.x_axis_dropdown.current(0)  # Set default selection
         # Dropdown List (Combobox)
         ttk.Label(self.left_frame, text="Y-axis:").grid(row=0, column=1, padx=5, pady=5, sticky="w")
         self.y_axis_dropdown = ttk.Combobox(
@@ -75,8 +75,14 @@ class TkinterApp:
             state="readonly",
         )
         self.y_axis_dropdown.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-        if self.axis_options:
-            self.y_axis_dropdown.current(1)  # Set default selection
+        self.y_axis_dropdown.current(1)  # Set default selection
+
+        # Set initial selection from config
+        for i in range(len(axis_option_keys)):
+            if axis_option_keys[i].casefold().startswith(config["initial_axis"]["x"].casefold()):
+                self.x_axis_dropdown.current(i)
+            if axis_option_keys[i].casefold().startswith(config["initial_axis"]["y"].casefold()):
+                self.y_axis_dropdown.current(i)
 
         # Listbox with Multiple Selection
         ttk.Label(self.left_frame, text="Topics:").grid(
@@ -126,6 +132,7 @@ class TkinterApp:
         self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.msg_per_topic = {}
+        self.plot(list(range(len(self.topics))))  # plot all initial topics
         self.refresh_topic_list()
 
     def hide_show_left_frame(self):
