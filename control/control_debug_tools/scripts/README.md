@@ -56,7 +56,6 @@ The script will print the paths of the files being compared and then output any 
 ## How it Works
 
 1. **Argument Parsing**: The script uses `argparse` to accept command-line arguments. This allows users to specify:
-
    - The name of the vehicle description package (`--vehicle_description`).
    - Specific paths to parameter files, overriding the defaults (`--mpc_param_file`, `--pid_param_file`, etc.).
    - A vehicle ID to load vehicle-specific control parameters (`--vehicle_id`).
@@ -70,7 +69,6 @@ The script will print the paths of the files being compared and then output any 
 5. **Parameter Sources**: A `Source` class (using an integer enum internally) is defined to represent the origin of each parameter set (MPC, PID, SIM, GATE). A helper function `to_string` converts the source enum to a human-readable string for output messages.
 
 6. **Condition Definition**: A `Condition` class encapsulates a single consistency check. Each `Condition` instance stores:
-
    - `param1`, `source1`: The name and origin of the first parameter.
    - `param2`, `source2`: The name and origin of the second parameter.
    - `fail_msg`: A string describing the expected relationship (e.g., "should be identical to", "should be lower than").
