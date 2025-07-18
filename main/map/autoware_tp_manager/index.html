@@ -3110,12 +3110,10 @@ colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span cla
 </tbody>
 </table>
 <p>Paths to folders should be specified as <strong>absolute paths</strong>.</p>
-<p>The rosbag should contain the following topics</p>
-<ul>
-<li>/localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias</li>
-<li>/localization/pose_estimator/transform_probability</li>
-<li>/localization/util/downsample/pointcloud</li>
-</ul>
+<p>The rosbag should contain the following topics
+- /localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias
+- /localization/pose_estimator/transform_probability
+- /localization/util/downsample/pointcloud</p>
 <p>The average TPs can be visualized on Rviz2 by running the following command</p>
 <div class="highlight"><pre><span></span><code>python3<span class="w"> </span>install/autoware_tp_manager/lib/autoware_tp_manager/tp_visualizer.py<span class="w"> </span>&lt;path_to_output_dir&gt;
 </code></pre></div>
