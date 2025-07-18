@@ -15,7 +15,6 @@
 # limitations under the License.
 # cspell:disable
 from angles import shortest_angular_distance
-from autoware_planning_msgs.msg import Trajectory
 from autoware_planning_msgs.msg import TrajectoryPoint
 from nav_msgs.msg import Odometry
 import numpy as np
@@ -44,35 +43,70 @@ def zero_fn(_: Odometry):
     return 0.0
 
 
-def get_velocites(trajectory: Trajectory):
-    return [p.longitudinal_velocity_mps for p in trajectory.points]
+def _get_points(msg):
+    # Trajectory: msg.points (TrajectoryPoint)
+    # PathWithLaneId: msg.points (PathPointWithLaneId) → .point (PathPoint)
+    # Path: msg.points (PathPoint)
+    if hasattr(msg, "points") and len(msg.points) > 0:
+        # TrajectoryPoint: pose, twist, accel
+        if (
+            hasattr(msg.points[0], "pose")
+            and hasattr(msg.points[0], "twist")
+            and hasattr(msg.points[0], "accel")
+        ):
+            return msg.points
+        # PathPointWithLaneId: .point
+        elif hasattr(msg.points[0], "point"):
+            return [p.point for p in msg.points]
+        # PathPoint: pose, longitudinal_velocity_mps
+        elif hasattr(msg.points[0], "pose") and hasattr(msg.points[0], "longitudinal_velocity_mps"):
+            return msg.points
+    return []
+
+
+def get_velocites(msg):
+    points = _get_points(msg)
+    if len(points) == 0:
+        return []
+    if hasattr(points[0], "longitudinal_velocity_mps"):
+        return [getattr(p, "longitudinal_velocity_mps", 0.0) for p in points]
+    elif hasattr(points[0], "twist"):
+        return [getattr(p.twist, "linear", type("obj", (), {"x": 0})).x for p in points]
+    return []
 
 
 def get_velocity(odom: Odometry):
     return odom.twist.twist.linear.x
 
 
-def get_arc_lengths(trajectory: Trajectory, zero_pose=None):
+def get_arc_lengths(msg, zero_pose=None):
+    points = _get_points(msg)
     arc_lengths = [0.0]
-    if zero_pose is not None and len(trajectory.points) > 0:
-        ls = LineString([(p.pose.position.x, p.pose.position.y) for p in trajectory.points])
+
+    # Early return for empty list or single element
+    if len(points) <= 1:
+        return arc_lengths
+
+    if zero_pose is not None and len(points) > 1:
+        ls = LineString([(p.pose.position.x, p.pose.position.y) for p in points])
         p = Point(zero_pose.pose.pose.position.x, zero_pose.pose.pose.position.y)
         arc_lengths = [-ls.project(p)]
 
-    for i in range(0, len(trajectory.points) - 1):
-        arc_lengths.append(arc_lengths[-1] + _dist(trajectory.points[i], trajectory.points[i + 1]))
+    for i in range(0, len(points) - 1):
+        arc_lengths.append(arc_lengths[-1] + _dist(points[i], points[i + 1]))
     return arc_lengths
 
 
-def get_times(trajectory: Trajectory):
+def get_times(msg):
+    points = _get_points(msg)
     times = []
-    for p in trajectory.points:
+    for p in points:
         d = time.Duration.from_msg(p.time_from_start)
         times.append(d.nanoseconds * 1e-9)
     return times
 
 
-def calculate_curvature_2d(trajectory: Trajectory):
+def calculate_curvature_2d(msg):
     """
     Calculate the curvature at each point of a 2D trajectory.
 
@@ -82,8 +116,8 @@ def calculate_curvature_2d(trajectory: Trajectory):
     where derivatives are computed numerically using numpy.gradient, assuming
     a unit spacing for the parameter t (e.g., time or arc length segment).
     """
-    # Validate input shape
-    num_points = len(trajectory.points)
+    points = _get_points(msg)
+    num_points = len(points)
 
     # Handle trivial cases
     if num_points == 0:
@@ -92,8 +126,8 @@ def calculate_curvature_2d(trajectory: Trajectory):
         return np.array([0.0])
     # For num_points == 2 (straight line), the formula will yield 0, so no special handling needed.
 
-    x = [p.pose.position.x for p in trajectory.points]
-    y = [p.pose.position.y for p in trajectory.points]
+    x = [p.pose.position.x for p in points]
+    y = [p.pose.position.y for p in points]
 
     # First derivatives (velocity components)
     # np.gradient assumes unit spacing if not specified otherwise
@@ -138,7 +172,7 @@ def calculate_curvature_2d(trajectory: Trajectory):
     return curvature
 
 
-def calculate_menger_curvature(trajectory: Trajectory):
+def calculate_menger_curvature(msg):
     """
     Calculate the Menger curvature at each point of a 2D trajectory using triplets of points.
 
@@ -147,7 +181,8 @@ def calculate_menger_curvature(trajectory: Trajectory):
     The curvature is assigned to the middle point (P2).
     Curvature for the first and last points is set to 0.
     """
-    num_points = len(trajectory.points)
+    points = _get_points(msg)
+    num_points = len(points)
 
     if num_points == 0:
         return np.array([])
@@ -158,9 +193,9 @@ def calculate_menger_curvature(trajectory: Trajectory):
     epsilon = 1e-9  # To avoid division by zero for collinear/coincident points
 
     for i in range(1, num_points - 1):
-        p1 = trajectory.points[i - 1]
-        p2 = trajectory.points[i]
-        p3 = trajectory.points[i + 1]
+        p1 = points[i - 1]
+        p2 = points[i]
+        p3 = points[i + 1]
 
         # Calculate side lengths of the triangle
         d12 = _dist(p1, p2)
@@ -191,8 +226,15 @@ def calculate_menger_curvature(trajectory: Trajectory):
     return curvatures
 
 
-def get_accelerations(trajectory: Trajectory):
-    return [p.acceleration_mps2 for p in trajectory.points]
+def get_accelerations(msg):
+    points = _get_points(msg)
+    if len(points) == 0:
+        return []
+    if hasattr(points[0], "acceleration_mps2"):
+        return [getattr(p, "acceleration_mps2", 0.0) for p in points]
+    elif hasattr(points[0], "accel"):
+        return [getattr(p.accel, "linear", type("obj", (), {"x": 0})).x for p in points]
+    return []
 
 
 def _get_yaw_from_quaternion(quaternion_msg):
@@ -201,37 +243,46 @@ def _get_yaw_from_quaternion(quaternion_msg):
     return yaw
 
 
-def relative_angles(trajectory: Trajectory):
+def relative_angles(msg):
+    points = _get_points(msg)
     angles = [0.0]
-    for i in range(0, len(trajectory.points) - 1):
-        yaw0 = _get_yaw_from_quaternion(trajectory.points[i].pose.orientation)
-        yaw1 = _get_yaw_from_quaternion(trajectory.points[i + 1].pose.orientation)
+    for i in range(0, len(points) - 1):
+        yaw0 = _get_yaw_from_quaternion(points[i].pose.orientation)
+        yaw1 = _get_yaw_from_quaternion(points[i + 1].pose.orientation)
         angles.append(shortest_angular_distance(yaw0, yaw1))
     return angles
 
 
-def x_values(trajectory: Trajectory):
-    return [p.pose.position.x for p in trajectory.points]
+def x_values(msg):
+    points = _get_points(msg)
+    return [p.pose.position.x for p in points]
 
 
 def x_value(odom: Odometry):
     return odom.pose.pose.position.x
 
 
-def y_values(trajectory: Trajectory):
-    return [p.pose.position.y for p in trajectory.points]
+def y_values(msg):
+    points = _get_points(msg)
+    return [p.pose.position.y for p in points]
 
 
 def y_value(odom: Odometry):
     return odom.pose.pose.position.y
 
 
-def yaws(trajectory: Trajectory):
-    return [_get_yaw_from_quaternion(p.pose.orientation) for p in trajectory.points]
+def yaws(msg):
+    points = _get_points(msg)
+    return [_get_yaw_from_quaternion(p.pose.orientation) for p in points]
 
 
 def yaw(odom: Odometry):
     return _get_yaw_from_quaternion(odom.pose.pose.orientation)
+
+
+def index_values(msg):
+    points = _get_points(msg)
+    return list(range(len(points)))
 
 
 class DataFunction:
@@ -247,6 +298,7 @@ return a dictionnary where the key is the name of the function and the value is 
 
 def get_data_functions() -> dict:
     return {
+        "Index": DataFunction(index_values, zero_fn),
         "Arc Length [m]": DataFunction(get_arc_lengths, zero_fn),
         "Velocity [m/s]": DataFunction(get_velocites, get_velocity),
         "Times [s]": DataFunction(get_times, zero_fn),
