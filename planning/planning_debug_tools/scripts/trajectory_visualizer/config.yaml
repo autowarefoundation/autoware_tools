@@ -1,0 +1,8 @@
+initial_topics: # initial topics to plot and their type
+  - [/planning/scenario_planning/trajectory, Trajectory]
+  - [/planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory, Trajectory]
+  - [/planning/scenario_planning/lane_driving/behavior_planning/path, Path]
+  - [/planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id, PathWithLaneId]
+initial_axis: # initial metrics to plot (enough to match the start of the metric name, not case sensitive)
+  x: arc
+  y: vel

@@ -14,11 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # cspell:disable
+import argparse
+import os
+from pathlib import Path
 import tkinter as tk
 
 from gui import TkinterApp
 import rclpy
 from ros2_interface import ROS2Interface
+import yaml
 
 
 class Main:
@@ -34,13 +38,14 @@ class Main:
             self.root.destroy()
         self.running_state = False
 
-    def main(self, args=None):
-        rclpy.init(args=args)
+    def main(self, config_path):
+        rclpy.init(args=None)
+        config = yaml.safe_load(open(config_path, "r"))
         root = tk.Tk()
         root.protocol("WM_DELETE_WINDOW", self.cleanup)
         ros_interface_node = ROS2Interface(node_name="trajectory_visualizer")
         try:
-            app = TkinterApp(root, ros_interface_node)
+            app = TkinterApp(root, ros_interface_node, config)
             while self.running_state:
                 root.update_idletasks()
                 root.update()
@@ -53,6 +58,14 @@ class Main:
 
 
 if __name__ == "__main__":
-    # TODO: provide initial topics as arguments
+    parser = argparse.ArgumentParser(description="Visualize Autoware paths and trajectories.")
+    parser.add_argument(
+        "--config",
+        required=False,
+        help="path to the config file specifying initial topics and metrics to visualize (use 'config.yaml' in the current directory if not provided).",
+        default=None,
+    )
+    args = parser.parse_args()
+    config_path = Path(os.curdir) / "config.yaml" if args.config is None else args.config
     m = Main()
-    m.main()
+    m.main(config_path)
