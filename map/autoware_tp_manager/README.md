@@ -36,7 +36,6 @@ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-test
   Paths to folders should be specified as **absolute paths**.
 
   The rosbag should contain the following topics
-
   - /localization/pose_twist_fusion_filter/pose_with_covariance_without_yawbias
   - /localization/pose_estimator/transform_probability
   - /localization/util/downsample/pointcloud
