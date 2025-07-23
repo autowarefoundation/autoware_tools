@@ -99,6 +99,8 @@ def get_arc_lengths(msg, zero_pose=None):
 
 def get_times(msg):
     points = _get_points(msg)
+    if len(points) > 0 and not hasattr(points[0], "time_from_start"):
+        return [0.0 for _ in points]
     times = []
     for p in points:
         d = time.Duration.from_msg(p.time_from_start)
