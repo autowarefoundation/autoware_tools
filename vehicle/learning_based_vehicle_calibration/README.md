@@ -4,19 +4,15 @@
 
 ### 1. Installation
 
-Download the repository and move inside the folder:
+
+Navigate to `autoware/src/tools/vehicle/learning_based_vehicle_calibration` and install the required libraries:
 
 ```bash
-git clone https://github.com/pixmoving-moveit/learning_based_vehicle_calibration.git && cd learning_based_vehicle_calibration
-```
-
-Install the required libraries:
-
-```bash
+# It is recommended to do this in a miniconda environment
+# There are 2 stages: data collection and calibration.
+# These requirements are only needed for the calibration step.
 pip install -r requirements.txt
 ```
-
-Make sure to place this package correctly inside your workspace, colcon build it and source it.
 
 ### 2. Longitudinal Dynamics
 
@@ -167,9 +163,10 @@ First, we applied a mean filter to smooth data with a window size of 20 (which c
 After having collected the data and having saved them in csv format, you can visualize them by launching the following scrips:
 
 ```bash
-python3 throttle_data_visualization.py
+python3 src/tools/vehicle/learning_based_vehicle_calibration/scripts/throttle_data_visualization.py
 
-python3 brake_data_visualization.py
+
+python3 src/tools/vehicle/learning_based_vehicle_calibration/scripts/brake_data_visualization.py
 ```
 
 This way, we can have an idea about the distribution of our data.
@@ -206,11 +203,7 @@ ros2 launch learning_based_vehicle_calibration neural_network_launch.py
 
 ![NN_brake](./imgs/NN_brake.png)
 
-When you launch these scripts, the training stage begins and when it is done, the software automatically saves the trained model in a zip file.
-
-This way, when you want to use the neural network model, you can avoid to train it every time from scratch, but you can just train it once and then load it, according to the following scripts:
-
-These scripts will also create the acceleration and braking offline tables.
+When you launch this script, the training stage begins and when it is done, the software generates the acceleration and braking offline tables: `accel_map.csv` and `brake_map.csv` in your working directory.
 
 Finally, the script will also plot the distribution of velocity, throttling/braking levels and acceleration data:
 

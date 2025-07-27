@@ -12,6 +12,7 @@
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
 
+  <exec_depend>autoware_vehicle_msgs</exec_depend>
   <exec_depend>can_msgs</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>ros2launch</exec_depend>

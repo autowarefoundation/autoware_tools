@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
-from autoware_auto_vehicle_msgs.msg import SteeringReport
-from autoware_auto_vehicle_msgs.msg import VelocityReport
+from autoware_vehicle_msgs.msg import SteeringReport
+from autoware_vehicle_msgs.msg import VelocityReport
 import rclpy
 import rclpy.node
 from sensor_msgs.msg import Imu

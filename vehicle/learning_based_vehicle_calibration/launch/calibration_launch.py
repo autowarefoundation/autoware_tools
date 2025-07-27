@@ -9,7 +9,7 @@ import launch_ros.actions
 def launch_data_monitor(context):
     # Open a new terminal and run data_monitor.py
     os.system(
-        "gnome-terminal -- /bin/bash -c 'ros2 run learning_based_vehicle_calibration data_monitor.py; exec bash'"
+        "gnome-terminal -- /bin/bash -c 'source $HOME/autoware/install/setup.bash && ros2 run learning_based_vehicle_calibration data_monitor.py; exec bash'"
     )
 
 
