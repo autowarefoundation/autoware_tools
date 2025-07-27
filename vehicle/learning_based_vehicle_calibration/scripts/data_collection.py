@@ -4,8 +4,8 @@ from collections import deque
 import math
 from statistics import mean
 
-from autoware_auto_vehicle_msgs.msg import SteeringReport
-from autoware_auto_vehicle_msgs.msg import VelocityReport
+from autoware_vehicle_msgs.msg import SteeringReport
+from autoware_vehicle_msgs.msg import VelocityReport
 from learning_based_vehicle_calibration.msg import LongitudinalProcesses
 from learning_based_vehicle_calibration.msg import LongitudinalProgress
 import pandas as pd

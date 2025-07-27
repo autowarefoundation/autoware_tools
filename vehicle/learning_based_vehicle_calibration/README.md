@@ -54,11 +54,7 @@ Here we present the software structure, data collection, data preprocessing and 
 
 ## Input Data Software
 
-Launch Autoware as follows:
-
-```bash
-./autoware.sh
-```
+Configure the Autoware to publish the necessary topics. Then launch Autoware.
 
 It is recommended to record the topics we need to collect in order to train our model. The data we need to record are the pitch angle, the linear acceleration, the velocity, the braking and throttling values and the steering angle (make sure to modify the name of the topics according to your vehicle):
 
