@@ -4,7 +4,6 @@
 
 ### 1. Installation
 
-
 Navigate to `autoware/src/tools/vehicle/learning_based_vehicle_calibration` and install the required libraries:
 
 ```bash
