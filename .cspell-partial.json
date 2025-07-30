@@ -7,5 +7,26 @@
     "planning/autoware_planning_data_analyzer/**"
   ],
   "ignoreRegExpList": [],
-  "words": ["dltype", "tvmgen", "quantizer", "imageio", "mimsave"]
+  "words": [
+    "dltype",
+    "tvmgen",
+    "quantizer",
+    "imageio",
+    "mimsave",
+    "accb",
+    "Backpropagation",
+    "cmdb",
+    "dataa",
+    "dioss",
+    "ncols",
+    "prec",
+    "primotest",
+    "scikit",
+    "setpoint",
+    "timegap",
+    "usecols",
+    "velb",
+    "viridis",
+    "zdata"
+  ]
 }
