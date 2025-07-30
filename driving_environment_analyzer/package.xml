@@ -46,6 +46,9 @@
   <depend>tier4_rtc_msgs</depend>
   <depend>visualization_msgs</depend>
 
+  <exec_depend>autoware_launch</exec_depend>
+  <exec_depend>autoware_map_projection_loader</exec_depend>
+
   <export>
     <build_type>ament_cmake</build_type>
     <rviz plugin="${prefix}/plugins/plugin_description.xml"/>
