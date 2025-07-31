@@ -21,12 +21,11 @@
   <exec_depend>autoware_global_parameter_loader</exec_depend>
   <exec_depend>autoware_launch</exec_depend>
   <exec_depend>calibration_adapter</exec_depend>
-  <exec_depend>dynamic_object_visualization</exec_depend>
-  <exec_depend>map_launch</exec_depend>
+  <exec_depend>tier4_map_launch</exec_depend>
   <exec_depend>plotjuggler</exec_depend>
   <exec_depend>plotjuggler_ros</exec_depend>
   <exec_depend>time_delay_estimator</exec_depend>
-  <exec_depend>vehicle_launch</exec_depend>
+  <exec_depend>tier4_vehicle_launch</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>autoware_lint_common</test_depend>
