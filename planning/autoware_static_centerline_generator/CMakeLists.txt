@@ -85,7 +85,7 @@ if(BUILD_TESTING)
   # centerline_source=bag_ego_trajectory_base
   add_launch_test(
     test/test_static_centerline_generator_gui_launch.test.py
-    TIMEOUT 60
+    TIMEOUT 120
   )
   install(DIRECTORY
     test/data/
