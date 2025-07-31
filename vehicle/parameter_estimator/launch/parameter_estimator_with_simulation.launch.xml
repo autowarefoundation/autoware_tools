@@ -34,5 +34,4 @@
 
   <!-- Rviz -->
   <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(find-pkg-share time_delay_estimator)/config/time_delay_estimator_viz.rviz" if="$(var rviz)"/>
-
 </launch>
