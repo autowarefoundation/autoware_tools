@@ -35,13 +35,4 @@
   <!-- Rviz -->
   <node pkg="rviz2" exec="rviz2" name="rviz2" output="screen" args="-d $(find-pkg-share time_delay_estimator)/config/time_delay_estimator_viz.rviz" if="$(var rviz)"/>
 
-  <!-- visualization -->
-  <!-- dynamic_object_visualization package has been removed. Consider using tier4_perception_rviz_plugin instead. -->
-  <!--
-  <include file="$(find-pkg-share dynamic_object_visualization)/launch/dynamic_object_visualizer.launch.xml">
-    <arg name="input" value="/perception/object_recognition/objects"/>
-    <arg name="with_feature" value="false"/>
-    <arg name="only_known_objects" value="true"/>
-  </include>
-  -->
 </launch>
