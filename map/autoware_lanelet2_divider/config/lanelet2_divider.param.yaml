@@ -1,0 +1,6 @@
+/**:
+  ros__parameters:
+    input_lanelet2_map_path: "/path/to/lanelet2_map.osm"
+    output_folder_path: "/path/to/output_folder"
+    mgrs_grid: "35TPF"
+    grid_edge_size: 1000
