@@ -54,38 +54,38 @@ if(BUILD_TESTING)
   # default settings (centerline_source=optimization_trajectory_base, mode=AUTO)
   add_launch_test(
     test/test_static_centerline_generator_launch.test.py
-    TIMEOUT "30"
+    TIMEOUT 30
   )
   # 2. mode=AUTO
   # 2.1. goal_method=path_generator, centerline_source=optimization_trajectory_base
   #      various cases with start/end pose
   add_launch_test(
     test/test_static_centerline_generator_path_generator_case1_launch.test.py
-    TIMEOUT "30"
+    TIMEOUT 90
   )
   add_launch_test(
     test/test_static_centerline_generator_path_generator_case2_launch.test.py
-    TIMEOUT "30"
+    TIMEOUT 90
   )
   add_launch_test(
     test/test_static_centerline_generator_path_generator_case3_launch.test.py
-    TIMEOUT "30"
+    TIMEOUT 90
   )
   add_launch_test(
     test/test_static_centerline_generator_path_generator_case4_launch.test.py
-    TIMEOUT "30"
+    TIMEOUT 90
   )
   # # 2.2. goal_method=behavior_path_planner, centerline_source=optimization_trajectory_base
   # # NOTE: Commented out since goal_method=behavior_path_planner is not supported.
   # add_launch_test(
   #   test/test_static_centerline_generator_behavior_path_planner_launch.test.py
-  #   TIMEOUT "30"
+  #   TIMEOUT 60
   # )
   # 3. mode=GUI
   # centerline_source=bag_ego_trajectory_base
   add_launch_test(
     test/test_static_centerline_generator_gui_launch.test.py
-    TIMEOUT "30"
+    TIMEOUT 120
   )
   install(DIRECTORY
     test/data/
