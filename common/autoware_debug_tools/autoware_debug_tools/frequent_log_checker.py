@@ -41,6 +41,14 @@ def check(log_file, duration_to_count, log_count_threshold, log_format):
 
     with open(log_file, "r") as f:
         for full_message in f.readlines():
+            # log which can be ignored
+            if "create_component_factory()" in full_message:
+                continue
+            if "[robot_state_publisher]" in full_message:
+                continue
+            if "launchScenePlugin()" in full_message:
+                continue
+
             try:
                 # The following implementation depends on the log format.
                 if log_format == "1":
