@@ -15,7 +15,7 @@ common/tier4_screen_capture_rviz_plugin/** kyoichi.sugahara@tier4.jp satoshi.ota
 common/tier4_simulated_clock_rviz_plugin/** maxime.clement@tier4.jp
 common/tier4_string_viewer_rviz_plugin/** satoshi.ota@tier4.jp
 common/tier4_target_object_type_rviz_plugin/** takamasa.horibe@tier4.jp
-control/control_debug_tools/** takayuki.murooka@tier4.jp zhe.shen@tier4.jp
+control/control_debug_tools/** takayuki.murooka@tier4.jp zhe.shen@tier4.jp kosuke.takeuchi@tier4.jp temkei.kem@tier4.jp
 control/stop_accel_evaluator/** takayuki.murooka@tier4.jp
 control/vehicle_cmd_analyzer/** taichi.hirano@tier4.jp
 control_data_collecting_tool/** asei.inoue@proxima-ai-tech.com kosuke.takeuchi@tier4.jp masayuki.aino@proxima-ai-tech.com takamasa.horibe@tier4.jp takayuki.murooka@tier4.jp toru.hishinuma@proxima-ai-tech.com
