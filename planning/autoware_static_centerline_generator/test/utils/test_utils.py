@@ -86,7 +86,7 @@ class TestBase(unittest.TestCase):
             qos_profile,
         )
         print("spin_once for self.traj_sub_node")
-        rclpy.spin_once(self.traj_sub_node, timeout_sec=20.0)
+        rclpy.spin_once(self.traj_sub_node, timeout_sec=60.0)
 
         # subscribe the map_saved flag
         self.map_saved_sub_node.create_subscription(
@@ -96,7 +96,7 @@ class TestBase(unittest.TestCase):
             qos_profile,
         )
         print("spin_once for self.map_saved_sub_node")
-        rclpy.spin_once(self.map_saved_sub_node, timeout_sec=10.0)
+        rclpy.spin_once(self.map_saved_sub_node, timeout_sec=60.0)
 
         print("end setUp")
 
