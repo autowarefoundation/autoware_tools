@@ -27,13 +27,13 @@
 namespace autoware::behavior_analyzer
 {
 
-std::string TOPIC::TF = "/tf";                                             // NOLINT
-std::string TOPIC::ODOMETRY = "/localization/kinematic_state";             // NOLINT
-std::string TOPIC::ACCELERATION = "/localization/acceleration";            // NOLINT
-std::string TOPIC::OBJECTS = "/perception/object_recognition/objects";     // NOLINT
-std::string TOPIC::TRAJECTORY = "/planning/scenario_planning/trajectory";  // NOLINT
-std::string TOPIC::STEERING = "/vehicle/status/steering_status";           // NOLINT
-                                                                           //
+std::string TOPIC::TF = "/tf";                                          // NOLINT
+std::string TOPIC::ODOMETRY = "/localization/kinematic_state";          // NOLINT
+std::string TOPIC::ACCELERATION = "/localization/acceleration";         // NOLINT
+std::string TOPIC::OBJECTS = "/perception/object_recognition/objects";  // NOLINT
+std::string TOPIC::TRAJECTORY = "/planning/trajectory";                 // NOLINT
+std::string TOPIC::STEERING = "/vehicle/status/steering_status";        // NOLINT
+                                                                        //
 template <>
 bool Buffer<SteeringReport>::ready() const
 {
@@ -439,9 +439,9 @@ SamplingTrajectoryData::SamplingTrajectoryData(
     throw std::logic_error("data is not enough.");
   }
 
-  const auto opt_trajectory = std::dynamic_pointer_cast<Buffer<Trajectory>>(
-                                bag_data->buffers.at("/planning/scenario_planning/trajectory"))
-                                ->get(bag_data->timestamp);
+  const auto opt_trajectory =
+    std::dynamic_pointer_cast<Buffer<Trajectory>>(bag_data->buffers.at("/planning/trajectory"))
+      ->get(bag_data->timestamp);
   if (!opt_trajectory) {
     throw std::logic_error("data is not enough.");
   }
