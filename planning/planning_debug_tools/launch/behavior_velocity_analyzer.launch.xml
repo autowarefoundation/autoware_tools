@@ -1,7 +1,9 @@
 <launch>
   <node pkg="planning_debug_tools" exec="trajectory_analyzer_exe" name="trajectory_analyzer" output="screen">
     <param name="path_topics" value="[/planning/scenario_planning/lane_driving/behavior_planning/path]"/>
-    <param name="path_with_lane_id_topics" value="[/planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id
+    <param
+      name="path_with_lane_id_topics"
+      value="[/planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id
               ,/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/crosswalk
               ,/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/intersection
               ,/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/merge_from_private
@@ -9,7 +11,8 @@
               ,/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/stop_line
               ,/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/traffic_light
               ,/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/walkway
-              ]" />
+              ]"
+    />
     <param name="trajectory_topics" value="[/planning/trajectory]"/>
     <remap from="ego_kinematics" to="/localization/kinematic_state"/>
   </node>
