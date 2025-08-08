@@ -2,9 +2,7 @@
   <node pkg="planning_debug_tools" exec="trajectory_analyzer_exe" name="trajectory_analyzer" output="screen">
     <param name="path_topics" value="[/planning/scenario_planning/lane_driving/behavior_planning/path]"/>
     <param name="path_with_lane_id_topics" value="[/planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id]"/>
-    <param
-      name="trajectory_topics"
-      value="[/planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory,
+    <param name="trajectory_topics" value="[/planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory,
               /planning/scenario_planning/motion_velocity_smoother/debug/backward_filtered_trajectory,
               /planning/scenario_planning/motion_velocity_smoother/debug/forward_filtered_trajectory,
               /planning/scenario_planning/motion_velocity_smoother/debug/merged_filtered_trajectory,
@@ -12,8 +10,7 @@
               /planning/scenario_planning/motion_velocity_smoother/debug/trajectory_lateral_acc_filtered,
               /planning/scenario_planning/motion_velocity_smoother/debug/trajectory_raw,
               /planning/scenario_planning/motion_velocity_smoother/debug/trajectory_time_resampled,
-              /planning/scenario_planning/trajectory]"
-    />
+              /planning/trajectory]" />
     <remap from="ego_kinematics" to="/localization/kinematic_state"/>
   </node>
 </launch>

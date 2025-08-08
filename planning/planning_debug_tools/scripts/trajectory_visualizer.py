@@ -151,7 +151,7 @@ class TrajectoryVisualizer(Node):
             self, Trajectory, optimizer_debug + "trajectory_steering_rate_limited"
         )
         self.sub5 = message_filters.Subscriber(
-            self, Trajectory, "/planning/scenario_planning/trajectory"
+            self, Trajectory, "/planning/trajectory"
         )
 
         lane_driving = "/planning/scenario_planning/lane_driving"
