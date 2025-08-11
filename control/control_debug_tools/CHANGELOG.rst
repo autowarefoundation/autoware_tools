@@ -2,6 +2,15 @@
 Changelog for package control_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.0 (2025-08-11)
+------------------
+* style(pre-commit): autofix (`#275 <https://github.com/autowarefoundation/autoware_tools/issues/275>`_)
+  * apply pre-commit
+  * fix: add maintainer in planning_debug tools package.xml
+  ---------
+* feat(control_debug_tools): improve consistency checker script (`#230 <https://github.com/autowarefoundation/autoware_tools/issues/230>`_)
+* Contributors: Kyoichi Sugahara, Maxime CLEMENT
+
 0.2.0 (2025-03-24)
 ------------------
 

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>autoware_sample_vehicle_description</name>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
   <description>The autoware_sample_vehicle_description package</description>
 
   <maintainer email="temkei.kem@tier4.jp">Temkei Kem</maintainer>
