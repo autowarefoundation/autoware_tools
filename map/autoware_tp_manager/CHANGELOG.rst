@@ -2,8 +2,8 @@
 Changelog for package autoware_tp_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2025-08-11)
+------------------
 * style(pre-commit): autofix (`#275 <https://github.com/autowarefoundation/autoware_tools/issues/275>`_)
   * apply pre-commit
   * fix: add maintainer in planning_debug tools package.xml

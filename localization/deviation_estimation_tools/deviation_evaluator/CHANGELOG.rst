@@ -2,8 +2,8 @@
 Changelog for package deviation_evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2025-08-11)
+------------------
 * chore: sync files (`#214 <https://github.com/autowarefoundation/autoware_tools/issues/214>`_)
 * Contributors: awf-autoware-bot[bot]
 

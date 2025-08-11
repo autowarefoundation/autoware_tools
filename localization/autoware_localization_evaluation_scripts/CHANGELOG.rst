@@ -2,8 +2,8 @@
 Changelog for package autoware_localization_evaluation_scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2025-08-11)
+------------------
 * fix: change the criteria for localization  (`#267 <https://github.com/autowarefoundation/autoware_tools/issues/267>`_)
   * Added the ndt filter
   * Fixed the threshold from 1% to 5%

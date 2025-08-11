@@ -2,8 +2,8 @@
 Changelog for package autoware_static_centerline_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2025-08-11)
+------------------
 * fix(autoware_static_centerline_generator): fix test dependency (`#285 <https://github.com/autowarefoundation/autoware_tools/issues/285>`_)
   * fix(autoware_static_centerline_generator): fix test dependency
   * style(pre-commit): autofix

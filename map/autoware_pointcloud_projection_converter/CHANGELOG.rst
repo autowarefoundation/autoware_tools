@@ -2,8 +2,8 @@
 Changelog for package autoware_pointcloud_projection_converter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2025-08-11)
+------------------
 * feat(pointcloud projection converter): add new package, pointcloud projection converter (`#254 <https://github.com/autowarefoundation/autoware_tools/issues/254>`_)
   * add pointcloud projection converter
   * add newline

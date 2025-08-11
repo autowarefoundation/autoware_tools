@@ -2,8 +2,8 @@
 Changelog for package autoware_pointcloud_divider
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2025-08-11)
+------------------
 * feat: add tools to collect and check average TPs of PCD maps (`#213 <https://github.com/autowarefoundation/autoware_tools/issues/213>`_)
   * Move all parameters of point cloud divider to launch xml file
   * style(pre-commit): autofix

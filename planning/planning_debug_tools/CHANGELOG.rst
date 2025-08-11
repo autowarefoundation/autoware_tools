@@ -2,8 +2,8 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2025-08-11)
+------------------
 * feat(trajectory_visualizer): add initial config and better layout (`#273 <https://github.com/autowarefoundation/autoware_tools/issues/273>`_)
 * feat(trajectory_visualizer): support for new message types (`#272 <https://github.com/autowarefoundation/autoware_tools/issues/272>`_)
   * fix(trajectory_data): handle early return for empty or single element trajectory in get_arc_lengths

@@ -2,8 +2,8 @@
 Changelog for package autoware_sample_vehicle_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.3.0 (2025-08-11)
+------------------
 * feat(build_depends.repos): update autoware_lanelet2_extension v0.7.0 (`#238 <https://github.com/autowarefoundation/autoware_tools/issues/238>`_)
   * feat(build_depends.repos): update autoware_lanelet2_extension v0.7.0
   * feat(sample_vehicle_description): depend xacro
