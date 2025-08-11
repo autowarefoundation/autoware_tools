@@ -3234,7 +3234,7 @@
 <span class="nv">behavior_velocity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'/planning/scenario_planning/lane_driving/behavior_planning/path/debug_info'</span>
 <span class="nv">motion_avoid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'/planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory/debug_info'</span>
 <span class="nv">motion_smoother_latacc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'/planning/scenario_planning/motion_velocity_smoother/debug/trajectory_lateral_acc_filtered/debug_info'</span>
-<span class="nv">motion_smoother</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'/planning/scenario_planning/trajectory/debug_info'</span>
+<span class="nv">motion_smoother</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'/planning/trajectory/debug_info'</span>
 </code></pre></div>
 <p>in function(tracker_time)</p>
 <div class="highlight"><pre><span></span><code><span class="nf">PlotCurvatureOverArclength</span><span class="p">(</span><span class="s1">'k_behavior_path'</span><span class="p">,</span><span class="w"> </span><span class="nv">behavior_path</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
