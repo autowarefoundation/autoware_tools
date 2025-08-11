@@ -2,6 +2,9 @@
 Changelog for package tier4_calibration_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.0 (2025-03-24)
 ------------------
 

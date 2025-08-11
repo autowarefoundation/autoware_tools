@@ -2,6 +2,9 @@
 Changelog for package tier4_automatic_goal_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.2.0 (2025-03-24)
 ------------------
 

@@ -2,6 +2,14 @@
 Changelog for package control_data_collecting_tool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* style(pre-commit): autofix (`#275 <https://github.com/autowarefoundation/autoware_tools/issues/275>`_)
+  * apply pre-commit
+  * fix: add maintainer in planning_debug tools package.xml
+  ---------
+* Contributors: Kyoichi Sugahara
+
 0.2.0 (2025-03-24)
 ------------------
 

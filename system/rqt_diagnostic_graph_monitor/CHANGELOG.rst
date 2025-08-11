@@ -2,6 +2,11 @@
 Changelog for package rqt_diagnostic_graph_monitor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(rqt_diagnostic_graph_monitor): reflect diagnostic graph msg change (`#263 <https://github.com/autowarefoundation/autoware_tools/issues/263>`_)
+* Contributors: Takagi, Isamu
+
 0.2.0 (2025-03-24)
 ------------------
 

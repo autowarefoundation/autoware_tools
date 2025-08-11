@@ -2,6 +2,16 @@
 Changelog for package autoware_sample_vehicle_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(build_depends.repos): update autoware_lanelet2_extension v0.7.0 (`#238 <https://github.com/autowarefoundation/autoware_tools/issues/238>`_)
+  * feat(build_depends.repos): update autoware_lanelet2_extension v0.7.0
+  * feat(sample_vehicle_description): depend xacro
+  * feat(build_depends.repos): add autoware_cmake
+  ---------
+  Co-authored-by: t4-adc <grp-rd-1-adc-admin@tier4.jp>
+* Contributors: Kazunori-Nakajima
+
 0.2.0 (2025-03-24)
 ------------------
 
