@@ -2,6 +2,17 @@
 Changelog for package parameter_estimator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.0 (2025-08-11)
+------------------
+* fix(parameter_estimatior): update package dependencies (`#280 <https://github.com/autowarefoundation/autoware_tools/issues/280>`_)
+  * fix(parameter_estimatior): update package dependencies
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: t4-adc <grp-rd-1-adc-admin@tier4.jp>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* chore: sync files (`#214 <https://github.com/autowarefoundation/autoware_tools/issues/214>`_)
+* Contributors: Kazunori-Nakajima, awf-autoware-bot[bot]
+
 0.2.0 (2025-03-24)
 ------------------
 
