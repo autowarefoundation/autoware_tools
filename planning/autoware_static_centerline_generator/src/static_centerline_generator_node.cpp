@@ -320,8 +320,9 @@ void StaticCenterlineGeneratorNode::visualize_selected_centerline()
 
   // delete markers for validation
   pub_validation_results_->publish(utils::create_delete_all_marker_array({}, now()));
-  pub_debug_markers_->publish(utils::create_delete_all_marker_array(
-    {"unsafe_footprints", "unsafe_footprints_distance"}, now()));
+  pub_debug_markers_->publish(
+    utils::create_delete_all_marker_array(
+      {"unsafe_footprints", "unsafe_footprints_distance"}, now()));
   pub_debug_ego_footprint_bounds_->publish(
     utils::create_delete_all_marker_array({"road_bounds"}, now()));
 }
@@ -373,8 +374,9 @@ CenterlineWithRoute StaticCenterlineGeneratorNode::generate_whole_centerline_wit
   centerline_with_route.centerline =
     resample_trajectory_points(centerline_with_route.centerline, output_trajectory_interval);
 
-  pub_whole_centerline_->publish(autoware::motion_utils::convertToTrajectory(
-    centerline_with_route.centerline, create_header(this->now())));
+  pub_whole_centerline_->publish(
+    autoware::motion_utils::convertToTrajectory(
+      centerline_with_route.centerline, create_header(this->now())));
 
   return centerline_with_route;
 }

@@ -2,6 +2,41 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.0 (2025-08-11)
+------------------
+* feat(trajectory_visualizer): add initial config and better layout (`#273 <https://github.com/autowarefoundation/autoware_tools/issues/273>`_)
+* feat(trajectory_visualizer): support for new message types (`#272 <https://github.com/autowarefoundation/autoware_tools/issues/272>`_)
+  * fix(trajectory_data): handle early return for empty or single element trajectory in get_arc_lengths
+  * feat(trajectory_visualizer): support multiple message types in trajectory visualization and data processing
+  * feat(trajectory_data): add index_values function to return indices of trajectory points
+  * apply pre-commit
+  * remove unused imports
+  * fix(package.xml): add missing maintainer entry for Maxime CLEMENT
+  ---------
+* style(pre-commit): autofix (`#275 <https://github.com/autowarefoundation/autoware_tools/issues/275>`_)
+  * apply pre-commit
+  * fix: add maintainer in planning_debug tools package.xml
+  ---------
+* feat(trajectory_visualizer): add visualization of X, Y, and Yaw values (`#262 <https://github.com/autowarefoundation/autoware_tools/issues/262>`_)
+* fix(planning): bug of loading the db3 rosbag for the perception replayer (`#269 <https://github.com/autowarefoundation/autoware_tools/issues/269>`_)
+  * fix loading rosbag bug
+  * remove formatting chanes
+  ---------
+* feat(planning/perception_reproducer): add mcap bag format support (`#246 <https://github.com/autowarefoundation/autoware_tools/issues/246>`_)
+* fix: skip ureadable msg (`#259 <https://github.com/autowarefoundation/autoware_tools/issues/259>`_)
+  fix error check
+* feat(planning_debug_tools): add trajectory visualizer tool (`#251 <https://github.com/autowarefoundation/autoware_tools/issues/251>`_)
+  * implement initial script
+  * improvements
+  * add todo
+  * improve script and add arc length shift on ego pose
+  * remove "plot" button (now we replot when topics selection is changed)
+  * Add README
+  * disable cspell for python code
+  * add copyright
+  ---------
+* Contributors: Kem (TiankuiXian), Kyoichi Sugahara, Maxime CLEMENT, yukage-oya
+
 0.2.0 (2025-03-24)
 ------------------
 * feat(planning_debug_tools)!: replace VelocityLimit messages to autoware_internal_planning_msgs (`#223 <https://github.com/autowarefoundation/autoware_tools/issues/223>`_)

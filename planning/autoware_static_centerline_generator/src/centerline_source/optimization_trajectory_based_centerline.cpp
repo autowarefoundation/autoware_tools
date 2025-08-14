@@ -198,8 +198,9 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     // smooth trajectory by elastic band in the autoware_path_smoother package
     const auto smoothed_traj_points =
       eb_path_smoother_ptr->smoothTrajectory(traj_points, virtual_ego_pose);
-    pub_iterative_smoothed_traj_->publish(autoware::motion_utils::convertToTrajectory(
-      smoothed_traj_points, create_header(node.get_clock()->now())));
+    pub_iterative_smoothed_traj_->publish(
+      autoware::motion_utils::convertToTrajectory(
+        smoothed_traj_points, create_header(node.get_clock()->now())));
 
     // road collision avoidance by model predictive trajectory in the autoware_path_optimizer
     // package
@@ -210,8 +211,9 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     if (!optimized_traj_points) {
       return whole_optimized_traj_points;
     }
-    pub_iterative_optimized_traj_->publish(autoware::motion_utils::convertToTrajectory(
-      *optimized_traj_points, create_header(node.get_clock()->now())));
+    pub_iterative_optimized_traj_->publish(
+      autoware::motion_utils::convertToTrajectory(
+        *optimized_traj_points, create_header(node.get_clock()->now())));
 
     // connect the previously and currently optimized trajectory points
     // 1. generate valid_optimized_traj_points
