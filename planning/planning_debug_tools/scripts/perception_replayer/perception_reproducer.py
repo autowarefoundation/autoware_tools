@@ -226,7 +226,32 @@ class PerceptionReproducer(PerceptionReplayerCommon):
             traffic_signals_msg if traffic_signals_msg else self.prev_traffic_signals_msg
         )
         if traffic_signals_msg:
+            original_timestamp = traffic_signals_msg.stamp
             traffic_signals_msg.stamp = timestamp_msg
+            for traffic_signal in traffic_signals_msg.traffic_light_groups:
+                for prediction in traffic_signal.predictions:
+                    # Calculate time difference and add it to predicted_stamp
+                    time_diff = (
+                        timestamp_msg.sec
+                        - original_timestamp.sec
+                        + (timestamp_msg.nanosec - original_timestamp.nanosec) / 1e9
+                    )
+                    prediction.predicted_stamp.sec = int(prediction.predicted_stamp.sec + time_diff)
+                    prediction.predicted_stamp.nanosec = (
+                        int(
+                            (
+                                prediction.predicted_stamp.sec
+                                + time_diff
+                                - int(prediction.predicted_stamp.sec + time_diff)
+                            )
+                            * 1e9
+                        )
+                        + prediction.predicted_stamp.nanosec
+                    )
+                    # Handle nanosecond overflow
+                    if prediction.predicted_stamp.nanosec >= 1e9:
+                        prediction.predicted_stamp.sec += 1
+                        prediction.predicted_stamp.nanosec -= int(1e9)
             self.prev_traffic_signals_msg = traffic_signals_msg
             self.traffic_signals_pub.publish(traffic_signals_msg)
 
