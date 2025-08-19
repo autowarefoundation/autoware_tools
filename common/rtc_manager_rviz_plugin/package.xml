@@ -6,6 +6,8 @@
   <description>The rtc manager rviz plugin package</description>
   <maintainer email="taiki.tanaka@tier4.jp">Taiki Tanaka</maintainer>
   <maintainer email="tomoya.kimura@tier4.jp">Tomoya Kimura</maintainer>
+  <maintainer email="satoshi.ota@tier4.jp">Satoshi Ota</maintainer>
+  <maintainer email="mamoru.sobue@tier4.jp">Mamoru Sobue</maintainer>
 
   <license>Apache License 2.0</license>
 
