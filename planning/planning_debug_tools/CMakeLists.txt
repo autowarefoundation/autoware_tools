@@ -53,6 +53,8 @@ install(PROGRAMS
   scripts/closest_velocity_checker.py
   scripts/perception_replayer/perception_reproducer.py
   scripts/perception_replayer/perception_replayer.py
+  scripts/perception_replayer/perception_replayer_common.py
+  scripts/perception_replayer/utils.py
   scripts/update_logger_level.sh
   DESTINATION lib/${PROJECT_NAME}
 )
