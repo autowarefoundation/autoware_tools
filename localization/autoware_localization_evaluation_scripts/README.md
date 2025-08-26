@@ -139,11 +139,11 @@ You can see the results in a JSON file named `summary.json`.
 
 | Criterion                      | Description                                                                                      | Success Condition/Threshold |
 | ------------------------------ | ------------------------------------------------------------------------------------------------ | --------------------------- |
-| mean_relative_position         | The mean difference of position calcualated through `compare_trajectories.py`                    | < 0.5 [m]                   |
-| mean_relative_angle            | The mean difference of angle calcualated through `compare_trajectories.py`                       | < 0.5 [deg]                 |
-| mean_relative_linear_velocity  | The mean difference of linear velocity calcualated through `compare_trajectories.py`             | < 0.05 [m/s]                |
-| mean_relative_angular_velocity | The mean difference of angular velocity calcualated through `compare_trajectories.py`            | < 0.05 [rad/s]              |
-| mean_relative_accelaration     | The mean difference of linear acceleration calcualated through `compare_trajectories.py`         | < 0.5 [m/s^2]               |
+| mean_relative_position         | The mean difference of position calculated through `compare_trajectories.py`                     | < 0.5 [m]                   |
+| mean_relative_angle            | The mean difference of angle calculated through `compare_trajectories.py`                        | < 0.5 [deg]                 |
+| mean_relative_linear_velocity  | The mean difference of linear velocity calculated through `compare_trajectories.py`              | < 0.05 [m/s]                |
+| mean_relative_angular_velocity | The mean difference of angular velocity calculated through `compare_trajectories.py`             | < 0.05 [rad/s]              |
+| mean_relative_acceleration     | The mean difference of linear acceleration calculated through `compare_trajectories.py`          | < 0.5 [m/s^2]               |
 | diagnostics_not_ok_rate        | Check whether diagnostics collect by `plot_diagnostics.py` has low percentages of non-ok status. | < 5.0 [%]                   |
 
 `analyze_rosbags_parallel.py` has an optional argument `--scenario_file` to pass a scenario file (formatted by Driving Log Replayer) to the script.
@@ -158,7 +158,7 @@ Evaluation:
       mean_relative_angle: false
       mean_relative_linear_velocity: true
       mean_relative_angular_velocity: true
-      mean_relative_accelaration: false
+      mean_relative_acceleration: false
       diagnostics_not_ok_rate: false
 ```
 

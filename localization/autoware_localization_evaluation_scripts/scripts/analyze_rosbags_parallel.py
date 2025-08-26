@@ -21,7 +21,7 @@ class OverallCriteriaMask:
     mean_relative_angle: bool = True
     mean_relative_linear_velocity: bool = True
     mean_relative_angular_velocity: bool = True
-    mean_relative_accelaration: bool = True
+    mean_relative_acceleration: bool = True
     diagnostics_not_ok_rate: bool = True
 
 
@@ -170,7 +170,7 @@ def process_directory(
 
     # acceleration
     df_ref = pd.read_csv(compare_result_dir / f"{save_name_reference}.tsv", sep="\t")
-    if "linear_velocity.x" in df_ref.columns and criteria_mask.mean_relative_accelaration:
+    if "linear_velocity.x" in df_ref.columns and criteria_mask.mean_relative_acceleration:
         THRESHOLD_MEAN_ACCELERATION_NORM = 0.5
         acceleration_tsv = save_dir / "result_acceleration/localization__acceleration.tsv"
         df_acceleration = pd.read_csv(acceleration_tsv, sep="\t")
