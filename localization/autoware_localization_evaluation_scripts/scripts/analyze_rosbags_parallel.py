@@ -46,13 +46,10 @@ def load_overall_criteria_mask(yaml_path: Path) -> OverallCriteriaMask:
             data = yaml.safe_load(f)
         conditions = data["Evaluation"]["Conditions"]
     except Exception:
-        print("Cannot load scenario file")
         return OverallCriteriaMask()
 
     # If mask exists -> merge with defaults, else return defaults
     mask = conditions.get("OverallCriteriaMask", {})
-    if mask is {}:
-        print("mask is empty")
     return OverallCriteriaMask(**{**OverallCriteriaMask().__dict__, **mask})
 
 
@@ -133,7 +130,6 @@ def process_directory(
 
     # position
     if criteria_mask.mean_relative_position:
-        print("PPPOSITION")
         mean_position_norm = df["position.norm"].mean()
         THRESHOLD_MEAN_POSITION_NORM = 0.5
         if mean_position_norm > THRESHOLD_MEAN_POSITION_NORM:
