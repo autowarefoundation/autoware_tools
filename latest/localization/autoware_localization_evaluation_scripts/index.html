@@ -3104,7 +3104,7 @@
 
 <div><h1 id="autoware_localization_evaluation_scripts">autoware_localization_evaluation_scripts<a class="headerlink" href="#autoware_localization_evaluation_scripts" title="Permanent link">#</a></h1>
 <p>This package contains some scripts for evaluating the localization of Autoware.</p>
-<p>Ths scripts are used for the result rosbags of localization, particularly the result_bag from <code>driving_log_replayer_v2</code>.</p>
+<p>The scripts are used for the result rosbags of localization, particularly the result_bag from <code>driving_log_replayer_v2</code>.</p>
 <p><a href="https://tier4.github.io/driving_log_replayer_v2/quick_start/setup/">https://tier4.github.io/driving_log_replayer_v2/quick_start/setup/</a></p>
 <p>As a test, execute <code>driving_log_replayer_v2</code> with the following command:</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>driving_log_replayer_v2<span class="w"> </span>driving_log_replayer_v2.launch.py<span class="w"> </span><span class="se">\</span>
@@ -3192,7 +3192,70 @@
 <span class="w">    </span>--topic_subject<span class="w"> </span><span class="s2">"/localization/kinematic_state"</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--topic_reference<span class="w"> </span><span class="s2">"/localization/pose_estimator/pose_with_covariance"</span>
 </code></pre></div>
-<p>This command performs the above three analyses on the subdirectories of the target directory.</p></div>
+<p>This command performs the above three analysis on the subdirectories of the target directory and outputs the results regarding the following criteria.
+You can see the results in a JSON file named <code>summary.json</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Criterion</th>
+<th>Description</th>
+<th>Success Condition/Threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mean_relative_position</td>
+<td>The mean difference of position calculated through <code>compare_trajectories.py</code></td>
+<td>&lt; 0.5 [m]</td>
+</tr>
+<tr>
+<td>mean_relative_angle</td>
+<td>The mean difference of angle calculated through <code>compare_trajectories.py</code></td>
+<td>&lt; 0.5 [deg]</td>
+</tr>
+<tr>
+<td>mean_relative_linear_velocity</td>
+<td>The mean difference of linear velocity calculated through <code>compare_trajectories.py</code></td>
+<td>&lt; 0.05 [m/s]</td>
+</tr>
+<tr>
+<td>mean_relative_angular_velocity</td>
+<td>The mean difference of angular velocity calculated through <code>compare_trajectories.py</code></td>
+<td>&lt; 0.05 [rad/s]</td>
+</tr>
+<tr>
+<td>mean_relative_acceleration</td>
+<td>The mean difference of linear acceleration calculated through <code>compare_trajectories.py</code></td>
+<td>&lt; 0.5 [m/s^2]</td>
+</tr>
+<tr>
+<td>diagnostics_not_ok_rate</td>
+<td>Check whether diagnostics collect by <code>plot_diagnostics.py</code> has low percentages of non-ok status.</td>
+<td>&lt; 5.0 [%]</td>
+</tr>
+</tbody>
+</table>
+<p><code>analyze_rosbags_parallel.py</code> has an optional argument <code>--scenario_file</code> to pass a scenario file (formatted by Driving Log Replayer) to the script.
+If the scenario file has a condition named <code>OverallCriteriaMask</code> like below, the script <code>analyze_rosbags_parallel.py</code> will skip the criterion if it is set to <code>false</code>.
+The <code>OverallCriteriaMask</code> block must be under <code>Evaluation -&gt; Conditions</code>. <strong>Note that the scenario file is not required</strong> and the script will automatically set the mask to <code>true</code> if no scenario file is given OR there is no <code>OverallCriteriaMask</code> in the scenario file.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">Evaluation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">Conditions</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">OverallCriteriaMask</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">mean_relative_position</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">mean_relative_angle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">mean_relative_linear_velocity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">      </span><span class="nt">mean_relative_angular_velocity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">      </span><span class="nt">mean_relative_acceleration</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">      </span><span class="nt">diagnostics_not_ok_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</code></pre></div>
+<p>[Example]</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>analyze_rosbags_parallel.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--parallel_num<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--topic_subject<span class="w"> </span><span class="s2">"/localization/kinematic_state"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--topic_reference<span class="w"> </span><span class="s2">"/localization/pose_estimator/pose_with_covariance"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--scenario_file<span class="w"> </span>/path/to/scenario.yml
+</code></pre></div></div>
 
 
 
