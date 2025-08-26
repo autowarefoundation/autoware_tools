@@ -169,6 +169,6 @@ $ ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py 
     $HOME/driving_log_replayer_v2/out/ \
     --parallel_num 2 \
     --topic_subject "/localization/kinematic_state" \
-    --topic_reference "/localization/pose_estimator/pose_with_covariance"
+    --topic_reference "/localization/pose_estimator/pose_with_covariance" \
     --scenario_file /path/to/scenario.yml
 ```
