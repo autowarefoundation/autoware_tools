@@ -1,0 +1,191 @@
+#!/usr/bin/env python3
+"""A script to check rise/fall of diagnostics flags."""
+
+import argparse
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict
+
+import pandas as pd
+
+
+@dataclass
+class CriteriaConfig:
+    tsv_path: Path
+    diagnostics_key: str
+    target_time_ns: int
+    flag: str = "rise"
+    time_window_ns: int = 200_000_000
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("diagnostics_list", type=dict, default={})
+    parser.add_argument("diagnostics_result_dir", type=Path, default=None)
+    return parser.parse_args()
+
+
+def check_pose_no_update_count(cfg: CriteriaConfig) -> bool:
+    if not cfg.tsv_path.exists():
+        print(f"TSV file not found for {cfg.diagnostics_key}: {cfg.tsv_path}")
+        return False
+    df = pd.read_csv(cfg.tsv_path, sep="\t")
+
+    required_cols = [
+        "pose_no_update_count",
+        "pose_no_update_count_threshold_error",
+        "timestamp_header",
+        "message",
+    ]
+    error_message = "[ERROR]pose is not updated"
+
+    for col in required_cols:
+        if col not in df.columns:
+            print(f"Missing required column: {col}")
+            return False
+
+    # Convert timestamps into integer nanoseconds
+    df["timestamp_ns"] = pd.to_numeric(df["timestamp_header"], errors="coerce")
+
+    # Define ranges
+    start = cfg.target_time_ns - cfg.time_window_ns
+    end = cfg.target_time_ns + cfg.time_window_ns
+
+    df_numeric = df.dropna(subset=required_cols)
+
+    # Split into pre-window, in-window
+    df_pre = df_numeric[df_numeric["timestamp_ns"] < start]
+    df_window = df_numeric[
+        (df_numeric["timestamp_ns"] >= start) & (df_numeric["timestamp_ns"] <= end)
+    ]
+
+    # Define conditions
+    violation = (
+        df_numeric["pose_no_update_count"] >= df_numeric["pose_no_update_count_threshold_error"]
+    ) & (df_numeric["message"].str.contains(error_message, na=False, regex=False))
+    ok = ~violation
+
+    if cfg.flag == "rise":
+        # Expect violation inside the window, but *no violation* before it
+        if violation[df_pre.index].any():
+            print(f"{cfg.diagnostics_key}: Unexpected violation before window.")
+            return False
+        df_condition = df_window[violation[df_window.index]]
+    elif cfg.flag == "fall":
+        # Expect OK inside the window, but *only violation* before it
+        if ok[df_pre.index].any():
+            print(f"{cfg.diagnostics_key}: Unexpected OK state before window.")
+            return False
+        df_condition = df_window[ok[df_window.index]]
+    else:
+        print("Invalid flag is set")
+        return False
+
+    if df_condition.empty:
+        print(f"{cfg.diagnostics_key}: No matching rows found in window.")
+        return False
+
+    print(f"{cfg.diagnostics_key}: Matching rows from {cfg.tsv_path}:")
+    print(df_condition["pose_no_update_count"].iloc[0])
+    return True
+
+
+def check_pose_is_passed_delay_gate(cfg: CriteriaConfig) -> bool:
+    if not cfg.tsv_path.exists():
+        print(f"TSV file not found for {cfg.diagnostics_key}: {cfg.tsv_path}")
+        return False
+    df = pd.read_csv(cfg.tsv_path, sep="\t")
+
+    # Ensure columns exist
+    required_cols = [
+        "pose_is_passed_delay_gate",
+        "timestamp_header",
+        "message",
+    ]
+
+    error_message = "[WARN]pose topic is delay"
+
+    for col in required_cols:
+        if col not in df.columns:
+            print(f"Missing required column: {col}")
+            return False
+
+    # Convert timestamps into integer nanoseconds
+    df["pose_is_passed_delay_gate"] = df["pose_is_passed_delay_gate"].astype(bool)
+    df["timestamp_ns"] = pd.to_numeric(df["timestamp_header"], errors="coerce")
+
+    # Convert target into window range
+    start = cfg.target_time_ns - cfg.time_window_ns
+    end = cfg.target_time_ns + cfg.time_window_ns
+
+    df_pre = df[df["timestamp_ns"] < start]
+    df_window = df[(df["timestamp_ns"] >= start) & (df["timestamp_ns"] <= end)]
+
+    if cfg.flag == "rise":
+        # Expect False + no False before window
+        if (~df_pre["pose_is_passed_delay_gate"]).any():
+            print(f"{cfg.diagnostics_key}: Unexpected False before window.")
+            return False
+        df_condition = df_window[
+            (~df_window["pose_is_passed_delay_gate"])
+            & (df_window["message"].str.contains(error_message, na=False, regex=False))
+        ]
+    elif cfg.flag == "fall":
+        # Expect True + no True before window
+        if (df_pre["pose_is_passed_delay_gate"]).any():
+            print(f"{cfg.diagnostics_key}: Unexpected True before window.")
+            return False
+        df_condition = df_window[
+            (df_window["pose_is_passed_delay_gate"])
+            & (~df_window["message"].str.contains(error_message, na=True, regex=False))
+        ]
+    else:
+        print("Invalid flag is set")
+        return False
+
+    if df_condition.empty:
+        print(f"{cfg.diagnostics_key}: No matching rows found.")
+        return False
+
+    print(f"{cfg.diagnostics_key}: Matching rows from {cfg.tsv_path} at:")
+    print(df_condition["timestamp_header"].iloc[0])
+    return True
+
+
+def main(diagnostics_list: dict, diagnostics_result_dir: Path) -> Dict[str, bool]:
+    results = {key: False for key in diagnostics_list}
+    if not diagnostics_list:
+        print("No DiagnosticsCriteria found, exiting.")
+        return results
+
+    for key, criteria in diagnostics_list.items():
+        print(f"\nProcessing criteria: {key}")
+
+        flag = criteria.get("flag", "").strip().lower()
+        at_sec = int(criteria.get("at_sec", 0))
+        at_nsec = int(criteria.get("at_nanosec", 0))
+        target_time = int(at_sec * 1_000_000_000 + at_nsec)
+
+        if key == "pose_no_update_count":
+            tsv_path = diagnostics_result_dir / "localization__ekf_localizer.tsv"
+            criteria_cfg = CriteriaConfig(
+                tsv_path=tsv_path, diagnostics_key=key, flag=flag, target_time_ns=target_time
+            )
+            results[key] = check_pose_no_update_count(criteria_cfg)
+        elif key == "pose_is_passed_delay_gate":
+            tsv_path = diagnostics_result_dir / "localization__ekf_localizer.tsv"
+            criteria_cfg = CriteriaConfig(
+                tsv_path=tsv_path, diagnostics_key=key, flag=flag, target_time_ns=target_time
+            )
+            results[key] = check_pose_is_passed_delay_gate(criteria_cfg)
+        else:
+            print(f"Flag checking for {key} not defined!!")
+    return results
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    diagnostics_list = args.diagnositcs_list
+    diagnostics_result_dir = args.diagnostics_result_dir
+
+    main(diagnostics_list, diagnostics_result_dir)

@@ -8,6 +8,7 @@ from multiprocessing import Pool
 from pathlib import Path
 
 import compare_trajectories
+import diagnostics_flag_check
 import extract_values_from_rosbag
 import pandas as pd
 import plot_diagnostics
@@ -78,6 +79,7 @@ def process_directory(
     diagnostics_result_dir = save_dir / "diagnostics_result"
 
     criteria_mask = load_overall_criteria_mask(scenario_file)
+    diagnostics_flag_condition = load_diagnostics_flag_check(scenario_file)
 
     # (1) Plot diagnostics
     plot_diagnostics.main(rosbag_path=target_rosbag, save_dir=diagnostics_result_dir)
@@ -215,6 +217,18 @@ def process_directory(
                 final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%] is too large."
             else:
                 final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%]"
+
+    # (7) extract diag rise/fall
+    if diagnostics_flag_condition is not None:
+        diag_flag_check = diagnostics_flag_check.main(
+            diagnostics_flag_condition, diagnostics_result_dir
+        )
+        for key, check in diag_flag_check.items():
+            if check is False:
+                final_success = False
+                final_summary += f"|Diagnostics flag '{key}' NOT detected as expected."
+            else:
+                final_summary += f"|Diagnostics flag '{key}' OK."
 
     with open(save_dir / "summary.json", "w") as f:
         json.dump(
