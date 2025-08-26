@@ -2,7 +2,7 @@
 
 This package contains some scripts for evaluating the localization of Autoware.
 
-Ths scripts are used for the result rosbags of localization, particularly the result_bag from `driving_log_replayer_v2`.
+The scripts are used for the result rosbags of localization, particularly the result_bag from `driving_log_replayer_v2`.
 
 <https://tier4.github.io/driving_log_replayer_v2/quick_start/setup/>
 
@@ -134,4 +134,41 @@ $ ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py 
     --topic_reference "/localization/pose_estimator/pose_with_covariance"
 ```
 
-This command performs the above three analyses on the subdirectories of the target directory.
+This command performs the above three analysis on the subdirectories of the target directory and outputs the results regarding the following criteria.
+You can see the results in a JSON file named `summary.json`.
+
+| Criterion                      | Description                                                                                      | Success Condition/Threshold |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ | --------------------------- |
+| mean_relative_position         | The mean difference of position calculated through `compare_trajectories.py`                     | < 0.5 [m]                   |
+| mean_relative_angle            | The mean difference of angle calculated through `compare_trajectories.py`                        | < 0.5 [deg]                 |
+| mean_relative_linear_velocity  | The mean difference of linear velocity calculated through `compare_trajectories.py`              | < 0.05 [m/s]                |
+| mean_relative_angular_velocity | The mean difference of angular velocity calculated through `compare_trajectories.py`             | < 0.05 [rad/s]              |
+| mean_relative_acceleration     | The mean difference of linear acceleration calculated through `compare_trajectories.py`          | < 0.5 [m/s^2]               |
+| diagnostics_not_ok_rate        | Check whether diagnostics collect by `plot_diagnostics.py` has low percentages of non-ok status. | < 5.0 [%]                   |
+
+`analyze_rosbags_parallel.py` has an optional argument `--scenario_file` to pass a scenario file (formatted by Driving Log Replayer) to the script.
+If the scenario file has a condition named `OverallCriteriaMask` like below, the script `analyze_rosbags_parallel.py` will skip the criterion if it is set to `false`.
+The `OverallCriteriaMask` block must be under `Evaluation -> Conditions`. **Note that the scenario file is not required** and the script will automatically set the mask to `true` if no scenario file is given OR there is no `OverallCriteriaMask` in the scenario file.
+
+```yaml
+Evaluation:
+  Conditions:
+    OverallCriteriaMask:
+      mean_relative_position: false
+      mean_relative_angle: false
+      mean_relative_linear_velocity: true
+      mean_relative_angular_velocity: true
+      mean_relative_acceleration: false
+      diagnostics_not_ok_rate: false
+```
+
+[Example]
+
+```bash
+$ ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
+    $HOME/driving_log_replayer_v2/out/ \
+    --parallel_num 2 \
+    --topic_subject "/localization/kinematic_state" \
+    --topic_reference "/localization/pose_estimator/pose_with_covariance" \
+    --scenario_file /path/to/scenario.yml
+```
