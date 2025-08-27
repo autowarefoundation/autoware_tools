@@ -145,6 +145,8 @@ Evaluation:
         at_nanosec: 750000000
 ```
 
+This example means that the diagnostics `pose_is_passed_delay_gate` should rise at 113.75 sec in the rosbag time. To be more specific, the flag should rise within a time window of ±0.2 seconds around the target time.
+
 Currently this script is still in development and the number of observable diagnostics will increase.
 Read the actual `diagnostics_flag_check.py` file to know what can be observed and the definition of rise and fall for each diagnostics.
 

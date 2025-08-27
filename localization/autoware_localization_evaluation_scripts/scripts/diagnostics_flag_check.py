@@ -177,8 +177,8 @@ def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
 
         flag = criteria.get("flag", "").strip().lower()
         at_sec = int(float(criteria.get("at_sec", 0)))
-        at_nsec = int(float(criteria.get("at_nanosec", 0)))
-        target_time = int(at_sec * 1_000_000_000 + at_nsec)
+        at_nanosec = int(float(criteria.get("at_nanosec", 0)))
+        target_time = int(at_sec * 1_000_000_000 + at_nanosec)
 
         if key == "pose_no_update_count":
             tsv_path = diagnostics_result_dir / "localization__ekf_localizer.tsv"
