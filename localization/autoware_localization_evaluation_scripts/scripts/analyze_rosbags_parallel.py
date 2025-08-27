@@ -3,6 +3,7 @@
 
 import argparse
 from dataclasses import dataclass
+from dataclasses import fields
 import json
 from multiprocessing import Pool
 from pathlib import Path
@@ -51,7 +52,15 @@ def load_overall_criteria_mask(yaml_path: Path) -> OverallCriteriaMask:
 
     # If mask exists -> merge with defaults, else return defaults
     mask = conditions.get("OverallCriteriaMask", {})
-    return OverallCriteriaMask(**{**OverallCriteriaMask().__dict__, **mask})
+    valid_fields = {f.name for f in fields(OverallCriteriaMask)}
+    invalid_fields = [k for k in mask if k not in valid_fields]
+
+    if invalid_fields:
+        print(f"[WARN] Ignoring invalid OverallCriteriaMask fields: {invalid_fields}")
+
+    filtered_mask = {k: v for k, v in mask.items() if k in valid_fields}
+
+    return OverallCriteriaMask(**{**OverallCriteriaMask().__dict__, **filtered_mask})
 
 
 def load_diagnostics_flag_check(yaml_path: Path):
