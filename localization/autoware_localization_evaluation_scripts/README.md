@@ -117,6 +117,37 @@ $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_
 0 directories, 4 files
 ```
 
+## diagnostics_flag_check.py
+
+```bash
+ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
+   <path_to_scenario_file> <directory_to_diagnostics_result>
+```
+
+[Example]
+
+```bash
+$ ros2 run autoware_localization_evaluation_scripts compare_trajectories.py \
+    ./scenario.yml \
+    $HOME/driving_log_replayer_v2/out/latest/result_archive/diagnostics_result
+```
+
+This command checks whether a diagnostics have risen/fallen at a specific timing.
+The diagnostics flag to observe should be defined in the input scenario file in the format like below.
+
+```yaml
+Evaluation:
+  Conditions:
+    DiagnosticsFlagCheck:
+      pose_is_passed_delay_gate:
+        flag: rise
+        at_sec: 113
+        at_nanosec: 750000000
+```
+
+Currently this script is still in development and the number of observable diagnostics will increase.
+Read the actual `diagnostics_flag_check.py` file to know what can be observed and the definition of rise and fall for each diagnostics.
+
 ## analyze_rosbags_parallel.py
 
 ```bash
