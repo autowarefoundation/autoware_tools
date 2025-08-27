@@ -63,17 +63,6 @@ def load_overall_criteria_mask(yaml_path: Path) -> OverallCriteriaMask:
     return OverallCriteriaMask(**{**OverallCriteriaMask().__dict__, **filtered_mask})
 
 
-def load_diagnostics_flag_check(yaml_path: Path):
-    try:
-        with open(yaml_path, "r") as f:
-            data = yaml.safe_load(f)
-        conditions = data["Evaluation"]["Conditions"]
-    except Exception:
-        return None
-
-    return conditions.get("DiagnosticsFlagCheck", None)
-
-
 def process_directory(
     directory: Path,
     topic_subject: str,
@@ -88,7 +77,6 @@ def process_directory(
     diagnostics_result_dir = save_dir / "diagnostics_result"
 
     criteria_mask = load_overall_criteria_mask(scenario_file)
-    diagnostics_flag_condition = load_diagnostics_flag_check(scenario_file)
 
     # (1) Plot diagnostics
     plot_diagnostics.main(rosbag_path=target_rosbag, save_dir=diagnostics_result_dir)
@@ -228,10 +216,8 @@ def process_directory(
                 final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%]"
 
     # (7) extract diag rise/fall
-    if diagnostics_flag_condition is not None:
-        diag_flag_check = diagnostics_flag_check.main(
-            diagnostics_flag_condition, diagnostics_result_dir
-        )
+    if scenario_file is not None:
+        diag_flag_check = diagnostics_flag_check.main(scenario_file, diagnostics_result_dir)
         for key, check in diag_flag_check.items():
             if check is False:
                 final_success = False

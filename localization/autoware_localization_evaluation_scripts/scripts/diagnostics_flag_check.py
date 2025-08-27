@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Dict
 
 import pandas as pd
+import yaml
 
 
 @dataclass
@@ -20,9 +21,20 @@ class CriteriaConfig:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("diagnostics_list", type=dict, default={})
+    parser.add_argument("scenario_file", type=Path, default=None)
     parser.add_argument("diagnostics_result_dir", type=Path, default=None)
     return parser.parse_args()
+
+
+def load_diagnostics_flag_check(yaml_path: Path):
+    try:
+        with open(yaml_path, "r") as f:
+            data = yaml.safe_load(f)
+        conditions = data["Evaluation"]["Conditions"]
+    except Exception:
+        return None
+
+    return conditions.get("DiagnosticsFlagCheck", None)
 
 
 def check_pose_no_update_count(cfg: CriteriaConfig) -> bool:
@@ -152,18 +164,20 @@ def check_pose_is_passed_delay_gate(cfg: CriteriaConfig) -> bool:
     return True
 
 
-def main(diagnostics_list: dict, diagnostics_result_dir: Path) -> Dict[str, bool]:
-    results = {key: False for key in diagnostics_list}
-    if not diagnostics_list:
+def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
+    diagnostics_flag_condition = load_diagnostics_flag_check(scenario_file)
+
+    results = {key: False for key in diagnostics_flag_condition}
+    if not diagnostics_flag_condition:
         print("No DiagnosticsCriteria found, exiting.")
         return results
 
-    for key, criteria in diagnostics_list.items():
+    for key, criteria in diagnostics_flag_condition.items():
         print(f"\nProcessing criteria: {key}")
 
         flag = criteria.get("flag", "").strip().lower()
-        at_sec = int(criteria.get("at_sec", 0))
-        at_nsec = int(criteria.get("at_nanosec", 0))
+        at_sec = int(float(criteria.get("at_sec", 0)))
+        at_nsec = int(float(criteria.get("at_nanosec", 0)))
         target_time = int(at_sec * 1_000_000_000 + at_nsec)
 
         if key == "pose_no_update_count":
@@ -185,7 +199,7 @@ def main(diagnostics_list: dict, diagnostics_result_dir: Path) -> Dict[str, bool
 
 if __name__ == "__main__":
     args = parse_args()
-    diagnostics_list = args.diagnositcs_list
+    scenario_file = args.scenario_file
     diagnostics_result_dir = args.diagnostics_result_dir
 
-    main(diagnostics_list, diagnostics_result_dir)
+    main(scenario_file, diagnostics_result_dir)
