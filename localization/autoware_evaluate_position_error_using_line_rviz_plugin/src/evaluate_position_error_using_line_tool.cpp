@@ -61,8 +61,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <sstream>
+#include <vector>
 
 namespace autoware
 {
