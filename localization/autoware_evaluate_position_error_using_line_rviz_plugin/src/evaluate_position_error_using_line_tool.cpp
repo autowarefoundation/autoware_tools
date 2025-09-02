@@ -78,9 +78,8 @@ EvaluatePositionErrorUsingLineTool::EvaluatePositionErrorUsingLineTool()
   shortcut_key_ = 'n';
 
   color_property_ = new rviz_common::properties::ColorProperty(
-    "Line color", Qt::darkYellow,
-    "The topic on which to publish points.",
-    getPropertyContainer(), SLOT(updateLineColor()), this);
+    "Line color", Qt::darkYellow, "The topic on which to publish points.", getPropertyContainer(),
+    SLOT(updateLineColor()), this);
 }
 
 void EvaluatePositionErrorUsingLineTool::onInitialize()
@@ -103,14 +102,15 @@ void EvaluatePositionErrorUsingLineTool::onInitialize()
 
 }
 
-
-void EvaluatePositionErrorUsingLineTool::onMap(const autoware_map_msgs::msg::LaneletMapBin::ConstSharedPtr & msg_ptr)
+void EvaluatePositionErrorUsingLineTool::onMap(
+  const autoware_map_msgs::msg::LaneletMapBin::ConstSharedPtr & msg_ptr)
 {
   lanelet_map_ptr_ = std::make_shared<lanelet::LaneletMap>();
   lanelet::utils::conversion::fromBinMsg(*msg_ptr, lanelet_map_ptr_);
 }
 
-void EvaluatePositionErrorUsingLineTool::onSelfPose(const nav_msgs::msg::Odometry::ConstSharedPtr & msg_ptr)
+void EvaluatePositionErrorUsingLineTool::onSelfPose(
+  const nav_msgs::msg::Odometry::ConstSharedPtr & msg_ptr)
 {
   self_pose_ = msg_ptr->pose.pose;
 }
@@ -241,11 +241,13 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
 
     lanelet::BasicPoint2d point2d((start_.x+end_.x)/2.0, (start_.y+end_.y)/2.0);
 
-    auto search_func = [](const lanelet::BoundingBox2d& /*box*/, const lanelet::LineString3d& linestring) {
+    auto search_func =
+      [](const lanelet::BoundingBox2d & /*box*/, const lanelet::LineString3d & linestring) {
       return linestring.attributeOr(lanelet::AttributeName::Type, "") == std::string("stop_line");
     };
 
-    lanelet::Optional<lanelet::LineString3d> stop_line = lanelet_map_ptr_->lineStringLayer.nearestUntil(point2d, search_func);
+    lanelet::Optional<lanelet::LineString3d> stop_line =
+      lanelet_map_ptr_->lineStringLayer.nearestUntil(point2d, search_func);
 
     const auto stop_line_seg_start = Ogre::Vector3(stop_line.get().front().x(), stop_line.get().front().y(), 100);
     const auto stop_line_seg_end   = Ogre::Vector3(stop_line.get().back().x(), stop_line.get().back().y(), 100);
@@ -327,4 +329,6 @@ void EvaluatePositionErrorUsingLineTool::processRightButton()
 }  // namespace autoware
 
 #include <pluginlib/class_list_macros.hpp>  // NOLINT
-PLUGINLIB_EXPORT_CLASS(autoware::evaluate_position_error_using_line_rviz_plugin::EvaluatePositionErrorUsingLineTool, rviz_common::Tool)
+PLUGINLIB_EXPORT_CLASS(
+  autoware::evaluate_position_error_using_line_rviz_plugin::EvaluatePositionErrorUsingLineTool,
+  rviz_common::Tool)
