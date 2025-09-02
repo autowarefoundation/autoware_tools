@@ -99,7 +99,6 @@ void EvaluatePositionErrorUsingLineTool::onInitialize()
   sub_self_pose_ = raw_node->create_subscription<nav_msgs::msg::Odometry>(
     "/localization/kinematic_state", rclcpp::QoS{1},
     std::bind(&EvaluatePositionErrorUsingLineTool::onSelfPose, this, std::placeholders::_1));
-
 }
 
 void EvaluatePositionErrorUsingLineTool::onMap(
@@ -285,7 +284,6 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
     line_lane_->addPoint(seg_start_, color_lane_);
     line_lane_->addPoint(seg_end_, color_lane_);
 
-
     const double yaw_line = std::atan2(end_.y - start_.y, end_.x - start_.x);
     const double yaw_lane = std::atan2(seg_end_.y - seg_start_.y, seg_end_.x - seg_start_.x);
     const double yaw = std::remainder(yaw_line-yaw_lane, 2 * M_PI);
@@ -307,9 +305,6 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
     else {
      std::cout << "x_error:" << distance_selfpose_to_line - distance_selfpose_to_lane << "[m], y_error: " << "none" << "[m], yaw_error:  " << yaw/M_PI*180.0 << "[deg] " << std::endl;
     }
-
- 
-
 
   } else {
     start_ = pos;
