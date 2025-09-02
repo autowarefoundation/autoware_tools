@@ -120,14 +120,14 @@ $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_
 ## diagnostics_flag_check.py
 
 ```bash
-ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
+ros2 run autoware_localization_evaluation_scripts diagnostics_flag_check.py \
    <path_to_scenario_file> <directory_to_diagnostics_result>
 ```
 
 [Example]
 
 ```bash
-$ ros2 run autoware_localization_evaluation_scripts compare_trajectories.py \
+$ ros2 run autoware_localization_evaluation_scripts diagnostics_flag_check.py \
     ./scenario.yml \
     $HOME/driving_log_replayer_v2/out/latest/result_archive/diagnostics_result
 ```
