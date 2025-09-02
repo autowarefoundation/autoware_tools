@@ -187,98 +187,221 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
     line_->addPoint(end_, color_);
     is_line_started_ = false;
 
+    // Calculate direction vector and angle of the line segment
+    const double line_dx = end_.x - start_.x;
+    const double line_dy = end_.y - start_.y;
+    const double line_length = std::sqrt(line_dx * line_dx + line_dy * line_dy);
+    const double line_angle = std::atan2(line_dy, line_dx);
 
+    // Normalized direction vector
+    const double norm_dx = line_dx / line_length;
+    const double norm_dy = line_dy / line_length;
 
-    lanelet::ConstLanelets lanes;
+    // Extract Lanelets within 1.5m of the line segment
+    lanelet::ConstLanelets nearby_lanes;
+    const double search_radius = 1.5;  // 1.5m
+
     for (const auto & lanelet : lanelet_map_ptr_->laneletLayer) {
       const std::string type = lanelet.attributeOr(lanelet::AttributeName::Type, "none");
       const std::string subtype = lanelet.attributeOr(lanelet::AttributeName::Subtype, "none");
       if (type == "lanelet" && subtype == "road") {
-        lanes.push_back(lanelet);
+        // Check if boundary points of the Lanelet are near the line segment
+        bool is_nearby = false;
+
+        // Check left and right boundaries
+        for (const auto & bound : {lanelet.leftBound(), lanelet.rightBound()}) {
+          for (const auto & point : bound) {
+            // Calculate distance from point to line segment
+            const double px = point.x() - start_.x;
+            const double py = point.y() - start_.y;
+
+            // Projection length onto the line segment
+            const double projection = px * norm_dx + py * norm_dy;
+
+            if (projection >= 0 && projection <= line_length) {  // Within the line segment
+              // Perpendicular distance from the line segment
+              const double distance = std::abs(px * norm_dy - py * norm_dx);
+              if (distance <= search_radius) {
+                is_nearby = true;
+                break;
+              }
+            } else {
+              // Outside line segment, check distance to nearest endpoint
+              double distance_to_start = std::sqrt(px * px + py * py);
+              const double end_px = point.x() - end_.x;
+              const double end_py = point.y() - end_.y;
+              double distance_to_end = std::sqrt(end_px * end_px + end_py * end_py);
+              double min_distance = std::min(distance_to_start, distance_to_end);
+              if (min_distance <= search_radius) {
+                is_nearby = true;
+                break;
+              }
+            }
+          }
+          if (is_nearby) break;
+        }
+
+        if (is_nearby) {
+          nearby_lanes.push_back(lanelet);
+        }
       }
     }
 
-    geometry_msgs::msg::Pose start_pose;
-    start_pose.position.x = start_.x;
-    start_pose.position.y = start_.y;
+    // Extract boundaries with similar slopes to the line segment and calculate approximation line
+    std::vector<lanelet::BasicPoint2d> candidate_points;
 
-    lanelet::Lanelet closest_lane_start;
-    lanelet::utils::query::getClosestLanelet(lanes, start_pose, &closest_lane_start);
+    for (const auto & lanelet : nearby_lanes) {
+      // Process left and right boundaries
+      for (const auto & bound : {lanelet.leftBound(), lanelet.rightBound()}) {
+        // Check if all segments in the boundary have similar slopes
+        bool all_segments_valid = true;
 
-    geometry_msgs::msg::Pose end_pose;
-    end_pose.position.x = end_.x;
-    end_pose.position.y = end_.y;
+        for (size_t i = 1; i < bound.size() && all_segments_valid; ++i) {
+          const double seg_dx = bound[i].x() - bound[i - 1].x();
+          const double seg_dy = bound[i].y() - bound[i - 1].y();
+          const double seg_length = std::sqrt(seg_dx * seg_dx + seg_dy * seg_dy);
 
-    lanelet::Lanelet closest_lane_end;
-    lanelet::utils::query::getClosestLanelet(lanes, end_pose, &closest_lane_end);
+          if (seg_length > 1e-6) {  // Valid segment
+            const double seg_angle = std::atan2(seg_dy, seg_dx);
 
-    const auto lane_right_segment1 = lanelet::utils::getClosestSegment(lanelet::BasicPoint2d(start_.x, start_.y), closest_lane_start.rightBound());
-    const auto lane_right_segment2 = lanelet::utils::getClosestSegment(lanelet::BasicPoint2d(end_.x, end_.y), closest_lane_end.rightBound());
+            // Calculate angle difference for this segment
+            double angle_diff = std::remainder(seg_angle - line_angle, 2 * M_PI);
+            angle_diff = std::abs(angle_diff);
+            if (angle_diff > M_PI / 2) {
+              angle_diff = M_PI - angle_diff;  // Consider reverse direction
+            }
 
-    const auto lane_left_segment1 = lanelet::utils::getClosestSegment(lanelet::BasicPoint2d(start_.x, start_.y), closest_lane_start.leftBound());
-    const auto lane_left_segment2 = lanelet::utils::getClosestSegment(lanelet::BasicPoint2d(end_.x, end_.y), closest_lane_end.leftBound());
+            // If any segment has large angle difference, reject this boundary
+            if (angle_diff > M_PI / 36) {  // 5 degrees
+              all_segments_valid = false;
+            }
+          }
+        }
 
-    const double lane_right_distance = ((lane_right_segment1.front().x() + lane_right_segment2.back().x())/2.0 - (start_.x+end_.x)/2.0)
-                                      *((lane_right_segment1.front().x() + lane_right_segment2.back().x())/2.0 - (start_.x+end_.x)/2.0)
-                                      +((lane_right_segment1.front().y() + lane_right_segment2.back().y())/2.0 - (start_.y+end_.y)/2.0)
-                                      *((lane_right_segment1.front().y() + lane_right_segment2.back().y())/2.0 - (start_.y+end_.y)/2.0);
-    const double lane_left_distance =  ((lane_left_segment1.front().x() + lane_left_segment2.back().x())/2.0 - (start_.x+end_.x)/2.0)
-                                      *((lane_left_segment1.front().x() + lane_left_segment2.back().x())/2.0 - (start_.x+end_.x)/2.0)
-                                      +((lane_left_segment1.front().y() + lane_left_segment2.back().y())/2.0 - (start_.y+end_.y)/2.0)
-                                      *((lane_left_segment1.front().y() + lane_left_segment2.back().y())/2.0 - (start_.y+end_.y)/2.0);
+        // If all segments are valid, extract points from this boundary
+        if (all_segments_valid) {
+          // Extract points within the line segment region
+          for (const auto & point : bound) {
+            const double px = point.x() - start_.x;
+            const double py = point.y() - start_.y;
 
-    const auto lane_segment1 = lane_right_distance < lane_left_distance ? lane_right_segment1 : lane_left_segment1; 
-    const auto lane_segment2 = lane_right_distance < lane_left_distance ? lane_right_segment2 : lane_left_segment2;
+            // Projection length onto the line segment
+            const double projection = px * norm_dx + py * norm_dy;
 
-    const auto lane_seg_start = Ogre::Vector3(lane_segment1.front().x(), lane_segment1.front().y(), 100);
-    const auto lane_seg_end = Ogre::Vector3(lane_segment2.back().x(), lane_segment2.back().y(), 100);
+            if (projection >= 0 && projection <= line_length) {
+              // Perpendicular distance from the line segment
+              const double distance = std::abs(px * norm_dy - py * norm_dx);
+              if (distance <= search_radius) {
+                candidate_points.push_back(lanelet::BasicPoint2d(point.x(), point.y()));
+              }
+            }
+          }
+        }
+      }
+    }
 
+    // Calculate approximation line from extracted points using least squares method
+    Ogre::Vector3 lane_seg_start, lane_seg_end;
+    bool is_no_lane_points = true;
 
-    // const auto lanelets =  lanelet_map_ptr_->laneletLayer.nearest(lanelet::BasicPoint2d((start_.x+end_.x)/2.0, (start_.y+end_.y)/2.0) ,1);
-    // lanelets.front().rightBound().front().x();
-    // lanelets.front().rightBound().front().x();
+    if (candidate_points.size() >= 2) {
+      is_no_lane_points = false;
+      // Calculate approximation line using least squares method
+      double sum_x = 0.0, sum_y = 0.0, sum_xx = 0.0, sum_xy = 0.0;
+      const size_t n = candidate_points.size();
 
+      for (const auto & point : candidate_points) {
+        sum_x += point.x();
+        sum_y += point.y();
+        sum_xx += point.x() * point.x();
+        sum_xy += point.x() * point.y();
+      }
+
+      // Calculate line parameters: y = ax + b
+      const double denominator = n * sum_xx - sum_x * sum_x;
+
+      if (std::abs(denominator) > 1e-10) {
+        // Normal case: y = ax + b
+        const double line_a = (n * sum_xy - sum_x * sum_y) / denominator;
+        const double line_b = (sum_y - line_a * sum_x) / n;
+
+        // Calculate perpendicular feet from start and end points to the approximation line
+        const double denom = 1.0 + line_a * line_a;
+
+        // Perpendicular foot from start point
+        const double start_foot_x = (start_.x + line_a * (start_.y - line_b)) / denom;
+        const double start_foot_y = line_a * start_foot_x + line_b;
+
+        // Perpendicular foot from end point
+        const double end_foot_x = (end_.x + line_a * (end_.y - line_b)) / denom;
+        const double end_foot_y = line_a * end_foot_x + line_b;
+
+        lane_seg_start = Ogre::Vector3(start_foot_x, start_foot_y, 100);
+        lane_seg_end = Ogre::Vector3(end_foot_x, end_foot_y, 100);
+      } else {
+        // Nearly vertical line, use x = cy + d instead
+        double sum_yy = 0.0, sum_yx = 0.0;
+        for (const auto & point : candidate_points) {
+          sum_yy += point.y() * point.y();
+          sum_yx += point.y() * point.x();
+        }
+        const double denom_y = n * sum_yy - sum_y * sum_y;
+        if (std::abs(denom_y) > 1e-10) {
+          const double line_c = (n * sum_yx - sum_y * sum_x) / denom_y;
+          const double line_d = (sum_x - line_c * sum_y) / n;
+
+          // Calculate perpendicular feet for vertical-ish line
+          const double start_foot_y = start_.y;
+          const double start_foot_x = line_c * start_foot_y + line_d;
+          const double end_foot_y = end_.y;
+          const double end_foot_x = line_c * end_foot_y + line_d;
+
+          lane_seg_start = Ogre::Vector3(start_foot_x, start_foot_y, 100);
+          lane_seg_end = Ogre::Vector3(end_foot_x, end_foot_y, 100);
+        } else {
+          // Degenerate case: all points are the same
+          lane_seg_start = Ogre::Vector3(candidate_points[0].x(), candidate_points[0].y(), 100);
+          lane_seg_end = Ogre::Vector3(candidate_points[0].x(), candidate_points[0].y(), 100);
+        }
+      }
+    }
+
+    // Stop line processing
     lanelet::BasicPoint2d point2d((start_.x + end_.x) / 2.0, (start_.y + end_.y) / 2.0);
 
     auto search_func =
       [](const lanelet::BoundingBox2d & /*box*/, const lanelet::LineString3d & linestring) {
-      return linestring.attributeOr(lanelet::AttributeName::Type, "") == std::string("stop_line");
-    };
+        return linestring.attributeOr(lanelet::AttributeName::Type, "") == std::string("stop_line");
+      };
 
     lanelet::Optional<lanelet::LineString3d> stop_line =
       lanelet_map_ptr_->lineStringLayer.nearestUntil(point2d, search_func);
 
-    const auto stop_line_seg_start = Ogre::Vector3(stop_line.get().front().x(), stop_line.get().front().y(), 100);
-    const auto stop_line_seg_end   = Ogre::Vector3(stop_line.get().back().x(), stop_line.get().back().y(), 100);
+    Ogre::Vector3 stop_line_seg_start, stop_line_seg_end;
+    bool stop_line_found = false;
 
+    if (stop_line) {
+      stop_line_seg_start =
+        Ogre::Vector3(stop_line.get().front().x(), stop_line.get().front().y(), 100);
+      stop_line_seg_end =
+        Ogre::Vector3(stop_line.get().back().x(), stop_line.get().back().y(), 100);
+      stop_line_found = true;
+    }
 
-    const double lane_distance = ((lane_seg_start.x + lane_seg_end.x)/2.0 - (start_.x+end_.x)/2.0)
-                                *((lane_seg_start.x + lane_seg_end.x)/2.0 - (start_.x+end_.x)/2.0)
-                                +((lane_seg_start.y + lane_seg_end.y)/2.0 - (start_.y+end_.y)/2.0)
-                                *((lane_seg_start.y + lane_seg_end.y)/2.0 - (start_.y+end_.y)/2.0);
-    const double stop_line_distance = ((stop_line_seg_start.x + stop_line_seg_end.x)/2.0 - (start_.x+end_.x)/2.0)
-                                     *((stop_line_seg_start.x + stop_line_seg_end.x)/2.0 - (start_.x+end_.x)/2.0)
-                                     +((stop_line_seg_start.y + stop_line_seg_end.y)/2.0 - (start_.y+end_.y)/2.0)
-                                     *((stop_line_seg_start.y + stop_line_seg_end.y)/2.0 - (start_.y+end_.y)/2.0);
-
-    enum class LINE_TYPE{
-      LANE,
-      STOP_LINE
-    };
+    enum class LINE_TYPE { LANE, STOP_LINE, ERROR };
 
     LINE_TYPE line_type;
-    if (lane_distance < stop_line_distance) {
+    if (!is_no_lane_points) {
       seg_start_ = lane_seg_start;
       seg_end_ = lane_seg_end;
       line_type = LINE_TYPE::LANE;
-    } else {
+    } else if (stop_line_found) {
       seg_start_ = stop_line_seg_start;
       seg_end_ = stop_line_seg_end;
       line_type = LINE_TYPE::STOP_LINE;
+    } else {
+      line_type = LINE_TYPE::ERROR;
     }
-
-    // std::cout << seg_start_.x << " " << seg_start_.y << " " << seg_end_.x << " " << seg_end_.y << std::endl;
-
 
     line_lane_->clear();
     line_lane_->addPoint(seg_start_, color_lane_);
@@ -286,24 +409,51 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
 
     const double yaw_line = std::atan2(end_.y - start_.y, end_.x - start_.x);
     const double yaw_lane = std::atan2(seg_end_.y - seg_start_.y, seg_end_.x - seg_start_.x);
-    const double yaw = std::remainder(yaw_line-yaw_lane, 2 * M_PI);
-
+    double yaw = std::remainder(yaw_line - yaw_lane, 2 * M_PI);
+    if (yaw > M_PI / 2) {
+      yaw = M_PI - yaw;
+    } else if (yaw < -M_PI / 2) {
+      yaw = -M_PI - yaw;
+    }
 
     const double distance_selfpose_to_line = autoware_utils::distance(
-      autoware_utils::alt::Point2d(self_pose_.position.x, self_pose_.position.y), 
+      autoware_utils::alt::Point2d(self_pose_.position.x, self_pose_.position.y),
       autoware_utils::alt::Point2d(start_.x, start_.y),
       autoware_utils::alt::Point2d(end_.x, end_.y));
 
     const double distance_selfpose_to_lane = autoware_utils::distance(
-      autoware_utils::alt::Point2d(self_pose_.position.x, self_pose_.position.y), 
+      autoware_utils::alt::Point2d(self_pose_.position.x, self_pose_.position.y),
       autoware_utils::alt::Point2d(seg_start_.x, seg_start_.y),
       autoware_utils::alt::Point2d(seg_end_.x, seg_end_.y));
 
-    if (line_type == LINE_TYPE::LANE) {
-     std::cout << "x_error:" << "none" << "[m], y_error: " << distance_selfpose_to_line - distance_selfpose_to_lane << "[m], yaw_error:  " << yaw/M_PI*180.0 << "[deg] " << std::endl;
+    // Error calculation
+    double x_error = 0.0;
+    double y_error = 0.0;
+
+    if (line_type == LINE_TYPE::STOP_LINE) {
+      // For stop_line case, calculate distance as x_error
+      x_error = distance_selfpose_to_line - distance_selfpose_to_lane;
+    } else if (line_type == LINE_TYPE::LANE) {
+      // For lane case, calculate only y_error
+      y_error = distance_selfpose_to_line - distance_selfpose_to_lane;
+    } else if (line_type == LINE_TYPE::ERROR) {
+      // None
     }
-    else {
-     std::cout << "x_error:" << distance_selfpose_to_line - distance_selfpose_to_lane << "[m], y_error: " << "none" << "[m], yaw_error:  " << yaw/M_PI*180.0 << "[deg] " << std::endl;
+
+    // Display number of extracted points
+    std::cout << "Extracted " << candidate_points.size() << " candidate points from nearby lanelets"
+              << std::endl;
+    std::cout << "Lane approximation: start(" << seg_start_.x << ", " << seg_start_.y << ") -> end("
+              << seg_end_.x << ", " << seg_end_.y << ")" << std::endl;
+    if (line_type == LINE_TYPE::STOP_LINE) {
+      std::cout << "x_error: " << x_error << "[m], y_error: " << "none"
+                << "[m], yaw_error: " << yaw / M_PI * 180.0 << "[deg]" << std::endl;
+    } else if (line_type == LINE_TYPE::LANE) {
+      std::cout << "x_error: " << "none" << "[m], y_error: " << y_error
+                << "[m], yaw_error: " << yaw / M_PI * 180.0 << "[deg]" << std::endl;
+    } else if (line_type == LINE_TYPE::ERROR) {
+      std::cout << "x_error: " << "none" << "[m], y_error: " << "none"
+                << "[m], yaw_error: " << "none" << "[deg]" << std::endl;
     }
 
   } else {
