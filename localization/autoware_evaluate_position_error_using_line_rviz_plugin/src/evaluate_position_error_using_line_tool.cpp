@@ -37,36 +37,32 @@
 
 #include "evaluate_position_error_using_line_tool.hpp"
 
-#include <cmath>
-#include <memory>
-#include <sstream>
-#include <algorithm>
+#include "rviz_common/display_context.hpp"
+#include "rviz_common/interaction/view_picker_iface.hpp"
+#include "rviz_common/load_resource.hpp"
+#include "rviz_common/properties/color_property.hpp"
+#include "rviz_common/properties/parse_color.hpp"
+#include "rviz_common/viewport_mouse_event.hpp"
+#include "rviz_rendering/objects/line.hpp"
+
+#include <QString>  // NOLINT: cpplint is unable to handle the include order here
+#include <autoware_lanelet2_extension/utility/message_conversion.hpp>
+#include <autoware_lanelet2_extension/utility/query.hpp>
+#include <autoware_lanelet2_extension/utility/utilities.hpp>
+#include <autoware_utils/geometry/alt_geometry.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 #include <OgreBillboardSet.h>
 #include <OgreManualObject.h>
 #include <OgreSceneManager.h>
 #include <OgreSceneNode.h>
-
-#include <QString>  // NOLINT: cpplint is unable to handle the include order here
-
-#include <rclcpp/rclcpp.hpp>
-#include "rviz_rendering/objects/line.hpp"
-
-#include "rviz_common/display_context.hpp"
-#include "rviz_common/load_resource.hpp"
-#include "rviz_common/viewport_mouse_event.hpp"
-#include "rviz_common/interaction/view_picker_iface.hpp"
-#include "rviz_common/properties/color_property.hpp"
-#include "rviz_common/properties/parse_color.hpp"
-
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_core/primitives/Lanelet.h>
-#include <autoware_lanelet2_extension/utility/utilities.hpp>
-#include <autoware_lanelet2_extension/utility/query.hpp>
-#include <autoware_lanelet2_extension/utility/message_conversion.hpp>
 
-
-#include <autoware_utils/geometry/alt_geometry.hpp>
+#include <algorithm>
+#include <cmath>
+#include <memory>
+#include <sstream>
 
 namespace autoware
 {
