@@ -125,7 +125,7 @@ void EvaluatePositionErrorUsingLineTool::deactivate()
 
 int EvaluatePositionErrorUsingLineTool::processMouseEvent(rviz_common::ViewportMouseEvent & event)
 {
-  if(lanelet_map_ptr_ == nullptr) {
+  if (lanelet_map_ptr_ == nullptr) {
     std::cerr << "null" << std::endl;
     return 0;
   }
@@ -158,8 +158,8 @@ void EvaluatePositionErrorUsingLineTool::updateLineColor()
 {
   color_ = rviz_common::properties::qtToOgre(color_property_->getColor());
   // line_->setColor(color);
-  color_ = Ogre::ColourValue(0,1,0,1);
-  color_lane_ = Ogre::ColourValue(0,0,1,1);
+  color_ = Ogre::ColourValue(0, 1, 0, 1);
+  color_lane_ = Ogre::ColourValue(0, 0, 1, 1);
 
   line_->setLineWidth(0.3);
 
@@ -238,7 +238,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
     // lanelets.front().rightBound().front().x();
     // lanelets.front().rightBound().front().x();
 
-    lanelet::BasicPoint2d point2d((start_.x+end_.x)/2.0, (start_.y+end_.y)/2.0);
+    lanelet::BasicPoint2d point2d((start_.x + end_.x) / 2.0, (start_.y + end_.y) / 2.0);
 
     auto search_func =
       [](const lanelet::BoundingBox2d & /*box*/, const lanelet::LineString3d & linestring) {
