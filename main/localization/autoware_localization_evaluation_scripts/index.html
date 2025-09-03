@@ -3078,6 +3078,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#diagnostics_flag_checkpy" class="md-nav__link">
+    diagnostics_flag_check.py
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#analyze_rosbags_parallelpy" class="md-nav__link">
     analyze_rosbags_parallel.py
   </a>
@@ -3181,6 +3188,28 @@
 
 <span class="m">0</span><span class="w"> </span>directories,<span class="w"> </span><span class="m">4</span><span class="w"> </span>files
 </code></pre></div>
+<h2 id="diagnostics_flag_checkpy">diagnostics_flag_check.py<a class="headerlink" href="#diagnostics_flag_checkpy" title="Permanent link">#</a></h2>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>diagnostics_flag_check.py<span class="w"> </span><span class="se">\</span>
+<span class="w">   </span>&lt;path_to_scenario_file&gt;<span class="w"> </span>&lt;directory_to_diagnostics_result&gt;
+</code></pre></div>
+<p>[Example]</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>diagnostics_flag_check.py<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>./scenario.yml<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/result_archive/diagnostics_result
+</code></pre></div>
+<p>This command checks whether a diagnostics have risen/fallen at a specific timing.
+The diagnostics flag to observe should be defined in the input scenario file in the format like below.</p>
+<div class="highlight"><pre><span></span><code><span class="nt">Evaluation</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">Conditions</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">DiagnosticsFlagCheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">pose_is_passed_delay_gate</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">flag</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rise</span>
+<span class="w">        </span><span class="nt">at_sec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">113</span>
+<span class="w">        </span><span class="nt">at_nanosec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">750000000</span>
+</code></pre></div>
+<p>This example means that the diagnostics <code>pose_is_passed_delay_gate</code> should rise at 113.75 sec in the rosbag time. To be more specific, the flag should rise within a time window of ±0.2 seconds around the target time.</p>
+<p>Currently this script is still in development and the number of observable diagnostics will increase.
+Read the actual <code>diagnostics_flag_check.py</code> file to know what can be observed and the definition of rise and fall for each diagnostics.</p>
 <h2 id="analyze_rosbags_parallelpy">analyze_rosbags_parallel.py<a class="headerlink" href="#analyze_rosbags_parallelpy" title="Permanent link">#</a></h2>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>analyze_rosbags_parallel.py<span class="w"> </span><span class="se">\</span>
 <span class="w">   </span>&lt;result_dir&gt;<span class="w"> </span>--parallel_num<span class="w"> </span><span class="m">2</span>
