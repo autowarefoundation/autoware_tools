@@ -254,6 +254,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
       // Process left and right boundaries
       for (const auto & bound : {lanelet.leftBound(), lanelet.rightBound()}) {
         // Check if all segments in the boundary have similar slopes
+        // Only check segments that are within search_radius of the line segment
         bool all_segments_valid = true;
 
         for (size_t i = 1; i < bound.size() && all_segments_valid; ++i) {
@@ -262,18 +263,53 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
           const double seg_length = std::sqrt(seg_dx * seg_dx + seg_dy * seg_dy);
 
           if (seg_length > 1e-6) {  // Valid segment
-            const double seg_angle = std::atan2(seg_dy, seg_dx);
-
-            // Calculate angle difference for this segment
-            double angle_diff = std::remainder(seg_angle - line_angle, 2 * M_PI);
-            angle_diff = std::abs(angle_diff);
-            if (angle_diff > M_PI / 2) {
-              angle_diff = M_PI - angle_diff;  // Consider reverse direction
+            // Check if this segment is within search_radius of the line segment
+            bool segment_in_range = false;
+            
+            // Check both endpoints of the segment
+            for (const auto & point : {bound[i - 1], bound[i]}) {
+              const double px = point.x() - start_.x;
+              const double py = point.y() - start_.y;
+              
+              // Projection length onto the line segment
+              const double projection = px * norm_dx + py * norm_dy;
+              
+              if (projection >= 0 && projection <= line_length) {  // Within the line segment
+                // Perpendicular distance from the line segment
+                const double distance = std::abs(px * norm_dy - py * norm_dx);
+                if (distance <= search_radius) {
+                  segment_in_range = true;
+                  break;
+                }
+              } else {
+                // Outside line segment, check distance to nearest endpoint
+                double distance_to_start = std::sqrt(px * px + py * py);
+                const double end_px = point.x() - end_.x;
+                const double end_py = point.y() - end_.y;
+                double distance_to_end = std::sqrt(end_px * end_px + end_py * end_py);
+                double min_distance = std::min(distance_to_start, distance_to_end);
+                if (min_distance <= search_radius) {
+                  segment_in_range = true;
+                  break;
+                }
+              }
             }
+            
+            // Only check angle if the segment is within range
+            if (segment_in_range) {
+              const double seg_angle = std::atan2(seg_dy, seg_dx);
 
-            // If any segment has large angle difference, reject this boundary
-            if (angle_diff > M_PI / 36) {  // 5 degrees
-              all_segments_valid = false;
+              // Calculate angle difference for this segment
+              double angle_diff = std::remainder(seg_angle - line_angle, 2 * M_PI);
+              angle_diff = std::abs(angle_diff);
+              if (angle_diff > M_PI / 2) {
+                angle_diff = M_PI - angle_diff;  // Consider reverse direction
+              }
+
+              // If any segment has large angle difference, reject this boundary
+              if (angle_diff > M_PI / 36) {  // 5 degrees
+                all_segments_valid = false;
+              }
             }
           }
         }
@@ -288,10 +324,20 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
             // Projection length onto the line segment
             const double projection = px * norm_dx + py * norm_dy;
 
-            if (projection >= 0 && projection <= line_length) {
+            if (projection >= 0 && projection <= line_length) {  // Within the line segment
               // Perpendicular distance from the line segment
               const double distance = std::abs(px * norm_dy - py * norm_dx);
               if (distance <= search_radius) {
+                candidate_points.push_back(lanelet::BasicPoint2d(point.x(), point.y()));
+              }
+            } else {
+              // Outside line segment, check distance to nearest endpoint
+              double distance_to_start = std::sqrt(px * px + py * py);
+              const double end_px = point.x() - end_.x;
+              const double end_py = point.y() - end_.y;
+              double distance_to_end = std::sqrt(end_px * end_px + end_py * end_py);
+              double min_distance = std::min(distance_to_start, distance_to_end);
+              if (min_distance <= search_radius) {
                 candidate_points.push_back(lanelet::BasicPoint2d(point.x(), point.y()));
               }
             }
