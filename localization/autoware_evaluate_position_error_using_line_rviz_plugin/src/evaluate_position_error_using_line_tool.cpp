@@ -65,6 +65,9 @@
 #include <memory>
 #include <sstream>
 #include <vector>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <cerrno>
 
 namespace autoware
 {
@@ -73,13 +76,23 @@ namespace evaluate_position_error_using_line_rviz_plugin
 {
 
 EvaluatePositionErrorUsingLineTool::EvaluatePositionErrorUsingLineTool()
-: is_line_started_(false), length_(-1)
+: is_line_started_(false), length_(-1), measurement_count_(0)
 {
   shortcut_key_ = 'n';
 
   color_property_ = new rviz_common::properties::ColorProperty(
     "Line color", Qt::darkYellow, "The topic on which to publish points.", getPropertyContainer(),
     SLOT(updateLineColor()), this);
+
+  initCsvFile();
+}
+
+EvaluatePositionErrorUsingLineTool::~EvaluatePositionErrorUsingLineTool()
+{
+  if (csv_file_.is_open()) {
+    csv_file_.close();
+    std::cout << "CSV file closed: " << csv_filename_ << std::endl;
+  }
 }
 
 void EvaluatePositionErrorUsingLineTool::onInitialize()
@@ -489,17 +502,21 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
     // Display number of extracted points
     std::cout << "Extracted " << candidate_points.size() << " candidate points from nearby lanelets"
               << std::endl;
-    std::cout << "Lane approximation: start(" << seg_start_.x << ", " << seg_start_.y << ") -> end("
-              << seg_end_.x << ", " << seg_end_.y << ")" << std::endl;
+    std::cout << "Map line approximation: start(" << seg_start_.x << ", " << seg_start_.y
+              << ") -> end(" << seg_end_.x << ", " << seg_end_.y << ")" << std::endl;
+
     if (line_type == LINE_TYPE::STOP_LINE) {
       std::cout << "x_error: " << x_error << "[m], y_error: " << "none"
                 << "[m], yaw_error: " << yaw / M_PI * 180.0 << "[deg]" << std::endl;
+      writeToCsv(x_error, std::numeric_limits<double>::quiet_NaN(), yaw / M_PI * 180.0);
     } else if (line_type == LINE_TYPE::LANE) {
       std::cout << "x_error: " << "none" << "[m], y_error: " << y_error
                 << "[m], yaw_error: " << yaw / M_PI * 180.0 << "[deg]" << std::endl;
+      writeToCsv(std::numeric_limits<double>::quiet_NaN(), y_error, yaw / M_PI * 180.0);
     } else if (line_type == LINE_TYPE::ERROR) {
       std::cout << "x_error: " << "none" << "[m], y_error: " << "none"
                 << "[m], yaw_error: " << "none" << "[deg]" << std::endl;
+      // Do not write to CSV for error cases
     }
 
   } else {
@@ -514,6 +531,56 @@ void EvaluatePositionErrorUsingLineTool::processRightButton()
   // line_->setVisible(false);
   line_->clear();
   line_lane_->clear();
+}
+
+void EvaluatePositionErrorUsingLineTool::initCsvFile()
+{
+  // Create output directory if it doesn't exist
+  const char* home_dir = std::getenv("HOME");
+  std::string output_dir;
+  if (home_dir) {
+    output_dir = std::string(home_dir) + "/evaluate_position_error_using_line_tool";
+  } else {
+    output_dir = "./evaluate_position_error_using_line_tool";
+  }
+  
+  // Create directory (recursive creation)
+  if (mkdir(output_dir.c_str(), 0755) != 0 && errno != EEXIST) {
+    std::cerr << "Failed to create directory: " << output_dir << std::endl;
+  }
+
+  // Generate filename with timestamp
+  auto now = std::chrono::system_clock::now();
+  auto time_t_now = std::chrono::system_clock::to_time_t(now);
+  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+
+  std::stringstream ss;
+  ss << output_dir << "/position_error_evaluation_" 
+     << std::put_time(std::localtime(&time_t_now), "%Y%m%d_%H%M%S")
+     << "_" << std::setfill('0') << std::setw(3) << ms.count() << ".csv";
+
+  csv_filename_ = ss.str();
+
+  // Open CSV file and write header
+  csv_file_.open(csv_filename_);
+  if (csv_file_.is_open()) {
+    csv_file_ << "measurement_number,x_error,y_error,yaw_error" << std::endl;
+    std::cout << "CSV output file created: " << csv_filename_ << std::endl;
+  } else {
+    std::cerr << "Failed to create CSV file: " << csv_filename_ << std::endl;
+  }
+}
+
+void EvaluatePositionErrorUsingLineTool::writeToCsv(
+  double x_error, double y_error, double yaw_error)
+{
+  if (csv_file_.is_open()) {
+    measurement_count_++;
+    csv_file_ << measurement_count_ << "," << std::fixed << std::setprecision(6) << x_error << ","
+              << y_error << "," << yaw_error << std::endl;
+    csv_file_.flush();  // Ensure data is written immediately
+    std::cout << "Measurement " << measurement_count_ << " written to CSV" << std::endl;
+  }
 }
 
 }  // namespace evaluate_position_error_using_line_rviz_plugin
