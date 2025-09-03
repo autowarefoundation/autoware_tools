@@ -51,10 +51,10 @@ The optimized centerline can be generated from the command line interface by des
 - `<end-pose>` (not mandatory)
 - `<vehicle-model>`
 - `<goal-method>` (not mandatory, `path_generator` or `behavior_path_planner` only)
-- `<lanelet-squence>` (not mandatory)
+- `<lanelet-sequence>` (not mandatory)
 
 ```sh
-ros2 launch autoware_static_centerline_generator static_centerline_generator.launch.xml run_backgrond:=false lanelet2_input_file_path:=<input-osm-path> lanelet2_output_file_path:=<output-osm-path> start_lanelet_id:=<start-lane-id> start_pose:=<start-pose> end_lanelet_id:=<end-lane-id> end_pose:=<end-pose> vehicle_model:=<vehicle-model> goal_method:=<goal-method> lanelet_squence:=<lanelet-squence>
+ros2 launch autoware_static_centerline_generator static_centerline_generator.launch.xml run_backgrond:=false lanelet2_input_file_path:=<input-osm-path> lanelet2_output_file_path:=<output-osm-path> start_lanelet_id:=<start-lane-id> start_pose:=<start-pose> end_lanelet_id:=<end-lane-id> end_pose:=<end-pose> vehicle_model:=<vehicle-model> goal_method:=<goal-method> lanelet_sequence:=<lanelet-sequence>
 ```
 
 **Note that `<goal-method>:=behavior_path_planner` is not currently supported.**
@@ -66,7 +66,7 @@ By specifying `start-pose`, `goal-pose`, and `goal-method`, the centerline from 
 `<start-pose>`, `<goal-pose>` are entered like `[position.x, position.y, position.z, orientation.x, orientation.y, orientation.z, orientation.w]` with double type.
 In order to run smoothly to the goal pose, `goal-method` is used.
 Only `path_generator` or `behavior_path_planner` can be entered for `<goal_method>`.
-In `<lanelet-squence>`, you can specify the lanelet_ids for the static centerline to be embedded.
+In `<lanelet-sequence>`, you can specify the lanelet_ids for the static centerline to be embedded.
 The input route must be continuous and a drivable path.
 
 > [!WARNING]

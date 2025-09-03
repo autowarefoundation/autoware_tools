@@ -491,12 +491,13 @@ LaneletRoute StaticCenterlineGeneratorNode::plan_route_by_lane_ids(
   }();
 
   // plan route
-  const auto lanelet_sequence = autoware::universe_utils::getOrDeclareParameter<std::vector<int64_t>>(*this, "lanelet_sequence");
+  const auto lanelet_sequence =
+    autoware::universe_utils::getOrDeclareParameter<std::vector<int64_t>>(
+      *this, "lanelet_sequence");
   LaneletRoute route;
   if (lanelet_sequence.front() == -1) {
     route = plan_route(start_pose, end_pose);
-  }
-  else {
+  } else {
     // create route from lanelet_sequence
     route.start_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.front());
     route.goal_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.back());
