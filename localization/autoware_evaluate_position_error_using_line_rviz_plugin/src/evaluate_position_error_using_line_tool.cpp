@@ -164,7 +164,7 @@ void EvaluatePositionErrorUsingLineTool::updateLineColor()
   line_->setLineWidth(0.3);
 
   // line_lane_->setColor(1,0,0,1);
-  line_lane_->setLineWidth(0.3);
+  line_lane_->setLineWidth(0.15);
 }
 
 void EvaluatePositionErrorUsingLineTool::setStatusMessage()
@@ -265,15 +265,15 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
           if (seg_length > 1e-6) {  // Valid segment
             // Check if this segment is within search_radius of the line segment
             bool segment_in_range = false;
-            
+
             // Check both endpoints of the segment
             for (const auto & point : {bound[i - 1], bound[i]}) {
               const double px = point.x() - start_.x;
               const double py = point.y() - start_.y;
-              
+
               // Projection length onto the line segment
               const double projection = px * norm_dx + py * norm_dy;
-              
+
               if (projection >= 0 && projection <= line_length) {  // Within the line segment
                 // Perpendicular distance from the line segment
                 const double distance = std::abs(px * norm_dy - py * norm_dx);
@@ -294,7 +294,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
                 }
               }
             }
-            
+
             // Only check angle if the segment is within range
             if (segment_in_range) {
               const double seg_angle = std::atan2(seg_dy, seg_dx);
