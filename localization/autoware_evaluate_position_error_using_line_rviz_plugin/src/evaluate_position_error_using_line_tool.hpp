@@ -56,6 +56,11 @@
 
 #include <lanelet2_core/LaneletMap.h>
 
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <chrono>
+
 namespace rviz_rendering
 {
 class Line;
@@ -80,6 +85,7 @@ class RVIZ_DEFAULT_PLUGINS_PUBLIC EvaluatePositionErrorUsingLineTool : public rv
 
 public:
   EvaluatePositionErrorUsingLineTool();
+  ~EvaluatePositionErrorUsingLineTool();
 
   void onInitialize() override;
 
@@ -99,6 +105,8 @@ private:
   void setStatusMessage();
   void processLeftButton(const Ogre::Vector3 & pos);
   void processRightButton();
+  void initCsvFile();
+  void writeToCsv(double x_error, double y_error, double yaw_error);
 
   rviz_common::properties::ColorProperty * color_property_;
 
@@ -120,6 +128,11 @@ private:
   geometry_msgs::msg::Pose self_pose_;
   bool is_line_started_;
   float length_;
+
+  // CSV output related
+  std::ofstream csv_file_;
+  std::string csv_filename_;
+  int measurement_count_;
 
   QCursor std_cursor_;
   QCursor hit_cursor_;
