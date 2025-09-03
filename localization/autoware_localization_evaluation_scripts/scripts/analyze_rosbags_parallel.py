@@ -3,11 +3,13 @@
 
 import argparse
 from dataclasses import dataclass
+from dataclasses import fields
 import json
 from multiprocessing import Pool
 from pathlib import Path
 
 import compare_trajectories
+import diagnostics_flag_check
 import extract_values_from_rosbag
 import pandas as pd
 import plot_diagnostics
@@ -50,18 +52,15 @@ def load_overall_criteria_mask(yaml_path: Path) -> OverallCriteriaMask:
 
     # If mask exists -> merge with defaults, else return defaults
     mask = conditions.get("OverallCriteriaMask", {})
-    return OverallCriteriaMask(**{**OverallCriteriaMask().__dict__, **mask})
+    valid_fields = {f.name for f in fields(OverallCriteriaMask)}
+    invalid_fields = [k for k in mask if k not in valid_fields]
 
+    if invalid_fields:
+        print(f"[WARN] Ignoring invalid OverallCriteriaMask fields: {invalid_fields}")
 
-def load_diagnostics_flag_check(yaml_path: Path):
-    try:
-        with open(yaml_path, "r") as f:
-            data = yaml.safe_load(f)
-        conditions = data["Evaluation"]["Conditions"]
-    except Exception:
-        return None
+    filtered_mask = {k: v for k, v in mask.items() if k in valid_fields}
 
-    return conditions.get("DiagnosticsFlagCheck", None)
+    return OverallCriteriaMask(**{**OverallCriteriaMask().__dict__, **filtered_mask})
 
 
 def process_directory(
@@ -215,6 +214,16 @@ def process_directory(
                 final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%] is too large."
             else:
                 final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%]"
+
+    # (7) extract diag rise/fall
+    if scenario_file is not None:
+        diag_flag_check = diagnostics_flag_check.main(scenario_file, diagnostics_result_dir)
+        for key, check in diag_flag_check.items():
+            if check is False:
+                final_success = False
+                final_summary += f"|Diagnostics flag '{key}' NOT detected as expected."
+            else:
+                final_summary += f"|Diagnostics flag '{key}' OK."
 
     with open(save_dir / "summary.json", "w") as f:
         json.dump(
