@@ -503,7 +503,7 @@ LaneletRoute StaticCenterlineGeneratorNode::plan_route_by_lane_ids(
     route.goal_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.back());
     for (const auto & id : lanelet_sequence) {
       LaneletSegment segment;
-      segment.preferred_primitive.id = static_cast<std::int32_t>(id);
+      segment.preferred_primitive.id = id;
       segment.primitives.push_back(segment.preferred_primitive);
       route.segments.push_back(segment);
     }
