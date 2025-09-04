@@ -552,14 +552,23 @@ void EvaluatePositionErrorUsingLineTool::initCsvFile()
   // Generate filename with timestamp
   auto now = std::chrono::system_clock::now();
   auto time_t_now = std::chrono::system_clock::to_time_t(now);
-  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
 
-  std::stringstream ss;
-  ss << output_dir << "/position_error_evaluation_" 
-     << std::put_time(std::localtime(&time_t_now), "%Y%m%d_%H%M%S")
-     << "_" << std::setfill('0') << std::setw(3) << ms.count() << ".csv";
-
-  csv_filename_ = ss.str();
+  // Create timestamp string for filenames and directories
+  std::stringstream timestamp_ss;
+  timestamp_ss << std::put_time(std::localtime(&time_t_now), "%Y%m%d_%H%M%S");
+  capture_timestamp_ = timestamp_ss.str();
+  // Generate CSV filename with automatic numbering to avoid conflicts
+  std::string base_filename = output_dir + "/position_error_evaluation_" + capture_timestamp_;
+  csv_filename_ = base_filename + ".csv";
+  
+  // If file exists, add sequential number
+  int file_counter = 1;
+  while (std::ifstream(csv_filename_).good()) {
+    std::stringstream numbered_ss;
+    numbered_ss << base_filename << "_" << std::setfill('0') << std::setw(2) << file_counter << ".csv";
+    csv_filename_ = numbered_ss.str();
+    file_counter++;
+  }
 
   // Open CSV file and write header
   csv_file_.open(csv_filename_);
