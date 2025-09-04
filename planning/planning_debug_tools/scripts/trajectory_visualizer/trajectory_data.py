@@ -278,6 +278,36 @@ def yaws(msg):
     return [_get_yaw_from_quaternion(p.pose.orientation) for p in points]
 
 
+def yaws_continuous(msg):
+    """Get yaw values as continuous angles without -PI/PI discontinuity"""
+    points = _get_points(msg)
+    if not points:
+        return []
+    
+    # Get initial yaw values
+    yaw_values = [_get_yaw_from_quaternion(p.pose.orientation) for p in points]
+    
+    if len(yaw_values) <= 1:
+        return yaw_values
+    
+    # Make yaw continuous by unwrapping phase jumps
+    continuous_yaws = [yaw_values[0]]
+    offset = 0.0
+    
+    for i in range(1, len(yaw_values)):
+        diff = yaw_values[i] - yaw_values[i-1]
+        # Check for phase jump
+        if diff > np.pi:
+            # Jump from -pi to pi region
+            offset -= 2 * np.pi
+        elif diff < -np.pi:
+            # Jump from pi to -pi region
+            offset += 2 * np.pi
+        continuous_yaws.append(yaw_values[i] + offset)
+    
+    return continuous_yaws
+
+
 def yaw(odom: Odometry):
     return _get_yaw_from_quaternion(odom.pose.pose.orientation)
 
@@ -310,5 +340,6 @@ def get_data_functions() -> dict:
         "Relative angles [rad]": DataFunction(relative_angles, zero_fn),
         "X values": DataFunction(x_values, x_value),
         "Y values": DataFunction(y_values, y_value),
-        "Yaws [rad]": DataFunction(yaws, yaw),
+        "Yaws [rad]": DataFunction(yaws_continuous, yaw),
+        "Yaws (wrapped) [rad]": DataFunction(yaws, yaw),
     }
