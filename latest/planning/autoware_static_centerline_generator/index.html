@@ -3176,8 +3176,9 @@ Currently there is no documentation about Vector Map Builder's operation for thi
 <li><code>&lt;end-pose&gt;</code> (not mandatory)</li>
 <li><code>&lt;vehicle-model&gt;</code></li>
 <li><code>&lt;goal-method&gt;</code> (not mandatory, <code>path_generator</code> or <code>behavior_path_planner</code> only)</li>
+<li><code>&lt;lanelet-sequence&gt;</code> (not mandatory)</li>
 </ul>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_static_centerline_generator<span class="w"> </span>static_centerline_generator.launch.xml<span class="w"> </span>run_backgrond:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>lanelet2_input_file_path:<span class="o">=</span>&lt;input-osm-path&gt;<span class="w"> </span>lanelet2_output_file_path:<span class="o">=</span>&lt;output-osm-path&gt;<span class="w"> </span>start_lanelet_id:<span class="o">=</span>&lt;start-lane-id&gt;<span class="w"> </span>start_pose:<span class="o">=</span>&lt;start-pose&gt;<span class="w"> </span>end_lanelet_id:<span class="o">=</span>&lt;end-lane-id&gt;<span class="w"> </span>end_pose:<span class="o">=</span>&lt;end-pose&gt;<span class="w"> </span>vehicle_model:<span class="o">=</span>&lt;vehicle-model&gt;<span class="w"> </span>goal_method:<span class="o">=</span>&lt;goal-method&gt;
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_static_centerline_generator<span class="w"> </span>static_centerline_generator.launch.xml<span class="w"> </span>run_backgrond:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>lanelet2_input_file_path:<span class="o">=</span>&lt;input-osm-path&gt;<span class="w"> </span>lanelet2_output_file_path:<span class="o">=</span>&lt;output-osm-path&gt;<span class="w"> </span>start_lanelet_id:<span class="o">=</span>&lt;start-lane-id&gt;<span class="w"> </span>start_pose:<span class="o">=</span>&lt;start-pose&gt;<span class="w"> </span>end_lanelet_id:<span class="o">=</span>&lt;end-lane-id&gt;<span class="w"> </span>end_pose:<span class="o">=</span>&lt;end-pose&gt;<span class="w"> </span>vehicle_model:<span class="o">=</span>&lt;vehicle-model&gt;<span class="w"> </span>goal_method:<span class="o">=</span>&lt;goal-method&gt;<span class="w"> </span>lanelet_sequence:<span class="o">=</span>&lt;lanelet-sequence&gt;
 </code></pre></div>
 <p><strong>Note that <code>&lt;goal-method&gt;:=behavior_path_planner</code> is not currently supported.</strong></p>
 <p>The default output map path containing the optimized centerline locates <code>/tmp/autoware_static_centerline_generator/lanelet2_map.osm</code>.
@@ -3185,7 +3186,9 @@ If you want to change the output map path, you can remap the path by designating
 <p>By specifying <code>start-pose</code>, <code>goal-pose</code>, and <code>goal-method</code>, the centerline from <code>start-pose</code> to <code>goal-pose</code> can be embedded.
 <code>&lt;start-pose&gt;</code>, <code>&lt;goal-pose&gt;</code> are entered like <code>[position.x, position.y, position.z, orientation.x, orientation.y, orientation.z, orientation.w]</code> with double type.
 In order to run smoothly to the goal pose, <code>goal-method</code> is used.
-Only <code>path_generator</code> or <code>behavior_path_planner</code> can be entered for <code>&lt;goal_method&gt;</code>.</p>
+Only <code>path_generator</code> or <code>behavior_path_planner</code> can be entered for <code>&lt;goal_method&gt;</code>.
+In <code>&lt;lanelet-sequence&gt;</code>, you can specify the lanelet_ids for the static centerline to be embedded like <code>"100,101,102"</code>.
+The input route must be continuous and a drivable path.</p>
 <blockquote>
 <p>[!WARNING]
 If the start pose is off the center of the lane, it is necessary to manually embed a centerline that smoothly connects the start pose and the start lane in advance using VMB, etc.</p>
