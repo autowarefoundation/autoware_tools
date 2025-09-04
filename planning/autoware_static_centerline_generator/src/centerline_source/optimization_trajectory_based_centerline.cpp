@@ -278,36 +278,6 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
   return whole_optimized_traj_points;
 }
 
-std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute>
-OptimizationTrajectoryBasedCenterline::create_route(
-  std::shared_ptr<RouteHandler> & route_handler_ptr, const geometry_msgs::msg::Pose & start_pose,
-  const geometry_msgs::msg::Pose & goal_pose) const
-{
-  // create route_ptr
-  auto route_ptr = std::make_shared<autoware_planning_msgs::msg::LaneletRoute>();
-
-  lanelet::ConstLanelets all_lanelets;
-  lanelet::ConstLanelets path_lanelets;
-  route_handler_ptr->planPathLaneletsBetweenCheckpoints(start_pose, goal_pose, &path_lanelets);
-
-  for (const auto & lane : path_lanelets) {
-    if (!all_lanelets.empty() && lane.id() == all_lanelets.back().id()) continue;
-    all_lanelets.push_back(lane);
-  }
-
-  route_handler_ptr->setRouteLanelets(all_lanelets);
-
-  std::vector<autoware_planning_msgs::msg::LaneletSegment> route_sections =
-    route_handler_ptr->createMapSegments(all_lanelets);
-
-  // set necessary data
-  route_ptr->header.frame_id = "map";
-  route_ptr->start_pose = start_pose;
-  route_ptr->goal_pose = goal_pose;
-  route_ptr->segments = route_sections;
-  return route_ptr;
-}
-
 void OptimizationTrajectoryBasedCenterline::init_path_generator_node(
   const geometry_msgs::msg::Pose current_pose, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
   const LaneletRoute & route) const
