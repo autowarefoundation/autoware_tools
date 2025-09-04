@@ -66,7 +66,7 @@ By specifying `start-pose`, `goal-pose`, and `goal-method`, the centerline from 
 `<start-pose>`, `<goal-pose>` are entered like `[position.x, position.y, position.z, orientation.x, orientation.y, orientation.z, orientation.w]` with double type.
 In order to run smoothly to the goal pose, `goal-method` is used.
 Only `path_generator` or `behavior_path_planner` can be entered for `<goal_method>`.
-In `<lanelet-sequence>`, you can specify the lanelet_ids for the static centerline to be embedded.
+In `<lanelet-sequence>`, you can specify the lanelet_ids for the static centerline to be embedded like `100, 101, 102`.
 The input route must be continuous and a drivable path.
 
 > [!WARNING]

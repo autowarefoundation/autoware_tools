@@ -491,22 +491,34 @@ LaneletRoute StaticCenterlineGeneratorNode::plan_route_by_lane_ids(
   }();
 
   // plan route
-  const auto lanelet_sequence =
-    autoware::universe_utils::getOrDeclareParameter<std::vector<int64_t>>(
-      *this, "lanelet_sequence");
-  LaneletRoute route;
-  if (lanelet_sequence.front() == -1) {
-    route = plan_route(start_pose, end_pose);
+  const auto lanelet_sequence_str =
+    autoware::universe_utils::getOrDeclareParameter<std::string>(*this, "lanelet_sequence");
+  if (lanelet_sequence_str.empty()) {
+    return plan_route(start_pose, end_pose);
   } else {
-    // create route from lanelet_sequence
-    route.start_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.front());
-    route.goal_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.back());
-    for (const auto & id : lanelet_sequence) {
-      LaneletSegment segment;
-      segment.preferred_primitive.id = id;
-      segment.primitives.push_back(segment.preferred_primitive);
-      route.segments.push_back(segment);
-    }
+    return plan_route_from_lanelet_sequence(lanelet_sequence_str);
+  }
+}
+
+LaneletRoute StaticCenterlineGeneratorNode::plan_route_from_lanelet_sequence(
+  const std::string & lanelet_sequence_str) const
+{
+  std::vector<lanelet::Id> lanelet_sequence;
+  std::vector<std::string> tokens;
+  boost::split(tokens, lanelet_sequence_str, boost::is_any_of(","), boost::token_compress_on);
+  for (const auto & token : tokens) {
+    lanelet_sequence.push_back(std::stoll(token));
+  }
+
+  // create route from lanelet sequence
+  LaneletRoute route;
+  route.start_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.front());
+  route.goal_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.back());
+  for (const auto & id : lanelet_sequence) {
+    LaneletSegment segment;
+    segment.preferred_primitive.id = id;
+    segment.primitives.push_back(segment.preferred_primitive);
+    route.segments.push_back(segment);
   }
   return route;
 }

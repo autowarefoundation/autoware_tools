@@ -15,7 +15,7 @@
   <arg name="end_lanelet_id" default="0"/>
   <arg name="end_pose" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
   <arg name="goal_method" default="None"/>
-  <arg name="lanelet_sequence" default="[-1]"/>
+  <arg name="lanelet_sequence" default=""/>
 
   <!-- mandatory arguments when mode is GUI -->
   <arg name="bag_filename" default="bag.db3"/>
