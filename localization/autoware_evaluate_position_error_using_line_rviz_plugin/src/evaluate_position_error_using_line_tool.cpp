@@ -45,6 +45,7 @@
 #include "rviz_common/viewport_mouse_event.hpp"
 #include "rviz_rendering/objects/line.hpp"
 
+#include <QApplication>
 #include <QString>  // NOLINT: cpplint is unable to handle the include order here
 #include <autoware_lanelet2_extension/utility/message_conversion.hpp>
 #include <autoware_lanelet2_extension/utility/query.hpp>
@@ -58,16 +59,18 @@
 #include <OgreSceneNode.h>
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_core/primitives/Lanelet.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <cmath>
+#include <iomanip>
 #include <limits>
 #include <memory>
 #include <sstream>
 #include <vector>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <cerrno>
 
 namespace autoware
 {
@@ -509,10 +512,12 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
       std::cout << "x_error: " << x_error << "[m], y_error: " << "none"
                 << "[m], yaw_error: " << yaw / M_PI * 180.0 << "[deg]" << std::endl;
       writeToCsv(x_error, std::numeric_limits<double>::quiet_NaN(), yaw / M_PI * 180.0);
+      takeScreenshotAfterMeasurement();
     } else if (line_type == LINE_TYPE::LANE) {
       std::cout << "x_error: " << "none" << "[m], y_error: " << y_error
                 << "[m], yaw_error: " << yaw / M_PI * 180.0 << "[deg]" << std::endl;
       writeToCsv(std::numeric_limits<double>::quiet_NaN(), y_error, yaw / M_PI * 180.0);
+      takeScreenshotAfterMeasurement();
     } else if (line_type == LINE_TYPE::ERROR) {
       std::cout << "x_error: " << "none" << "[m], y_error: " << "none"
                 << "[m], yaw_error: " << "none" << "[deg]" << std::endl;
@@ -536,14 +541,14 @@ void EvaluatePositionErrorUsingLineTool::processRightButton()
 void EvaluatePositionErrorUsingLineTool::initCsvFile()
 {
   // Create output directory if it doesn't exist
-  const char* home_dir = std::getenv("HOME");
+  const char * home_dir = std::getenv("HOME");
   std::string output_dir;
   if (home_dir) {
     output_dir = std::string(home_dir) + "/evaluate_position_error_using_line_tool";
   } else {
     output_dir = "./evaluate_position_error_using_line_tool";
   }
-  
+
   // Create directory (recursive creation)
   if (mkdir(output_dir.c_str(), 0755) != 0 && errno != EEXIST) {
     std::cerr << "Failed to create directory: " << output_dir << std::endl;
@@ -560,12 +565,13 @@ void EvaluatePositionErrorUsingLineTool::initCsvFile()
   // Generate CSV filename with automatic numbering to avoid conflicts
   std::string base_filename = output_dir + "/position_error_evaluation_" + capture_timestamp_;
   csv_filename_ = base_filename + ".csv";
-  
+
   // If file exists, add sequential number
   int file_counter = 1;
   while (std::ifstream(csv_filename_).good()) {
     std::stringstream numbered_ss;
-    numbered_ss << base_filename << "_" << std::setfill('0') << std::setw(2) << file_counter << ".csv";
+    numbered_ss << base_filename << "_" << std::setfill('0') << std::setw(2) << file_counter
+                << ".csv";
     csv_filename_ = numbered_ss.str();
     file_counter++;
   }
@@ -589,6 +595,62 @@ void EvaluatePositionErrorUsingLineTool::writeToCsv(
               << y_error << "," << yaw_error << std::endl;
     csv_file_.flush();  // Ensure data is written immediately
     std::cout << "Measurement " << measurement_count_ << " written to CSV" << std::endl;
+  }
+}
+
+void EvaluatePositionErrorUsingLineTool::initScreenshotDirectory()
+{
+  // Create screenshot directory based on the same timestamp as CSV file
+  const char * home_dir = std::getenv("HOME");
+  std::string base_dir;
+  if (home_dir) {
+    base_dir = std::string(home_dir) + "/evaluate_position_error_using_line_tool";
+  } else {
+    base_dir = "./evaluate_position_error_using_line_tool";
+  }
+
+  screenshot_directory_ = base_dir + "/screenshots_" + capture_timestamp_;
+
+  // Create directory recursively
+  std::string cmd = "mkdir -p \"" + screenshot_directory_ + "\"";
+  int result = system(cmd.c_str());
+
+  if (result == 0) {
+    std::cout << "Screenshot directory created: " << screenshot_directory_ << std::endl;
+  } else {
+    std::cerr << "Failed to create screenshot directory: " << screenshot_directory_ << std::endl;
+    screenshot_directory_.clear();  // Clear if creation failed
+  }
+}
+
+void EvaluatePositionErrorUsingLineTool::takeScreenshotAfterMeasurement()
+{
+  if (screenshot_directory_.empty()) {
+    initScreenshotDirectory();
+  }
+
+  if (!screenshot_directory_.empty()) {
+    // Wait for rendering to complete
+    QApplication::processEvents();
+    usleep(200000);  // 200ms delay to ensure rendering is complete
+
+    // Take desktop screenshot using import command
+    std::ostringstream filename_ss;
+    filename_ss << "measurement_" << capture_timestamp_ << "_" << std::setfill('0') << std::setw(2)
+                << measurement_count_ << ".png";
+
+    std::string filepath = screenshot_directory_ + "/" + filename_ss.str();
+    std::string cmd = "import -window root \"" + filepath + "\" 2>/dev/null";
+
+    int result = system(cmd.c_str());
+
+    if (result == 0) {
+      std::cout << "Screenshot captured for measurement " << measurement_count_ << ": " << filepath
+                << std::endl;
+    } else {
+      std::cerr << "Failed to capture screenshot for measurement " << measurement_count_
+                << std::endl;
+    }
   }
 }
 
