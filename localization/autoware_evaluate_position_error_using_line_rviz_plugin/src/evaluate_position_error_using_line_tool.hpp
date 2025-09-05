@@ -38,28 +38,25 @@
 #ifndef EVALUATE_POSITION_ERROR_USING_LINE_TOOL_HPP_
 #define EVALUATE_POSITION_ERROR_USING_LINE_TOOL_HPP_
 
-#include <memory>
+#include "rviz_common/tool.hpp"
+#include "rviz_default_plugins/visibility_control.hpp"
 
 #include <QCursor>  // NOLINT cpplint cannot handle include order
-
-#include <OgreVector.h>
-
 #include <rclcpp/rclcpp.hpp>
-#include "rviz_common/tool.hpp"
-
-#include "rviz_default_plugins/visibility_control.hpp"
 #include <rviz_rendering/objects/billboard_line.hpp>
 
 #include <autoware_map_msgs/msg/lanelet_map_bin.hpp>
-#include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/pose.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 
+#include <OgreVector.h>
 #include <lanelet2_core/LaneletMap.h>
 
+#include <chrono>
 #include <fstream>
 #include <iomanip>
+#include <memory>
 #include <sstream>
-#include <chrono>
 
 namespace rviz_rendering
 {
@@ -72,7 +69,7 @@ namespace properties
 {
 class ColorProperty;
 }
-}
+}  // namespace rviz_common
 
 namespace autoware
 {
@@ -107,6 +104,8 @@ private:
   void processRightButton();
   void initCsvFile();
   void writeToCsv(double x_error, double y_error, double yaw_error);
+  void initScreenshotDirectory();
+  void takeScreenshotAfterMeasurement();
 
   rviz_common::properties::ColorProperty * color_property_;
 
@@ -133,6 +132,10 @@ private:
   std::ofstream csv_file_;
   std::string csv_filename_;
   int measurement_count_;
+
+  // Screenshot related
+  std::string screenshot_directory_;
+  std::string capture_timestamp_;
 
   QCursor std_cursor_;
   QCursor hit_cursor_;
