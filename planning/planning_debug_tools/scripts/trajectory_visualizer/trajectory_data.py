@@ -19,8 +19,8 @@ from autoware_planning_msgs.msg import TrajectoryPoint
 from nav_msgs.msg import Odometry
 import numpy as np
 from rclpy import time
-from shapely import LineString
-from shapely import Point
+from shapely.geometry import LineString
+from shapely.geometry import Point
 from tf_transformations import euler_from_quaternion
 
 
