@@ -42,6 +42,8 @@
 #include <cerrno>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
+#include <fstream>
 #include <iomanip>
 #include <limits>
 #include <memory>
@@ -55,7 +57,7 @@ namespace evaluate_position_error_using_line_rviz_plugin
 {
 
 EvaluatePositionErrorUsingLineTool::EvaluatePositionErrorUsingLineTool()
-: is_line_started_(false), length_(-1), measurement_count_(0)
+: is_line_started_(false), length_(-1), measurement_count_(0), has_last_measurement_(false)
 {
   shortcut_key_ = 'n';
 
@@ -146,6 +148,21 @@ int EvaluatePositionErrorUsingLineTool::processMouseEvent(rviz_common::ViewportM
   }
   if (event.rightUp()) {
     processRightButton();
+  }
+
+  return 0;
+}
+
+int EvaluatePositionErrorUsingLineTool::processKeyEvent(
+  QKeyEvent * event, rviz_common::RenderPanel * panel)
+{
+  (void)panel;  // Suppress unused parameter warning
+
+  if (event->type() == QEvent::KeyPress) {
+    if (event->key() == Qt::Key_Delete) {
+      undoLastMeasurement();
+      return Render;
+    }
   }
 
   return 0;
@@ -680,12 +697,88 @@ void EvaluatePositionErrorUsingLineTool::takeScreenshotAfterMeasurement()
     int result = system(cmd.c_str());
 
     if (result == 0) {
+      last_screenshot_path_ = filepath;  // Save path for undo functionality
+      has_last_measurement_ = true;
       std::cout << "Screenshot captured for measurement " << measurement_count_ << ": " << filepath
                 << std::endl;
     } else {
       std::cerr << "Failed to capture screenshot for measurement " << measurement_count_
                 << std::endl;
     }
+  }
+}
+
+void EvaluatePositionErrorUsingLineTool::undoLastMeasurement()
+{
+  if (!has_last_measurement_) {
+    std::cout << "No measurement to undo." << std::endl;
+    return;
+  }
+
+  if (measurement_count_ > 0) {
+    // Remove last line from CSV files
+    if (csv_file_.is_open()) {
+      csv_file_.close();
+
+      // Read all lines except the last one from CSV
+      std::vector<std::string> lines;
+      std::ifstream temp_csv(csv_filename_);
+      std::string line;
+      while (std::getline(temp_csv, line)) {
+        lines.push_back(line);
+      }
+      temp_csv.close();
+
+      // Rewrite CSV file without the last measurement
+      if (lines.size() > 1) {  // Header + at least one data line
+        lines.pop_back();      // Remove last measurement line
+
+        csv_file_.open(csv_filename_);
+        for (const auto & csv_line : lines) {
+          csv_file_ << csv_line << std::endl;
+        }
+        csv_file_.flush();
+      }
+    }
+
+    // Remove last line from trajectory CSV
+    if (trajectory_file_.is_open()) {
+      trajectory_file_.close();
+
+      std::vector<std::string> traj_lines;
+      std::ifstream temp_traj(trajectory_filename_);
+      std::string line;
+      while (std::getline(temp_traj, line)) {
+        traj_lines.push_back(line);
+      }
+      temp_traj.close();
+
+      if (traj_lines.size() > 1) {  // Header + at least one data line
+        traj_lines.pop_back();      // Remove last trajectory line
+
+        trajectory_file_.open(trajectory_filename_);
+        for (const auto & traj_line : traj_lines) {
+          trajectory_file_ << traj_line << std::endl;
+        }
+        trajectory_file_.flush();
+      }
+    }
+
+    // Delete screenshot file
+    if (!last_screenshot_path_.empty()) {
+      if (std::remove(last_screenshot_path_.c_str()) == 0) {
+        std::cout << "Screenshot deleted: " << last_screenshot_path_ << std::endl;
+      } else {
+        std::cerr << "Failed to delete screenshot: " << last_screenshot_path_ << std::endl;
+      }
+      last_screenshot_path_.clear();
+    }
+
+    // Decrement measurement count
+    measurement_count_--;
+    has_last_measurement_ = false;
+
+    std::cout << "Last measurement undone. Current count: " << measurement_count_ << std::endl;
   }
 }
 

@@ -19,6 +19,7 @@
 #include "rviz_default_plugins/visibility_control.hpp"
 
 #include <QCursor>  // NOLINT cpplint cannot handle include order
+#include <QKeyEvent>
 #include <rclcpp/rclcpp.hpp>
 #include <rviz_rendering/objects/billboard_line.hpp>
 
@@ -72,6 +73,8 @@ public:
 
   int processMouseEvent(rviz_common::ViewportMouseEvent & event) override;
 
+  int processKeyEvent(QKeyEvent * event, rviz_common::RenderPanel * panel) override;
+
 public Q_SLOTS:
   void updateLineColor();
 
@@ -79,6 +82,7 @@ private:
   void setStatusMessage();
   void processLeftButton(const Ogre::Vector3 & pos);
   void processRightButton();
+  void undoLastMeasurement();
   void initCsvFile();
   void writeToCsv(double x_error, double y_error, double yaw_error);
   void initTrajectoryFile();
@@ -130,6 +134,10 @@ private:
   // Screenshot related
   std::string screenshot_directory_;
   std::string capture_timestamp_;
+
+  // Undo functionality
+  bool has_last_measurement_;
+  std::string last_screenshot_path_;
 
   QCursor std_cursor_;
   QCursor hit_cursor_;
