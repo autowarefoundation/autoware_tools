@@ -28,6 +28,7 @@
 
 #include <OgreVector.h>
 #include <lanelet2_core/LaneletMap.h>
+#include <sys/stat.h>
 
 #include <chrono>
 #include <fstream>
@@ -83,6 +84,17 @@ private:
   void writeToCsv(double x_error, double y_error, double yaw_error);
   void initScreenshotDirectory();
   void takeScreenshotAfterMeasurement();
+
+  // Constants
+  static constexpr double LINE_WIDTH_MAIN = 0.3;
+  static constexpr double LINE_WIDTH_LANE = 0.15;
+  static constexpr double RADIANS_TO_DEGREES = 180.0 / M_PI;
+  static constexpr double DEGREES_TO_RADIANS = M_PI / 180.0;
+  static constexpr double ANGLE_THRESHOLD_DEGREES = 5.0;
+  static constexpr double SEARCH_RADIUS_METERS = 1.5;
+  static constexpr int SCREENSHOT_DELAY_MICROSECONDS = 200000;  // 200ms
+  static constexpr mode_t DIRECTORY_PERMISSIONS = 0755;
+  static constexpr int FILENAME_SEQUENCE_WIDTH = 2;
 
   rviz_common::properties::ColorProperty * color_property_;
 

@@ -154,10 +154,10 @@ void EvaluatePositionErrorUsingLineTool::updateLineColor()
   color_ = Ogre::ColourValue(0, 1, 0, 1);
   color_lane_ = Ogre::ColourValue(0, 0, 1, 1);
 
-  line_->setLineWidth(0.3);
+  line_->setLineWidth(LINE_WIDTH_MAIN);
 
   // line_lane_->setColor(1,0,0,1);
-  line_lane_->setLineWidth(0.15);
+  line_lane_->setLineWidth(LINE_WIDTH_LANE);
 }
 
 void EvaluatePositionErrorUsingLineTool::setStatusMessage()
@@ -190,9 +190,8 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
     const double norm_dx = line_dx / line_length;
     const double norm_dy = line_dy / line_length;
 
-    // Extract Lanelets within 1.5m of the line segment
+    // Extract Lanelets within search radius of the line segment
     lanelet::ConstLanelets nearby_lanes;
-    const double search_radius = 1.5;  // 1.5m
 
     for (const auto & lanelet : lanelet_map_ptr_->laneletLayer) {
       const std::string type = lanelet.attributeOr(lanelet::AttributeName::Type, "none");
@@ -214,7 +213,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
             if (projection >= 0 && projection <= line_length) {  // Within the line segment
               // Perpendicular distance from the line segment
               const double distance = std::abs(px * norm_dy - py * norm_dx);
-              if (distance <= search_radius) {
+              if (distance <= SEARCH_RADIUS_METERS) {
                 is_nearby = true;
                 break;
               }
@@ -225,7 +224,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
               const double end_py = point.y() - end_.y;
               double distance_to_end = std::sqrt(end_px * end_px + end_py * end_py);
               double min_distance = std::min(distance_to_start, distance_to_end);
-              if (min_distance <= search_radius) {
+              if (min_distance <= SEARCH_RADIUS_METERS) {
                 is_nearby = true;
                 break;
               }
@@ -247,7 +246,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
       // Process left and right boundaries
       for (const auto & bound : {lanelet.leftBound(), lanelet.rightBound()}) {
         // Check if all segments in the boundary have similar slopes
-        // Only check segments that are within search_radius of the line segment
+        // Only check segments that are within SEARCH_RADIUS_METERS of the line segment
         bool all_segments_valid = true;
 
         for (size_t i = 1; i < bound.size() && all_segments_valid; ++i) {
@@ -256,7 +255,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
           const double seg_length = std::sqrt(seg_dx * seg_dx + seg_dy * seg_dy);
 
           if (seg_length > 1e-6) {  // Valid segment
-            // Check if this segment is within search_radius of the line segment
+            // Check if this segment is within SEARCH_RADIUS_METERS of the line segment
             bool segment_in_range = false;
 
             // Check both endpoints of the segment
@@ -270,7 +269,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
               if (projection >= 0 && projection <= line_length) {  // Within the line segment
                 // Perpendicular distance from the line segment
                 const double distance = std::abs(px * norm_dy - py * norm_dx);
-                if (distance <= search_radius) {
+                if (distance <= SEARCH_RADIUS_METERS) {
                   segment_in_range = true;
                   break;
                 }
@@ -281,7 +280,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
                 const double end_py = point.y() - end_.y;
                 double distance_to_end = std::sqrt(end_px * end_px + end_py * end_py);
                 double min_distance = std::min(distance_to_start, distance_to_end);
-                if (min_distance <= search_radius) {
+                if (min_distance <= SEARCH_RADIUS_METERS) {
                   segment_in_range = true;
                   break;
                 }
@@ -300,7 +299,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
               }
 
               // If any segment has large angle difference, reject this boundary
-              if (angle_diff > M_PI / 36) {  // 5 degrees
+              if (angle_diff > ANGLE_THRESHOLD_DEGREES * DEGREES_TO_RADIANS) {  // 5 degrees
                 all_segments_valid = false;
               }
             }
@@ -320,7 +319,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
             if (projection >= 0 && projection <= line_length) {  // Within the line segment
               // Perpendicular distance from the line segment
               const double distance = std::abs(px * norm_dy - py * norm_dx);
-              if (distance <= search_radius) {
+              if (distance <= SEARCH_RADIUS_METERS) {
                 candidate_points.push_back(lanelet::BasicPoint2d(point.x(), point.y()));
               }
             } else {
@@ -330,7 +329,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
               const double end_py = point.y() - end_.y;
               double distance_to_end = std::sqrt(end_px * end_px + end_py * end_py);
               double min_distance = std::min(distance_to_start, distance_to_end);
-              if (min_distance <= search_radius) {
+              if (min_distance <= SEARCH_RADIUS_METERS) {
                 candidate_points.push_back(lanelet::BasicPoint2d(point.x(), point.y()));
               }
             }
@@ -487,13 +486,13 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
 
     if (line_type == LINE_TYPE::STOP_LINE) {
       std::cout << "x_error: " << x_error << "[m], y_error: " << "none"
-                << "[m], yaw_error: " << yaw / M_PI * 180.0 << "[deg]" << std::endl;
-      writeToCsv(x_error, std::numeric_limits<double>::quiet_NaN(), yaw / M_PI * 180.0);
+                << "[m], yaw_error: " << yaw * RADIANS_TO_DEGREES << "[deg]" << std::endl;
+      writeToCsv(x_error, std::numeric_limits<double>::quiet_NaN(), yaw * RADIANS_TO_DEGREES);
       takeScreenshotAfterMeasurement();
     } else if (line_type == LINE_TYPE::LANE) {
       std::cout << "x_error: " << "none" << "[m], y_error: " << y_error
-                << "[m], yaw_error: " << yaw / M_PI * 180.0 << "[deg]" << std::endl;
-      writeToCsv(std::numeric_limits<double>::quiet_NaN(), y_error, yaw / M_PI * 180.0);
+                << "[m], yaw_error: " << yaw * RADIANS_TO_DEGREES << "[deg]" << std::endl;
+      writeToCsv(std::numeric_limits<double>::quiet_NaN(), y_error, yaw * RADIANS_TO_DEGREES);
       takeScreenshotAfterMeasurement();
     } else if (line_type == LINE_TYPE::ERROR) {
       std::cout << "x_error: " << "none" << "[m], y_error: " << "none"
@@ -527,7 +526,7 @@ void EvaluatePositionErrorUsingLineTool::initCsvFile()
   }
 
   // Create directory (recursive creation)
-  if (mkdir(output_dir.c_str(), 0755) != 0 && errno != EEXIST) {
+  if (mkdir(output_dir.c_str(), DIRECTORY_PERMISSIONS) != 0 && errno != EEXIST) {
     std::cerr << "Failed to create directory: " << output_dir << std::endl;
   }
 
@@ -547,8 +546,8 @@ void EvaluatePositionErrorUsingLineTool::initCsvFile()
   int file_counter = 1;
   while (std::ifstream(csv_filename_).good()) {
     std::stringstream numbered_ss;
-    numbered_ss << base_filename << "_" << std::setfill('0') << std::setw(2) << file_counter
-                << ".csv";
+    numbered_ss << base_filename << "_" << std::setfill('0') << std::setw(FILENAME_SEQUENCE_WIDTH)
+                << file_counter << ".csv";
     csv_filename_ = numbered_ss.str();
     file_counter++;
   }
@@ -609,12 +608,12 @@ void EvaluatePositionErrorUsingLineTool::takeScreenshotAfterMeasurement()
   if (!screenshot_directory_.empty()) {
     // Wait for rendering to complete
     QApplication::processEvents();
-    usleep(200000);  // 200ms delay to ensure rendering is complete
+    usleep(SCREENSHOT_DELAY_MICROSECONDS);  // 200ms delay to ensure rendering is complete
 
     // Take desktop screenshot using import command
     std::ostringstream filename_ss;
-    filename_ss << "measurement_" << capture_timestamp_ << "_" << std::setfill('0') << std::setw(2)
-                << measurement_count_ << ".png";
+    filename_ss << "measurement_" << capture_timestamp_ << "_" << std::setfill('0')
+                << std::setw(FILENAME_SEQUENCE_WIDTH) << measurement_count_ << ".png";
 
     std::string filepath = screenshot_directory_ + "/" + filename_ss.str();
     std::string cmd = "import -window root \"" + filepath + "\" 2>/dev/null";
