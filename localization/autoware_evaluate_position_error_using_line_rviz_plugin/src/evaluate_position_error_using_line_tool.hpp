@@ -30,7 +30,6 @@
 #include <lanelet2_core/LaneletMap.h>
 #include <sys/stat.h>
 
-#include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <memory>
