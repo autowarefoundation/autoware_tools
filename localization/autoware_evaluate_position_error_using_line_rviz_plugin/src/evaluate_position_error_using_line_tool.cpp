@@ -30,18 +30,14 @@
 #include <autoware_utils/geometry/alt_geometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <OgreBillboardSet.h>
-#include <OgreManualObject.h>
 #include <OgreSceneManager.h>
-#include <OgreSceneNode.h>
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_core/primitives/Lanelet.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
-#include <algorithm>
 #include <cerrno>
+#include <chrono>
 #include <cmath>
 #include <iomanip>
 #include <limits>
