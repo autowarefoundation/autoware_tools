@@ -30,10 +30,13 @@
 #include <autoware_utils/geometry/alt_geometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
+
 #include <OgreSceneManager.h>
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_core/primitives/Lanelet.h>
 #include <sys/stat.h>
+#include <tf2/utils.h>
 #include <unistd.h>
 
 #include <cerrno>
@@ -61,6 +64,7 @@ EvaluatePositionErrorUsingLineTool::EvaluatePositionErrorUsingLineTool()
     SLOT(updateLineColor()), this);
 
   initCsvFile();
+  initTrajectoryFile();
 }
 
 EvaluatePositionErrorUsingLineTool::~EvaluatePositionErrorUsingLineTool()
@@ -68,6 +72,10 @@ EvaluatePositionErrorUsingLineTool::~EvaluatePositionErrorUsingLineTool()
   if (csv_file_.is_open()) {
     csv_file_.close();
     std::cout << "CSV file closed: " << csv_filename_ << std::endl;
+  }
+  if (trajectory_file_.is_open()) {
+    trajectory_file_.close();
+    std::cout << "Trajectory CSV file closed: " << trajectory_filename_ << std::endl;
   }
 }
 
@@ -484,11 +492,21 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
       std::cout << "x_error: " << x_error << "[m], y_error: " << "none"
                 << "[m], yaw_error: " << yaw * RADIANS_TO_DEGREES << "[deg]" << std::endl;
       writeToCsv(x_error, std::numeric_limits<double>::quiet_NaN(), yaw * RADIANS_TO_DEGREES);
+
+      // Write trajectory data
+      double vehicle_yaw = tf2::getYaw(self_pose_.orientation);
+      writeTrajectoryToCsv(self_pose_.position.x, self_pose_.position.y, 0.0, vehicle_yaw);
+
       takeScreenshotAfterMeasurement();
     } else if (line_type == LINE_TYPE::LANE) {
       std::cout << "x_error: " << "none" << "[m], y_error: " << y_error
                 << "[m], yaw_error: " << yaw * RADIANS_TO_DEGREES << "[deg]" << std::endl;
       writeToCsv(std::numeric_limits<double>::quiet_NaN(), y_error, yaw * RADIANS_TO_DEGREES);
+
+      // Write trajectory data
+      double vehicle_yaw = tf2::getYaw(self_pose_.orientation);
+      writeTrajectoryToCsv(self_pose_.position.x, self_pose_.position.y, 0.0, vehicle_yaw);
+
       takeScreenshotAfterMeasurement();
     } else if (line_type == LINE_TYPE::ERROR) {
       std::cout << "x_error: " << "none" << "[m], y_error: " << "none"
@@ -567,6 +585,51 @@ void EvaluatePositionErrorUsingLineTool::writeToCsv(
               << y_error << "," << yaw_error << std::endl;
     csv_file_.flush();  // Ensure data is written immediately
     std::cout << "Measurement " << measurement_count_ << " written to CSV" << std::endl;
+  }
+}
+
+void EvaluatePositionErrorUsingLineTool::initTrajectoryFile()
+{
+  // Create output directory if it doesn't exist (same as CSV)
+  const char * home_dir = std::getenv("HOME");
+  std::string output_dir;
+  if (home_dir) {
+    output_dir = std::string(home_dir) + "/evaluate_position_error_using_line_tool";
+  } else {
+    output_dir = "./evaluate_position_error_using_line_tool";
+  }
+
+  // Generate trajectory filename with timestamp
+  std::string base_filename = output_dir + "/trajectory" + capture_timestamp_;
+  trajectory_filename_ = base_filename + ".csv";
+
+  // If file exists, add sequential number
+  int file_counter = 1;
+  while (std::ifstream(trajectory_filename_).good()) {
+    std::stringstream numbered_ss;
+    numbered_ss << base_filename << "_" << std::setfill('0') << std::setw(FILENAME_SEQUENCE_WIDTH)
+                << file_counter << ".csv";
+    trajectory_filename_ = numbered_ss.str();
+    file_counter++;
+  }
+
+  // Open trajectory CSV file and write header
+  trajectory_file_.open(trajectory_filename_);
+  if (trajectory_file_.is_open()) {
+    trajectory_file_ << "x,y,z,yaw" << std::endl;
+    std::cout << "Trajectory CSV output file created: " << trajectory_filename_ << std::endl;
+  } else {
+    std::cerr << "Failed to create trajectory CSV file: " << trajectory_filename_ << std::endl;
+  }
+}
+
+void EvaluatePositionErrorUsingLineTool::writeTrajectoryToCsv(
+  double x, double y, double z, double yaw)
+{
+  if (trajectory_file_.is_open()) {
+    trajectory_file_ << std::fixed << std::setprecision(6) << x << "," << y << "," << z << ","
+                     << yaw << std::endl;
+    trajectory_file_.flush();  // Ensure data is written immediately
   }
 }
 

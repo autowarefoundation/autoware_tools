@@ -81,6 +81,8 @@ private:
   void processRightButton();
   void initCsvFile();
   void writeToCsv(double x_error, double y_error, double yaw_error);
+  void initTrajectoryFile();
+  void writeTrajectoryToCsv(double x, double y, double z, double yaw);
   void initScreenshotDirectory();
   void takeScreenshotAfterMeasurement();
 
@@ -120,6 +122,10 @@ private:
   std::ofstream csv_file_;
   std::string csv_filename_;
   int measurement_count_;
+
+  // Trajectory CSV output related
+  std::ofstream trajectory_file_;
+  std::string trajectory_filename_;
 
   // Screenshot related
   std::string screenshot_directory_;
