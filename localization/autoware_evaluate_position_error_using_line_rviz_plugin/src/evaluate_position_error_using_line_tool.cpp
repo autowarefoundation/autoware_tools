@@ -154,10 +154,10 @@ void EvaluatePositionErrorUsingLineTool::updateLineColor()
   color_ = Ogre::ColourValue(0, 1, 0, 1);
   color_lane_ = Ogre::ColourValue(0, 0, 1, 1);
 
-  line_->setLineWidth(0.3);
+  line_->setLineWidth(LINE_WIDTH_MAIN);
 
   // line_lane_->setColor(1,0,0,1);
-  line_lane_->setLineWidth(0.15);
+  line_lane_->setLineWidth(LINE_WIDTH_LANE);
 }
 
 void EvaluatePositionErrorUsingLineTool::setStatusMessage()
@@ -300,7 +300,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
               }
 
               // If any segment has large angle difference, reject this boundary
-              if (angle_diff > M_PI / 36) {  // 5 degrees
+              if (angle_diff > ANGLE_THRESHOLD_DEGREES * DEGREES_TO_RADIANS) {  // 5 degrees
                 all_segments_valid = false;
               }
             }
@@ -487,13 +487,13 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
 
     if (line_type == LINE_TYPE::STOP_LINE) {
       std::cout << "x_error: " << x_error << "[m], y_error: " << "none"
-                << "[m], yaw_error: " << yaw / M_PI * 180.0 << "[deg]" << std::endl;
-      writeToCsv(x_error, std::numeric_limits<double>::quiet_NaN(), yaw / M_PI * 180.0);
+                << "[m], yaw_error: " << yaw * RADIANS_TO_DEGREES << "[deg]" << std::endl;
+      writeToCsv(x_error, std::numeric_limits<double>::quiet_NaN(), yaw * RADIANS_TO_DEGREES);
       takeScreenshotAfterMeasurement();
     } else if (line_type == LINE_TYPE::LANE) {
       std::cout << "x_error: " << "none" << "[m], y_error: " << y_error
-                << "[m], yaw_error: " << yaw / M_PI * 180.0 << "[deg]" << std::endl;
-      writeToCsv(std::numeric_limits<double>::quiet_NaN(), y_error, yaw / M_PI * 180.0);
+                << "[m], yaw_error: " << yaw * RADIANS_TO_DEGREES << "[deg]" << std::endl;
+      writeToCsv(std::numeric_limits<double>::quiet_NaN(), y_error, yaw * RADIANS_TO_DEGREES);
       takeScreenshotAfterMeasurement();
     } else if (line_type == LINE_TYPE::ERROR) {
       std::cout << "x_error: " << "none" << "[m], y_error: " << "none"
@@ -527,7 +527,7 @@ void EvaluatePositionErrorUsingLineTool::initCsvFile()
   }
 
   // Create directory (recursive creation)
-  if (mkdir(output_dir.c_str(), 0755) != 0 && errno != EEXIST) {
+  if (mkdir(output_dir.c_str(), DIRECTORY_PERMISSIONS) != 0 && errno != EEXIST) {
     std::cerr << "Failed to create directory: " << output_dir << std::endl;
   }
 
@@ -547,8 +547,8 @@ void EvaluatePositionErrorUsingLineTool::initCsvFile()
   int file_counter = 1;
   while (std::ifstream(csv_filename_).good()) {
     std::stringstream numbered_ss;
-    numbered_ss << base_filename << "_" << std::setfill('0') << std::setw(2) << file_counter
-                << ".csv";
+    numbered_ss << base_filename << "_" << std::setfill('0') << std::setw(FILENAME_SEQUENCE_WIDTH)
+                << file_counter << ".csv";
     csv_filename_ = numbered_ss.str();
     file_counter++;
   }
@@ -609,12 +609,12 @@ void EvaluatePositionErrorUsingLineTool::takeScreenshotAfterMeasurement()
   if (!screenshot_directory_.empty()) {
     // Wait for rendering to complete
     QApplication::processEvents();
-    usleep(200000);  // 200ms delay to ensure rendering is complete
+    usleep(SCREENSHOT_DELAY_MICROSECONDS);  // 200ms delay to ensure rendering is complete
 
     // Take desktop screenshot using import command
     std::ostringstream filename_ss;
-    filename_ss << "measurement_" << capture_timestamp_ << "_" << std::setfill('0') << std::setw(2)
-                << measurement_count_ << ".png";
+    filename_ss << "measurement_" << capture_timestamp_ << "_" << std::setfill('0')
+                << std::setw(FILENAME_SEQUENCE_WIDTH) << measurement_count_ << ".png";
 
     std::string filepath = screenshot_directory_ + "/" + filename_ss.str();
     std::string cmd = "import -window root \"" + filepath + "\" 2>/dev/null";
