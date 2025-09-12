@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EVALUATE_POSITION_ERROR_USING_LINE_TOOL_HPP_
-#define EVALUATE_POSITION_ERROR_USING_LINE_TOOL_HPP_
+#ifndef POSITION_ERROR_EVALUATOR_TOOL_HPP_
+#define POSITION_ERROR_EVALUATOR_TOOL_HPP_
 
 #include "rviz_common/tool.hpp"
 #include "rviz_default_plugins/visibility_control.hpp"
@@ -51,16 +51,16 @@ class ColorProperty;
 
 namespace autoware
 {
-namespace evaluate_position_error_using_line_rviz_plugin
+namespace position_error_evaluator
 {
 
-class RVIZ_DEFAULT_PLUGINS_PUBLIC EvaluatePositionErrorUsingLineTool : public rviz_common::Tool
+class RVIZ_DEFAULT_PLUGINS_PUBLIC PositionErrorEvaluatorTool : public rviz_common::Tool
 {
   Q_OBJECT
 
 public:
-  EvaluatePositionErrorUsingLineTool();
-  ~EvaluatePositionErrorUsingLineTool();
+  PositionErrorEvaluatorTool();
+  ~PositionErrorEvaluatorTool();
 
   void onInitialize() override;
 
@@ -143,7 +143,7 @@ private:
   QCursor hit_cursor_;
 };
 
-}  // namespace evaluate_position_error_using_line_rviz_plugin
+}  // namespace position_error_evaluator
 }  // namespace autoware
 
-#endif  // EVALUATE_POSITION_ERROR_USING_LINE_TOOL_HPP_
+#endif  // POSITION_ERROR_EVALUATOR_TOOL_HPP_

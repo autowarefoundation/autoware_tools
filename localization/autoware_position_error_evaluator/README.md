@@ -40,7 +40,7 @@ Adding the usual Autoware installation and build instructions, please do vcs imp
 vcs import < tools.repos
 source /opt/ros/humble/setup.bash
 rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
-colcon build --packages-select autoware_evaluate_position_error_using_line_rviz_plugin
+colcon build --packages-select autoware_position_error_evaluator
 ```
 
 ## Usage

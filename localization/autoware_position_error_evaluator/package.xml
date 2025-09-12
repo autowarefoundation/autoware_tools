@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>autoware_evaluate_position_error_using_line_rviz_plugin</name>
+  <name>autoware_position_error_evaluator</name>
   <version>0.1.0</version>
-  <description>The autoware_evaluate_position_error_using_line_rviz_plugin package</description>
+  <description>The autoware_position_error_evaluator package</description>
   <maintainer email="yamato.ando@tier4.jp">Yamato Ando</maintainer>
   <license>Apache License 2.0</license>
   <author email="yamato.ando@tier4.jp">Yamato Ando</author>

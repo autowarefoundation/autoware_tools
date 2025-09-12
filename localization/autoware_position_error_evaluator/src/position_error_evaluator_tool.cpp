@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "evaluate_position_error_using_line_tool.hpp"
+#include "position_error_evaluator_tool.hpp"
 
 #include "rviz_common/display_context.hpp"
 #include "rviz_common/interaction/view_picker_iface.hpp"
@@ -53,10 +53,10 @@
 namespace autoware
 {
 
-namespace evaluate_position_error_using_line_rviz_plugin
+namespace position_error_evaluator
 {
 
-EvaluatePositionErrorUsingLineTool::EvaluatePositionErrorUsingLineTool()
+PositionErrorEvaluatorTool::PositionErrorEvaluatorTool()
 : is_line_started_(false), length_(-1), measurement_count_(0), has_last_measurement_(false)
 {
   shortcut_key_ = 'n';
@@ -69,7 +69,7 @@ EvaluatePositionErrorUsingLineTool::EvaluatePositionErrorUsingLineTool()
   initTrajectoryFile();
 }
 
-EvaluatePositionErrorUsingLineTool::~EvaluatePositionErrorUsingLineTool()
+PositionErrorEvaluatorTool::~PositionErrorEvaluatorTool()
 {
   if (csv_file_.is_open()) {
     csv_file_.close();
@@ -81,7 +81,7 @@ EvaluatePositionErrorUsingLineTool::~EvaluatePositionErrorUsingLineTool()
   }
 }
 
-void EvaluatePositionErrorUsingLineTool::onInitialize()
+void PositionErrorEvaluatorTool::onInitialize()
 {
   line_ = std::make_shared<rviz_rendering::BillboardLine>(context_->getSceneManager());
   line_lane_ = std::make_shared<rviz_rendering::BillboardLine>(context_->getSceneManager());
@@ -93,36 +93,36 @@ void EvaluatePositionErrorUsingLineTool::onInitialize()
   rclcpp::Node::SharedPtr raw_node = context_->getRosNodeAbstraction().lock()->get_raw_node();
   sub_map_ = raw_node->create_subscription<autoware_map_msgs::msg::LaneletMapBin>(
     "/map/vector_map", rclcpp::QoS{1}.transient_local(),
-    std::bind(&EvaluatePositionErrorUsingLineTool::onMap, this, std::placeholders::_1));
+    std::bind(&PositionErrorEvaluatorTool::onMap, this, std::placeholders::_1));
 
   sub_self_pose_ = raw_node->create_subscription<nav_msgs::msg::Odometry>(
     "/localization/kinematic_state", rclcpp::QoS{1},
-    std::bind(&EvaluatePositionErrorUsingLineTool::onSelfPose, this, std::placeholders::_1));
+    std::bind(&PositionErrorEvaluatorTool::onSelfPose, this, std::placeholders::_1));
 }
 
-void EvaluatePositionErrorUsingLineTool::onMap(
+void PositionErrorEvaluatorTool::onMap(
   const autoware_map_msgs::msg::LaneletMapBin::ConstSharedPtr & msg_ptr)
 {
   lanelet_map_ptr_ = std::make_shared<lanelet::LaneletMap>();
   lanelet::utils::conversion::fromBinMsg(*msg_ptr, lanelet_map_ptr_);
 }
 
-void EvaluatePositionErrorUsingLineTool::onSelfPose(
+void PositionErrorEvaluatorTool::onSelfPose(
   const nav_msgs::msg::Odometry::ConstSharedPtr & msg_ptr)
 {
   self_pose_ = msg_ptr->pose.pose;
 }
 
-void EvaluatePositionErrorUsingLineTool::activate()
+void PositionErrorEvaluatorTool::activate()
 {
   is_line_started_ = false;
 }
 
-void EvaluatePositionErrorUsingLineTool::deactivate()
+void PositionErrorEvaluatorTool::deactivate()
 {
 }
 
-int EvaluatePositionErrorUsingLineTool::processMouseEvent(rviz_common::ViewportMouseEvent & event)
+int PositionErrorEvaluatorTool::processMouseEvent(rviz_common::ViewportMouseEvent & event)
 {
   if (lanelet_map_ptr_ == nullptr) {
     std::cerr << "null" << std::endl;
@@ -153,7 +153,7 @@ int EvaluatePositionErrorUsingLineTool::processMouseEvent(rviz_common::ViewportM
   return 0;
 }
 
-int EvaluatePositionErrorUsingLineTool::processKeyEvent(
+int PositionErrorEvaluatorTool::processKeyEvent(
   QKeyEvent * event, rviz_common::RenderPanel * panel)
 {
   (void)panel;  // Suppress unused parameter warning
@@ -168,7 +168,7 @@ int EvaluatePositionErrorUsingLineTool::processKeyEvent(
   return 0;
 }
 
-void EvaluatePositionErrorUsingLineTool::updateLineColor()
+void PositionErrorEvaluatorTool::updateLineColor()
 {
   color_ = rviz_common::properties::qtToOgre(color_property_->getColor());
   // line_->setColor(color);
@@ -181,7 +181,7 @@ void EvaluatePositionErrorUsingLineTool::updateLineColor()
   line_lane_->setLineWidth(LINE_WIDTH_LANE);
 }
 
-void EvaluatePositionErrorUsingLineTool::setStatusMessage()
+void PositionErrorEvaluatorTool::setStatusMessage()
 {
   std::stringstream ss;
   if (length_ > 0.0) {
@@ -192,7 +192,7 @@ void EvaluatePositionErrorUsingLineTool::setStatusMessage()
   setStatus(QString(ss.str().c_str()));
 }
 
-void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 & pos)
+void PositionErrorEvaluatorTool::processLeftButton(const Ogre::Vector3 & pos)
 {
   if (is_line_started_) {
     end_ = pos;
@@ -537,7 +537,7 @@ void EvaluatePositionErrorUsingLineTool::processLeftButton(const Ogre::Vector3 &
   }
 }
 
-void EvaluatePositionErrorUsingLineTool::processRightButton()
+void PositionErrorEvaluatorTool::processRightButton()
 {
   is_line_started_ = false;
   // line_->setVisible(false);
@@ -545,7 +545,7 @@ void EvaluatePositionErrorUsingLineTool::processRightButton()
   line_lane_->clear();
 }
 
-void EvaluatePositionErrorUsingLineTool::initCsvFile()
+void PositionErrorEvaluatorTool::initCsvFile()
 {
   // Create output directory if it doesn't exist
   const char * home_dir = std::getenv("HOME");
@@ -593,7 +593,7 @@ void EvaluatePositionErrorUsingLineTool::initCsvFile()
   }
 }
 
-void EvaluatePositionErrorUsingLineTool::writeToCsv(
+void PositionErrorEvaluatorTool::writeToCsv(
   double x_error, double y_error, double yaw_error)
 {
   if (csv_file_.is_open()) {
@@ -605,7 +605,7 @@ void EvaluatePositionErrorUsingLineTool::writeToCsv(
   }
 }
 
-void EvaluatePositionErrorUsingLineTool::initTrajectoryFile()
+void PositionErrorEvaluatorTool::initTrajectoryFile()
 {
   // Create output directory if it doesn't exist (same as CSV)
   const char * home_dir = std::getenv("HOME");
@@ -640,7 +640,7 @@ void EvaluatePositionErrorUsingLineTool::initTrajectoryFile()
   }
 }
 
-void EvaluatePositionErrorUsingLineTool::writeTrajectoryToCsv(
+void PositionErrorEvaluatorTool::writeTrajectoryToCsv(
   double x, double y, double z, double yaw)
 {
   if (trajectory_file_.is_open()) {
@@ -650,7 +650,7 @@ void EvaluatePositionErrorUsingLineTool::writeTrajectoryToCsv(
   }
 }
 
-void EvaluatePositionErrorUsingLineTool::initScreenshotDirectory()
+void PositionErrorEvaluatorTool::initScreenshotDirectory()
 {
   // Create screenshot directory based on the same timestamp as CSV file
   const char * home_dir = std::getenv("HOME");
@@ -675,7 +675,7 @@ void EvaluatePositionErrorUsingLineTool::initScreenshotDirectory()
   }
 }
 
-void EvaluatePositionErrorUsingLineTool::takeScreenshotAfterMeasurement()
+void PositionErrorEvaluatorTool::takeScreenshotAfterMeasurement()
 {
   if (screenshot_directory_.empty()) {
     initScreenshotDirectory();
@@ -708,7 +708,7 @@ void EvaluatePositionErrorUsingLineTool::takeScreenshotAfterMeasurement()
   }
 }
 
-void EvaluatePositionErrorUsingLineTool::undoLastMeasurement()
+void PositionErrorEvaluatorTool::undoLastMeasurement()
 {
   if (!has_last_measurement_) {
     std::cout << "No measurement to undo." << std::endl;
@@ -782,10 +782,10 @@ void EvaluatePositionErrorUsingLineTool::undoLastMeasurement()
   }
 }
 
-}  // namespace evaluate_position_error_using_line_rviz_plugin
+}  // namespace position_error_evaluator
 }  // namespace autoware
 
 #include <pluginlib/class_list_macros.hpp>  // NOLINT
 PLUGINLIB_EXPORT_CLASS(
-  autoware::evaluate_position_error_using_line_rviz_plugin::EvaluatePositionErrorUsingLineTool,
+  autoware::position_error_evaluator::PositionErrorEvaluatorTool,
   rviz_common::Tool)
