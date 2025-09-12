@@ -16,6 +16,7 @@ This RViz plugin tool evaluates vehicle position error by measuring deviations f
 - **Lanelet2 Integration**: Uses HD map data for accurate reference line detection
 
 ## Prerequisites
+
 - RViz2 and rviz_common
 - Lanelet2 libraries
 - Autoware map messages
@@ -27,13 +28,13 @@ This RViz plugin tool evaluates vehicle position error by measuring deviations f
   - X11 display server
   - Qt5 development libraries
 
-
 ```bash
 # Install system dependencies
 sudo apt install imagemagick x11-apps qt5-default
 ```
 
 ## Build Instructions
+
 Adding the usual Autoware installation and build instructions, please do vcs import the repository and build the package.
 
 ```bash
@@ -61,12 +62,14 @@ colcon build --packages-select autoware_position_error_evaluator
 ### Measurement Types
 
 #### Stop Line Measurement
+
 - Click near a stop line in the map
 - Tool automatically detects the closest stop line
 - Measures X-error (longitudinal deviation)
 - Output: `x_error`, `NaN`, `yaw_error`
 
 #### Lane Boundary Measurement
+
 - Click near a lane boundary
 - Tool detects the closest lane boundary
 - Measures Y-error (lateral deviation)
@@ -74,42 +77,52 @@ colcon build --packages-select autoware_position_error_evaluator
 
 ## Inputs
 
-| Name                            | Type                                    | Description       |
-| ------------------------------- | --------------------------------------- | ----------------- |
-| `/map/vector_map`               | `autoware_map_msgs::msg::LaneletMapBin` | vector map topic  |
-| `/localization/kinematic_state` | `nav_msgs::msg::Odometry`               | self pose topic   |
+| Name                            | Type                                    | Description      |
+| ------------------------------- | --------------------------------------- | ---------------- |
+| `/map/vector_map`               | `autoware_map_msgs::msg::LaneletMapBin` | vector map topic |
+| `/localization/kinematic_state` | `nav_msgs::msg::Odometry`               | self pose topic  |
 
 ## Outputs
 
 ### CSV Files
+
 #### measurement CSV
+
 The tool generates CSV files with the following format:
+
 ```csv
 measurement_number,x_error,y_error,yaw_error
 1,0.123456,NaN,2.345678
 2,NaN,0.567890,1.234567
 ```
+
 - `measurement_number`: Sequential measurement counter
 - `x_error`: Longitudinal error in meters (stop line measurements)
 - `y_error`: Lateral error in meters (lane boundary measurements)
 - `yaw_error`: Angular error in degrees
 - `NaN`: Not applicable for the measurement type
+
 #### trajectory CSV
+
 To show the measured points, the tool generates trajectory CSV files with the following format:
+
 ```csv
 x,y,z,yaw
 1.0,2.0,0.0,0.0
 1.1,2.1,0.0,0.1
 ```
+
 - `x`, `y`, `z`: Vehicle position in meters
 - `yaw`: Vehicle orientation in radians
 
 ### Screenshot Naming
+
 Screenshots are automatically captured and named as:
 `measurement_YYYYMMDD_HHMMSS_NN.png`
 where NN is the zero-padded measurement number.
 
 ### File Structure
+
 ```Text
 ~/evaluate_position_error_using_line_tool/
 ├── position_error_evaluation_YYYYMMDD_HHMMSS.csv
@@ -121,18 +134,21 @@ where NN is the zero-padded measurement number.
 ```
 
 ## Line Detection Algorithm
+
 1. **Perpendicular Foot Calculation**: Finds closest point on reference line
 2. **Least Squares Fitting**: Improves line segment accuracy
 3. **Error Computation**: Calculates perpendicular distance and angular deviation
 4. **Type Classification**: Automatically determines stop line vs lane boundary
 
 ## File Management
+
 - Automatic directory creation
 - Timestamp-based file naming
 - Collision avoidance with sequential numbering
 - Immediate CSV flush for data safety
 
 ## Configuration Parameters
+
 | Name                    | Type   | Description                                           | Default value |
 | ----------------------- | ------ | ----------------------------------------------------- | ------------- |
 | LINE_WIDTH_MAIN         | double | Line width for main measurement lines (meters)        | 0.3           |
@@ -140,11 +156,13 @@ where NN is the zero-padded measurement number.
 | ANGLE_THRESHOLD_DEGREES | double | Angular threshold for line segment matching (degrees) | 5.0           |
 
 ## Automatic Configuration
+
 The tool automatically configures output directories and filenames based on system timestamp. No additional configuration files are required.
 
 ## Troubleshooting
 
 ### Screenshot Issues
+
 ```bash
 # Test ImageMagick installation
 import -window root test_screenshot.png
@@ -155,11 +173,13 @@ xhost +local:
 ```
 
 ### CSV File Issues
+
 - Check write permissions in home directory
 - Verify disk space availability
 - Ensure proper ROS2 environment setup
 
 ### Map Detection Issues
+
 - Verify Lanelet2 map is properly loaded
 - Check map topic subscription
 - Ensure vehicle pose is being published
