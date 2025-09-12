@@ -164,6 +164,24 @@ def check_pose_is_passed_delay_gate(cfg: CriteriaConfig) -> bool:
     return True
 
 
+def check_is_initial_pose_reliable(cfg: CriteriaConfig) -> bool:
+    if not cfg.tsv_path.exists():
+        print(f"TSV file not found for {cfg.diagnostics_key}: {cfg.tsv_path}")
+        return False
+    df = pd.read_csv(cfg.tsv_path, sep="\t", dtype={"is_initial_pose_reliable": "boolean"})
+
+    # We will just see the final row for pose_initializer diagnostics. In other words, the timing is not considered
+
+    is_initial_pose_reliable = df.iloc[-1]["is_initial_pose_reliable"]  # get the last result
+    if (cfg.flag == "rise" and is_initial_pose_reliable) or (
+        cfg.flag == "fall" and not is_initial_pose_reliable
+    ):
+        return True
+
+    print("pose_initializer didn't work as expected.")
+    return False
+
+
 def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
     diagnostics_flag_condition = load_diagnostics_flag_check(scenario_file)
 
@@ -192,6 +210,12 @@ def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
                 tsv_path=tsv_path, diagnostics_key=key, flag=flag, target_time_ns=target_time
             )
             results[key] = check_pose_is_passed_delay_gate(criteria_cfg)
+        elif key == "is_initial_pose_reliable":
+            tsv_path = diagnostics_result_dir / "pose_initializer__pose_initializer_status.tsv"
+            criteria_cfg = CriteriaConfig(
+                tsv_path=tsv_path, diagnostics_key=key, flag=flag, target_time_ns=target_time
+            )
+            results[key] = check_is_initial_pose_reliable(criteria_cfg)
         else:
             print(f"Flag checking for {key} not defined!!")
     return results

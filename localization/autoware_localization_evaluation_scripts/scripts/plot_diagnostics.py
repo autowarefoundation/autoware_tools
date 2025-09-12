@@ -85,6 +85,7 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
         "localization_error_monitor: ellipse_error_status",
         "localization: pose_instability_detector",
         "gyro_bias_validator: gyro_bias_validator",
+        "pose_initializer: pose_initializer_status",
     ]
 
     data_dict = parse_diagnostics_msgs(rosbag_path, target_list)
