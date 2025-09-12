@@ -110,7 +110,7 @@ Screenshots are automatically captured and named as:
 where NN is the zero-padded measurement number.
 
 ### File Structure
-```
+```Text
 ~/evaluate_position_error_using_line_tool/
 ├── position_error_evaluation_YYYYMMDD_HHMMSS.csv
 ├── trajectory_YYYYMMDD_HHMMSS.csv
