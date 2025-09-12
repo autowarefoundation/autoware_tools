@@ -168,7 +168,7 @@ def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
     diagnostics_flag_condition = load_diagnostics_flag_check(scenario_file)
 
     if not diagnostics_flag_condition:
-        print("No DiagnosticsCriteria found, exiting.")
+        print("No DiagnosticsFlagCheck found, exiting.")
         return {}
 
     results = {key: False for key in diagnostics_flag_condition}
