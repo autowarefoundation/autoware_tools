@@ -39,15 +39,18 @@
 #include <tf2/utils.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cerrno>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace autoware
@@ -107,8 +110,7 @@ void PositionErrorEvaluatorTool::onMap(
   lanelet::utils::conversion::fromBinMsg(*msg_ptr, lanelet_map_ptr_);
 }
 
-void PositionErrorEvaluatorTool::onSelfPose(
-  const nav_msgs::msg::Odometry::ConstSharedPtr & msg_ptr)
+void PositionErrorEvaluatorTool::onSelfPose(const nav_msgs::msg::Odometry::ConstSharedPtr & msg_ptr)
 {
   self_pose_ = msg_ptr->pose.pose;
 }
@@ -153,8 +155,7 @@ int PositionErrorEvaluatorTool::processMouseEvent(rviz_common::ViewportMouseEven
   return 0;
 }
 
-int PositionErrorEvaluatorTool::processKeyEvent(
-  QKeyEvent * event, rviz_common::RenderPanel * panel)
+int PositionErrorEvaluatorTool::processKeyEvent(QKeyEvent * event, rviz_common::RenderPanel * panel)
 {
   (void)panel;  // Suppress unused parameter warning
 
@@ -593,8 +594,7 @@ void PositionErrorEvaluatorTool::initCsvFile()
   }
 }
 
-void PositionErrorEvaluatorTool::writeToCsv(
-  double x_error, double y_error, double yaw_error)
+void PositionErrorEvaluatorTool::writeToCsv(double x_error, double y_error, double yaw_error)
 {
   if (csv_file_.is_open()) {
     measurement_count_++;
@@ -640,8 +640,7 @@ void PositionErrorEvaluatorTool::initTrajectoryFile()
   }
 }
 
-void PositionErrorEvaluatorTool::writeTrajectoryToCsv(
-  double x, double y, double z, double yaw)
+void PositionErrorEvaluatorTool::writeTrajectoryToCsv(double x, double y, double z, double yaw)
 {
   if (trajectory_file_.is_open()) {
     trajectory_file_ << std::fixed << std::setprecision(6) << x << "," << y << "," << z << ","
@@ -787,5 +786,4 @@ void PositionErrorEvaluatorTool::undoLastMeasurement()
 
 #include <pluginlib/class_list_macros.hpp>  // NOLINT
 PLUGINLIB_EXPORT_CLASS(
-  autoware::position_error_evaluator::PositionErrorEvaluatorTool,
-  rviz_common::Tool)
+  autoware::position_error_evaluator::PositionErrorEvaluatorTool, rviz_common::Tool)
