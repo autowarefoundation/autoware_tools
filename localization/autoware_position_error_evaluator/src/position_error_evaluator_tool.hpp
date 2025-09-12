@@ -35,6 +35,7 @@
 #include <iomanip>
 #include <memory>
 #include <sstream>
+#include <string>
 
 namespace rviz_rendering
 {
