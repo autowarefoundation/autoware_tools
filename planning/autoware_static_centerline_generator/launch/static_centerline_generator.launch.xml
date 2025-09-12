@@ -3,7 +3,7 @@
   <arg name="vehicle_model" default="autoware_sample_vehicle"/>
 
   <!-- flag -->
-  <arg name="mode" default="AUTO" description="select from AUTO, GUI, and VMB"/>
+  <arg name="mode" default="AUTO" description="select from AUTO, GUI, VMB and VALIDATION"/>
   <arg name="rviz" default="true"/>
   <arg name="centerline_source" default="optimization_trajectory_base" description="select from optimization_trajectory_base and bag_ego_trajectory_base"/>
 
