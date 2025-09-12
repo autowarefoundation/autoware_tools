@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(autoware_evaluate_position_error_using_line_rviz_plugin)
+project(autoware_position_error_evaluator)
 
 find_package(autoware_cmake REQUIRED)
 autoware_package()
@@ -16,7 +16,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
-  src/evaluate_position_error_using_line_tool.cpp
+  src/position_error_evaluator_tool.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
