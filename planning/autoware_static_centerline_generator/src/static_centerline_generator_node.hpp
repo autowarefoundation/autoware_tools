@@ -90,6 +90,7 @@ struct CenterlineHandler
   }
   void clear_centerline_lane_ids() { centerline_lane_ids.clear(); }
   void add_centerline_lane_id(const lanelet::Id lane_id) { centerline_lane_ids.push_back(lane_id); }
+  void add_centerline_lane_ids(const std::vector<lanelet::Id> & ids) { centerline_lane_ids = ids; }
   std::vector<lanelet::Id> get_centerline_lane_ids() const { return centerline_lane_ids; }
 
   std::optional<CenterlineWithRoute> whole_centerline_with_route{std::nullopt};
@@ -109,6 +110,7 @@ class StaticCenterlineGeneratorNode : public rclcpp::Node
 public:
   explicit StaticCenterlineGeneratorNode(const rclcpp::NodeOptions & node_options);
   void generate_centerline();
+  void load_centerline();
   void connect_centerline_to_lanelet();
   void validate_centerline();
   void save_map();
@@ -125,10 +127,11 @@ private:
   LaneletRoute plan_route(
     const geometry_msgs::msg::Pose & start_center_pose,
     const geometry_msgs::msg::Pose & end_center_pose);
-  LaneletRoute plan_route_from_lanelet_sequence(const std::string & lanelet_sequence_str) const;
-
+  LaneletRoute plan_route_from_lanelet_sequence(
+    const std::vector<lanelet::Id> & lanelet_sequence) const;
   void on_plan_route(
     const PlanRoute::Request::SharedPtr request, const PlanRoute::Response::SharedPtr response);
+  std::vector<lanelet::Id> get_lanelet_sequence_from_param();
 
   // plan centerline
   CenterlineWithRoute generate_whole_centerline_with_route();
@@ -138,6 +141,10 @@ private:
     const PlanPath::Request::SharedPtr request, const PlanPath::Response::SharedPtr response);
 
   void visualize_selected_centerline();
+
+  // validation pre-process
+  std::pair<std::vector<TrajectoryPoint>, std::vector<lanelet::Id>> get_centerline_from_lane_ids(
+    const std::vector<lanelet::Id> & lane_ids) const;
 
   // parameter
   template <typename T>
