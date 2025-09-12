@@ -1,5 +1,0 @@
-<library path="autoware_evaluate_position_error_using_line_rviz_plugin">
-  <class type="autoware::evaluate_position_error_using_line_rviz_plugin::EvaluatePositionErrorUsingLineTool" base_class_type="rviz_common::Tool">
-    <description>EvaluatePositionErrorUsingLineTool</description>
-  </class>
-</library>
