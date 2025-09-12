@@ -167,11 +167,11 @@ def check_pose_is_passed_delay_gate(cfg: CriteriaConfig) -> bool:
 def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
     diagnostics_flag_condition = load_diagnostics_flag_check(scenario_file)
 
-    results = {key: False for key in diagnostics_flag_condition}
     if not diagnostics_flag_condition:
         print("No DiagnosticsCriteria found, exiting.")
-        return results
+        return {}
 
+    results = {key: False for key in diagnostics_flag_condition}
     for key, criteria in diagnostics_flag_condition.items():
         print(f"\nProcessing criteria: {key}")
 
