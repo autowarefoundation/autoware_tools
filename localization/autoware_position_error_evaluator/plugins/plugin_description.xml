@@ -1,0 +1,5 @@
+<library path="autoware_position_error_evaluator">
+  <class type="autoware::position_error_evaluator::PositionErrorEvaluatorTool" base_class_type="rviz_common::Tool">
+    <description>PositionErrorEvaluatorTool</description>
+  </class>
+</library>
