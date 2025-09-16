@@ -508,8 +508,10 @@ void PositionErrorEvaluatorTool::processLeftButton(const Ogre::Vector3 & pos)
 
     if (line_type == LINE_TYPE::STOP_LINE) {
       std::cout << "x_error: " << x_error << "[m], y_error: " << "none"
-                << "[m], yaw_error: " << yaw * RADIANS_TO_DEGREES << "[deg]" << std::endl;
-      writeToCsv(x_error, std::numeric_limits<double>::quiet_NaN(), yaw * RADIANS_TO_DEGREES);
+                << "[m], yaw_error: " << "none" << "[deg]" << std::endl;
+      writeToCsv(
+        x_error, std::numeric_limits<double>::quiet_NaN(),
+        std::numeric_limits<double>::quiet_NaN());
 
       // Write trajectory data
       double vehicle_yaw = tf2::getYaw(self_pose_.orientation);
