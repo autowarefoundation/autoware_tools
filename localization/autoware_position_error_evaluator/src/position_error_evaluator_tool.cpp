@@ -476,12 +476,12 @@ void PositionErrorEvaluatorTool::processLeftButton(const Ogre::Vector3 & pos)
       yaw = -M_PI - yaw;
     }
 
-    const double distance_selfpose_to_line = autoware_utils::distance(
+    const double distance_self_pose_to_line = autoware_utils::distance(
       autoware_utils::alt::Point2d(self_pose_.position.x, self_pose_.position.y),
       autoware_utils::alt::Point2d(start_.x, start_.y),
       autoware_utils::alt::Point2d(end_.x, end_.y));
 
-    const double distance_selfpose_to_lane = autoware_utils::distance(
+    const double distance_self_pose_to_lane = autoware_utils::distance(
       autoware_utils::alt::Point2d(self_pose_.position.x, self_pose_.position.y),
       autoware_utils::alt::Point2d(seg_start_.x, seg_start_.y),
       autoware_utils::alt::Point2d(seg_end_.x, seg_end_.y));
@@ -492,10 +492,10 @@ void PositionErrorEvaluatorTool::processLeftButton(const Ogre::Vector3 & pos)
 
     if (line_type == LINE_TYPE::STOP_LINE) {
       // For stop_line case, calculate distance as x_error
-      x_error = distance_selfpose_to_line - distance_selfpose_to_lane;
+      x_error = distance_self_pose_to_line - distance_self_pose_to_lane;
     } else if (line_type == LINE_TYPE::LANE) {
       // For lane case, calculate only y_error
-      y_error = distance_selfpose_to_line - distance_selfpose_to_lane;
+      y_error = distance_self_pose_to_line - distance_self_pose_to_lane;
     } else if (line_type == LINE_TYPE::ERROR) {
       // None
     }

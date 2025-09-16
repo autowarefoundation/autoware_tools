@@ -176,7 +176,7 @@ xhost +local:
 
 - Check write permissions in home directory
 - Verify disk space availability
-- Ensure proper ROS2 environment setup
+- Ensure proper ROS 2 environment setup
 
 ### Map Detection Issues
 
