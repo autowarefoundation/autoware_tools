@@ -84,6 +84,10 @@ class TkinterApp:
             if axis_option_keys[i].casefold().startswith(config["initial_axis"]["y"].casefold()):
                 self.y_axis_dropdown.current(i)
 
+        # bind dropdown selection events to update axis labels
+        self.x_axis_dropdown.bind("<<ComboboxSelected>>", self.update_axis_labels)
+        self.y_axis_dropdown.bind("<<ComboboxSelected>>", self.update_axis_labels)
+
         # Listbox with Multiple Selection
         ttk.Label(self.left_frame, text="Topics:").grid(
             row=2, column=0, columnspan=2, padx=5, pady=5, sticky="w"
@@ -197,6 +201,13 @@ class TkinterApp:
         if ego_odom is not None:
             self.plotter.update_ego_data(x_axis_fns.ego_fn(ego_odom), y_axis_fns.ego_fn(ego_odom))
         self.plotter.replot()
+        self.canvas.draw_idle()
+
+    def update_axis_labels(self, event=None):
+        """Update plot axis labels when dropdown selection changes."""
+        x_axis_selection = self.current_x_axis_selection.get()
+        y_axis_selection = self.current_y_axis_selection.get()
+        self.plotter.update_labels(x_axis_selection, y_axis_selection)
         self.canvas.draw_idle()
 
 
