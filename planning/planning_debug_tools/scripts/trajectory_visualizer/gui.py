@@ -204,7 +204,7 @@ class TkinterApp:
         self.canvas.draw_idle()
 
     def update_axis_labels(self, event=None):
-        """Update plot axis labels when dropdown selection changes"""
+        """Update plot axis labels when dropdown selection changes."""
         x_axis_selection = self.current_x_axis_selection.get()
         y_axis_selection = self.current_y_axis_selection.get()
         self.plotter.update_labels(x_axis_selection, y_axis_selection)

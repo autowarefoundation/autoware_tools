@@ -279,23 +279,23 @@ def yaws(msg):
 
 
 def yaws_continuous(msg):
-    """Get yaw values as continuous angles without -PI/PI discontinuity"""
+    """Get yaw values as continuous angles without -PI/PI discontinuity."""
     points = _get_points(msg)
     if not points:
         return []
-    
+
     # Get initial yaw values
     yaw_values = [_get_yaw_from_quaternion(p.pose.orientation) for p in points]
-    
+
     if len(yaw_values) <= 1:
         return yaw_values
-    
+
     # Make yaw continuous by unwrapping phase jumps
     continuous_yaws = [yaw_values[0]]
     offset = 0.0
-    
+
     for i in range(1, len(yaw_values)):
-        diff = yaw_values[i] - yaw_values[i-1]
+        diff = yaw_values[i] - yaw_values[i - 1]
         # Check for phase jump
         if diff > np.pi:
             # Jump from -pi to pi region
@@ -304,7 +304,7 @@ def yaws_continuous(msg):
             # Jump from pi to -pi region
             offset += 2 * np.pi
         continuous_yaws.append(yaw_values[i] + offset)
-    
+
     return continuous_yaws
 
 
