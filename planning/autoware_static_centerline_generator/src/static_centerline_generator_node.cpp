@@ -58,6 +58,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #define RESET_TEXT "\x1B[0m"
@@ -343,6 +344,97 @@ void StaticCenterlineGeneratorNode::generate_centerline()
   visualize_selected_centerline();
 }
 
+void StaticCenterlineGeneratorNode::load_centerline()
+{
+  // declare planning setting parameters
+  const auto lanelet2_input_file_path = declare_parameter<std::string>("lanelet2_input_file_path");
+  if (lanelet2_input_file_path == "") {
+    throw std::invalid_argument("The `lanelet2_input_file_path` is empty.");
+  }
+
+  // process
+  load_map(lanelet2_input_file_path);
+  const auto start_lanelet_id = declare_parameter<int64_t>("start_lanelet_id");
+  const auto end_lanelet_id = declare_parameter<int64_t>("end_lanelet_id");
+  const auto route = plan_route_by_lane_ids(start_lanelet_id, end_lanelet_id);
+  const auto lanelet_sequence = get_lanelet_sequence_from_param();
+  const auto [centerline, lane_ids] = get_centerline_from_lane_ids(lanelet_sequence);
+  centerline_handler_ = CenterlineHandler(CenterlineWithRoute{centerline, route});
+  centerline_handler_.add_centerline_lane_ids(lane_ids);
+
+  visualize_selected_centerline();
+}
+
+std::vector<lanelet::Id> StaticCenterlineGeneratorNode::get_lanelet_sequence_from_param()
+{
+  const auto lanelet_sequence_str =
+    autoware::universe_utils::getOrDeclareParameter<std::string>(*this, "lanelet_sequence");
+  std::vector<lanelet::Id> lanelet_sequence;
+  if (!lanelet_sequence_str.empty()) {
+    std::vector<std::string> tokens;
+    boost::split(tokens, lanelet_sequence_str, boost::is_any_of(","), boost::token_compress_on);
+    for (const auto & token : tokens) {
+      lanelet_sequence.push_back(std::stoll(token));
+    }
+  }
+  return lanelet_sequence;
+}
+
+std::pair<std::vector<TrajectoryPoint>, std::vector<lanelet::Id>>
+StaticCenterlineGeneratorNode::get_centerline_from_lane_ids(
+  const std::vector<lanelet::Id> & lane_ids) const
+{
+  std::vector<TrajectoryPoint> centerline_points;
+  std::vector<lanelet::Id> lane_ids_for_points;
+
+  for (size_t i = 0; i < lane_ids.size(); ++i) {
+    const auto id = lane_ids[i];
+    const auto lanelet = route_handler_ptr_->getLaneletsFromId(id);
+
+    const auto & centerline = lanelet.centerline();
+    for (size_t j = 0; j < centerline.size(); ++j) {
+      // skip duplicated points
+      if (!centerline_points.empty() && j == 0 && i > 0) {
+        const auto & prev = centerline_points.back().pose.position;
+        const auto & curr = centerline[j];
+        if (prev.x == curr.x() && prev.y == curr.y() && prev.z == curr.z()) {
+          continue;
+        }
+      }
+
+      TrajectoryPoint pt;
+      // position
+      pt.pose.position.x = centerline[j].x();
+      pt.pose.position.y = centerline[j].y();
+      pt.pose.position.z = centerline[j].z();
+
+      // orientation
+      double yaw = 0.0;
+      if (centerline.size() >= 2) {
+        if (j < centerline.size() - 1) {
+          double dx = centerline[j + 1].x() - centerline[j].x();
+          double dy = centerline[j + 1].y() - centerline[j].y();
+          yaw = std::atan2(dy, dx);
+        } else if (j > 0) {
+          double dx = centerline[j].x() - centerline[j - 1].x();
+          double dy = centerline[j].y() - centerline[j - 1].y();
+          yaw = std::atan2(dy, dx);
+        }
+      }
+      tf2::Quaternion q;
+      q.setRPY(0, 0, yaw);
+      pt.pose.orientation = tf2::toMsg(q);
+
+      centerline_points.push_back(pt);
+      lane_ids_for_points.push_back(id);
+    }
+  }
+  if (centerline_points.empty()) {
+    throw std::runtime_error("The centerline is empty.");
+  }
+  return {centerline_points, lane_ids_for_points};
+}
+
 CenterlineWithRoute StaticCenterlineGeneratorNode::generate_whole_centerline_with_route()
 {
   if (!route_handler_ptr_) {
@@ -491,26 +583,18 @@ LaneletRoute StaticCenterlineGeneratorNode::plan_route_by_lane_ids(
   }();
 
   // plan route
-  const auto lanelet_sequence_str =
-    autoware::universe_utils::getOrDeclareParameter<std::string>(*this, "lanelet_sequence");
-  if (lanelet_sequence_str.empty()) {
-    return plan_route(start_pose, end_pose);
+  // lanelet_sequenceパラメータがあればそれを使う
+  const auto lanelet_sequence = get_lanelet_sequence_from_param();
+  if (!lanelet_sequence.empty()) {
+    return plan_route_from_lanelet_sequence(lanelet_sequence);
   } else {
-    return plan_route_from_lanelet_sequence(lanelet_sequence_str);
+    return plan_route(start_pose, end_pose);
   }
 }
 
 LaneletRoute StaticCenterlineGeneratorNode::plan_route_from_lanelet_sequence(
-  const std::string & lanelet_sequence_str) const
+  const std::vector<lanelet::Id> & lanelet_sequence) const
 {
-  std::vector<lanelet::Id> lanelet_sequence;
-  std::vector<std::string> tokens;
-  boost::split(tokens, lanelet_sequence_str, boost::is_any_of(","), boost::token_compress_on);
-  for (const auto & token : tokens) {
-    lanelet_sequence.push_back(std::stoll(token));
-  }
-
-  // create route from lanelet sequence
   LaneletRoute route;
   route.start_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.front());
   route.goal_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.back());
@@ -783,6 +867,11 @@ void StaticCenterlineGeneratorNode::validate_centerline()
     centerline_lane_id_map_order.push_back(centerline_lane_id);
 
     const auto lanelet = route_handler_ptr_->getLaneletsFromId(centerline_lane_id);
+    if (lanelet.centerline().empty()) {
+      std::cerr << "Warning: lanelet id " << centerline_lane_id << " has no centerline."
+                << std::endl;
+      continue;
+    }
     for (const auto & point : lanelet.rightBound()) {
       boost::geometry::append(
         lanelet_right_bound_map.at(centerline_lane_id), Point2d(point.x(), point.y()));
