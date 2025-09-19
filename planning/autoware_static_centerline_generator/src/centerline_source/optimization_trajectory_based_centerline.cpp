@@ -344,9 +344,8 @@ PathWithLaneId OptimizationTrajectoryBasedCenterline::modify_goal_connection(
     init_path_generator_node(current_pose, map_bin_ptr, route);
     const auto param_listener = std::make_shared<::path_generator::ParamListener>(
       path_generator_node_->get_node_parameters_interface());
-    auto params = param_listener->get_params();
-    params.path_length.backward = -0.01;
-    const auto generated_path = path_generator_node_->generate_path(current_pose, params);
+    const auto generated_path =
+      path_generator_node_->generate_path(current_pose, param_listener->get_params());
     if (generated_path) {
       return *generated_path;
     }
