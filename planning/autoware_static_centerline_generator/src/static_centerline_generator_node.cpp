@@ -393,7 +393,7 @@ StaticCenterlineGeneratorNode::get_centerline_from_lane_ids(
     const auto lanelet = route_handler_ptr_->getLaneletsFromId(id);
 
     const auto & centerline = lanelet.centerline();
-    for (size_t j = 0; j < centerline.size(); ++j) {
+    for (size_t j = 0; j + 1 < centerline.size(); ++j) {
       // skip duplicated points
       if (!centerline_points.empty() && j == 0 && i > 0) {
         const auto & prev = centerline_points.back().pose.position;
@@ -410,21 +410,18 @@ StaticCenterlineGeneratorNode::get_centerline_from_lane_ids(
       pt.pose.position.z = centerline[j].z();
 
       // orientation
-      double yaw = 0.0;
-      if (centerline.size() >= 2) {
-        if (j < centerline.size() - 1) {
-          double dx = centerline[j + 1].x() - centerline[j].x();
-          double dy = centerline[j + 1].y() - centerline[j].y();
-          yaw = std::atan2(dy, dx);
-        } else if (j > 0) {
-          double dx = centerline[j].x() - centerline[j - 1].x();
-          double dy = centerline[j].y() - centerline[j - 1].y();
-          yaw = std::atan2(dy, dx);
-        }
-      }
-      tf2::Quaternion q;
-      q.setRPY(0, 0, yaw);
-      pt.pose.orientation = tf2::toMsg(q);
+      geometry_msgs::msg::Point curr_pt;
+      curr_pt.x = centerline[j].x();
+      curr_pt.y = centerline[j].y();
+      curr_pt.z = centerline[j].z();
+
+      geometry_msgs::msg::Point next_pt;
+      next_pt.x = centerline[j + 1].x();
+      next_pt.y = centerline[j + 1].y();
+      next_pt.z = centerline[j + 1].z();
+
+      const double yaw = autoware_utils::calc_azimuth_angle(curr_pt, next_pt);
+      pt.pose.orientation = autoware_utils_geometry::create_quaternion_from_yaw(yaw);
 
       centerline_points.push_back(pt);
       lane_ids_for_points.push_back(id);
@@ -844,11 +841,6 @@ JitterDetectionResult StaticCenterlineGeneratorNode::detect_jitter_sections(
   const double jitter_rad_threshold = jitter_deg_threshold * M_PI / 180.0;
 
   // Detect centerline jitter from angle differences
-  auto normalize_angle = [](double angle) {
-    while (angle > M_PI) angle -= 2.0 * M_PI;
-    while (angle < -M_PI) angle += 2.0 * M_PI;
-    return angle;
-  };
   for (size_t i = 0; i < centerline.size() - 3; ++i) {
     const auto & p1 = centerline[i].pose.position;
     const auto & p2 = centerline[i + 1].pose.position;
@@ -859,16 +851,13 @@ JitterDetectionResult StaticCenterlineGeneratorNode::detect_jitter_sections(
     double angle2 = std::atan2(p3.y - p2.y, p3.x - p2.x);
     double angle3 = std::atan2(p4.y - p3.y, p4.x - p3.x);
 
-    double angle_diff1 = normalize_angle(angle1 - angle2);
-    double angle_diff2 = normalize_angle(angle2 - angle3);
-    double angle_diff_delta = normalize_angle(angle_diff1 - angle_diff2);
+    double angle_diff1 = autoware_utils_math::normalize_radian(angle1 - angle2);
+    double angle_diff2 = autoware_utils_math::normalize_radian(angle2 - angle3);
+    double angle_diff_delta = autoware_utils_math::normalize_radian(angle_diff1 - angle_diff2);
 
     if (std::abs(angle_diff_delta) > jitter_rad_threshold) {
       result.jitter_indices.push_back(i + 1);
     }
-
-    if (angle_diff_delta > M_PI) angle_diff_delta -= 2.0 * M_PI;
-    if (angle_diff_delta < -M_PI) angle_diff_delta += 2.0 * M_PI;
 
     angle_diffs.push_back(angle_diff_delta);
   }
@@ -1093,12 +1082,12 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   // 3. jitter / rough sections detection
   const int64_t jitter_deg_threshold =
     autoware::universe_utils::getOrDeclareParameter<int64_t>(*this, "jitter_deg_threshold");
-  double max_angle_diff =
+  const double max_angle_diff =
     jitter_result.angle_differences.empty()
       ? 0.0
       : *std::max_element(
           jitter_result.angle_differences.begin(), jitter_result.angle_differences.end());
-  double max_angle_diff_deg =
+  const double max_angle_diff_deg =
     std::round(autoware::universe_utils::rad2deg(max_angle_diff) * 10.0) / 10.0;
 
   std::string jitter_indices_str;
@@ -1117,8 +1106,8 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   } else {
     const auto threshold_message =
       (max_angle_diff_deg > jitter_deg_threshold)
-        ? "(>" + std::to_string(jitter_deg_threshold) + " [deg] threshold)"
-        : "(<=" + std::to_string(jitter_deg_threshold) + " [deg] threshold)";
+        ? "( > " + std::to_string(jitter_deg_threshold) + " [deg] threshold)"
+        : "( <= " + std::to_string(jitter_deg_threshold) + " [deg] threshold)";
     std::cerr
       << YELLOW_TEXT << "  The generated centerline has "
       << std::to_string(jitter_result.total_error_points) << " sections with jitter detected."

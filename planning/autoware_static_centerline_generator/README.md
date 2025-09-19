@@ -78,26 +78,30 @@ The input route must be continuous and a drivable path.
 
 ## Visualization
 
-When launching the path planning server, rviz is launched as well as follows.
+When performing validation, launch rviz as follows.
+
 ![rviz](./media/rviz.png)
 
-- The yellow footprints are the original ones from the osm map file.
-  - FYI: Footprints are generated based on the centerline and vehicle size.
-- The red footprints are the optimized ones.
-- The gray area is the drivable area.
-- You can see that the red footprints are inside the drivable area although the yellow ones are outside.
+- Gray lines indicate map information such as `lanelet` or `stop line`.
+- The pink and purple lines show the boundaries of the `lanelet` with embedded fixed paths and the embedded static centerline themselves.
+  - The pink and purple breaks indicate where `lanelets` switch.
+- The green boxes are safe footprints.
 
-### Unsafe footprints
+### Unsafe Footprints
 
-Sometimes the optimized centerline footprints are close to the lanes' boundaries.
-We can check how close they are with `unsafe footprints` marker as follows.
+Optimized centerlines may present the following hazards.
+These can be identified using the `unsafe footprints` marker.
 
-Footprints' color depends on its distance to the boundaries, and text expresses its distance.
+- When the footprint approaches the vehicle boundary
+- When making abrupt directional changes
+
+Footprint color changes based on distance to the boundary and the angular difference between front and rear points, with distance displayed as text.
 
 ![rviz](./media/unsafe_footprints.png)
 
-By default, footprints' color is
+By default, footprint colors are:
 
-- when the distance is less than 0.1 [m] : red
-- when the distance is less than 0.2 [m] : green
-- when the distance is less than 0.3 [m] : blue
+- Distance to lanelet boundary < 0.1 [m]: Red
+- Distance to lanelet boundary < 0.2 [m]: Orange
+- Distance to lanelet boundary < 0.3 [m]: Yello
+- Yaw difference exceeds jitter_deg_threshold (default is 40) [deg]: Blue
