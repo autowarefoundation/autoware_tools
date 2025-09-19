@@ -2,6 +2,11 @@
 Changelog for package vehicle_cmd_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.0 (2025-08-11)
+------------------
+* chore: sync files (`#214 <https://github.com/autowarefoundation/autoware_tools/issues/214>`_)
+* Contributors: awf-autoware-bot[bot]
+
 0.2.0 (2025-03-24)
 ------------------
 

@@ -8,6 +8,7 @@ install(PROGRAMS
     scripts/analyze_rosbags_parallel.py
     scripts/compare_trajectories.py
     scripts/extract_values_from_rosbag.py
+    scripts/diagnostics_flag_check.py
     scripts/plot_diagnostics.py
     DESTINATION lib/${PROJECT_NAME}
 )

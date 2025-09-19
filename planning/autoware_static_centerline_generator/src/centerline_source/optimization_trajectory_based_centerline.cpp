@@ -198,8 +198,9 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     // smooth trajectory by elastic band in the autoware_path_smoother package
     const auto smoothed_traj_points =
       eb_path_smoother_ptr->smoothTrajectory(traj_points, virtual_ego_pose);
-    pub_iterative_smoothed_traj_->publish(autoware::motion_utils::convertToTrajectory(
-      smoothed_traj_points, create_header(node.get_clock()->now())));
+    pub_iterative_smoothed_traj_->publish(
+      autoware::motion_utils::convertToTrajectory(
+        smoothed_traj_points, create_header(node.get_clock()->now())));
 
     // road collision avoidance by model predictive trajectory in the autoware_path_optimizer
     // package
@@ -210,8 +211,9 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
     if (!optimized_traj_points) {
       return whole_optimized_traj_points;
     }
-    pub_iterative_optimized_traj_->publish(autoware::motion_utils::convertToTrajectory(
-      *optimized_traj_points, create_header(node.get_clock()->now())));
+    pub_iterative_optimized_traj_->publish(
+      autoware::motion_utils::convertToTrajectory(
+        *optimized_traj_points, create_header(node.get_clock()->now())));
 
     // connect the previously and currently optimized trajectory points
     // 1. generate valid_optimized_traj_points
@@ -274,36 +276,6 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
   pub_iterative_path_->publish(empty_path);
 
   return whole_optimized_traj_points;
-}
-
-std::shared_ptr<autoware_planning_msgs::msg::LaneletRoute>
-OptimizationTrajectoryBasedCenterline::create_route(
-  std::shared_ptr<RouteHandler> & route_handler_ptr, const geometry_msgs::msg::Pose & start_pose,
-  const geometry_msgs::msg::Pose & goal_pose) const
-{
-  // create route_ptr
-  auto route_ptr = std::make_shared<autoware_planning_msgs::msg::LaneletRoute>();
-
-  lanelet::ConstLanelets all_lanelets;
-  lanelet::ConstLanelets path_lanelets;
-  route_handler_ptr->planPathLaneletsBetweenCheckpoints(start_pose, goal_pose, &path_lanelets);
-
-  for (const auto & lane : path_lanelets) {
-    if (!all_lanelets.empty() && lane.id() == all_lanelets.back().id()) continue;
-    all_lanelets.push_back(lane);
-  }
-
-  route_handler_ptr->setRouteLanelets(all_lanelets);
-
-  std::vector<autoware_planning_msgs::msg::LaneletSegment> route_sections =
-    route_handler_ptr->createMapSegments(all_lanelets);
-
-  // set necessary data
-  route_ptr->header.frame_id = "map";
-  route_ptr->start_pose = start_pose;
-  route_ptr->goal_pose = goal_pose;
-  route_ptr->segments = route_sections;
-  return route_ptr;
 }
 
 void OptimizationTrajectoryBasedCenterline::init_path_generator_node(

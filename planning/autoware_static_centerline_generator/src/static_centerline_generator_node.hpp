@@ -125,6 +125,7 @@ private:
   LaneletRoute plan_route(
     const geometry_msgs::msg::Pose & start_center_pose,
     const geometry_msgs::msg::Pose & end_center_pose);
+  LaneletRoute plan_route_from_lanelet_sequence(const std::string & lanelet_sequence_str) const;
 
   void on_plan_route(
     const PlanRoute::Request::SharedPtr request, const PlanRoute::Response::SharedPtr response);
