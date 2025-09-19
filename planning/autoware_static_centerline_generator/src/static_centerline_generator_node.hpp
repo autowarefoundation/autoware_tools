@@ -47,7 +47,6 @@ struct CenterlineWithRoute
   LaneletRoute route{};
 };
 
-// todo: nakajima struct作る必要ある？？
 struct JitterDetectionResult
 {
   std::vector<size_t> jitter_indices;
