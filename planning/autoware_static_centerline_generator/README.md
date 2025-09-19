@@ -89,7 +89,7 @@ When performing validation, launch rviz as follows.
 
 ### Unsafe Footprints
 
-Optimized centerlines may present the following hazards.
+Optimized centerline may present the following hazards.
 These can be identified using the `unsafe footprints` marker.
 
 - When the footprint approaches the vehicle boundary
