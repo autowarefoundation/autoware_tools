@@ -896,7 +896,7 @@ void StaticCenterlineGeneratorNode::visualize_jitter_sections(
 
       // White footprint marker for detected jitter section
       const auto jitter_marker = utils::create_footprint_marker(
-        "jitter_sections", jitter_footprint, 0.08, 1.0, 0.0, 0.0, 0.95, now(), jitter_idx);
+        "jitter_sections", jitter_footprint, 0.08, 0.0, 0.4, 1.0, 0.95, now(), jitter_idx);
       marker_array.markers.push_back(jitter_marker);
 
       // Text marker showing the angle change at jitter location
@@ -908,7 +908,7 @@ void StaticCenterlineGeneratorNode::visualize_jitter_sections(
           : 0.0;
       const double angle_diff_deg = autoware::universe_utils::rad2deg(angle_diff_rad);
       const auto jitter_text_marker = utils::create_text_marker(
-        "jitter_values", jitter_text_pose, std::round(angle_diff_deg * 10.0) / 10.0, 1.0, 0.0, 0.0,
+        "jitter_values", jitter_text_pose, std::round(angle_diff_deg * 10.0) / 10.0, 0.0, 0.4, 1.0,
         0.95, now(), jitter_idx);
       marker_array.markers.push_back(jitter_text_marker);
     }
@@ -1123,15 +1123,13 @@ void StaticCenterlineGeneratorNode::validate_centerline()
       << YELLOW_TEXT << "  The generated centerline has "
       << std::to_string(jitter_result.total_error_points) << " sections with jitter detected."
       << std::endl
-      << "  Jitter detection: " << std::to_string(jitter_result.angle_differences.size())
-      << " sections" << std::endl
-      << "  Maximum jitter: " << std::to_string(max_angle_diff_deg) << " [deg]" << std::endl
-      << threshold_message << std::endl
+      << "  All detected indices: " << jitter_indices_str << std::endl
+      << "  Maximum jitter: " << std::to_string(max_angle_diff_deg) << " [deg]" << threshold_message
+      << std::endl
       << "  (Warning: May affect ride comfort)" << RESET_TEXT << std::endl
       << "  However, the estimated jitter is not enough precise, so the result is conditional pass."
       << std::endl
-      << "  Conditionally Passed." << std::endl
-      << "  All detected indices: " << jitter_indices_str << std::endl;
+      << "  Conditionally Passed." << std::endl;
   }
 
   // 4. result
