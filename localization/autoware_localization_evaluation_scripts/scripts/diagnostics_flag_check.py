@@ -174,9 +174,11 @@ def load_diagnostics_flag_check(yaml_path: Path):
         with open(yaml_path, "r") as f:
             data = yaml.safe_load(f)
         conditions = data["Evaluation"]["Conditions"]
-    except Exception:
+    except Exception as e:
+        print(type(e).__name__, e)
         return None
 
+    print("Read scenario file.")
     return conditions.get("DiagnosticsFlagCheck", None)
 
 
