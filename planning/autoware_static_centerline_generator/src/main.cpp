@@ -40,6 +40,9 @@ int main(int argc, char * argv[])
       node->save_map();
     } else if (mode == "GUI") {
       node->generate_centerline();
+    } else if (mode == "VALIDATION") {
+      node->load_centerline();
+      node->validate_centerline();
     } else if (mode == "VMB") {
       // Do nothing
     } else {
