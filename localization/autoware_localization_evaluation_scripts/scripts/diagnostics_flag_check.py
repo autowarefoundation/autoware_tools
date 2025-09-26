@@ -151,7 +151,7 @@ class PoseIsPassedDelayGateChecker(BaseChecker):
 
 
 class IsInitialPoseReliableChecker(BaseChecker):
-    # Override check() since this diagnostics is special
+    # Override check() since this diagnostics is an one shot
     def check(self):
         is_initial_pose_reliable = self.df.iloc[-1]["is_initial_pose_reliable"]
         if (self.cfg.flag == "rise" and not is_initial_pose_reliable) or (
@@ -160,6 +160,41 @@ class IsInitialPoseReliableChecker(BaseChecker):
             return True
         else:
             return False
+
+
+class NearestVoxelTransformationLikelihoodChecker(BaseChecker):
+    def is_positive(self, series):
+        level_label = "level"
+        nvtl_label = "nearest_voxel_transformation_likelihood"
+        if level_label in series and nvtl_label in series:
+            return series[level_label] >= 1 and series[nvtl_label] < 2.3
+        else:
+            return False
+
+
+class LocalizationErrorEllipseChecker(BaseChecker):
+    def is_positive(self, series):
+        level_label = "level"
+        error_ellipse_label = "localization_error_ellipse"
+        if level_label in series and error_ellipse_label in series:
+            return series[level_label] == 2 and series[error_ellipse_label] >= 1.5
+        else:
+            return False
+
+    # Override check() since the beginning is always an error
+    def check(self) -> bool:
+        if self.cfg.flag == "rise":
+            if not self.any_positive_in_window():
+                print("    Not positive around target time.")
+                return False
+            else:
+                return True
+        else:
+            if not self.any_negative_in_window():
+                print("    Not negative around target time.")
+                return False
+            else:
+                return True
 
 
 def parse_args() -> argparse.Namespace:
@@ -208,17 +243,14 @@ def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
         elif key == "pose_no_update_count":
             criteria_cfg.tsv_path = diagnostics_result_dir / "localization__ekf_localizer.tsv"
             results[key] = PoseNoUpdateCountChecker(criteria_cfg).check()
-            # results[key] = check_pose_no_update_count(criteria_cfg)
         elif key == "pose_is_passed_delay_gate":
             criteria_cfg.tsv_path = diagnostics_result_dir / "localization__ekf_localizer.tsv"
             results[key] = PoseIsPassedDelayGateChecker(criteria_cfg).check()
-            # results[key] = check_pose_is_passed_delay_gate(criteria_cfg)
         elif key == "is_initial_pose_reliable":
             criteria_cfg.tsv_path = (
                 diagnostics_result_dir / "pose_initializer__pose_initializer_status.tsv"
             )
             results[key] = IsInitialPoseReliableChecker(criteria_cfg).check()
-            # results[key] = check_is_initial_pose_reliable(criteria_cfg)
         elif key == "imu_time_stamp_dt":
             criteria_cfg.tsv_path = (
                 diagnostics_result_dir / "gyro_odometer__gyro_odometer_status.tsv"
@@ -229,6 +261,18 @@ def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
                 diagnostics_result_dir / "gyro_odometer__gyro_odometer_status.tsv"
             )
             results[key] = VehicleTwistTimeStampDtChecker(criteria_cfg).check()
+        elif key == "nearest_voxel_transformation_likelihood":
+            criteria_cfg.tsv_path = (
+                diagnostics_result_dir / "ndt_scan_matcher__scan_matching_status.tsv"
+            )
+            criteria_cfg.time_window_ns = 1_000_000_000
+            results[key] = NearestVoxelTransformationLikelihoodChecker(criteria_cfg).check()
+        elif key == "localization_error_ellipse":
+            criteria_cfg.tsv_path = (
+                diagnostics_result_dir / "localization_error_monitor__ellipse_error_status.tsv"
+            )
+            criteria_cfg.time_window_ns = 1_000_000_000
+            results[key] = LocalizationErrorEllipseChecker(criteria_cfg).check()
         else:
             print(f"Flag checking for {key} not defined!!")
 
