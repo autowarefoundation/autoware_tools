@@ -1,150 +1,150 @@
 main_flow_topics:
-- /planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id
-- /planning/scenario_planning/lane_driving/behavior_planning/path
-- /planning/scenario_planning/lane_driving/motion_planning/path_smoother/path
-- /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory
-- /planning/scenario_planning/lane_driving/trajectory
-- /planning/scenario_planning/scenario_selector/trajectory
-- /planning/scenario_planning/velocity_smoother/trajectory
-- /planning/trajectory
-- /control/trajectory_follower/lateral/predicted_trajectory
+  - /planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id
+  - /planning/scenario_planning/lane_driving/behavior_planning/path
+  - /planning/scenario_planning/lane_driving/motion_planning/path_smoother/path
+  - /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory
+  - /planning/scenario_planning/lane_driving/trajectory
+  - /planning/scenario_planning/scenario_selector/trajectory
+  - /planning/scenario_planning/velocity_smoother/trajectory
+  - /planning/trajectory
+  - /control/trajectory_follower/lateral/predicted_trajectory
 topics_by_node:
   /planning/scenario_planning/lane_driving/behavior_planning/behavior_path_planner:
-  - priority: main
-    topic: /planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id
-    msg_type: autoware_internal_planning_msgs/msg/PathWithLaneId
-  - priority: other
-    topic: /planning/path_candidate/bidirectional_traffic
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_candidate/goal_planner
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_candidate/lane_change_left
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_candidate/lane_change_right
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_candidate/side_shift
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_candidate/start_planner
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_candidate/static_obstacle_avoidance
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_reference/bidirectional_traffic
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_reference/goal_planner
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_reference/lane_change_left
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_reference/lane_change_right
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_reference/side_shift
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_reference/start_planner
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/path_reference/static_obstacle_avoidance
-    msg_type: autoware_planning_msgs/msg/Path
+    - priority: main
+      topic: /planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id
+      msg_type: autoware_internal_planning_msgs/msg/PathWithLaneId
+    - priority: other
+      topic: /planning/path_candidate/bidirectional_traffic
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_candidate/goal_planner
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_candidate/lane_change_left
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_candidate/lane_change_right
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_candidate/side_shift
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_candidate/start_planner
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_candidate/static_obstacle_avoidance
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_reference/bidirectional_traffic
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_reference/goal_planner
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_reference/lane_change_left
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_reference/lane_change_right
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_reference/side_shift
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_reference/start_planner
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/path_reference/static_obstacle_avoidance
+      msg_type: autoware_planning_msgs/msg/Path
   /planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner:
-  - priority: main
-    topic: /planning/scenario_planning/lane_driving/behavior_planning/path
-    msg_type: autoware_planning_msgs/msg/Path
+    - priority: main
+      topic: /planning/scenario_planning/lane_driving/behavior_planning/path
+      msg_type: autoware_planning_msgs/msg/Path
   /planning/scenario_planning/lane_driving/motion_planning/elastic_band_smoother:
-  - priority: main
-    topic: /planning/scenario_planning/lane_driving/motion_planning/path_smoother/path
-    msg_type: autoware_planning_msgs/msg/Path
-  - priority: other
-    topic: /planning/scenario_planning/lane_driving/motion_planning/elastic_band_smoother/debug/eb_fixed_traj
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/lane_driving/motion_planning/elastic_band_smoother/debug/eb_traj
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/lane_driving/motion_planning/elastic_band_smoother/debug/extended_traj
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/lane_driving/motion_planning/elastic_band_smoother/output/traj
-    msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: main
+      topic: /planning/scenario_planning/lane_driving/motion_planning/path_smoother/path
+      msg_type: autoware_planning_msgs/msg/Path
+    - priority: other
+      topic: /planning/scenario_planning/lane_driving/motion_planning/elastic_band_smoother/debug/eb_fixed_traj
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/lane_driving/motion_planning/elastic_band_smoother/debug/eb_traj
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/lane_driving/motion_planning/elastic_band_smoother/debug/extended_traj
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/lane_driving/motion_planning/elastic_band_smoother/output/traj
+      msg_type: autoware_planning_msgs/msg/Trajectory
   /planning/scenario_planning/lane_driving/motion_planning/path_optimizer:
-  - priority: main
-    topic: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/debug/extended_traj
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/debug/mpt_fixed_traj
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/debug/mpt_ref_traj
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/debug/mpt_traj
-    msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: main
+      topic: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/debug/extended_traj
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/debug/mpt_fixed_traj
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/debug/mpt_ref_traj
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/lane_driving/motion_planning/path_optimizer/debug/mpt_traj
+      msg_type: autoware_planning_msgs/msg/Trajectory
   /planning/scenario_planning/lane_driving/motion_planning/motion_velocity_planner:
-  - priority: main
-    topic: /planning/scenario_planning/lane_driving/trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/lane_driving/motion_planning/motion_velocity_planner/debug/run_out/trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: main
+      topic: /planning/scenario_planning/lane_driving/trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/lane_driving/motion_planning/motion_velocity_planner/debug/run_out/trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
   /planning/scenario_planning/scenario_selector:
-  - priority: main
-    topic: /planning/scenario_planning/scenario_selector/trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: main
+      topic: /planning/scenario_planning/scenario_selector/trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
   /planning/scenario_planning/velocity_smoother:
-  - priority: main
-    topic: /planning/scenario_planning/velocity_smoother/trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/velocity_smoother/debug/backward_filtered_trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/velocity_smoother/debug/forward_filtered_trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/velocity_smoother/debug/merged_filtered_trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/velocity_smoother/debug/trajectory_external_velocity_limited
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/velocity_smoother/debug/trajectory_lateral_acc_filtered
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/velocity_smoother/debug/trajectory_raw
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/velocity_smoother/debug/trajectory_steering_rate_limited
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /planning/scenario_planning/velocity_smoother/debug/trajectory_time_resampled
-    msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: main
+      topic: /planning/scenario_planning/velocity_smoother/trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/velocity_smoother/debug/backward_filtered_trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/velocity_smoother/debug/forward_filtered_trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/velocity_smoother/debug/merged_filtered_trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/velocity_smoother/debug/trajectory_external_velocity_limited
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/velocity_smoother/debug/trajectory_lateral_acc_filtered
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/velocity_smoother/debug/trajectory_raw
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/velocity_smoother/debug/trajectory_steering_rate_limited
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/velocity_smoother/debug/trajectory_time_resampled
+      msg_type: autoware_planning_msgs/msg/Trajectory
   /planning/planning_validator:
-  - priority: main
-    topic: /planning/trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: main
+      topic: /planning/trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
   /control/trajectory_follower/controller_node_exe:
-  - priority: main
-    topic: /control/trajectory_follower/lateral/predicted_trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /control/trajectory_follower/controller_node_exe/debug/predicted_trajectory_in_frenet_coordinate
-    msg_type: autoware_planning_msgs/msg/Trajectory
-  - priority: other
-    topic: /control/trajectory_follower/controller_node_exe/debug/resampled_reference_trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: main
+      topic: /control/trajectory_follower/lateral/predicted_trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /control/trajectory_follower/controller_node_exe/debug/predicted_trajectory_in_frenet_coordinate
+      msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /control/trajectory_follower/controller_node_exe/debug/resampled_reference_trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory
   /planning/scenario_planning/parking/freespace_planner:
-  - priority: other
-    topic: /planning/scenario_planning/parking/trajectory
-    msg_type: autoware_planning_msgs/msg/Trajectory
+    - priority: other
+      topic: /planning/scenario_planning/parking/trajectory
+      msg_type: autoware_planning_msgs/msg/Trajectory

@@ -26,6 +26,7 @@ from ros2_interface import ROS2Interface
 from trajectory_data import get_data_functions
 from trajectory_node_graph import TrajectoryNodeGraph
 
+
 class TkinterApp:
     def __init__(self, root, ros_interface_node: ROS2Interface, config):
         self.root = root
@@ -140,16 +141,14 @@ class TkinterApp:
         self.refresh_topic_list()
         # Start with no topics selected - initialize empty plot
         self.plotter.init_plot(
-            self.current_x_axis_selection.get(),
-            self.current_y_axis_selection.get(),
-            []
+            self.current_x_axis_selection.get(), self.current_y_axis_selection.get(), []
         )
 
     def on_listbox_select(self, event):  # noqa: ARG002
-        """Handle listbox selection event, preventing node separator selection"""
+        """Handle listbox selection event, preventing node separator selection."""
         current_selection = list(self.listbox.curselection())
         modified = False
-        
+
         # Check each selected index
         for idx in current_selection[:]:  # Use slice to create a copy
             item_text = self.listbox.get(idx)
@@ -158,14 +157,14 @@ class TkinterApp:
                 self.listbox.selection_clear(idx)
                 current_selection.remove(idx)
                 modified = True
-        
+
         # Only trigger plot if selection contains actual topics
         if current_selection:
             self.plot(current_selection)
         elif modified:
             # If all selections were node separators, don't plot
             pass
-    
+
     def hide_show_left_frame(self):
         if self.left_hidden:
             self.left_frame.grid(row=0, column=0, sticky="nswe", padx=5, pady=5)
@@ -179,28 +178,28 @@ class TkinterApp:
 
     def refresh_topic_list(self):
         self.listbox.delete(0, tk.END)  # Clear existing items
-        
+
         # Use TrajectoryNodeGraph for better organization
         try:
             # First, get currently available topics
             current_topics = self.ros_interface.get_trajectory_topics()
-            
+
             # Try to analyze using TrajectoryNodeGraph
             analyzer = TrajectoryNodeGraph(node=self.ros_interface)
             results = None
-            
+
             try:
                 # Try live analysis first
                 results = analyzer.analyze()
-                
+
                 # Check if we got valid results with nodes
-                if not results or not results.get('graph') or not results.get('nodes_in_order'):
+                if not results or not results.get("graph") or not results.get("nodes_in_order"):
                     raise RuntimeError("Live analysis returned empty graph")
-                    
+
             except Exception as live_error:
                 # If live analysis fails (e.g., bag playback), try loading from YAML
                 print(f"Live analysis failed ({live_error}), trying YAML fallback...")
-                
+
                 yaml_data = TrajectoryNodeGraph.load_from_yaml()
                 if yaml_data:
                     # Filter YAML data with currently active topics
@@ -209,13 +208,13 @@ class TkinterApp:
                         print("Using cached graph configuration from YAML")
                 else:
                     print("No YAML configuration found")
-            
+
             # Get organized topics only if we have results
-            if not results or not results.get('topics_by_node'):
+            if not results or not results.get("topics_by_node"):
                 raise RuntimeError("No valid results to display")
 
             # Get organized topics
-            topics_by_node = results.get('topics_by_node', {})
+            topics_by_node = results.get("topics_by_node", {})
 
             # Build topics list with node separators
             self.topics = []
@@ -227,7 +226,7 @@ class TkinterApp:
                     # Add node separator
                     node_line = f"--- [{node_name}] ---"
                     self.listbox.insert(tk.END, node_line)
-                    self.listbox.itemconfig(tk.END, {'fg': 'gray'})
+                    self.listbox.itemconfig(tk.END, {"fg": "gray"})
 
                     for topic_info in node_topics:
                         # topic_info is ('main'/'other', topic_name, msg_type)
@@ -242,15 +241,16 @@ class TkinterApp:
                         self.listbox.insert(tk.END, display_text)
 
                         # Highlight main flow topics
-                        if priority == 'main':
-                            self.listbox.itemconfig(tk.END, {'fg': 'blue'})
+                        if priority == "main":
+                            self.listbox.itemconfig(tk.END, {"fg": "blue"})
 
             # Add remaining topics not in YAML under "others" section
             other_topics = []
             for topic_name, msg_type in current_topics:
                 # Only add if not already displayed and under /planning or /control
-                if (topic_name not in displayed_topics and
-                    (topic_name.startswith('/planning') or topic_name.startswith('/control'))):
+                if topic_name not in displayed_topics and (
+                    topic_name.startswith("/planning") or topic_name.startswith("/control")
+                ):
                     other_topics.append((topic_name, msg_type))
 
             # Sort other topics alphabetically
@@ -261,7 +261,7 @@ class TkinterApp:
                 # Add separator
                 node_line = "--- [others] ---"
                 self.listbox.insert(tk.END, node_line)
-                self.listbox.itemconfig(tk.END, {'fg': 'gray'})
+                self.listbox.itemconfig(tk.END, {"fg": "gray"})
 
                 for topic_name, msg_type in other_topics:
                     # Store in topics list
@@ -275,7 +275,7 @@ class TkinterApp:
         except Exception as e:
             # Fall back to original method if analysis fails
             print(f"TrajectoryNodeGraph analysis failed: {e}")
-        
+
         # Original implementation (fallback)
         self.topics = self.ros_interface.get_trajectory_topics()
         for topic, msg_type in self.topics:
