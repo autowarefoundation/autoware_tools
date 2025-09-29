@@ -4,22 +4,55 @@
 from abc import abstractmethod
 import argparse
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
+from typing import Callable
 from typing import Dict
-from typing import Optional
+from typing import List
 
 import pandas as pd
 import yaml
 
 
+def window_condition_before(t, target_time):
+    return t <= target_time
+
+
+def window_condition_after(t, target_time):
+    return t >= target_time
+
+
+def window_condition_at(t, start_time, end_time):
+    return t >= start_time & t <= end_time
+
+
+class TimingType(Enum):
+    BEFORE = "before"
+    AFTER = "after"
+    AT = "at"
+
+
+class FlagType(Enum):
+    POSITIVE = "positive"
+    NEGATIVE = "negative"
+
+
+@dataclass
+class Flag:
+    flag_type: FlagType
+    timing: TimingType
+    sec: int
+    nanosec: int
+    window: int
+    entirely: bool
+
+
 @dataclass
 class CriteriaConfig:
+    diagnostics_key: str
+    flags: List[Flag]
     tsv_path: Path = "default.tsv"
-    diagnostics_key: str = ""
-    flag: str = "rise"
-    target_time_ns: Optional[int] = None
     timestamp_label = "timestamp_header"
-    time_window_ns: int = 500_000_000
 
 
 class BaseChecker:
@@ -34,14 +67,11 @@ class BaseChecker:
     def is_positive(self, series: pd.Series) -> bool:
         pass
 
-    def any_positive_in_window(self) -> bool:
-        start = self.cfg.target_time_ns - self.cfg.time_window_ns
-        end = self.cfg.target_time_ns + self.cfg.time_window_ns
-
+    def is_any_positive_in_window(self, window_condition: Callable[[pd.Series], pd.Series]) -> bool:
         df_valid = self.df.dropna(subset=[self.cfg.timestamp_label])
         df_valid = df_valid.sort_values(by=self.cfg.timestamp_label)
         timestamp_ns = pd.to_numeric(df_valid[self.cfg.timestamp_label], errors="coerce")
-        df_window = df_valid[(timestamp_ns >= start) & (timestamp_ns <= end)]
+        df_window = df_valid[window_condition(timestamp_ns)]
 
         for _, row in df_window.iterrows():
             if self.is_positive(row):
@@ -49,14 +79,11 @@ class BaseChecker:
 
         return False
 
-    def any_negative_in_window(self) -> bool:
-        start = self.cfg.target_time_ns - self.cfg.time_window_ns
-        end = self.cfg.target_time_ns + self.cfg.time_window_ns
-
+    def is_any_negative_in_window(self, window_condition: Callable[[pd.Series], pd.Series]) -> bool:
         df_valid = self.df.dropna(subset=[self.cfg.timestamp_label])
         df_valid = df_valid.sort_values(by=self.cfg.timestamp_label)
         timestamp_ns = pd.to_numeric(df_valid[self.cfg.timestamp_label], errors="coerce")
-        df_window = df_valid[(timestamp_ns >= start) & (timestamp_ns <= end)]
+        df_window = df_valid[window_condition(timestamp_ns)]
 
         for _, row in df_window.iterrows():
             if not self.is_positive(row):
@@ -64,12 +91,11 @@ class BaseChecker:
 
         return False
 
-    def all_positive_before_window(self) -> bool:
-        start = self.cfg.target_time_ns - self.cfg.time_window_ns
+    def is_all_positive_in_window(self, window_condition: Callable[[pd.Series], pd.Series]) -> bool:
         df_valid = self.df.dropna(subset=[self.cfg.timestamp_label])
         df_valid = df_valid.sort_values(by=self.cfg.timestamp_label)
         timestamp_ns = pd.to_numeric(df_valid[self.cfg.timestamp_label], errors="coerce")
-        df_window = df_valid[(timestamp_ns >= 0) & (timestamp_ns <= start)]
+        df_window = df_valid[window_condition(timestamp_ns)]
 
         for _, row in df_window.iterrows():
             if not self.is_positive(row):
@@ -77,12 +103,11 @@ class BaseChecker:
 
         return True
 
-    def all_negative_before_window(self) -> bool:
-        start = self.cfg.target_time_ns - self.cfg.time_window_ns
+    def is_all_negative_in_window(self, window_condition: Callable[[pd.Series], pd.Series]) -> bool:
         df_valid = self.df.dropna(subset=[self.cfg.timestamp_label])
         df_valid = df_valid.sort_values(by=self.cfg.timestamp_label)
         timestamp_ns = pd.to_numeric(df_valid[self.cfg.timestamp_label], errors="coerce")
-        df_window = df_valid[(timestamp_ns >= 0) & (timestamp_ns <= start)]
+        df_window = df_valid[window_condition(timestamp_ns)]
 
         for _, row in df_window.iterrows():
             if self.is_positive(row):
@@ -91,22 +116,50 @@ class BaseChecker:
         return True
 
     def check(self) -> bool:
-        if self.cfg.flag == "rise":
-            if not self.any_positive_in_window():
-                print("    Not positive around target time.")
+        entire_result = True
+        for flag in self.cfg.flags:
+            target_time = flag.sec * 1_000_000_000 + flag.nanosec
+            if flag.timing == TimingType.BEFORE.value:
+
+                def window_condition(t: int) -> bool:
+                    return t <= target_time
+
+            elif flag.timing == TimingType.AFTER.value:
+
+                def window_condition(t: int) -> bool:
+                    return t >= target_time
+
+            elif flag.timing == TimingType.AT.value:
+                start_time = target_time - flag.window
+                end_time = target_time + flag.window
+
+                def window_condition(t: int) -> bool:
+                    return (t >= start_time) & (t <= end_time)
+
+            else:
+                print("Invalid timing type found!!")
                 return False
-            if not self.all_negative_before_window():
-                print("    Found positive before target time.")
+
+            if flag.flag_type == FlagType.POSITIVE.value and flag.entirely:
+                partial_result = self.is_all_positive_in_window(window_condition)
+            elif flag.flag_type == FlagType.POSITIVE.value and not flag.entirely:
+                partial_result = self.is_any_positive_in_window(window_condition)
+            elif flag.flag_type == FlagType.NEGATIVE.value and flag.entirely:
+                partial_result = self.is_all_negative_in_window(window_condition)
+            elif flag.flag_type == FlagType.NEGATIVE.value and not flag.entirely:
+                partial_result = self.is_any_negative_in_window(window_condition)
+            else:
+                print("Invalid flag type found!!")
                 return False
-            return True
-        else:
-            if not self.any_negative_in_window():
-                print("    Not negative around target time.")
-                return False
-            if not self.all_positive_before_window():
-                print("    Found negative before target time.")
-                return False
-            return True
+
+            if not partial_result:
+                print(
+                    f'{flag.flag_type} flag of {self.cfg.diagnostics_key} with timing "{flag.timing}" of {flag.sec}.{flag.nanosec} failed.'
+                )
+
+            entire_result &= partial_result
+
+        return entire_result
 
 
 class ImuTimeStampDtChecker(BaseChecker):
@@ -153,10 +206,12 @@ class PoseIsPassedDelayGateChecker(BaseChecker):
 class IsInitialPoseReliableChecker(BaseChecker):
     # Override check() since this diagnostics is an one shot
     def check(self):
-        is_initial_pose_reliable = self.df.iloc[-1]["is_initial_pose_reliable"]
-        if (self.cfg.flag == "rise" and not is_initial_pose_reliable) or (
-            self.cfg.flag == "fall" and is_initial_pose_reliable
-        ):
+        is_initial_pose_reliable = self.df.iloc[-1]["is_initial_pose_reliable"] & (
+            self.df.iloc[-1]["level"] != 2
+        )
+        if (
+            self.cfg.flags[0].flag_type == FlagType.POSITIVE.value and not is_initial_pose_reliable
+        ) or (self.cfg.flags[0].flag_type == FlagType.NEGATIVE.value and is_initial_pose_reliable):
             return True
         else:
             return False
@@ -176,25 +231,13 @@ class LocalizationErrorEllipseChecker(BaseChecker):
     def is_positive(self, series):
         level_label = "level"
         error_ellipse_label = "localization_error_ellipse"
+        lateral_error_ellipse_label = "localization_error_ellipse_lateral_direction"
         if level_label in series and error_ellipse_label in series:
-            return series[level_label] == 2 and series[error_ellipse_label] >= 1.5
+            return (series[level_label] == 2 and series[error_ellipse_label] >= 1.5) or (
+                series[level_label] == 2 and series[lateral_error_ellipse_label] >= 0.3
+            )
         else:
             return False
-
-    # Override check() since the beginning is always an error
-    def check(self) -> bool:
-        if self.cfg.flag == "rise":
-            if not self.any_positive_in_window():
-                print("    Not positive around target time.")
-                return False
-            else:
-                return True
-        else:
-            if not self.any_negative_in_window():
-                print("    Not negative around target time.")
-                return False
-            else:
-                return True
 
 
 def parse_args() -> argparse.Namespace:
@@ -217,6 +260,22 @@ def load_diagnostics_flag_check(yaml_path: Path):
     return conditions.get("DiagnosticsFlagCheck", None)
 
 
+def parse_flags(flags_yaml: Dict) -> List[Flag]:
+    flags: List[Flag] = []
+    for name, flag_yaml in flags_yaml.items():
+        flag = Flag(
+            flag_type=flag_yaml.get("type", ""),
+            timing=flag_yaml.get("timing", ""),
+            sec=flag_yaml.get("sec", 0),
+            nanosec=flag_yaml.get("nanosec", 0),
+            window=flag_yaml.get("window", 500_000_000),
+            entirely=flag_yaml.get("entirely", False),
+        )
+        flags.append(flag)
+
+    return flags
+
+
 def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
     diagnostics_flag_condition = load_diagnostics_flag_check(scenario_file)
 
@@ -225,22 +284,10 @@ def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
         return {}
 
     results = {key: False for key in diagnostics_flag_condition}
-    for key, criteria in diagnostics_flag_condition.items():
+    for key, flags_yaml in diagnostics_flag_condition.items():
         print(f"Processing diagnostics: {key}")
-
-        criteria_cfg = CriteriaConfig()
-
-        criteria_cfg.key = key
-        criteria_cfg.flag = criteria.get("flag", "").strip().lower()
-
-        at_sec = int(float(criteria.get("at_sec", 0)))
-        at_nanosec = int(float(criteria.get("at_nanosec", 0)))
-        criteria_cfg.target_time_ns = int(at_sec * 1_000_000_000 + at_nanosec)
-
-        if not (criteria_cfg.flag == "rise" or criteria_cfg.flag == "fall"):
-            print("    Invalid flag found!")
-            results[key] = False
-        elif key == "pose_no_update_count":
+        criteria_cfg = CriteriaConfig(diagnostics_key=key, flags=parse_flags(flags_yaml))
+        if key == "pose_no_update_count":
             criteria_cfg.tsv_path = diagnostics_result_dir / "localization__ekf_localizer.tsv"
             results[key] = PoseNoUpdateCountChecker(criteria_cfg).check()
         elif key == "pose_is_passed_delay_gate":
@@ -265,13 +312,11 @@ def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
             criteria_cfg.tsv_path = (
                 diagnostics_result_dir / "ndt_scan_matcher__scan_matching_status.tsv"
             )
-            criteria_cfg.time_window_ns = 1_000_000_000
             results[key] = NearestVoxelTransformationLikelihoodChecker(criteria_cfg).check()
         elif key == "localization_error_ellipse":
             criteria_cfg.tsv_path = (
                 diagnostics_result_dir / "localization_error_monitor__ellipse_error_status.tsv"
             )
-            criteria_cfg.time_window_ns = 1_000_000_000
             results[key] = LocalizationErrorEllipseChecker(criteria_cfg).check()
         else:
             print(f"Flag checking for {key} not defined!!")
