@@ -266,9 +266,9 @@ def parse_flags(flags_yaml: Dict) -> List[Flag]:
         flag = Flag(
             flag_type=flag_yaml.get("type", ""),
             timing=flag_yaml.get("timing", ""),
-            sec=flag_yaml.get("sec", 0),
-            nanosec=flag_yaml.get("nanosec", 0),
-            window=flag_yaml.get("window", 500_000_000),
+            sec=int(flag_yaml.get("sec", 0)),
+            nanosec=int(flag_yaml.get("nanosec", 0)),
+            window=int(flag_yaml.get("window", 500_000_000)),
             entirely=flag_yaml.get("entirely", False),
         )
         flags.append(flag)
