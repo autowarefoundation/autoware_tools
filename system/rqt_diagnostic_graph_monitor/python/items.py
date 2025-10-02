@@ -13,12 +13,12 @@
 # limitations under the License.
 
 
-from diagnostic_msgs.msg import DiagnosticStatus
 from python_qt_binding import QtCore
 from python_qt_binding import QtGui
 from python_qt_binding import QtWidgets
 
 from .graph import BaseUnit
+from .graph import UnitLevel
 from .graph import UnitLink
 
 
@@ -32,10 +32,10 @@ class MonitorIcons:
         self.stale = QtGui.QIcon.fromTheme("appointment-missed")
 
         self._levels = {}
-        self._levels[DiagnosticStatus.OK] = self.ok
-        self._levels[DiagnosticStatus.WARN] = self.warn
-        self._levels[DiagnosticStatus.ERROR] = self.error
-        self._levels[DiagnosticStatus.STALE] = self.stale
+        self._levels[UnitLevel.OK] = self.ok
+        self._levels[UnitLevel.WARN] = self.warn
+        self._levels[UnitLevel.ERROR] = self.error
+        self._levels[UnitLevel.STALE] = self.stale
 
     def get(self, level):
         return self._levels.get(level, self.unknown)

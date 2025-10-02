@@ -20,6 +20,39 @@ from .items import MonitorItem
 from .utils import foreach
 
 
+class ItemInspector(QtWidgets.QTreeWidget):
+    def __init__(self):
+        super().__init__()
+        self.setHeaderLabels(["Item", "Data"])
+
+    def inspect(self, item: MonitorItem):
+        self.clear()
+        self.addTopLevelItem(self._create_node_item(item.node))
+        if item.node.diag:
+            self.addTopLevelItem(self._create_diag_item(item.node.diag))
+        for index in range(self.topLevelItemCount()):
+            self.topLevelItem(index).setExpanded(True)
+
+    @staticmethod
+    def _create_node_item(node):
+        item = QtWidgets.QTreeWidgetItem(["Node"])
+        item.addChild(QtWidgets.QTreeWidgetItem(["Level", node.level.name]))
+        item.addChild(QtWidgets.QTreeWidgetItem(["Path", node.path]))
+        item.addChild(QtWidgets.QTreeWidgetItem(["Type", node.kind]))
+        return item
+
+    @staticmethod
+    def _create_diag_item(diag):
+        item = QtWidgets.QTreeWidgetItem(["Diag"])
+        item.addChild(QtWidgets.QTreeWidgetItem(["Level", diag.level.name]))
+        item.addChild(QtWidgets.QTreeWidgetItem(["Name", diag.name]))
+        item.addChild(QtWidgets.QTreeWidgetItem(["Hardware ID", diag.hardware]))
+        item.addChild(QtWidgets.QTreeWidgetItem(["Message", diag.message]))
+        for kv in diag.values:
+            item.addChild(QtWidgets.QTreeWidgetItem([kv.key, kv.value]))
+        return item
+
+
 class MonitorWidget(QtWidgets.QSplitter):
     def __init__(self):
         super().__init__(QtCore.Qt.Orientation.Vertical)
@@ -31,7 +64,7 @@ class MonitorWidget(QtWidgets.QSplitter):
         self.root_widget.setHeaderLabels(["Top-level"])
         self.tree_widget.setHeaderLabels(["Subtrees"])
 
-        self.info_widget = QtWidgets.QTextEdit()
+        self.info_widget = ItemInspector()
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         self.splitter.addWidget(self.root_widget)
@@ -48,8 +81,7 @@ class MonitorWidget(QtWidgets.QSplitter):
 
     def on_item_selected(self, item, column):
         item = item.data(0, QtCore.Qt.UserRole)
-        node = item.node
-        print(node.path, node.kind, node.diag)
+        self.info_widget.inspect(item)
 
     def shutdown(self):
         self.clear_graph()

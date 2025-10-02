@@ -12,8 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
+
 from diagnostic_msgs.msg import DiagnosticStatus
 from rclpy.time import Time
+
+
+class UnitLevel(Enum):
+    OK = DiagnosticStatus.OK
+    WARN = DiagnosticStatus.WARN
+    ERROR = DiagnosticStatus.ERROR
+    STALE = DiagnosticStatus.STALE
 
 
 class DummyStatus:
@@ -39,15 +48,15 @@ class BaseUnit:
     def children(self):
         return self._children
 
+    @property
+    def level(self):
+        return UnitLevel(self._status.level)
+
 
 class NodeUnit(BaseUnit):
     def __init__(self, struct):
         super().__init__(struct)
         self._diag = None
-
-    @property
-    def level(self):
-        return self._status.level
 
     @property
     def path(self):
@@ -68,16 +77,24 @@ class DiagUnit(BaseUnit):
         self._node = None
 
     @property
-    def level(self):
-        return self._status.level
+    def parent(self):
+        return self._struct.parent
 
     @property
     def name(self):
         return self._struct.name
 
     @property
-    def parent(self):
-        return self._struct.parent
+    def hardware(self):
+        return self._status.hardware_id
+
+    @property
+    def message(self):
+        return self._status.message
+
+    @property
+    def values(self):
+        return self._status.values
 
 
 class UnitLink:
