@@ -14,6 +14,7 @@
 
 
 from diagnostic_msgs.msg import DiagnosticStatus
+from python_qt_binding import QtCore
 from python_qt_binding import QtGui
 from python_qt_binding import QtWidgets
 
@@ -43,12 +44,13 @@ class MonitorIcons:
 class MonitorItem:
     icons = MonitorIcons()
 
-    def __init__(self, link: UnitLink, unit: BaseUnit):
-        item_text = f"{unit.path} ({unit.kind})" if unit.path else f"({unit.kind})"
+    def __init__(self, link: UnitLink, node: BaseUnit):
+        item_text = node.path if node.path else "[group]"
         self.item = QtWidgets.QTreeWidgetItem([item_text])
+        self.item.setData(0, QtCore.Qt.UserRole, self)
         self.link = link
-        self.unit = unit
+        self.node = node
         self.item.setIcon(0, self.icons.stale)
 
     def update(self):
-        self.item.setIcon(0, self.icons.get(self.unit.level))
+        self.item.setIcon(0, self.icons.get(self.node.level))

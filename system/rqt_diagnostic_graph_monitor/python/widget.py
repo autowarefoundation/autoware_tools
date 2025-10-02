@@ -22,19 +22,34 @@ from .utils import foreach
 
 class MonitorWidget(QtWidgets.QSplitter):
     def __init__(self):
-        super().__init__()
+        super().__init__(QtCore.Qt.Orientation.Vertical)
         self.graph = None
         self.items = []
+
         self.root_widget = QtWidgets.QTreeWidget()
         self.tree_widget = QtWidgets.QTreeWidget()
         self.root_widget.setHeaderLabels(["Top-level"])
         self.tree_widget.setHeaderLabels(["Subtrees"])
-        self.addWidget(self.root_widget)
-        self.addWidget(self.tree_widget)
+
+        self.info_widget = QtWidgets.QTextEdit()
+
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
+        self.splitter.addWidget(self.root_widget)
+        self.splitter.addWidget(self.tree_widget)
+        self.addWidget(self.splitter)
+        self.addWidget(self.info_widget)
+
+        self.root_widget.itemClicked.connect(self.on_item_selected)
+        self.tree_widget.itemClicked.connect(self.on_item_selected)
 
         self._timer = QtCore.QTimer()
         self._timer.timeout.connect(self.on_timer)
         self._timer.start(500)
+
+    def on_item_selected(self, item, column):
+        item = item.data(0, QtCore.Qt.UserRole)
+        node = item.node
+        print(node.path, node.kind, node.diag)
 
     def shutdown(self):
         self.clear_graph()
@@ -53,18 +68,18 @@ class MonitorWidget(QtWidgets.QSplitter):
         self.tree_widget.clear()
 
     def build_graph(self, graph: Graph):
+        root_nodes = filter(self.is_root_node, graph.nodes)
+        tree_nodes = filter(self.is_tree_node, graph.nodes)
+        root_items = [MonitorItem(None, node) for node in root_nodes]
+        tree_items = [MonitorItem(None, node) for node in tree_nodes]
+        link_items = [MonitorItem(link, link.child) for link in graph.links]
         self.graph = graph
-        root_nodes = filter(self.is_root_unit, self.graph.nodes)
-        tree_nodes = filter(self.is_tree_unit, self.graph.nodes)
-        root_items = [MonitorItem(None, unit) for unit in root_nodes]
-        tree_items = [MonitorItem(None, unit) for unit in tree_nodes]
-        link_items = [MonitorItem(link, link.child) for link in self.graph.links]
         self.items = root_items + tree_items + link_items
 
         # Note: overwrite link items with root/tree items if there is more than one.
         parents = {}
         for items in [link_items, tree_items, root_items]:
-            parents.update({item.unit: item.item for item in items})
+            parents.update({item.node: item.item for item in items})
 
         # Connect tree widget items.
         root_widget_item = self.root_widget.invisibleRootItem()
@@ -77,9 +92,9 @@ class MonitorWidget(QtWidgets.QSplitter):
             parents[item.link.parent].addChild(item.item)
 
     @staticmethod
-    def is_root_unit(unit):
-        return len(unit.parents) == 0
+    def is_root_node(node):
+        return len(node.parents) == 0
 
     @staticmethod
-    def is_tree_unit(unit):
-        return len(unit.parents) >= 2 and len(unit.children) != 0
+    def is_tree_node(node):
+        return len(node.parents) >= 2 and len(node.children) != 0
