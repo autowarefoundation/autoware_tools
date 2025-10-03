@@ -240,6 +240,42 @@ class LocalizationErrorEllipseChecker(BaseChecker):
             return False
 
 
+class PoseInstabilityChecker(BaseChecker):
+    def is_positive(self, series):
+        level_label = "level"
+        status_label = [
+            "diff_position_x:status",
+            "diff_position_y:status",
+            "diff_position_z:status",
+            "diff_angle_x:status",
+            "diff_angle_y:status",
+            "diff_angle_z:status",
+        ]
+        validation_label = [
+            "diff_position_x:validation_enabled",
+            "diff_position_y:validation_enabled",
+            "diff_position_z:validation_enabled",
+            "diff_angle_x:validation_enabled",
+            "diff_angle_y:validation_enabled",
+            "diff_angle_z:validation_enabled",
+        ]
+
+        if (
+            level_label in series
+            and set(status_label).issubset(series.index)
+            and set(validation_label).issubset(series.index)
+        ):
+            all_ok = True
+            for s, v in zip(status_label, validation_label):
+                if series[v]:  # validation_enabled == True
+                    if series[s] != "OK":
+                        all_ok = False
+                        break
+            return not all_ok and series[level_label] == 2
+        else:
+            return False
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("scenario_file", type=Path, default=None)
@@ -318,6 +354,11 @@ def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
                 diagnostics_result_dir / "localization_error_monitor__ellipse_error_status.tsv"
             )
             results[key] = LocalizationErrorEllipseChecker(criteria_cfg).check()
+        elif key == "pose_instability":
+            criteria_cfg.tsv_path = (
+                diagnostics_result_dir / "localization__pose_instability_detector.tsv"
+            )
+            results[key] = PoseInstabilityChecker(criteria_cfg).check()
         else:
             print(f"Flag checking for {key} not defined!!")
 
