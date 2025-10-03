@@ -20,37 +20,93 @@ from .items import MonitorItem
 from .utils import foreach
 
 
-class ItemInspector(QtWidgets.QTreeWidget):
+class ItemInspector(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        self.setHeaderLabels(["Item", "Data"])
+        self.item = None
 
-    def inspect(self, item: MonitorItem):
-        self.clear()
-        self.addTopLevelItem(self._create_node_item(item.node))
-        if item.node.diag:
-            self.addTopLevelItem(self._create_diag_item(item.node.diag))
-        for index in range(self.topLevelItemCount()):
-            self.topLevelItem(index).setExpanded(True)
+        self.opts = QtWidgets.QCheckBox("Realtime Update")
+        self.tree = QtWidgets.QTreeWidget()
+        self.tree.setHeaderLabels(["Item", "Data"])
 
-    @staticmethod
-    def _create_node_item(node):
-        item = QtWidgets.QTreeWidgetItem(["Node"])
-        item.addChild(QtWidgets.QTreeWidgetItem(["Level", node.level.name]))
-        item.addChild(QtWidgets.QTreeWidgetItem(["Path", node.path]))
-        item.addChild(QtWidgets.QTreeWidgetItem(["Type", node.kind]))
-        return item
+        self.item_node_group = QtWidgets.QTreeWidgetItem(["Node"])
+        self.item_node_path = QtWidgets.QTreeWidgetItem(["Path"])
+        self.item_node_type = QtWidgets.QTreeWidgetItem(["Type"])
+        self.item_node_level = QtWidgets.QTreeWidgetItem(["Level"])
+        self.item_node_group.addChild(self.item_node_path)
+        self.item_node_group.addChild(self.item_node_type)
+        self.item_node_group.addChild(self.item_node_level)
 
-    @staticmethod
-    def _create_diag_item(diag):
-        item = QtWidgets.QTreeWidgetItem(["Diag"])
-        item.addChild(QtWidgets.QTreeWidgetItem(["Level", diag.level.name]))
-        item.addChild(QtWidgets.QTreeWidgetItem(["Name", diag.name]))
-        item.addChild(QtWidgets.QTreeWidgetItem(["Hardware ID", diag.hardware]))
-        item.addChild(QtWidgets.QTreeWidgetItem(["Message", diag.message]))
-        for kv in diag.values:
-            item.addChild(QtWidgets.QTreeWidgetItem([kv.key, kv.value]))
-        return item
+        self.item_diag_group = QtWidgets.QTreeWidgetItem(["Diag"])
+        self.item_diag_name = QtWidgets.QTreeWidgetItem(["Name"])
+        self.item_diag_hardware = QtWidgets.QTreeWidgetItem(["Hardware ID"])
+        self.item_diag_level = QtWidgets.QTreeWidgetItem(["Level"])
+        self.item_diag_message = QtWidgets.QTreeWidgetItem(["Message"])
+        self.item_diag_group.addChild(self.item_diag_name)
+        self.item_diag_group.addChild(self.item_diag_hardware)
+        self.item_diag_group.addChild(self.item_diag_level)
+        self.item_diag_group.addChild(self.item_diag_message)
+        self.item_kv_group = QtWidgets.QTreeWidgetItem(["KeyValue"])
+
+        self.tree.addTopLevelItem(self.item_node_group)
+        self.tree.addTopLevelItem(self.item_diag_group)
+        self.tree.addTopLevelItem(self.item_kv_group)
+        self.item_node_group.setExpanded(True)
+        self.item_diag_group.setExpanded(True)
+        self.item_kv_group.setExpanded(True)
+
+        self.setLayout(QtWidgets.QVBoxLayout())
+        self.layout().addWidget(self.opts)
+        self.layout().addWidget(self.tree)
+
+    def select(self, item: MonitorItem):
+        self.item = item
+        self._update_unit_items()
+
+    def update(self):
+        if self.item and self.opts.isChecked():
+            self._update_unit_items()
+
+    def _update_unit_items(self):
+        if self.item.node.diag is None:
+            self._update_node_items(self.item.node)
+            self._remove_diag_items()
+            self._remove_kv_items()
+        else:
+            self._update_node_items(self.item.node)
+            self._update_diag_items(self.item.node.diag)
+            self._update_kv_items(self.item.node.diag.values)
+
+    def _update_node_items(self, node):
+        self.item_node_path.setText(1, node.path)
+        self.item_node_type.setText(1, node.kind)
+        self.item_node_level.setText(1, node.level.name)
+
+    def _update_diag_items(self, diag):
+        self.item_diag_name.setText(1, diag.name)
+        self.item_diag_hardware.setText(1, diag.hardware)
+        self.item_diag_level.setText(1, diag.level.name)
+        self.item_diag_message.setText(1, diag.message)
+
+    def _remove_diag_items(self):
+        self.item_diag_name.setText(1, "")
+        self.item_diag_hardware.setText(1, "")
+        self.item_diag_level.setText(1, "")
+        self.item_diag_message.setText(1, "")
+
+    def _update_kv_items(self, values):
+        root = self.item_kv_group
+        for index in range(root.childCount(), len(values)):
+            root.addChild(QtWidgets.QTreeWidgetItem())
+        for index in range(len(values)):
+            root.child(index).setText(0, values[index].key)
+            root.child(index).setText(1, values[index].value)
+        for index in range(len(values), root.childCount()):
+            root.child(index).setText(0, "")
+            root.child(index).setText(1, "")
+
+    def _remove_kv_items(self):
+        self._update_kv_items([])
 
 
 class MonitorWidget(QtWidgets.QSplitter):
@@ -72,16 +128,12 @@ class MonitorWidget(QtWidgets.QSplitter):
         self.addWidget(self.splitter)
         self.addWidget(self.info_widget)
 
-        self.root_widget.itemClicked.connect(self.on_item_selected)
-        self.tree_widget.itemClicked.connect(self.on_item_selected)
+        self.root_widget.itemActivated.connect(self.on_item_selected)
+        self.tree_widget.itemActivated.connect(self.on_item_selected)
 
         self._timer = QtCore.QTimer()
         self._timer.timeout.connect(self.on_timer)
         self._timer.start(500)
-
-    def on_item_selected(self, item, column):
-        item = item.data(0, QtCore.Qt.UserRole)
-        self.info_widget.inspect(item)
 
     def shutdown(self):
         self.clear_graph()
@@ -89,9 +141,16 @@ class MonitorWidget(QtWidgets.QSplitter):
     def on_timer(self):
         foreach(self.items, lambda item: item.update())
 
-    def on_graph(self, graph: Graph):
+    def on_item_selected(self, item, column):
+        item = item.data(0, QtCore.Qt.UserRole)
+        self.info_widget.select(item)
+
+    def on_graph_created(self, graph: Graph):
         self.clear_graph()
         self.build_graph(graph)
+
+    def on_graph_updated(self, graph: Graph):
+        self.info_widget.update()
 
     def clear_graph(self):
         self.graph = None
@@ -105,6 +164,7 @@ class MonitorWidget(QtWidgets.QSplitter):
         root_items = [MonitorItem(None, node) for node in root_nodes]
         tree_items = [MonitorItem(None, node) for node in tree_nodes]
         link_items = [MonitorItem(link, link.child) for link in graph.links]
+
         self.graph = graph
         self.items = root_items + tree_items + link_items
 
