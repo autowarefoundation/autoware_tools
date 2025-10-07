@@ -34,7 +34,9 @@ def parse_diagnostics_msgs(rosbag_dir: str, target_list: list) -> dict:
         storage_id = "sqlite3"
     elif len(list(Path(rosbag_dir).rglob("*.mcap"))) > 0:
         storage_id = "mcap"
-    assert storage_id is not None, f"Error: {rosbag_dir} is not a valid rosbag directory."
+    assert (
+        storage_id is not None
+    ), f"Error: {rosbag_dir} is not a valid rosbag directory."
     storage_options = rosbag2_py.StorageOptions(
         uri=str(rosbag_dir),
         storage_id=storage_id,
@@ -48,7 +50,9 @@ def parse_diagnostics_msgs(rosbag_dir: str, target_list: list) -> dict:
     reader.open(storage_options, converter_options)
 
     topic_types = reader.get_all_topics_and_types()
-    type_map = {topic_types[i].name: topic_types[i].type for i in range(len(topic_types))}
+    type_map = {
+        topic_types[i].name: topic_types[i].type for i in range(len(topic_types))
+    }
 
     storage_filter = rosbag2_py.StorageFilter(topics=["/diagnostics"])
     reader.set_filter(storage_filter)
@@ -183,36 +187,93 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
     #################
     # ekf_localizer #
     #################
-    diag_name = "localization: ekf_localizer"
-    df = pd.DataFrame(data_dict[diag_name])
-    df = df[df["is_activated"] == "True"]
-    key_list = [
-        "pose_mahalanobis_distance",
-        "twist_mahalanobis_distance",
-        "cov_ellipse_long_axis_size",
-        "cov_ellipse_lateral_direction_size",
-    ]
-    plt.figure(figsize=(6.4 * 2, 4.8 * 2))
-    for i, key in enumerate(key_list):
-        if key not in df.columns:
-            print(f"Skip {key}")
-            continue
-        df[key] = df[key].astype(float)
-        key_threshold = (
-            key + "_threshold" if "mahalanobis" in key else key.replace("_size", "_warn_threshold")
-        )
-        df[key_threshold] = df[key_threshold].astype(float)
-        plt.subplot(4, 1, (i + 1))
-        plt.plot(df["timestamp_header"], df[key], label=key)
-        plt.plot(df["timestamp_header"], df[key_threshold], label=key_threshold)
-        plt.xlabel("time [s]")
-        plt.title(f"{key}")
-        plt.grid()
+    # Collect data from the new fragmented diagnostic messages
+    key_mapping = {
+        "pose_mahalanobis_distance": "localization: ekf_localizer: pose_mahalanobis_distance",
+        "twist_mahalanobis_distance": "localization: ekf_localizer: twist_mahalanobis_distance",
+        "cov_ellipse_long_axis_size": "localization: ekf_localizer: cov_ellipse_long_axis_size",
+        "cov_ellipse_lateral_direction_size": "localization: ekf_localizer: cov_ellipse_lateral_direction_size",
+    }
 
-    plt.tight_layout()
-    save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
-    plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
-    plt.close()
+    # Get is_activated status from the activation diagnostic
+    is_activated_data = data_dict.get("localization: ekf_localizer: is_activated", [])
+
+    # Create combined dataframe from individual diagnostic messages
+    combined_data = []
+
+    if is_activated_data:
+        # Use is_activated timestamps as the base
+        for activated_entry in is_activated_data:
+            if activated_entry.get("is_activated") == "True":
+                timestamp = activated_entry["timestamp_header"]
+
+                # Create entry with timestamp
+                entry = {
+                    "timestamp_header": timestamp,
+                    "timestamp_rosbag": activated_entry["timestamp_rosbag"],
+                    "is_activated": "True",
+                }
+
+                # Find corresponding data from each diagnostic message
+                for key, diag_name in key_mapping.items():
+                    if diag_name in data_dict:
+                        # Find the closest timestamp match
+                        target_data = data_dict[diag_name]
+                        closest_entry = min(
+                            target_data,
+                            key=lambda x: abs(
+                                float(x["timestamp_header"]) - float(timestamp)
+                            ),
+                            default=None,
+                        )
+                        if closest_entry:
+                            # Add the main value and threshold if available
+                            for col_name, col_value in closest_entry.items():
+                                if col_name not in [
+                                    "timestamp_header",
+                                    "timestamp_rosbag",
+                                ]:
+                                    entry[col_name] = col_value
+
+                combined_data.append(entry)
+
+    if combined_data:
+        df = pd.DataFrame(combined_data)
+        key_list = [
+            "pose_mahalanobis_distance",
+            "twist_mahalanobis_distance",
+            "cov_ellipse_long_axis_size",
+            "cov_ellipse_lateral_direction_size",
+        ]
+        plt.figure(figsize=(6.4 * 2, 4.8 * 2))
+        for i, key in enumerate(key_list):
+            if key not in df.columns:
+                print(f"Skip {key}")
+                continue
+            df[key] = df[key].astype(float)
+            key_threshold = (
+                key + "_threshold"
+                if "mahalanobis" in key
+                else key.replace("_size", "_warn_threshold")
+            )
+            if key_threshold in df.columns:
+                df[key_threshold] = df[key_threshold].astype(float)
+                plt.subplot(4, 1, (i + 1))
+                plt.plot(df["timestamp_header"], df[key], label=key)
+                plt.plot(df["timestamp_header"], df[key_threshold], label=key_threshold)
+            else:
+                plt.subplot(4, 1, (i + 1))
+                plt.plot(df["timestamp_header"], df[key], label=key)
+            plt.xlabel("time [s]")
+            plt.title(f"{key}")
+            plt.grid()
+
+        plt.tight_layout()
+        save_path = save_dir / "localization__ekf_localizer.png"
+        plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
+        plt.close()
+    else:
+        print("No activated EKF localizer data found for plotting")
 
     #############################
     # pose_instability_detector #
