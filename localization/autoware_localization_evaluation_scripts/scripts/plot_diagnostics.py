@@ -34,9 +34,7 @@ def parse_diagnostics_msgs(rosbag_dir: str, target_list: list) -> dict:
         storage_id = "sqlite3"
     elif len(list(Path(rosbag_dir).rglob("*.mcap"))) > 0:
         storage_id = "mcap"
-    assert (
-        storage_id is not None
-    ), f"Error: {rosbag_dir} is not a valid rosbag directory."
+    assert storage_id is not None, f"Error: {rosbag_dir} is not a valid rosbag directory."
     storage_options = rosbag2_py.StorageOptions(
         uri=str(rosbag_dir),
         storage_id=storage_id,
@@ -50,9 +48,7 @@ def parse_diagnostics_msgs(rosbag_dir: str, target_list: list) -> dict:
     reader.open(storage_options, converter_options)
 
     topic_types = reader.get_all_topics_and_types()
-    type_map = {
-        topic_types[i].name: topic_types[i].type for i in range(len(topic_types))
-    }
+    type_map = {topic_types[i].name: topic_types[i].type for i in range(len(topic_types))}
 
     storage_filter = rosbag2_py.StorageFilter(topics=["/diagnostics"])
     reader.set_filter(storage_filter)
@@ -221,9 +217,7 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
                         target_data = data_dict[diag_name]
                         closest_entry = min(
                             target_data,
-                            key=lambda x: abs(
-                                float(x["timestamp_header"]) - float(timestamp)
-                            ),
+                            key=lambda x: abs(float(x["timestamp_header"]) - float(timestamp)),
                             default=None,
                         )
                         if closest_entry:
