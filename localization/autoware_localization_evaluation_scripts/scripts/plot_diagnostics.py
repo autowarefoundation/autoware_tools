@@ -122,6 +122,83 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
             float_format="%.9f",
         )
 
+    # Create combined TSV files for backward compatibility
+    # Group diagnostic items by their common prefix (major category)
+    category_groups = {}
+    for key in data_dict.keys():
+        parts = key.split(": ")
+        if len(parts) >= 3:  # Format: "category: subcategory: item"
+            major_category = f"{parts[0]}: {parts[1]}"
+            if major_category not in category_groups:
+                category_groups[major_category] = []
+            category_groups[major_category].append(key)
+
+    # Create combined TSV for each major category
+    for major_category, diag_items in category_groups.items():
+        if len(diag_items) <= 1:
+            continue  # Skip if only one item (no need to combine)
+
+        # Find the first available item to use as base for timestamps
+        base_data = None
+        for item in diag_items:
+            if item in data_dict and data_dict[item]:
+                base_data = data_dict[item]
+                break
+
+        if not base_data:
+            continue
+
+        combined_data = []
+
+        for base_entry in base_data:
+            timestamp = base_entry["timestamp_header"]
+
+            # Start with base entry
+            combined_entry = {
+                "timestamp_header": timestamp,
+                "timestamp_rosbag": base_entry["timestamp_rosbag"],
+            }
+
+            # Add data from each diagnostic item in this category
+            for diag_item in diag_items:
+                if diag_item in data_dict:
+                    target_data = data_dict[diag_item]
+                    # Find closest timestamp match
+                    closest_entry = min(
+                        target_data,
+                        key=lambda x: abs(
+                            float(x["timestamp_header"]) - float(timestamp)
+                        ),
+                        default=None,
+                    )
+                    if closest_entry:
+                        # Add all columns except timestamps
+                        for col_name, col_value in closest_entry.items():
+                            if col_name not in ["timestamp_header", "timestamp_rosbag"]:
+                                combined_entry[col_name] = col_value
+
+            combined_data.append(combined_entry)
+
+        # Save combined data as TSV
+        if combined_data:
+            df_combined = pd.DataFrame(combined_data)
+            for col in df_combined.columns:
+                if pd.api.types.is_numeric_dtype(df_combined[col]):
+                    df_combined[col] = df_combined[col].astype(float)
+                    df_combined[col] = df_combined[col].apply(
+                        lambda x: int(x) if x.is_integer() else x
+                    )
+
+            # Create filename from major category
+            filename = diag_name_to_filename(major_category)
+            df_combined.to_csv(
+                save_dir / f"{filename}.tsv",
+                index=False,
+                sep="\t",
+                float_format="%.9f",
+            )
+            print(f"Created combined TSV for backward compatibility: {major_category}")
+
     # Fix timestamp to relative time from the first message and convert to seconds
     # (for better visualization)
     for one_data_dict_key in data_dict:
