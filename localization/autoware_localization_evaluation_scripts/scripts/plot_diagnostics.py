@@ -166,9 +166,7 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
                     # Find closest timestamp match
                     closest_entry = min(
                         target_data,
-                        key=lambda x: abs(
-                            float(x["timestamp_header"]) - float(timestamp)
-                        ),
+                        key=lambda x: abs(float(x["timestamp_header"]) - float(timestamp)),
                         default=None,
                     )
                     if closest_entry:
