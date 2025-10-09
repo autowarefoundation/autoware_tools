@@ -14,18 +14,6 @@ import pandas as pd
 import yaml
 
 
-def window_condition_before(t, target_time):
-    return t <= target_time
-
-
-def window_condition_after(t, target_time):
-    return t >= target_time
-
-
-def window_condition_at(t, start_time, end_time):
-    return t >= start_time & t <= end_time
-
-
 class TimingType(Enum):
     BEFORE = "before"
     AFTER = "after"
@@ -276,6 +264,7 @@ class PoseInstabilityChecker(BaseChecker):
             return False
 
 
+# parse arguments of CLI
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("scenario_file", type=Path, default=None)
@@ -283,6 +272,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+# load the DiagnosticsFlagCheck block from the scenario file
 def load_diagnostics_flag_check(yaml_path: Path):
     try:
         with open(yaml_path, "r") as f:
@@ -292,13 +282,13 @@ def load_diagnostics_flag_check(yaml_path: Path):
         print(type(e).__name__, e)
         return None
 
-    print("Read scenario file.")
     return conditions.get("DiagnosticsFlagCheck", None)
 
 
+# parse the flag block from the DiagnosticsFlagCheck block
 def parse_flags(flags_yaml: Dict) -> List[Flag]:
     flags: List[Flag] = []
-    for name, flag_yaml in flags_yaml.items():
+    for _, flag_yaml in flags_yaml.items():
         flag = Flag(
             flag_type=flag_yaml.get("type", ""),
             timing=flag_yaml.get("timing", ""),
@@ -323,6 +313,7 @@ def main(scenario_file: Path, diagnostics_result_dir: Path) -> Dict[str, bool]:
     for key, flags_yaml in diagnostics_flag_condition.items():
         print(f"Processing diagnostics: {key}")
         criteria_cfg = CriteriaConfig(diagnostics_key=key, flags=parse_flags(flags_yaml))
+
         if key == "pose_no_update_count":
             criteria_cfg.tsv_path = diagnostics_result_dir / "localization__ekf_localizer.tsv"
             results[key] = PoseNoUpdateCountChecker(criteria_cfg).check()
