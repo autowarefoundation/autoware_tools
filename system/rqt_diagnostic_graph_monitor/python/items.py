@@ -13,11 +13,12 @@
 # limitations under the License.
 
 
-from diagnostic_msgs.msg import DiagnosticStatus
+from python_qt_binding import QtCore
 from python_qt_binding import QtGui
 from python_qt_binding import QtWidgets
 
 from .graph import BaseUnit
+from .graph import UnitLevel
 from .graph import UnitLink
 
 
@@ -31,10 +32,10 @@ class MonitorIcons:
         self.stale = QtGui.QIcon.fromTheme("appointment-missed")
 
         self._levels = {}
-        self._levels[DiagnosticStatus.OK] = self.ok
-        self._levels[DiagnosticStatus.WARN] = self.warn
-        self._levels[DiagnosticStatus.ERROR] = self.error
-        self._levels[DiagnosticStatus.STALE] = self.stale
+        self._levels[UnitLevel.OK] = self.ok
+        self._levels[UnitLevel.WARN] = self.warn
+        self._levels[UnitLevel.ERROR] = self.error
+        self._levels[UnitLevel.STALE] = self.stale
 
     def get(self, level):
         return self._levels.get(level, self.unknown)
@@ -43,12 +44,13 @@ class MonitorIcons:
 class MonitorItem:
     icons = MonitorIcons()
 
-    def __init__(self, link: UnitLink, unit: BaseUnit):
-        item_text = f"{unit.path} ({unit.kind})" if unit.path else f"({unit.kind})"
+    def __init__(self, link: UnitLink, node: BaseUnit):
+        item_text = node.path if node.path else "[group]"
         self.item = QtWidgets.QTreeWidgetItem([item_text])
+        self.item.setData(0, QtCore.Qt.UserRole, self)
         self.link = link
-        self.unit = unit
+        self.node = node
         self.item.setIcon(0, self.icons.stale)
 
     def update(self):
-        self.item.setIcon(0, self.icons.get(self.unit.level))
+        self.item.setIcon(0, self.icons.get(self.node.level))
