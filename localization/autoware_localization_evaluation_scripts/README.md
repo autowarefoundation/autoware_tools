@@ -168,7 +168,7 @@ A diagnostics can have multiple flags and each flag should have the following fi
 
 This example means that the diagnostics `pose_is_passed_delay_gate` should rise at 113.75 sec in ROS time. To be more specific, the flag should be positive somewhere within a time window of +/- 0.5 seconds around the target time. Besides, the diagnostics should be negative until it reach 110.0 sec in ROS time.
 
-Currently this script supports the following diagnostics. See the actual script to know the concrete definition of postive/negative.
+Currently this script supports the following diagnostics. See the actual script to know the concrete definition of positive/negative.
 
 | Key                                     | diagnostics                                      |
 | --------------------------------------- | ------------------------------------------------ |
