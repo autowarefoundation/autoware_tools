@@ -60,7 +60,6 @@ def load_overall_criteria_mask(yaml_path: Path) -> OverallCriteriaMask:
         print(f"[WARN] Ignoring invalid OverallCriteriaMask fields: {invalid_fields}")
 
     filtered_mask = {k: v for k, v in mask.items() if k in valid_fields}
-    print("Read yaml file.")
     return OverallCriteriaMask(**{**OverallCriteriaMask().__dict__, **filtered_mask})
 
 
