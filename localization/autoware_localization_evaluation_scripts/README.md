@@ -132,7 +132,7 @@ $ ros2 run autoware_localization_evaluation_scripts diagnostics_flag_check.py \
     $HOME/driving_log_replayer_v2/out/latest/result_archive/diagnostics_result
 ```
 
-This command checks whether a diagnostics have risen/fallen at a specific timing.
+This command checks whether a diagnostics have been positive/negative at a specific timing.
 The diagnostics flag to observe should be defined in the input scenario file in the format like below.
 
 ```yaml
@@ -140,15 +140,46 @@ Evaluation:
   Conditions:
     DiagnosticsFlagCheck:
       pose_is_passed_delay_gate:
-        flag: rise
-        at_sec: 113
-        at_nanosec: 750000000
+        flag1:
+          type: positive
+          timing: at
+          sec: 113
+          nanosec: 750000000
+          window: 500000000
+          entirely: false
+        flag2:
+          type: negative
+          timing: before
+          sec: 110
+          nanosec: 0
+          entirely: true
 ```
 
-This example means that the diagnostics `pose_is_passed_delay_gate` should rise at 113.75 sec in the rosbag time. To be more specific, the flag should rise within a time window of ±0.2 seconds around the target time.
+A diagnostics can have multiple flags and each flag should have the following fields. (Some have exceptions)
 
-Currently this script is still in development and the number of observable diagnostics will increase.
-Read the actual `diagnostics_flag_check.py` file to know what can be observed and the definition of rise and fall for each diagnostics.
+| Key      | Expected value             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| type     | "positive" or "negative"   | Whether the diagnostics is expected to be "positive" or "negative". "positive" means that the diagnostics is ERROR or WARN, and "negative" is not.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| timing   | "before", "after", or "at" | This defines the time window to check whether the diagnostics is "positive" or "negative". If the type is "positive" and there was a positive diagnostics in the time window the flag check passes, and the flag check fails if not. If the timing is set to "before", the time window starts from the beginning of the rosbag and ends to the time defined by `sec` and `nanosec`. If the timing is set to "after", the time window starts from the time defined by `sec` and `nanosec` and ends to the finish of the rosbag. If the timing is set to "at", the time window will be `-window` nanoseconds to `+window` nanoseconds with the time defined by `sec` and `nanosec` on the center. |
+| sec      | int                        | The base time to define the time window with `nanosec`. The `sec` part in ROS time must be filled.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| nanosec  | int                        | The base time to define the time window with `sec`. The `nanosec` part in ROS time must be filled.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| window   | int                        | The nanoseconds of the half wing of the time window. Only used when the `timing` is "at", and it is removable if you are using "before" or "after".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| entirely | bool                       | Whether the target diagnostics should be positive/negative in the entire time window. It is removable and it will be set as "false" by default.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+
+This example means that the diagnostics `pose_is_passed_delay_gate` should rise at 113.75 sec in ROS time. To be more specific, the flag should be positive somewhere within a time window of +/- 0.5 seconds around the target time. Besides, the diagnostics should be negative until it reach 110.0 sec in ROS time.
+
+Currently this script supports the following diagnostics. See the actual script to know the concrete definition of postive/negative.
+
+| Key                                     | diagnostics                                      |
+| --------------------------------------- | ------------------------------------------------ |
+| pose_no_update_count                    | localization: ekf_localizer                      |
+| pose_is_passed_delay_gate               | localization: ekf_localizer                      |
+| is_initial_pose_reliable                | pose_initializer: pose_initializer_status        |
+| imu_time_stamp_dt                       | gyro_odometer: gyro_odometer_status              |
+| vehicle_twist_time_stamp_dt             | gyro_odometer: gyro_odometer_status              |
+| nearest_voxel_transformation_likelihood | ndt_scan_matcher: scan_matcher_status            |
+| localization_error_ellipse              | localization_error_monitor: ellipse_error_status |
+| pose_instability                        | localization: pose_instability_detector          |
 
 ## analyze_rosbags_parallel.py
 
