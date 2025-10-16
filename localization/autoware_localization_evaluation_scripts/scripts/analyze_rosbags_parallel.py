@@ -47,7 +47,8 @@ def load_overall_criteria_mask(yaml_path: Path) -> OverallCriteriaMask:
         with open(yaml_path, "r") as f:
             data = yaml.safe_load(f)
         conditions = data["Evaluation"]["Conditions"]
-    except Exception:
+    except Exception as e:
+        print(type(e).__name__, e)
         return OverallCriteriaMask()
 
     # If mask exists -> merge with defaults, else return defaults
@@ -59,7 +60,6 @@ def load_overall_criteria_mask(yaml_path: Path) -> OverallCriteriaMask:
         print(f"[WARN] Ignoring invalid OverallCriteriaMask fields: {invalid_fields}")
 
     filtered_mask = {k: v for k, v in mask.items() if k in valid_fields}
-
     return OverallCriteriaMask(**{**OverallCriteriaMask().__dict__, **filtered_mask})
 
 

@@ -84,7 +84,9 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
         "localization: ekf_localizer",
         "localization_error_monitor: ellipse_error_status",
         "localization: pose_instability_detector",
-        "gyro_bias_validator: gyro_bias_validator",
+        "gyro_bias_scale_validator: gyro_bias_scale_validator",
+        "pose_initializer: pose_initializer_status",
+        "gyro_odometer: gyro_odometer_status",
     ]
 
     data_dict = parse_diagnostics_msgs(rosbag_path, target_list)
@@ -275,7 +277,7 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
     #######################
     # gyro_bias_validator #
     #######################
-    diag_name = "gyro_bias_validator: gyro_bias_validator"
+    diag_name = "gyro_bias_scale_validator: gyro_bias_scale_validator"
     df = pd.DataFrame(data_dict[diag_name])
     key_list = [
         "estimated_gyro_bias_x",
@@ -304,6 +306,32 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
     plt.ylabel("gyro_bias [rad/s]")
     plt.grid()
     plt.legend()
+    plt.tight_layout()
+    save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
+    plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
+    plt.close()
+
+    #################
+    # gyro_odometer #
+    #################
+    diag_name = "gyro_odometer: gyro_odometer_status"
+    df = pd.DataFrame(data_dict[diag_name])
+    key_list = [
+        "imu_time_stamp_dt",
+        "vehicle_twist_time_stamp_dt",
+    ]
+    plt.figure(figsize=(6.4 * 2, 4.8 * 2))
+    for i, key in enumerate(key_list):
+        if key not in df.columns:
+            print(f"Skip {key}")
+            continue
+        df[key] = df[key].astype(float)
+        plt.subplot(2, 1, (i + 1))
+        plt.plot(df["timestamp_header"], df[key], label=key)
+        plt.xlabel("time [s]")
+        plt.title(f"{key}")
+        plt.grid()
+
     plt.tight_layout()
     save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
     plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
