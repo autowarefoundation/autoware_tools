@@ -34,6 +34,7 @@ class TkinterApp:
         self.root.geometry("800x600")
         self.ros_interface = ros_interface_node
         self.topics = config["initial_topics"]
+        self.available_topics = []
 
         # Predetermined list for the dropdown
         self.axis_options = get_data_functions()
@@ -137,14 +138,11 @@ class TkinterApp:
         self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.msg_per_topic = {}
-        self.plot(list(range(len(self.topics))))  # plot all initial topics
         self.refresh_topic_list()
-        # Start with no topics selected - initialize empty plot
-        self.plotter.init_plot(
-            self.current_x_axis_selection.get(), self.current_y_axis_selection.get(), []
-        )
+        # Auto-select initial topics from config
+        self.select_initial_topics()
 
-    def on_listbox_select(self, event):  # noqa: ARG002
+    def on_listbox_select(self, event):  # noqa: ARG002 unused-argument
         """Handle listbox selection event, preventing node separator selection."""
         current_selection = list(self.listbox.curselection())
         modified = False
@@ -160,7 +158,9 @@ class TkinterApp:
 
         # Only trigger plot if selection contains actual topics
         if current_selection:
-            self.plot(current_selection)
+            # Update self.topics with the new selection
+            self._update_topics_from_selection(current_selection)
+            self._plot_without_updating_topics(current_selection)
         elif modified:
             # If all selections were node separators, don't plot
             pass
@@ -176,8 +176,41 @@ class TkinterApp:
             self.root.grid_columnconfigure(0, weight=0)
         self.left_hidden = not self.left_hidden
 
+    def select_initial_topics(self):
+        """Auto-select topics that are currently in self.topics (initially from config.yaml)."""
+        # Convert self.topics to set of topic names only (ignore msg type for matching)
+        selected_topic_names = set(topic for topic, _ in self.topics)
+
+        # Find matching topics in the listbox
+        indices_to_select = []
+        topic_idx = 0
+        listbox_idx = 0
+
+        for i in range(self.listbox.size()):
+            item_text = self.listbox.get(i)
+            if item_text.startswith("---"):
+                listbox_idx += 1
+                continue
+
+            if topic_idx < len(self.available_topics):
+                current_topic_name, _ = self.available_topics[topic_idx]
+                # Select if this topic is in self.topics
+                if current_topic_name in selected_topic_names:
+                    indices_to_select.append(listbox_idx)
+                    self.listbox.selection_set(listbox_idx)
+
+            topic_idx += 1
+            listbox_idx += 1
+
+        # Plot selected topics (without updating self.topics)
+        if indices_to_select:
+            self._plot_without_updating_topics(indices_to_select)
+
     def refresh_topic_list(self):
         self.listbox.delete(0, tk.END)  # Clear existing items
+
+        # Clear selection but keep self.topics unchanged
+        self.listbox.selection_clear(0, tk.END)
 
         # Use TrajectoryNodeGraph for better organization
         try:
@@ -216,8 +249,8 @@ class TkinterApp:
             # Get organized topics
             topics_by_node = results.get("topics_by_node", {})
 
-            # Build topics list with node separators
-            self.topics = []
+            # Build available_topics list with node separators
+            self.available_topics = []
             displayed_topics = set()  # Track topics already displayed
 
             # First, display topics from YAML nodes
@@ -233,7 +266,7 @@ class TkinterApp:
                         priority, topic_name, msg_type = topic_info
 
                         # Store in original format
-                        self.topics.append((topic_name, msg_type))
+                        self.available_topics.append((topic_name, msg_type))
                         displayed_topics.add(topic_name)
 
                         # Display in original format
@@ -264,27 +297,53 @@ class TkinterApp:
                 self.listbox.itemconfig(tk.END, {"fg": "gray"})
 
                 for topic_name, msg_type in other_topics:
-                    # Store in topics list
-                    self.topics.append((topic_name, msg_type))
+                    # Store in available_topics list
+                    self.available_topics.append((topic_name, msg_type))
 
                     # Display in original format
                     display_text = f"{topic_name} [{msg_type.split('/')[-1]}]"
                     self.listbox.insert(tk.END, display_text)
 
+            # Restore selection state based on self.topics
+            self.select_initial_topics()
             return
         except Exception as e:
             # Fall back to original method if analysis fails
             print(f"TrajectoryNodeGraph analysis failed: {e}")
 
         # Original implementation (fallback)
-        self.topics = self.ros_interface.get_trajectory_topics()
-        for topic, msg_type in self.topics:
+        self.available_topics = self.ros_interface.get_trajectory_topics()
+        for topic, msg_type in self.available_topics:
             self.listbox.insert(tk.END, f"{topic} [{msg_type.split('/')[-1]}]")
+
+        # Restore selection state based on self.topics
+        self.select_initial_topics()
 
     def update(self, topic, msg):
         self.msg_per_topic[topic] = msg
 
-    def plot(self, topic_indexes):
+    def _update_topics_from_selection(self, topic_indexes):
+        """Update self.topics based on listbox selection."""
+        selected_topics = []
+        topic_idx = 0
+        listbox_idx = 0
+
+        for i in range(self.listbox.size()):
+            item_text = self.listbox.get(i)
+            if item_text.startswith("---"):
+                listbox_idx += 1
+                continue
+
+            if listbox_idx in topic_indexes:
+                if topic_idx < len(self.available_topics):
+                    selected_topics.append(self.available_topics[topic_idx])
+
+            topic_idx += 1
+            listbox_idx += 1
+
+        self.topics = selected_topics
+
+    def _plot_without_updating_topics(self, topic_indexes):
         self.ros_interface.remove_callbacks()
         self.msg_per_topic.clear()
         x_axis_selection = self.current_x_axis_selection.get()
@@ -303,8 +362,8 @@ class TkinterApp:
                 continue
 
             if listbox_idx in topic_indexes:
-                if topic_idx < len(self.topics):
-                    selected_topics.append(self.topics[topic_idx])
+                if topic_idx < len(self.available_topics):
+                    selected_topics.append(self.available_topics[topic_idx])
 
             topic_idx += 1
             listbox_idx += 1
