@@ -66,6 +66,6 @@ if __name__ == "__main__":
         default=None,
     )
     args = parser.parse_args()
-    config_path = Path(os.curdir) / "config.yaml" if args.config is None else args.config
+    config_path = os.path.join(Path(__file__).parent, "config.yaml") if args.config is None else args.config
     m = Main()
     m.main(config_path)
