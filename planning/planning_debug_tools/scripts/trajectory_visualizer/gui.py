@@ -179,7 +179,7 @@ class TkinterApp:
     def select_initial_topics(self):
         """Auto-select topics that are currently in self.topics (initially from config.yaml)."""
         # Convert self.topics to set of topic names only (ignore msg type for matching)
-        selected_topic_names = set(topic for topic, _ in self.topics)
+        selected_topic_names = {topic for topic, _ in self.topics}
 
         # Find matching topics in the listbox
         indices_to_select = []
