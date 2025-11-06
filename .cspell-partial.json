@@ -4,8 +4,31 @@
     "sensing/tier4_pcl_extensions/include/**",
     "perception/bytetrack/lib/**",
     "common/autoware_debug_tools/**",
-    "planning/autoware_planning_data_analyzer/**"
+    "planning/autoware_planning_data_analyzer/**",
+    ".github/CODEOWNERS",
+    ".github/CODEOWNERS-manual"
   ],
   "ignoreRegExpList": [],
-  "words": ["dltype", "tvmgen", "quantizer", "imageio", "mimsave"]
+  "words": [
+    "dltype",
+    "tvmgen",
+    "quantizer",
+    "imageio",
+    "mimsave",
+    "accb",
+    "Backpropagation",
+    "cmdb",
+    "dataa",
+    "dioss",
+    "ncols",
+    "prec",
+    "primotest",
+    "scikit",
+    "setpoint",
+    "timegap",
+    "usecols",
+    "velb",
+    "viridis",
+    "zdata"
+  ]
 }

@@ -19,6 +19,7 @@ import time
 from typing import Tuple
 
 from autoware_adapi_v1_msgs.srv import SetRoutePoints
+from autoware_localization_msgs.srv import InitializeLocalization
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Pose
 from geometry_msgs.msg import PoseWithCovariance
@@ -39,16 +40,15 @@ from sensor_msgs.msg import PointField
 from std_msgs.msg import Header
 from tf_transformations import euler_from_quaternion
 from tf_transformations import quaternion_from_euler
-from tier4_localization_msgs.srv import InitializeLocalization
 
 
-def get_starting_time(uri: str):
-    info = rosbag2_py.Info().read_metadata(uri, "sqlite3")
+def get_starting_time(uri: str, storage_id: str):
+    info = rosbag2_py.Info().read_metadata(uri, storage_id)
     return info.starting_time
 
 
-def get_rosbag_options(path, serialization_format="cdr"):
-    storage_options = rosbag2_py.StorageOptions(uri=path, storage_id="sqlite3")
+def get_rosbag_options(path: str, storage_id: str, serialization_format="cdr"):
+    storage_options = rosbag2_py.StorageOptions(uri=path, storage_id=storage_id)
 
     converter_options = rosbag2_py.ConverterOptions(
         input_serialization_format=serialization_format,
@@ -58,8 +58,8 @@ def get_rosbag_options(path, serialization_format="cdr"):
     return storage_options, converter_options
 
 
-def open_reader(path: str):
-    storage_options, converter_options = get_rosbag_options(path)
+def open_reader(path: str, storage_id: str):
+    storage_options, converter_options = get_rosbag_options(path, storage_id)
     reader = rosbag2_py.SequentialReader()
     reader.open(storage_options, converter_options)
     return reader
@@ -147,8 +147,8 @@ def translate_objects_coordinate(ego_pose, log_ego_pose, objects_msg):
         object_pose.orientation = get_quaternion_from_yaw(log_object_yaw + log_ego_yaw - ego_yaw)
 
 
-def create_reader(bag_dir: str) -> SequentialReader:
-    storage_options = StorageOptions(uri=bag_dir, storage_id="sqlite3")
+def create_reader(bag_dir: str, storage_id: str) -> SequentialReader:
+    storage_options = StorageOptions(uri=bag_dir, storage_id=storage_id)
     converter_options = ConverterOptions(
         input_serialization_format="cdr", output_serialization_format="cdr"
     )
@@ -162,8 +162,10 @@ def is_close_pose(p0, p1, min_dist, max_dist) -> bool:
     return dist < min_dist or dist > max_dist
 
 
-def get_pose_from_bag(input_path: str, interval=(0.1, 10000.0)) -> Tuple[Pose, Pose]:
-    reader = create_reader(input_path)
+def get_pose_from_bag(
+    input_path: str, storage_id: str, interval=(0.1, 10000.0)
+) -> Tuple[Pose, Pose]:
+    reader = create_reader(input_path, storage_id)
     type_map = {
         topic_type.name: topic_type.type for topic_type in reader.get_all_topics_and_types()
     }
@@ -206,9 +208,9 @@ def get_pose_from_bag(input_path: str, interval=(0.1, 10000.0)) -> Tuple[Pose, P
     return initial_pose, goal_pose
 
 
-def pub_route(input_path: str):
+def pub_route(input_path: str, storage_id: str):
     try:
-        first_pose, last_pose = get_pose_from_bag(input_path)
+        first_pose, last_pose = get_pose_from_bag(input_path, storage_id)
     except Exception as e:
         print(f"Error retrieving poses from bag: {e}")
         return

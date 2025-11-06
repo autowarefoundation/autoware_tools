@@ -3,7 +3,7 @@
   <arg name="vehicle_model" default="autoware_sample_vehicle"/>
 
   <!-- flag -->
-  <arg name="mode" default="AUTO" description="select from AUTO, GUI, and VMB"/>
+  <arg name="mode" default="AUTO" description="select from AUTO, GUI, VMB and VALIDATION"/>
   <arg name="rviz" default="true"/>
   <arg name="centerline_source" default="optimization_trajectory_base" description="select from optimization_trajectory_base and bag_ego_trajectory_base"/>
 
@@ -15,6 +15,8 @@
   <arg name="end_lanelet_id" default="0"/>
   <arg name="end_pose" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
   <arg name="goal_method" default="None"/>
+  <arg name="lanelet_sequence" default=""/>
+  <arg name="jitter_deg_threshold" default="40"/>
 
   <!-- mandatory arguments when mode is GUI -->
   <arg name="bag_filename" default="bag.db3"/>
@@ -56,7 +58,7 @@
   </node>
 
   <!-- visualize map -->
-  <node pkg="autoware_lanelet2_map_visualizer" exec="lanelet2_map_visualization" name="lanelet2_map_visualization">
+  <node pkg="autoware_lanelet2_map_visualizer" exec="autoware_lanelet2_map_visualizer" name="lanelet2_map_visualization">
     <remap from="input/lanelet2_map" to="$(var lanelet2_map_topic)"/>
     <remap from="output/lanelet2_map_marker" to="$(var lanelet2_map_marker_topic)"/>
   </node>
@@ -74,6 +76,8 @@
     <param name="end_lanelet_id" value="$(var end_lanelet_id)"/>
     <param name="end_pose" value="$(var end_pose)"/>
     <param name="goal_method" value="$(var goal_method)"/>
+    <param name="lanelet_sequence" value="$(var lanelet_sequence)"/>
+    <param name="jitter_deg_threshold" value="$(var jitter_deg_threshold)"/>
     <!-- common param -->
     <param from="$(var common_param)"/>
     <param from="$(var nearest_search_param)"/>

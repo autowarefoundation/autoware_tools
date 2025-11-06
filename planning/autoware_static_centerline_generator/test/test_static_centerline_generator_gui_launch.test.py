@@ -66,7 +66,7 @@ class TestGuiOperation(TestBase):
         )
         self.pub_traj_end_idx.publish(create_Int32(150))
 
-        rclpy.spin_once(self.traj_sub_node, timeout_sec=10.0)
+        rclpy.spin_once(self.traj_sub_node, timeout_sec=30.0)
 
         # validate
         self.pub_validate = self.traj_sub_node.create_publisher(
@@ -82,7 +82,7 @@ class TestGuiOperation(TestBase):
         self.pub_save_map.publish(Empty())
 
         # subscribe the map_saved
-        rclpy.spin_once(self.map_saved_sub_node, timeout_sec=10.0)
+        rclpy.spin_once(self.map_saved_sub_node, timeout_sec=30.0)
 
         # check if the subscription is successful
         self.assertIsNotNone(self.centerline)

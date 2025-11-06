@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>pitch_checker</name>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
   <description>The pitch_checker</description>
   <maintainer email="tomoya.kimura@tier4.jp">Tomoya Kimura</maintainer>
   <license>Apache 2</license>
