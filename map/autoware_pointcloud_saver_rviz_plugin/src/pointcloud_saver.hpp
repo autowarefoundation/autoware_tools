@@ -48,7 +48,7 @@ namespace autoware
 {
 namespace pointcloud_saver_rviz_plugin
 {
-  using PointType = pcl::PointXYZ;
+  using PointType = pcl::PointXYZI;
 
   class RVIZ_DEFAULT_PLUGINS_PUBLIC PointCloudSaver : public rviz_common::Tool
 {
