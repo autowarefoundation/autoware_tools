@@ -167,23 +167,16 @@ struct Point {
     double y;
 };
 
-// 点 p が線分 a-b 上にあるか（許容誤差 eps）
 bool pointOnSegment(const Point& a, const Point& b, const Point& p, double eps = 1e-12) {
-    // ベクトル (p-a) と (b-a) が共線で、p が a と b の間にあるか確認
     double cross = (p.y - a.y) * (b.x - a.x) - (p.x - a.x) * (b.y - a.y);
     if (std::fabs(cross) > eps) return false;
     double dot = (p.x - a.x) * (p.x - b.x) + (p.y - a.y) * (p.y - b.y);
-    return dot <= eps; // p が a と b の範囲に入っている（または端点）
+    return dot <= eps;
 }
 
-// レイキャスティング法による点内判定
-// poly: 多角形の頂点（時計回りでも反時計回りでも可）。最後の点を最初と重複させる必要はない。
-// p: 判定する点
-// includeBoundary: 辺上を「内」とみなすか（デフォルト true）
 bool pointInPolygon(const std::vector<Point>& poly, const Point& p, bool includeBoundary = true) {
     int n = (int)poly.size();
     if (n < 3) return false;
-    // まず辺上チェック（境界を内とする場合、あるいは明示的に判定したい場合）
     if (includeBoundary) {
         for (int i = 0; i < n; ++i) {
             const Point& a = poly[i];
@@ -192,16 +185,12 @@ bool pointInPolygon(const std::vector<Point>& poly, const Point& p, bool include
         }
     }
 
-    // レイキャスト（x 軸正方向にレイを飛ばして交差回数を数える）
     bool inside = false;
     for (int i = 0, j = n - 1; i < n; j = i++) {
       const Point& vi = poly[i];
       const Point& vj = poly[j];
-      // 辺 (vj -> vi)
-      // y が p.y をまたぐかをチェック
       bool intersect = ((vi.y > p.y) != (vj.y > p.y));
       if (intersect) {
-          // 交点の x 座標を計算
           double xIntersect = vj.x + (vi.x - vj.x) * ( (p.y - vj.y) / (vi.y - vj.y) );
           if (p.x < xIntersect)
              inside = !inside;
