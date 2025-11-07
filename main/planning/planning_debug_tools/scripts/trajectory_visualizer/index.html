@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.6.22">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.6.23">
     
     
       
@@ -4035,6 +4035,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#topic-display-ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      Topic display ordering
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#how-to-add-new-properties-to-plot" class="md-nav__link">
     <span class="md-ellipsis">
       How to add new properties to plot
@@ -4094,6 +4103,20 @@
 <li><code>plotter.py</code>: This file uses Matplotlib to create the plots. It draws the trajectory data on the graph.</li>
 <li><code>ros2_interface.py</code>: This file handles the communication with ROS 2. It gets the trajectory data from ROS 2 topics.</li>
 <li><code>trajectory_data.py</code>: This file calculates different properties of the trajectory, like velocity, curvature, etc. It provides the data that can be plotted.</li>
+<li><code>trajectory_node_graph.py</code>: This script analyzes the node graph structure to determine topic display order. It generates <code>graph_config.yaml</code> which contains the node and topic dependency information.</li>
+<li><code>graph_config.yaml</code>: Configuration file that stores the node graph structure for topic ordering.</li>
+</ul>
+<h2 id="topic-display-ordering">Topic display ordering<a class="headerlink" href="#topic-display-ordering" title="Permanent link">#</a></h2>
+<p>The visualizer automatically sorts trajectory topics based on the node graph structure for better visualization:</p>
+<ul>
+<li><strong>When Autoware is running:</strong> The tool obtains the node and topic graph structure from the running node graph to determine the topic display order.</li>
+<li><strong>When using rosbag playback (Autoware not running):</strong> The tool uses the pre-generated <code>graph_config.yaml</code> to obtain the graph structure information for topic ordering.</li>
+<li>
+<p><strong>Updating graph_config.yaml:</strong> When the planning/control node or topic structure in Autoware changes, you can regenerate <code>graph_config.yaml</code> by running:</p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>trajectory_node_graph.py
+</code></pre></div>
+<p>Note: Autoware must be running when executing this command to capture the current node graph structure.</p>
+</li>
 </ul>
 <h2 id="how-to-add-new-properties-to-plot">How to add new properties to plot<a class="headerlink" href="#how-to-add-new-properties-to-plot" title="Permanent link">#</a></h2>
 <ol>
