@@ -27,6 +27,22 @@ This tool allow the visualization of Autoware trajectory messages (`autoware_pla
 - `plotter.py`: This file uses Matplotlib to create the plots. It draws the trajectory data on the graph.
 - `ros2_interface.py`: This file handles the communication with ROS 2. It gets the trajectory data from ROS 2 topics.
 - `trajectory_data.py`: This file calculates different properties of the trajectory, like velocity, curvature, etc. It provides the data that can be plotted.
+- `trajectory_node_graph.py`: This script analyzes the node graph structure to determine topic display order. It generates `graph_config.yaml` which contains the node and topic dependency information.
+- `graph_config.yaml`: Configuration file that stores the node graph structure for topic ordering.
+
+## Topic display ordering
+
+The visualizer automatically sorts trajectory topics based on the node graph structure for better visualization:
+
+- **When Autoware is running:** The tool obtains the node and topic graph structure from the running node graph to determine the topic display order.
+- **When using rosbag playback (Autoware not running):** The tool uses the pre-generated `graph_config.yaml` to obtain the graph structure information for topic ordering.
+- **Updating graph_config.yaml:** When the planning/control node or topic structure in Autoware changes, you can regenerate `graph_config.yaml` by running:
+
+  ```bash
+  python3 trajectory_node_graph.py
+  ```
+
+  Note: Autoware must be running when executing this command to capture the current node graph structure.
 
 ## How to add new properties to plot
 

@@ -39,12 +39,15 @@ class Plotter:
         else:
             self.ax.set_aspect("auto")
 
-        self.ax.legend()
         for name in plot_names:
             (self.plots[name],) = self.ax.plot(
                 [], [], marker="o", linestyle="-", label=name, alpha=0.6
             )
         (self.ego_plot,) = self.ax.plot([], [], marker="x", label="ego", alpha=1.0, color="black")
+
+        # Only create legend if there are labeled artists
+        if plot_names or self.ego_plot.get_label():
+            self.ax.legend()
 
     def update_data(self, name, x_data, y_data):
         if name not in self.plots:
@@ -69,4 +72,7 @@ class Plotter:
     def replot(self):
         self.ax.relim()
         self.ax.autoscale_view()
-        self.ax.legend()
+        # Only update legend if there are labeled artists
+        handles, labels = self.ax.get_legend_handles_labels()
+        if handles:
+            self.ax.legend()
