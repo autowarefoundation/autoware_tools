@@ -13,22 +13,27 @@
 
   <build_depend>qtbase5-dev</build_depend>
 
+  <depend>autoware_lanelet2_extension</depend>
+  <depend>autoware_map_msgs</depend>
+  <depend>autoware_utils</depend>
+  <depend>autoware_utils_geometry</depend>
+  <depend>autoware_utils_pcl</depend>
+  <depend>geometry_msgs</depend>
+  <depend>lanelet2_core</depend>
+  <depend>libpcl-all</depend>
+  <depend>nav_msgs</depend>
+  <depend>pcl_conversions</depend>
   <depend>rclcpp</depend>
-  <depend>tf2_ros</depend>
-  <depend>tf2_eigen</depend>
-  <depend>tf2_sensor_msgs</depend>
-
   <depend>rviz_common</depend>
-  <depend>yaml-cpp</depend>
   <depend>rviz_default_plugins</depend>
   <depend>rviz_ogre_vendor</depend>
-  <depend>autoware_map_msgs</depend>
-  <depend>geometry_msgs</depend>
   <depend>sensor_msgs</depend>
-  <depend>nav_msgs</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_sensor_msgs</depend>
+  <depend>yaml-cpp</depend>
 
-  <depend>libpcl-all</depend>
-  <depend>pcl_conversions</depend>
+
 
   <exec_depend>libqt5-core</exec_depend>
   <exec_depend>libqt5-gui</exec_depend>
@@ -38,12 +43,7 @@
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>autoware_lint_common</test_depend>
 
-  <depend>autoware_utils</depend>
-  <depend>autoware_utils_geometry</depend>
-  <depend>autoware_utils_pcl</depend>
 
-  <depend>autoware_lanelet2_extension</depend>
-  <depend>lanelet2_core</depend>
 
   <export>
     <build_type>ament_cmake</build_type>
