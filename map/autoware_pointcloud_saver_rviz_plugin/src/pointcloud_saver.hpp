@@ -15,6 +15,7 @@
 #ifndef POINTCLOUD_SAVER_HPP_
 #define POINTCLOUD_SAVER_HPP_
 
+#include <string>
 #include <memory>
 
 #include <pcl/point_types.h>

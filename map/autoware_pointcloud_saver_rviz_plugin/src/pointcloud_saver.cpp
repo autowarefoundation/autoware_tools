@@ -15,9 +15,12 @@
 #include "pointcloud_saver.hpp"
 
 #include <cmath>
-#include <memory>
-#include <sstream>
 #include <algorithm>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <memory>
+#include <vector>
 
 #include <tf2_eigen/tf2_eigen.hpp>
 
@@ -175,7 +178,7 @@ bool pointOnSegment(const Point& a, const Point& b, const Point& p, double eps =
 }
 
 bool pointInPolygon(const std::vector<Point>& poly, const Point& p, bool includeBoundary = true) {
-    int n = (int)poly.size();
+    int n = static_cast<int>(poly.size());
     if (n < 3) return false;
     if (includeBoundary) {
         for (int i = 0; i < n; ++i) {
