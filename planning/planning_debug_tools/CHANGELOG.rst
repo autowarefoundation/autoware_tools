@@ -2,8 +2,8 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2025-11-16)
+------------------
 * feat(trajectory_visualizer): sort topic list (`#307 <https://github.com/autowarefoundation/autoware_tools/issues/307>`_)
   * sort topic list
   * fix pre-commit error

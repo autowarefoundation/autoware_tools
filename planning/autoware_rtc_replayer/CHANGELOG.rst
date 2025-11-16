@@ -2,8 +2,8 @@
 Changelog for package autoware_rtc_replayer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2025-11-16)
+------------------
 * chore: add maintainers (`#293 <https://github.com/autowarefoundation/autoware_tools/issues/293>`_)
   chore: add maintaiers
 * Contributors: Fumiya Watanabe

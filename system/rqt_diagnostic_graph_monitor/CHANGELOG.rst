@@ -2,8 +2,8 @@
 Changelog for package rqt_diagnostic_graph_monitor
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.0 (2025-11-16)
+------------------
 * feat(rqt_diagnostic_graph_monitor): add detail panel (`#308 <https://github.com/autowarefoundation/autoware_tools/issues/308>`_)
   * get selected item node
   * show diag details
