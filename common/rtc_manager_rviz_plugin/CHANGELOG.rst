@@ -2,6 +2,12 @@
 Changelog for package rtc_manager_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* chore: add maintainers (`#293 <https://github.com/autowarefoundation/autoware_tools/issues/293>`_)
+  chore: add maintaiers
+* Contributors: Fumiya Watanabe
+
 0.3.0 (2025-08-11)
 ------------------
 

@@ -2,6 +2,20 @@
 Changelog for package autoware_pointcloud_projection_converter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* chore: update maintainer (`#304 <https://github.com/autowarefoundation/autoware_tools/issues/304>`_)
+  * chore: update maintainer
+  remove Ryu Yamamoto
+  * chore: update maintainer
+  remove Kento Yabuuchi
+  * chore: update maintainer
+  remove Koji Minoda
+  * chore: update maintainer
+  remove Shintaro Sakoda
+  ---------
+* Contributors: Motz
+
 0.3.0 (2025-08-11)
 ------------------
 * feat(pointcloud projection converter): add new package, pointcloud projection converter (`#254 <https://github.com/autowarefoundation/autoware_tools/issues/254>`_)

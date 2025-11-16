@@ -2,6 +2,9 @@
 Changelog for package time_delay_estimator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.0 (2025-08-11)
 ------------------
 

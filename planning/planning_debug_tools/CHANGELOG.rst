@@ -2,6 +2,28 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(trajectory_visualizer): sort topic list (`#307 <https://github.com/autowarefoundation/autoware_tools/issues/307>`_)
+  * sort topic list
+  * fix pre-commit error
+  * add README topic display ordering section
+  * fix inital topics selection
+  * config path
+  * fix pre-commit error
+  * add copylight
+  ---------
+* feat(planning_debug_tools): improve trajectory visualizer usability (`#300 <https://github.com/autowarefoundation/autoware_tools/issues/300>`_)
+  * feat equal aspect ratio when XY-plot
+  * add unwrapped yaw plot
+  * fix pre-commit
+  ---------
+* fix: change to detailed library reference (`#295 <https://github.com/autowarefoundation/autoware_tools/issues/295>`_)
+* feat(planning_debug_tools): support V2I (`#292 <https://github.com/autowarefoundation/autoware_tools/issues/292>`_)
+* fix(planning_debug_tools): fix InitializeLocalization msg import (`#291 <https://github.com/autowarefoundation/autoware_tools/issues/291>`_)
+* fix: show motion velocity planner output by default (`#290 <https://github.com/autowarefoundation/autoware_tools/issues/290>`_)
+* Contributors: Kotakku, Satoshi OTA, Xiaoyu WANG, Yukinari Hisaki
+
 0.3.0 (2025-08-11)
 ------------------
 * feat(trajectory_visualizer): add initial config and better layout (`#273 <https://github.com/autowarefoundation/autoware_tools/issues/273>`_)

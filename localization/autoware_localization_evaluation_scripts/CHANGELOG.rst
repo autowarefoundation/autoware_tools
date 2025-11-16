@@ -2,6 +2,54 @@
 Changelog for package autoware_localization_evaluation_scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(autoware_localization_evaluation_scripts): add new diagnostics to check and refactor diagnostics_flag_check (`#310 <https://github.com/autowarefoundation/autoware_tools/issues/310>`_)
+  * fix process when there is no DiagnosticsFlagCheck in scenario
+  * fix typo
+  * add diagnostics flag check_is_initial_pose_reliable
+  * refactor script
+  * add debug print
+  * add nvtl and localization_error_monitor diags
+  * make time expression richer
+  * make sec and nanosec explicilty int
+  * fix large int casting
+  * add pose_instability
+  * Update document
+  * make the code clean
+  * fix spelling error
+  * remove unnecessary print
+  ---------
+* chore: update maintainer (`#304 <https://github.com/autowarefoundation/autoware_tools/issues/304>`_)
+  * chore: update maintainer
+  remove Ryu Yamamoto
+  * chore: update maintainer
+  remove Kento Yabuuchi
+  * chore: update maintainer
+  remove Koji Minoda
+  * chore: update maintainer
+  remove Shintaro Sakoda
+  ---------
+* fix(autoware_localization_evaluation_scripts): fix diagnostics flag check expection handling (`#303 <https://github.com/autowarefoundation/autoware_tools/issues/303>`_)
+  * fix process when there is no DiagnosticsFlagCheck in scenario
+  * fix typo
+  ---------
+* feat(autoware_localization_evaluation_scripts): detect rise/fall flags of localization diagnostics (`#298 <https://github.com/autowarefoundation/autoware_tools/issues/298>`_)
+  * Enable to read diagnostics flags
+  * make the constructor of OverallCriteriaMask robust to unknown conditions
+  * make input of diagnostics_flag_check simple and make large int value inputs robust
+  * add document for diagnostics_flag_check
+  * fix cspell, add explanation
+  * fix docs mistake
+  ---------
+* feat(autoware_localization_evaluation_scripts): create masks for each criterion (`#297 <https://github.com/autowarefoundation/autoware_tools/issues/297>`_)
+  * add mask to evaluate each criterion
+  * minor fix
+  * remove print debugs
+  * fix spelling mistakes
+  ---------
+* Contributors: Motz, Taiki Yamada
+
 0.3.0 (2025-08-11)
 ------------------
 * fix: change the criteria for localization  (`#267 <https://github.com/autowarefoundation/autoware_tools/issues/267>`_)

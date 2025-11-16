@@ -2,6 +2,30 @@
 Changelog for package autoware_static_centerline_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(static_centerline): add jitter validation (`#305 <https://github.com/autowarefoundation/autoware_tools/issues/305>`_)
+  * feat(static_centerline): add jitter validation
+  * fix: extra comment
+  * fix
+  * fix readme and comment
+  * fix
+  * fix: optimization_trajectory_based_centerline
+  ---------
+  Co-authored-by: t4-adc <grp-rd-1-adc-admin@tier4.jp>
+* fix(static_centerline_generator): inside centerline start point in start lanelet (`#274 <https://github.com/autowarefoundation/autoware_tools/issues/274>`_)
+  Co-authored-by: t4-adc <grp-rd-1-adc-admin@tier4.jp>
+* feat(static_centerline): enabled input of lanelet_sequence (`#299 <https://github.com/autowarefoundation/autoware_tools/issues/299>`_)
+  * feat(static_centerline): enabled input of lanelet_sequence
+  * pre-commit
+  * fix cast
+  * pre-commit
+  * fix readme
+  ---------
+  Co-authored-by: t4-adc <grp-rd-1-adc-admin@tier4.jp>
+* chore: sync files (`#278 <https://github.com/autowarefoundation/autoware_tools/issues/278>`_)
+* Contributors: Kazunori-Nakajima, awf-autoware-bot[bot]
+
 0.3.0 (2025-08-11)
 ------------------
 * fix(autoware_static_centerline_generator): fix test dependency (`#285 <https://github.com/autowarefoundation/autoware_tools/issues/285>`_)

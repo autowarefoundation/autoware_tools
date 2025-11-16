@@ -2,6 +2,9 @@
 Changelog for package tier4_screen_capture_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.3.0 (2025-08-11)
 ------------------
 * feat(tier4_screen_capture_rviz_plugin): add buffer change bottom (`#232 <https://github.com/autowarefoundation/autoware_tools/issues/232>`_)
