@@ -2,6 +2,9 @@
 Changelog for package parameter_estimator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.0 (2025-11-16)
+------------------
+
 0.3.0 (2025-08-11)
 ------------------
 * fix(parameter_estimatior): update package dependencies (`#280 <https://github.com/autowarefoundation/autoware_tools/issues/280>`_)
