@@ -9,9 +9,10 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 add_executable(topic_listener src/topic_listener.cpp)
-ament_target_dependencies(topic_listener rclcpp geometry_msgs)
+ament_target_dependencies(topic_listener rclcpp geometry_msgs nlohmann_json)
 
 install(TARGETS topic_listener
 	DESTINATION lib/${PROJECT_NAME}
