@@ -1,6 +1,9 @@
 #include <memory>
 #include <functional>
+#include <fstream>
+#include <string>
 
+#include <nlohmann/json.hpp>
 #include "rclcpp/rclcpp.hpp" 
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -23,12 +26,28 @@ class TopicListener : public rclcpp::Node {
 	private:
 	void initial_pose_topic_callback(const geometry_msgs::msg::PoseWithCovarianceStamped& msg) const 
 	{
-		RCLCPP_INFO(this->get_logger(), "I heard: '%f'", msg.pose.pose.position.x);
+		double x = msg.pose.pose.position.x;
+		write_to_file_callback("initial", x);
+		RCLCPP_INFO(this->get_logger(), "I heard: '%f' and recorded this initial pose", x);	
 	}
+	
 	void goal_pose_topic_callback(const geometry_msgs::msg::PoseStamped& msg) const 
 	{
-		RCLCPP_INFO(this->get_logger(), "I heard: '%f'", msg.pose.position.x);
+		double x = msg.pose.position.x;
+		write_to_file_callback("checkpoint/goal", x);
+		RCLCPP_INFO(this->get_logger(), "I heard: '%f' and recorded this checkpoint or goal pose", x);
 	}
+	
+	void write_to_file_callback(std::string label, double x) const
+	{
+		std::ofstream outFile("output.txt");
+		if(outFile){
+			RCLCPP_INFO(this->get_logger(), "In here");
+			std::cout << label << ": " << x << std::endl;
+		}
+		outFile.close(); 
+	}
+	
 	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_subscription_;
 	rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_subscription_;
 
