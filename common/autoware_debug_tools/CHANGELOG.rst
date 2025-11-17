@@ -2,6 +2,11 @@
 Changelog for package autoware_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.0 (2025-11-16)
+------------------
+* chore(autoware_debug_tools): ignore log in frequent_log_checker (`#276 <https://github.com/autowarefoundation/autoware_tools/issues/276>`_)
+* Contributors: Takayuki Murooka
+
 0.3.0 (2025-08-11)
 ------------------
 * style(pre-commit): autofix (`#275 <https://github.com/autowarefoundation/autoware_tools/issues/275>`_)

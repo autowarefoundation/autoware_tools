@@ -2,6 +2,20 @@
 Changelog for package autoware_tp_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.0 (2025-11-16)
+------------------
+* chore: update maintainer (`#304 <https://github.com/autowarefoundation/autoware_tools/issues/304>`_)
+  * chore: update maintainer
+  remove Ryu Yamamoto
+  * chore: update maintainer
+  remove Kento Yabuuchi
+  * chore: update maintainer
+  remove Koji Minoda
+  * chore: update maintainer
+  remove Shintaro Sakoda
+  ---------
+* Contributors: Motz
+
 0.3.0 (2025-08-11)
 ------------------
 * style(pre-commit): autofix (`#275 <https://github.com/autowarefoundation/autoware_tools/issues/275>`_)

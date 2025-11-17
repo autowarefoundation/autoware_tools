@@ -19,7 +19,7 @@ publishers_moraisim = "simulator_compatibility_test/publishers/moraisim/"
 
 setup(
     name=package_name,
-    version="0.3.0",
+    version="0.4.0",
     packages=[
         package_name,
         clients,

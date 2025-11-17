@@ -2,6 +2,9 @@
 Changelog for package autoware_sample_vehicle_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.0 (2025-11-16)
+------------------
+
 0.3.0 (2025-08-11)
 ------------------
 * feat(build_depends.repos): update autoware_lanelet2_extension v0.7.0 (`#238 <https://github.com/autowarefoundation/autoware_tools/issues/238>`_)
