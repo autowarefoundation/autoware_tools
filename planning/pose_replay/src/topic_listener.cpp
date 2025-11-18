@@ -29,7 +29,20 @@ class TopicListener : public rclcpp::Node {
 		double x = msg.pose.pose.position.x;
 		double y = msg.pose.pose.position.y;
 		double z = msg.pose.pose.position.z;
-		write_to_file_callback("initial", x, y, z);
+
+		//
+		nlohmann::json obj;
+		obj["uuid"] = 1;
+		obj["type"] = "initial";
+		obj["pose"]["x"] = x;
+		obj["pose"]["y"] = y;
+		obj["pose"]["z"] = z;
+
+		std::ofstream o("output.json");
+		o << obj.dump(4);
+		//
+		
+//		write_to_file_callback("initial", x, y, z);
 		RCLCPP_INFO(this->get_logger(), "Inital pose: x: %f, y: %f, z: %f", x, y, z);	
 	}
 	
