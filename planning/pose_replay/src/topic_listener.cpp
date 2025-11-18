@@ -1,6 +1,7 @@
 #include <memory>
 #include <functional>
 #include <fstream>
+#include <sstream>
 #include <string>
 
 #include <nlohmann/json.hpp>
@@ -24,52 +25,87 @@ class TopicListener : public rclcpp::Node {
 	};	
 
 	private:
-	void initial_pose_topic_callback(const geometry_msgs::msg::PoseWithCovarianceStamped& msg) const 
+	void initial_pose_topic_callback(const geometry_msgs::msg::PoseWithCovarianceStamped& msg)  
 	{
 		double x = msg.pose.pose.position.x;
 		double y = msg.pose.pose.position.y;
 		double z = msg.pose.pose.position.z;
-
-		//
-		nlohmann::json obj;
-		obj["uuid"] = 1;
-		obj["type"] = "initial";
-		obj["pose"]["x"] = x;
-		obj["pose"]["y"] = y;
-		obj["pose"]["z"] = z;
-
-		std::ofstream o("output.json");
-		o << obj.dump(4);
-		//
 		
-//		write_to_file_callback("initial", x, y, z);
-		RCLCPP_INFO(this->get_logger(), "Inital pose: x: %f, y: %f, z: %f", x, y, z);	
+		nlohmann::json j = pose_to_json(x, y, z);
+		fwrite_json(j);
+	
+		set_pose(initial_pose, x, y, z);
+		
+		log_pose_update();	
 	}
 	
-	void goal_pose_topic_callback(const geometry_msgs::msg::PoseStamped& msg) const 
+	void goal_pose_topic_callback(const geometry_msgs::msg::PoseStamped& msg) 
 	{
 		double x = msg.pose.position.x; 
 		double y = msg.pose.position.y;
 		double z = msg.pose.position.z;
-		write_to_file_callback("checkpoint/goal", x, y, z);
-		RCLCPP_INFO(this->get_logger(), "Checkpoint/goal pose: x: %f, y: %f, z: %f", x, y, z);	
+		
+		nlohmann::json j = pose_to_json(x, y, z);
+		fwrite_json(j);
+
+		set_pose(goal_pose, x, y, z);
+			
+		log_pose_update();	
 	}
+
+	void log_pose_update(){
+		std::string initialstr = "initial: ";
+		std::string word;
+		for(auto& v : initial_pose){
+			std::stringstream ss;
+			ss << v;
+			initialstr += " ";
+			ss >> word;
+			initialstr += word;
+		}	
+		RCLCPP_INFO_STREAM(this->get_logger(), initialstr); 
+
+		std::string goalstr = "goal: ";
+		for(auto& v : goal_pose){
+			std::stringstream ss;
+			ss << v;
+			goalstr += " ";
+			ss >> word;
+			goalstr += word;
+		}	
+		RCLCPP_INFO_STREAM(this->get_logger(), goalstr); 
+	};
 	
-	void write_to_file_callback(std::string label, double x, double y, double z) const
+	nlohmann::json pose_to_json(double x, double y, double z) 
 	{
-		std::ofstream outFile("output.txt");
-		if(outFile){
-			outFile << label << ": "; 
-			outFile << "x: " << x << " ";
-			outFile << "y: " << y << " ";
-			outFile << "z: " << z;
-			outFile << std::endl;
-		}
-		outFile.close(); 
+		nlohmann::json j;
+		j["uuid"] = 1;
+		j["type"] = "initial / goal";
+		j["pose"]["x"] = x;
+		j["pose"]["y"] = y;
+		j["pose"]["z"] = z;
+		return j;
 	}
+
+	void fwrite_json(nlohmann::json j) 
+	{
+		std::ofstream o("output.json");
+		o << j.dump(4);	
+	};
+
+	void set_pose(double (&ref)[3], double x, double y, double z) 
+	{
+		ref[0] = x;
+		ref[1] = y;
+		ref[2] = z;	
+	};
+	
 	
 	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_subscription_;
 	rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_subscription_;
+
+	double initial_pose[3]; 
+	double goal_pose[3]; 
 
 };
 
