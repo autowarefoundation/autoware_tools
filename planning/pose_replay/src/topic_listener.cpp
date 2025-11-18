@@ -89,8 +89,10 @@ class TopicListener : public rclcpp::Node {
 
 	void fwrite_json(nlohmann::json j) 
 	{
-		std::ofstream o("output.json");
-		o << j.dump(4);	
+		std::ofstream o;
+		o.open("output.json", std::ios::app);
+		if(o.is_open()) o << j.dump(4);	
+		o.close();
 	};
 
 	void set_pose(double (&ref)[3], double x, double y, double z) 
