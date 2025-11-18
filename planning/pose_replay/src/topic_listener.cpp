@@ -27,23 +27,30 @@ class TopicListener : public rclcpp::Node {
 	void initial_pose_topic_callback(const geometry_msgs::msg::PoseWithCovarianceStamped& msg) const 
 	{
 		double x = msg.pose.pose.position.x;
-		write_to_file_callback("initial", x);
-		RCLCPP_INFO(this->get_logger(), "I heard: '%f' and recorded this initial pose", x);	
+		double y = msg.pose.pose.position.y;
+		double z = msg.pose.pose.position.z;
+		write_to_file_callback("initial", x, y, z);
+		RCLCPP_INFO(this->get_logger(), "Inital pose: x: %f, y: %f, z: %f", x, y, z);	
 	}
 	
 	void goal_pose_topic_callback(const geometry_msgs::msg::PoseStamped& msg) const 
 	{
-		double x = msg.pose.position.x;
-		write_to_file_callback("checkpoint/goal", x);
-		RCLCPP_INFO(this->get_logger(), "I heard: '%f' and recorded this checkpoint or goal pose", x);
+		double x = msg.pose.position.x; 
+		double y = msg.pose.position.y;
+		double z = msg.pose.position.z;
+		write_to_file_callback("checkpoint/goal", x, y, z);
+		RCLCPP_INFO(this->get_logger(), "Checkpoint/goal pose: x: %f, y: %f, z: %f", x, y, z);	
 	}
 	
-	void write_to_file_callback(std::string label, double x) const
+	void write_to_file_callback(std::string label, double x, double y, double z) const
 	{
 		std::ofstream outFile("output.txt");
 		if(outFile){
-			RCLCPP_INFO(this->get_logger(), "In here");
-			std::cout << label << ": " << x << std::endl;
+			outFile << label << ": "; 
+			outFile << "x: " << x << " ";
+			outFile << "y: " << y << " ";
+			outFile << "z: " << z;
+			outFile << std::endl;
 		}
 		outFile.close(); 
 	}
