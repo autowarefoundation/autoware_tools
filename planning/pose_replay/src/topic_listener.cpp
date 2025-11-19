@@ -9,48 +9,52 @@
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
+#include "autoware_adapi_v1_msgs/msg/route.hpp"
+
 class TopicListener : public rclcpp::Node {
 
 	public:
-	TopicListener() : Node("topic_listener") {
+	TopicListener() : Node("topic_listener") {		
 		RCLCPP_INFO_STREAM(this->get_logger(), "Listener online."); 
 
-		// /initialpose for initial pose
-		initial_pose_subscription_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-			"initialpose", 10, std::bind(&TopicListener::initial_pose_topic_callback, this, std::placeholders::_1));
-
-		// /planning/mission_planning/goal for goal - currently this includes checkpoints, need to distinguish
-		goal_pose_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-			"planning/mission_planning/goal", 10, std::bind(&TopicListener::goal_pose_topic_callback, this, std::placeholders::_1));
-	};	
+		route_set_subscription_ = this->create_subscription<autoware_adapi_v1_msgs::msg::Route>(
+			"api/routing/route", 10, std::bind(&TopicListener::test_callback, this, std::placeholders::_1));
+		 
+		/* test_topic_two_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+			"planning/mission_planning/checkpoint", 10, std::bind(&TopicListener::test_two_callback, this, std::placeholders::_1)); */
+	};
+	
 
 	private:
-	void initial_pose_topic_callback(const geometry_msgs::msg::PoseWithCovarianceStamped& msg)  
-	{
-		double x = msg.pose.pose.position.x;
-		double y = msg.pose.pose.position.y;
-		double z = msg.pose.pose.position.z;
+	void test_callback(const autoware_adapi_v1_msgs::msg::Route& msg)
+	{	
+		if(msg.data.empty()) return;
 		
-		nlohmann::json j = pose_to_json(x, y, z);
-		fwrite_json(j);
-	
-		set_pose(initial_pose, x, y, z);
-		
-		log_pose_update();	
-	}
-	
-	void goal_pose_topic_callback(const geometry_msgs::msg::PoseStamped& msg) 
-	{
-		double x = msg.pose.position.x; 
-		double y = msg.pose.position.y;
-		double z = msg.pose.position.z;
-		
-		nlohmann::json j = pose_to_json(x, y, z);
-		fwrite_json(j);
+		auto data = msg.data[0];	
 
-		set_pose(goal_pose, x, y, z);
+		double xi = data.start.position.x;
+		double yi = data.start.position.y;
+		double zi = data.start.position.z;
+
+		double xg = data.goal.position.x;
+		double yg = data.goal.position.y;
+		double zg = data.goal.position.z;
+		
+		nlohmann::json j = pose_to_json(xi, yi, zi);
+		fwrite_json(j);
+	
+		set_pose(initial_pose, xi, yi, zi);
+		set_pose(initial_pose, xg, yg, zg);
 			
 		log_pose_update();	
+
+		RCLCPP_INFO(this->get_logger(), "Route log start: %f", msg.data[0].start.position.x);
+		RCLCPP_INFO(this->get_logger(), "Route log end: %f", msg.data[0].goal.position.x);
+	}
+	
+	void test_two_callback(const geometry_msgs::msg::PoseStamped& msg)
+	{	
+		RCLCPP_INFO_ONCE(this->get_logger(), "checkpoint route log x: %f", msg.pose.position.x);
 	}
 
 	void log_pose_update(){
@@ -103,9 +107,9 @@ class TopicListener : public rclcpp::Node {
 	};
 	
 	
-	rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_subscription_;
-	rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_subscription_;
-
+	rclcpp::Subscription<autoware_adapi_v1_msgs::msg::Route>::SharedPtr route_set_subscription_;	
+	rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr test_topic_two_subscription_;	
+	
 	double initial_pose[3]; 
 	double goal_pose[3]; 
 
