@@ -239,12 +239,9 @@ void PointCloudSaver::transform_sensor_measurement(
     return;
   }
 
-  geometry_msgs::msg::TransformStamped transform;
-  try {
-    transform = tf2_buffer_.lookupTransform(target_frame, source_frame, tf2::TimePointZero);
-  } catch (const tf2::TransformException & ex) {
-    throw;
-  }
+  // May throw tf2::TransformException if transform is not available
+  geometry_msgs::msg::TransformStamped transform =
+    tf2_buffer_.lookupTransform(target_frame, source_frame, tf2::TimePointZero);
 
   const geometry_msgs::msg::PoseStamped target_to_source_pose_stamped =
     autoware_utils::transform2pose(transform);
