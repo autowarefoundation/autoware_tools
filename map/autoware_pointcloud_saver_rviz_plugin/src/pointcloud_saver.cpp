@@ -63,7 +63,7 @@ constexpr double POINT_ON_SEGMENT_EPS = 1e-12;
     // shortcut_key_ = 'n';
 
     color_property_ = new rviz_common::properties::ColorProperty(
-      "Line color", Qt::darkYellow, "The topic on which to publish points.", getPropertyContainer(),
+      "Line color", Qt::green, "The topic on which to publish points.", getPropertyContainer(),
       SLOT(updateLineColor()), this);
   }
 
@@ -260,8 +260,6 @@ constexpr double POINT_ON_SEGMENT_EPS = 1e-12;
   void PointCloudSaver::updateLineColor()
   {
     color_ = rviz_common::properties::qtToOgre(color_property_->getColor());
-    // line_->setColor(color);
-    color_ = Ogre::ColourValue(0, 1, 0, 1);
 
     line_viz->setLineWidth(0.3);
   }
