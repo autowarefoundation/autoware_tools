@@ -33,8 +33,6 @@
   <depend>tf2_sensor_msgs</depend>
   <depend>yaml-cpp</depend>
 
-
-
   <exec_depend>libqt5-core</exec_depend>
   <exec_depend>libqt5-gui</exec_depend>
   <exec_depend>libqt5-opengl</exec_depend>
@@ -42,8 +40,6 @@
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>autoware_lint_common</test_depend>
-
-
 
   <export>
     <build_type>ament_cmake</build_type>
