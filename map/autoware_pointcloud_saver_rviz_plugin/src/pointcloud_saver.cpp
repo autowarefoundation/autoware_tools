@@ -188,8 +188,7 @@ void PointCloudSaver::savePointCloud(std::vector<Ogre::Vector3> line_points)
     poly.push_back(Point{static_cast<double>(line_point.x), static_cast<double>(line_point.y)});
   }
 
-  pcl::shared_ptr<pcl::PointCloud<PointType>> sensor_points_in_fixed_frame(
-    new pcl::PointCloud<PointType>);
+  auto sensor_points_in_fixed_frame = std::make_shared<pcl::PointCloud<PointType>>();
   try {
     transform_sensor_measurement(
       sensor_points_->header.frame_id, context_->getFixedFrame().toStdString(), sensor_points_,
