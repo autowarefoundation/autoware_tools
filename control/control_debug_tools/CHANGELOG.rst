@@ -2,6 +2,9 @@
 Changelog for package control_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.0 (2025-11-16)
+------------------
+
 0.3.0 (2025-08-11)
 ------------------
 * style(pre-commit): autofix (`#275 <https://github.com/autowarefoundation/autoware_tools/issues/275>`_)
