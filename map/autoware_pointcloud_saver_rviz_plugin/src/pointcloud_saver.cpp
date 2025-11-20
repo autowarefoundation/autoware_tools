@@ -195,10 +195,10 @@ void PointCloudSaver::savePointCloud(std::vector<Ogre::Vector3> line_points)
       sensor_points_->header.frame_id, context_->getFixedFrame().toStdString(), sensor_points_,
       sensor_points_in_fixed_frame);
   } catch (const std::exception & ex) {
-    std::stringstream message;
-    message << ex.what() << ". Please publish TF " << sensor_points_->header.frame_id << " to "
-            << context_->getFixedFrame().toStdString();
-    // RCLCPP_ERROR_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, message.str());
+    std::cerr << "[PointCloudSaver::savePointCloud] Transform error: " << ex.what()
+              << ". Please publish TF '" << sensor_points_->header.frame_id << "' to '"
+              << context_->getFixedFrame().toStdString() << "'" << std::endl;
+    return;
   }
 
   pcl::PointCloud<PointType> save_points;
