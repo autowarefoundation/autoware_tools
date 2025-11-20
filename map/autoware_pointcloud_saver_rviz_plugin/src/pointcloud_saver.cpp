@@ -26,24 +26,15 @@
 #include "rviz_rendering/objects/line.hpp"
 
 #include <QString>  // NOLINT: cpplint is unable to handle the include order here
-#include <autoware_lanelet2_extension/utility/message_conversion.hpp>
-#include <autoware_lanelet2_extension/utility/query.hpp>
-#include <autoware_lanelet2_extension/utility/utilities.hpp>
-#include <autoware_utils/geometry/alt_geometry.hpp>
-#include <autoware_utils_geometry/geometry.hpp>
-#include <autoware_utils_pcl/transforms.hpp>
+#include <autoware_utils/geometry/geometry.hpp>
+#include <autoware_utils/transform/transforms.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
 
 #include <geometry_msgs/msg/point.hpp>
 
-#include <OgreBillboardSet.h>
-#include <OgreManualObject.h>
-#include <OgreRay.h>
 #include <OgreSceneManager.h>
 #include <OgreSceneNode.h>
-#include <lanelet2_core/LaneletMap.h>
-#include <lanelet2_core/primitives/Lanelet.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -257,10 +248,10 @@ void PointCloudSaver::transform_sensor_measurement(
   }
 
   const geometry_msgs::msg::PoseStamped target_to_source_pose_stamped =
-    autoware_utils_geometry::transform2pose(transform);
+    autoware_utils::transform2pose(transform);
   const Eigen::Matrix4f base_to_sensor_matrix =
     pose_to_matrix4f(target_to_source_pose_stamped.pose);
-  autoware_utils_pcl::transform_pointcloud(
+  autoware_utils::transform_pointcloud(
     *sensor_points_input_ptr, *sensor_points_output_ptr, base_to_sensor_matrix);
 }
 
