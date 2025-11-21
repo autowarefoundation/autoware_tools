@@ -1,0 +1,5 @@
+<library path="autoware_pointcloud_saver_rviz_plugin">
+  <class type="autoware::pointcloud_saver_rviz_plugin::PointCloudSaver" base_class_type="rviz_common::Tool">
+    <description>PointCloudSaver</description>
+  </class>
+</library>
