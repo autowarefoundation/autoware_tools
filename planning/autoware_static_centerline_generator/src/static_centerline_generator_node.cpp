@@ -58,6 +58,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #define RESET_TEXT "\x1B[0m"
@@ -320,8 +321,10 @@ void StaticCenterlineGeneratorNode::visualize_selected_centerline()
 
   // delete markers for validation
   pub_validation_results_->publish(utils::create_delete_all_marker_array({}, now()));
-  pub_debug_markers_->publish(utils::create_delete_all_marker_array(
-    {"unsafe_footprints", "unsafe_footprints_distance"}, now()));
+  pub_debug_markers_->publish(
+    utils::create_delete_all_marker_array(
+      {"unsafe_footprints", "unsafe_footprints_distance", "jitter_sections", "jitter_values"},
+      now()));
   pub_debug_ego_footprint_bounds_->publish(
     utils::create_delete_all_marker_array({"road_bounds"}, now()));
 }
@@ -340,6 +343,94 @@ void StaticCenterlineGeneratorNode::generate_centerline()
   centerline_handler_ = CenterlineHandler(whole_centerline_with_route);
 
   visualize_selected_centerline();
+}
+
+void StaticCenterlineGeneratorNode::load_centerline()
+{
+  // declare planning setting parameters
+  const auto lanelet2_input_file_path = declare_parameter<std::string>("lanelet2_input_file_path");
+  if (lanelet2_input_file_path == "") {
+    throw std::invalid_argument("The `lanelet2_input_file_path` is empty.");
+  }
+
+  // process
+  load_map(lanelet2_input_file_path);
+  const auto start_lanelet_id = declare_parameter<int64_t>("start_lanelet_id");
+  const auto end_lanelet_id = declare_parameter<int64_t>("end_lanelet_id");
+  const auto route = plan_route_by_lane_ids(start_lanelet_id, end_lanelet_id);
+  const auto lanelet_sequence = get_lanelet_sequence_from_param();
+  const auto [centerline, lane_ids] = get_centerline_from_lane_ids(lanelet_sequence);
+  centerline_handler_ = CenterlineHandler(CenterlineWithRoute{centerline, route});
+  centerline_handler_.add_centerline_lane_ids(lane_ids);
+
+  visualize_selected_centerline();
+}
+
+std::vector<lanelet::Id> StaticCenterlineGeneratorNode::get_lanelet_sequence_from_param()
+{
+  const auto lanelet_sequence_str =
+    autoware::universe_utils::getOrDeclareParameter<std::string>(*this, "lanelet_sequence");
+  std::vector<lanelet::Id> lanelet_sequence;
+  if (!lanelet_sequence_str.empty()) {
+    std::vector<std::string> tokens;
+    boost::split(tokens, lanelet_sequence_str, boost::is_any_of(","), boost::token_compress_on);
+    for (const auto & token : tokens) {
+      lanelet_sequence.push_back(std::stoll(token));
+    }
+  }
+  return lanelet_sequence;
+}
+
+std::pair<std::vector<TrajectoryPoint>, std::vector<lanelet::Id>>
+StaticCenterlineGeneratorNode::get_centerline_from_lane_ids(
+  const std::vector<lanelet::Id> & lane_ids) const
+{
+  std::vector<TrajectoryPoint> centerline_points;
+  std::vector<lanelet::Id> lane_ids_for_points;
+
+  for (size_t i = 0; i < lane_ids.size(); ++i) {
+    const auto id = lane_ids[i];
+    const auto lanelet = route_handler_ptr_->getLaneletsFromId(id);
+
+    const auto & centerline = lanelet.centerline();
+    for (size_t j = 0; j + 1 < centerline.size(); ++j) {
+      // skip duplicated points
+      if (!centerline_points.empty() && j == 0 && i > 0) {
+        const auto & prev = centerline_points.back().pose.position;
+        const auto & curr = centerline[j];
+        if (prev.x == curr.x() && prev.y == curr.y() && prev.z == curr.z()) {
+          continue;
+        }
+      }
+
+      TrajectoryPoint pt;
+      // position
+      pt.pose.position.x = centerline[j].x();
+      pt.pose.position.y = centerline[j].y();
+      pt.pose.position.z = centerline[j].z();
+
+      // orientation
+      geometry_msgs::msg::Point curr_pt;
+      curr_pt.x = centerline[j].x();
+      curr_pt.y = centerline[j].y();
+      curr_pt.z = centerline[j].z();
+
+      geometry_msgs::msg::Point next_pt;
+      next_pt.x = centerline[j + 1].x();
+      next_pt.y = centerline[j + 1].y();
+      next_pt.z = centerline[j + 1].z();
+
+      const double yaw = autoware_utils::calc_azimuth_angle(curr_pt, next_pt);
+      pt.pose.orientation = autoware_utils_geometry::create_quaternion_from_yaw(yaw);
+
+      centerline_points.push_back(pt);
+      lane_ids_for_points.push_back(id);
+    }
+  }
+  if (centerline_points.empty()) {
+    throw std::runtime_error("The centerline is empty.");
+  }
+  return {centerline_points, lane_ids_for_points};
 }
 
 CenterlineWithRoute StaticCenterlineGeneratorNode::generate_whole_centerline_with_route()
@@ -373,8 +464,9 @@ CenterlineWithRoute StaticCenterlineGeneratorNode::generate_whole_centerline_wit
   centerline_with_route.centerline =
     resample_trajectory_points(centerline_with_route.centerline, output_trajectory_interval);
 
-  pub_whole_centerline_->publish(autoware::motion_utils::convertToTrajectory(
-    centerline_with_route.centerline, create_header(this->now())));
+  pub_whole_centerline_->publish(
+    autoware::motion_utils::convertToTrajectory(
+      centerline_with_route.centerline, create_header(this->now())));
 
   return centerline_with_route;
 }
@@ -489,7 +581,27 @@ LaneletRoute StaticCenterlineGeneratorNode::plan_route_by_lane_ids(
   }();
 
   // plan route
-  return plan_route(start_pose, end_pose);
+  const auto lanelet_sequence = get_lanelet_sequence_from_param();
+  if (!lanelet_sequence.empty()) {
+    return plan_route_from_lanelet_sequence(lanelet_sequence);
+  } else {
+    return plan_route(start_pose, end_pose);
+  }
+}
+
+LaneletRoute StaticCenterlineGeneratorNode::plan_route_from_lanelet_sequence(
+  const std::vector<lanelet::Id> & lanelet_sequence) const
+{
+  LaneletRoute route;
+  route.start_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.front());
+  route.goal_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.back());
+  for (const auto & id : lanelet_sequence) {
+    LaneletSegment segment;
+    segment.preferred_primitive.id = id;
+    segment.primitives.push_back(segment.preferred_primitive);
+    route.segments.push_back(segment);
+  }
+  return route;
 }
 
 LaneletRoute StaticCenterlineGeneratorNode::plan_route(
@@ -714,6 +826,84 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
   }
 }
 
+JitterDetectionResult StaticCenterlineGeneratorNode::detect_jitter_sections(
+  const std::vector<TrajectoryPoint> & centerline)
+{
+  JitterDetectionResult result;
+
+  if (centerline.size() < 4) {
+    return result;  // Need at least 4 points for jitter analysis
+  }
+
+  std::vector<double> angle_diffs;
+  const int64_t jitter_deg_threshold =
+    autoware::universe_utils::getOrDeclareParameter<int64_t>(*this, "jitter_deg_threshold");
+  const double jitter_rad_threshold = jitter_deg_threshold * M_PI / 180.0;
+
+  // Detect centerline jitter from angle differences
+  for (size_t i = 0; i < centerline.size() - 3; ++i) {
+    const auto & p1 = centerline[i].pose.position;
+    const auto & p2 = centerline[i + 1].pose.position;
+    const auto & p3 = centerline[i + 2].pose.position;
+    const auto & p4 = centerline[i + 3].pose.position;
+
+    double angle1 = std::atan2(p2.y - p1.y, p2.x - p1.x);
+    double angle2 = std::atan2(p3.y - p2.y, p3.x - p2.x);
+    double angle3 = std::atan2(p4.y - p3.y, p4.x - p3.x);
+
+    double angle_diff1 = autoware_utils_math::normalize_radian(angle1 - angle2);
+    double angle_diff2 = autoware_utils_math::normalize_radian(angle2 - angle3);
+    double angle_diff_delta = autoware_utils_math::normalize_radian(angle_diff1 - angle_diff2);
+
+    if (std::abs(angle_diff_delta) > jitter_rad_threshold) {
+      result.jitter_indices.push_back(i + 1);
+    }
+
+    angle_diffs.push_back(angle_diff_delta);
+  }
+
+  // Always collect all angle differences for analysis
+  for (size_t i = 0; i < angle_diffs.size(); ++i) {
+    result.angle_differences.push_back(std::abs(angle_diffs[i]));
+  }
+
+  result.total_error_points = result.jitter_indices.size();
+
+  return result;
+}
+
+void StaticCenterlineGeneratorNode::visualize_jitter_sections(
+  const std::vector<TrajectoryPoint> & centerline, const JitterDetectionResult & jitter_result,
+  MarkerArray & marker_array)
+{
+  // Add markers for detected jitter sections only
+  for (size_t i = 0; i < jitter_result.jitter_indices.size(); ++i) {
+    const auto & jitter_idx = jitter_result.jitter_indices[i];
+    if (jitter_idx < centerline.size()) {
+      const auto & jitter_pose = centerline[jitter_idx].pose;
+      const auto jitter_footprint = create_vehicle_footprint(jitter_pose, vehicle_info_);
+
+      // White footprint marker for detected jitter section
+      const auto jitter_marker = utils::create_footprint_marker(
+        "jitter_sections", jitter_footprint, 0.08, 0.0, 0.4, 1.0, 0.95, now(), jitter_idx);
+      marker_array.markers.push_back(jitter_marker);
+
+      // Text marker showing the angle change at jitter location
+      const auto jitter_text_pose = get_text_pose(jitter_pose, vehicle_info_, 0.5);
+      // Use the actual jitter index to get the corresponding angle difference
+      const double angle_diff_rad =
+        (jitter_idx > 0 && (jitter_idx - 1) < jitter_result.angle_differences.size())
+          ? jitter_result.angle_differences[jitter_idx - 1]
+          : 0.0;
+      const double angle_diff_deg = autoware::universe_utils::rad2deg(angle_diff_rad);
+      const auto jitter_text_marker = utils::create_text_marker(
+        "jitter_values", jitter_text_pose, std::round(angle_diff_deg * 10.0) / 10.0, 0.0, 0.4, 1.0,
+        0.95, now(), jitter_idx);
+      marker_array.markers.push_back(jitter_text_marker);
+    }
+  }
+}
+
 void StaticCenterlineGeneratorNode::validate_centerline()
 {
   const auto centerline = centerline_handler_.get_selected_centerline();
@@ -817,6 +1007,10 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   }
   const double max_steer_angle = vehicle_info_.calcSteerAngleFromCurvature(max_curvature);
 
+  // visualize jitter
+  const auto jitter_result = detect_jitter_sections(centerline);
+  visualize_jitter_sections(centerline, jitter_result, marker_array);
+
   // add centerline and road boundaries to debug markers
   const auto centerline_vec = convert_to_geometry_points_vector(centerline, centerline_lane_ids);
   const auto left_bound_vec =
@@ -884,7 +1078,50 @@ void StaticCenterlineGeneratorNode::validate_centerline()
               << std::endl
               << "  Conditionally Passed." << RESET_TEXT << std::endl;
   }
-  // 3. result
+
+  // 3. jitter / rough sections detection
+  const int64_t jitter_deg_threshold =
+    autoware::universe_utils::getOrDeclareParameter<int64_t>(*this, "jitter_deg_threshold");
+  const double max_angle_diff =
+    jitter_result.angle_differences.empty()
+      ? 0.0
+      : *std::max_element(
+          jitter_result.angle_differences.begin(), jitter_result.angle_differences.end());
+  const double max_angle_diff_deg =
+    std::round(autoware::universe_utils::rad2deg(max_angle_diff) * 10.0) / 10.0;
+
+  std::string jitter_indices_str;
+  for (size_t i = 0; i < jitter_result.jitter_indices.size(); ++i) {
+    jitter_indices_str += std::to_string(jitter_result.jitter_indices[i]);
+    if (i < jitter_result.jitter_indices.size() - 1) jitter_indices_str += ", ";
+  }
+
+  std::string jitter_section;
+  std::cerr << "3. Jitter:" << std::endl;
+  if (jitter_result.total_error_points == 0) {
+    std::cerr << "  The generated centerline has no jitter. (estimated:"
+              << std::to_string(max_angle_diff_deg)
+              << " [deg] < threshold:" << std::to_string(jitter_deg_threshold) << " [deg])"
+              << std::endl;
+  } else {
+    const auto threshold_message =
+      (max_angle_diff_deg > jitter_deg_threshold)
+        ? "( > " + std::to_string(jitter_deg_threshold) + " [deg] threshold)"
+        : "( <= " + std::to_string(jitter_deg_threshold) + " [deg] threshold)";
+    std::cerr
+      << YELLOW_TEXT << "  The generated centerline has "
+      << std::to_string(jitter_result.total_error_points) << " sections with jitter detected."
+      << std::endl
+      << "  All detected indices: " << jitter_indices_str << std::endl
+      << "  Maximum jitter: " << std::to_string(max_angle_diff_deg) << " [deg]" << threshold_message
+      << std::endl
+      << "  (Warning: May affect ride comfort)" << RESET_TEXT << std::endl
+      << "  However, the estimated jitter is not enough precise, so the result is conditional pass."
+      << std::endl
+      << "  Conditionally Passed." << std::endl;
+  }
+
+  // 4. result
   std::cerr << std::endl << BOLD_TEXT << "Result:" << RESET_TEXT << std::endl;
   if (are_footprints_inside_lanelets && is_curvature_low) {
     std::cerr << BOLD_TEXT << "  Passed!" << RESET_TEXT << std::endl;

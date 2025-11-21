@@ -2,6 +2,20 @@
 Changelog for package autoware_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.0 (2025-11-16)
+------------------
+* chore(autoware_debug_tools): ignore log in frequent_log_checker (`#276 <https://github.com/autowarefoundation/autoware_tools/issues/276>`_)
+* Contributors: Takayuki Murooka
+
+0.3.0 (2025-08-11)
+------------------
+* style(pre-commit): autofix (`#275 <https://github.com/autowarefoundation/autoware_tools/issues/275>`_)
+  * apply pre-commit
+  * fix: add maintainer in planning_debug tools package.xml
+  ---------
+* fix(frequent_log_checker): print the largest number of each frequent log (`#228 <https://github.com/autowarefoundation/autoware_tools/issues/228>`_)
+* Contributors: Kyoichi Sugahara, Takayuki Murooka
+
 0.2.0 (2025-03-24)
 ------------------
 * fix(autoware_debug_tools): time keeper does not work with the old message type (`#224 <https://github.com/autowarefoundation/autoware_tools/issues/224>`_)

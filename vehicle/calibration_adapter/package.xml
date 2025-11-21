@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>calibration_adapter</name>
-  <version>0.2.0</version>
+  <version>0.4.0</version>
   <description>The calibration_adapter</description>
   <maintainer email="tomoya.kimura@tier4.jp">Tomoya Kimura</maintainer>
   <maintainer email="taiki.tanaka@tier4.jp">Taiki Tanaka</maintainer>

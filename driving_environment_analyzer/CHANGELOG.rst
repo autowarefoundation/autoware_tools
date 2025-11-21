@@ -2,6 +2,14 @@
 Changelog for package driving_environment_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.0 (2025-11-16)
+------------------
+
+0.3.0 (2025-08-11)
+------------------
+* chore: sync files (`#214 <https://github.com/autowarefoundation/autoware_tools/issues/214>`_)
+* Contributors: awf-autoware-bot[bot]
+
 0.2.0 (2025-03-24)
 ------------------
 * fix(driving_environment_analyzer): add missing include files for autoware_universe_utils (`#212 <https://github.com/autowarefoundation/autoware_tools/issues/212>`_)

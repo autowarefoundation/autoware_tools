@@ -2,6 +2,63 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.4.0 (2025-11-16)
+------------------
+* feat(trajectory_visualizer): sort topic list (`#307 <https://github.com/autowarefoundation/autoware_tools/issues/307>`_)
+  * sort topic list
+  * fix pre-commit error
+  * add README topic display ordering section
+  * fix inital topics selection
+  * config path
+  * fix pre-commit error
+  * add copylight
+  ---------
+* feat(planning_debug_tools): improve trajectory visualizer usability (`#300 <https://github.com/autowarefoundation/autoware_tools/issues/300>`_)
+  * feat equal aspect ratio when XY-plot
+  * add unwrapped yaw plot
+  * fix pre-commit
+  ---------
+* fix: change to detailed library reference (`#295 <https://github.com/autowarefoundation/autoware_tools/issues/295>`_)
+* feat(planning_debug_tools): support V2I (`#292 <https://github.com/autowarefoundation/autoware_tools/issues/292>`_)
+* fix(planning_debug_tools): fix InitializeLocalization msg import (`#291 <https://github.com/autowarefoundation/autoware_tools/issues/291>`_)
+* fix: show motion velocity planner output by default (`#290 <https://github.com/autowarefoundation/autoware_tools/issues/290>`_)
+* Contributors: Kotakku, Satoshi OTA, Xiaoyu WANG, Yukinari Hisaki
+
+0.3.0 (2025-08-11)
+------------------
+* feat(trajectory_visualizer): add initial config and better layout (`#273 <https://github.com/autowarefoundation/autoware_tools/issues/273>`_)
+* feat(trajectory_visualizer): support for new message types (`#272 <https://github.com/autowarefoundation/autoware_tools/issues/272>`_)
+  * fix(trajectory_data): handle early return for empty or single element trajectory in get_arc_lengths
+  * feat(trajectory_visualizer): support multiple message types in trajectory visualization and data processing
+  * feat(trajectory_data): add index_values function to return indices of trajectory points
+  * apply pre-commit
+  * remove unused imports
+  * fix(package.xml): add missing maintainer entry for Maxime CLEMENT
+  ---------
+* style(pre-commit): autofix (`#275 <https://github.com/autowarefoundation/autoware_tools/issues/275>`_)
+  * apply pre-commit
+  * fix: add maintainer in planning_debug tools package.xml
+  ---------
+* feat(trajectory_visualizer): add visualization of X, Y, and Yaw values (`#262 <https://github.com/autowarefoundation/autoware_tools/issues/262>`_)
+* fix(planning): bug of loading the db3 rosbag for the perception replayer (`#269 <https://github.com/autowarefoundation/autoware_tools/issues/269>`_)
+  * fix loading rosbag bug
+  * remove formatting chanes
+  ---------
+* feat(planning/perception_reproducer): add mcap bag format support (`#246 <https://github.com/autowarefoundation/autoware_tools/issues/246>`_)
+* fix: skip ureadable msg (`#259 <https://github.com/autowarefoundation/autoware_tools/issues/259>`_)
+  fix error check
+* feat(planning_debug_tools): add trajectory visualizer tool (`#251 <https://github.com/autowarefoundation/autoware_tools/issues/251>`_)
+  * implement initial script
+  * improvements
+  * add todo
+  * improve script and add arc length shift on ego pose
+  * remove "plot" button (now we replot when topics selection is changed)
+  * Add README
+  * disable cspell for python code
+  * add copyright
+  ---------
+* Contributors: Kem (TiankuiXian), Kyoichi Sugahara, Maxime CLEMENT, yukage-oya
+
 0.2.0 (2025-03-24)
 ------------------
 * feat(planning_debug_tools)!: replace VelocityLimit messages to autoware_internal_planning_msgs (`#223 <https://github.com/autowarefoundation/autoware_tools/issues/223>`_)

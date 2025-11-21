@@ -51,9 +51,10 @@ The optimized centerline can be generated from the command line interface by des
 - `<end-pose>` (not mandatory)
 - `<vehicle-model>`
 - `<goal-method>` (not mandatory, `path_generator` or `behavior_path_planner` only)
+- `<lanelet-sequence>` (not mandatory)
 
 ```sh
-ros2 launch autoware_static_centerline_generator static_centerline_generator.launch.xml run_backgrond:=false lanelet2_input_file_path:=<input-osm-path> lanelet2_output_file_path:=<output-osm-path> start_lanelet_id:=<start-lane-id> start_pose:=<start-pose> end_lanelet_id:=<end-lane-id> end_pose:=<end-pose> vehicle_model:=<vehicle-model> goal_method:=<goal-method>
+ros2 launch autoware_static_centerline_generator static_centerline_generator.launch.xml run_backgrond:=false lanelet2_input_file_path:=<input-osm-path> lanelet2_output_file_path:=<output-osm-path> start_lanelet_id:=<start-lane-id> start_pose:=<start-pose> end_lanelet_id:=<end-lane-id> end_pose:=<end-pose> vehicle_model:=<vehicle-model> goal_method:=<goal-method> lanelet_sequence:=<lanelet-sequence>
 ```
 
 **Note that `<goal-method>:=behavior_path_planner` is not currently supported.**
@@ -65,6 +66,8 @@ By specifying `start-pose`, `goal-pose`, and `goal-method`, the centerline from 
 `<start-pose>`, `<goal-pose>` are entered like `[position.x, position.y, position.z, orientation.x, orientation.y, orientation.z, orientation.w]` with double type.
 In order to run smoothly to the goal pose, `goal-method` is used.
 Only `path_generator` or `behavior_path_planner` can be entered for `<goal_method>`.
+In `<lanelet-sequence>`, you can specify the lanelet_ids for the static centerline to be embedded like `"100,101,102"`.
+The input route must be continuous and a drivable path.
 
 > [!WARNING]
 > If the start pose is off the center of the lane, it is necessary to manually embed a centerline that smoothly connects the start pose and the start lane in advance using VMB, etc.
@@ -75,26 +78,30 @@ Only `path_generator` or `behavior_path_planner` can be entered for `<goal_metho
 
 ## Visualization
 
-When launching the path planning server, rviz is launched as well as follows.
+When performing validation, launch rviz as follows.
+
 ![rviz](./media/rviz.png)
 
-- The yellow footprints are the original ones from the osm map file.
-  - FYI: Footprints are generated based on the centerline and vehicle size.
-- The red footprints are the optimized ones.
-- The gray area is the drivable area.
-- You can see that the red footprints are inside the drivable area although the yellow ones are outside.
+- Gray lines indicate map information such as `lanelet` or `stop line`.
+- The pink and purple lines show the boundaries of the `lanelet` with embedded fixed paths and the embedded static centerline themselves.
+  - The pink and purple breaks indicate where `lanelets` switch.
+- The green boxes are safe footprints.
 
-### Unsafe footprints
+### Unsafe Footprints
 
-Sometimes the optimized centerline footprints are close to the lanes' boundaries.
-We can check how close they are with `unsafe footprints` marker as follows.
+Optimized centerline may present the following hazards.
+These can be identified using the `unsafe footprints` marker.
 
-Footprints' color depends on its distance to the boundaries, and text expresses its distance.
+- When the footprint approaches the vehicle boundary
+- When making abrupt directional changes
+
+Footprint color changes based on distance to the boundary and the angular difference between front and rear points, with distance displayed as text.
 
 ![rviz](./media/unsafe_footprints.png)
 
-By default, footprints' color is
+By default, footprint colors are:
 
-- when the distance is less than 0.1 [m] : red
-- when the distance is less than 0.2 [m] : green
-- when the distance is less than 0.3 [m] : blue
+- Distance to lanelet boundary < 0.1 [m]: Red
+- Distance to lanelet boundary < 0.2 [m]: Orange
+- Distance to lanelet boundary < 0.3 [m]: Yello
+- Yaw difference exceeds jitter_deg_threshold (default is 40) [deg]: Blue
