@@ -4,7 +4,6 @@
 #include <sstream>
 #include <string>
 
-#include <nlohmann/json.hpp>
 #include "rclcpp/rclcpp.hpp" 
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -16,6 +15,7 @@
 #include "autoware_adapi_v1_msgs/srv/clear_route.hpp"
 #include <chrono>
 
+#include <yaml-cpp/yaml.h>
 
 using namespace std::literals::chrono_literals;
 using autoware_adapi_v1_msgs::msg::to_yaml;
@@ -29,8 +29,62 @@ class TopicListener : public rclcpp::Node {
 		route_set_subscription_ = this->create_subscription<autoware_adapi_v1_msgs::msg::Route>(
 			"/api/routing/route", 10, std::bind(&TopicListener::route_set_callback, this, std::placeholders::_1));
 		
+		initial_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 10);
+		goal_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/planning/mission_planning/goal", 10);		
+		
+		timer_ = this->create_wall_timer(3s, std::bind(&TopicListener::timer_callback, this));
+	
+	
 	//	client_ = this->create_client<autoware_adapi_v1_msgs::srv::ClearRoute>("/api/routing/clear_route");
 	};
+	
+	void timer_callback()
+	{
+		set_route();
+	}
+	
+	void set_route()
+	{	
+		try {
+			auto yaml = read_yaml("output.yaml");
+			
+			geometry_msgs::msg::PoseWithCovarianceStamped msg;
+
+			msg.header.frame_id = yaml["header"]["frame_id"].as<std::string>();
+
+			msg.pose.pose.position.x = yaml["data"][0]["start"]["position"]["x"].as<double>();
+			msg.pose.pose.position.y = yaml["data"][0]["start"]["position"]["y"].as<double>();
+			msg.pose.pose.position.z = yaml["data"][0]["start"]["position"]["z"].as<double>();
+
+			msg.pose.pose.orientation.x = yaml["data"][0]["start"]["orientation"]["x"].as<double>();
+			msg.pose.pose.orientation.y = yaml["data"][0]["start"]["orientation"]["y"].as<double>();
+			msg.pose.pose.orientation.z = yaml["data"][0]["start"]["orientation"]["z"].as<double>();
+			msg.pose.pose.orientation.w = yaml["data"][0]["start"]["orientation"]["w"].as<double>();
+
+			if (yaml["covariance"] && yaml["covariance"].size() == 36) {
+			    for (size_t i = 0; i < 36; i++) {
+				msg.pose.covariance[i] = yaml["covariance"][i].as<double>();
+			    }
+			} else {
+			    std::fill(msg.pose.covariance.begin(), msg.pose.covariance.end(), 0.0);
+			}
+
+			initial_pose_publisher_->publish(msg);
+
+		} catch(const YAML::BadFile& e) {
+			RCLCPP_INFO(this->get_logger(), "Output.yaml not found.");
+		} catch(const YAML::BadConversion& e) {
+			RCLCPP_INFO(this->get_logger(), "Bad conversion: %s", e.what());
+		}
+
+		
+	}
+
+	YAML::Node read_yaml(std::string filepath)
+	{
+		YAML::Node yaml = YAML::LoadFile(filepath);
+		return yaml;
+	}
 
 	void route_set_callback(const autoware_adapi_v1_msgs::msg::Route& msg)
 	{	
@@ -50,6 +104,9 @@ class TopicListener : public rclcpp::Node {
 
 	rclcpp::Subscription<autoware_adapi_v1_msgs::msg::Route>::SharedPtr route_set_subscription_;	
 //	rclcpp::Client<autoware_adapi_v1_msgs::srv::ClearRoute>::SharedPtr client_;
+	rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_publisher_;
+	rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_publisher_;
+	rclcpp::TimerBase::SharedPtr timer_;	
 
 };
 
