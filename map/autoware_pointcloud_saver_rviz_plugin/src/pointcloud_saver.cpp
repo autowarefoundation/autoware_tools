@@ -53,6 +53,11 @@ namespace autoware
 namespace pointcloud_saver_rviz_plugin
 {
 
+namespace
+{
+constexpr const char * SAVED_PCD_FILENAME = "saved_pointcloud.pcd";
+constexpr double POINT_ON_SEGMENT_EPS = 1e-12;
+}  // namespace
 PointCloudSaver::PointCloudSaver() : tf2_listener_(tf2_buffer_)
 {
   // shortcut_key_ = 'n';
@@ -148,7 +153,8 @@ struct Point
   double y;
 };
 
-bool pointOnSegment(const Point & a, const Point & b, const Point & p, double eps = 1e-12)
+bool pointOnSegment(
+  const Point & a, const Point & b, const Point & p, double eps = POINT_ON_SEGMENT_EPS)
 {
   double cross = (p.y - a.y) * (b.x - a.x) - (p.x - a.x) * (b.y - a.y);
   if (std::fabs(cross) > eps) return false;
@@ -211,7 +217,7 @@ void PointCloudSaver::savePointCloud(std::vector<Ogre::Vector3> line_points)
   std::cout << "save_points.points.size() " << save_points.points.size() << std::endl;
 
   if (!save_points.points.empty()) {
-    pcl::io::savePCDFileBinary("saved_pointcloud.pcd", save_points);
+    pcl::io::savePCDFileBinary(SAVED_PCD_FILENAME, save_points);
   }
 }
 
