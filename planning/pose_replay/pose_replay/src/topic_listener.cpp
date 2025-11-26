@@ -8,14 +8,12 @@
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 
-#include "autoware_planning_msgs/msg/lanelet_route.hpp"
-
 #include "autoware_adapi_v1_msgs/msg/route.hpp"
-#include "autoware_adapi_v1_msgs/srv/set_route_points.hpp"
 #include "autoware_adapi_v1_msgs/srv/clear_route.hpp"
 #include <chrono>
 
 #include <yaml-cpp/yaml.h>
+#include <uuid/uuid.h>
 
 using namespace std::literals::chrono_literals;
 using autoware_adapi_v1_msgs::msg::to_yaml;
@@ -98,6 +96,20 @@ class TopicListener : public rclcpp::Node {
 		return yaml;
 	}
 
+	std::string prepend_uuid(const std::string yaml_str){	
+		uuid_t binuuid;
+		uuid_generate(binuuid);
+		char uuid_str[37];
+		uuid_unparse_lower(binuuid, uuid_str);
+		
+		std::ostringstream oss;
+		oss << "uuid: \"" << uuid_str << "\"\n";
+		oss << yaml_str;
+		std::string new_str = oss.str();
+
+		return new_str;
+	}
+
 	void route_set_callback(const autoware_adapi_v1_msgs::msg::Route& msg)
 	{	
 		if(msg.data.empty()) return;
@@ -106,10 +118,11 @@ class TopicListener : public rclcpp::Node {
 	}
 
 	void route_to_yaml(const autoware_adapi_v1_msgs::msg::Route& msg){
-		std::string yaml = autoware_adapi_v1_msgs::msg::to_yaml(msg);
+		std::string yaml_str = autoware_adapi_v1_msgs::msg::to_yaml(msg);
+		std::string uuid_yaml_str = prepend_uuid(yaml_str);	
 		std::ofstream o;
 		o.open("output.yaml", std::ios::app);
-		if(o.is_open()) o << yaml;	
+		if(o.is_open()) o << uuid_yaml_str << "---\n";	
 		o.close();
 	}	
 	
