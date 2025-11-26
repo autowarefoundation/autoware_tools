@@ -9,10 +9,16 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(nlohmann_json REQUIRED)
+find_package(yaml-cpp REQUIRED)
+
+# test
+find_package(autoware_adapi_v1_msgs REQUIRED)
+find_package(autoware_planning_msgs REQUIRED)
 
 add_executable(topic_listener src/topic_listener.cpp)
-ament_target_dependencies(topic_listener rclcpp geometry_msgs nlohmann_json)
+ament_target_dependencies(topic_listener rclcpp geometry_msgs autoware_adapi_v1_msgs autoware_planning_msgs)
+
+target_link_libraries(topic_listener yaml-cpp)
 
 install(TARGETS topic_listener
 	DESTINATION lib/${PROJECT_NAME}
