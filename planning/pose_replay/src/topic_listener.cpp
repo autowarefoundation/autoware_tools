@@ -30,12 +30,10 @@ class TopicListener : public rclcpp::Node {
 			"/api/routing/route", 10, std::bind(&TopicListener::route_set_callback, this, std::placeholders::_1));
 		
 		initial_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 10);
-		goal_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/planning/mission_planning/goal", 10);		
-		
-		timer_ = this->create_wall_timer(3s, std::bind(&TopicListener::timer_callback, this));
-	
-	
+		goal_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/planning/mission_planning/goal", 10);				
+	//	timer_ = this->create_wall_timer(1s, std::bind(&TopicListener::timer_callback, this));
 	//	client_ = this->create_client<autoware_adapi_v1_msgs::srv::ClearRoute>("/api/routing/clear_route");
+
 	};
 	
 	void timer_callback()
