@@ -60,7 +60,7 @@ class TopicListener : public rclcpp::Node {
 			msg.pose.pose.orientation.y = yaml["data"][0]["start"]["orientation"]["y"].as<double>();
 			msg.pose.pose.orientation.z = yaml["data"][0]["start"]["orientation"]["z"].as<double>();
 			msg.pose.pose.orientation.w = yaml["data"][0]["start"]["orientation"]["w"].as<double>();
-
+			
 			if (yaml["covariance"] && yaml["covariance"].size() == 36) {
 			    for (size_t i = 0; i < 36; i++) {
 				msg.pose.covariance[i] = yaml["covariance"][i].as<double>();
@@ -68,8 +68,22 @@ class TopicListener : public rclcpp::Node {
 			} else {
 			    std::fill(msg.pose.covariance.begin(), msg.pose.covariance.end(), 0.0);
 			}
+			
+			geometry_msgs::msg::PoseStamped goalmsg;			
+			
+			goalmsg.header.frame_id = yaml["header"]["frame_id"].as<std::string>();
+
+			goalmsg.pose.position.x = yaml["data"][0]["goal"]["position"]["x"].as<double>();
+			goalmsg.pose.position.y = yaml["data"][0]["goal"]["position"]["y"].as<double>();
+			goalmsg.pose.position.z = yaml["data"][0]["goal"]["position"]["z"].as<double>();
+
+			goalmsg.pose.orientation.x = yaml["data"][0]["goal"]["orientation"]["x"].as<double>();
+			goalmsg.pose.orientation.y = yaml["data"][0]["goal"]["orientation"]["y"].as<double>();
+			goalmsg.pose.orientation.z = yaml["data"][0]["goal"]["orientation"]["z"].as<double>();
+			goalmsg.pose.orientation.w = yaml["data"][0]["goal"]["orientation"]["w"].as<double>();
 
 			initial_pose_publisher_->publish(msg);
+			goal_pose_publisher_->publish(goalmsg);			
 
 		} catch(const YAML::BadFile& e) {
 			RCLCPP_INFO(this->get_logger(), "Output.yaml not found.");
