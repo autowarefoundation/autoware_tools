@@ -22,6 +22,8 @@
 #include <autoware_lanelet2_extension/utility/utilities.hpp>
 #include <magic_enum.hpp>
 
+#include <lanelet2_core/geometry/Lanelet.h>
+#include <lanelet2_core/primitives/LaneletSequence.h>
 #include <lanelet2_routing/RoutingGraphContainer.h>
 
 #include <algorithm>
@@ -106,7 +108,7 @@ double getLaneWidth(const lanelet::ConstLanelet & lane)
 
 double getRouteLength(const lanelet::ConstLanelets & lanes)
 {
-  return lanelet::utils::getLaneletLength3d(lanes);
+  return lanelet::geometry::length3d(lanelet::LaneletSequence(lanes));
 }
 
 double getMaxCurvature(const lanelet::ConstLanelets & lanes)
@@ -227,7 +229,7 @@ double getRouteLengthWithSameDirectionLane(
 
   for (const auto & lane : lanes) {
     if (existSameDirectionLane(lane, route_handler)) {
-      value += lanelet::utils::getLaneletLength3d(lane);
+      value += lanelet::geometry::length3d(lane);
     }
   }
 
@@ -241,7 +243,7 @@ double getRouteLengthWithOppositeDirectionLane(
 
   for (const auto & lane : lanes) {
     if (existOppositeDirectionLane(lane, route_handler)) {
-      value += lanelet::utils::getLaneletLength3d(lane);
+      value += lanelet::geometry::length3d(lane);
     }
   }
 
@@ -262,7 +264,7 @@ double getRouteLengthWithNoAdjacentLane(
       continue;
     }
 
-    value += lanelet::utils::getLaneletLength3d(lane);
+    value += lanelet::geometry::length3d(lane);
   }
 
   return value;
