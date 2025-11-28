@@ -20,13 +20,18 @@
 using namespace std::literals::chrono_literals;
 using autoware_adapi_v1_msgs::msg::to_yaml;
 
+const std::string save_filepath = "output.yaml";
+
+typedef autoware_adapi_v1_msgs::msg::Route adapi_route;
+typedef std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> uuid_route_map;
+
 class TopicListener : public rclcpp::Node {
 
 	public:
 	TopicListener() : Node("topic_listener") {		
 		RCLCPP_INFO_STREAM(this->get_logger(), "Listener online."); 
 		
-		route_set_subscription_ = this->create_subscription<autoware_adapi_v1_msgs::msg::Route>(
+		route_set_subscription_ = this->create_subscription<adapi_route>(
 			"/api/routing/route", 10, std::bind(&TopicListener::route_set_callback, this, std::placeholders::_1));
 		
 		initial_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 10);
@@ -34,8 +39,11 @@ class TopicListener : public rclcpp::Node {
 	//	timer_ = this->create_wall_timer(1s, std::bind(&TopicListener::timer_callback, this));
 	//	client_ = this->create_client<autoware_adapi_v1_msgs::srv::ClearRoute>("/api/routing/clear_route");
 		
-		read_yaml_history_from_file("output.yaml");
+		read_routes(save_filepath);
 		test_write_to_history();
+
+	//	delete_route("ba91685c-71bd-4254-a2e1-8d560a011d72");
+
 	};
 
 /*	
@@ -45,6 +53,108 @@ class TopicListener : public rclcpp::Node {
 	}
 */
 	
+	void delete_route(std::string uuid)
+	{
+		std::ifstream yaml_file(save_filepath);
+		
+		// Read and save to function scope
+		std::vector<YAML::Node> docs = YAML::LoadAll(yaml_file);
+		std::vector<YAML::Node>::iterator start = docs.begin(), end = docs.end();
+		
+		// Delete from function scope
+		for(auto p = start; p != end; ++p){
+			if((*p)["uuid"].as<std::string>() == uuid) docs.erase(p);
+		}
+		
+		// Write to save
+		for(auto &d : docs){
+			write_route("new_output.yaml", d, false);			
+		}
+
+		// Sync and update node
+		read_routes("new_output.yaml");	
+	}
+
+	template <typename T> void write_route(const std::string& filepath, T& value, bool append = true){
+		std::ofstream o;
+		if (append) {
+			o.open(filepath, std::ios::app);
+		} else {
+			o.open(filepath, std::ios::trunc);			
+		}
+
+		if(!o.is_open()) throw std::runtime_error("Cannot open file: " + filepath);
+		o << "---\n" << value << "\n";	
+	}
+
+	std::vector<YAML::Node> read_yaml_to_node_vector(std::string filepath)
+	{	
+		std::ifstream yaml_file(filepath);
+		std::vector<YAML::Node> docs = YAML::LoadAll(yaml_file);
+		if (docs.empty()) return {};
+		return docs; 
+	}
+	
+	void read_routes(std::string filepath)
+	{	
+		std::vector<YAML::Node> docs = read_yaml_to_node_vector(filepath);
+		if(docs.empty()){
+			routes = {};
+			return;
+		}	
+		for (size_t i = 0; i < docs.size(); ++i) {
+			append_route(docs[i]);
+		} 
+	}
+	
+	void append_route(YAML::Node node){
+		uuid_route_map new_map = yaml_to_map(node);
+		routes.insert(new_map.begin(), new_map.end());	
+	}
+
+	std::string prepend_uuid(const std::string yaml_str){	
+		uuid_t binuuid;
+		uuid_generate(binuuid);
+		char uuid_str[37];
+		uuid_unparse_lower(binuuid, uuid_str);
+		
+		std::ostringstream oss;
+		oss << "uuid: \"" << uuid_str << "\"\n";
+		oss << yaml_str;
+		std::string new_str = oss.str();
+		return new_str;
+	}
+
+	std::string route_to_yaml_string(std::string uuid, adapi_route route){
+		std::ostringstream oss;
+		oss << "uuid: \"" << uuid << "\"\n";
+		oss << autoware_adapi_v1_msgs::msg::to_yaml(route);
+		std::string new_str = oss.str();
+		return new_str;
+	};
+
+	void route_set_callback(const adapi_route& msg)
+	{	
+		if(msg.data.empty()) return;
+		std::string yaml_str = autoware_adapi_v1_msgs::msg::to_yaml(msg);
+		auto uuid_yaml_str = prepend_uuid(yaml_str);
+		write_route(save_filepath, uuid_yaml_str, true);
+		RCLCPP_INFO(this->get_logger(), "Route written to output.yaml.");
+	}
+	
+	void test_write_to_history(){
+		std::vector<std::string> yaml_strs = {};
+		for(auto &[uuid, route] : routes){
+			std::string s = route_to_yaml_string(uuid, route);
+			yaml_strs.push_back(s);
+		}
+		
+		for(auto &ys : yaml_strs){
+			write_route("new_output.yaml", ys, true);
+		}	
+	} 
+
+
 /*	void set_route(std::string uuid)
 	{	
 		try {
@@ -172,77 +282,6 @@ class TopicListener : public rclcpp::Node {
 		std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> m = {{root["uuid"].as<std::string>(), msg}};	
 		return m;
 	}
-
-	
-	void read_yaml_history_from_file(std::string filepath)
-	{	
-		// ...LoadAll
-		std::ifstream yaml_file(filepath);
-		std::vector<YAML::Node> docs = YAML::LoadAll(yaml_file);
-		
-		if (docs.empty()) {
-			RCLCPP_INFO(this->get_logger(), "Empty route");
-			return;
-		}
-
-		// check for empty
-		for (size_t i = 0; i < docs.size(); ++i) {
-//			std::cout << YAML::Dump(docs[i]) << std::endl;
-			std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> new_map = yaml_to_map(docs[i]);
-			routes.insert(new_map.begin(), new_map.end());
-		} 
-	}
-
-	std::string prepend_uuid(const std::string yaml_str){	
-		uuid_t binuuid;
-		uuid_generate(binuuid);
-		char uuid_str[37];
-		uuid_unparse_lower(binuuid, uuid_str);
-		
-		std::ostringstream oss;
-		oss << "uuid: \"" << uuid_str << "\"\n";
-		oss << yaml_str;
-		std::string new_str = oss.str();
-
-		return new_str;
-	}
-
-	std::string history_to_string(std::string uuid, autoware_adapi_v1_msgs::msg::Route route){
-		std::ostringstream oss;
-		oss << "uuid: \"" << uuid << "\"\n";
-		oss << autoware_adapi_v1_msgs::msg::to_yaml(route);
-		std::string new_str = oss.str();
-		return new_str;
-	};
-
-	void route_set_callback(const autoware_adapi_v1_msgs::msg::Route& msg)
-	{	
-		if(msg.data.empty()) return;
-		std::string yaml_str = autoware_adapi_v1_msgs::msg::to_yaml(msg);
-		write_to_history(yaml_str, false, "output.yaml");
-		RCLCPP_INFO(this->get_logger(), "Route written to output.yaml.");
-	}
-	
-	void test_write_to_history(){
-		std::vector<std::string> yaml_strs = {};
-		for(auto &[uuid, route] : routes){
-			std::string s = history_to_string(uuid, route);
-			yaml_strs.push_back(s);
-		}
-		
-		for(auto &ys : yaml_strs){
-			write_to_history(ys, true, "new_output.yaml");
-		}	
-	} 
-
-	void write_to_history(std::string& yaml_str, bool hasUuid, const std::string filepath){
-		std::string uuid_yaml_str = (hasUuid) ? yaml_str : prepend_uuid(yaml_str);	
-		std::ofstream o;
-		o.open(filepath, std::ios::app);
-		if(o.is_open()) o << "---\n" << uuid_yaml_str << "\n";	
-		o.close();
-	}	
-	
 
 	rclcpp::Subscription<autoware_adapi_v1_msgs::msg::Route>::SharedPtr route_set_subscription_;	
 //	rclcpp::Client<autoware_adapi_v1_msgs::srv::ClearRoute>::SharedPtr client_;
