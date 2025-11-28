@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "rclcpp/rclcpp.hpp" 
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
@@ -19,15 +20,6 @@
 using namespace std::literals::chrono_literals;
 using autoware_adapi_v1_msgs::msg::to_yaml;
 
-struct RouteWithUuid {
-	std::string uuid;
-	autoware_adapi_v1_msgs::msg::Route route;
-	
-	bool isEmpty() const {
-		return uuid.empty();
-	}
-};
-
 class TopicListener : public rclcpp::Node {
 
 	public:
@@ -42,8 +34,8 @@ class TopicListener : public rclcpp::Node {
 	//	timer_ = this->create_wall_timer(1s, std::bind(&TopicListener::timer_callback, this));
 	//	client_ = this->create_client<autoware_adapi_v1_msgs::srv::ClearRoute>("/api/routing/clear_route");
 		
-	//	read_yaml_history_from_file("output.yaml");
-	//	test_write_to_history();
+		read_yaml_history_from_file("output.yaml");
+		test_write_to_history();
 	};
 
 /*	
@@ -105,7 +97,7 @@ class TopicListener : public rclcpp::Node {
 	}
 */
 	
-	RouteWithUuid yaml_to_obj(YAML::Node root){
+	std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> yaml_to_map(YAML::Node root){
 		
 		autoware_adapi_v1_msgs::msg::Route msg;
 
@@ -177,11 +169,8 @@ class TopicListener : public rclcpp::Node {
 		    }
 		}
 		
-		RouteWithUuid obj;
-		obj.uuid = root["uuid"].as<std::string>();
-		obj.route = msg;
-
-		return obj;
+		std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> m = {{root["uuid"].as<std::string>(), msg}};	
+		return m;
 	}
 
 	
@@ -196,12 +185,11 @@ class TopicListener : public rclcpp::Node {
 			return;
 		}
 
-		std::cout << docs.size() << std::endl;
-
 		// check for empty
 		for (size_t i = 0; i < docs.size(); ++i) {
 //			std::cout << YAML::Dump(docs[i]) << std::endl;
-			routes_.push_back(yaml_to_obj(docs[i]));
+			std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> new_map = yaml_to_map(docs[i]);
+			routes.insert(new_map.begin(), new_map.end());
 		} 
 	}
 
@@ -219,10 +207,10 @@ class TopicListener : public rclcpp::Node {
 		return new_str;
 	}
 
-	std::string history_to_string(RouteWithUuid& obj){
+	std::string history_to_string(std::string uuid, autoware_adapi_v1_msgs::msg::Route route){
 		std::ostringstream oss;
-		oss << "uuid: \"" << obj.uuid << "\"\n";
-		oss << autoware_adapi_v1_msgs::msg::to_yaml(obj.route);
+		oss << "uuid: \"" << uuid << "\"\n";
+		oss << autoware_adapi_v1_msgs::msg::to_yaml(route);
 		std::string new_str = oss.str();
 		return new_str;
 	};
@@ -237,8 +225,8 @@ class TopicListener : public rclcpp::Node {
 	
 	void test_write_to_history(){
 		std::vector<std::string> yaml_strs = {};
-		for(auto &r : routes_){
-			std::string s = history_to_string(r);
+		for(auto &[uuid, route] : routes){
+			std::string s = history_to_string(uuid, route);
 			yaml_strs.push_back(s);
 		}
 		
@@ -262,7 +250,7 @@ class TopicListener : public rclcpp::Node {
 	rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_publisher_;
 	rclcpp::TimerBase::SharedPtr timer_;	
 		
-	std::vector<RouteWithUuid> routes_; 
+	std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> routes; 
 };
 
 int main(int argc, char * argv[]){
