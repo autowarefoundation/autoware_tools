@@ -36,22 +36,22 @@ class TopicListener : public rclcpp::Node {
 		
 		initial_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 10);
 		goal_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/planning/mission_planning/goal", 10);				
-	//	timer_ = this->create_wall_timer(1s, std::bind(&TopicListener::timer_callback, this));
+		timer_ = this->create_wall_timer(5s, std::bind(&TopicListener::timer_callback, this));
 	//	client_ = this->create_client<autoware_adapi_v1_msgs::srv::ClearRoute>("/api/routing/clear_route");
 		
 		read_routes(save_filepath);
-		test_write_to_history();
+	//	test_write_to_history();
 
 	//	delete_route("ba91685c-71bd-4254-a2e1-8d560a011d72");
 
 	};
 
-/*	
+
 	void timer_callback()
 	{
-		set_route();
+		set_route("1c51ec25-f14c-4ce2-bd41-a411fa781917");
 	}
-*/
+
 	
 	void delete_route(std::string uuid)
 	{
@@ -155,44 +155,44 @@ class TopicListener : public rclcpp::Node {
 	} 
 
 
-/*	void set_route(std::string uuid)
+	void set_route(std::string uuid)
 	{	
 		try {
-			auto yaml = read_yaml("output.yaml");
-			
 			geometry_msgs::msg::PoseWithCovarianceStamped msg;
-
-			msg.header.frame_id = yaml["header"]["frame_id"].as<std::string>();
-
-			msg.pose.pose.position.x = yaml["data"][0]["start"]["position"]["x"].as<double>();
-			msg.pose.pose.position.y = yaml["data"][0]["start"]["position"]["y"].as<double>();
-			msg.pose.pose.position.z = yaml["data"][0]["start"]["position"]["z"].as<double>();
-
-			msg.pose.pose.orientation.x = yaml["data"][0]["start"]["orientation"]["x"].as<double>();
-			msg.pose.pose.orientation.y = yaml["data"][0]["start"]["orientation"]["y"].as<double>();
-			msg.pose.pose.orientation.z = yaml["data"][0]["start"]["orientation"]["z"].as<double>();
-			msg.pose.pose.orientation.w = yaml["data"][0]["start"]["orientation"]["w"].as<double>();
 			
-			if (yaml["covariance"] && yaml["covariance"].size() == 36) {
+			msg.header.frame_id = routes.at(uuid).header.frame_id;
+
+			msg.pose.pose.position.x = routes.at(uuid).data[0].start.position.x;
+			msg.pose.pose.position.y = routes.at(uuid).data[0].start.position.y;
+			msg.pose.pose.position.z = routes.at(uuid).data[0].start.position.z;
+
+			msg.pose.pose.orientation.x = routes.at(uuid).data[0].start.orientation.x;
+			msg.pose.pose.orientation.y = routes.at(uuid).data[0].start.orientation.y;
+			msg.pose.pose.orientation.z = routes.at(uuid).data[0].start.orientation.z;
+			msg.pose.pose.orientation.w = routes.at(uuid).data[0].start.orientation.w;
+/*
+			if (routes.at(uuid).covariance && routes.at(uuid).covariance.size() == 36) {
 			    for (size_t i = 0; i < 36; i++) {
-				msg.pose.covariance[i] = yaml["covariance"][i].as<double>();
+				msg.pose.covariance[i] = routes.at(uuid).covariance[i];
 			    }
 			} else {
 			    std::fill(msg.pose.covariance.begin(), msg.pose.covariance.end(), 0.0);
 			}
-			
-			geometry_msgs::msg::PoseStamped goalmsg;			
-			
-			goalmsg.header.frame_id = yaml["header"]["frame_id"].as<std::string>();
+*/
+			std::fill(msg.pose.covariance.begin(), msg.pose.covariance.end(), 0.0);
 
-			goalmsg.pose.position.x = yaml["data"][0]["goal"]["position"]["x"].as<double>();
-			goalmsg.pose.position.y = yaml["data"][0]["goal"]["position"]["y"].as<double>();
-			goalmsg.pose.position.z = yaml["data"][0]["goal"]["position"]["z"].as<double>();
+			geometry_msgs::msg::PoseStamped goalmsg;
 
-			goalmsg.pose.orientation.x = yaml["data"][0]["goal"]["orientation"]["x"].as<double>();
-			goalmsg.pose.orientation.y = yaml["data"][0]["goal"]["orientation"]["y"].as<double>();
-			goalmsg.pose.orientation.z = yaml["data"][0]["goal"]["orientation"]["z"].as<double>();
-			goalmsg.pose.orientation.w = yaml["data"][0]["goal"]["orientation"]["w"].as<double>();
+			goalmsg.header.frame_id = routes.at(uuid).header.frame_id;
+
+			goalmsg.pose.position.x = routes.at(uuid).data[0].goal.position.x;
+			goalmsg.pose.position.y = routes.at(uuid).data[0].goal.position.y;
+			goalmsg.pose.position.z = routes.at(uuid).data[0].goal.position.z;
+
+			goalmsg.pose.orientation.x = routes.at(uuid).data[0].goal.orientation.x;
+			goalmsg.pose.orientation.y = routes.at(uuid).data[0].goal.orientation.y;
+			goalmsg.pose.orientation.z = routes.at(uuid).data[0].goal.orientation.z;
+			goalmsg.pose.orientation.w = routes.at(uuid).data[0].goal.orientation.w;
 
 			initial_pose_publisher_->publish(msg);
 			goal_pose_publisher_->publish(goalmsg);			
@@ -205,7 +205,6 @@ class TopicListener : public rclcpp::Node {
 
 		
 	}
-*/
 	
 	std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> yaml_to_map(YAML::Node root){
 		
