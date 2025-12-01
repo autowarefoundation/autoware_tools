@@ -12,6 +12,10 @@
 
 #include "autoware_adapi_v1_msgs/msg/route.hpp"
 #include "autoware_adapi_v1_msgs/srv/clear_route.hpp"
+
+#include "pose_replay_interfaces/msg/uuid_route.hpp"
+#include "pose_replay_interfaces/srv/get_uuid_route.hpp"
+
 #include <chrono>
 
 #include <yaml-cpp/yaml.h>
@@ -36,12 +40,16 @@ class TopicListener : public rclcpp::Node {
 		
 		initial_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 10);
 		goal_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/planning/mission_planning/goal", 10);				
-		timer_ = this->create_wall_timer(5s, std::bind(&TopicListener::timer_callback, this));
-	//	client_ = this->create_client<autoware_adapi_v1_msgs::srv::ClearRoute>("/api/routing/clear_route");
-		
+	
+	////////	
+		service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoute>(
+			"test_api_route", std::bind(&TopicListener::get_route, this, std::placeholders::_1, std::placeholders::_2));
+	////////
+
+	//	timer_ = this->create_wall_timer(5s, std::bind(&TopicListener::timer_callback, this));
+	//	client_ = this->create_client<autoware_adapi_v1_msgs::srv::ClearRoute>("/api/routing/clear_route");	
 		read_routes(save_filepath);
 	//	test_write_to_history();
-
 	//	delete_route("ba91685c-71bd-4254-a2e1-8d560a011d72");
 
 	};
@@ -51,8 +59,21 @@ class TopicListener : public rclcpp::Node {
 	{
 		set_route("1c51ec25-f14c-4ce2-bd41-a411fa781917");
 	}
-
 	
+	void get_route(const std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoute::Request> request,
+			std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoute::Response> response){
+		
+	//	if((request->uuid).size() == 0 || routes.count(response->uuid) == 0){
+	//		return;
+	//	}
+		
+		response->uuid = request->uuid;
+
+		// needs checks and end -> goal rename
+		response->start = routes.at(request->uuid).data[0].start;
+		response->end = routes.at(request->uuid).data[0].goal;	
+	}	
+		
 	void delete_route(std::string uuid)
 	{
 		std::ifstream yaml_file(save_filepath);
@@ -287,8 +308,9 @@ class TopicListener : public rclcpp::Node {
 	rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_publisher_;
 	rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_publisher_;
 	rclcpp::TimerBase::SharedPtr timer_;	
-		
-	std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> routes; 
+	rclcpp::Service<pose_replay_interfaces::srv::GetUuidRoute>::SharedPtr service_;		
+	
+	uuid_route_map routes; 
 };
 
 int main(int argc, char * argv[]){
