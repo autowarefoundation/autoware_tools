@@ -23,9 +23,11 @@
 #include <rosbag2_storage/storage_options.hpp>
 
 #include <algorithm>
+#include <cstdio>
 #include <filesystem>
 #include <iostream>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 

@@ -21,6 +21,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
 using autoware::planning_debug_tools::PerceptionReplayer;
 using autoware::planning_debug_tools::PerceptionReplayerCommonParam;

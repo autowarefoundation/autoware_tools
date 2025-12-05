@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PLANNING_DEBUG_TOOLS__PERCEPTION_REPLAYER_COMMON_HPP_
-#define PLANNING_DEBUG_TOOLS__PERCEPTION_REPLAYER_COMMON_HPP_
+#ifndef PERCEPTION_REPLAYER__PERCEPTION_REPLAYER_COMMON_HPP_
+#define PERCEPTION_REPLAYER__PERCEPTION_REPLAYER_COMMON_HPP_
 
 #include "type_alias.hpp"
 #include "utils.hpp"
@@ -156,4 +156,4 @@ private:
 
 }  // namespace autoware::planning_debug_tools
 
-#endif  // PLANNING_DEBUG_TOOLS__PERCEPTION_REPLAYER_COMMON_HPP_
+#endif  // PERCEPTION_REPLAYER__PERCEPTION_REPLAYER_COMMON_HPP_

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PLANNING_DEBUG_TOOLS__UTILS_HPP_
-#define PLANNING_DEBUG_TOOLS__UTILS_HPP_
+#ifndef PERCEPTION_REPLAYER__UTILS_HPP_
+#define PERCEPTION_REPLAYER__UTILS_HPP_
 
 #include <builtin_interfaces/msg/time.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -182,4 +182,4 @@ void translate_objects_coordinate(
 
 }  // namespace autoware::planning_debug_tools::utils
 
-#endif  // PLANNING_DEBUG_TOOLS__UTILS_HPP_
+#endif  // PERCEPTION_REPLAYER__UTILS_HPP_

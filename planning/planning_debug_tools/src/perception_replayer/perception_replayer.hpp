@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PLANNING_DEBUG_TOOLS__PERCEPTION_REPPLAYER_HPP_
-#define PLANNING_DEBUG_TOOLS__PERCEPTION_REPPLAYER_HPP_
+#ifndef PERCEPTION_REPLAYER__PERCEPTION_REPLAYER_HPP_
+#define PERCEPTION_REPLAYER__PERCEPTION_REPLAYER_HPP_
 
 #include "perception_replayer_common.hpp"
 #include "time_manager_widget.hpp"
@@ -45,4 +45,4 @@ private:
 };
 }  // namespace autoware::planning_debug_tools
 
-#endif  // PLANNING_DEBUG_TOOLS__PERCEPTION_REPPLAYER_HPP_
+#endif  // PERCEPTION_REPLAYER__PERCEPTION_REPLAYER_HPP_

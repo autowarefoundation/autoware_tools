@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PLANNING_DEBUG_TOOLS__TIME_MANAGER_WIDGET_HPP_
-#define PLANNING_DEBUG_TOOLS__TIME_MANAGER_WIDGET_HPP_
+#ifndef PERCEPTION_REPLAYER__TIME_MANAGER_WIDGET_HPP_
+#define PERCEPTION_REPLAYER__TIME_MANAGER_WIDGET_HPP_
 
 #include <QGridLayout>
 #include <QMainWindow>
@@ -86,4 +86,4 @@ private:
 
 }  // namespace autoware::planning_debug_tools
 
-#endif  // PLANNING_DEBUG_TOOLS__TIME_MANAGER_WIDGET_HPP_
+#endif  // PERCEPTION_REPLAYER__TIME_MANAGER_WIDGET_HPP_
