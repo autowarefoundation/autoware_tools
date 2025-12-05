@@ -30,7 +30,7 @@ map/autoware_pointcloud_merger/** anh.nguyen.2@tier4.jp
 map/autoware_pointcloud_projection_converter/** anh.nguyen.2@tier4.jp masahiro.sakamoto@tier4.jp taiki.yamada@tier4.jp yamato.ando@tier4.jp
 map/autoware_pointcloud_saver_rviz_plugin/** yamato.ando@tier4.jp
 map/autoware_tp_manager/** anh.nguyen.2@tier4.jp masahiro.sakamoto@tier4.jp taiki.yamada@tier4.jp yamato.ando@tier4.jp
-planning/autoware_planning_data_analyzer/** go.sakayori@tier4.jp satoshi.ota@tier4.jp
+planning/autoware_planning_data_analyzer/** cheng.lin@tier4.jp daniel.sanchez@tier4.jp go.sakayori@tier4.jp
 planning/autoware_route_client/** fumiya.watanabe@tier4.jp
 planning/autoware_rtc_replayer/** fumiya.watanabe@tier4.jp mamoru.sobue@tier4.jp satoshi.ota@tier4.jp taiki.tanaka@tier4.jp
 planning/autoware_static_centerline_generator/** kosuke.takeuchi@tier4.jp takayuki.murooka@tier4.jp
