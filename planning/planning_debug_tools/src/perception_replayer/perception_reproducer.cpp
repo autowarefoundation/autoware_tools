@@ -18,10 +18,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <deque>
 #include <limits>
 #include <memory>
 #include <numeric>
 #include <string>
+#include <vector>
 
 namespace autoware::planning_debug_tools
 {

@@ -18,6 +18,8 @@
 #include <QMouseEvent>
 #include <QSizePolicy>
 
+#include <vector>
+
 namespace autoware::planning_debug_tools
 {
 
