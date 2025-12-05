@@ -300,7 +300,7 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp(
     }
   }
 
-  publish_traffic_ligihts_at_timestamp(bag_timestamp, current_timestamp);
+  publish_traffic_lights_at_timestamp(bag_timestamp, current_timestamp);
 }
 
 void PerceptionReplayerCommon::publish_topics_at_timestamp_with_coordinate_conversion(
@@ -351,10 +351,10 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp_with_coordinate_conve
     }
   }
 
-  publish_traffic_ligihts_at_timestamp(bag_timestamp, current_timestamp);
+  publish_traffic_lights_at_timestamp(bag_timestamp, current_timestamp);
 }
 
-void PerceptionReplayerCommon::publish_traffic_ligihts_at_timestamp(
+void PerceptionReplayerCommon::publish_traffic_lights_at_timestamp(
   const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp)
 {
   const auto traffic_signals_msg =

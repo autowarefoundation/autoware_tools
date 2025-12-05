@@ -73,7 +73,7 @@ public:
   }
 
   /**
-   * @brief Publish objects and traffic signalsat the given timestamp
+   * @brief Publish objects and traffic light the given timestamp
    * @param bag_timestamp
    * @param current_timestamp
    */
@@ -125,7 +125,7 @@ private:
     const std::string & directory_path, const std::string & rosbag_format) const;
   Odometry find_ego_odom_by_timestamp(const rclcpp::Time & timestamp) const;
 
-  void publish_traffic_ligihts_at_timestamp(
+  void publish_traffic_lights_at_timestamp(
     const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp);
 
   // timer callback to periodically check and kill online perception nodes
