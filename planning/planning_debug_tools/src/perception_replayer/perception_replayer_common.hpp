@@ -39,7 +39,6 @@ struct PerceptionReplayerCommonParam
   std::string rosbag_format;
   bool detected_object;
   bool tracked_object;
-  // std::string excluded_object_uuids_file;
 };
 
 class PerceptionReplayerCommon : public rclcpp::Node
