@@ -100,6 +100,7 @@ int main(int argc, char * argv[])
 
     // If rosbag_path is empty, print error and exit
     if (perception_replayer_param.rosbag_path.empty()) {
+      std::cerr << "Error: bag path is required." << std::endl << std::endl;
       show_help(options, "ros2 run planning_debug_tools perception_replayer", app_desc);
       return 1;
     }
