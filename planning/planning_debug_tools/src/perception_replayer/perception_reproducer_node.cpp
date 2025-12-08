@@ -98,6 +98,13 @@ int main(int argc, char ** argv)
       "seconds", "80.0");
     options << cool_down_option;
 
+    const QCommandLineOption pub_route_option(
+      QStringList() << "p"
+                    << "pub-route",
+      "publish route created from the initial pose and goal pose retrieved from the beginning and "
+      "end of the rosbag. By default, route are not published.");
+    options << pub_route_option;
+
     const QCommandLineOption verbose_option(
       QStringList() << "v"
                     << "verbose",
@@ -130,6 +137,7 @@ int main(int argc, char ** argv)
     param.reproduce_cool_down = parser.value(cool_down_option).toDouble();
     param.noise = parser.isSet(noise_option);
     param.verbose = parser.isSet(verbose_option);
+    param.publish_route = parser.isSet(pub_route_option);
 
     if (param.rosbag_format != "sqlite3" && param.rosbag_format != "mcap") {
       std::cerr << "Error: invalid rosbag format: " << param.rosbag_format << std::endl;

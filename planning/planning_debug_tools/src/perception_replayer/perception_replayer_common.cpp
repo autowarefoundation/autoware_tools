@@ -303,57 +303,6 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp(
   publish_traffic_lights_at_timestamp(bag_timestamp, current_timestamp);
 }
 
-void PerceptionReplayerCommon::publish_topics_at_timestamp_with_coordinate_conversion(
-  const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp,
-  const Odometry & current_ego_odom)
-{
-  // for debugging
-  recorded_ego_pub_->publish(find_ego_odom_by_timestamp(bag_timestamp));
-
-  // publish objects
-  if (param_.detected_object) {
-    const auto objects_msg =
-      utils::find_message_by_timestamp(rosbag_detected_objects_data_, bag_timestamp);
-    if (objects_msg.has_value()) {
-      auto msg = objects_msg.value();
-      msg.header.stamp = current_timestamp;
-
-      // apply coordinate transformation using provided current ego odom
-      const auto log_ego_odom = find_ego_odom_by_timestamp(bag_timestamp);
-      utils::translate_objects_coordinate(current_ego_odom.pose.pose, log_ego_odom.pose.pose, msg);
-
-      auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<DetectedObjects>>(objects_pub_);
-      if (publisher) {
-        publisher->publish(msg);
-      }
-    }
-  } else if (param_.tracked_object) {
-    const auto objects_msg =
-      utils::find_message_by_timestamp(rosbag_tracked_objects_data_, bag_timestamp);
-    if (objects_msg.has_value()) {
-      auto msg = objects_msg.value();
-      msg.header.stamp = current_timestamp;
-      auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<TrackedObjects>>(objects_pub_);
-      if (publisher) {
-        publisher->publish(msg);
-      }
-    }
-  } else {
-    const auto objects_msg =
-      utils::find_message_by_timestamp(rosbag_predicted_objects_data_, bag_timestamp);
-    if (objects_msg.has_value()) {
-      auto msg = objects_msg.value();
-      msg.header.stamp = current_timestamp;
-      auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<PredictedObjects>>(objects_pub_);
-      if (publisher) {
-        publisher->publish(msg);
-      }
-    }
-  }
-
-  publish_traffic_lights_at_timestamp(bag_timestamp, current_timestamp);
-}
-
 void PerceptionReplayerCommon::publish_traffic_lights_at_timestamp(
   const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp)
 {

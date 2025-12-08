@@ -81,16 +81,6 @@ public:
     const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp);
 
   /**
-   * @brief Publish objects and traffic signals at the given timestamp with coordinate conversion
-   * @param bag_timestamp
-   * @param current_timestamp
-   * @param current_ego_odom
-   */
-  void publish_topics_at_timestamp_with_coordinate_conversion(
-    const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp,
-    const Odometry & current_ego_odom);
-
-  /**
    * @brief Publish the recorded ego pose for debugging
    * @param bag_timestamp
    */
@@ -112,21 +102,28 @@ public:
     return ego_odom_ ? std::make_optional<Odometry>(*ego_odom_) : std::nullopt;
   }
 
+  /**
+   * @brief Publish traffic light the given timestamp
+   * @param bag_timestamp
+   * @param current_timestamp
+   */
+  void publish_traffic_lights_at_timestamp(
+    const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp);
+
 protected:
   const PerceptionReplayerCommonParam param_;
 
   // rosbag data
-  // TODO(odashima): move to private
   std::vector<utils::DataStamped<Odometry>> rosbag_ego_odom_data_;
+  std::vector<utils::DataStamped<PredictedObjects>> rosbag_predicted_objects_data_;
+  std::vector<utils::DataStamped<TrackedObjects>> rosbag_tracked_objects_data_;
+  std::vector<utils::DataStamped<DetectedObjects>> rosbag_detected_objects_data_;
+  std::vector<utils::DataStamped<TrafficLightGroupArray>> rosbag_traffic_signals_data_;
 
-private:
   void load_rosbag(const std::string & rosbag_path, const std::string & rosbag_format);
   std::vector<std::string> find_rosbag_files(
     const std::string & directory_path, const std::string & rosbag_format) const;
   Odometry find_ego_odom_by_timestamp(const rclcpp::Time & timestamp) const;
-
-  void publish_traffic_lights_at_timestamp(
-    const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp);
 
   // timer callback to periodically check and kill online perception nodes
   void kill_online_perception_node();
@@ -146,12 +143,6 @@ private:
   rclcpp::Publisher<PoseStamped>::SharedPtr goal_as_mission_planning_goal_pub_;
 
   rclcpp::Publisher<Odometry>::SharedPtr recorded_ego_pub_;
-
-  // rosbag data
-  std::vector<utils::DataStamped<PredictedObjects>> rosbag_predicted_objects_data_;
-  std::vector<utils::DataStamped<TrackedObjects>> rosbag_tracked_objects_data_;
-  std::vector<utils::DataStamped<DetectedObjects>> rosbag_detected_objects_data_;
-  std::vector<utils::DataStamped<TrafficLightGroupArray>> rosbag_traffic_signals_data_;
 };
 
 }  // namespace autoware::planning_debug_tools
