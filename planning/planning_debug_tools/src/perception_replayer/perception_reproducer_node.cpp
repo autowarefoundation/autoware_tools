@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "help_utils.hpp"
 #include "perception_reproducer.hpp"
 
 #include <QCommandLineParser>
@@ -38,96 +39,85 @@ int main(int argc, char ** argv)
     QCoreApplication app(qt_argc, qt_argv.data());
     app.setApplicationName("perception_reproducer");
     app.setApplicationVersion(PACKAGE_VERSION);
+    const std::string app_desc =
+      "Replay perception outputs from rosbag data to reproduce planning behaviour.";
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(
-      "Replay perception outputs from rosbag data to reproduce planning behaviour.");
+
+    QList<QCommandLineOption> options;
+    const QCommandLineOption help_option(
+      QStringList() << "h"
+                    << "help",
+      "show this help message and exit");
+    options << help_option;
 
     const QCommandLineOption bag_option(
       QStringList() << "b"
                     << "bag",
       "rosbag", "BAG");
-    parser.addOption(bag_option);
+    options << bag_option;
+
+    const QCommandLineOption noise_option(
+      QStringList() << "n"
+                    << "noise",
+      "apply perception noise to the objects when publishing repeated messages");
+    options << noise_option;
 
     const QCommandLineOption detected_object_option(
-      "detected-object", "Use detected objects (default: false)");
-    parser.addOption(detected_object_option);
+      QStringList() << "d"
+                    << "detected-object",
+      "publish detected object");
+    options << detected_object_option;
 
     const QCommandLineOption tracked_object_option(
-      "tracked-object", "Use tracked objects (default: false)");
-    parser.addOption(tracked_object_option);
+      QStringList() << "t"
+                    << "tracked-object",
+      "publish tracked object");
+    options << tracked_object_option;
 
     const QCommandLineOption rosbag_format_option(
       QStringList() << "f"
                     << "rosbag-format",
       "rosbag data format (default is sqlite3)", "{sqlite3,mcap}", "sqlite3");
-    parser.addOption(rosbag_format_option);
+    options << rosbag_format_option;
 
     const QCommandLineOption search_radius_option(
       QStringList() << "r"
                     << "search-radius",
-      "Search radius for matching ego odom (meters).", "radius", "1.5");
-    parser.addOption(search_radius_option);
+      "the search radius for searching rosbag's ego odom messages around the nearest ego odom pose "
+      "(default is 1.5 meters), if the search radius is set to 0, it will always publish the "
+      "closest message, just as the old reproducer did.",
+      "radius", "1.5");
+    options << search_radius_option;
 
     const QCommandLineOption cool_down_option(
       QStringList() << "c"
-                    << "cool-down",
-      "Cool-down time before reproducing the same timestamp (seconds).", "seconds", "80.0");
-    parser.addOption(cool_down_option);
-
-    const QCommandLineOption noise_option(
-      QStringList() << "n"
-                    << "noise",
-      "Apply perception noise to objects (default: true)");
-    parser.addOption(noise_option);
+                    << "reproduce-cool-down",
+      "The cool down time for republishing published messages (default is 80.0 seconds), please "
+      "make sure that it's greater than the ego's stopping time.",
+      "seconds", "80.0");
+    options << cool_down_option;
 
     const QCommandLineOption verbose_option(
       QStringList() << "v"
                     << "verbose",
-      "Output debug data.");
-    parser.addOption(verbose_option);
+      "output debug data.");
+    options << verbose_option;
 
-    const QCommandLineOption help_option(
-      QStringList() << "h"
-                    << "help",
-      "show this help message and exit");
-    parser.addOption(help_option);
+    for (const auto & option : options) {
+      parser.addOption(option);
+    }
 
     parser.process(app);
 
-    const auto show_help = [&]() {
-      std::cout << "usage: ros2 run planning_debug_tools perception_reproducer [-h] [-b BAG] [-d] "
-                   "[-t] [-f {sqlite3,mcap}] [-u TXT] [-n] [-r <radius>] [-c <seconds>] [-v]"
-                << std::endl
-                << std::endl;
-      std::cout << "options:" << std::endl;
-      std::cout << "    -h, --help            show this help message and exit" << std::endl;
-      std::cout << "    -b BAG, --bag BAG     rosbag" << std::endl;
-      std::cout << "    -d, --detected-object" << std::endl;
-      std::cout << "                          publish detected object" << std::endl;
-      std::cout << "    -t, --tracked-object  publish tracked object" << std::endl;
-      std::cout << "    -f {sqlite3,mcap}, --rosbag-format {sqlite3,mcap}" << std::endl;
-      std::cout << "                          rosbag data format (default is sqlite3)" << std::endl;
-      std::cout << "    -n, --noise           apply perception noise to objects (default: true)"
-                << std::endl;
-      std::cout << "    -r <radius>, --search-radius <radius>" << std::endl;
-      std::cout << "                          search radius for matching ego odom (default: 1.5 m)"
-                << std::endl;
-      std::cout << "    -c <seconds>, --cool-down <seconds>" << std::endl;
-      std::cout
-        << "                          cool-down time before reusing timestamp (default: 80.0 s)"
-        << std::endl;
-      std::cout << "    -v, --verbose         output debug data" << std::endl;
-    };
-
     if (parser.isSet(help_option)) {
-      show_help();
+      show_help(options, "ros2 run planning_debug_tools perception_reproducer", app_desc);
       return 0;
     }
 
     if (!parser.isSet(bag_option)) {
       std::cerr << "Error: bag path is required." << std::endl << std::endl;
-      show_help();
+      show_help(options, "ros2 run planning_debug_tools perception_reproducer", app_desc);
       return 1;
     }
 
@@ -136,35 +126,14 @@ int main(int argc, char ** argv)
     param.rosbag_format = parser.value(rosbag_format_option).toStdString();
     param.detected_object = parser.isSet(detected_object_option);
     param.tracked_object = parser.isSet(tracked_object_option);
-    param.search_radius = 1.5;
-    param.reproduce_cool_down = 80.0;
-    param.noise = true;
+    param.search_radius = parser.value(search_radius_option).toDouble();
+    param.reproduce_cool_down = parser.value(cool_down_option).toDouble();
+    param.noise = parser.isSet(noise_option);
     param.verbose = parser.isSet(verbose_option);
 
     if (param.rosbag_format != "sqlite3" && param.rosbag_format != "mcap") {
       std::cerr << "Error: invalid rosbag format: " << param.rosbag_format << std::endl;
       return 1;
-    }
-
-    bool ok = false;
-    const auto search_radius_str = parser.value(search_radius_option);
-    const double search_radius = search_radius_str.toDouble(&ok);
-    if (!ok) {
-      std::cerr << "Error: invalid search radius: " << search_radius_str.toStdString() << std::endl;
-      return 1;
-    }
-    param.search_radius = search_radius;
-
-    const auto cool_down_str = parser.value(cool_down_option);
-    const double cool_down = cool_down_str.toDouble(&ok);
-    if (!ok) {
-      std::cerr << "Error: invalid cool-down value: " << cool_down_str.toStdString() << std::endl;
-      return 1;
-    }
-    param.reproduce_cool_down = cool_down;
-
-    if (param.search_radius == 0.0) {
-      param.reproduce_cool_down = 0.0;
     }
 
     auto node = std::make_shared<autoware::planning_debug_tools::PerceptionReproducer>(

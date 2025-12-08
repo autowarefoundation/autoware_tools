@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "help_utils.hpp"
 #include "perception_replayer.hpp"
 
 #include <QApplication>
@@ -41,65 +42,56 @@ int main(int argc, char * argv[])
     QApplication app(qt_argc, qt_argv.data());
     app.setApplicationName("perception_replayer");
     app.setApplicationVersion(PACKAGE_VERSION);
-
-    QCommandLineParser parser;
-    parser.setApplicationDescription(
+    const std::string app_desc =
       "This script can overlay the perception results from the rosbag on the planning simulator.\n"
       "\n"
       "In detail, this script publishes the data at a certain timestamp from the rosbag.\n"
       "The timestamp will increase according to the real time without any operation.\n"
       "By using the GUI, you can modify the timestamp by pausing, changing the rate or going back "
-      "into the past.");
+      "into the past.";
+
+    QCommandLineParser parser;
+
+    QList<QCommandLineOption> options;
+    QCommandLineOption help_option(
+      QStringList() << "h"
+                    << "help",
+      "show this help message and exit");
+    options << help_option;
 
     QCommandLineOption bag_option(
       QStringList() << "b"
                     << "bag",
       "rosbag", "BAG");
-    parser.addOption(bag_option);
+    options << bag_option;
 
     QCommandLineOption detected_object_option(
-      "detected-object", "Use detected objects (default: false)");
-    parser.addOption(detected_object_option);
+      QStringList() << "d"
+                    << "detected-object",
+      "publish detected object");
+    options << detected_object_option;
 
     QCommandLineOption tracked_object_option(
-      "tracked-object", "Use tracked objects (default: false)");
-    parser.addOption(tracked_object_option);
+      QStringList() << "t"
+                    << "tracked-object",
+      "publish tracked object");
+    options << tracked_object_option;
 
     QCommandLineOption rosbag_format_option(
       QStringList() << "f"
                     << "rosbag-format",
       "rosbag data format (default is sqlite3)", "{sqlite3,mcap}", "sqlite3");
-    parser.addOption(rosbag_format_option);
+    options << rosbag_format_option;
 
-    QCommandLineOption help_option(
-      QStringList() << "h"
-                    << "help",
-      "show this help message and exit");
-    parser.addOption(help_option);
-
-    parser.addVersionOption();
+    for (const auto & option : options) {
+      parser.addOption(option);
+    }
 
     parser.process(app);
 
-    const auto show_help = [&]() {
-      std::cout << "usage: ros2 run planning_debug_tools perception_replayer [-h] [-b BAG] [-d] "
-                   "[-t] [-f {sqlite3,mcap}] [-u TXT] [-v]"
-                << std::endl
-                << std::endl;
-      std::cout << "options:" << std::endl;
-      std::cout << "    -h, --help            show this help message and exit" << std::endl;
-      std::cout << "    -b BAG, --bag BAG     rosbag" << std::endl;
-      std::cout << "    -d, --detected-object" << std::endl;
-      std::cout << "                          publish detected object" << std::endl;
-      std::cout << "    -t, --tracked-object  publish tracked object" << std::endl;
-      std::cout << "    -f {sqlite3,mcap}, --rosbag-format {sqlite3,mcap}" << std::endl;
-      std::cout << "                          rosbag data format (default is sqlite3)" << std::endl;
-      std::cout << "    -v, --version         displays version information" << std::endl;
-    };
-
     // Check if help was requested
     if (parser.isSet(help_option)) {
-      show_help();
+      show_help(options, "ros2 run planning_debug_tools perception_replayer", app_desc);
       return 0;
     }
 
@@ -108,7 +100,7 @@ int main(int argc, char * argv[])
 
     // If rosbag_path is empty, print error and exit
     if (perception_replayer_param.rosbag_path.empty()) {
-      show_help();
+      show_help(options, "ros2 run planning_debug_tools perception_replayer", app_desc);
       return 1;
     }
 
