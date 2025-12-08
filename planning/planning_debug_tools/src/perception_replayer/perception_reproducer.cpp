@@ -62,6 +62,9 @@ PerceptionReproducer::PerceptionReproducer(
 
   if (param_.publish_route) {
     publish_recorded_ego_pose(get_bag_start_time());
+    // temporarily add a sleep because sometimes the route is not generated correctly without it.
+    // Need to consider a proper solution.
+    rclcpp::sleep_for(std::chrono::seconds(2));
     publish_goal_pose();
   }
 

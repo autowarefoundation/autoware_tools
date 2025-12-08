@@ -80,7 +80,7 @@ int main(int argc, char * argv[])
     QCommandLineOption rosbag_format_option(
       QStringList() << "f"
                     << "rosbag-format",
-      "rosbag data format (default is sqlite3)", "{sqlite3,mcap}", "sqlite3");
+      "rosbag data format", "{sqlite3,mcap}", "sqlite3");
     options << rosbag_format_option;
 
     for (const auto & option : options) {

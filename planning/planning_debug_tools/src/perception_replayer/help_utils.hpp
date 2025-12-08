@@ -46,7 +46,13 @@ void show_help(
 
       names += unit_option;
     }
-    option_names_and_values.emplace_back(names, option.description().toStdString());
+
+    const std::string default_value =
+      option.defaultValues().isEmpty()
+        ? ""
+        : " (default: " + option.defaultValues().join(", ").toStdString() + ")";
+
+    option_names_and_values.emplace_back(names, option.description().toStdString() + default_value);
   }
 
   std::cout << "usage: " << execute_command << options_str << std::endl << std::endl;

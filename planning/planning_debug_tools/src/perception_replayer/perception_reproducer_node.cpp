@@ -60,7 +60,8 @@ int main(int argc, char ** argv)
     const QCommandLineOption noise_option(
       QStringList() << "n"
                     << "noise",
-      "apply perception noise to the objects when publishing repeated messages");
+      "apply perception noise to the objects when publishing repeated messages", "{true,false}",
+      "true");
     options << noise_option;
 
     const QCommandLineOption detected_object_option(
@@ -78,14 +79,14 @@ int main(int argc, char ** argv)
     const QCommandLineOption rosbag_format_option(
       QStringList() << "f"
                     << "rosbag-format",
-      "rosbag data format (default is sqlite3)", "{sqlite3,mcap}", "sqlite3");
+      "rosbag data format", "{sqlite3,mcap}", "sqlite3");
     options << rosbag_format_option;
 
     const QCommandLineOption search_radius_option(
       QStringList() << "r"
                     << "search-radius",
       "the search radius for searching rosbag's ego odom messages around the nearest ego odom pose "
-      "(default is 1.5 meters), if the search radius is set to 0, it will always publish the "
+      "if the search radius is set to 0, it will always publish the "
       "closest message, just as the old reproducer did.",
       "radius", "1.5");
     options << search_radius_option;
@@ -93,7 +94,7 @@ int main(int argc, char ** argv)
     const QCommandLineOption cool_down_option(
       QStringList() << "c"
                     << "reproduce-cool-down",
-      "The cool down time for republishing published messages (default is 80.0 seconds), please "
+      "The cool down time for republishing published messages, please "
       "make sure that it's greater than the ego's stopping time.",
       "seconds", "80.0");
     options << cool_down_option;
@@ -135,7 +136,7 @@ int main(int argc, char ** argv)
     param.tracked_object = parser.isSet(tracked_object_option);
     param.search_radius = parser.value(search_radius_option).toDouble();
     param.reproduce_cool_down = parser.value(cool_down_option).toDouble();
-    param.noise = parser.isSet(noise_option);
+    param.noise = parser.value(noise_option).toLower() == "true";
     param.verbose = parser.isSet(verbose_option);
     param.publish_route = parser.isSet(pub_route_option);
 
