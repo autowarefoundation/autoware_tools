@@ -27,7 +27,7 @@ void show_help(
   const QList<QCommandLineOption> & options, const std::string & execute_command,
   const std::string & description)
 {
-  // construct usage optios
+  // construct usage options
   std::string options_str = {};
   std::vector<std::pair<std::string, std::string>> option_names_and_values;
   option_names_and_values.reserve(options.size());
