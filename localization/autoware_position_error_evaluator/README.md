@@ -26,11 +26,11 @@ This RViz plugin tool evaluates vehicle position error by measuring deviations f
 - **System Dependencies**:
   - ImageMagick (`import` command for screenshots)
   - X11 display server
-  - Qt5 development libraries
+  - Qt5 development libraries(autoware usually includes these)
 
 ```bash
 # Install system dependencies
-sudo apt install imagemagick x11-apps qt5-default
+sudo apt install imagemagick x11-apps
 ```
 
 ## Build Instructions
@@ -41,7 +41,8 @@ Adding the usual Autoware installation and build instructions, please do vcs imp
 vcs import < tools.repos
 source /opt/ros/humble/setup.bash
 rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
-colcon build --packages-select autoware_position_error_evaluator
+rosdep update
+colcon build --packages-up-to autoware_position_error_evaluator
 ```
 
 ## Usage
@@ -50,14 +51,19 @@ colcon build --packages-select autoware_position_error_evaluator
 
 1. **Launch RViz** with Autoware
 2. **Add the Tool**:
-   - Go to RViz toolbar
-   - Add "Evaluate Position Error Using Line Tool"
+    - Go to RViz toolbar
+    - Add "Position Error Evaluator Tool"(the arrow icon pointed in the image below)
+        1. Click "Add Tool" button (#1 in the image)
+        2. Select "PositionErrorEvaluatorTool" from the list pop-up (#2 in the image)
+        <p align="center">
+        <img src="./media/position_error_evaluator_add_tool_to_rviz.png" width="400">
+        </p>
 3. **Load Map Data**: Ensure Lanelet2 map is loaded in RViz
 4. **Start Measuring**:
-   - Click to start line measurement
-   - Click again to complete measurement
-   - Right-click to cancel current measurement
-   - Delete key to remove last measurement
+    - Click to start the following line measurement
+    - Click again to complete measurement
+    - Right-click to cancel current measurement
+    - Delete key to remove last measurement
 
 ### Measurement Types
 
@@ -66,7 +72,11 @@ colcon build --packages-select autoware_position_error_evaluator
 - Click near a stop line in the map
 - Tool automatically detects the closest stop line
 - Measures X-error (longitudinal deviation)
-- Output: `x_error`, `NaN`, `yaw_error`
+- Output: `x_error`, `NaN`, `NaN`
+
+<p align="center">
+<img src="./media/position_error_evaluator_Stop_Line_Measurement.gif" width="400">
+</p>
 
 #### Lane Boundary Measurement
 
@@ -74,6 +84,10 @@ colcon build --packages-select autoware_position_error_evaluator
 - Tool detects the closest lane boundary
 - Measures Y-error (lateral deviation)
 - Output: `NaN`, `y_error`, `yaw_error`
+
+<p align="center">
+<img src="./media/position_error_evaluator_Lane_Boundary_Measurement.gif" width="400">
+</p>
 
 ## Inputs
 
@@ -124,7 +138,7 @@ where NN is the zero-padded measurement number.
 ### File Structure
 
 ```Text
-~/evaluate_position_error_using_line_tool/
+~/autoware_position_error_evaluator/
 ├── position_error_evaluation_YYYYMMDD_HHMMSS.csv
 ├── trajectory_YYYYMMDD_HHMMSS.csv
 └── screenshots_YYYYMMDD_HHMMSS/
