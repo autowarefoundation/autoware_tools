@@ -51,19 +51,19 @@ colcon build --packages-up-to autoware_position_error_evaluator
 
 1. **Launch RViz** with Autoware
 2. **Add the Tool**:
-    - Go to RViz toolbar
-    - Add "Position Error Evaluator Tool"(the arrow icon pointed in the image below)
-        1. Click "Add Tool" button (#1 in the image)
-        2. Select "PositionErrorEvaluatorTool" from the list pop-up (#2 in the image)
-        <p align="center">
-        <img src="./media/position_error_evaluator_add_tool_to_rviz.png" width="400">
-        </p>
+   - Go to RViz toolbar
+   - Add "Position Error Evaluator Tool"(the arrow icon pointed in the image below)
+     1. Click "Add Tool" button (#1 in the image)
+     2. Select "PositionErrorEvaluatorTool" from the list pop-up (#2 in the image)
+     <p align="center">
+     <img src="./media/position_error_evaluator_add_tool_to_rviz.png" width="400">
+     </p>
 3. **Load Map Data**: Ensure Lanelet2 map is loaded in RViz
 4. **Start Measuring**:
-    - Click to start the following line measurement
-    - Click again to complete measurement
-    - Right-click to cancel current measurement
-    - Delete key to remove last measurement
+   - Click to start the following line measurement
+   - Click again to complete measurement
+   - Right-click to cancel current measurement
+   - Delete key to remove last measurement
 
 ### Measurement Types
 
