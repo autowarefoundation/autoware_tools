@@ -554,9 +554,9 @@ void PositionErrorEvaluatorTool::initCsvFile()
   const char * home_dir = std::getenv("HOME");
   std::string output_dir;
   if (home_dir) {
-    output_dir = std::string(home_dir) + "/evaluate_position_error_using_line_tool";
+    output_dir = std::string(home_dir) + "/autoware_position_error_evaluator";
   } else {
-    output_dir = "./evaluate_position_error_using_line_tool";
+    output_dir = "./autoware_position_error_evaluator";
   }
 
   // Create directory (recursive creation)
@@ -613,9 +613,9 @@ void PositionErrorEvaluatorTool::initTrajectoryFile()
   const char * home_dir = std::getenv("HOME");
   std::string output_dir;
   if (home_dir) {
-    output_dir = std::string(home_dir) + "/evaluate_position_error_using_line_tool";
+    output_dir = std::string(home_dir) + "/autoware_position_error_evaluator";
   } else {
-    output_dir = "./evaluate_position_error_using_line_tool";
+    output_dir = "./autoware_position_error_evaluator";
   }
 
   // Generate trajectory filename with timestamp
@@ -657,9 +657,9 @@ void PositionErrorEvaluatorTool::initScreenshotDirectory()
   const char * home_dir = std::getenv("HOME");
   std::string base_dir;
   if (home_dir) {
-    base_dir = std::string(home_dir) + "/evaluate_position_error_using_line_tool";
+    base_dir = std::string(home_dir) + "/autoware_position_error_evaluator";
   } else {
-    base_dir = "./evaluate_position_error_using_line_tool";
+    base_dir = "./autoware_position_error_evaluator";
   }
 
   screenshot_directory_ = base_dir + "/screenshots_" + capture_timestamp_;
