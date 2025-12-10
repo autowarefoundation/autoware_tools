@@ -59,14 +59,14 @@ colcon build --packages-up-to autoware_position_error_evaluator
 
 1. **Launch RViz** with Autoware
 2. **Set pointcloud intensity view**:
-    - In RViz Display window, select the pointcloud topic (e.g. `/sensing/lidar/concatenated/pointcloud`) in the Sensing/LiDAR/ConcatenatedPointCloud category
-    - Set "Color Transformer" to "Intensity"
-    - Adjust "Min Intensity" and "Max Intensity" to highlight lane markings
-    - Decay Time can be adjusted to visualize static lane markings better(e.g. set to 1.0)
-    - (Optional) Adjust point size for better visibility
-     <p align="center">
-     <img src="./media/position_error_evaluator_set_pointcloud_intensity_view.png" width="400">
-     </p>
+   - In RViz Display window, select the pointcloud topic (e.g. `/sensing/lidar/concatenated/pointcloud`) in the Sensing/LiDAR/ConcatenatedPointCloud category
+   - Set "Color Transformer" to "Intensity"
+   - Adjust "Min Intensity" and "Max Intensity" to highlight lane markings
+   - Decay Time can be adjusted to visualize static lane markings better(e.g. set to 1.0)
+   - (Optional) Adjust point size for better visibility
+   <p align="center">
+   <img src="./media/position_error_evaluator_set_pointcloud_intensity_view.png" width="400">
+   </p>
 3. **Add the Tool**:
    - Go to RViz toolbar
    - Add "Position Error Evaluator Tool"(the arrow icon pointed in the image below)
