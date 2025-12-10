@@ -4,6 +4,14 @@
 
 This RViz plugin tool evaluates vehicle position error by measuring deviations from Lanelet2 map lane boundaries and stop lines. It provides interactive line-based measurement functionality with automatic CSV logging and screenshot capture capabilities.
 
+### Measurement Process
+
+1. **Manual Ground Truth Line Drawing**: Users draw lines along actual lane markings and stop lines visible in the pointcloud intensity view
+2. **Automatic Map Line Detection**: The tool automatically detects the closest corresponding line in the Lanelet2 map
+3. **Error Calculation**: Position and orientation error is calculated from the deviation between the drawn ground truth line and the matched map line, revealing localization accuracy on map
+
+The reference lines (ground truth lines) used for measurement are lane markings and stop lines distinguished by the intensity brightness in the pointcloud.
+
 ## Features
 
 - **Interactive Line Measurement**: Click-and-drag interface to measure position errors in RViz
