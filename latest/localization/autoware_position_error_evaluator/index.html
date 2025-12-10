@@ -8,31 +8,31 @@
       
       
       
-        <link rel="canonical" href="https://autowarefoundation.github.io/autoware-tools-documentation/latest/driving_environment_analyzer/">
+        <link rel="canonical" href="https://autowarefoundation.github.io/autoware-tools-documentation/latest/localization/autoware_position_error_evaluator/">
       
       
-        <link rel="prev" href="../control_data_collecting_tool/">
+        <link rel="prev" href="../autoware_localization_evaluation_scripts/">
       
       
-        <link rel="next" href="../evaluation/tier4_metrics_rviz_plugin/">
+        <link rel="next" href="../deviation_estimation_tools/ReadMe/">
       
       
         
       
       
-      <link rel="icon" href="../docs/assets/images/autoware-foundation.png">
+      <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
     
     
       
-        <title>Driving Environment Analyzer - Autoware Tools Documentation</title>
+        <title>Position Error Evaluator - Autoware Tools Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.618322db.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,11 +51,11 @@
       
     
     
-      <link rel="stylesheet" href="../docs/assets/css/extra.css">
+      <link rel="stylesheet" href="../../docs/assets/css/extra.css">
     
       <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#driving-environment-analyzer" class="md-skip">
+        <a href="#position-error-evaluator" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +100,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="Autoware Tools Documentation" class="md-header__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
+    <a href="../.." title="Autoware Tools Documentation" class="md-header__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4m-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-32H96v32c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2M128 304a32 32 0 1 0-64 0 32 32 0 1 0 64 0m288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64"/></svg>
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Driving Environment Analyzer
+              Position Error Evaluator
             
           </span>
         </div>
@@ -227,7 +227,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../autoware_dependency_checker/" class="md-tabs__link">
+        <a href="../../autoware_dependency_checker/" class="md-tabs__link">
           
   
   
@@ -249,7 +249,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../bag2lanelet/" class="md-tabs__link">
+        <a href="../../bag2lanelet/" class="md-tabs__link">
           
   
   
@@ -278,7 +278,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../common/autoware_debug_tools/" class="md-tabs__link">
+        <a href="../../common/autoware_debug_tools/" class="md-tabs__link">
           
   
   
@@ -317,7 +317,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../control/control_debug_tools/scripts/" class="md-tabs__link">
+        <a href="../../control/control_debug_tools/scripts/" class="md-tabs__link">
           
   
   
@@ -345,7 +345,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../control_data_collecting_tool/" class="md-tabs__link">
+        <a href="../../control_data_collecting_tool/" class="md-tabs__link">
           
   
   
@@ -363,13 +363,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../driving_environment_analyzer/" class="md-tabs__link">
           
   
   
@@ -398,7 +396,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
+        <a href="../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
           
   
   
@@ -419,6 +417,8 @@
   
   
   
+    
+  
   
     
     
@@ -426,11 +426,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../localization/autoware_localization_evaluation_scripts/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../autoware_localization_evaluation_scripts/" class="md-tabs__link">
           
   
   
@@ -462,7 +464,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../map/autoware_lanelet2_map_utils/" class="md-tabs__link">
+        <a href="../../map/autoware_lanelet2_map_utils/" class="md-tabs__link">
           
   
   
@@ -494,7 +496,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../planning/autoware_planning_data_analyzer/" class="md-tabs__link">
+        <a href="../../planning/autoware_planning_data_analyzer/" class="md-tabs__link">
           
   
   
@@ -526,7 +528,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../simulator/simulator_compatibility_test/" class="md-tabs__link">
+        <a href="../../simulator/simulator_compatibility_test/" class="md-tabs__link">
           
   
   
@@ -558,7 +560,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
+        <a href="../../system/rqt_diagnostic_graph_monitor/" class="md-tabs__link">
           
   
   
@@ -590,7 +592,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../vehicle/calibration_adapter/" class="md-tabs__link">
+        <a href="../../vehicle/calibration_adapter/" class="md-tabs__link">
           
   
   
@@ -635,7 +637,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="Autoware Tools Documentation" class="md-nav__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
+    <a href="../.." title="Autoware Tools Documentation" class="md-nav__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4m-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-32H96v32c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2M128 304a32 32 0 1 0-64 0 32 32 0 1 0 64 0m288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64"/></svg>
@@ -690,7 +692,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../autoware_dependency_checker/" class="md-nav__link ">
+            <a href="../../autoware_dependency_checker/" class="md-nav__link ">
               
   
   
@@ -761,7 +763,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../bag2lanelet/" class="md-nav__link ">
+            <a href="../../bag2lanelet/" class="md-nav__link ">
               
   
   
@@ -914,7 +916,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/autoware_debug_tools/" class="md-nav__link ">
+            <a href="../../common/autoware_debug_tools/" class="md-nav__link ">
               
   
   
@@ -1074,7 +1076,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../common/autoware_debug_tools/autoware_debug_tools/topic_connection_checker/readme/" class="md-nav__link">
+      <a href="../../common/autoware_debug_tools/autoware_debug_tools/topic_connection_checker/readme/" class="md-nav__link">
         
   
   
@@ -1151,7 +1153,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/mission_planner_rviz_plugin/" class="md-nav__link ">
+            <a href="../../common/mission_planner_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1223,7 +1225,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/rtc_manager_rviz_plugin/" class="md-nav__link ">
+            <a href="../../common/rtc_manager_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1295,7 +1297,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/tier4_automatic_goal_rviz_plugin/" class="md-nav__link ">
+            <a href="../../common/tier4_automatic_goal_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1367,7 +1369,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/tier4_control_rviz_plugin/" class="md-nav__link ">
+            <a href="../../common/tier4_control_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1439,7 +1441,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/tier4_debug_rviz_plugin/" class="md-nav__link ">
+            <a href="../../common/tier4_debug_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1511,7 +1513,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/tier4_debug_tools/" class="md-nav__link ">
+            <a href="../../common/tier4_debug_tools/" class="md-nav__link ">
               
   
   
@@ -1583,7 +1585,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/tier4_logging_level_configure_rviz_plugin/" class="md-nav__link ">
+            <a href="../../common/tier4_logging_level_configure_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1655,7 +1657,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/tier4_screen_capture_rviz_plugin/" class="md-nav__link ">
+            <a href="../../common/tier4_screen_capture_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1727,7 +1729,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/tier4_simulated_clock_rviz_plugin/" class="md-nav__link ">
+            <a href="../../common/tier4_simulated_clock_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1799,7 +1801,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/tier4_string_viewer_rviz_plugin/" class="md-nav__link ">
+            <a href="../../common/tier4_string_viewer_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1871,7 +1873,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../common/tier4_target_object_type_rviz_plugin/" class="md-nav__link ">
+            <a href="../../common/tier4_target_object_type_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -2068,7 +2070,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../control/control_debug_tools/scripts/" class="md-nav__link ">
+            <a href="../../control/control_debug_tools/scripts/" class="md-nav__link ">
               
   
   
@@ -2148,7 +2150,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../control/vehicle_cmd_analyzer/" class="md-nav__link ">
+            <a href="../../control/vehicle_cmd_analyzer/" class="md-nav__link ">
               
   
   
@@ -2227,7 +2229,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../control_data_collecting_tool/" class="md-nav__link ">
+            <a href="../../control_data_collecting_tool/" class="md-nav__link ">
               
   
   
@@ -2270,8 +2272,6 @@
       
   
   
-    
-  
   
   
     
@@ -2285,23 +2285,22 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="./" class="md-nav__link md-nav__link--active">
+            <a href="../../driving_environment_analyzer/" class="md-nav__link ">
               
   
   
@@ -2320,7 +2319,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2430,7 +2429,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../evaluation/tier4_metrics_rviz_plugin/" class="md-nav__link ">
+            <a href="../../evaluation/tier4_metrics_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -2481,8 +2480,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -2496,21 +2497,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
-        
-          
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
             
   
   
@@ -2528,7 +2530,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2558,10 +2560,13 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -2571,7 +2576,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../localization/autoware_localization_evaluation_scripts/" class="md-nav__link ">
+            <a href="../autoware_localization_evaluation_scripts/" class="md-nav__link ">
               
   
   
@@ -2615,6 +2620,8 @@
                 
   
   
+    
+  
   
   
     
@@ -2630,20 +2637,21 @@
       
       
         
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
+          
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_2" >
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_2" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../localization/autoware_position_error_evaluator/" class="md-nav__link ">
+            <a href="./" class="md-nav__link md-nav__link--active">
               
   
   
@@ -2662,7 +2670,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_8_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2700,10 +2708,13 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -2712,7 +2723,7 @@
         <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8_3" >
         
           
-          <label class="md-nav__link" for="__nav_8_3" id="__nav_8_3_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_8_3" id="__nav_8_3_label" tabindex="">
             
   
   
@@ -2748,7 +2759,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
+      <a href="../deviation_estimation_tools/ReadMe/" class="md-nav__link">
         
   
   
@@ -2884,7 +2895,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../map/autoware_lanelet2_map_utils/" class="md-nav__link ">
+            <a href="../../map/autoware_lanelet2_map_utils/" class="md-nav__link ">
               
   
   
@@ -2956,7 +2967,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../map/autoware_pointcloud_divider/" class="md-nav__link ">
+            <a href="../../map/autoware_pointcloud_divider/" class="md-nav__link ">
               
   
   
@@ -3028,7 +3039,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../map/autoware_pointcloud_merger/" class="md-nav__link ">
+            <a href="../../map/autoware_pointcloud_merger/" class="md-nav__link ">
               
   
   
@@ -3100,7 +3111,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../map/autoware_pointcloud_projection_converter/" class="md-nav__link ">
+            <a href="../../map/autoware_pointcloud_projection_converter/" class="md-nav__link ">
               
   
   
@@ -3172,7 +3183,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../map/autoware_pointcloud_saver_rviz_plugin/" class="md-nav__link ">
+            <a href="../../map/autoware_pointcloud_saver_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -3244,7 +3255,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../map/autoware_tp_manager/" class="md-nav__link ">
+            <a href="../../map/autoware_tp_manager/" class="md-nav__link ">
               
   
   
@@ -3389,7 +3400,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../planning/autoware_planning_data_analyzer/" class="md-nav__link ">
+            <a href="../../planning/autoware_planning_data_analyzer/" class="md-nav__link ">
               
   
   
@@ -3461,7 +3472,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../planning/autoware_route_client/" class="md-nav__link ">
+            <a href="../../planning/autoware_route_client/" class="md-nav__link ">
               
   
   
@@ -3533,7 +3544,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../planning/autoware_rtc_replayer/" class="md-nav__link ">
+            <a href="../../planning/autoware_rtc_replayer/" class="md-nav__link ">
               
   
   
@@ -3605,7 +3616,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../planning/autoware_static_centerline_generator/" class="md-nav__link ">
+            <a href="../../planning/autoware_static_centerline_generator/" class="md-nav__link ">
               
   
   
@@ -3681,7 +3692,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../planning/planning_debug_tools/" class="md-nav__link ">
+            <a href="../../planning/planning_debug_tools/" class="md-nav__link ">
               
   
   
@@ -3725,7 +3736,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
+      <a href="../../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
         
   
   
@@ -3836,7 +3847,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../planning/planning_debug_tools/scripts/trajectory_visualizer/" class="md-nav__link ">
+            <a href="../../planning/planning_debug_tools/scripts/trajectory_visualizer/" class="md-nav__link ">
               
   
   
@@ -3989,7 +4000,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../simulator/simulator_compatibility_test/" class="md-nav__link ">
+            <a href="../../simulator/simulator_compatibility_test/" class="md-nav__link ">
               
   
   
@@ -4126,7 +4137,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../system/rqt_diagnostic_graph_monitor/" class="md-nav__link ">
+            <a href="../../system/rqt_diagnostic_graph_monitor/" class="md-nav__link ">
               
   
   
@@ -4271,7 +4282,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../vehicle/calibration_adapter/" class="md-nav__link ">
+            <a href="../../vehicle/calibration_adapter/" class="md-nav__link ">
               
   
   
@@ -4343,7 +4354,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../vehicle/learning_based_vehicle_calibration/" class="md-nav__link ">
+            <a href="../../vehicle/learning_based_vehicle_calibration/" class="md-nav__link ">
               
   
   
@@ -4415,7 +4426,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../vehicle/parameter_estimator/" class="md-nav__link ">
+            <a href="../../vehicle/parameter_estimator/" class="md-nav__link ">
               
   
   
@@ -4487,7 +4498,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../vehicle/pitch_checker/" class="md-nav__link ">
+            <a href="../../vehicle/pitch_checker/" class="md-nav__link ">
               
   
   
@@ -4559,7 +4570,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../vehicle/time_delay_estimator/" class="md-nav__link ">
+            <a href="../../vehicle/time_delay_estimator/" class="md-nav__link ">
               
   
   
@@ -4633,10 +4644,38 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#rosbagodd" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ROSBAGの特定時刻における周囲のODDを解析する場合
+        Overview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#measurement-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measurement Process
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
       
     </span>
   </a>
@@ -4644,13 +4683,229 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#rosbagodd_1" class="md-nav__link">
+  <a href="#prerequisites" class="md-nav__link">
     <span class="md-ellipsis">
       
-        ROSBAG全体に対して経路沿いのODDを解析する場合
+        Prerequisites
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build-instructions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Build Instructions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-operation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Operation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#important-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Important Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#measurement-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Measurement Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inputs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Outputs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Outputs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#csv-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSV Files
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#screenshot-naming" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screenshot Naming
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-structure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Structure
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#line-detection-algorithm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Line Detection Algorithm
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Management
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Parameters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automatic-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Troubleshooting
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#screenshot-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screenshot Issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#csv-file-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CSV File Issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#map-detection-issues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Map Detection Issues
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -4674,118 +4929,257 @@
   
 
 
-<div><h1 id="driving-environment-analyzer">Driving Environment Analyzer<a class="headerlink" href="#driving-environment-analyzer" title="Permanent link">#</a></h1>
-<p>このツールはROSBAGに含まれる走行履歴を元に走行環境のODDを解析するツールです。</p>
-<h2 id="rosbagodd">ROSBAGの特定時刻における周囲のODDを解析する場合<a class="headerlink" href="#rosbagodd" title="Permanent link">#</a></h2>
-<p>この場合にはRvizプラグインである<code>driving_environment_analyzer_rviz_panel</code>を使用することをおすすめします。</p>
-<p>現在以下の情報が出力可能です。</p>
+<div><h1 id="position-error-evaluator">Position Error Evaluator<a class="headerlink" href="#position-error-evaluator" title="Permanent link">#</a></h1>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h2>
+<p>This RViz plugin tool evaluates vehicle position error by measuring deviations from Lanelet2 map lane boundaries and stop lines. It provides interactive line-based measurement functionality with automatic CSV logging and screenshot capture capabilities.</p>
+<h3 id="measurement-process">Measurement Process<a class="headerlink" href="#measurement-process" title="Permanent link">#</a></h3>
+<ol>
+<li><strong>Manual Ground Truth Line Drawing</strong>: Users draw lines along actual lane markings and stop lines visible in the pointcloud intensity view</li>
+<li><strong>Automatic Map Line Detection</strong>: The tool automatically detects the closest corresponding line in the Lanelet2 map</li>
+<li><strong>Error Calculation</strong>: Position and orientation error is calculated from the deviation between the drawn ground truth line and the matched map line, revealing localization accuracy on map</li>
+</ol>
+<p>The reference lines (ground truth lines) used for measurement are lane markings and stop lines distinguished by the intensity brightness in the pointcloud.</p>
+<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">#</a></h2>
 <ul>
-<li>EGOの現在車速</li>
-<li>現在位置の勾配</li>
-<li>EGOの挙動</li>
-<li>現在の車線情報</li>
+<li><strong>Interactive Line Measurement</strong>: Click-and-drag interface to measure position errors in RViz</li>
+<li><strong>Dual Line Type Support</strong>:<ul>
+<li><strong>Stop Line Measurement</strong>: Measures X-axis error (longitudinal deviation) from stop lines</li>
+<li><strong>Lane Boundary Measurement</strong>: Measures Y-axis error (lateral deviation) from lane boundaries</li>
 </ul>
-<p>こちらのツールはautoware_launchに含まれる<code>logging_simulator</code>を使用します。まず以下のコマンドからシミュレータを起動してください。</p>
-<p><code>ros2 launch autoware_launch logging_simulator.launch.xml map_path:=&lt;MAP&gt; vehicle_model:=&lt;VEHICLE_NAME&gt; sensor_model:=&lt;AIP_NAME&gt; sensing:=false control:=false planning:=false perception:=false localization:=false system:=false</code></p>
-<p><img alt="fig1" src="images/launch_rviz.png"></p>
-<p>シミュレータ起動時に地図を読み込むためROSBAGに地図情報が含まれていなくてもODDの解析が可能です。（ただし、その場合にはROSBAG取得の際に使用した地図を指定してシミュレータを起動するようにしてください。）</p>
-<p>次に本パッケージに含まれる解析ツールを起動します。Rviz画面左上部のAdd New PanelからDrivingEnvironmentAnalyzerPanelを選択してください。これでRviz左下に新しく操作パネルが追加されます。</p>
-<p><img alt="fig1" src="images/launch_tool.png">
-<img alt="fig1" src="images/rviz_overview_1.png"></p>
-<p>本ツールはROSBAGファイル指定してロードできる他、複数のROSBAGファイルが格納されているディレクトリを指定することも可能です。ただし、その場合には事前に以下のコマンドで<code>metadata.yaml</code>の生成が必要になります。</p>
-<p><code>ros2 bag reindex &lt;DIR_PATH&gt; sqlite3</code></p>
-<p><img alt="fig1" src="images/select_directory.png"></p>
-<p>ROSBAGの読み込みが完了したらODDを解析したい時刻を指定します。時刻の指定にはUnix timeを直接指定するほかスライドバーも使用可能です。左に表示されている日時を参考に調整してください。</p>
-<p><img alt="fig1" src="./images/select_time%20.png"></p>
-<p>また、このときViewsのTarget Flameを<code>base_link</code>にしておくことで、指定した時刻のEGOの位置と周囲の状況をRvizで可視化可能です。</p>
-<p><img alt="fig1" src="images/select_target_frame.png"></p>
-<p>時刻の指定が完了したら、<code>Set time stamp</code>ボタンを押し、最後に<code>Analyze dynamic ODD factor</code>を押すことで解析が始まります。</p>
-<p><img alt="fig1" src="images/rviz_overview_2.png"></p>
-<div class="highlight"><pre><span></span><code><span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>***********************************************************
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">                    </span>ODD<span class="w"> </span>analysis<span class="w"> </span>result
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>***********************************************************
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>Type:<span class="w"> </span>TIME<span class="w"> </span>SPECIFIED
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>Time:<span class="w"> </span><span class="m">2024</span>-04-22<span class="w"> </span><span class="m">14</span>:48:05
-<span class="o">[</span>rviz2-11<span class="o">]</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>-<span class="w"> </span>EGO<span class="w"> </span>INFO
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>SPEED<span class="o">]</span><span class="w">                       </span>:<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">[</span>m/s<span class="o">]</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>ELEVATION<span class="w"> </span>ANGLE<span class="o">]</span><span class="w">             </span>:<span class="w"> </span><span class="m">0</span>.00963597<span class="w"> </span><span class="o">[</span>rad<span class="o">]</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>-<span class="w"> </span>EGO<span class="w"> </span>BEHAIOVR
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>AVOIDANCE<span class="o">(</span>R<span class="o">)]</span><span class="w">                </span>:<span class="w"> </span>NONE
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>AVOIDANCE<span class="o">(</span>L<span class="o">)]</span><span class="w">                </span>:<span class="w"> </span>NONE
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>LANE_CHANGE<span class="o">(</span>R<span class="o">)]</span><span class="w">              </span>:<span class="w"> </span>NONE
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>LANE_CHANGE<span class="o">(</span>L<span class="o">)]</span><span class="w">              </span>:<span class="w"> </span>NONE
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>START_PLANNER<span class="o">]</span><span class="w">               </span>:<span class="w"> </span>SAFE:<span class="w"> </span><span class="nb">true</span><span class="w"> </span>COMMAND:<span class="w"> </span>deactivate
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>GOAL_PLANNER<span class="o">]</span><span class="w">                </span>:<span class="w"> </span>NONE
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>CROSSWALK<span class="o">]</span><span class="w">                   </span>:<span class="w"> </span>NONE
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>INTERSECTION<span class="o">]</span><span class="w">                </span>:<span class="w"> </span>NONE
-<span class="o">[</span>rviz2-11<span class="o">]</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>-<span class="w"> </span>LANE<span class="w"> </span>INFO
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>ID<span class="o">]</span><span class="w">                          </span>:<span class="w"> </span><span class="m">176126</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>WIDTH<span class="o">]</span><span class="w">                       </span>:<span class="w"> </span><span class="m">4</span>.24132<span class="w"> </span><span class="o">[</span>m<span class="o">]</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>SHAPE<span class="o">]</span><span class="w">                       </span>:<span class="w"> </span>STRAIGHT
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>RIGHT<span class="w"> </span>LANE<span class="w"> </span>NUM<span class="o">]</span><span class="w">              </span>:<span class="w"> </span><span class="m">0</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>LEFT<span class="w"> </span>LANE<span class="w"> </span>NUM<span class="o">]</span><span class="w">               </span>:<span class="w"> </span><span class="m">0</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>TOTAL<span class="w"> </span>LANE<span class="w"> </span>NUM<span class="o">]</span><span class="w">              </span>:<span class="w"> </span><span class="m">1</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>SAME<span class="w"> </span>DIRECTION<span class="w"> </span>LANE<span class="o">]</span><span class="w">         </span>:<span class="w"> </span>NONE
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>OPPOSITE<span class="w"> </span>DIRECTION<span class="w"> </span>LANE<span class="o">]</span><span class="w">     </span>:<span class="w"> </span>NONE
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>ROAD<span class="w"> </span>SHOULDER<span class="o">]</span><span class="w">               </span>:<span class="w"> </span>EXIST
-<span class="o">[</span>rviz2-11<span class="o">]</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>-<span class="w"> </span>SURROUND<span class="w"> </span>OBJECT<span class="w"> </span>NUM
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>UNKNOWN<span class="o">]</span><span class="w">                     </span>:<span class="w"> </span><span class="m">0</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>CAR<span class="o">]</span><span class="w">                         </span>:<span class="w"> </span><span class="m">6</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>TRUCK<span class="o">]</span><span class="w">                       </span>:<span class="w"> </span><span class="m">0</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>BUS<span class="o">]</span><span class="w">                         </span>:<span class="w"> </span><span class="m">3</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>TRAILER<span class="o">]</span><span class="w">                     </span>:<span class="w"> </span><span class="m">2</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>MOTORCYCLE<span class="o">]</span><span class="w">                  </span>:<span class="w"> </span><span class="m">0</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>BICYCLE<span class="o">]</span><span class="w">                     </span>:<span class="w"> </span><span class="m">0</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w">   </span><span class="o">[</span>PEDESTRIAN<span class="o">]</span><span class="w">                  </span>:<span class="w"> </span><span class="m">7</span>
-<span class="o">[</span>rviz2-11<span class="o">]</span><span class="w"> </span>***********************************************************
+</li>
+<li><strong>Automatic CSV Export</strong>: Timestamped CSV files with measurement data</li>
+<li><strong>Screenshot Integration</strong>: Automatic desktop screenshot capture after each measurement</li>
+<li><strong>Real-time Error Display</strong>: Visual feedback with colored line indicators</li>
+<li><strong>Lanelet2 Integration</strong>: Uses HD map data for accurate reference line detection</li>
+</ul>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">#</a></h2>
+<ul>
+<li>RViz2 and rviz_common</li>
+<li>Lanelet2 libraries</li>
+<li>Autoware map messages</li>
+<li>LL2 map which accuracy must match the desired precision, and the correct relationships between objects are essential.</li>
+<li>Rosbag data for vehicle pose playback</li>
+</ul>
+<ul>
+<li><strong>System Dependencies</strong>:<ul>
+<li>ImageMagick (<code>import</code> command for screenshots)</li>
+<li>X11 display server</li>
+<li>Qt5 development libraries(autoware usually includes these)</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1"># Install system dependencies</span>
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>imagemagick<span class="w"> </span>x11-apps
 </code></pre></div>
-<h2 id="rosbagodd_1">ROSBAG全体に対して経路沿いのODDを解析する場合<a class="headerlink" href="#rosbagodd_1" title="Permanent link">#</a></h2>
-<p>現在以下の情報が出力可能です。</p>
-<ul>
-<li>走行経路の長さ</li>
-<li>走行経路の車線情報</li>
-<li>走行経路の最大・最小勾配</li>
-<li>走行経路の最大曲率</li>
-<li>走行経路の最大・最小車線幅</li>
-<li>交差点の有無</li>
-<li>信号機の有無</li>
-<li>横断歩道の有無</li>
-</ul>
-<p>起動時に<code>bag_path</code>オプションで解析したいROSBAGを指定してください。（ディレクトリの指定も.db3ファイルの直接指定もサポートしています。）</p>
-<p>解析に必要なtopicは以下のとおりです。（今後増える可能性もあります。）</p>
-<ul>
-<li><code>/planning/mission_planning/route</code></li>
-<li><code>/map/vector_map</code></li>
-</ul>
-<p>以下のようにlaunchすることでODDの解析結果が得られます。</p>
-<p><code>ros2 launch driving_environment_analyzer driving_environment_analyzer.launch.xml use_map_in_bag:=true bag_path:=&lt;ROSBAG&gt;</code></p>
-<div class="highlight"><pre><span></span><code><span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.768870564<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span><span class="o">======================================</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.768922452<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w">  </span>data<span class="w"> </span>is<span class="w"> </span>ready.<span class="w"> </span>start<span class="w"> </span>ODD<span class="w"> </span>analysis...
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.768933574<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span><span class="o">======================================</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.768967412<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Length<span class="w"> </span>of<span class="w"> </span>total<span class="w"> </span>lanes<span class="w"> </span>:<span class="w"> </span><span class="m">2357</span>.50<span class="w"> </span><span class="o">[</span>m<span class="o">]</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769031174<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Length<span class="w"> </span>of<span class="w"> </span>lane<span class="w"> </span>that<span class="w"> </span>has<span class="w"> </span>adjacent<span class="w"> </span>lane<span class="w"> </span>:<span class="w"> </span><span class="m">2080</span>.43<span class="w"> </span><span class="o">[</span>m<span class="o">]</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769076141<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Length<span class="w"> </span>of<span class="w"> </span>lane<span class="w"> </span>that<span class="w"> </span>has<span class="w"> </span>opposite<span class="w"> </span>lane<span class="w"> </span>:<span class="w"> </span><span class="m">0</span>.00<span class="w"> </span><span class="o">[</span>m<span class="o">]</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769101793<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Length<span class="w"> </span>of<span class="w"> </span>lane<span class="w"> </span>that<span class="w"> </span>has<span class="w"> </span>no<span class="w"> </span>adjacent<span class="w"> </span>lane<span class="w"> </span>:<span class="w"> </span><span class="m">277</span>.07<span class="w"> </span><span class="o">[</span>m<span class="o">]</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769225729<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Min<span class="w"> </span>lane<span class="w"> </span>width:<span class="w"> </span><span class="m">3</span>.14<span class="w"> </span><span class="o">[</span>m<span class="o">]</span><span class="w"> </span>Max<span class="w"> </span>lane<span class="w"> </span>width:<span class="w"> </span><span class="m">4</span>.94<span class="w"> </span><span class="o">[</span>m<span class="o">]</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769278698<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Max<span class="w"> </span>curvature:<span class="w"> </span><span class="m">0</span>.007967<span class="w"> </span><span class="o">[</span><span class="m">1</span>/m<span class="o">]</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769293161<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Min<span class="w"> </span>curve<span class="w"> </span>radius:<span class="w"> </span><span class="m">125</span>.52<span class="w"> </span><span class="o">[</span>m<span class="o">]</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769336094<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Min<span class="w"> </span>elevation<span class="w"> </span>angle:<span class="w"> </span>-0.033037<span class="w"> </span><span class="o">[</span>rad<span class="o">]</span><span class="w"> </span>Max<span class="w"> </span>elevation<span class="w"> </span>angle:<span class="w"> </span><span class="m">0</span>.026073<span class="w"> </span><span class="o">[</span>rad<span class="o">]</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769403870<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Min<span class="w"> </span>speed<span class="w"> </span>limit:<span class="w"> </span><span class="m">13</span>.89<span class="w"> </span><span class="o">[</span>m/s<span class="o">]</span><span class="w"> </span>Max<span class="w"> </span>speed<span class="w"> </span>limit:<span class="w"> </span><span class="m">16</span>.67<span class="w"> </span><span class="o">[</span>m/s<span class="o">]</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769424648<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Exist<span class="w"> </span>traffic<span class="w"> </span>light:<span class="w"> </span><span class="nb">true</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769435813<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Exist<span class="w"> </span>intersection:<span class="w"> </span><span class="nb">true</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769620035<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span>-<span class="w"> </span>Exist<span class="w"> </span>crosswalk:<span class="w"> </span><span class="nb">true</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769634980<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span><span class="o">======================================</span>
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769642769<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w">  </span><span class="nb">complete</span><span class="w"> </span>ODD<span class="w"> </span>analysis.<span class="w"> </span>shutdown.
-<span class="o">[</span>component_container-1<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1708999777</span>.769650034<span class="o">]</span><span class="w"> </span><span class="o">[</span>driving_environment_analyzer<span class="o">]</span>:<span class="w"> </span><span class="o">======================================</span>
+<h2 id="build-instructions">Build Instructions<a class="headerlink" href="#build-instructions" title="Permanent link">#</a></h2>
+<p>Adding the usual Autoware installation and build instructions, please do vcs import the repository and build the package.</p>
+<div class="highlight"><pre><span></span><code>vcs<span class="w"> </span>import<span class="w"> </span>&lt;<span class="w"> </span>tools.repos
+<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
+rosdep<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>--from-paths<span class="w"> </span>src<span class="w"> </span>--ignore-src<span class="w"> </span>--rosdistro<span class="w"> </span><span class="nv">$ROS_DISTRO</span>
+rosdep<span class="w"> </span>update
+colcon<span class="w"> </span>build<span class="w"> </span>--packages-up-to<span class="w"> </span>autoware_position_error_evaluator
 </code></pre></div>
-<p>ただし、<code>map/vector_map</code>に関しては<code>use_map_in_bag</code>を<code>false</code>にすることでローカル環境に保存されている地図を使用してODD解析を行うことも可能です。その場合、<code>map_path</code>オプションで地図のパスを指定してください。</p>
-<p><code>ros2 launch driving_environment_analyzer driving_environment_analyzer.launch.xml use_map_in_bag:=false map_path:=&lt;MAP&gt; bag_path:=&lt;ROSBAG&gt;</code></p>
-<p>以上のようにオプションを指定することでROSBAGに地図情報が保存されていなくてもODD解析が可能です。</p></div>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
+<h3 id="basic-operation">Basic Operation<a class="headerlink" href="#basic-operation" title="Permanent link">#</a></h3>
+<ol>
+<li><strong>Launch RViz</strong> with Autoware</li>
+<li>
+<p><strong>Set pointcloud intensity view</strong>:</p>
+<ul>
+<li>In RViz Display window, select the pointcloud topic (e.g. <code>/sensing/lidar/concatenated/pointcloud</code>) in the Sensing/LiDAR/ConcatenatedPointCloud category</li>
+<li>Set "Color Transformer" to "Intensity"</li>
+<li>Adjust "Min Intensity" and "Max Intensity" to highlight lane markings</li>
+<li>Decay Time can be adjusted to visualize static lane markings better(e.g. set to 1.0)</li>
+<li>(Optional) Adjust point size for better visibility
+ 
+<p align="center">
+   <img src="./media/position_error_evaluator_set_pointcloud_intensity_view.png" width="400">
+   </p></li>
+</ul>
+</li>
+<li>
+<p><strong>Add the Tool</strong>:</p>
+<ul>
+<li>Go to RViz toolbar</li>
+<li>Add "Position Error Evaluator Tool"(the arrow icon pointed in the image below)<ol>
+<li>Click "Add Tool" button (#1 in the image)</li>
+<li>Select "PositionErrorEvaluatorTool" from the list pop-up (#2 in the image)
+ <p align="center">
+ <img src="./media/position_error_evaluator_add_tool_to_rviz.png" width="400">
+ </p></li>
+</ol>
+</li>
+</ul>
+</li>
+<li><strong>Load Map Data</strong>: Ensure Lanelet2 map is loaded in RViz</li>
+<li><strong>Stop replay rosbag</strong>: Pause the rosbag playback(space key on terminal of rosbag replay) to fix the vehicle pose during measurement</li>
+<li><strong>Start Measuring</strong>:<ul>
+<li>Click to "Position Error Evaluator Tool"</li>
+<li>Click to start point of line measurement</li>
+<li>Click again to end point of line measurement</li>
+<li>Check the measurement result displayed in the terminal</li>
+<li>(if needed)Delete key to remove last measurement</li>
+<li>Right-click to reset current measurement</li>
+</ul>
+</li>
+<li><strong>Repeat</strong> for additional measurements as needed</li>
+</ol>
+<h3 id="important-notes">Important Notes<a class="headerlink" href="#important-notes" title="Permanent link">#</a></h3>
+<ul>
+<li><strong>Straight sections only</strong>: Measurements are limited to straight road sections. Curves or complex-shaped sections cannot be measured accurately.</li>
+<li><strong>Line segment requirements</strong>: Drawing line segments that are too short or too far from the target lanelet line may result in incorrect selection or measurement failure. Draw sufficiently long line segments close to the vehicle position on clearly distinguishable lane markings.</li>
+</ul>
+<h3 id="measurement-types">Measurement Types<a class="headerlink" href="#measurement-types" title="Permanent link">#</a></h3>
+<h4 id="stop-line-measurement">Stop Line Measurement<a class="headerlink" href="#stop-line-measurement" title="Permanent link">#</a></h4>
+<ul>
+<li>Click near a stop line in the map</li>
+<li>Tool automatically detects the closest stop line</li>
+<li>Measures X-error (longitudinal deviation)</li>
+<li>Output: <code>x_error</code>, <code>NaN</code>, <code>NaN</code></li>
+</ul>
+<p align="center">
+<img src="./media/position_error_evaluator_Stop_Line_Measurement.gif" width="400">
+</p>
+
+<h4 id="lane-boundary-measurement">Lane Boundary Measurement<a class="headerlink" href="#lane-boundary-measurement" title="Permanent link">#</a></h4>
+<ul>
+<li>Click near a lane boundary</li>
+<li>Tool detects the closest lane boundary</li>
+<li>Measures Y-error (lateral deviation)</li>
+<li>Output: <code>NaN</code>, <code>y_error</code>, <code>yaw_error</code></li>
+</ul>
+<p align="center">
+<img src="./media/position_error_evaluator_Lane_Boundary_Measurement.gif" width="400">
+</p>
+
+<h2 id="inputs">Inputs<a class="headerlink" href="#inputs" title="Permanent link">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/map/vector_map</code></td>
+<td><code>autoware_map_msgs::msg::LaneletMapBin</code></td>
+<td>vector map topic</td>
+</tr>
+<tr>
+<td><code>/localization/kinematic_state</code></td>
+<td><code>nav_msgs::msg::Odometry</code></td>
+<td>self pose topic</td>
+</tr>
+</tbody>
+</table>
+<h2 id="outputs">Outputs<a class="headerlink" href="#outputs" title="Permanent link">#</a></h2>
+<h3 id="csv-files">CSV Files<a class="headerlink" href="#csv-files" title="Permanent link">#</a></h3>
+<h4 id="measurement-csv">measurement CSV<a class="headerlink" href="#measurement-csv" title="Permanent link">#</a></h4>
+<p>The tool generates CSV files with the following format:</p>
+<div class="highlight"><pre><span></span><code>measurement_number,x_error,y_error,yaw_error
+1,0.123456,NaN,2.345678
+2,NaN,0.567890,1.234567
+</code></pre></div>
+<ul>
+<li><code>measurement_number</code>: Sequential measurement counter</li>
+<li><code>x_error</code>: Longitudinal error in meters (stop line measurements)</li>
+<li><code>y_error</code>: Lateral error in meters (lane boundary measurements)</li>
+<li><code>yaw_error</code>: Angular error in degrees</li>
+<li><code>NaN</code>: Not applicable for the measurement type</li>
+</ul>
+<h4 id="trajectory-csv">trajectory CSV<a class="headerlink" href="#trajectory-csv" title="Permanent link">#</a></h4>
+<p>To show the measured points, the tool generates trajectory CSV files with the following format:</p>
+<div class="highlight"><pre><span></span><code>x,y,z,yaw
+1.0,2.0,0.0,0.0
+1.1,2.1,0.0,0.1
+</code></pre></div>
+<ul>
+<li><code>x</code>, <code>y</code>, <code>z</code>: Vehicle position in meters</li>
+<li><code>yaw</code>: Vehicle orientation in radians</li>
+</ul>
+<h3 id="screenshot-naming">Screenshot Naming<a class="headerlink" href="#screenshot-naming" title="Permanent link">#</a></h3>
+<p>Screenshots are automatically captured and named as:
+<code>measurement_YYYYMMDD_HHMMSS_NN.png</code>
+where NN is the zero-padded measurement number.</p>
+<h3 id="file-structure">File Structure<a class="headerlink" href="#file-structure" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code>~/autoware_position_error_evaluator/
+├── position_error_evaluation_YYYYMMDD_HHMMSS.csv
+├── trajectory_YYYYMMDD_HHMMSS.csv
+└── screenshots_YYYYMMDD_HHMMSS/
+    ├── measurement_YYYYMMDD_HHMMSS_01.png
+    ├── measurement_YYYYMMDD_HHMMSS_02.png
+    └── ...
+</code></pre></div>
+<h2 id="line-detection-algorithm">Line Detection Algorithm<a class="headerlink" href="#line-detection-algorithm" title="Permanent link">#</a></h2>
+<ol>
+<li><strong>Perpendicular Foot Calculation</strong>: Finds closest point on reference line</li>
+<li><strong>Least Squares Fitting</strong>: Improves line segment accuracy</li>
+<li><strong>Error Computation</strong>: Calculates perpendicular distance and angular deviation</li>
+<li><strong>Type Classification</strong>: Automatically determines stop line vs lane boundary</li>
+</ol>
+<h2 id="file-management">File Management<a class="headerlink" href="#file-management" title="Permanent link">#</a></h2>
+<ul>
+<li>Automatic directory creation</li>
+<li>Timestamp-based file naming</li>
+<li>Collision avoidance with sequential numbering</li>
+<li>Immediate CSV flush for data safety</li>
+</ul>
+<h2 id="configuration-parameters">Configuration Parameters<a class="headerlink" href="#configuration-parameters" title="Permanent link">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LINE_WIDTH_MAIN</td>
+<td>double</td>
+<td>Line width for main measurement lines (meters)</td>
+<td>0.3</td>
+</tr>
+<tr>
+<td>LINE_WIDTH_LANE</td>
+<td>double</td>
+<td>Line width for lane boundary lines (meters)</td>
+<td>0.15</td>
+</tr>
+<tr>
+<td>ANGLE_THRESHOLD_DEGREES</td>
+<td>double</td>
+<td>Angular threshold for line segment matching (degrees)</td>
+<td>5.0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="automatic-configuration">Automatic Configuration<a class="headerlink" href="#automatic-configuration" title="Permanent link">#</a></h2>
+<p>The tool automatically configures output directories and filenames based on system timestamp. No additional configuration files are required.</p>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">#</a></h2>
+<h3 id="screenshot-issues">Screenshot Issues<a class="headerlink" href="#screenshot-issues" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Test ImageMagick installation</span>
+import<span class="w"> </span>-window<span class="w"> </span>root<span class="w"> </span>test_screenshot.png
+
+<span class="c1"># Check X11 access</span>
+<span class="nb">echo</span><span class="w"> </span><span class="nv">$DISPLAY</span>
+xhost<span class="w"> </span>+local:
+</code></pre></div>
+<h3 id="csv-file-issues">CSV File Issues<a class="headerlink" href="#csv-file-issues" title="Permanent link">#</a></h3>
+<ul>
+<li>Check write permissions in home directory</li>
+<li>Verify disk space availability</li>
+<li>Ensure proper ROS 2 environment setup</li>
+</ul>
+<h3 id="map-detection-issues">Map Detection Issues<a class="headerlink" href="#map-detection-issues" title="Permanent link">#</a></h3>
+<ul>
+<li>Verify Lanelet2 map is properly loaded</li>
+<li>Check map topic subscription</li>
+<li>Ensure vehicle pose is being published</li>
+</ul></div>
 
 
 
@@ -4821,7 +5215,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../control_data_collecting_tool/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Control data collecting tool">
+          <a href="../autoware_localization_evaluation_scripts/" class="md-footer__link md-footer__link--prev" aria-label="Previous: autoware_localization_evaluation_scripts">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -4831,20 +5225,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Control data collecting tool
+                autoware_localization_evaluation_scripts
               </div>
             </div>
           </a>
         
         
           
-          <a href="../evaluation/tier4_metrics_rviz_plugin/" class="md-footer__link md-footer__link--next" aria-label="Next: tier4_metrics_rviz_plugin">
+          <a href="../deviation_estimation_tools/ReadMe/" class="md-footer__link md-footer__link--next" aria-label="Next: deviation_estimation_tools">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                tier4_metrics_rviz_plugin
+                deviation_estimation_tools
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -4885,12 +5279,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
       
-        <script src="../docs/assets/js/mathjax.js"></script>
+        <script src="../../docs/assets/js/mathjax.js"></script>
       
         <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
       
