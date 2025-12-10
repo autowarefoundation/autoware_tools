@@ -14,7 +14,11 @@
 #include "autoware_adapi_v1_msgs/srv/clear_route.hpp"
 
 #include "pose_replay_interfaces/msg/uuid_route.hpp"
+#include "pose_replay_interfaces/msg/uuid_routes.hpp"
 #include "pose_replay_interfaces/srv/get_uuid_route.hpp"
+#include "pose_replay_interfaces/srv/get_uuid_routes.hpp"
+#include "pose_replay_interfaces/srv/set_route.hpp"
+#include "pose_replay_interfaces/srv/delete_route.hpp"
 
 #include <chrono>
 
@@ -43,8 +47,16 @@ class TopicListener : public rclcpp::Node {
 	
 	////////	
 		service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoute>(
-			"test_api_route", std::bind(&TopicListener::get_route, this, std::placeholders::_1, std::placeholders::_2));
+			"get_route_service", std::bind(&TopicListener::get_route_service, this, std::placeholders::_1, std::placeholders::_2));
 	////////
+		all_routes_service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoutes>(
+			"get_routes_service", std::bind(&TopicListener::get_routes_service, this, std::placeholders::_1, std::placeholders::_2));
+	////////
+		 set_route_service_ = this->create_service<pose_replay_interfaces::srv::SetRoute>(
+			"set_route_service", std::bind(&TopicListener::set_route_service, this, std::placeholders::_1, std::placeholders::_2));
+	////////
+		delete_route_service_ = this->create_service<pose_replay_interfaces::srv::DeleteRoute>(
+			"delete_route_service", std::bind(&TopicListener::delete_route_service, this, std::placeholders::_1, std::placeholders::_2));
 
 	//	timer_ = this->create_wall_timer(5s, std::bind(&TopicListener::timer_callback, this));
 	//	client_ = this->create_client<autoware_adapi_v1_msgs::srv::ClearRoute>("/api/routing/clear_route");	
@@ -60,7 +72,46 @@ class TopicListener : public rclcpp::Node {
 		set_route("1c51ec25-f14c-4ce2-bd41-a411fa781917");
 	}
 	
-	void get_route(const std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoute::Request> request,
+	void delete_route_service(const std::shared_ptr<pose_replay_interfaces::srv::DeleteRoute::Request> request,
+			std::shared_ptr<pose_replay_interfaces::srv::DeleteRoute::Response> response){
+		std::string requestuuid = request->uuid;
+		if(requestuuid.size() == 0){
+				return;
+		}
+		delete_route(requestuuid);	
+		response->uuid = requestuuid;
+	}
+
+	void set_route_service(const std::shared_ptr<pose_replay_interfaces::srv::SetRoute::Request> request,
+			std::shared_ptr<pose_replay_interfaces::srv::SetRoute::Response> response){
+
+		std::string requestuuid = request->uuid;
+		set_route(requestuuid);
+		// reply with uuid if successful, empty if not
+		response->uuid = requestuuid;	
+	}
+	
+	void get_routes_service(const std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoutes::Request> request,
+			std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoutes::Response> response){
+		
+		pose_replay_interfaces::msg::UuidRoutes responseroutes;
+	
+		auto uuids = request->uuids;
+		if(uuids.size() == 0){
+			for(auto [key, value] : routes){
+				pose_replay_interfaces::msg::UuidRoute ur;
+				ur.uuid = key;
+				ur.start = value.data[0].start;
+				ur.end = value.data[0].goal;
+				responseroutes.routes.push_back(ur);
+			}
+		}
+
+		response->routes = responseroutes;
+
+	}
+	
+	void get_route_service(const std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoute::Request> request,
 			std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoute::Response> response){
 		
 	//	if((request->uuid).size() == 0 || routes.count(response->uuid) == 0){
@@ -80,20 +131,34 @@ class TopicListener : public rclcpp::Node {
 		
 		// Read and save to function scope
 		std::vector<YAML::Node> docs = YAML::LoadAll(yaml_file);
-		std::vector<YAML::Node>::iterator start = docs.begin(), end = docs.end();
 		
 		// Delete from function scope
-		for(auto p = start; p != end; ++p){
-			if((*p)["uuid"].as<std::string>() == uuid) docs.erase(p);
+		for(std::vector<YAML::Node>::iterator p = docs.begin(); p != docs.end(); ){
+			if(!*p || !(*p)["uuid"]){
+				++p;
+				continue;
+			}
+			if((*p)["uuid"].as<std::string>() == uuid){
+ 				RCLCPP_INFO(this->get_logger(), "Delete request received and object found.");
+				p = docs.erase(p);
+			} else {
+				++p;
+			}
 		}
 		
 		// Write to save
+		if(docs.size() == 0) clear_file("output.yaml");
 		for(auto &d : docs){
-			write_route("new_output.yaml", d, false);			
+			write_route("output.yaml", d, false);			
 		}
 
 		// Sync and update node
-		read_routes("new_output.yaml");	
+		read_routes("output.yaml");	
+	}
+
+	void clear_file(const std::string& filepath){
+		std::ofstream o;
+		o.open(filepath, std::ios::trunc);
 	}
 
 	template <typename T> void write_route(const std::string& filepath, T& value, bool append = true){
@@ -227,7 +292,8 @@ class TopicListener : public rclcpp::Node {
 		
 	}
 	
-	std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> yaml_to_map(YAML::Node root){
+	std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> yaml_to_map(YAML::Node root)
+	{
 		
 		autoware_adapi_v1_msgs::msg::Route msg;
 
@@ -310,6 +376,10 @@ class TopicListener : public rclcpp::Node {
 	rclcpp::TimerBase::SharedPtr timer_;	
 	rclcpp::Service<pose_replay_interfaces::srv::GetUuidRoute>::SharedPtr service_;		
 	
+	rclcpp::Service<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr all_routes_service_;
+	rclcpp::Service<pose_replay_interfaces::srv::SetRoute>::SharedPtr set_route_service_;	
+	rclcpp::Service<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr delete_route_service_;	
+
 	uuid_route_map routes; 
 };
 
