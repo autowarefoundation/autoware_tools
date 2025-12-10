@@ -58,7 +58,16 @@ colcon build --packages-up-to autoware_position_error_evaluator
 ### Basic Operation
 
 1. **Launch RViz** with Autoware
-2. **Add the Tool**:
+2. **Set pointcloud intensity view**:
+    - In RViz Display window, select the pointcloud topic (e.g. `/sensing/lidar/concatenated/pointcloud`) in the Sensing/LiDAR/ConcatenatedPointCloud category
+    - Set "Color Transformer" to "Intensity"
+    - Adjust "Min Intensity" and "Max Intensity" to highlight lane markings
+    - Decay Time can be adjusted to visualize static lane markings better(e.g. set to 1.0)
+    - (Optional) Adjust point size for better visibility
+     <p align="center">
+     <img src="./media/position_error_evaluator_set_pointcloud_intensity_view.png" width="400">
+     </p>
+3. **Add the Tool**:
    - Go to RViz toolbar
    - Add "Position Error Evaluator Tool"(the arrow icon pointed in the image below)
      1. Click "Add Tool" button (#1 in the image)
@@ -66,12 +75,16 @@ colcon build --packages-up-to autoware_position_error_evaluator
      <p align="center">
      <img src="./media/position_error_evaluator_add_tool_to_rviz.png" width="400">
      </p>
-3. **Load Map Data**: Ensure Lanelet2 map is loaded in RViz
-4. **Start Measuring**:
-   - Click to start the following line measurement
-   - Click again to complete measurement
-   - Right-click to cancel current measurement
-   - Delete key to remove last measurement
+4. **Load Map Data**: Ensure Lanelet2 map is loaded in RViz
+5. **Stop replay rosbag**: Pause the rosbag playback(space key on terminal of rosbag replay) to fix the vehicle pose during measurement
+6. **Start Measuring**:
+   - Click to "Position Error Evaluator Tool"
+   - Click to start point of line measurement
+   - Click again to end point of line measurement
+   - Check the measurement result displayed in the terminal
+   - (if needed)Delete key to remove last measurement
+   - Right-click to reset current measurement
+7. **Repeat** for additional measurements as needed
 
 ### Measurement Types
 
