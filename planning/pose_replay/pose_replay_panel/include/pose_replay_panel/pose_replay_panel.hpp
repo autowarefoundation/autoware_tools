@@ -4,9 +4,14 @@
 #include <rviz_common/panel.hpp>
 #include <rviz_common/ros_integration/ros_node_abstraction_iface.hpp>
 #include "pose_replay_interfaces/srv/get_uuid_route.hpp"
+#include "pose_replay_interfaces/srv/get_uuid_routes.hpp"
+#include "pose_replay_interfaces/srv/set_route.hpp"
+#include "pose_replay_interfaces/srv/delete_route.hpp"
+
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
+#include <string>
 
 namespace pose_replay_panel
 {
@@ -23,14 +28,21 @@ public:
 protected:
   std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
   rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoute>::SharedPtr client_;
-
+  rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr initclient_;
+  rclcpp::Client<pose_replay_interfaces::srv::SetRoute>::SharedPtr setrouteclient_;
+  rclcpp::Client<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr deleterouteclient_;
+ 
   // QLabel* label_;
   QPushButton* syncbutton_;
   QVBoxLayout* dynamiclayout_;
 
 private Q_SLOTS:
   void buttonActivated();
-  void routeEntryFactory();
+  void routeEntryFactory(const std::string&);
+  void setRouteButtonActivated(std::string&);
+  void deleteRouteButtonActivated(std::string&);
+  void syncRead();
+  void clearLayout(QLayout*);
 };
 }
 #endif  

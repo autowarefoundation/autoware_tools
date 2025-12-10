@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(pose_replay_interfaces REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
 # test
@@ -16,7 +17,13 @@ find_package(autoware_adapi_v1_msgs REQUIRED)
 find_package(autoware_planning_msgs REQUIRED)
 
 add_executable(topic_listener src/topic_listener.cpp)
-ament_target_dependencies(topic_listener rclcpp geometry_msgs autoware_adapi_v1_msgs autoware_planning_msgs)
+ament_target_dependencies(topic_listener 
+	rclcpp 
+	geometry_msgs 
+	autoware_adapi_v1_msgs 
+	autoware_planning_msgs 
+	pose_replay_interfaces
+)
 
 target_link_libraries(topic_listener yaml-cpp uuid)
 
