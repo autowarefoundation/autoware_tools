@@ -86,6 +86,11 @@ colcon build --packages-up-to autoware_position_error_evaluator
    - Right-click to reset current measurement
 7. **Repeat** for additional measurements as needed
 
+### Important Notes
+
+- **Straight sections only**: Measurements are limited to straight road sections. Curves or complex-shaped sections cannot be measured accurately.
+- **Line segment requirements**: Drawing line segments that are too short or too far from the target lanelet line may result in incorrect selection or measurement failure. Draw sufficiently long line segments close to the vehicle position on clearly distinguishable lane markings.
+
 ### Measurement Types
 
 #### Stop Line Measurement
