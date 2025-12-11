@@ -11,24 +11,37 @@ find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(pose_replay_interfaces REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 
 # test
 find_package(autoware_adapi_v1_msgs REQUIRED)
 find_package(autoware_planning_msgs REQUIRED)
 
-add_executable(topic_listener src/topic_listener.cpp)
-ament_target_dependencies(topic_listener 
+# add_executable(topic_listener src/topic_listener.cpp)
+add_library(pose_replay_node_component SHARED src/pose_replay_node.cpp)
+
+ament_target_dependencies(pose_replay_node_component 
 	rclcpp 
 	geometry_msgs 
 	autoware_adapi_v1_msgs 
 	autoware_planning_msgs 
 	pose_replay_interfaces
+	rclcpp_components
 )
 
-target_link_libraries(topic_listener yaml-cpp uuid)
+target_link_libraries(pose_replay_node_component yaml-cpp uuid)
 
-install(TARGETS topic_listener
-	DESTINATION lib/${PROJECT_NAME}
+install(TARGETS pose_replay_node_component
+	EXPORT export_pose_replay_node_component
+	ARCHIVE DESTINATION lib
+	LIBRARY DESTINATION lib
+	RUNTIME DESTINATION bin
+)
+
+rclcpp_components_register_node(
+	pose_replay_node_component
+	PLUGIN "PoseReplayNode"
+	EXECUTABLE pose_replay_node
 )
 
 if(BUILD_TESTING)
