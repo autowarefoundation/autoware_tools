@@ -30,24 +30,23 @@ const std::string save_filepath = "output.yaml";
 typedef autoware_adapi_v1_msgs::msg::Route adapi_route;
 typedef std::unordered_map<std::string, autoware_adapi_v1_msgs::msg::Route> uuid_route_map;
 
-class TopicListener : public rclcpp::Node {
-
+class PoseReplayNode : public rclcpp::Node {
 	public:
-	TopicListener() : Node("topic_listener") {		
-		RCLCPP_INFO_STREAM(this->get_logger(), "Listener online."); 
+	PoseReplayNode(const rclcpp::NodeOptions& options) : Node("pose_replay_node", options) {		
+		RCLCPP_INFO_STREAM(this->get_logger(), "pose_replay_node running..."); 
 		
 		route_set_subscription_ = this->create_subscription<adapi_route>(
-			"/api/routing/route", 10, std::bind(&TopicListener::route_set_callback, this, std::placeholders::_1));
+			"/api/routing/route", 10, std::bind(&PoseReplayNode::route_set_callback, this, std::placeholders::_1));
 		
 		initial_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 10);
 		goal_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/planning/mission_planning/goal", 10);				
 	
 		all_routes_service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoutes>(
-			"get_routes_service", std::bind(&TopicListener::get_routes_service, this, std::placeholders::_1, std::placeholders::_2));
+			"get_routes_service", std::bind(&PoseReplayNode::get_routes_service, this, std::placeholders::_1, std::placeholders::_2));
 		 set_route_service_ = this->create_service<pose_replay_interfaces::srv::SetRoute>(
-			"set_route_service", std::bind(&TopicListener::set_route_service, this, std::placeholders::_1, std::placeholders::_2));
+			"set_route_service", std::bind(&PoseReplayNode::set_route_service, this, std::placeholders::_1, std::placeholders::_2));
 		delete_route_service_ = this->create_service<pose_replay_interfaces::srv::DeleteRoute>(
-			"delete_route_service", std::bind(&TopicListener::delete_route_service, this, std::placeholders::_1, std::placeholders::_2));
+			"delete_route_service", std::bind(&PoseReplayNode::delete_route_service, this, std::placeholders::_1, std::placeholders::_2));
 	
 		read_routes(save_filepath);
 
@@ -201,14 +200,32 @@ class TopicListener : public rclcpp::Node {
 		routes.insert(new_map.begin(), new_map.end());	
 	}
 
+	std::string route_yaml_to_hash(const std::string yaml_str){
+		YAML::Node node = YAML::Load(yaml_str);
+		
+		// Timestamps, Z-values, and orientation tend to differ between manually setting the route via GUI and publishing to topics.
+		// Removed to not influence hash
+		node.remove("header");
+		node["data"][0]["start"]["position"].remove("z");
+		node["data"][0]["goal"]["position"].remove("z");
+		node["data"][0]["start"].remove("orientation");
+		node["data"][0]["goal"].remove("orientation");
+		std::string yaml_str_to_hash = YAML::Dump(node);
+		std::string hash_uuid = std::to_string(std::hash<std::string>{}(yaml_str_to_hash));
+		return hash_uuid;
+	}
+
 	std::string prepend_uuid(const std::string yaml_str){	
-		uuid_t binuuid;
+		/* uuid_t binuuid;
 		uuid_generate(binuuid);
 		char uuid_str[37];
-		uuid_unparse_lower(binuuid, uuid_str);
+		uuid_unparse_lower(binuuid, uuid_str); */
+		
+		std::string hash_uuid = route_yaml_to_hash(yaml_str);
 		
 		std::ostringstream oss;
-		oss << "uuid: \"" << uuid_str << "\"\n";
+		// oss << "uuid: \"" << uuid_str << "\"\n";
+		oss << "uuid: \"" << hash_uuid << "\"\n";
 		oss << yaml_str;
 		std::string new_str = oss.str();
 		return new_str;
@@ -226,15 +243,18 @@ class TopicListener : public rclcpp::Node {
 	void route_set_callback(const adapi_route& msg)
 	{	
 		if(msg.data.empty()) return;
+		
 		std::string yaml_str = autoware_adapi_v1_msgs::msg::to_yaml(msg);
-		//
-		RCLCPP_INFO(this->get_logger(), yaml_str.c_str());
-		//
+		
+		// Removes duplicate routes by comparing hash signatures
+		std::string hash_uuid_str = route_yaml_to_hash(yaml_str); 
+		if(routes.count(hash_uuid_str)) return;
+		
 		auto uuid_yaml_str = prepend_uuid(yaml_str);
 		write_route(save_filepath, uuid_yaml_str, true);
 		RCLCPP_INFO(this->get_logger(), "Route written to %s.", save_filepath.c_str());
-	}
-	
+		read_routes(save_filepath);
+	}	
 
 	void set_route(std::string uuid)
 	{	
@@ -267,7 +287,7 @@ class TopicListener : public rclcpp::Node {
 
 			initial_pose_publisher_->publish(initialmsg);
 			goal_pose_publisher_->publish(goalmsg);			
-
+			
 		} catch(const YAML::BadFile& e) {
 			RCLCPP_INFO(this->get_logger(), "Save file not found at path: %s.", save_filepath.c_str());
 		} catch(const YAML::BadConversion& e) {
@@ -369,8 +389,13 @@ class TopicListener : public rclcpp::Node {
 
 };
 
+#include <rclcpp_components/register_node_macro.hpp>
+RCLCPP_COMPONENTS_REGISTER_NODE(PoseReplayNode)
+
+/*
 int main(int argc, char * argv[]){
 	rclcpp::init(argc, argv);
 	rclcpp::spin(std::make_shared<TopicListener>());
 	rclcpp::shutdown();
 }
+*/
