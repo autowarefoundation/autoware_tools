@@ -215,6 +215,7 @@ This design results in the following behavior:
 - `-n`, `--noise`: Apply perception noise to objects when publishing repeated messages (default: True)
 - `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
 - `-v`, `--verbose`: Output debug data
+- `-h`, `--help`: Show help message
 
 ### How to use
 
@@ -224,13 +225,13 @@ Then, run the script according to the following command.
 By designating a rosbag, perception reproducer can be launched.
 
 ```bash
-ros2 run planning_debug_tools perception_reproducer.py -b <bag-file>
+ros2 run planning_debug_tools perception_reproducer -b <bag-file>
 ```
 
 You can designate multiple rosbags in the directory.
 
 ```bash
-ros2 run planning_debug_tools perception_reproducer.py -b <dir-to-bag-files>
+ros2 run planning_debug_tools perception_reproducer -b <dir-to-bag-files>
 ```
 
 Instead of publishing predicted objects, you can publish detected/tracked objects by designating `-d` or `-t`, respectively.
@@ -244,7 +245,7 @@ The `--pub-route` option enables automatic route generation based on the rosbag 
 Example usage with route publication:
 
 ```bash
-ros2 run planning_debug_tools perception_reproducer.py -b <bag-file> -p
+ros2 run planning_debug_tools perception_reproducer -b <bag-file> -p
 ```
 
 ## Perception replayer
@@ -257,6 +258,15 @@ In detail, this script publishes the data at a certain timestamp from the rosbag
 The timestamp will increase according to the real time without any operation.
 By using the GUI, you can modify the timestamp by pausing, changing the rate or going back into the past.
 
+### Available Options
+
+- `-b`, `--bag`: Rosbag file path (required)
+- `-d`, `--detected-object`: Publish detected objects
+- `-t`, `--tracked-object`: Publish tracked objects
+- `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
+- `-v`, `--verbose`: Output debug data
+- `-h`, `--help`: Show help message
+
 ### How to use
 
 First, launch the planning simulator, and put the ego pose.
@@ -266,13 +276,13 @@ By designating a rosbag, perception replayer can be launched.
 The GUI is launched as well with which a timestamp of rosbag can be managed.
 
 ```bash
-ros2 run planning_debug_tools perception_replayer.py -b <bag-file>
+ros2 run planning_debug_tools perception_replayer -b <bag-file>
 ```
 
 You can designate multiple rosbags in the directory.
 
 ```bash
-ros2 run planning_debug_tools perception_replayer.py -b <dir-to-bag-files>
+ros2 run planning_debug_tools perception_replayer -b <dir-to-bag-files>
 ```
 
 Instead of publishing predicted objects, you can publish detected/tracked objects by designating `-d` or `-t`, respectively.
