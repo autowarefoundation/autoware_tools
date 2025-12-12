@@ -4,7 +4,6 @@
 
 #include "pose_replay_interfaces/msg/uuid_route.hpp"
 #include "pose_replay_interfaces/msg/uuid_routes.hpp"
-// #include "pose_replay_interfaces/srv/get_uuid_route.hpp"
 #include "pose_replay_interfaces/srv/get_uuid_routes.hpp"
 #include "pose_replay_interfaces/srv/set_route.hpp"
 #include "pose_replay_interfaces/srv/delete_route.hpp"
@@ -22,9 +21,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <chrono>
 
-using namespace std::literals::chrono_literals;
 using autoware_adapi_v1_msgs::msg::to_yaml;
 
 const std::string save_filepath = "output.yaml";
@@ -43,62 +40,16 @@ class PoseReplayNode : public rclcpp::Node {
 		goal_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/planning/mission_planning/goal", 10);				
 		sync_notif_publisher_ = this->create_publisher<std_msgs::msg::String>("/pose_replay/update", 10);		
 	
-		all_routes_service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoutes>(
-			"get_routes_service", std::bind(&PoseReplayNode::get_routes_service, this, std::placeholders::_1, std::placeholders::_2));
+		get_routes_service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoutes>(
+			"/pose_replay/get_routes_service", std::bind(&PoseReplayNode::get_routes_service, this, std::placeholders::_1, std::placeholders::_2));
 		set_route_service_ = this->create_service<pose_replay_interfaces::srv::SetRoute>(
-			"set_route_service", std::bind(&PoseReplayNode::set_route_service, this, std::placeholders::_1, std::placeholders::_2));
+			"/pose_replay/set_route_service", std::bind(&PoseReplayNode::set_route_service, this, std::placeholders::_1, std::placeholders::_2));
 		delete_route_service_ = this->create_service<pose_replay_interfaces::srv::DeleteRoute>(
-			"delete_route_service", std::bind(&PoseReplayNode::delete_route_service, this, std::placeholders::_1, std::placeholders::_2));
+			"/pose_replay/delete_route_service", std::bind(&PoseReplayNode::delete_route_service, this, std::placeholders::_1, std::placeholders::_2));
 	
 		read_routes(save_filepath);
-
-	//	resync_notif_publisher_ = this->create_publisher<std_msgs::msg:String>("resyncroutes", 10);
-	//	service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoute>(
-	//		"get_route_service", std::bind(&TopicListener::get_route_service, this, std::placeholders::_1, std::placeholders::_2));
-	//	client_ = this->create_client<autoware_adapi_v1_msgs::srv::ClearRoute>("/api/routing/clear_route");	
-
 	};
 
-	
-	void delete_route_service(const std::shared_ptr<pose_replay_interfaces::srv::DeleteRoute::Request> request,
-			std::shared_ptr<pose_replay_interfaces::srv::DeleteRoute::Response> response){
-		std::string delete_route_uuid = request->uuid;
-		if(delete_route_uuid.size() == 0){
-				response->uuid = "";
-				return;
-		}
-		delete_route(delete_route_uuid);	
-		response->uuid = delete_route_uuid;
-	}
-
-	void set_route_service(const std::shared_ptr<pose_replay_interfaces::srv::SetRoute::Request> request,
-			std::shared_ptr<pose_replay_interfaces::srv::SetRoute::Response> response){
-		std::string set_route_uuid = request->uuid;
-		if(set_route_uuid.size() == 0){
-				response->uuid = "";
-				return;
-		}
-		set_route(set_route_uuid);
-		response->uuid = set_route_uuid;	
-	}
-
-	/* 
-	void get_route_service(const std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoute::Request> request,
-			std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoute::Response> response){
-		
-	//	if((request->uuid).size() == 0 || routes.count(response->uuid) == 0){
-	//		return;
-	//	}
-		
-		response->uuid = request->uuid;
-
-		// needs checks and end -> goal rename
-		response->start = routes.at(request->uuid).data[0].start;
-		response->end = routes.at(request->uuid).data[0].goal;	
-	}
-	*/
-	
-	// TODO: Simplify routes.routes to routes 	
 	void get_routes_service(const std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoutes::Request> request,
 			std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoutes::Response> response){
 		pose_replay_interfaces::msg::UuidRoutes response_routes;
@@ -126,6 +77,29 @@ class PoseReplayNode : public rclcpp::Node {
 			}
 		}
 		response->routes = response_routes;
+	}
+
+	void set_route_service(const std::shared_ptr<pose_replay_interfaces::srv::SetRoute::Request> request,
+			std::shared_ptr<pose_replay_interfaces::srv::SetRoute::Response> response){
+		std::string set_route_uuid = request->uuid;
+		if(set_route_uuid.size() == 0){
+				response->uuid = "";
+				return;
+		}
+		set_route(set_route_uuid);
+		response->uuid = set_route_uuid;	
+	}
+
+
+	void delete_route_service(const std::shared_ptr<pose_replay_interfaces::srv::DeleteRoute::Request> request,
+			std::shared_ptr<pose_replay_interfaces::srv::DeleteRoute::Response> response){
+		std::string delete_route_uuid = request->uuid;
+		if(delete_route_uuid.size() == 0){
+				response->uuid = "";
+				return;
+		}
+		delete_route(delete_route_uuid);	
+		response->uuid = delete_route_uuid;
 	}
 	
 		
@@ -170,7 +144,13 @@ class PoseReplayNode : public rclcpp::Node {
 		o.open(filepath, std::ios::trunc);
 	}
 
-	template <typename T> void write_route(const std::string& filepath, T& value, bool append = true){
+	void clear_routes()
+	{
+		routes = {};
+	}
+
+	template <typename T> void write_route(const std::string& filepath, T& value, bool append = true)
+	{
 		std::ofstream o;
 		if (append) {
 			o.open(filepath, std::ios::app);
@@ -194,7 +174,7 @@ class PoseReplayNode : public rclcpp::Node {
 	void read_routes(std::string filepath)
 	{	
 		std::vector<YAML::Node> docs = read_yaml_to_node_vector(filepath);
-		routes = {};
+		clear_routes();
 		for (size_t i = 0; i < docs.size(); ++i) {
 			append_route(docs[i]);
 		} 
@@ -221,29 +201,14 @@ class PoseReplayNode : public rclcpp::Node {
 	}
 
 	std::string prepend_uuid(const std::string yaml_str){	
-		/* uuid_t binuuid;
-		uuid_generate(binuuid);
-		char uuid_str[37];
-		uuid_unparse_lower(binuuid, uuid_str); */
-		
 		std::string hash_uuid = route_yaml_to_hash(yaml_str);
-		
 		std::ostringstream oss;
-		// oss << "uuid: \"" << uuid_str << "\"\n";
 		oss << "uuid: \"" << hash_uuid << "\"\n";
 		oss << yaml_str;
 		std::string new_str = oss.str();
 		return new_str;
 	}
 
-	std::string route_to_yaml_string(std::string uuid, adapi_route route){
-		std::ostringstream oss;
-		oss << "uuid: \"" << uuid << "\"\n";
-		oss << autoware_adapi_v1_msgs::msg::to_yaml(route);
-		std::string new_str = oss.str();
-		return new_str;
-	};
-	
 	// TODO: Fix route duplication when setting route from save file using rviz panel.
 	void route_set_callback(const adapi_route& msg)
 	{	
@@ -386,25 +351,12 @@ class PoseReplayNode : public rclcpp::Node {
 	rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_publisher_;
 	rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_publisher_;
 	rclcpp::Publisher<std_msgs::msg::String>::SharedPtr sync_notif_publisher_;
-	rclcpp::Service<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr all_routes_service_;
+	rclcpp::Service<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr get_routes_service_;
 	rclcpp::Service<pose_replay_interfaces::srv::SetRoute>::SharedPtr set_route_service_;	
 	rclcpp::Service<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr delete_route_service_;	
 	
 	uuid_route_map routes; 
-
-//	rclcpp::Service<pose_replay_interfaces::srv::GetUuidRoute>::SharedPtr service_;			
-//	rclcpp::Publisher<std_msgs::msg::String>::SharedPtr resync_notif_publisher_;
-//	rclcpp::Client<autoware_adapi_v1_msgs::srv::ClearRoute>::SharedPtr client_;
-
 };
 
 #include <rclcpp_components/register_node_macro.hpp>
 RCLCPP_COMPONENTS_REGISTER_NODE(PoseReplayNode)
-
-/*
-int main(int argc, char * argv[]){
-	rclcpp::init(argc, argv);
-	rclcpp::spin(std::make_shared<TopicListener>());
-	rclcpp::shutdown();
-}
-*/

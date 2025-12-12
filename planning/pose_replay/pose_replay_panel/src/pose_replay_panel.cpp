@@ -4,7 +4,6 @@
 
 #include <rviz_common/display_context.hpp>
 
-#include "pose_replay_interfaces/srv/get_uuid_route.hpp"
 #include "pose_replay_interfaces/srv/get_uuid_routes.hpp"
 #include "pose_replay_interfaces/srv/set_route.hpp"
 #include "pose_replay_interfaces/srv/delete_route.hpp"
@@ -22,90 +21,57 @@ namespace pose_replay_panel
 {
 PoseReplayPanel::PoseReplayPanel(QWidget* parent) : Panel(parent)
 {
-  const auto mainlayout = new QVBoxLayout(this);
-  syncbutton_ = new QPushButton("Sync");
-
-  dynamiclayout_ = new QVBoxLayout(this);
-
-  mainlayout->addWidget(syncbutton_);
-  mainlayout->addLayout(dynamiclayout_);
-
-  // Connect the event of when the button is released to our callback,
-  // so pressing the button results in the buttonActivated callback being called.
-  QObject::connect(syncbutton_, &QPushButton::released, this, &PoseReplayPanel::buttonActivated);
+  const auto main_layout = new QVBoxLayout(this);
+  main_layout->setAlignment(Qt::AlignTop);
+  const auto main_title = new QLabel("Route history");
+  //  sync_button_ = new QPushButton("Sync");
+  dynamic_layout_ = new QVBoxLayout(this);
+  dynamic_layout_->setAlignment(Qt::AlignTop);
+  //  main_layout->addWidget(sync_button_);
+  main_layout->addWidget(main_title);
+  main_layout->addLayout(dynamic_layout_);
+  
+  //  QObject::connect(syncbutton_, &QPushButton::released, this, &PoseReplayPanel::buttonActivated);
 }
 
 PoseReplayPanel::~PoseReplayPanel() = default;
 
 void PoseReplayPanel::onInitialize() 
 {
-  // Access the abstract ROS Node and
-  // in the process lock it for exclusive use until the method is done.
   node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
 
-  // Get a pointer to the familiar rclcpp::Node for making subscriptions/publishers
-  // (as per normal rclcpp code)
   rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
-
-  // Create a String subscription and bind it to the topicCallback inside this class.
-  client_ = node->create_client<pose_replay_interfaces::srv::GetUuidRoute>("get_route_service");
   
-  setrouteclient_ = node->create_client<pose_replay_interfaces::srv::SetRoute>("set_route_service");
-  
-  deleterouteclient_ = node->create_client<pose_replay_interfaces::srv::DeleteRoute>("delete_route_service");
+  get_routes_client_ = node->create_client<pose_replay_interfaces::srv::GetUuidRoutes>("/pose_replay/get_routes_service");
+  set_route_client_ = node->create_client<pose_replay_interfaces::srv::SetRoute>("/pose_replay/set_route_service");
+  delete_route_client_ = node->create_client<pose_replay_interfaces::srv::DeleteRoute>("/pose_replay/delete_route_service");
+  sync_notif_subscriber_ = node->create_subscription<std_msgs::msg::String>("/pose_replay/update", 10, std::bind(&PoseReplayPanel::sync_notif_callback, this, std::placeholders::_1));  
 
-  syncnotifsubscriber_ = node->create_subscription<std_msgs::msg::String>("/pose_replay/update", 10, std::bind(&PoseReplayPanel::sync_notif_callback, this, std::placeholders::_1));  
-
-  // Get all Routes
-  initclient_ = node->create_client<pose_replay_interfaces::srv::GetUuidRoutes>("get_routes_service");
-  syncRead();
+  sync_read();
 }
 
-void PoseReplayPanel::sync_notif_callback(std_msgs::msg::String msg)
+void PoseReplayPanel::sync_read()
 {
-	RCLCPP_INFO(rclcpp::get_logger("PoseReplayPanel"), "%s notification received", msg.data.c_str());
-	syncRead();	
-}
-
-void PoseReplayPanel::clearLayout(QLayout *layout)
-{
-    if (!layout)
-        return;
-
-    QLayoutItem *item;
-    while ((item = layout->takeAt(0)) != nullptr) {
-        if (QWidget *widget = item->widget()) {
-            widget->deleteLater(); // Schedule deletion of the widget
-        } else if (QLayout *childLayout = item->layout()) {
-            clearLayout(childLayout); // Recursively clear nested layouts
-        }
-        delete item; // Delete the layout item itself
-    }
-}
-
-void PoseReplayPanel::syncRead()
-{
-  clearLayout(dynamiclayout_);
+  clear_layout(dynamic_layout_);
 
   auto request = std::make_shared<pose_replay_interfaces::srv::GetUuidRoutes::Request>();
-  
-  if (!initclient_->service_is_ready()) {
-    RCLCPP_WARN(rclcpp::get_logger("GetUuidRoutes"), "Service not ready");
+
+  if (!get_routes_client_->service_is_ready()) {
+    RCLCPP_WARN(rclcpp::get_logger("GetUuidRoutes"), "GetUuidRoutes service is not ready.");
     return;
   }
 
-  initclient_->async_send_request(
+  get_routes_client_->async_send_request(
     request,
     [this](rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoutes>::SharedFuture future) {
       try {
         auto response = future.get();
-        // Update the UI safely (in Qt thread)
         QMetaObject::invokeMethod(
           this,
           [this, response]() {
 		auto routes = response->routes.routes;
   	  	for(auto& r : routes){
-	  		PoseReplayPanel::routeEntryFactory(r.uuid);
+	  		PoseReplayPanel::route_entry_factory(r.uuid);
     		} 
           },
           Qt::QueuedConnection);
@@ -116,45 +82,43 @@ void PoseReplayPanel::syncRead()
     });
 }
 
-void PoseReplayPanel::routeEntryFactory(const std::string& uuid)
+void PoseReplayPanel::route_entry_factory(const std::string& uuid)
 {
 	auto layout = new QHBoxLayout();
 	auto label = new QLabel(QString::fromStdString(uuid));
-
-	auto loadbtn = new QPushButton("load");
+	auto load_btn = new QPushButton("load");
   	QObject::connect(
-		loadbtn, 
+		load_btn, 
 		&QPushButton::released, 
 		this, 
-		std::bind(&PoseReplayPanel::setRouteButtonActivated, this, uuid)
+		std::bind(&PoseReplayPanel::set_route_button_activated, this, uuid)
 	);
 
-	auto deletebtn = new QPushButton("delete");
+	auto delete_btn = new QPushButton("delete");
   	QObject::connect(
-		deletebtn, 
+		delete_btn, 
 		&QPushButton::released, 
 		this, 
-		std::bind(&PoseReplayPanel::deleteRouteButtonActivated, this, uuid)
+		std::bind(&PoseReplayPanel::delete_route_button_activated, this, uuid)
 	);
 
 	layout->addWidget(label);
-	layout->addWidget(loadbtn);
-	layout->addWidget(deletebtn);
-	dynamiclayout_->addLayout(layout);
+	layout->addWidget(load_btn);
+	layout->addWidget(delete_btn);
+	dynamic_layout_->addLayout(layout);
 }
 
-
-void PoseReplayPanel::deleteRouteButtonActivated(std::string& uuid)
+void PoseReplayPanel::delete_route_button_activated(std::string& uuid)
 {
   auto request = std::make_shared<pose_replay_interfaces::srv::DeleteRoute::Request>();
   request->uuid = uuid;
 
-  if (!deleterouteclient_->service_is_ready()) {
-    RCLCPP_WARN(rclcpp::get_logger("PoseReplayPanel"), "Service not ready");
+  if (!delete_route_client_->service_is_ready()) {
+    RCLCPP_WARN(rclcpp::get_logger("DeleteRouteService"), "DeleteRoute service is not ready.");
     return;
   }
 
-  deleterouteclient_->async_send_request(
+  delete_route_client_->async_send_request(
     request,
     [this](rclcpp::Client<pose_replay_interfaces::srv::DeleteRoute>::SharedFuture future) {
       try {
@@ -164,9 +128,7 @@ void PoseReplayPanel::deleteRouteButtonActivated(std::string& uuid)
         QMetaObject::invokeMethod(
           this,
           [this, response]() {
-		///
 		RCLCPP_INFO(rclcpp::get_logger("PoseReplayPanel"), response->uuid.c_str());
-		///
           },
           Qt::QueuedConnection);
       }
@@ -176,17 +138,17 @@ void PoseReplayPanel::deleteRouteButtonActivated(std::string& uuid)
     });
 }
 
-void PoseReplayPanel::setRouteButtonActivated(std::string& uuid)
+void PoseReplayPanel::set_route_button_activated(std::string& uuid)
 {
   auto request = std::make_shared<pose_replay_interfaces::srv::SetRoute::Request>();
   request->uuid = uuid;
 
-  if (!setrouteclient_->service_is_ready()) {
-    RCLCPP_WARN(rclcpp::get_logger("PoseReplayPanel"), "Service not ready");
+  if (!set_route_client_->service_is_ready()) {
+    RCLCPP_WARN(rclcpp::get_logger("SetRouteService"), "SetRoute service is not ready.");
     return;
   }
 
-  setrouteclient_->async_send_request(
+  set_route_client_->async_send_request(
     request,
     [this](rclcpp::Client<pose_replay_interfaces::srv::SetRoute>::SharedFuture future) {
       try {
@@ -206,36 +168,27 @@ void PoseReplayPanel::setRouteButtonActivated(std::string& uuid)
     });
 }
 
-void PoseReplayPanel::buttonActivated()
+void PoseReplayPanel::sync_notif_callback(std_msgs::msg::String msg)
 {
-  auto request = std::make_shared<pose_replay_interfaces::srv::GetUuidRoute::Request>();
-  request->uuid = "1c51ec25-f14c-4ce2-bd41-a411fa781917";
-
-  if (!client_->service_is_ready()) {
-    RCLCPP_WARN(rclcpp::get_logger("PoseReplayPanel"), "Service not ready");
-    return;
-  }
-
-  client_->async_send_request(
-    request,
-    [this](rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoute>::SharedFuture future) {
-      try {
-        auto response = future.get();
-
-        // Update the UI safely (in Qt thread)
-        QMetaObject::invokeMethod(
-          this,
-          [this, response]() {
-//            syncbutton_->setText(QString(response->start.position.x));
-          },
-          Qt::QueuedConnection);
-      }
-      catch (const std::exception & e) {
-        RCLCPP_ERROR(rclcpp::get_logger("PoseReplayPanel"), "Service call failed: %s", e.what());
-      }
-    });
+	RCLCPP_INFO(rclcpp::get_logger("PoseReplayPanel"), "%s notification received", msg.data.c_str());
+	sync_read();	
 }
 
+void PoseReplayPanel::clear_layout(QLayout *layout)
+{
+    if (!layout)
+        return;
+
+    QLayoutItem *item;
+    while ((item = layout->takeAt(0)) != nullptr) {
+        if (QWidget *widget = item->widget()) {
+            widget->deleteLater(); // Schedule deletion of the widget
+        } else if (QLayout *childLayout = item->layout()) {
+            clear_layout(childLayout); // Recursively clear nested layouts
+        }
+        delete item; // Delete the layout item itself
+    }
+}
 
 }
 #include <pluginlib/class_list_macros.hpp>
