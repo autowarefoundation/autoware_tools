@@ -8,10 +8,12 @@
 #include "pose_replay_interfaces/srv/get_uuid_routes.hpp"
 #include "pose_replay_interfaces/srv/set_route.hpp"
 #include "pose_replay_interfaces/srv/delete_route.hpp"
+#include "std_msgs/msg/string.hpp"
 
 #include <chrono>
 #include <string>
 #include <functional>
+#include <memory>
 
 using namespace std::literals::chrono_literals;
 
@@ -22,7 +24,7 @@ PoseReplayPanel::PoseReplayPanel(QWidget* parent) : Panel(parent)
 {
   const auto mainlayout = new QVBoxLayout(this);
   syncbutton_ = new QPushButton("Sync");
-  	
+
   dynamiclayout_ = new QVBoxLayout(this);
 
   mainlayout->addWidget(syncbutton_);
@@ -52,9 +54,17 @@ void PoseReplayPanel::onInitialize()
   
   deleterouteclient_ = node->create_client<pose_replay_interfaces::srv::DeleteRoute>("delete_route_service");
 
+  syncnotifsubscriber_ = node->create_subscription<std_msgs::msg::String>("/pose_replay/update", 10, std::bind(&PoseReplayPanel::sync_notif_callback, this, std::placeholders::_1));  
+
   // Get all Routes
   initclient_ = node->create_client<pose_replay_interfaces::srv::GetUuidRoutes>("get_routes_service");
   syncRead();
+}
+
+void PoseReplayPanel::sync_notif_callback(std_msgs::msg::String msg)
+{
+	RCLCPP_INFO(rclcpp::get_logger("PoseReplayPanel"), "%s notification received", msg.data.c_str());
+	syncRead();	
 }
 
 void PoseReplayPanel::clearLayout(QLayout *layout)
@@ -94,7 +104,7 @@ void PoseReplayPanel::syncRead()
           this,
           [this, response]() {
 		auto routes = response->routes.routes;
-  	  	for(auto r : routes){
+  	  	for(auto& r : routes){
 	  		PoseReplayPanel::routeEntryFactory(r.uuid);
     		} 
           },
@@ -156,7 +166,6 @@ void PoseReplayPanel::deleteRouteButtonActivated(std::string& uuid)
           [this, response]() {
 		///
 		RCLCPP_INFO(rclcpp::get_logger("PoseReplayPanel"), response->uuid.c_str());
-		syncRead();
 		///
           },
           Qt::QueuedConnection);

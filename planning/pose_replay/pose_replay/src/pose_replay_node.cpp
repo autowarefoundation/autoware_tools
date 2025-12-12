@@ -13,6 +13,7 @@
 #include "autoware_adapi_v1_msgs/srv/clear_route.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "std_msgs/msg/string.hpp"
 
 #include <memory>
 #include <functional>
@@ -40,10 +41,11 @@ class PoseReplayNode : public rclcpp::Node {
 		
 		initial_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 10);
 		goal_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/planning/mission_planning/goal", 10);				
+		sync_notif_publisher_ = this->create_publisher<std_msgs::msg::String>("/pose_replay/update", 10);		
 	
 		all_routes_service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoutes>(
 			"get_routes_service", std::bind(&PoseReplayNode::get_routes_service, this, std::placeholders::_1, std::placeholders::_2));
-		 set_route_service_ = this->create_service<pose_replay_interfaces::srv::SetRoute>(
+		set_route_service_ = this->create_service<pose_replay_interfaces::srv::SetRoute>(
 			"set_route_service", std::bind(&PoseReplayNode::set_route_service, this, std::placeholders::_1, std::placeholders::_2));
 		delete_route_service_ = this->create_service<pose_replay_interfaces::srv::DeleteRoute>(
 			"delete_route_service", std::bind(&PoseReplayNode::delete_route_service, this, std::placeholders::_1, std::placeholders::_2));
@@ -133,6 +135,7 @@ class PoseReplayNode : public rclcpp::Node {
 		
 		// Read and save to function scope
 		std::vector<YAML::Node> docs = YAML::LoadAll(yaml_file);
+		yaml_file.close();
 		
 		// Delete from function scope
 		for(std::vector<YAML::Node>::iterator p = docs.begin(); p != docs.end(); ){
@@ -149,13 +152,17 @@ class PoseReplayNode : public rclcpp::Node {
 		}
 		
 		// Wipe file and re-write to save
-		if(docs.size() == 0) clear_file(save_filepath);
+		clear_file(save_filepath);
 		for(auto &d : docs){
-			write_route(save_filepath, d, false);			
+			write_route(save_filepath, d, true);			
 		}
 
 		// Update local node to sync
 		read_routes(save_filepath);	
+		
+		std_msgs::msg::String stdmsg;
+		stdmsg.data = "update";
+		sync_notif_publisher_->publish(stdmsg);
 	}
 
 	void clear_file(const std::string& filepath){
@@ -172,7 +179,8 @@ class PoseReplayNode : public rclcpp::Node {
 		}
 
 		if(!o.is_open()) throw std::runtime_error("Cannot open file: " + filepath);
-		o << "---\n" << value << "\n";	
+		o << "---\n" << value << "\n";
+		o.close();	
 	}
 
 	std::vector<YAML::Node> read_yaml_to_node_vector(std::string filepath)
@@ -186,10 +194,7 @@ class PoseReplayNode : public rclcpp::Node {
 	void read_routes(std::string filepath)
 	{	
 		std::vector<YAML::Node> docs = read_yaml_to_node_vector(filepath);
-		if(docs.empty()){
-			routes = {};
-			return;
-		}	
+		routes = {};
 		for (size_t i = 0; i < docs.size(); ++i) {
 			append_route(docs[i]);
 		} 
@@ -254,7 +259,11 @@ class PoseReplayNode : public rclcpp::Node {
 		write_route(save_filepath, uuid_yaml_str, true);
 		RCLCPP_INFO(this->get_logger(), "Route written to %s.", save_filepath.c_str());
 		read_routes(save_filepath);
-	}	
+		
+		std_msgs::msg::String stdmsg;
+		stdmsg.data = "update";
+		sync_notif_publisher_->publish(stdmsg);
+	}
 
 	void set_route(std::string uuid)
 	{	
@@ -376,7 +385,7 @@ class PoseReplayNode : public rclcpp::Node {
 	
 	rclcpp::Publisher<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_publisher_;
 	rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_publisher_;
-	
+	rclcpp::Publisher<std_msgs::msg::String>::SharedPtr sync_notif_publisher_;
 	rclcpp::Service<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr all_routes_service_;
 	rclcpp::Service<pose_replay_interfaces::srv::SetRoute>::SharedPtr set_route_service_;	
 	rclcpp::Service<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr delete_route_service_;	
