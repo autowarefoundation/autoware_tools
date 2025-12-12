@@ -17,116 +17,64 @@
 #ifndef RTC_MANAGER_PANEL_HPP_
 #define RTC_MANAGER_PANEL_HPP_
 
-#include <QLabel>
-#include <QPushButton>
-#include <QSpinBox>
-#include <QString>
-#include <QTableWidget>
+#include "rtc_auto_mode_table.hpp"
+#include "rtc_command_button.hpp"
+#include "rtc_status_table_widget.hpp"
+#include "rtc_utils.hpp"
+
+#include <QCheckBox>
+#include <QWidget>
 
 #ifndef Q_MOC_RUN
-// cpp
-#include <algorithm>
-#include <memory>
-#include <string>
-#include <vector>
-// ros
 #include <rclcpp/rclcpp.hpp>
 #include <rviz_common/panel.hpp>
 
-#include <unique_identifier_msgs/msg/uuid.hpp>
-// autoware
-#include <tier4_rtc_msgs/msg/command.hpp>
-#include <tier4_rtc_msgs/msg/cooperate_command.hpp>
-#include <tier4_rtc_msgs/msg/cooperate_response.hpp>
-#include <tier4_rtc_msgs/msg/cooperate_status.hpp>
-#include <tier4_rtc_msgs/msg/cooperate_status_array.hpp>
-#include <tier4_rtc_msgs/msg/module.hpp>
-#include <tier4_rtc_msgs/msg/state.hpp>
-#include <tier4_rtc_msgs/srv/auto_mode.hpp>
-#include <tier4_rtc_msgs/srv/cooperate_commands.hpp>
+#include <memory>
 #endif
 
 namespace rviz_plugins
 {
-using tier4_rtc_msgs::msg::Command;
-using tier4_rtc_msgs::msg::CooperateCommand;
-using tier4_rtc_msgs::msg::CooperateResponse;
-using tier4_rtc_msgs::msg::CooperateStatus;
-using tier4_rtc_msgs::msg::CooperateStatusArray;
-using tier4_rtc_msgs::msg::Module;
-using tier4_rtc_msgs::msg::State;
-using tier4_rtc_msgs::srv::AutoMode;
-using tier4_rtc_msgs::srv::CooperateCommands;
-using unique_identifier_msgs::msg::UUID;
 
-static const QString BG_BLUE = "background-color: #3dffff;";
-static const QString BG_YELLOW = "background-color: #ffff3d;";
-static const QString BG_PURPLE = "background-color: #9e3dff;";
-static const QString BG_ORANGE = "background-color: #ff7f00;";
-static const QString BG_GREEN = "background-color: #3dff3d;";
-static const QString BG_RED = "background-color: #ff3d3d;";
-
-struct RTCAutoMode : public QObject
-{
-  Q_OBJECT
-
-public Q_SLOTS:
-  void onChangeToAutoMode();
-  void onChangeToManualMode();
-
-public:
-  std::string module_name;
-  QPushButton * auto_module_button_ptr;
-  QPushButton * manual_module_button_ptr;
-  QLabel * auto_manual_mode_label;
-  rclcpp::Client<AutoMode>::SharedPtr enable_auto_mode_cli;
-};
-
+/**
+ * @brief Main RTC Manager Panel for RViz
+ */
 class RTCManagerPanel : public rviz_common::Panel
 {
   Q_OBJECT
-public Q_SLOTS:
-  void onClickExecution();
-  void onClickWait();
-  void onClickVelocityChangeRequest();
-  void onClickExecutePathChange();
-  void onClickWaitPathChange();
-  void onClickExecuteVelChange();
-  void onClickWaitVelChange();
 
-public:
+public Q_SLOTS:
+  void on_click_activate_front();
+  void on_toggle_auto_mode_panel(bool checked);
+
+public:  // NOLINT
   explicit RTCManagerPanel(QWidget * parent = nullptr);
   void onInitialize() override;
-
-protected:
-  void onRTCStatus(const CooperateStatusArray::ConstSharedPtr msg);
-  void onEnableService(
-    const AutoMode::Request::SharedPtr request, const AutoMode::Response::SharedPtr response) const;
-  void onClickCommandRequest(const uint8_t command);
-  void onClickChangeRequest(const bool is_path_change, const uint8_t command);
+  void save(rviz_common::Config config) const override;
+  void load(const rviz_common::Config & config) override;
 
 private:
+  void on_rtc_status(const CooperateStatusArray::ConstSharedPtr msg);
+  void on_auto_mode_status(const AutoModeStatusArray::ConstSharedPtr msg);
+  void send_command_to(const CooperateStatus & status, uint8_t command);
+  void update_front_module_button();
+  const CooperateStatus * find_activatable_module() const;
+
+  // ROS
   rclcpp::Node::SharedPtr raw_node_;
   rclcpp::Subscription<CooperateStatusArray>::SharedPtr sub_rtc_status_;
+  rclcpp::Subscription<AutoModeStatusArray>::SharedPtr sub_auto_mode_status_;
   rclcpp::Client<CooperateCommands>::SharedPtr client_rtc_commands_;
-  rclcpp::Client<AutoMode>::SharedPtr enable_auto_mode_cli_;
-  std::vector<RTCAutoMode *> auto_modes_;
 
+  // Data
   std::shared_ptr<CooperateStatusArray> cooperate_statuses_ptr_;
-  QTableWidget * rtc_table_;
-  QTableWidget * auto_mode_table_;
-  QPushButton * path_change_button_ptr_ = {nullptr};
-  QPushButton * velocity_change_button_ptr_ = {nullptr};
-  QPushButton * exec_path_change_button_ptr_ = {nullptr};
-  QPushButton * wait_path_change_button_ptr_ = {nullptr};
-  QPushButton * exec_vel_change_button_ptr_ = {nullptr};
-  QPushButton * wait_vel_change_button_ptr_ = {nullptr};
-  QPushButton * exec_button_ptr_ = {nullptr};
-  QPushButton * wait_button_ptr_ = {nullptr};
-  QLabel * num_rtc_status_ptr_ = {nullptr};
 
-  size_t column_size_ = {8};
-  std::string enable_auto_mode_namespace_ = "/planning/enable_auto_mode";
+  // UI components
+  QCheckBox * show_auto_mode_panel_checkbox_ = {nullptr};
+  RTCAutoModeTable * auto_mode_table_ = {nullptr};
+  RTCStatusTableWidget * status_table_ = {nullptr};
+  RTCCommandButton * activate_button_ = {nullptr};
+
+  static constexpr char AUTO_MODE_SERVICE_NAMESPACE[] = "/planning/enable_auto_mode";  // NOLINT
 };
 
 }  // namespace rviz_plugins
