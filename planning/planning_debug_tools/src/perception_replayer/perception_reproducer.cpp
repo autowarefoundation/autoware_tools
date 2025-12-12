@@ -214,7 +214,7 @@ void PerceptionReproducer::on_timer()
     publish_topics_at_timestamp_with_coordinate_conversion(
       bag_timestamp.value(), current_timestamp, ego_odom, param_.noise && repeat_flag);
   } else {
-    RCLCPP_WARN(get_logger(), "No valid bag timestamp to publish.");
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 3000, "No valid bag timestamp to publish.");
   }
 }
 
