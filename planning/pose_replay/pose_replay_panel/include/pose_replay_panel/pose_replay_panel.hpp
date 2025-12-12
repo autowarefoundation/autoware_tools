@@ -23,28 +23,26 @@ class PoseReplayPanel
 public:
   explicit PoseReplayPanel(QWidget * parent = 0);
   ~PoseReplayPanel() override;
-
   void onInitialize() override;
 
 protected:
   std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
-  rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoute>::SharedPtr client_;
-  rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr initclient_;
-  rclcpp::Client<pose_replay_interfaces::srv::SetRoute>::SharedPtr setrouteclient_;
-  rclcpp::Client<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr deleterouteclient_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr syncnotifsubscriber_;
+  rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr get_routes_client_;
+  rclcpp::Client<pose_replay_interfaces::srv::SetRoute>::SharedPtr set_route_client_;
+  rclcpp::Client<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr delete_route_client_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sync_notif_subscriber_;
  
   // QLabel* label_;
-  QPushButton* syncbutton_;
-  QVBoxLayout* dynamiclayout_;
+  // QPushButton* sync_button_;
+  QVBoxLayout* dynamic_layout_;
 
 private Q_SLOTS:
-  void buttonActivated();
-  void routeEntryFactory(const std::string&);
-  void setRouteButtonActivated(std::string&);
-  void deleteRouteButtonActivated(std::string&);
-  void syncRead();
-  void clearLayout(QLayout*);
+  void button_activated();
+  void route_entry_factory(const std::string&);
+  void set_route_button_activated(std::string&);
+  void delete_route_button_activated(std::string&);
+  void sync_read();
+  void clear_layout(QLayout*);
   void sync_notif_callback(std_msgs::msg::String);
 };
 }
