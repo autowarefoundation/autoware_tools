@@ -28,10 +28,18 @@
   <depend>autoware_planning_msgs</depend>
   <depend>autoware_universe_utils</depend>
   <depend>geometry_msgs</depend>
+  <depend>libqt5-core</depend>
+  <depend>libqt5-gui</depend>
+  <depend>libqt5-widgets</depend>
   <depend>nav_msgs</depend>
+  <depend>qtbase5-dev</depend>
   <depend>rclcpp</depend>
   <depend>rclcpp_components</depend>
+  <depend>rosbag2_cpp</depend>
+  <depend>rosbag2_storage</depend>
+  <depend>rosbag2_transport</depend>
   <depend>tier4_planning_msgs</depend>
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>autoware_lint_common</test_depend>
 
