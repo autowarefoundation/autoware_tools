@@ -99,7 +99,7 @@ void PerceptionReproducer::on_timer()
   // check if ego_odom is available
   const auto ego_odom_opt = get_latest_ego_odom();
   if (!ego_odom_opt.has_value()) {
-    RCLCPP_WARN(get_logger(), "No ego odom found.");
+    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 3000, "No ego odom found.");
     return;
   }
 
