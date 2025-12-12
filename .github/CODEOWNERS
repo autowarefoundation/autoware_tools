@@ -22,6 +22,7 @@ control_data_collecting_tool/** asei.inoue@proxima-ai-tech.com kosuke.takeuchi@t
 driving_environment_analyzer/** satoshi.ota@tier4.jp
 evaluation/tier4_metrics_rviz_plugin/** fumiya.watanabe@tier4.jp kosuke.takeuchi@tier4.jp kyoichi.sugahara@tier4.jp maxime.clement@tier4.jp satoshi.ota@tier4.jp
 localization/autoware_localization_evaluation_scripts/** anh.nguyen.2@tier4.jp masahiro.sakamoto@tier4.jp taiki.yamada@tier4.jp temkei.kem@tier4.jp yamato.ando@tier4.jp
+localization/autoware_position_error_evaluator/** masahiro.sakamoto@tier4.jp yamato.ando@tier4.jp
 localization/deviation_estimation_tools/deviation_estimator/** masahiro.sakamoto@tier4.jp taiki.yamada@tier4.jp yamato.ando@tier4.jp
 localization/deviation_estimation_tools/deviation_evaluator/** masahiro.sakamoto@tier4.jp taiki.yamada@tier4.jp yamato.ando@tier4.jp
 map/autoware_lanelet2_map_utils/** anh.nguyen.2@tier4.jp masahiro.sakamoto@tier4.jp taiki.yamada@tier4.jp yamato.ando@tier4.jp
