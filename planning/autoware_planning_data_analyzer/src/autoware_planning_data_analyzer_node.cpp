@@ -305,7 +305,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       }
 
       // Set map path for visualization
-      std::string map_path = get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.map_path");
+      auto map_path = get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.map_path");
       if (!map_path.empty()) {
         evaluator.set_map_path(map_path);
       }

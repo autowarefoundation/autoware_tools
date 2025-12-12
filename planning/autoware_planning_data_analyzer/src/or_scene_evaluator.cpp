@@ -16,6 +16,7 @@
 
 #include "bag_handler.hpp"
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
 #include <std_msgs/msg/float64.hpp>
 #include <std_msgs/msg/bool.hpp>
 
@@ -1083,10 +1084,14 @@ void ORSceneEvaluator::generate_debug_visualization(
     std::to_string(pred_time_ms) + ".png";
 
   // Call Python visualization script
-  // Try installed location first, fall back to source location
-  std::string script_path = "/home/danielsanchez/pilot-auto/install/autoware_offline_evaluation_tools/share/autoware_offline_evaluation_tools/scripts/generate_or_visualization.py";
-  if (!std::filesystem::exists(script_path)) {
-    script_path = "/home/danielsanchez/pilot-auto/src/new_planning_framework/autoware_offline_evaluation_tools/scripts/generate_or_visualization.py";
+  // Use ament_index to find the installed script
+  std::string script_path;
+  try {
+    const std::string share_dir = ament_index_cpp::get_package_share_directory("autoware_planning_data_analyzer");
+    script_path = share_dir + "/scripts/generate_or_visualization.py";
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR(logger_, "Failed to find package share directory: %s", e.what());
+    return;
   }
 
   if (!std::filesystem::exists(script_path)) {
