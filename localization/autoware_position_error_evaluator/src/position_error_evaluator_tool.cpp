@@ -172,13 +172,9 @@ int PositionErrorEvaluatorTool::processKeyEvent(QKeyEvent * event, rviz_common::
 void PositionErrorEvaluatorTool::updateLineColor()
 {
   color_ = rviz_common::properties::qtToOgre(color_property_->getColor());
-  // line_->setColor(color);
   color_ = Ogre::ColourValue(0, 1, 0, 1);
   color_lane_ = Ogre::ColourValue(0, 0, 1, 1);
-
   line_->setLineWidth(LINE_WIDTH_MAIN);
-
-  // line_lane_->setColor(1,0,0,1);
   line_lane_->setLineWidth(LINE_WIDTH_LANE);
 }
 
