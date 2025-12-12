@@ -7,6 +7,7 @@
 #include "pose_replay_interfaces/srv/get_uuid_routes.hpp"
 #include "pose_replay_interfaces/srv/set_route.hpp"
 #include "pose_replay_interfaces/srv/delete_route.hpp"
+#include "std_msgs/msg/string.hpp"
 
 #include <QLabel>
 #include <QPushButton>
@@ -31,6 +32,7 @@ protected:
   rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr initclient_;
   rclcpp::Client<pose_replay_interfaces::srv::SetRoute>::SharedPtr setrouteclient_;
   rclcpp::Client<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr deleterouteclient_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr syncnotifsubscriber_;
  
   // QLabel* label_;
   QPushButton* syncbutton_;
@@ -43,6 +45,7 @@ private Q_SLOTS:
   void deleteRouteButtonActivated(std::string&);
   void syncRead();
   void clearLayout(QLayout*);
+  void sync_notif_callback(std_msgs::msg::String);
 };
 }
 #endif  
