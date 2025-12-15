@@ -1,23 +1,19 @@
 #!/usr/bin/env python3
-"""
-Rename a topic in a rosbag file
-Based on ros2bag_extensions filter.py pattern
-"""
-import sys
+"""Rename a topic in a rosbag file."""
 import argparse
 from pathlib import Path
-from rosbag2_py import (
-    SequentialReader,
-    SequentialWriter,
-    StorageOptions,
-    ConverterOptions,
-    TopicMetadata,
-    Reindexer
-)
+
+from rosbag2_py import ConverterOptions
+from rosbag2_py import Reindexer
+from rosbag2_py import SequentialReader
+from rosbag2_py import SequentialWriter
+from rosbag2_py import StorageOptions
+from rosbag2_py import TopicMetadata
+
 
 def rename_topic_in_bag(input_bag, output_bag, old_topic, new_topic):
     """
-    Copy a bag while renaming a specific topic
+    Copy a bag while renaming a specific topic.
 
     Args:
         input_bag: Path to input bag directory or mcap file
@@ -25,19 +21,19 @@ def rename_topic_in_bag(input_bag, output_bag, old_topic, new_topic):
         old_topic: Original topic name to rename
         new_topic: New topic name
     """
-    print(f"Renaming topic in bag:")
+    print("Renaming topic in bag:")
     print(f"  Input: {input_bag}")
     print(f"  Output: {output_bag}")
-    print(f"  {old_topic} → {new_topic}")
+    print(" {old_topic} → {new_topic}")
     print("")
 
     # Auto-detect storage type
     input_path = Path(input_bag)
-    if input_path.is_file() and input_path.suffix == '.mcap':
-        storage_id = 'mcap'
+    if input_path.is_file() and input_path.suffix == ".mcap":
+        storage_id = "mcap"
         uri = str(input_path)
     elif input_path.is_dir():
-        storage_id = 'sqlite3'
+        storage_id = "sqlite3"
         uri = str(input_path)
     else:
         raise ValueError(f"Invalid input bag path: {input_bag}")
@@ -45,15 +41,14 @@ def rename_topic_in_bag(input_bag, output_bag, old_topic, new_topic):
     # Setup reader
     storage_options_in = StorageOptions(uri=uri, storage_id=storage_id)
     converter_options = ConverterOptions(
-        input_serialization_format='cdr',
-        output_serialization_format='cdr'
+        input_serialization_format="cdr", output_serialization_format="cdr"
     )
 
     reader = SequentialReader()
     reader.open(storage_options_in, converter_options)
 
     # Setup writer (always output as mcap for consistency)
-    storage_options_out = StorageOptions(uri=str(output_bag), storage_id='mcap')
+    storage_options_out = StorageOptions(uri=str(output_bag), storage_id="mcap")
     writer = SequentialWriter()
     writer.open(storage_options_out, converter_options)
 
@@ -70,7 +65,7 @@ def rename_topic_in_bag(input_bag, output_bag, old_topic, new_topic):
         new_metadata = TopicMetadata(
             name=output_topic_name,
             type=topic_metadata.type,
-            serialization_format=topic_metadata.serialization_format
+            serialization_format=topic_metadata.serialization_format,
         )
         writer.create_topic(new_metadata)
 
@@ -95,7 +90,7 @@ def rename_topic_in_bag(input_bag, output_bag, old_topic, new_topic):
         if message_count % 10000 == 0:
             print(f"Processed {message_count} messages...")
 
-    print(f"\nCopy complete:")
+    print("\nCopy complete:")
     print(f"  Total messages: {message_count}")
     print(f"  Renamed messages: {renamed_count}")
 
@@ -108,23 +103,18 @@ def rename_topic_in_bag(input_bag, output_bag, old_topic, new_topic):
     Reindexer().reindex(storage_options_out)
     print("Done!")
 
+
 def main():
-    parser = argparse.ArgumentParser(
-        description='Rename a topic in a rosbag file'
-    )
-    parser.add_argument('input_bag', help='Input bag directory or mcap file')
-    parser.add_argument('output_bag', help='Output bag directory')
-    parser.add_argument('old_topic', help='Topic name to rename')
-    parser.add_argument('new_topic', help='New topic name')
+    parser = argparse.ArgumentParser(description="Rename a topic in a rosbag file")
+    parser.add_argument("input_bag", help="Input bag directory or mcap file")
+    parser.add_argument("output_bag", help="Output bag directory")
+    parser.add_argument("old_topic", help="Topic name to rename")
+    parser.add_argument("new_topic", help="New topic name")
 
     args = parser.parse_args()
 
-    rename_topic_in_bag(
-        args.input_bag,
-        args.output_bag,
-        args.old_topic,
-        args.new_topic
-    )
+    rename_topic_in_bag(args.input_bag, args.output_bag, args.old_topic, args.new_topic)
+
 
 if __name__ == "__main__":
     main()

@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef DEVIATION_METRICS_HPP_
-#define DEVIATION_METRICS_HPP_
+#ifndef METRICS__DEVIATION_METRICS_HPP_
+#define METRICS__DEVIATION_METRICS_HPP_
 
 #include "metric_types.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/pose.hpp>
-#include <nlohmann/json.hpp>
 
 #include <utility>
 #include <vector>
@@ -115,4 +116,4 @@ FrenetErrors calculate_frenet_errors(
 
 }  // namespace metrics
 
-#endif  // DEVIATION_METRICS_HPP_
+#endif  // METRICS__DEVIATION_METRICS_HPP_

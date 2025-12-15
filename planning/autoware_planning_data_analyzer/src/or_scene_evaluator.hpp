@@ -23,10 +23,12 @@
 #include <autoware/route_handler/route_handler.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/rclcpp.hpp>
+
 #include <visualization_msgs/msg/marker_array.hpp>
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace autoware::planning_data_analyzer
@@ -68,7 +70,8 @@ public:
   ORSceneEvaluator(
     rclcpp::Logger logger, std::shared_ptr<autoware::route_handler::RouteHandler> route_handler,
     double time_window_sec = 0.5, const ORSuccessCriteria & success_criteria = ORSuccessCriteria(),
-    bool enable_debug_visualization = false, const std::string & debug_output_dir = "~/or_scene_debug_images");
+    bool enable_debug_visualization = false,
+    const std::string & debug_output_dir = "~/or_scene_debug_images");
 
   // BaseEvaluator interface implementation
   void evaluate(
@@ -118,8 +121,8 @@ private:
   ORSuccessCriteria success_criteria_;
   bool enable_debug_visualization_;
   std::string debug_output_dir_;
-  std::string map_path_;                    // Optional: path to lanelet2_map.osm for visualization
-  std::string metric_topic_prefix_;        // Optional: prefix for metric topics (multi-run support)
+  std::string map_path_;             // Optional: path to lanelet2_map.osm for visualization
+  std::string metric_topic_prefix_;  // Optional: prefix for metric topics (multi-run support)
 
   std::string or_events_json_input_path_;   // Optional: pre-extracted OR events
   std::string or_events_json_output_path_;  // Where to save extracted OR events
@@ -184,8 +187,7 @@ private:
    */
   std::pair<autoware_planning_msgs::msg::Trajectory, double> truncate_trajectory_to_gt_range(
     const autoware_planning_msgs::msg::Trajectory & trajectory,
-    const rclcpp::Time & trajectory_start_time,
-    const rclcpp::Time & gt_data_start,
+    const rclcpp::Time & trajectory_start_time, const rclcpp::Time & gt_data_start,
     const rclcpp::Time & gt_data_end) const;
 
   /**

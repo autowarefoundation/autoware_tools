@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-"""
-Merge multiple model result bags for a single OR segment.
-"""
+"""Merge multiple model result bags for a single OR segment."""
 import argparse
+from pathlib import Path
+import shutil
 import sys
 import tempfile
-import shutil
-from pathlib import Path
-from rosbag2_py import (
-    SequentialReader, SequentialWriter, StorageOptions,
-    ConverterOptions, Reindexer
-)
+
+from rosbag2_py import ConverterOptions
+from rosbag2_py import SequentialReader
+from rosbag2_py import SequentialWriter
+from rosbag2_py import StorageOptions
+
 
 def merge_model_bags(output_dir: str, segment_id: int, model_names: list, final_output: str):
     """Merge all model result bags for one segment."""
-
     print(f"Merging segment {segment_id} models: {', '.join(model_names)}")
 
     temp_bag = tempfile.mkdtemp(prefix="merge_segment_")
@@ -38,7 +37,9 @@ def merge_model_bags(output_dir: str, segment_id: int, model_names: list, final_
             print(f"  Reading {model_name} results...")
 
             reader = SequentialReader()
-            reader.open(StorageOptions(uri=result_bag, storage_id=""), ConverterOptions("cdr", "cdr"))
+            reader.open(
+                StorageOptions(uri=result_bag, storage_id=""), ConverterOptions("cdr", "cdr")
+            )
 
             # Collect topics
             for meta in reader.get_all_topics_and_types():
@@ -50,7 +51,10 @@ def merge_model_bags(output_dir: str, segment_id: int, model_names: list, final_
                 topic, data, timestamp = reader.read_next()
 
                 # Skip unprefixed trajectory - we only want prefixed versions
-                if topic == "/planning/trajectory_generator/diffusion_planner_node/output/trajectory":
+                if (
+                    topic
+                    == "/planning/trajectory_generator/diffusion_planner_node/output/trajectory"
+                ):
                     continue
 
                 all_messages.append((topic, data, timestamp))
@@ -67,7 +71,10 @@ def merge_model_bags(output_dir: str, segment_id: int, model_names: list, final_
         # Create all topics
         for meta in all_topics.values():
             # Skip unprefixed trajectory topic
-            if meta.name == "/planning/trajectory_generator/diffusion_planner_node/output/trajectory":
+            if (
+                meta.name
+                == "/planning/trajectory_generator/diffusion_planner_node/output/trajectory"
+            ):
                 continue
             writer.create_topic(meta)
 
@@ -96,6 +103,7 @@ def merge_model_bags(output_dir: str, segment_id: int, model_names: list, final_
             shutil.rmtree(temp_bag)
         raise e
 
+
 def main():
     parser = argparse.ArgumentParser(description="Merge model result bags for OR segment")
     parser.add_argument("--output-dir", required=True, help="Base output directory")
@@ -106,6 +114,7 @@ def main():
     args = parser.parse_args()
 
     merge_model_bags(args.output_dir, args.segment_id, args.models, args.final_output)
+
 
 if __name__ == "__main__":
     main()

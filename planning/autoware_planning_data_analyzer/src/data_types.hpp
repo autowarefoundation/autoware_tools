@@ -15,12 +15,13 @@
 #ifndef DATA_TYPES_HPP_
 #define DATA_TYPES_HPP_
 
+#include <rclcpp/rclcpp.hpp>
+
 #include <autoware_perception_msgs/msg/predicted_objects.hpp>
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 #include <autoware_vehicle_msgs/msg/steering_report.hpp>
 #include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include <rclcpp/rclcpp.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
 #include <memory>

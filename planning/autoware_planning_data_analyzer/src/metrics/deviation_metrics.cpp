@@ -15,11 +15,14 @@
 #include "deviation_metrics.hpp"
 
 #include <autoware_utils_geometry/geometry.hpp>
+
 #include <tf2/utils.h>
 
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <utility>
+#include <vector>
 
 namespace metrics
 {
@@ -48,9 +51,9 @@ DisplacementErrors calculate_displacement_errors(
   }
 
   // ADE: Average Displacement Error
-  result.ade = std::accumulate(
-                 result.point_wise_errors.begin(), result.point_wise_errors.end(), 0.0) /
-               result.point_wise_errors.size();
+  result.ade =
+    std::accumulate(result.point_wise_errors.begin(), result.point_wise_errors.end(), 0.0) /
+    result.point_wise_errors.size();
 
   // FDE: Final Displacement Error (error at last point)
   result.fde = result.point_wise_errors.back();

@@ -1,28 +1,27 @@
 #!/usr/bin/env python3
-"""
-Add ground truth trajectory topic to a bag
-Generates GT trajectories from future kinematic states
-"""
+"""Add ground truth trajectory topic to a bag."""
+
 import argparse
-from pathlib import Path
-from rosbag2_py import (
-    SequentialReader,
-    SequentialWriter,
-    StorageOptions,
-    ConverterOptions,
-    TopicMetadata,
-    Reindexer
-)
-import rclpy
-from rclpy.serialization import deserialize_message, serialize_message
-from nav_msgs.msg import Odometry
-from autoware_planning_msgs.msg import Trajectory, TrajectoryPoint
+
+from autoware_planning_msgs.msg import Trajectory
+from autoware_planning_msgs.msg import TrajectoryPoint
 from builtin_interfaces.msg import Duration
 from geometry_msgs.msg import Pose
+from nav_msgs.msg import Odometry
 import numpy as np
+import rclpy
+from rclpy.serialization import deserialize_message
+from rclpy.serialization import serialize_message
+from rosbag2_py import ConverterOptions
+from rosbag2_py import Reindexer
+from rosbag2_py import SequentialReader
+from rosbag2_py import SequentialWriter
+from rosbag2_py import StorageOptions
+from rosbag2_py import TopicMetadata
+
 
 def quat_slerp(q1, q2, t):
-    """SLERP interpolation between two quaternions"""
+    """SLERP interpolation between two quaternions."""
     # Normalize
     q1 = np.array([q1.x, q1.y, q1.z, q1.w])
     q2 = np.array([q2.x, q2.y, q2.z, q2.w])
@@ -44,17 +43,24 @@ def quat_slerp(q1, q2, t):
 
     # SLERP
     theta = np.arccos(np.clip(dot, -1.0, 1.0))
-    result = (np.sin((1-t)*theta) * q1 + np.sin(t*theta) * q2) / np.sin(theta)
+    result = (np.sin((1 - t) * theta) * q1 + np.sin(t * theta) * q2) / np.sin(theta)
     return result
 
+
 def interpolate_pose(odom1, odom2, t):
-    """Interpolate pose between two odometry messages"""
+    """Interpolate pose between two odometry messages."""
     pose = Pose()
 
     # Linear interpolation for position
-    pose.position.x = odom1.pose.pose.position.x + t * (odom2.pose.pose.position.x - odom1.pose.pose.position.x)
-    pose.position.y = odom1.pose.pose.position.y + t * (odom2.pose.pose.position.y - odom1.pose.pose.position.y)
-    pose.position.z = odom1.pose.pose.position.z + t * (odom2.pose.pose.position.z - odom1.pose.pose.position.z)
+    pose.position.x = odom1.pose.pose.position.x + t * (
+        odom2.pose.pose.position.x - odom1.pose.pose.position.x
+    )
+    pose.position.y = odom1.pose.pose.position.y + t * (
+        odom2.pose.pose.position.y - odom1.pose.pose.position.y
+    )
+    pose.position.z = odom1.pose.pose.position.z + t * (
+        odom2.pose.pose.position.z - odom1.pose.pose.position.z
+    )
 
     # SLERP for orientation
     q_interp = quat_slerp(odom1.pose.pose.orientation, odom2.pose.pose.orientation, t)
@@ -65,9 +71,11 @@ def interpolate_pose(odom1, odom2, t):
 
     return pose
 
-def generate_gt_trajectory(all_odometry, current_index, current_time_ns, horizon_sec, resolution_sec):
-    """Generate GT trajectory from future kinematic states"""
 
+def generate_gt_trajectory(
+    all_odometry, current_index, current_time_ns, horizon_sec, resolution_sec
+):
+    """Generate GT trajectory from future kinematic states."""
     trajectory = Trajectory()
 
     # Header
@@ -87,7 +95,7 @@ def generate_gt_trajectory(all_odometry, current_index, current_time_ns, horizon
         idx2 = None
 
         for i in range(current_index, len(all_odometry)):
-            odom_time_ns = all_odometry[i]['timestamp']
+            odom_time_ns = all_odometry[i]["timestamp"]
 
             if odom_time_ns <= target_time_ns:
                 idx1 = i
@@ -103,13 +111,13 @@ def generate_gt_trajectory(all_odometry, current_index, current_time_ns, horizon
 
         if idx2 is None or idx1 == idx2:
             # Use exact point or last available
-            point.pose = all_odometry[idx1]['odom'].pose.pose
+            point.pose = all_odometry[idx1]["odom"].pose.pose
         else:
             # Interpolate
-            time1 = all_odometry[idx1]['timestamp']
-            time2 = all_odometry[idx2]['timestamp']
+            time1 = all_odometry[idx1]["timestamp"]
+            time2 = all_odometry[idx2]["timestamp"]
             t = (target_time_ns - time1) / (time2 - time1)
-            point.pose = interpolate_pose(all_odometry[idx1]['odom'], all_odometry[idx2]['odom'], t)
+            point.pose = interpolate_pose(all_odometry[idx1]["odom"], all_odometry[idx2]["odom"], t)
 
         # Time from start
         point.time_from_start = Duration()
@@ -120,10 +128,10 @@ def generate_gt_trajectory(all_odometry, current_index, current_time_ns, horizon
 
     return trajectory if len(trajectory.points) > 0 else None
 
-def add_gt_trajectories(input_bag, output_bag, horizon_sec=8.0, resolution_sec=0.1):
-    """Add GT trajectory topic to bag"""
 
-    print(f"Adding GT trajectories to bag:")
+def add_gt_trajectories(input_bag, output_bag, horizon_sec=8.0, resolution_sec=0.1):
+    """Add GT trajectory topic to bag."""
+    print("Adding GT trajectories to bag:")
     print(f"  Input: {input_bag}")
     print(f"  Output: {output_bag}")
     print(f"  Horizon: {horizon_sec}s")
@@ -133,10 +141,9 @@ def add_gt_trajectories(input_bag, output_bag, horizon_sec=8.0, resolution_sec=0
     # Step 1: Load all kinematic states
     # Use empty storage_id to let rosbag2 auto-detect format
     print("Step 1: Loading all kinematic states...")
-    storage_options_read = StorageOptions(uri=str(input_bag), storage_id='')
+    storage_options_read = StorageOptions(uri=str(input_bag), storage_id="")
     converter_options = ConverterOptions(
-        input_serialization_format='cdr',
-        output_serialization_format='cdr'
+        input_serialization_format="cdr", output_serialization_format="cdr"
     )
 
     reader1 = SequentialReader()
@@ -147,10 +154,7 @@ def add_gt_trajectories(input_bag, output_bag, horizon_sec=8.0, resolution_sec=0
         topic, data, timestamp = reader1.read_next()
         if topic == "/localization/kinematic_state":
             odom = deserialize_message(data, Odometry)
-            all_odometry.append({
-                'timestamp': timestamp,
-                'odom': odom
-            })
+            all_odometry.append({"timestamp": timestamp, "odom": odom})
 
     del reader1
     print(f"  Loaded {len(all_odometry)} kinematic states")
@@ -161,7 +165,7 @@ def add_gt_trajectories(input_bag, output_bag, horizon_sec=8.0, resolution_sec=0
     reader2 = SequentialReader()
     reader2.open(storage_options_read, converter_options)
 
-    storage_options_write = StorageOptions(uri=str(output_bag), storage_id='mcap')
+    storage_options_write = StorageOptions(uri=str(output_bag), storage_id="mcap")
     writer = SequentialWriter()
     writer.open(storage_options_write, converter_options)
 
@@ -173,10 +177,10 @@ def add_gt_trajectories(input_bag, output_bag, horizon_sec=8.0, resolution_sec=0
     gt_topic = TopicMetadata(
         name="/ground_truth/trajectory",
         type="autoware_planning_msgs/msg/Trajectory",
-        serialization_format="cdr"
+        serialization_format="cdr",
     )
     writer.create_topic(gt_topic)
-    print(f"  Created topic: /ground_truth/trajectory")
+    print("Created topic: /ground_truth/trajectory")
 
     # Process messages
     message_count = 0
@@ -193,11 +197,7 @@ def add_gt_trajectories(input_bag, output_bag, horizon_sec=8.0, resolution_sec=0
         # Generate GT trajectory for each kinematic_state
         if topic == "/localization/kinematic_state":
             gt_traj = generate_gt_trajectory(
-                all_odometry,
-                odom_index,
-                timestamp,
-                horizon_sec,
-                resolution_sec
+                all_odometry, odom_index, timestamp, horizon_sec, resolution_sec
             )
 
             if gt_traj:
@@ -210,7 +210,7 @@ def add_gt_trajectories(input_bag, output_bag, horizon_sec=8.0, resolution_sec=0
         if message_count % 10000 == 0:
             print(f"  Processed {message_count} messages, generated {gt_count} GT trajectories...")
 
-    print(f"\nCopy complete:")
+    print("\nCopy complete:")
     print(f"  Total messages copied: {message_count}")
     print(f"  GT trajectories generated: {gt_count}")
 
@@ -222,27 +222,26 @@ def add_gt_trajectories(input_bag, output_bag, horizon_sec=8.0, resolution_sec=0
     Reindexer().reindex(storage_options_write)
     print("Done!")
 
+
 def main():
-    parser = argparse.ArgumentParser(
-        description='Add ground truth trajectory topic to a rosbag'
+    parser = argparse.ArgumentParser(description="Add ground truth trajectory topic to a rosbag")
+    parser.add_argument("--input", required=True, help="Input bag directory or mcap file")
+    parser.add_argument("--output", required=True, help="Output bag directory")
+    parser.add_argument(
+        "--horizon", type=float, default=8.0, help="Look-ahead horizon in seconds (default: 8.0)"
     )
-    parser.add_argument('--input', required=True, help='Input bag directory or mcap file')
-    parser.add_argument('--output', required=True, help='Output bag directory')
-    parser.add_argument('--horizon', type=float, default=8.0, help='Look-ahead horizon in seconds (default: 8.0)')
-    parser.add_argument('--resolution', type=float, default=0.1, help='Sample resolution in seconds (default: 0.1)')
+    parser.add_argument(
+        "--resolution", type=float, default=0.1, help="Sample resolution in seconds (default: 0.1)"
+    )
 
     args = parser.parse_args()
 
     rclpy.init()
 
-    add_gt_trajectories(
-        args.input,
-        args.output,
-        args.horizon,
-        args.resolution
-    )
+    add_gt_trajectories(args.input, args.output, args.horizon, args.resolution)
 
     rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()

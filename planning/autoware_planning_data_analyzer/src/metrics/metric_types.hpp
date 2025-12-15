@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRIC_TYPES_HPP_
-#define METRIC_TYPES_HPP_
+#ifndef METRICS__METRIC_TYPES_HPP_
+#define METRICS__METRIC_TYPES_HPP_
 
 #include <nlohmann/json.hpp>
 
@@ -81,4 +81,4 @@ Statistics calculate_statistics(const Container & values)
 
 }  // namespace metrics
 
-#endif  // METRIC_TYPES_HPP_
+#endif  // METRICS__METRIC_TYPES_HPP_

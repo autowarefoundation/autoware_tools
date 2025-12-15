@@ -28,6 +28,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace autoware::planning_data_analyzer
@@ -36,22 +37,24 @@ namespace autoware::planning_data_analyzer
 struct OpenLoopTrajectoryMetrics
 {
   // Point-wise metrics
-  std::vector<double> lateral_deviations;      // Lateral deviation at each trajectory point (in vehicle frame)
-  std::vector<double> longitudinal_deviations; // Longitudinal deviation at each trajectory point (in vehicle frame)
-  std::vector<double> displacement_errors;     // Euclidean distance at each trajectory point
-  std::vector<double> ade;                    // Average Displacement Error at each trajectory point
-  std::vector<double> ttc;                    // Time To Collision at each trajectory point
-  
+  std::vector<double>
+    lateral_deviations;  // Lateral deviation at each trajectory point (in vehicle frame)
+  std::vector<double>
+    longitudinal_deviations;  // Longitudinal deviation at each trajectory point (in vehicle frame)
+  std::vector<double> displacement_errors;  // Euclidean distance at each trajectory point
+  std::vector<double> ade;                  // Average Displacement Error at each trajectory point
+  std::vector<double> ttc;                  // Time To Collision at each trajectory point
+
   // Ground truth trajectory for this evaluation
   std::vector<geometry_msgs::msg::Pose> ground_truth_poses;  // Interpolated ground truth poses
-  
+
   // Trajectory info
-  size_t num_points;                  // Number of trajectory points
-  double trajectory_duration;         // Total trajectory duration in seconds
-  
-  rclcpp::Time trajectory_timestamp;  // When the trajectory was published
-  rclcpp::Time evaluation_start_time; // Start time of evaluation window
-  rclcpp::Time evaluation_end_time;   // End time of evaluation window
+  size_t num_points;           // Number of trajectory points
+  double trajectory_duration;  // Total trajectory duration in seconds
+
+  rclcpp::Time trajectory_timestamp;   // When the trajectory was published
+  rclcpp::Time evaluation_start_time;  // Start time of evaluation window
+  rclcpp::Time evaluation_end_time;    // End time of evaluation window
 };
 
 struct OpenLoopEvaluationSummary
@@ -63,17 +66,17 @@ struct OpenLoopEvaluationSummary
   double mean_fde;
   double std_fde;
   double max_fde;
-  
+
   double mean_lateral_deviation;
   double std_lateral_deviation;
   double max_lateral_deviation;
-  
+
   // Evaluation coverage
   size_t total_trajectories;
-  size_t valid_trajectories;      // Trajectories with at least one valid comparison
-  size_t fully_valid_trajectories; // Trajectories with all points having ground truth
-  double mean_coverage_ratio;      // Average ratio of valid comparisons per trajectory
-  
+  size_t valid_trajectories;        // Trajectories with at least one valid comparison
+  size_t fully_valid_trajectories;  // Trajectories with all points having ground truth
+  double mean_coverage_ratio;       // Average ratio of valid comparisons per trajectory
+
   double total_evaluation_duration;
 };
 
@@ -83,11 +86,14 @@ public:
   explicit OpenLoopEvaluator(
     rclcpp::Logger logger,
     std::shared_ptr<autoware::route_handler::RouteHandler> route_handler = nullptr)
-  : BaseEvaluator(logger, route_handler) {}
+  : BaseEvaluator(logger, route_handler)
+  {
+  }
 
   /**
    * @brief Evaluate trajectories against ground truth localization data
-   * @param synchronized_data_list List of synchronized bag data containing trajectories and localization
+   * @param synchronized_data_list List of synchronized bag data containing trajectories and
+   * localization
    * @param bag_writer Optional writer to save evaluation results to a new bag
    */
   void evaluate(
@@ -99,15 +105,15 @@ public:
   std::vector<OpenLoopTrajectoryMetrics> get_metrics() const { return metrics_list_; }
 
   nlohmann::json get_summary_as_json() const override;
-  
+
   nlohmann::json get_detailed_results_as_json() const override;
-  
+
   /**
    * @brief Get topic definitions for open-loop evaluation results
    * @return Vector of topic name and type pairs
    */
   std::vector<std::pair<std::string, std::string>> get_result_topics() const override;
-  
+
   /**
    * @brief Run open-loop evaluation from bag file
    * @param bag_path Path to the bag file
@@ -116,8 +122,7 @@ public:
    * @return Pair of start and end times
    */
   std::pair<rclcpp::Time, rclcpp::Time> run_evaluation_from_bag(
-    const std::string & bag_path,
-    rosbag2_cpp::Writer * evaluation_bag_writer,
+    const std::string & bag_path, rosbag2_cpp::Writer * evaluation_bag_writer,
     const TopicNames & topic_names) override;
 
   /**
@@ -147,8 +152,7 @@ public:
    * @param eval_data Evaluation data containing trajectory and ground truth
    * @return Metrics for this trajectory
    */
-  OpenLoopTrajectoryMetrics evaluate_trajectory(
-    const EvaluationData & eval_data);
+  OpenLoopTrajectoryMetrics evaluate_trajectory(const EvaluationData & eval_data);
 
 private:
   /**
@@ -159,13 +163,11 @@ private:
   std::vector<EvaluationData> prepare_evaluation_data(
     const std::vector<std::shared_ptr<SynchronizedData>> & synchronized_data_list);
 
-
   /**
    * @brief Calculate 2D Euclidean distance between two points
    */
   double calculate_distance_2d(
-    const geometry_msgs::msg::Point & p1,
-    const geometry_msgs::msg::Point & p2);
+    const geometry_msgs::msg::Point & p1, const geometry_msgs::msg::Point & p2);
 
   /**
    * @brief Calculate errors in vehicle coordinate frame
@@ -191,10 +193,8 @@ private:
    * @brief Save evaluation metrics to bag
    */
   void save_metrics_to_bag(
-    const OpenLoopTrajectoryMetrics & metrics,
-    const EvaluationData & eval_data,
+    const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
     rosbag2_cpp::Writer & bag_writer);
-
 
   /**
    * @brief Calculate summary statistics from all evaluations

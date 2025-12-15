@@ -14,7 +14,8 @@
 
 #include "autoware_planning_data_analyzer_node.hpp"
 
-// #include "closed_loop_evaluator.hpp"  // TODO: Closed loop evaluator not yet implemented
+// #include "closed_loop_evaluator.hpp"  // TODO(gosakayori): Closed loop evaluator not yet
+// implemented
 #include "open_loop_evaluator.hpp"
 #include "or_scene_evaluator.hpp"
 
@@ -44,9 +45,12 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <memory>
 #include <set>
 #include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace autoware::planning_data_analyzer
 {
@@ -63,8 +67,10 @@ T get_parameter_or_default(rclcpp::Node & node, const std::string & name, const 
   return node.declare_parameter<T>(name, default_value);
 }
 
-AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(const rclcpp::NodeOptions & node_options)
-: Node("autoware_planning_data_analyzer", node_options), route_handler_{std::make_shared<autoware::route_handler::RouteHandler>()}
+AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
+  const rclcpp::NodeOptions & node_options)
+: Node("autoware_planning_data_analyzer", node_options),
+  route_handler_{std::make_shared<autoware::route_handler::RouteHandler>()}
 {
   setup_evaluation_bag_writer();
 
@@ -128,8 +134,8 @@ void AutowarePlanningDataAnalyzerNode::setup_evaluation_bag_writer()
     evaluation_bag_writer_ = std::make_unique<rosbag2_cpp::Writer>();
 
     // Get output bag path from parameters with default
-    auto output_bag_path = get_parameter_or_default<std::string>(
-      *this, "evaluation_output_bag_path", "./");
+    auto output_bag_path =
+      get_parameter_or_default<std::string>(*this, "evaluation_output_bag_path", "./");
 
     // Ensure directory exists
     const auto output_dir = std::filesystem::path(output_bag_path).parent_path();
@@ -264,33 +270,34 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       // Read OR scene specific parameters
       const double time_window_sec =
         get_parameter_or_default<double>(*this, "or_scene_evaluation.time_window_sec", 0.5);
-      const bool enable_debug_viz =
-        get_parameter_or_default<bool>(*this, "or_scene_evaluation.enable_debug_visualization", false);
+      const bool enable_debug_viz = get_parameter_or_default<bool>(
+        *this, "or_scene_evaluation.enable_debug_visualization", false);
 
       // Read success criteria
       ORSuccessCriteria success_criteria;
-      success_criteria.enabled =
-        get_parameter_or_default<bool>(*this, "or_scene_evaluation.success_criteria.enabled", false);
-      success_criteria.max_ade =
-        get_parameter_or_default<double>(*this, "or_scene_evaluation.success_criteria.max_ade", 1.0);
-      success_criteria.max_fde =
-        get_parameter_or_default<double>(*this, "or_scene_evaluation.success_criteria.max_fde", 1.5);
-      success_criteria.max_lateral_deviation =
-        get_parameter_or_default<double>(*this, "or_scene_evaluation.success_criteria.max_lateral_deviation", 0.5);
-      success_criteria.min_ttc =
-        get_parameter_or_default<double>(*this, "or_scene_evaluation.success_criteria.min_ttc", 3.0);
+      success_criteria.enabled = get_parameter_or_default<bool>(
+        *this, "or_scene_evaluation.success_criteria.enabled", false);
+      success_criteria.max_ade = get_parameter_or_default<double>(
+        *this, "or_scene_evaluation.success_criteria.max_ade", 1.0);
+      success_criteria.max_fde = get_parameter_or_default<double>(
+        *this, "or_scene_evaluation.success_criteria.max_fde", 1.5);
+      success_criteria.max_lateral_deviation = get_parameter_or_default<double>(
+        *this, "or_scene_evaluation.success_criteria.max_lateral_deviation", 0.5);
+      success_criteria.min_ttc = get_parameter_or_default<double>(
+        *this, "or_scene_evaluation.success_criteria.min_ttc", 3.0);
 
-      const auto debug_output_dir =
-        get_parameter_or_default<std::string>(*this, "or_scene_evaluation.debug_output_dir", "~/or_scene_debug_images");
+      const auto debug_output_dir = get_parameter_or_default<std::string>(
+        *this, "or_scene_evaluation.debug_output_dir", "~/or_scene_debug_images");
 
-      ORSceneEvaluator evaluator(get_logger(), route_handler_, time_window_sec, success_criteria,
-        enable_debug_viz, debug_output_dir);
+      ORSceneEvaluator evaluator(
+        get_logger(), route_handler_, time_window_sec, success_criteria, enable_debug_viz,
+        debug_output_dir);
 
       // Set OR events JSON paths if provided
-      const auto or_events_input_path =
-        get_parameter_or_default<std::string>(*this, "or_scene_evaluation.or_events_input_path", "");
-      const auto or_events_output_path =
-        get_parameter_or_default<std::string>(*this, "or_scene_evaluation.or_events_output_path", "");
+      const auto or_events_input_path = get_parameter_or_default<std::string>(
+        *this, "or_scene_evaluation.or_events_input_path", "");
+      const auto or_events_output_path = get_parameter_or_default<std::string>(
+        *this, "or_scene_evaluation.or_events_output_path", "");
       const auto input_bag_path =
         get_parameter_or_default<std::string>(*this, "or_scene_evaluation.input_bag_path", "");
 
@@ -321,8 +328,9 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
           std::string first_component = trajectory_topic.substr(1, second_slash - 1);
 
           // Check if first component is NOT a standard Autoware namespace
-          const std::set<std::string> standard_namespaces =
-            {"planning", "control", "localization", "perception", "sensing", "map", "system", "vehicle"};
+          const std::set<std::string> standard_namespaces = {
+            "planning", "control", "localization", "perception",
+            "sensing",  "map",     "system",       "vehicle"};
 
           if (standard_namespaces.find(first_component) == standard_namespaces.end()) {
             // This is a custom prefix for multi-run collection
@@ -363,7 +371,8 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
   rclcpp::shutdown();
 }
 
-void AutowarePlanningDataAnalyzerNode::write_map_and_route_markers_to_bag(const rclcpp::Time & reference_time)
+void AutowarePlanningDataAnalyzerNode::write_map_and_route_markers_to_bag(
+  const rclcpp::Time & reference_time)
 {
   if (!evaluation_bag_writer_) {
     return;
@@ -414,5 +423,4 @@ void AutowarePlanningDataAnalyzerNode::create_route_markers(
 }  // namespace autoware::planning_data_analyzer
 
 #include <rclcpp_components/register_node_macro.hpp>
-RCLCPP_COMPONENTS_REGISTER_NODE(
-  autoware::planning_data_analyzer::AutowarePlanningDataAnalyzerNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(autoware::planning_data_analyzer::AutowarePlanningDataAnalyzerNode)

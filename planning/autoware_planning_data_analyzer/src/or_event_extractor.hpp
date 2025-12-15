@@ -18,11 +18,13 @@
 #include "data_types.hpp"
 #include "or_scene_structs.hpp"
 
-#include <autoware_vehicle_msgs/msg/control_mode_report.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rosbag2_cpp/reader.hpp>
 
+#include <autoware_vehicle_msgs/msg/control_mode_report.hpp>
+
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -73,8 +75,7 @@ public:
    * @param events Vector of OR events
    * @param output_path Path to output JSON file
    */
-  void save_or_events_to_json(
-    const std::vector<OREvent> & events, const std::string & output_path);
+  void save_or_events_to_json(const std::vector<OREvent> & events, const std::string & output_path);
 
   /**
    * @brief Load OR events from JSON file

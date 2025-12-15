@@ -1,22 +1,14 @@
 #!/usr/bin/env python3
-"""
-Merge multiple rosbag2 bags into a single output bag.
-
-This script combines multiple input bags (e.g., DLR result_bag + evaluation metrics)
-into a single unified bag containing all topics from all inputs.
-"""
+"""Merge multiple rosbag2 bags into a single output bag."""
 
 import argparse
-import sys
 from pathlib import Path
+import sys
 
-from rosbag2_py import (
-    ConverterOptions,
-    SequentialReader,
-    SequentialWriter,
-    StorageOptions,
-    TopicMetadata,
-)
+from rosbag2_py import ConverterOptions
+from rosbag2_py import SequentialReader
+from rosbag2_py import SequentialWriter
+from rosbag2_py import StorageOptions
 
 
 def merge_bags(input_bags: list[str], output_bag: str, storage_id: str = "mcap") -> None:

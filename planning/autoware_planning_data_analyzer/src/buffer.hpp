@@ -87,9 +87,8 @@ struct Buffer : BufferBase
     return std::make_shared<T>(*itr);
   }
 
-  auto get_closest(
-    const rcutils_time_point_value_t target_time, const double tolerance_ms = 50.0) const ->
-    typename T::SharedPtr
+  auto get_closest(const rcutils_time_point_value_t target_time, const double tolerance_ms = 50.0)
+    const -> typename T::SharedPtr
   {
     if (msgs.empty()) {
       return nullptr;
@@ -132,21 +131,21 @@ template <>
 void Buffer<TFMessage>::remove_old_data(const rcutils_time_point_value_t now);
 
 template <>
-auto Buffer<SteeringReport>::get(const rcutils_time_point_value_t now) const ->
-  SteeringReport::SharedPtr;
+auto Buffer<SteeringReport>::get(const rcutils_time_point_value_t now) const
+  -> SteeringReport::SharedPtr;
 
 template <>
 auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> TFMessage::SharedPtr;
 
 template <>
 auto Buffer<SteeringReport>::get_closest(
-  const rcutils_time_point_value_t target_time, const double tolerance_ms) const ->
-  SteeringReport::SharedPtr;
+  const rcutils_time_point_value_t target_time, const double tolerance_ms) const
+  -> SteeringReport::SharedPtr;
 
 template <>
 auto Buffer<TFMessage>::get_closest(
-  const rcutils_time_point_value_t target_time, const double tolerance_ms) const ->
-  TFMessage::SharedPtr;
+  const rcutils_time_point_value_t target_time, const double tolerance_ms) const
+  -> TFMessage::SharedPtr;
 
 }  // namespace autoware::planning_data_analyzer
 

@@ -13,11 +13,17 @@
 // limitations under the License.
 
 #include "or_event_extractor.hpp"
+
 #include "utils/bag_utils.hpp"
 #include "utils/json_utils.hpp"
 
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/reader.hpp>
+
+#include <limits>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer
 {
@@ -32,12 +38,9 @@ std::vector<OREvent> OREventExtractor::extract_or_events_from_bag(
   const std::string & bag_path, const std::string & control_mode_topic,
   const std::string & kinematic_state_topic)
 {
-  RCLCPP_INFO(
-    logger_, "Extracting OR events from bag: %s", bag_path.c_str());
-  RCLCPP_INFO(
-    logger_, "  Control mode topic: %s", control_mode_topic.c_str());
-  RCLCPP_INFO(
-    logger_, "  Kinematic state topic: %s", kinematic_state_topic.c_str());
+  RCLCPP_INFO(logger_, "Extracting OR events from bag: %s", bag_path.c_str());
+  RCLCPP_INFO(logger_, "  Control mode topic: %s", control_mode_topic.c_str());
+  RCLCPP_INFO(logger_, "  Kinematic state topic: %s", kinematic_state_topic.c_str());
 
   std::vector<OREvent> or_events;
 
@@ -112,7 +115,7 @@ std::vector<OREvent> OREventExtractor::extract_or_events_from_bag(
       first_message = false;
     }
     // Process odometry messages (buffer for speed lookup)
-    else if (bag_message->topic_name == kinematic_state_topic) {
+    if (bag_message->topic_name == kinematic_state_topic) {
       auto odometry_msg = utils::deserialize_message<Odometry>(bag_message);
       odometry_buffer.push_back(odometry_msg);
 

@@ -18,11 +18,14 @@
 #include <autoware_lanelet2_extension/utility/utilities.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
 #include <tf2/LinearMath/Vector3.hpp>
+
 #include <tf2/utils.h>
 
-#include <limits>
-#include <cmath>
 #include <algorithm>
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -102,15 +105,12 @@ double calculate_ttc_between_points(
  * @return Time to collision [s], capped at max_ttc_value
  */
 double calculate_time_to_collision(
-  const autoware_planning_msgs::msg::TrajectoryPoint & ego_point,
-  const rclcpp::Duration & duration,
-  const autoware_perception_msgs::msg::PredictedObject & object,
-  const double max_ttc_value)
+  const autoware_planning_msgs::msg::TrajectoryPoint & ego_point, const rclcpp::Duration & duration,
+  const autoware_perception_msgs::msg::PredictedObject & object, const double max_ttc_value)
 {
   // Find the predicted path with highest confidence
   const auto max_confidence_path = std::max_element(
-    object.kinematics.predicted_paths.begin(),
-    object.kinematics.predicted_paths.end(),
+    object.kinematics.predicted_paths.begin(), object.kinematics.predicted_paths.end(),
     [](const auto & a, const auto & b) { return a.confidence < b.confidence; });
 
   if (max_confidence_path == object.kinematics.predicted_paths.end()) {
@@ -211,27 +211,24 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   // Calculate lateral acceleration from lateral velocity difference
   constexpr double epsilon = 1.0e-3;
   for (size_t i = 0; i < num_points - 1; ++i) {
-    const double time_diff =
-      rclcpp::Duration(trajectory.points[i + 1].time_from_start).seconds() -
-      rclcpp::Duration(trajectory.points[i].time_from_start).seconds();
+    const double time_diff = rclcpp::Duration(trajectory.points[i + 1].time_from_start).seconds() -
+                             rclcpp::Duration(trajectory.points[i].time_from_start).seconds();
     const double time_resolution = time_diff > epsilon ? time_diff : epsilon;
 
-    const double lateral_acc = (trajectory.points[i + 1].lateral_velocity_mps -
-                                trajectory.points[i].lateral_velocity_mps) /
-                               time_resolution;
+    const double lateral_acc =
+      (trajectory.points[i + 1].lateral_velocity_mps - trajectory.points[i].lateral_velocity_mps) /
+      time_resolution;
     metrics.lateral_accelerations[i] = lateral_acc;
   }
   if (num_points > 0) {
-    metrics.lateral_accelerations[num_points - 1] =
-      metrics.lateral_accelerations[num_points - 2];
+    metrics.lateral_accelerations[num_points - 1] = metrics.lateral_accelerations[num_points - 2];
   }
 
   // Calculate longitudinal jerk from velocity differences
   std::vector<double> longitudinal_accelerations(num_points, 0.0);
   for (size_t i = 0; i < num_points - 1; ++i) {
-    const double time_diff =
-      rclcpp::Duration(trajectory.points[i + 1].time_from_start).seconds() -
-      rclcpp::Duration(trajectory.points[i].time_from_start).seconds();
+    const double time_diff = rclcpp::Duration(trajectory.points[i + 1].time_from_start).seconds() -
+                             rclcpp::Duration(trajectory.points[i].time_from_start).seconds();
     const double time_resolution = time_diff > epsilon ? time_diff : epsilon;
 
     longitudinal_accelerations[i] = (trajectory.points[i + 1].longitudinal_velocity_mps -
@@ -244,9 +241,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
 
   // Calculate jerk from acceleration differences
   for (size_t i = 0; i < num_points - 1; ++i) {
-    const double time_diff =
-      rclcpp::Duration(trajectory.points[i + 1].time_from_start).seconds() -
-      rclcpp::Duration(trajectory.points[i].time_from_start).seconds();
+    const double time_diff = rclcpp::Duration(trajectory.points[i + 1].time_from_start).seconds() -
+                             rclcpp::Duration(trajectory.points[i].time_from_start).seconds();
     const double time_resolution = time_diff > epsilon ? time_diff : epsilon;
 
     const double jerk =

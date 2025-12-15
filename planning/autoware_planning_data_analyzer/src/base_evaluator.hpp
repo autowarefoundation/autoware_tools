@@ -24,17 +24,18 @@
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writer.hpp>
 #include <rosbag2_storage/topic_metadata.hpp>
+
 #include <tf2_msgs/msg/tf_message.hpp>
 
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <memory>
 #include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace autoware::planning_data_analyzer
 {
@@ -45,7 +46,7 @@ struct TopicNames;
 
 /**
  * @brief Base class for trajectory evaluators
- * 
+ *
  * This abstract base class provides common functionality for both
  * open-loop and closed-loop evaluation modes.
  */
@@ -87,7 +88,7 @@ public:
    * @return Vector of topic name and type pairs
    */
   virtual std::vector<std::pair<std::string, std::string>> get_result_topics() const = 0;
-  
+
   /**
    * @brief Run evaluation from bag file
    * @param bag_path Path to the bag file
@@ -96,8 +97,7 @@ public:
    * @return Pair of start and end times
    */
   virtual std::pair<rclcpp::Time, rclcpp::Time> run_evaluation_from_bag(
-    const std::string & bag_path,
-    rosbag2_cpp::Writer * evaluation_bag_writer,
+    const std::string & bag_path, rosbag2_cpp::Writer * evaluation_bag_writer,
     const TopicNames & topic_names) = 0;
 
 protected:
@@ -109,8 +109,8 @@ protected:
   {
     const auto topics = get_result_topics();
     for (const auto & [topic_name, topic_type] : topics) {
-      const auto topic_info = rosbag2_storage::TopicMetadata{
-        topic_name, topic_type, rmw_get_serialization_format(), ""};
+      const auto topic_info =
+        rosbag2_storage::TopicMetadata{topic_name, topic_type, rmw_get_serialization_format(), ""};
       bag_writer.create_topic(topic_info);
     }
   }
@@ -121,13 +121,12 @@ protected:
    * @param timestamp Timestamp for the markers
    */
   void write_static_markers_to_bag(
-    rosbag2_cpp::Writer & /*bag_writer*/,
-    const rclcpp::Time & /*timestamp*/) const
+    rosbag2_cpp::Writer & /*bag_writer*/, const rclcpp::Time & /*timestamp*/) const
   {
     // This would be implemented to write map/route visualization
     // Currently a placeholder for common marker writing functionality
   }
-  
+
   /**
    * @brief Common implementation for reading and processing bag data
    * @param bag_path Path to the bag file
@@ -135,18 +134,18 @@ protected:
    * @param topic_names Topic names configuration
    * @return Synchronized data list and evaluation time range
    */
-  struct BagProcessingResult {
+  struct BagProcessingResult
+  {
     std::vector<std::shared_ptr<SynchronizedData>> synchronized_data_list;
     rclcpp::Time evaluation_start_time;
     rclcpp::Time evaluation_end_time;
     tf2_msgs::msg::TFMessage tf_static_msgs;
   };
-  
+
   BagProcessingResult process_bag_common(
-    const std::string & bag_path,
-    rosbag2_cpp::Writer * evaluation_bag_writer,
+    const std::string & bag_path, rosbag2_cpp::Writer * evaluation_bag_writer,
     const TopicNames & topic_names);
-  
+
   /**
    * @brief Save evaluation results to JSON file
    * @param json_output JSON object containing results
@@ -155,11 +154,10 @@ protected:
    * @param output_filename Base filename for output (without timestamp)
    */
   void save_json_results(
-    const nlohmann::json & json_output,
-    const std::string & bag_path,
+    const nlohmann::json & json_output, const std::string & bag_path,
     const std::string & evaluation_mode,
     const std::string & output_filename = "evaluation_result") const;
-  
+
   /**
    * @brief Write tf_static messages to evaluation bag
    * @param evaluation_bag_writer Bag writer
@@ -167,10 +165,9 @@ protected:
    * @param normalized_timestamp Timestamp to use for writing
    */
   void write_tf_static_to_bag(
-    rosbag2_cpp::Writer * evaluation_bag_writer,
-    const tf2_msgs::msg::TFMessage & tf_static_msgs,
+    rosbag2_cpp::Writer * evaluation_bag_writer, const tf2_msgs::msg::TFMessage & tf_static_msgs,
     const rclcpp::Time & normalized_timestamp = rclcpp::Time(0, 0, RCL_ROS_TIME)) const;
-  
+
   /**
    * @brief Write trajectory to evaluation bag with normalized timestamp
    * @param sync_data Synchronized data containing trajectory
@@ -178,10 +175,9 @@ protected:
    * @param normalized_timestamp Normalized timestamp to use
    */
   void write_trajectory_to_bag(
-    const std::shared_ptr<SynchronizedData> & sync_data,
-    rosbag2_cpp::Writer & bag_writer,
+    const std::shared_ptr<SynchronizedData> & sync_data, rosbag2_cpp::Writer & bag_writer,
     const rclcpp::Time & normalized_timestamp) const;
-  
+
   /**
    * @brief Save trajectory point metrics to bag
    * @param metrics Trajectory point metrics to save
@@ -189,13 +185,12 @@ protected:
    * @param normalized_timestamp Normalized timestamp to use
    */
   void save_trajectory_point_metrics_to_bag(
-    const metrics::TrajectoryPointMetrics & metrics,
-    rosbag2_cpp::Writer & bag_writer,
+    const metrics::TrajectoryPointMetrics & metrics, rosbag2_cpp::Writer & bag_writer,
     const rclcpp::Time & normalized_timestamp) const;
 
   rclcpp::Logger logger_;
   std::shared_ptr<autoware::route_handler::RouteHandler> route_handler_;
-  
+
   // For normalized timestamp calculation
   rclcpp::Time first_bag_timestamp_;
   bool first_bag_timestamp_set_ = false;

@@ -14,6 +14,9 @@
 
 #include "buffer.hpp"
 
+#include <limits>
+#include <memory>
+
 namespace autoware::planning_data_analyzer
 {
 
@@ -44,8 +47,8 @@ void Buffer<SteeringReport>::remove_old_data(const rcutils_time_point_value_t no
 }
 
 template <>
-auto Buffer<SteeringReport>::get(const rcutils_time_point_value_t now) const ->
-  SteeringReport::SharedPtr
+auto Buffer<SteeringReport>::get(const rcutils_time_point_value_t now) const
+  -> SteeringReport::SharedPtr
 {
   const auto itr = std::find_if(msgs.begin(), msgs.end(), [&now](const auto & msg) {
     return rclcpp::Time(msg.stamp).nanoseconds() > now;
@@ -60,8 +63,8 @@ auto Buffer<SteeringReport>::get(const rcutils_time_point_value_t now) const ->
 
 template <>
 auto Buffer<SteeringReport>::get_closest(
-  const rcutils_time_point_value_t target_time, const double tolerance_ms) const ->
-  SteeringReport::SharedPtr
+  const rcutils_time_point_value_t target_time, const double tolerance_ms) const
+  -> SteeringReport::SharedPtr
 {
   if (msgs.empty()) {
     return nullptr;
@@ -139,8 +142,8 @@ auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> TFMes
 
 template <>
 auto Buffer<TFMessage>::get_closest(
-  const rcutils_time_point_value_t target_time, const double tolerance_ms) const ->
-  TFMessage::SharedPtr
+  const rcutils_time_point_value_t target_time, const double tolerance_ms) const
+  -> TFMessage::SharedPtr
 {
   if (msgs.empty()) {
     return nullptr;
@@ -153,8 +156,9 @@ auto Buffer<TFMessage>::get_closest(
 
   for (auto itr = msgs.begin(); itr != msgs.end(); ++itr) {
     if (!itr->transforms.empty()) {
-      const double diff = std::abs(static_cast<double>(
-        rclcpp::Time(itr->transforms.front().header.stamp).nanoseconds() - target_time));
+      const double diff = std::abs(
+        static_cast<double>(
+          rclcpp::Time(itr->transforms.front().header.stamp).nanoseconds() - target_time));
       if (diff < min_diff) {
         min_diff = diff;
         closest_itr = itr;

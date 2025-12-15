@@ -17,15 +17,21 @@
 #include "bag_handler.hpp"
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
-#include <std_msgs/msg/float64.hpp>
+
 #include <std_msgs/msg/bool.hpp>
+#include <std_msgs/msg/float64.hpp>
 
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <limits>
+#include <memory>
 #include <numeric>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace autoware::planning_data_analyzer
 {
@@ -67,9 +73,9 @@ Statistics<Container> calculate_statistics(const Container & values)
 }
 
 ORSceneEvaluator::ORSceneEvaluator(
-  rclcpp::Logger logger, std::shared_ptr<autoware::route_handler::RouteHandler> route_handler, double time_window_sec,
-  const ORSuccessCriteria & success_criteria, bool enable_debug_visualization,
-  const std::string & debug_output_dir)
+  rclcpp::Logger logger, std::shared_ptr<autoware::route_handler::RouteHandler> route_handler,
+  double time_window_sec, const ORSuccessCriteria & success_criteria,
+  bool enable_debug_visualization, const std::string & debug_output_dir)
 : BaseEvaluator(logger, route_handler),
   time_window_sec_(time_window_sec),
   success_criteria_(success_criteria),
@@ -86,7 +92,7 @@ ORSceneEvaluator::ORSceneEvaluator(
     // Create debug directory if it doesn't exist
     std::filesystem::path debug_path(debug_output_dir_);
     if (debug_path.string().substr(0, 2) == "~/") {
-      const char* home = std::getenv("HOME");
+      const char * home = std::getenv("HOME");
       if (home) {
         debug_path = std::string(home) + debug_path.string().substr(1);
       }
@@ -144,7 +150,8 @@ std::pair<rclcpp::Time, rclcpp::Time> ORSceneEvaluator::run_evaluation_from_bag(
 {
   RCLCPP_INFO(logger_, "Running OR scene evaluation");
   RCLCPP_INFO(logger_, "  Bag path: %s", bag_path.c_str());
-  RCLCPP_INFO(logger_, "  Time window: [OR - %.2fs, OR + %.2fs]", time_window_sec_, time_window_sec_);
+  RCLCPP_INFO(
+    logger_, "  Time window: [OR - %.2fs, OR + %.2fs]", time_window_sec_, time_window_sec_);
 
   rclcpp::Time evaluation_start_time(0, 0, RCL_ROS_TIME);
   rclcpp::Time evaluation_end_time(0, 0, RCL_ROS_TIME);
@@ -191,9 +198,9 @@ std::pair<rclcpp::Time, rclcpp::Time> ORSceneEvaluator::run_evaluation_from_bag(
   // Log summary
   RCLCPP_INFO(logger_, "OR scene evaluation complete:");
   RCLCPP_INFO(logger_, "  Total OR events: %zu", summary_.total_or_events);
+  RCLCPP_INFO(logger_, "  Events with predictions: %zu", summary_.events_with_valid_predictions);
   RCLCPP_INFO(
-    logger_, "  Events with predictions: %zu", summary_.events_with_valid_predictions);
-  RCLCPP_INFO(logger_, "  Mean ADE: %.3fm (±%.3fm)", summary_.mean_ade_all_events,
+    logger_, "  Mean ADE: %.3fm (±%.3fm)", summary_.mean_ade_all_events,
     summary_.std_ade_all_events);
   RCLCPP_INFO(
     logger_, "  Mean FDE: %.3fm (±%.3fm)", summary_.mean_fde_all_events,
@@ -276,7 +283,9 @@ OREventMetrics ORSceneEvaluator::evaluate_or_event(
     return event_metrics;
   }
 
-  RCLCPP_INFO(logger_, "Loaded %zu synchronized data points from bag", bag_result.synchronized_data_list.size());
+  RCLCPP_INFO(
+    logger_, "Loaded %zu synchronized data points from bag",
+    bag_result.synchronized_data_list.size());
 
   // Filter to get trajectory predictions in OR window only
   std::vector<std::shared_ptr<SynchronizedData>> trajectories_in_window;
@@ -292,8 +301,8 @@ OREventMetrics ORSceneEvaluator::evaluate_or_event(
 
   if (trajectories_in_window.empty()) {
     RCLCPP_WARN(
-      logger_, "OR event %zu: No trajectories found in window [%.3f, %.3f]",
-      event_metrics.event_id, event.window_start.seconds(), event.window_end.seconds());
+      logger_, "OR event %zu: No trajectories found in window [%.3f, %.3f]", event_metrics.event_id,
+      event.window_start.seconds(), event.window_end.seconds());
     return event_metrics;
   }
 
@@ -314,12 +323,12 @@ OREventMetrics ORSceneEvaluator::evaluate_or_event(
     auto traj_metrics =
       evaluate_trajectory_prediction(trajectory_data, bag_result.synchronized_data_list, event);
     trajectory_metrics_list.push_back(traj_metrics);
-
   }
 
   // Generate debug visualizations if enabled
   if (enable_debug_visualization_) {
-    for (size_t i = 0; i < trajectories_in_window.size() && i < trajectory_metrics_list.size(); ++i) {
+    for (size_t i = 0; i < trajectories_in_window.size() && i < trajectory_metrics_list.size();
+         ++i) {
       const auto & traj_data = trajectories_in_window[i];
       const auto & traj_metrics = trajectory_metrics_list[i];
 
@@ -351,12 +360,14 @@ std::vector<std::shared_ptr<SynchronizedData>> ORSceneEvaluator::load_data_for_o
 {
   // For now, we need to process the entire bag to get all data for GT interpolation
   // GT generation requires data beyond the evaluation window (for trajectory horizon)
-  // TODO: Optimize to only read specific time range from bag
+  // TODO(go-sakayori): Optimize to only read specific time range from bag
 
   RCLCPP_INFO(logger_, "Loading bag data for GT generation (processing entire bag)...");
   auto bag_result = process_bag_common(bag_path, nullptr, topic_names);
 
-  RCLCPP_INFO(logger_, "Total synchronized data points in bag: %zu", bag_result.synchronized_data_list.size());
+  RCLCPP_INFO(
+    logger_, "Total synchronized data points in bag: %zu",
+    bag_result.synchronized_data_list.size());
 
   // Filter to get trajectory predictions in OR event window only
   // But keep ALL data for GT interpolation (trajectories need future kinematic states)
@@ -371,8 +382,9 @@ std::vector<std::shared_ptr<SynchronizedData>> ORSceneEvaluator::load_data_for_o
     }
   }
 
-  RCLCPP_INFO(logger_, "Filtered %zu trajectory predictions in window [%.3f, %.3f]",
-    window_data.size(), event.window_start.seconds(), event.window_end.seconds());
+  RCLCPP_INFO(
+    logger_, "Filtered %zu trajectory predictions in window [%.3f, %.3f]", window_data.size(),
+    event.window_start.seconds(), event.window_end.seconds());
 
   return window_data;
 }
@@ -426,12 +438,14 @@ ORTrajectoryMetrics ORSceneEvaluator::evaluate_trajectory_prediction(
     return metrics;
   }
 
-  RCLCPP_DEBUG(logger_, "Truncated trajectory from %zu to %zu points (%.1f%% coverage)",
+  RCLCPP_DEBUG(
+    logger_, "Truncated trajectory from %zu to %zu points (%.1f%% coverage)",
     metrics.num_points_original, truncated_traj.points.size(), coverage * 100.0);
 
   // Create temporary SynchronizedData with truncated trajectory
   auto truncated_data = std::make_shared<SynchronizedData>(*trajectory_data);
-  truncated_data->trajectory = std::make_shared<autoware_planning_msgs::msg::Trajectory>(truncated_traj);
+  truncated_data->trajectory =
+    std::make_shared<autoware_planning_msgs::msg::Trajectory>(truncated_traj);
 
   // Generate ground truth for truncated trajectory
   auto ground_truth_opt =
@@ -478,9 +492,9 @@ ORTrajectoryMetrics ORSceneEvaluator::evaluate_trajectory_prediction(
   // Lateral/longitudinal deviation
   if (!open_loop_metrics.lateral_deviations.empty()) {
     metrics.mean_lateral_deviation = std::accumulate(
-                                        open_loop_metrics.lateral_deviations.begin(),
-                                        open_loop_metrics.lateral_deviations.end(), 0.0) /
-                                      open_loop_metrics.lateral_deviations.size();
+                                       open_loop_metrics.lateral_deviations.begin(),
+                                       open_loop_metrics.lateral_deviations.end(), 0.0) /
+                                     open_loop_metrics.lateral_deviations.size();
     metrics.max_lateral_deviation = *std::max_element(
       open_loop_metrics.lateral_deviations.begin(), open_loop_metrics.lateral_deviations.end());
   } else {
@@ -489,11 +503,10 @@ ORTrajectoryMetrics ORSceneEvaluator::evaluate_trajectory_prediction(
   }
 
   if (!open_loop_metrics.longitudinal_deviations.empty()) {
-    metrics.mean_longitudinal_deviation =
-      std::accumulate(
-        open_loop_metrics.longitudinal_deviations.begin(),
-        open_loop_metrics.longitudinal_deviations.end(), 0.0) /
-      open_loop_metrics.longitudinal_deviations.size();
+    metrics.mean_longitudinal_deviation = std::accumulate(
+                                            open_loop_metrics.longitudinal_deviations.begin(),
+                                            open_loop_metrics.longitudinal_deviations.end(), 0.0) /
+                                          open_loop_metrics.longitudinal_deviations.size();
   } else {
     metrics.mean_longitudinal_deviation = 0.0;
   }
@@ -664,8 +677,7 @@ void ORSceneEvaluator::calculate_summary()
     }
 
     total_predictions += event_metrics.total_predictions;
-    total_duration +=
-      (event_metrics.window_end - event_metrics.window_start).seconds();
+    total_duration += (event_metrics.window_end - event_metrics.window_start).seconds();
   }
 
   // ADE statistics
@@ -908,7 +920,7 @@ visualization_msgs::msg::MarkerArray ORSceneEvaluator::create_or_event_markers(
 {
   visualization_msgs::msg::MarkerArray marker_array;
 
-  // TODO: Create visualization markers for OR event
+  // TODO(go-sakayori): Create visualization markers for OR event
   // - Marker at OR location
   // - Text showing event_id, metrics summary
   // - Timeline markers showing evaluation window
@@ -919,8 +931,7 @@ visualization_msgs::msg::MarkerArray ORSceneEvaluator::create_or_event_markers(
 std::pair<autoware_planning_msgs::msg::Trajectory, double>
 ORSceneEvaluator::truncate_trajectory_to_gt_range(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const rclcpp::Time & trajectory_start_time,
-  const rclcpp::Time & gt_data_start,
+  const rclcpp::Time & trajectory_start_time, const rclcpp::Time & gt_data_start,
   const rclcpp::Time & gt_data_end) const
 {
   autoware_planning_msgs::msg::Trajectory truncated;
@@ -946,8 +957,8 @@ ORSceneEvaluator::truncate_trajectory_to_gt_range(
     }
   }
 
-  const double coverage = truncated.points.empty() ?
-    0.0 : static_cast<double>(truncated.points.size()) / original_size;
+  const double coverage =
+    truncated.points.empty() ? 0.0 : static_cast<double>(truncated.points.size()) / original_size;
 
   return {truncated, coverage};
 }
@@ -1061,7 +1072,7 @@ void ORSceneEvaluator::generate_debug_visualization(
   // Expand ~ in output_dir
   std::string expanded_dir = output_dir;
   if (expanded_dir.substr(0, 2) == "~/") {
-    const char* home = std::getenv("HOME");
+    const char * home = std::getenv("HOME");
     if (home) {
       expanded_dir = std::string(home) + expanded_dir.substr(1);
     }
@@ -1080,14 +1091,15 @@ void ORSceneEvaluator::generate_debug_visualization(
   // Generate output filename
   const int64_t pred_time_ms = static_cast<int64_t>(metrics.prediction_time.seconds() * 1000);
   const std::string output_image = expanded_dir + "/or_event_" +
-    std::to_string(event_metrics_list_.size()) + "_pred_" +
-    std::to_string(pred_time_ms) + ".png";
+                                   std::to_string(event_metrics_list_.size()) + "_pred_" +
+                                   std::to_string(pred_time_ms) + ".png";
 
   // Call Python visualization script
   // Use ament_index to find the installed script
   std::string script_path;
   try {
-    const std::string share_dir = ament_index_cpp::get_package_share_directory("autoware_planning_data_analyzer");
+    const std::string share_dir =
+      ament_index_cpp::get_package_share_directory("autoware_planning_data_analyzer");
     script_path = share_dir + "/scripts/generate_or_visualization.py";
   } catch (const std::exception & e) {
     RCLCPP_ERROR(logger_, "Failed to find package share directory: %s", e.what());

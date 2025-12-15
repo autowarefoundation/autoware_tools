@@ -1,25 +1,19 @@
 #!/usr/bin/env python3
-"""
-Evaluate all LIVE trajectory topics in a bag simultaneously.
-Injects metrics for each model with proper prefixes.
-
-Instead of running evaluation 6 times (once per model), runs 3 times
-(once per bag), evaluating all LIVE trajectories in each pass.
-"""
+"""Evaluate all LIVE trajectory topics in a bag simultaneously."""
 import argparse
-import sys
 import json
 from pathlib import Path
-from rosbag2_py import SequentialReader, SequentialWriter, StorageOptions, ConverterOptions, TopicMetadata, Reindexer
+import sys
+
 import rclpy
-from rclpy.serialization import deserialize_message, serialize_message
-from autoware_planning_msgs.msg import Trajectory
-from nav_msgs.msg import Odometry
-from std_msgs.msg import Float64
+from rosbag2_py import ConverterOptions
+from rosbag2_py import SequentialReader
+from rosbag2_py import SequentialWriter
+from rosbag2_py import StorageOptions
+
 
 def detect_live_trajectory_topics(bag_path: str):
     """Detect all LIVE trajectory topics with prefixes."""
-
     reader = SequentialReader()
     reader.open(StorageOptions(uri=bag_path, storage_id=""), ConverterOptions("cdr", "cdr"))
 
@@ -28,21 +22,24 @@ def detect_live_trajectory_topics(bag_path: str):
         # Look for trajectory topics with prefixes (e.g., /v2.0/planning/...)
         if "trajectory_generator" in meta.name and "/output/trajectory" in meta.name:
             # Extract prefix (first component after /)
-            parts = meta.name.strip('/').split('/')
-            if parts[0] not in ['planning', 'control', 'localization', 'perception']:
+            parts = meta.name.strip("/").split("/")
+            if parts[0] not in ["planning", "control", "localization", "perception"]:
                 # This is a prefixed topic
                 prefix = parts[0]
                 # Convert underscores back to dots for display (v2_0 -> v2.0)
-                prefix_display = prefix.replace('_', '.')
-                live_topics.append({
-                    'topic': meta.name,
-                    'prefix': prefix,
-                    'prefix_display': prefix_display,
-                    'type': meta.type
-                })
+                prefix_display = prefix.replace("_", ".")
+                live_topics.append(
+                    {
+                        "topic": meta.name,
+                        "prefix": prefix,
+                        "prefix_display": prefix_display,
+                        "type": meta.type,
+                    }
+                )
 
     del reader
     return live_topics
+
 
 def evaluate_all_trajectories(
     bag_path: str,
@@ -50,7 +47,7 @@ def evaluate_all_trajectories(
     map_path: str,
     output_bag_path: str,
     json_output_path: str = None,
-    time_window: float = 0.5
+    time_window: float = 0.5,
 ):
     """
     Evaluate all LIVE trajectories in a single pass.
@@ -62,7 +59,6 @@ def evaluate_all_trajectories(
         output_bag_path: Output bag with metrics injected
         json_output_path: Optional JSON output file
     """
-
     print(f"Evaluating all LIVE trajectories in: {bag_path}")
     print(f"Input bag (for OR extraction): {input_bag_path}")
 
@@ -81,30 +77,43 @@ def evaluate_all_trajectories(
     all_results = {}
 
     for lt in live_topics:
-        prefix = lt['prefix']
-        traj_topic = lt['topic']
+        prefix = lt["prefix"]
+        traj_topic = lt["topic"]
 
         print(f"\nEvaluating {prefix}...")
 
         # Clean up old metric bag if it exists
         import shutil
-        metric_bag_dir = f'/tmp/eval_{prefix}_metrics.bag'
+
+        metric_bag_dir = f"/tmp/eval_{prefix}_metrics.bag"
         if Path(metric_bag_dir).exists():
             shutil.rmtree(metric_bag_dir)
 
         # Run autoware_planning_data_analyzer_node for this trajectory
         import subprocess
+
         cmd = [
-            'ros2', 'run', 'autoware_planning_data_analyzer', 'autoware_planning_data_analyzer_node',
-            '--ros-args',
-            '-p', f'bag_path:={bag_path}',
-            '-p', 'evaluation.mode:=or_scene',
-            '-p', f'trajectory_topic:={traj_topic}',
-            '-p', f'or_scene_evaluation.input_bag_path:={input_bag_path}',
-            '-p', f'or_scene_evaluation.map_path:={map_path}',
-            '-p', f'or_scene_evaluation.time_window_sec:={time_window}',
-            '-p', f'or_scene_evaluation.enable_debug_visualization:=false',
-            '-p', f'evaluation_output_bag_path:=/tmp/eval_{prefix}_metrics.bag'
+            "ros2",
+            "run",
+            "autoware_planning_data_analyzer",
+            "autoware_planning_data_analyzer_node",
+            "--ros-args",
+            "-p",
+            f"bag_path:={bag_path}",
+            "-p",
+            "evaluation.mode:=or_scene",
+            "-p",
+            f"trajectory_topic:={traj_topic}",
+            "-p",
+            f"or_scene_evaluation.input_bag_path:={input_bag_path}",
+            "-p",
+            f"or_scene_evaluation.map_path:={map_path}",
+            "-p",
+            f"or_scene_evaluation.time_window_sec:={time_window}",
+            "-p",
+            "or_scene_evaluation.enable_debug_visualization:=false",
+            "-p",
+            f"evaluation_output_bag_path:=/tmp/eval_{prefix}_metrics.bag",
         ]
 
         result = subprocess.run(cmd, capture_output=True, text=True)
@@ -116,12 +125,15 @@ def evaluate_all_trajectories(
 
         # Find the JSON results (saved to home directory with timestamp)
         import glob
+
         json_pattern = str(Path.home() / "or_scene_evaluation_results_*.json")
-        json_files = sorted(glob.glob(json_pattern), key=lambda x: Path(x).stat().st_mtime, reverse=True)
+        json_files = sorted(
+            glob.glob(json_pattern), key=lambda x: Path(x).stat().st_mtime, reverse=True
+        )
 
         if len(json_files) > 0:
             latest_json = json_files[0]
-            with open(latest_json, 'r') as f:
+            with open(latest_json, "r") as f:
                 all_results[prefix] = json.load(f)
             print(f"  ✓ Evaluation complete for {prefix}")
             print(f"    JSON: {latest_json}")
@@ -148,7 +160,7 @@ def evaluate_all_trajectories(
 
     # Collect metric topics and messages from each model
     for prefix in all_results.keys():
-        metric_bag = f'/tmp/eval_{prefix}_metrics.bag'
+        metric_bag = f"/tmp/eval_{prefix}_metrics.bag"
 
         if not Path(metric_bag).exists():
             continue
@@ -156,7 +168,9 @@ def evaluate_all_trajectories(
         print(f"  Reading metrics for {prefix}...")
 
         metric_reader = SequentialReader()
-        metric_reader.open(StorageOptions(uri=metric_bag, storage_id=""), ConverterOptions("cdr", "cdr"))
+        metric_reader.open(
+            StorageOptions(uri=metric_bag, storage_id=""), ConverterOptions("cdr", "cdr")
+        )
 
         # Collect metric topics (only those with messages)
         metric_topics = {}
@@ -183,8 +197,9 @@ def evaluate_all_trajectories(
     print(f"  Total topics: {len(all_topics)}")
 
     # Write to temp bag
-    import tempfile
     import shutil
+    import tempfile
+
     temp_bag = tempfile.mkdtemp(prefix="eval_merge_")
     shutil.rmtree(temp_bag)  # Remove the directory, we just need the unique name
 
@@ -215,23 +230,29 @@ def evaluate_all_trajectories(
 
     # Save combined JSON
     if json_output_path:
-        with open(json_output_path, 'w') as f:
+        with open(json_output_path, "w") as f:
             json.dump(all_results, f, indent=2)
         print(f"  ✓ Combined results saved to: {json_output_path}")
 
     print(f"\n✓ Evaluation complete for {len(all_results)} models")
     print(f"  Output bag: {output_bag_path}")
 
+
 def main():
     parser = argparse.ArgumentParser(
-        description='Evaluate all LIVE trajectories in a bag simultaneously'
+        description="Evaluate all LIVE trajectories in a bag simultaneously"
     )
-    parser.add_argument('--bag', required=True, help='Bag with LIVE trajectories')
-    parser.add_argument('--input-bag', required=True, help='Original input bag for OR extraction')
-    parser.add_argument('--map-path', required=True, help='Path to lanelet2 map file')
-    parser.add_argument('--output-bag', required=True, help='Output bag with metrics')
-    parser.add_argument('--json-output', help='Combined JSON output file')
-    parser.add_argument('--time-window', type=float, default=5.0, help='Evaluation window on each side of OR (default: 5.0s)')
+    parser.add_argument("--bag", required=True, help="Bag with LIVE trajectories")
+    parser.add_argument("--input-bag", required=True, help="Original input bag for OR extraction")
+    parser.add_argument("--map-path", required=True, help="Path to lanelet2 map file")
+    parser.add_argument("--output-bag", required=True, help="Output bag with metrics")
+    parser.add_argument("--json-output", help="Combined JSON output file")
+    parser.add_argument(
+        "--time-window",
+        type=float,
+        default=5.0,
+        help="Evaluation window on each side of OR (default: 5.0s)",
+    )
 
     args = parser.parse_args()
 
@@ -250,15 +271,11 @@ def main():
     rclpy.init()
 
     evaluate_all_trajectories(
-        args.bag,
-        args.input_bag,
-        args.map_path,
-        args.output_bag,
-        args.json_output,
-        args.time_window
+        args.bag, args.input_bag, args.map_path, args.output_bag, args.json_output, args.time_window
     )
 
     rclpy.shutdown()
+
 
 if __name__ == "__main__":
     main()

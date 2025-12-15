@@ -7,15 +7,16 @@ Outputs JSON with OR event timestamps and saves route message for injection into
 
 import argparse
 import json
-import sys
 from pathlib import Path
+import sys
 
 from rclpy.serialization import deserialize_message
-from rosbag2_py import ConverterOptions, SequentialReader, StorageOptions
+from rosbag2_py import ConverterOptions
+from rosbag2_py import SequentialReader
+from rosbag2_py import StorageOptions
 
 try:
     from autoware_vehicle_msgs.msg import ControlModeReport
-    from autoware_planning_msgs.msg import LaneletRoute
 except ImportError:
     print("ERROR: Required ROS message types not found.")
     print("Make sure to source Autoware workspace first:")
@@ -89,9 +90,7 @@ def detect_or_events_and_extract_route(bag_path: str, before_sec: float, after_s
                         }
                     )
 
-                    print(
-                        f"OR Event #{or_count} detected at t={timestamp / 1e9:.3f}s"
-                    )
+                    print(f"OR Event #{or_count} detected at t={timestamp / 1e9:.3f}s")
                     print(
                         f"  Segment: [{seg_start_ns / 1e9:.3f}s, {seg_end_ns / 1e9:.3f}s] "
                         f"(duration: {(seg_end_ns - seg_start_ns) / 1e9:.2f}s)"
@@ -139,9 +138,7 @@ def main():
         description="Detect OR events and extract route message from rosbag"
     )
     parser.add_argument("--input", "-i", required=True, help="Input bag path")
-    parser.add_argument(
-        "--output", "-o", required=True, help="Output JSON file for OR events"
-    )
+    parser.add_argument("--output", "-o", required=True, help="Output JSON file for OR events")
     parser.add_argument(
         "--route-output",
         required=True,

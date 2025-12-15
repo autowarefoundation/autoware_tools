@@ -15,13 +15,16 @@
 #include "../src/bag_handler.hpp"
 
 #include <autoware_test_utils/autoware_test_utils.hpp>
+
 #include <gtest/gtest.h>
 
 #include <chrono>
 #include <memory>
 
-using namespace autoware::planning_data_analyzer;
-using namespace std::chrono;
+using autoware::planning_data_analyzer::BagData;
+using std::chrono::duration_cast;
+using std::chrono::nanoseconds;
+using std::chrono::system_clock;
 
 class BagHandlerTest : public ::testing::Test
 {

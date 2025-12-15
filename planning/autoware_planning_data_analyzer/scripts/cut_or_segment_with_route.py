@@ -6,10 +6,13 @@ This ensures each segment is self-contained with route available for DLR.
 """
 
 import argparse
-import sys
 from pathlib import Path
+import sys
 
-from rosbag2_py import ConverterOptions, SequentialReader, SequentialWriter, StorageOptions
+from rosbag2_py import ConverterOptions
+from rosbag2_py import SequentialReader
+from rosbag2_py import SequentialWriter
+from rosbag2_py import StorageOptions
 
 
 def cut_segment_with_route(
@@ -113,17 +116,11 @@ def cut_segment_with_route(
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Cut rosbag segment with route message injection"
-    )
+    parser = argparse.ArgumentParser(description="Cut rosbag segment with route message injection")
     parser.add_argument("--input", "-i", required=True, help="Input bag path")
     parser.add_argument("--output", "-o", required=True, help="Output bag path")
-    parser.add_argument(
-        "--start", type=int, required=True, help="Start timestamp (nanoseconds)"
-    )
-    parser.add_argument(
-        "--end", type=int, required=True, help="End timestamp (nanoseconds)"
-    )
+    parser.add_argument("--start", type=int, required=True, help="Start timestamp (nanoseconds)")
+    parser.add_argument("--end", type=int, required=True, help="End timestamp (nanoseconds)")
     parser.add_argument(
         "--route-data", required=True, help="File containing serialized route message"
     )
@@ -147,6 +144,7 @@ def main():
     # Remove output if it exists (allow overwriting)
     if Path(args.output).exists():
         import shutil
+
         shutil.rmtree(args.output)
         print(f"Removed existing output: {args.output}")
 
@@ -158,7 +156,7 @@ def main():
 
     # Cut segment
     try:
-        result = cut_segment_with_route(
+        _ = cut_segment_with_route(
             args.input, args.output, args.start, args.end, route_msg_data, args.route_topic
         )
         print("\n✓ Segment cut successfully")

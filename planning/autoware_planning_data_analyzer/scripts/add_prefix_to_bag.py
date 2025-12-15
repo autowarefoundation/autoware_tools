@@ -1,23 +1,22 @@
 #!/usr/bin/env python3
-"""
-Add prefixed trajectory topic to MCAP bag (in-place modification).
-Workaround for broken topic_tools/relay in DLR.
-"""
+"""Add prefixed trajectory topic to MCAP bag (in-place modification)."""
 import argparse
+from pathlib import Path
+import shutil
 import sys
 import tempfile
-import shutil
-from pathlib import Path
-from rosbag2_py import (
-    SequentialReader, SequentialWriter, StorageOptions,
-    ConverterOptions, TopicMetadata, Reindexer
-)
+
+from rosbag2_py import ConverterOptions
+from rosbag2_py import SequentialReader
+from rosbag2_py import SequentialWriter
+from rosbag2_py import StorageOptions
+from rosbag2_py import TopicMetadata
+
 
 def add_prefixed_topic(bag_path: str, prefix: str, source_topic: str):
     """Add prefixed copy of source topic to bag."""
-
     # Replace dots with underscores for ROS compliance (v2.0 -> v2_0)
-    prefix_safe = prefix.replace('.', '_')
+    prefix_safe = prefix.replace(".", "_")
     prefixed_topic = f"/{prefix_safe}{source_topic}"
 
     print(f"Adding prefixed topic to: {bag_path}")
@@ -69,7 +68,9 @@ def add_prefixed_topic(bag_path: str, prefix: str, source_topic: str):
             writer.create_topic(topic_meta)
 
         # Create prefixed topic
-        writer.create_topic(TopicMetadata(name=prefixed_topic, type=traj_type, serialization_format="cdr"))
+        writer.create_topic(
+            TopicMetadata(name=prefixed_topic, type=traj_type, serialization_format="cdr")
+        )
 
         # Write all original messages
         for topic, data, timestamp in all_messages:
@@ -95,12 +96,16 @@ def add_prefixed_topic(bag_path: str, prefix: str, source_topic: str):
             shutil.rmtree(temp_bag)
         raise e
 
+
 def main():
     parser = argparse.ArgumentParser(description="Add prefixed trajectory topic to bag")
     parser.add_argument("--bag", required=True, help="Path to result_bag directory")
     parser.add_argument("--prefix", required=True, help="Topic prefix (e.g., v2.0)")
-    parser.add_argument("--source-topic", default="/planning/trajectory_generator/diffusion_planner_node/output/trajectory",
-                        help="Source topic to copy")
+    parser.add_argument(
+        "--source-topic",
+        default="/planning/trajectory_generator/diffusion_planner_node/output/trajectory",
+        help="Source topic to copy",
+    )
 
     args = parser.parse_args()
 
@@ -109,6 +114,7 @@ def main():
         sys.exit(1)
 
     add_prefixed_topic(args.bag, args.prefix, args.source_topic)
+
 
 if __name__ == "__main__":
     main()

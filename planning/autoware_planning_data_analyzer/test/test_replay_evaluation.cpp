@@ -15,12 +15,16 @@
 #include "../src/autoware_planning_data_analyzer_node.hpp"
 
 #include <autoware_test_utils/autoware_test_utils.hpp>
-#include <gtest/gtest.h>
 #include <rclcpp/rclcpp.hpp>
 
-#include <memory>
+#include <gtest/gtest.h>
 
-using namespace autoware::planning_data_analyzer;
+#include <map>
+#include <memory>
+#include <string>
+#include <vector>
+
+using autoware::planning_data_analyzer::TopicNames;
 
 class ReplayEvaluationTest : public ::testing::Test
 {
@@ -28,23 +32,21 @@ protected:
   void SetUp() override
   {
     rclcpp::init(0, nullptr);
-    
+
     // Create node options for testing
     rclcpp::NodeOptions node_options;
     node_options.append_parameter_override("replay_bag_path", "/tmp/test_replay.bag");
     node_options.append_parameter_override("route_bag_path", "/tmp/test_route.bag");
-    node_options.append_parameter_override("metrics", std::vector<std::string>{"lateral_acceleration"});
+    node_options.append_parameter_override(
+      "metrics", std::vector<std::string>{"lateral_acceleration"});
     node_options.append_parameter_override("sample_num", 10);
     node_options.append_parameter_override("resolution", 0.1);
-    
+
     // Skip actual node creation due to missing bag files in test environment
     // This would be done in integration tests with actual test bags
   }
 
-  void TearDown() override
-  {
-    rclcpp::shutdown();
-  }
+  void TearDown() override { rclcpp::shutdown(); }
 };
 
 TEST_F(ReplayEvaluationTest, TopicDefinitions)
@@ -89,13 +91,13 @@ TEST_F(ReplayEvaluationTest, TrajectoryMessageCreation)
 
   EXPECT_EQ(trajectory.points.size(), 10u);
   EXPECT_EQ(trajectory.header.frame_id, "map");
-  
+
   // Verify trajectory point data
-  const auto& first_point = trajectory.points[0];
+  const auto & first_point = trajectory.points[0];
   EXPECT_DOUBLE_EQ(first_point.pose.position.x, 0.0);
   EXPECT_DOUBLE_EQ(first_point.longitudinal_velocity_mps, 15.0);
-  
-  const auto& last_point = trajectory.points[9];
+
+  const auto & last_point = trajectory.points[9];
   EXPECT_DOUBLE_EQ(last_point.pose.position.x, 18.0);
 }
 
@@ -104,22 +106,19 @@ TEST_F(ReplayEvaluationTest, ParameterValidation)
 {
   // Test parameter structure that would be used by the node
   std::map<std::string, std::string> expected_params = {
-    {"replay_bag_path", "/path/to/replay.bag"},
-    {"route_bag_path", "/path/to/route.bag"}
-  };
+    {"replay_bag_path", "/path/to/replay.bag"}, {"route_bag_path", "/path/to/route.bag"}};
 
-  for (const auto& [key, value] : expected_params) {
+  for (const auto & [key, value] : expected_params) {
     EXPECT_FALSE(key.empty());
     EXPECT_FALSE(value.empty());
   }
 
   // Test metric parameter validation
   std::vector<std::string> valid_metrics = {
-    "lateral_acceleration", "longitudinal_jerk", "travel_distance"
-  };
+    "lateral_acceleration", "longitudinal_jerk", "travel_distance"};
 
   EXPECT_GT(valid_metrics.size(), 0u);
-  for (const auto& metric : valid_metrics) {
+  for (const auto & metric : valid_metrics) {
     EXPECT_FALSE(metric.empty());
   }
 }

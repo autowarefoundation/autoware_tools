@@ -13,20 +13,23 @@
 // limitations under the License.
 
 #include "base_evaluator.hpp"
+
 #include "metrics/trajectory_metrics.hpp"
 
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/reader.hpp>
+
 #include <std_msgs/msg/float64_multi_array.hpp>
 
 #include <limits>
+#include <memory>
+#include <string>
 
 namespace autoware::planning_data_analyzer
 {
 
 BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
-  const std::string & bag_path,
-  rosbag2_cpp::Writer * /*evaluation_bag_writer*/,
+  const std::string & bag_path, rosbag2_cpp::Writer * /*evaluation_bag_writer*/,
   const TopicNames & topic_names)
 {
   // Open bag reader
@@ -34,25 +37,26 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   bag_reader.open(bag_path);
 
   // Create bag data handler with common parameters
-  const double buffer_duration_sec = 20.0;  // TODO: make configurable
-  const size_t max_buffer_messages = 100000; // TODO: make configurable
-  auto bag_data = std::make_shared<BagData>(0, topic_names, buffer_duration_sec, max_buffer_messages);
+  const double buffer_duration_sec = 20.0;    // TODO(go-sakayori): make configurable
+  const size_t max_buffer_messages = 100000;  // TODO(go-sakayori): make configurable
+  auto bag_data =
+    std::make_shared<BagData>(0, topic_names, buffer_duration_sec, max_buffer_messages);
 
   // Result to return
   BagProcessingResult result;
-  
+
   // Find the time range of the bag
   rclcpp::Time bag_start_time = rclcpp::Time(std::numeric_limits<int64_t>::max());
   rclcpp::Time bag_end_time = rclcpp::Time(0);
-  
-  const bool use_bag_timestamp = true;  // TODO: make configurable
+
+  const bool use_bag_timestamp = true;  // TODO(go-sakayori): make configurable
 
   // Process all messages in the bag
   while (bag_reader.has_next() && rclcpp::ok()) {
     auto serialized_message = bag_reader.read_next();
     const auto & topic_name = serialized_message->topic_name;
     rclcpp::Time msg_time(serialized_message->time_stamp);
-    
+
     // Update time range
     if (msg_time < bag_start_time) bag_start_time = msg_time;
     if (msg_time > bag_end_time) bag_end_time = msg_time;
@@ -61,32 +65,28 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
     if (topic_name == topic_names.odometry_topic) {
       process_and_append_message<Odometry>(
         serialized_message, bag_data, topic_names.odometry_topic, use_bag_timestamp, logger_);
-    } 
-    else if (topic_name == topic_names.trajectory_topic) {
+    } else if (topic_name == topic_names.trajectory_topic) {
       process_and_append_message<Trajectory>(
         serialized_message, bag_data, topic_names.trajectory_topic, use_bag_timestamp, logger_);
-    } 
-    else if (topic_name == topic_names.acceleration_topic && !topic_names.acceleration_topic.empty()) {
+    } else if (
+      topic_name == topic_names.acceleration_topic && !topic_names.acceleration_topic.empty()) {
       process_and_append_message<AccelWithCovarianceStamped>(
         serialized_message, bag_data, topic_names.acceleration_topic, use_bag_timestamp, logger_);
-    } 
-    else if (topic_name == topic_names.steering_topic && !topic_names.steering_topic.empty()) {
+    } else if (topic_name == topic_names.steering_topic && !topic_names.steering_topic.empty()) {
       // SteeringReport doesn't have header, so we don't override timestamp
       process_and_append_message<SteeringReport>(
         serialized_message, bag_data, topic_names.steering_topic, false, logger_);
-    } 
-    else if (topic_name == topic_names.objects_topic) {
+    } else if (topic_name == topic_names.objects_topic) {
       process_and_append_message<PredictedObjects>(
         serialized_message, bag_data, topic_names.objects_topic, use_bag_timestamp, logger_);
-    } 
-    else if (topic_name == topic_names.tf_topic) {
+    } else if (topic_name == topic_names.tf_topic) {
       process_and_append_message<TFMessage>(
         serialized_message, bag_data, topic_names.tf_topic, false, logger_);
     }
   }
 
   // Get kinematic states at regular intervals
-  const double evaluation_interval_ms = 100.0;  // TODO: make configurable
+  const double evaluation_interval_ms = 100.0;  // TODO(go-sakayori): make configurable
   auto kinematic_states = bag_data->get_kinematic_states_at_interval(evaluation_interval_ms);
 
   if (kinematic_states.empty()) {
@@ -97,18 +97,19 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   }
 
   // Collect synchronized data
-  const double sync_tolerance_ms = 50.0;  // TODO: make configurable
+  const double sync_tolerance_ms = 50.0;  // TODO(go-sakayori): make configurable
   for (const auto & kinematic_state : kinematic_states) {
     const auto timestamp = rclcpp::Time(kinematic_state->header.stamp).nanoseconds();
     auto sync_data = bag_data->get_synchronized_data_at_time(timestamp, sync_tolerance_ms);
-    
+
     if (sync_data && sync_data->trajectory) {
       result.synchronized_data_list.push_back(sync_data);
     }
   }
 
   // Sort by timestamp
-  std::sort(result.synchronized_data_list.begin(), result.synchronized_data_list.end(),
+  std::sort(
+    result.synchronized_data_list.begin(), result.synchronized_data_list.end(),
     [](const auto & a, const auto & b) { return a->timestamp < b->timestamp; });
 
   // Set evaluation time range
@@ -124,12 +125,10 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
 }
 
 void BaseEvaluator::save_json_results(
-  const nlohmann::json & json_output,
-  const std::string & bag_path,
-  const std::string & evaluation_mode,
-  const std::string & output_filename) const
+  const nlohmann::json & json_output, const std::string & bag_path,
+  const std::string & evaluation_mode, const std::string & output_filename) const
 {
-  // TODO: make output directory configurable
+  // TODO(go-sakayori): make output directory configurable
   const std::string json_output_path = "~/" + output_filename + ".json";
   std::string expanded_path = json_output_path;
 
@@ -154,7 +153,7 @@ void BaseEvaluator::save_json_results(
 
   // Create mutable copy to add evaluation info
   nlohmann::json json_with_info = json_output;
-  
+
   // Add evaluation info
   json_with_info["evaluation_info"]["timestamp"] = timestamp_ss.str();
   json_with_info["evaluation_info"]["bag_path"] = bag_path;
@@ -172,8 +171,7 @@ void BaseEvaluator::save_json_results(
 }
 
 void BaseEvaluator::write_tf_static_to_bag(
-  rosbag2_cpp::Writer * evaluation_bag_writer,
-  const tf2_msgs::msg::TFMessage & tf_static_msgs,
+  rosbag2_cpp::Writer * evaluation_bag_writer, const tf2_msgs::msg::TFMessage & tf_static_msgs,
   const rclcpp::Time & normalized_timestamp) const
 {
   if (!evaluation_bag_writer || tf_static_msgs.transforms.empty()) {
@@ -182,16 +180,15 @@ void BaseEvaluator::write_tf_static_to_bag(
 
   // Create normalized tf_static message
   tf2_msgs::msg::TFMessage normalized_tf_static = tf_static_msgs;
-  for (auto& transform : normalized_tf_static.transforms) {
+  for (auto & transform : normalized_tf_static.transforms) {
     transform.header.stamp = normalized_timestamp;
   }
-  
+
   evaluation_bag_writer->write(normalized_tf_static, "/tf_static", normalized_timestamp);
 }
 
 void BaseEvaluator::write_trajectory_to_bag(
-  const std::shared_ptr<SynchronizedData> & sync_data,
-  rosbag2_cpp::Writer & bag_writer,
+  const std::shared_ptr<SynchronizedData> & sync_data, rosbag2_cpp::Writer & bag_writer,
   const rclcpp::Time & normalized_timestamp) const
 {
   if (sync_data && sync_data->trajectory) {
@@ -201,10 +198,8 @@ void BaseEvaluator::write_trajectory_to_bag(
   }
 }
 
-
 void BaseEvaluator::save_trajectory_point_metrics_to_bag(
-  const metrics::TrajectoryPointMetrics & metrics,
-  rosbag2_cpp::Writer & bag_writer,
+  const metrics::TrajectoryPointMetrics & metrics, rosbag2_cpp::Writer & bag_writer,
   const rclcpp::Time & normalized_timestamp) const
 {
   // Save lateral accelerations
@@ -239,7 +234,7 @@ void BaseEvaluator::save_trajectory_point_metrics_to_bag(
   {
     std_msgs::msg::Float64MultiArray msg;
     msg.data = metrics.travel_distances;
-    bag_writer.write(msg,"/trajectory/travel_distances", normalized_timestamp);
+    bag_writer.write(msg, "/trajectory/travel_distances", normalized_timestamp);
   }
 }
 
