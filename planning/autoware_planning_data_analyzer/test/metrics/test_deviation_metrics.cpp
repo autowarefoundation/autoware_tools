@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 #include <cmath>
+#include <vector>
 
 TEST(DeviationMetrics, Distance2D)
 {
