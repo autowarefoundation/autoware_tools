@@ -14,6 +14,9 @@
 
 #include "bag_utils.hpp"
 
+#include <string>
+#include <vector>
+
 namespace autoware::planning_data_analyzer::utils
 {
 
