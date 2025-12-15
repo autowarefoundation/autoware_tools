@@ -1,6 +1,6 @@
 <launch>
   <arg name="bag_path" description="Path to rosbag file or directory"/>
-  <arg name="config_file" default="$(find-pkg-share autoware_planning_data_analyzer)/config/offline_evaluation.param.yaml" description="Path to parameter file"/>
+  <arg name="config_file" default="$(find-pkg-share autoware_planning_data_analyzer)/config/planning_data_analyzer.param.yaml" description="Path to parameter file"/>
 
   <node pkg="autoware_planning_data_analyzer" exec="autoware_planning_data_analyzer_node" name="autoware_planning_data_analyzer" output="screen">
     <param name="bag_path" value="$(var bag_path)"/>
