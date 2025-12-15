@@ -40,6 +40,7 @@
 #include <rmw/rmw.h>
 
 #include <chrono>
+#include <cstdlib>
 #include <ctime>
 #include <exception>
 #include <filesystem>
@@ -136,6 +137,17 @@ void AutowarePlanningDataAnalyzerNode::setup_evaluation_bag_writer()
     // Get output bag path from parameters with default
     auto output_bag_path =
       get_parameter_or_default<std::string>(*this, "evaluation_output_bag_path", "./");
+
+    // Expand ~ to home directory
+    if (!output_bag_path.empty() && output_bag_path[0] == '~') {
+      const char * home = std::getenv("HOME");
+      if (home != nullptr) {
+        output_bag_path = std::string(home) + output_bag_path.substr(1);
+      } else {
+        RCLCPP_WARN(get_logger(), "HOME environment variable not set, using current directory");
+        output_bag_path = "./";
+      }
+    }
 
     // Ensure directory exists
     const auto output_dir = std::filesystem::path(output_bag_path).parent_path();
