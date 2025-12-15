@@ -1,9 +1,5 @@
 # Planning Data Analyzer
 
-<div align="center">
-  <img src="./docs/planning_data_analyzer.png" width=100%>
-</div>
-
 ## Overview
 
 This package provides offline evaluation tools for trajectory planning performance analysis from recorded rosbag data.
