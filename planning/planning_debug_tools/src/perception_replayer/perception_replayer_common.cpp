@@ -403,7 +403,8 @@ void PerceptionReplayerCommon::kill_online_perception_node()
 
 void PerceptionReplayerCommon::kill_process(const std::string & process_name)
 {
-  const std::string command = "pgrep -f '" + process_name + "' 2>/dev/null";
+  // use pidof to find the process
+  const std::string command = "pidof " + process_name + " 2>/dev/null";
   FILE * pipe = popen(command.c_str(), "r");
   if (!pipe) {
     return;
@@ -414,26 +415,23 @@ void PerceptionReplayerCommon::kill_process(const std::string & process_name)
   while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
     result += buffer;
   }
-  pclose(pipe);
+  const int pclose_result = pclose(pipe);
 
-  if (result.empty()) {
-    return;
-  }
-
-  std::istringstream iss(result);
-  std::string line;
-  while (std::getline(iss, line)) {
-    if (line.empty()) {
-      continue;
-    }
-
+  // check if pidof found the process (exit code 0)
+  if (pclose_result == 0 && !result.empty()) {
     try {
-      const pid_t pid = static_cast<pid_t>(std::stol(line));
+      // parse pid from result
+      const pid_t pid = static_cast<pid_t>(std::stol(result));
+      // send SIGTERM (same as Python's process.terminate())
       const std::string kill_command = "kill -TERM " + std::to_string(pid) + " 2>/dev/null";
       const int kill_result = system(kill_command.c_str());
-      (void)kill_result;
+      if (kill_result == 0) {
+        RCLCPP_INFO(
+          get_logger(), "Terminated process %s (PID: %d)", process_name.c_str(),
+          pid);
+      }
     } catch (const std::exception & e) {
-      continue;
+      // failed to convert pid, ignore
     }
   }
 }
