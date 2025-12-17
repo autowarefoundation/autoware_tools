@@ -4650,10 +4650,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#usage" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Usage
+        Overview
       
     </span>
   </a>
@@ -4661,10 +4661,110 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#output" class="md-nav__link">
+  <a href="#evaluation-modes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Output
+        Evaluation Modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick Start
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Quick Start">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#open-loop-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Loop Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#or-scene-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OR Scene Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-model-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Model Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#utility-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Utility Scripts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#for-more-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For More Information
       
     </span>
   </a>
@@ -4692,45 +4792,72 @@
 
 
 <div><h1 id="planning-data-analyzer">Planning Data Analyzer<a class="headerlink" href="#planning-data-analyzer" title="Permanent link">#</a></h1>
-<div align="center">
-  <img src="./docs/planning_data_analyzer.png" width="100%">
-</div>
-
-<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_planning_data_analyzer<span class="w"> </span>behavior_analyzer.launch.xml<span class="w"> </span>bag_path:<span class="o">=</span>&lt;ROSBAG&gt;
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h2>
+<p>This package provides offline evaluation tools for trajectory planning performance analysis from recorded rosbag data.</p>
+<h2 id="evaluation-modes">Evaluation Modes<a class="headerlink" href="#evaluation-modes" title="Permanent link">#</a></h2>
+<ol>
+<li><strong>Open Loop</strong>: Evaluate prediction accuracy against ground truth trajectories</li>
+<li><strong>OR Scene</strong>: Evaluate override regression scenarios (LIVE vs HISTORICAL)</li>
+</ol>
+<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">#</a></h2>
+<h3 id="open-loop-evaluation">Open Loop Evaluation<a class="headerlink" href="#open-loop-evaluation" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_planning_data_analyzer<span class="w"> </span>autoware_planning_data_analyzer_node<span class="w"> </span>--ros-args<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span>bag_path:<span class="o">=</span>~/my_bag<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span>evaluation.mode:<span class="o">=</span>open_loop<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span>trajectory_topic:<span class="o">=</span>/planning/trajectory<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span>json_output_path:<span class="o">=</span>~/results.json
 </code></pre></div>
-<h2 id="output">Output<a class="headerlink" href="#output" title="Permanent link">#</a></h2>
-<table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>~/output/manual_metrics</code></td>
-<td><code>autoware_internal_debug_msgs::msg::Float32MultiArrayStamped</code></td>
-<td>Metrics calculated from the driver's driving trajectory.</td>
-</tr>
-<tr>
-<td><code>~/output/system_metrics</code></td>
-<td><code>autoware_internal_debug_msgs::msg::Float32MultiArrayStamped</code></td>
-<td>Metrics calculated from the autoware output.</td>
-</tr>
-<tr>
-<td><code>~/output/manual_score</code></td>
-<td><code>autoware_internal_debug_msgs::msg::Float32MultiArrayStamped</code></td>
-<td>Driving scores calculated from the driver's driving trajectory.</td>
-</tr>
-<tr>
-<td><code>~/output/system_score</code></td>
-<td><code>autoware_internal_debug_msgs::msg::Float32MultiArrayStamped</code></td>
-<td>Driving scores calculated from the autoware output.</td>
-</tr>
-</tbody>
-</table></div>
+<h3 id="or-scene-evaluation">OR Scene Evaluation<a class="headerlink" href="#or-scene-evaluation" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Using the unified script</span>
+./install/autoware_planning_data_analyzer/share/autoware_planning_data_analyzer/scripts/run_evaluation.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-b<span class="w"> </span>~/result_bag.mcap<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-m<span class="w"> </span>or_scene<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-t<span class="w"> </span>/planning/diffusion_planner/trajectory<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-o<span class="w"> </span>~/results<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--live<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--viz
+</code></pre></div>
+<h3 id="multi-model-pipeline">Multi-Model Pipeline<a class="headerlink" href="#multi-model-pipeline" title="Permanent link">#</a></h3>
+<div class="highlight"><pre><span></span><code><span class="c1"># Evaluate multiple models from DLR results</span>
+./install/autoware_planning_data_analyzer/share/autoware_planning_data_analyzer/scripts/multi_model_pipeline.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--scenario<span class="w"> </span>~/dataset/scenario.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--trajectory<span class="w"> </span>/planning/model_a/trajectory<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--trajectory<span class="w"> </span>/planning/model_b/trajectory<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output<span class="w"> </span>~/comparison<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--viz
+</code></pre></div>
+<h2 id="output-files">Output Files<a class="headerlink" href="#output-files" title="Permanent link">#</a></h2>
+<ul>
+<li><strong><code>evaluation_result.json</code></strong> - Detailed metrics (ADE, FDE, TTC, etc.) and summary statistics</li>
+<li><strong><code>evaluation_output.bag/</code></strong> - Evaluation metrics as rosbag for visualization</li>
+<li><strong><code>debug_images/*.png</code></strong> - Trajectory visualization (with <code>--viz</code> flag)</li>
+</ul>
+<h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">#</a></h2>
+<p>Key parameters in <code>config/offline_evaluation.param.yaml</code>:</p>
+<ul>
+<li><code>evaluation.mode</code>: Evaluation mode (<code>open_loop</code> or <code>or_scene</code>)</li>
+<li><code>evaluation_interval_ms</code>: Sampling interval (default: 100ms)</li>
+<li><code>sync_tolerance_ms</code>: Time synchronization tolerance (default: 100ms)</li>
+<li><code>trajectory_topic</code>: Trajectory topic to evaluate</li>
+<li><code>or_scene_evaluation.*</code>: OR scene specific settings</li>
+</ul>
+<h3 id="utility-scripts">Utility Scripts<a class="headerlink" href="#utility-scripts" title="Permanent link">#</a></h3>
+<p>Located in <code>scripts/</code> directory:</p>
+<ul>
+<li><strong>Bag Processing</strong>: <code>merge_bags.py</code>, <code>rename_bag_topic.py</code>, <code>add_prefix_to_bag.py</code></li>
+<li><strong>Ground Truth</strong>: <code>add_gt_trajectory_to_bag.py</code></li>
+<li><strong>OR Analysis</strong>: <code>detect_or_and_route.py</code>, <code>evaluate_or_segments.py</code></li>
+<li><strong>Visualization</strong>: <code>generate_or_visualization.py</code></li>
+<li><strong>Comparison</strong>: <code>compare_live_historical.py</code></li>
+</ul>
+<p>See <code>scripts/README.md</code> for detailed documentation.</p>
+<hr>
+<h2 id="for-more-information">For More Information<a class="headerlink" href="#for-more-information" title="Permanent link">#</a></h2>
+<ul>
+<li>Offline evaluation scripts: <a href="scripts/README.md">scripts/README.md</a></li>
+<li>Configuration: <a href="config/offline_evaluation.param.yaml">config/offline_evaluation.param.yaml</a></li>
+<li>Launch files: <a href="launch/">launch/</a></li>
+</ul></div>
 
 
 
