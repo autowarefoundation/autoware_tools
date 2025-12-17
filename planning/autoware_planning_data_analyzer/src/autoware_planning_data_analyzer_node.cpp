@@ -18,6 +18,7 @@
 // implemented
 #include "open_loop_evaluator.hpp"
 #include "or_scene_evaluator.hpp"
+#include "utils/path_utils.hpp"
 
 #include <autoware_lanelet2_extension/visualization/visualization.hpp>
 #include <autoware_utils/ros/marker_helper.hpp>
@@ -47,6 +48,7 @@
 #include <fstream>
 #include <iomanip>
 #include <memory>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <string>
@@ -58,16 +60,6 @@ namespace autoware::planning_data_analyzer
 using autoware_utils::create_marker_color;
 using autoware_utils_rclcpp::get_or_declare_parameter;
 
-// Helper function to get parameter with default value
-template <typename T>
-T get_parameter_or_default(rclcpp::Node & node, const std::string & name, const T & default_value)
-{
-  if (node.has_parameter(name)) {
-    return node.get_parameter(name).get_value<T>();
-  }
-  return node.declare_parameter<T>(name, default_value);
-}
-
 AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   const rclcpp::NodeOptions & node_options)
 : Node("autoware_planning_data_analyzer", node_options),
@@ -76,7 +68,7 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   setup_evaluation_bag_writer();
 
   // Open bag file
-  bag_path_ = get_or_declare_parameter<std::string>(*this, "bag_path");
+  bag_path_ = get_or_declare_parameter<std::string>(*this, "input_bag_path");
   try {
     bag_reader_.open(bag_path_);
   } catch (const std::exception & e) {
@@ -84,27 +76,19 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
     throw;
   }
 
-  // Initialize topic names from parameters with defaults
-  map_topic_name_ = get_parameter_or_default<std::string>(*this, "map_topic", "/map/vector_map");
-  map_marker_topic_name_ =
-    get_parameter_or_default<std::string>(*this, "map_marker_array", "/map/vector_map_marker");
-  route_topic_name_ =
-    get_parameter_or_default<std::string>(*this, "route_topic", "/planning/mission_planning/route");
-  odometry_topic_name_ =
-    get_parameter_or_default<std::string>(*this, "odometry_topic", "/localization/kinematic_state");
-  trajectory_topic_name_ = get_parameter_or_default<std::string>(
-    *this, "trajectory_topic", "/planning/scenario_planning/lane_driving/trajectory");
-  objects_topic_name_ = get_parameter_or_default<std::string>(
-    *this, "objects_topic", "/perception/object_recognition/objects");
-  tf_topic_name_ = get_parameter_or_default<std::string>(*this, "tf_topic", "/tf");
-  acceleration_topic_name_ = get_parameter_or_default<std::string>(
-    *this, "acceleration_topic", "/localization/acceleration");
-  steering_topic_name_ = get_parameter_or_default<std::string>(
-    *this, "steering_topic", "/vehicle/status/steering_status");
+  // Initialize topic names from parameters
+  map_topic_name_ = get_or_declare_parameter<std::string>(*this, "map_topic");
+  map_marker_topic_name_ = get_or_declare_parameter<std::string>(*this, "map_marker_array");
+  route_topic_name_ = get_or_declare_parameter<std::string>(*this, "route_topic");
+  odometry_topic_name_ = get_or_declare_parameter<std::string>(*this, "odometry_topic");
+  trajectory_topic_name_ = get_or_declare_parameter<std::string>(*this, "trajectory_topic");
+  objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
+  tf_topic_name_ = get_or_declare_parameter<std::string>(*this, "tf_topic");
+  acceleration_topic_name_ = get_or_declare_parameter<std::string>(*this, "acceleration_topic");
+  steering_topic_name_ = get_or_declare_parameter<std::string>(*this, "steering_topic");
 
   // Read evaluation mode
-  const auto mode_str =
-    get_parameter_or_default<std::string>(*this, "evaluation.mode", "closed_loop");
+  const auto mode_str = get_or_declare_parameter<std::string>(*this, "evaluation.mode");
   if (mode_str == "open_loop") {
     evaluation_mode_ = EvaluationMode::OPEN_LOOP;
   } else if (mode_str == "or_scene") {
@@ -134,43 +118,20 @@ void AutowarePlanningDataAnalyzerNode::setup_evaluation_bag_writer()
   try {
     evaluation_bag_writer_ = std::make_unique<rosbag2_cpp::Writer>();
 
-    // Get output bag path from parameters with default
-    auto output_bag_path =
-      get_parameter_or_default<std::string>(*this, "evaluation_output_bag_path", "./");
+    // Get output directory
+    auto output_dir = get_or_declare_parameter<std::string>(*this, "output_dir");
 
-    // Expand ~ to home directory
-    if (!output_bag_path.empty() && output_bag_path[0] == '~') {
-      const char * home = std::getenv("HOME");
-      if (home != nullptr) {
-        output_bag_path = std::string(home) + output_bag_path.substr(1);
-      } else {
-        RCLCPP_WARN(get_logger(), "HOME environment variable not set, using current directory");
-        output_bag_path = "./";
-      }
-    }
+    // Expand home directory if needed
+    output_dir = utils::expand_home_directory(output_dir);
 
-    // Ensure directory exists
-    const auto output_dir = std::filesystem::path(output_bag_path).parent_path();
-    RCLCPP_INFO(get_logger(), "Output directory: %s", output_dir.string().c_str());
-    if (!output_dir.empty() && !std::filesystem::exists(output_dir)) {
-      std::filesystem::create_directories(output_dir);
-      RCLCPP_INFO(get_logger(), "Created output directory: %s", output_dir.string().c_str());
-    }
+    // Generate output bag path (use .mcap extension to save directly as single file)
+    const auto output_bag_path = (std::filesystem::path(output_dir) / "bag").string();
 
-    // Validate write permissions
-    if (!output_dir.empty()) {
-      const auto test_file = output_dir / ".write_test";
-      std::ofstream test_stream(test_file);
-      if (!test_stream.is_open()) {
-        throw std::runtime_error("No write permission to output directory: " + output_dir.string());
-      }
-      test_stream.close();
-      std::filesystem::remove(test_file);
-    }
+    // Ensure output directory exists and is writable
+    utils::ensure_directory_writable(output_dir, get_logger());
 
     // Setup bag writer with MCAP format
     const rosbag2_storage::StorageOptions storage_options{output_bag_path, "mcap"};
-
     const rosbag2_cpp::ConverterOptions converter_options{
       rmw_get_serialization_format(), rmw_get_serialization_format()};
 
@@ -281,37 +242,37 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
     case EvaluationMode::OR_SCENE: {
       // Read OR scene specific parameters
       const double time_window_sec =
-        get_parameter_or_default<double>(*this, "or_scene_evaluation.time_window_sec", 0.5);
-      const bool enable_debug_viz = get_parameter_or_default<bool>(
-        *this, "or_scene_evaluation.enable_debug_visualization", false);
+        get_or_declare_parameter<double>(*this, "or_scene_evaluation.time_window_sec");
+      const bool enable_debug_viz =
+        get_or_declare_parameter<bool>(*this, "or_scene_evaluation.enable_debug_visualization");
 
       // Read success criteria
       ORSuccessCriteria success_criteria;
-      success_criteria.enabled = get_parameter_or_default<bool>(
-        *this, "or_scene_evaluation.success_criteria.enabled", false);
-      success_criteria.max_ade = get_parameter_or_default<double>(
-        *this, "or_scene_evaluation.success_criteria.max_ade", 1.0);
-      success_criteria.max_fde = get_parameter_or_default<double>(
-        *this, "or_scene_evaluation.success_criteria.max_fde", 1.5);
-      success_criteria.max_lateral_deviation = get_parameter_or_default<double>(
-        *this, "or_scene_evaluation.success_criteria.max_lateral_deviation", 0.5);
-      success_criteria.min_ttc = get_parameter_or_default<double>(
-        *this, "or_scene_evaluation.success_criteria.min_ttc", 3.0);
+      success_criteria.enabled =
+        get_or_declare_parameter<bool>(*this, "or_scene_evaluation.success_criteria.enabled");
+      success_criteria.max_ade =
+        get_or_declare_parameter<double>(*this, "or_scene_evaluation.success_criteria.max_ade");
+      success_criteria.max_fde =
+        get_or_declare_parameter<double>(*this, "or_scene_evaluation.success_criteria.max_fde");
+      success_criteria.max_lateral_deviation = get_or_declare_parameter<double>(
+        *this, "or_scene_evaluation.success_criteria.max_lateral_deviation");
+      success_criteria.min_ttc =
+        get_or_declare_parameter<double>(*this, "or_scene_evaluation.success_criteria.min_ttc");
 
-      const auto debug_output_dir = get_parameter_or_default<std::string>(
-        *this, "or_scene_evaluation.debug_output_dir", "~/or_scene_debug_images");
+      const auto debug_output_dir =
+        get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.debug_output_dir");
 
       ORSceneEvaluator evaluator(
         get_logger(), route_handler_, time_window_sec, success_criteria, enable_debug_viz,
         debug_output_dir);
 
       // Set OR events JSON paths if provided
-      const auto or_events_input_path = get_parameter_or_default<std::string>(
-        *this, "or_scene_evaluation.or_events_input_path", "");
-      const auto or_events_output_path = get_parameter_or_default<std::string>(
-        *this, "or_scene_evaluation.or_events_output_path", "");
+      const auto or_events_input_path =
+        get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.or_events_input_path");
+      const auto or_events_output_path =
+        get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.or_events_output_path");
       const auto input_bag_path =
-        get_parameter_or_default<std::string>(*this, "or_scene_evaluation.input_bag_path", "");
+        get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.input_bag_path");
 
       if (!or_events_input_path.empty()) {
         evaluator.set_or_events_json_path(or_events_input_path);

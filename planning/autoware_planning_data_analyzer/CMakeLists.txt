@@ -14,6 +14,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/metrics/trajectory_metrics.cpp
   src/utils/bag_utils.cpp
   src/utils/json_utils.cpp
+  src/utils/path_utils.cpp
   src/autoware_planning_data_analyzer_node.cpp
 )
 
