@@ -426,9 +426,7 @@ void PerceptionReplayerCommon::kill_process(const std::string & process_name)
       const std::string kill_command = "kill -TERM " + std::to_string(pid) + " 2>/dev/null";
       const int kill_result = system(kill_command.c_str());
       if (kill_result == 0) {
-        RCLCPP_INFO(
-          get_logger(), "Terminated process %s (PID: %d)", process_name.c_str(),
-          pid);
+        RCLCPP_INFO(get_logger(), "Terminated process %s (PID: %d)", process_name.c_str(), pid);
       }
     } catch (const std::exception & e) {
       // failed to convert pid, ignore
