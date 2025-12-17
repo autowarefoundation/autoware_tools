@@ -137,9 +137,6 @@ protected:
   rclcpp::Publisher<PoseStamped>::SharedPtr goal_as_mission_planning_goal_pub_;
 
   rclcpp::Publisher<Odometry>::SharedPtr recorded_ego_pub_;
-
-  // cache for occupancy grid to avoid republishing the same message
-  size_t last_published_occupancy_grid_idx_ = SIZE_MAX;
 };
 
 }  // namespace autoware::planning_debug_tools

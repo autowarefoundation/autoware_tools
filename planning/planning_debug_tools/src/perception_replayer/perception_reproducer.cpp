@@ -110,7 +110,6 @@ void PerceptionReproducer::on_timer()
       : 999.0;
 
   // update the reproduce sequence if the distance moved is greater than the search radius
-  auto seq_update_start = std::chrono::high_resolution_clock::now();
   if (dist_moved > ego_odom_search_radius_) {
     last_sequenced_ego_pose_ = ego_pose;
 
@@ -156,11 +155,6 @@ void PerceptionReproducer::on_timer()
     reproduce_sequence_indices_ =
       std::deque<size_t>(ego_odom_indices.begin(), ego_odom_indices.end());
   }
-  const auto seq_update_end = std::chrono::high_resolution_clock::now();
-  const auto seq_update_time =
-    std::chrono::duration_cast<std::chrono::microseconds>(seq_update_end - seq_update_start)
-      .count() /
-    1000.0;
 
   if (param_.verbose) {
     std::string indices_str;
@@ -209,26 +203,19 @@ void PerceptionReproducer::on_timer()
     return last_published_timestamp_;
   }();
 
-  auto publish_start = std::chrono::high_resolution_clock::now();
   if (bag_timestamp.has_value()) {
     publish_topics_at_timestamp_with_coordinate_conversion(
       bag_timestamp.value(), current_timestamp);
   } else {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 3000, "No valid bag timestamp to publish.");
   }
-  const auto publish_end = std::chrono::high_resolution_clock::now();
-  const auto publish_time =
-    std::chrono::duration_cast<std::chrono::microseconds>(publish_end - publish_start).count() /
-    1000.0;
 
   const auto timer_end = std::chrono::high_resolution_clock::now();
   const auto total_time =
     std::chrono::duration_cast<std::chrono::microseconds>(timer_end - timer_start).count() / 1000.0;
 
   if (param_.verbose) {
-    RCLCPP_INFO(
-      get_logger(), "on_timer processing time: total=%.3f ms, seq_update=%.3f ms, publish=%.3f ms",
-      total_time, seq_update_time, publish_time);
+    RCLCPP_INFO(get_logger(), "on_timer processing time: %.3f ms", total_time);
   }
 }
 
