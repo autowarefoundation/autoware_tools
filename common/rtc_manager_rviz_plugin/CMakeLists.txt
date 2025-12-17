@@ -5,17 +5,24 @@ find_package(autoware_cmake REQUIRED)
 autoware_package()
 
 find_package(Qt5 REQUIRED Core Widgets)
+find_package(fmt REQUIRED)
 set(QT_LIBRARIES Qt5::Widgets)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_definitions(-DQT_NO_KEYWORDS)
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
+  src/rtc_utils.cpp
+  src/rtc_auto_mode_item.cpp
+  src/rtc_auto_mode_table.cpp
+  src/rtc_status_table_widget.cpp
+  src/rtc_command_button.cpp
   src/rtc_manager_panel.cpp
 )
 
 target_link_libraries(${PROJECT_NAME}
   ${QT_LIBRARIES}
+  fmt::fmt
 )
 
 # Export the plugin to be imported by rviz2
