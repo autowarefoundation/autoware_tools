@@ -4682,6 +4682,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#inputs-outputs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4753,19 +4764,19 @@
 
 <div><h1 id="rtc_manager_rviz_plugin">rtc_manager_rviz_plugin<a class="headerlink" href="#rtc_manager_rviz_plugin" title="Permanent link">#</a></h1>
 <h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">#</a></h2>
-<p>The purpose of this Rviz plugin is</p>
+<p>The purpose of this RViz plugin is to provide a graphical interface for managing RTC (Request To Cooperate) functionality:</p>
 <ol>
-<li>
-<p>To display each content of RTC status.</p>
-</li>
-<li>
-<p>To switch each module of RTC auto mode.</p>
-</li>
-<li>
-<p>To change RTC cooperate commands by button.</p>
-</li>
+<li>Display RTC status for each cooperate module (ID, Module, Safe, Command, AutoMode, State, StartDistance, FinishDistance).</li>
+<li>Switch each module between Auto mode and Manual mode.</li>
+<li>Send cooperate commands by button (Activate the front module).</li>
 </ol>
 <p><img alt="rtc_manager_panel" src="images/rtc_manager_panel.png"></p>
+<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">#</a></h2>
+<ul>
+<li><strong>Auto Mode Panel</strong>: Toggle visibility with "Show Auto Mode Panel" checkbox. Displays a table of modules with buttons to switch between Auto/Manual mode.</li>
+<li><strong>Status Table</strong>: Shows real-time status of all RTC modules including distance information.</li>
+<li><strong>Activate Button</strong>: Sends an ACTIVATE command to the nearest activatable module (modules that are not yet activated, not in auto mode, and have positive start distance).</li>
+</ul>
 <h2 id="inputs-outputs">Inputs / Outputs<a class="headerlink" href="#inputs-outputs" title="Permanent link">#</a></h2>
 <h3 id="input">Input<a class="headerlink" href="#input" title="Permanent link">#</a></h3>
 <table>
@@ -4782,6 +4793,11 @@
 <td><code>tier4_rtc_msgs::msg::CooperateStatusArray</code></td>
 <td>The statuses of each Cooperate Commands</td>
 </tr>
+<tr>
+<td><code>/api/external/get/rtc_auto_mode</code></td>
+<td><code>tier4_rtc_msgs::msg::AutoModeStatusArray</code></td>
+<td>The auto mode statuses for each module</td>
+</tr>
 </tbody>
 </table>
 <h3 id="output">Output<a class="headerlink" href="#output" title="Permanent link">#</a></h3>
@@ -4796,25 +4812,34 @@
 <tbody>
 <tr>
 <td><code>/api/external/set/rtc_commands</code></td>
-<td><code>tier4_rtc_msgs::src::CooperateCommands</code></td>
+<td><code>tier4_rtc_msgs::srv::CooperateCommands</code></td>
 <td>The Cooperate Commands for each planning</td>
 </tr>
 <tr>
 <td><code>/planning/enable_auto_mode/*</code></td>
-<td><code>tier4_rtc_msgs::src::AutoMode</code></td>
-<td>The Cooperate Commands mode for each planning module</td>
+<td><code>tier4_rtc_msgs::srv::AutoMode</code></td>
+<td>The service to switch Auto/Manual mode for each module</td>
 </tr>
 </tbody>
 </table>
 <h2 id="howtouse">HowToUse<a class="headerlink" href="#howtouse" title="Permanent link">#</a></h2>
 <ol>
 <li>
-<p>Start rviz and select panels/Add new panel.
+<p>Start RViz and select Panels &gt; Add New Panel.
    <img alt="select_panel" src="images/select_panels.png"></p>
 </li>
 <li>
-<p>tier4_state_rviz_plugin/RTCManagerPanel and press OK.
+<p>Select rtc_manager_rviz_plugin/RTCManagerPanel and press OK.
    <img alt="select_rtc_panel" src="images/rtc_selection.png"></p>
+</li>
+<li>
+<p>The panel will appear with:</p>
+<ul>
+<li>A checkbox to show/hide the Auto Mode Panel</li>
+<li>Auto Mode Table (if visible) with buttons to switch each module between Auto/Manual mode</li>
+<li>Status Table showing all RTC module statuses</li>
+<li>Activate button to send ACTIVATE command to the front activatable module</li>
+</ul>
 </li>
 </ol></div>
 
