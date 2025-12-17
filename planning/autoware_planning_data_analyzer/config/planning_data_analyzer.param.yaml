@@ -13,19 +13,20 @@
     buffer_duration_sec: 20.0  # Buffer duration in seconds
     max_buffer_messages: 10000  # Maximum messages per buffer
 
-    # Output Configuration
-    evaluation_output_bag_path: "~/trajectory_evaluation_results.bag"
-    summary_output_file: "~/evaluation_summary.txt"
-    json_output_path: "~/evaluation_result.json"
+    # Input / Ouput Configuration
+    input_bag_path: ""
+    output_dir: ""
 
-    # Topic Name Configuration (optional - uses defaults if not specified)
-    # route_topic: "/planning/mission_planning/route"
-    # odometry_topic: "/localization/kinematic_state"
-    # trajectory_topic: "/planning/scenario_planning/trajectory"
-    # objects_topic: "/perception/object_recognition/objects"
-    # tf_topic: "/tf"
-    # acceleration_topic: "/localization/acceleration"
-    # steering_topic: "/vehicle/status/steering_status"
+    # Topic Name Configuration
+    map_topic: "/map/vector_map"
+    map_marker_array: "/map/vector_map_marker"
+    route_topic: "/planning/mission_planning/route"
+    odometry_topic: "/localization/kinematic_state"
+    trajectory_topic: "/planning/generator/diffusion_planner/trajectory"
+    objects_topic: "/perception/object_recognition/objects"
+    tf_topic: "/tf"
+    acceleration_topic: "/localization/acceleration"
+    steering_topic: "/vehicle/status/steering_status"
 
     # OR Scene Evaluation Configuration (only used when mode="or_scene")
     or_scene_evaluation:
