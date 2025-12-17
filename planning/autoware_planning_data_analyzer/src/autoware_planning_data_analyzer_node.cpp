@@ -125,7 +125,7 @@ void AutowarePlanningDataAnalyzerNode::setup_evaluation_bag_writer()
     output_dir = utils::expand_home_directory(output_dir);
 
     // Generate output bag path (use .mcap extension to save directly as single file)
-    const auto output_bag_path = (std::filesystem::path(output_dir) / "bag").string();
+    const auto output_bag_path = (std::filesystem::path(output_dir) / "mcap").string();
 
     // Ensure output directory exists and is writable
     utils::ensure_directory_writable(output_dir, get_logger());

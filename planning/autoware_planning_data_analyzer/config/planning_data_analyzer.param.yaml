@@ -22,7 +22,7 @@
     map_marker_array: "/map/vector_map_marker"
     route_topic: "/planning/mission_planning/route"
     odometry_topic: "/localization/kinematic_state"
-    trajectory_topic: "/planning/scenario_planning/lane_driving/trajectory"
+    trajectory_topic: "/planning/generator/diffusion_planner/trajectory"
     objects_topic: "/perception/object_recognition/objects"
     tf_topic: "/tf"
     acceleration_topic: "/localization/acceleration"
