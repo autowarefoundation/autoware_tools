@@ -70,10 +70,6 @@ void PerceptionReplayer::on_timer()
     widget->set_slider_timestamp(bag_timestamp);
   }
 
-  if (param_.detected_object) {
-    publish_empty_pointcloud(current_timestamp);
-  }
-
   publish_topics_at_timestamp(bag_timestamp, current_timestamp);
 }
 

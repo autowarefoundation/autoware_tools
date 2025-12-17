@@ -25,6 +25,7 @@
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <utility>
@@ -37,7 +38,6 @@ struct PerceptionReplayerCommonParam
 {
   std::string rosbag_path;
   std::string rosbag_format;
-  bool detected_object;
   bool tracked_object;
 };
 
@@ -91,12 +91,6 @@ public:
    */
   void publish_goal_pose();
 
-  /**
-   * @brief Publish an empty pointcloud at the given timestamp
-   * @param current_timestamp
-   */
-  void publish_empty_pointcloud(const rclcpp::Time & current_timestamp);
-
   std::optional<Odometry> get_latest_ego_odom() const
   {
     return ego_odom_ ? std::make_optional<Odometry>(*ego_odom_) : std::nullopt;
@@ -117,17 +111,17 @@ protected:
   std::vector<utils::DataStamped<Odometry>> rosbag_ego_odom_data_;
   std::vector<utils::DataStamped<PredictedObjects>> rosbag_predicted_objects_data_;
   std::vector<utils::DataStamped<TrackedObjects>> rosbag_tracked_objects_data_;
-  std::vector<utils::DataStamped<DetectedObjects>> rosbag_detected_objects_data_;
   std::vector<utils::DataStamped<TrafficLightGroupArray>> rosbag_traffic_signals_data_;
+  std::vector<utils::DataStamped<OccupancyGrid>> rosbag_occupancy_grid_data_;
 
   void load_rosbag(const std::string & rosbag_path, const std::string & rosbag_format);
   std::vector<std::string> find_rosbag_files(
     const std::string & directory_path, const std::string & rosbag_format) const;
   Odometry find_ego_odom_by_timestamp(const rclcpp::Time & timestamp) const;
 
-  // timer callback to periodically check and kill online perception nodes
   void kill_online_perception_node();
-  rclcpp::TimerBase::SharedPtr timer_check_perception_process_;
+  void kill_process(const std::string & process_name);
+  void unload_component(const std::string & container_name, const std::string & component_name);
 
   // subscriber
   void on_ego_odom(const Odometry::SharedPtr msg);
@@ -137,12 +131,15 @@ protected:
   // publisher
   rclcpp::PublisherBase::SharedPtr objects_pub_;
   rclcpp::Publisher<TrafficLightGroupArray>::SharedPtr traffic_signals_pub_;
-  rclcpp::Publisher<PointCloud2>::SharedPtr pointcloud_pub_;
+  rclcpp::Publisher<OccupancyGrid>::SharedPtr occupancy_grid_pub_;
 
   rclcpp::Publisher<PoseWithCovarianceStamped>::SharedPtr recorded_ego_as_initialpose_pub_;
   rclcpp::Publisher<PoseStamped>::SharedPtr goal_as_mission_planning_goal_pub_;
 
   rclcpp::Publisher<Odometry>::SharedPtr recorded_ego_pub_;
+
+  // cache for occupancy grid to avoid republishing the same message
+  size_t last_published_occupancy_grid_idx_ = SIZE_MAX;
 };
 
 }  // namespace autoware::planning_debug_tools

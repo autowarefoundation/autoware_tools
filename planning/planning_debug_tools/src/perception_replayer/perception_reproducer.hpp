@@ -35,7 +35,6 @@ struct PerceptionReproducerParam : public PerceptionReplayerCommonParam
 {
   double search_radius;
   double reproduce_cool_down;
-  bool noise;
   bool verbose;
   bool publish_route;
 };
@@ -58,30 +57,7 @@ private:
     const std::vector<geometry_msgs::msg::Pose> & ego_poses, const double search_radius) const;
 
   void publish_topics_at_timestamp_with_coordinate_conversion(
-    const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp,
-    const Odometry & current_ego_odom, const bool apply_noise);
-
-  template <typename T>
-  T add_perception_noise(
-    T msg, const double update_rate = 0.03, const double x_noise_std = 0.1,
-    const double y_noise_std = 0.05)
-  {
-    if (uniform_dist_(gen_) < update_rate) {
-      for (auto & object : msg.objects) {
-        const double noise_x = standard_dist_(gen_) * x_noise_std;
-        const double noise_y = standard_dist_(gen_) * y_noise_std;
-        if constexpr (std::is_same_v<decltype(msg), PredictedObjects>) {
-          object.kinematics.initial_pose_with_covariance.pose.position.x += noise_x;
-          object.kinematics.initial_pose_with_covariance.pose.position.y += noise_y;
-        } else {
-          object.kinematics.pose_with_covariance.pose.position.x += noise_x;
-          object.kinematics.pose_with_covariance.pose.position.y += noise_y;
-        }
-      }
-    }
-
-    return msg;
-  }
+    const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp);
 
 private:
   // parameters
@@ -100,12 +76,6 @@ private:
   std::unordered_map<size_t, rclcpp::Time> ego_odom_id2last_published_timestamp_;
   std::optional<geometry_msgs::msg::Pose> last_sequenced_ego_pose_;
   std::optional<rclcpp::Time> last_published_timestamp_;
-
-  // random engine for noise
-  std::random_device rd_;
-  std::mt19937 gen_{rd_()};
-  std::uniform_real_distribution<double> uniform_dist_{0.0, 1.0};
-  std::normal_distribution<double> standard_dist_{0.0, 1.0};
 };
 
 }  // namespace autoware::planning_debug_tools

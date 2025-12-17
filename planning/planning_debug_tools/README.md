@@ -4,7 +4,7 @@ This package contains several planning-related debug tools.
 
 - **Trajectory analyzer**: visualizes the information (speed, curvature, yaw, etc) along the trajectory
 - **Closest velocity checker**: prints the velocity information indicated by each modules
-- **Perception reproducer**: generates detected objects from rosbag data in planning simulator environment
+- **Perception reproducer**: generates perception objects from rosbag data in planning simulator environment
 - **processing time checker**: displays processing_time of modules on the terminal
 - **logging level updater**: updates the logging level of the planning modules.
 
@@ -193,6 +193,27 @@ PlotCurrentVelocity('localization_kinematic_state', '/localization/kinematic_sta
 
 This script can overlay the perception results from the rosbag on the planning simulator synchronized with the simulator's ego pose.
 
+### Topics from Rosbag
+
+The following topics are loaded from the rosbag and replayed:
+
+- `/localization/kinematic_state` (nav_msgs/msg/Odometry): Ego vehicle odometry data
+- `/perception/object_recognition/tracking/objects` (autoware_perception_msgs/msg/TrackedObjects): Tracked objects (when `-t` option is used)
+- `/perception/object_recognition/objects` (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)
+- `/perception/traffic_light_recognition/traffic_signals` (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals
+- `/perception/occupancy_grid_map/map` (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)
+
+### Published Topics
+
+The following topics are published during replay:
+
+- `/perception/object_recognition/tracking/objects` or `/perception/object_recognition/objects`: Replayed perception objects
+- `/perception/traffic_light_recognition/traffic_signals`: Replayed traffic light signals
+- `/perception/occupancy_grid_map/map`: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)
+- `/perception_reproducer/rosbag_ego_odom`: Debug topic for recorded ego odometry
+- `/initialpose`: Initial pose (when `-p` option is used)
+- `/planning/mission_planning/goal`: Goal pose (when `-p` option is used)
+
 ### How it works
 
 Whenever the ego's position changes, a chronological `reproduce_sequence` queue is generated based on its position with a search radius (default to 2 m).
@@ -207,12 +228,10 @@ This design results in the following behavior:
 ### Available Options
 
 - `-b`, `--bag`: Rosbag file path (required)
-- `-d`, `--detected-object`: Publish detected objects
-- `-t`, `--tracked-object`: Publish tracked objects
+- `-t`, `--tracked-object`: Publish tracked objects instead of predicted objects
 - `-r`, `--search-radius`: Set the search radius in meters (default: 1.5m). If set to 0, always publishes the nearest message
 - `-c`, `--reproduce-cool-down`: Set the cool down time in seconds (default: 80.0s)
 - `-p`, `--pub-route`: Initialize localization and publish a route based on poses from the rosbag
-- `-n`, `--noise`: Apply perception noise to objects when publishing repeated messages (default: True)
 - `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
 - `-v`, `--verbose`: Output debug data
 - `-h`, `--help`: Show help message
@@ -234,7 +253,7 @@ You can designate multiple rosbags in the directory.
 ros2 run planning_debug_tools perception_reproducer -b <dir-to-bag-files>
 ```
 
-Instead of publishing predicted objects, you can publish detected/tracked objects by designating `-d` or `-t`, respectively.
+Instead of publishing predicted objects, you can publish tracked objects by designating `-t`.
 
 The `--pub-route` option enables automatic route generation based on the rosbag data. When enabled, the script:
 
@@ -258,10 +277,28 @@ In detail, this script publishes the data at a certain timestamp from the rosbag
 The timestamp will increase according to the real time without any operation.
 By using the GUI, you can modify the timestamp by pausing, changing the rate or going back into the past.
 
+### Topics from Rosbag
+
+The following topics are loaded from the rosbag and replayed:
+
+- `/localization/kinematic_state` (nav_msgs/msg/Odometry): Ego vehicle odometry data
+- `/perception/object_recognition/tracking/objects` (autoware_perception_msgs/msg/TrackedObjects): Tracked objects (when `-t` option is used)
+- `/perception/object_recognition/objects` (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)
+- `/perception/traffic_light_recognition/traffic_signals` (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals
+- `/perception/occupancy_grid_map/map` (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)
+
+### Published Topics
+
+The following topics are published during replay:
+
+- `/perception/object_recognition/tracking/objects` or `/perception/object_recognition/objects`: Replayed perception objects
+- `/perception/traffic_light_recognition/traffic_signals`: Replayed traffic light signals
+- `/perception/occupancy_grid_map/map`: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)
+- `/perception_reproducer/rosbag_ego_odom`: Debug topic for recorded ego odometry
+
 ### Available Options
 
 - `-b`, `--bag`: Rosbag file path (required)
-- `-d`, `--detected-object`: Publish detected objects
 - `-t`, `--tracked-object`: Publish tracked objects
 - `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
 - `-v`, `--verbose`: Output debug data
@@ -285,7 +322,7 @@ You can designate multiple rosbags in the directory.
 ros2 run planning_debug_tools perception_replayer -b <dir-to-bag-files>
 ```
 
-Instead of publishing predicted objects, you can publish detected/tracked objects by designating `-d` or `-t`, respectively.
+Instead of publishing predicted objects, you can publish tracked objects by designating `-t`.
 
 ## Processing time checker
 

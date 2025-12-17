@@ -65,12 +65,6 @@ int main(int argc, char * argv[])
       "rosbag", "BAG");
     options << bag_option;
 
-    QCommandLineOption detected_object_option(
-      QStringList() << "d"
-                    << "detected-object",
-      "publish detected object");
-    options << detected_object_option;
-
     QCommandLineOption tracked_object_option(
       QStringList() << "t"
                     << "tracked-object",
@@ -114,7 +108,6 @@ int main(int argc, char * argv[])
       return 1;
     }
 
-    perception_replayer_param.detected_object = parser.isSet(detected_object_option);
     perception_replayer_param.tracked_object = parser.isSet(tracked_object_option);
 
     rclcpp::NodeOptions node_options;
