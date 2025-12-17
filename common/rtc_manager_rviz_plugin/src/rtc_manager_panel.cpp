@@ -120,11 +120,14 @@ const CooperateStatus * RTCManagerPanel::find_activatable_module() const
     if (status.start_distance < 0) {
       continue;  // Skip already passed modules
     }
-    if (status.safe) {
-      continue;  // Skip auto mode modules (no manual activation needed)
-    }
-    if (status.command_status.type == Command::ACTIVATE) {
-      continue;  // Skip modules that are already activated
+    if (status.auto_mode) {
+      if (status.safe || status.command_status.type == Command::ACTIVATE) {
+        continue;
+      }
+    } else {
+      if (status.command_status.type == Command::ACTIVATE) {
+        continue;
+      }
     }
     if (!front || status.start_distance < front->start_distance) {
       front = &status;
