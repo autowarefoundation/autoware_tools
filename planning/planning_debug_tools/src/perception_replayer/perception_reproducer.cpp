@@ -204,8 +204,8 @@ void PerceptionReproducer::on_timer()
   }();
 
   if (bag_timestamp.has_value()) {
-    publish_topics_at_timestamp_with_coordinate_conversion(
-      bag_timestamp.value(), current_timestamp);
+    publish_topics_at_timestamp(
+      bag_timestamp.value(), current_timestamp, param_.noise && repeat_flag);
   } else {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 3000, "No valid bag timestamp to publish.");
   }
@@ -265,49 +265,6 @@ std::vector<size_t> PerceptionReproducer::find_nearby_ego_odom_indices(
   }
 
   return nearby_indices;
-}
-
-void PerceptionReproducer::publish_topics_at_timestamp_with_coordinate_conversion(
-  const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp)
-{
-  // for debugging
-  recorded_ego_pub_->publish(find_ego_odom_by_timestamp(bag_timestamp));
-
-  // publish objects
-  if (param_.tracked_object) {
-    const auto objects_msg =
-      utils::find_message_by_timestamp(rosbag_tracked_objects_data_, bag_timestamp);
-    if (objects_msg.has_value()) {
-      auto msg = objects_msg.value();
-      msg.header.stamp = current_timestamp;
-      auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<TrackedObjects>>(objects_pub_);
-      if (publisher) {
-        publisher->publish(msg);
-      }
-    }
-  } else {
-    const auto objects_msg =
-      utils::find_message_by_timestamp(rosbag_predicted_objects_data_, bag_timestamp);
-    if (objects_msg.has_value()) {
-      auto msg = objects_msg.value();
-      msg.header.stamp = current_timestamp;
-      auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<PredictedObjects>>(objects_pub_);
-      if (publisher) {
-        publisher->publish(msg);
-      }
-    }
-  }
-
-  // publish traffic lights
-  publish_traffic_lights_at_timestamp(bag_timestamp, current_timestamp);
-
-  // publish occupancy grid
-  if (!rosbag_occupancy_grid_data_.empty()) {
-    const size_t idx = utils::get_nearest_index(rosbag_occupancy_grid_data_, bag_timestamp);
-    auto & msg = rosbag_occupancy_grid_data_[idx].second;
-    msg.header.stamp = current_timestamp;
-    occupancy_grid_pub_->publish(msg);
-  }
 }
 
 }  // namespace autoware::planning_debug_tools

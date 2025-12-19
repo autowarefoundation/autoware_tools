@@ -70,7 +70,7 @@ void PerceptionReplayer::on_timer()
     widget->set_slider_timestamp(bag_timestamp);
   }
 
-  publish_topics_at_timestamp(bag_timestamp, current_timestamp);
+  publish_topics_at_timestamp(bag_timestamp, current_timestamp, false);
 }
 
 void PerceptionReplayer::on_set_rate(const QString & rate_text)

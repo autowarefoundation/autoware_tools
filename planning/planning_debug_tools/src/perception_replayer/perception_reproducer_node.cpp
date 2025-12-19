@@ -63,6 +63,12 @@ int main(int argc, char ** argv)
       "publish tracked object");
     options << tracked_object_option;
 
+    const QCommandLineOption noise_option(
+      QStringList() << "n"
+                    << "noise",
+      "apply perception noise to the objects when publishing repeated messages");
+    options << noise_option;
+
     const QCommandLineOption rosbag_format_option(
       QStringList() << "f"
                     << "rosbag-format",
@@ -122,6 +128,7 @@ int main(int argc, char ** argv)
     param.tracked_object = parser.isSet(tracked_object_option);
     param.search_radius = parser.value(search_radius_option).toDouble();
     param.reproduce_cool_down = parser.value(cool_down_option).toDouble();
+    param.noise = parser.isSet(noise_option);
     param.verbose = parser.isSet(verbose_option);
     param.publish_route = parser.isSet(pub_route_option);
 

@@ -232,6 +232,7 @@ This design results in the following behavior:
 - `-r`, `--search-radius`: Set the search radius in meters (default: 1.5m). If set to 0, always publishes the nearest message
 - `-c`, `--reproduce-cool-down`: Set the cool down time in seconds (default: 80.0s)
 - `-p`, `--pub-route`: Initialize localization and publish a route based on poses from the rosbag
+- `-n`, `--noise`: Apply perception noise to objects when publishing repeated messages (default: False)
 - `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
 - `-v`, `--verbose`: Output debug data
 - `-h`, `--help`: Show help message

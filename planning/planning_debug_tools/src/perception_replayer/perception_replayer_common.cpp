@@ -178,7 +178,11 @@ void PerceptionReplayerCommon::load_rosbag(
 PerceptionReplayerCommon::PerceptionReplayerCommon(
   const PerceptionReplayerCommonParam & param, const std::string & node_name,
   const rclcpp::NodeOptions & node_options)
-: Node(node_name, node_options), param_(param)
+: Node(node_name, node_options),
+  param_(param),
+  gen_(rd_()),
+  uniform_dist_(0.0, 1.0),
+  standard_dist_(0.0, 1.0)
 {
   // check if rosbag_path is a directory or file
   if (std::filesystem::is_directory(param_.rosbag_path)) {
@@ -248,34 +252,33 @@ Odometry PerceptionReplayerCommon::find_ego_odom_by_timestamp(const rclcpp::Time
 }
 
 void PerceptionReplayerCommon::publish_topics_at_timestamp(
-  const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp)
+  const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp,
+  const bool apply_noise)
 {
   // for debugging
   recorded_ego_pub_->publish(find_ego_odom_by_timestamp(bag_timestamp));
 
   // publish objects
+  const auto publish_objects = [&](auto & data, auto * type_tag) {
+    const auto objects_msg = utils::find_message_by_timestamp(data, bag_timestamp);
+    if (objects_msg.has_value()) {
+      auto msg = objects_msg.value();
+      if (apply_noise) {
+        apply_perception_noise(msg);
+      }
+      msg.header.stamp = current_timestamp;
+      using MessageType = std::remove_pointer_t<decltype(type_tag)>;
+      if (
+        auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<MessageType>>(objects_pub_)) {
+        publisher->publish(msg);
+      }
+    }
+  };
+
   if (param_.tracked_object) {
-    const auto objects_msg =
-      utils::find_message_by_timestamp(rosbag_tracked_objects_data_, bag_timestamp);
-    if (objects_msg.has_value()) {
-      auto msg = objects_msg.value();
-      msg.header.stamp = current_timestamp;
-      auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<TrackedObjects>>(objects_pub_);
-      if (publisher) {
-        publisher->publish(msg);
-      }
-    }
+    publish_objects(rosbag_tracked_objects_data_, static_cast<TrackedObjects *>(nullptr));
   } else {
-    const auto objects_msg =
-      utils::find_message_by_timestamp(rosbag_predicted_objects_data_, bag_timestamp);
-    if (objects_msg.has_value()) {
-      auto msg = objects_msg.value();
-      msg.header.stamp = current_timestamp;
-      auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<PredictedObjects>>(objects_pub_);
-      if (publisher) {
-        publisher->publish(msg);
-      }
-    }
+    publish_objects(rosbag_predicted_objects_data_, static_cast<PredictedObjects *>(nullptr));
   }
 
   publish_traffic_lights_at_timestamp(bag_timestamp, current_timestamp);
