@@ -112,9 +112,11 @@ int main(int argc, char * argv[])
 
     rclcpp::NodeOptions node_options;
     auto node = std::make_shared<PerceptionReplayer>(perception_replayer_param, node_options);
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
 
     while (rclcpp::ok()) {
-      rclcpp::spin_some(node);
+      executor.spin_some();
       app.processEvents();
     }
     rclcpp::shutdown();

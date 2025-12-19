@@ -194,6 +194,10 @@ protected:
   rclcpp::Subscription<Odometry>::SharedPtr ego_odom_sub_;
   Odometry::SharedPtr ego_odom_;
 
+  // timers
+  rclcpp::CallbackGroup::SharedPtr callback_group_check_perception_;
+  rclcpp::TimerBase::SharedPtr timer_check_perception_process_;
+
   // publisher
   rclcpp::PublisherBase::SharedPtr objects_pub_;
   rclcpp::Publisher<TrafficLightGroupArray>::SharedPtr traffic_signals_pub_;

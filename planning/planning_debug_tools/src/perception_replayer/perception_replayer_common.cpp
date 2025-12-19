@@ -241,8 +241,14 @@ PerceptionReplayerCommon::PerceptionReplayerCommon(
   goal_as_mission_planning_goal_pub_ =
     this->create_publisher<PoseStamped>("/planning/mission_planning/goal", 1);
 
-  // kill online perception nodes once at initialization
-  kill_online_perception_node();
+  // create timer to periodically check and kill online perception nodes (0.1 Hz)
+  // Use Reentrant callback group to allow parallel execution with other timers
+  callback_group_check_perception_ =
+    this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+  timer_check_perception_process_ = rclcpp::create_timer(
+    this, get_clock(), std::chrono::seconds(10),
+    std::bind(&PerceptionReplayerCommon::kill_online_perception_node, this),
+    callback_group_check_perception_);
 }
 
 Odometry PerceptionReplayerCommon::find_ego_odom_by_timestamp(const rclcpp::Time & timestamp) const

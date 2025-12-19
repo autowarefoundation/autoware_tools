@@ -139,8 +139,10 @@ int main(int argc, char ** argv)
 
     auto node = std::make_shared<autoware::planning_debug_tools::PerceptionReproducer>(
       param, rclcpp::NodeOptions());
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
 
-    rclcpp::spin(node);
+    executor.spin();
     rclcpp::shutdown();
   } catch (const std::exception & e) {
     std::cerr << "Exception in main(): " << e.what() << std::endl;

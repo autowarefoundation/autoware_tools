@@ -59,7 +59,7 @@ PerceptionReproducer::PerceptionReproducer(
     get_logger(), "Creating main timer with interval %.3f seconds", average_ego_odom_interval);
   timer_ = rclcpp::create_timer(
     this, get_clock(), std::chrono::duration<double>(average_ego_odom_interval),
-    std::bind(&PerceptionReproducer::on_timer, this));
+    std::bind(&PerceptionReproducer::on_timer, this), callback_group_check_perception_);
 
   if (param_.publish_route) {
     publish_recorded_ego_pose(get_bag_start_time());
