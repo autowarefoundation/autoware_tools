@@ -20,6 +20,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetUuidRoutes.srv"
   "srv/SetRoute.srv"
   "srv/DeleteRoute.srv"
+  "srv/SetName.srv"
   DEPENDENCIES geometry_msgs
 )
 
