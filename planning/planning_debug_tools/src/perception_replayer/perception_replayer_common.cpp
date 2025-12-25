@@ -265,7 +265,7 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp(
   recorded_ego_pub_->publish(find_ego_odom_by_timestamp(bag_timestamp));
 
   // publish objects
-  const auto publish_objects = [&](auto & data, auto * type_tag) {
+  const auto publish_objects = [&](auto & data) {
     const auto objects_msg = utils::find_message_by_timestamp(data, bag_timestamp);
     if (objects_msg.has_value()) {
       auto msg = objects_msg.value();
@@ -273,7 +273,7 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp(
         apply_perception_noise(msg);
       }
       msg.header.stamp = current_timestamp;
-      using MessageType = std::remove_pointer_t<decltype(type_tag)>;
+      using MessageType = std::decay_t<decltype(msg)>;
       if (
         auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<MessageType>>(objects_pub_)) {
         publisher->publish(msg);
@@ -282,9 +282,9 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp(
   };
 
   if (param_.tracked_object) {
-    publish_objects(rosbag_tracked_objects_data_, static_cast<TrackedObjects *>(nullptr));
+    publish_objects(rosbag_tracked_objects_data_);
   } else {
-    publish_objects(rosbag_predicted_objects_data_, static_cast<PredictedObjects *>(nullptr));
+    publish_objects(rosbag_predicted_objects_data_);
   }
 
   publish_traffic_lights_at_timestamp(bag_timestamp, current_timestamp);
