@@ -2,6 +2,28 @@
 Changelog for package autoware_planning_data_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.5.0 (2025-12-30)
+------------------
+* chore(planning_data_analyzer): add output dir in launch (`#327 <https://github.com/autowarefoundation/autoware_tools/issues/327>`_)
+  * add output dir in launch
+  * change trajectory topic in yaml
+  ---------
+* feat(planning_data_analyzer): update function to evaluate open loop simulation (`#325 <https://github.com/autowarefoundation/autoware_tools/issues/325>`_)
+  * update package based on new planning framework repositry
+  * remove unnecessary files
+  * fix dependency
+  * fix pre-commit
+  * remove unneccesary files
+  * fix file names
+  * fix pre-commit for utils
+  * fix bag file path
+  * fix pre-commit for utils test
+  * add copyright for python scripts
+  ---------
+* chore(autoware_planning_data_analyzer): update maintainer (`#319 <https://github.com/autowarefoundation/autoware_tools/issues/319>`_)
+  change and add maintainer
+* Contributors: Go Sakayori
+
 0.4.0 (2025-11-16)
 ------------------
 
