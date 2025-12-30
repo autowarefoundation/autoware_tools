@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rtc_manager_rviz_plugin</name>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
   <description>The rtc manager rviz plugin package</description>
   <maintainer email="taiki.tanaka@tier4.jp">Taiki Tanaka</maintainer>
   <maintainer email="tomoya.kimura@tier4.jp">Tomoya Kimura</maintainer>

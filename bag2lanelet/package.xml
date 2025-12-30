@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>bag2lanelet</name>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
   <description>The bag2lanelet package</description>
   <maintainer email="shinnosuke.hirakawa@tier4.jp">Shinnosuke Hirakawa</maintainer>
   <maintainer email="taiki.tanaka@tier4.jp">Taiki Tanaka</maintainer>

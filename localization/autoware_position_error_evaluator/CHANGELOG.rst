@@ -2,8 +2,8 @@
 Changelog for package autoware_position_error_evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.0 (2025-12-30)
+------------------
 * feat(position_error_evaluator): add tool for evaluating position error (`#301 <https://github.com/autowarefoundation/autoware_tools/issues/301>`_)
   * autoware_evaluate_position_error_using_line_rviz_plugin
   * remove abs

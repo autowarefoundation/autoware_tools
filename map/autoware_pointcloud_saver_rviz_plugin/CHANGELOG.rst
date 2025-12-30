@@ -2,8 +2,8 @@
 Changelog for package autoware_pointcloud_saver_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.0 (2025-12-30)
+------------------
 * feat(pointcloud_saver_rviz_plugin): add new rviz plugin to save pointcloud (`#312 <https://github.com/autowarefoundation/autoware_tools/issues/312>`_)
   * add pointcloud_saver_rviz_plugin
   * change PointType
