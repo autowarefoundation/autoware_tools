@@ -2,6 +2,9 @@
 Changelog for package autoware_pointcloud_projection_converter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.4.0 (2025-11-16)
 ------------------
 * chore: update maintainer (`#304 <https://github.com/autowarefoundation/autoware_tools/issues/304>`_)
