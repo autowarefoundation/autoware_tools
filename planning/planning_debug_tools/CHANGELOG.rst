@@ -2,8 +2,8 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.5.0 (2025-12-30)
+------------------
 * feat(perception_replayer): cpp implementation of perception replayer (`#321 <https://github.com/autowarefoundation/autoware_tools/issues/321>`_)
   * feat cpp version perception_replayer/reproducer
   * delete comment

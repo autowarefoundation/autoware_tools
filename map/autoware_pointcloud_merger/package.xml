@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>autoware_pointcloud_merger</name>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
   <description>A package for dividing PCD files to non-overlapped segments</description>
   <maintainer email="anh.nguyen.2@tier4.jp">Anh Nguyen</maintainer>
   <license>Apache License 2.0</license>
