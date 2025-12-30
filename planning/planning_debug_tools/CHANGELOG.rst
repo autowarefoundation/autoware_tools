@@ -2,6 +2,25 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.5.0 (2025-12-30)
+------------------
+* feat(perception_replayer): cpp implementation of perception replayer (`#321 <https://github.com/autowarefoundation/autoware_tools/issues/321>`_)
+  * feat cpp version perception_replayer/reproducer
+  * delete comment
+  * fix pre-commit error
+  * fix spell
+  * fix package.xml depends
+  * update readme and fix options
+  * add error ouptut
+  * add noise and pub_route option
+  * fix option behavior
+  * delete unnecessary depend
+  * fix typo
+  * throttling warn message
+  * throttling warn message
+  ---------
+* Contributors: Kotakku
+
 0.4.0 (2025-11-16)
 ------------------
 * feat(trajectory_visualizer): sort topic list (`#307 <https://github.com/autowarefoundation/autoware_tools/issues/307>`_)

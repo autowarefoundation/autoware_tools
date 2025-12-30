@@ -2,6 +2,9 @@
 Changelog for package autoware_lanelet2_map_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.5.0 (2025-12-30)
+------------------
+
 0.4.0 (2025-11-16)
 ------------------
 * chore: update maintainer (`#304 <https://github.com/autowarefoundation/autoware_tools/issues/304>`_)

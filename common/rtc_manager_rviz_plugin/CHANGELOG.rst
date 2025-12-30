@@ -2,6 +2,15 @@
 Changelog for package rtc_manager_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.5.0 (2025-12-30)
+------------------
+* fix(rtc_manager_rviz_plugin): refine module activation logic in RTCManagerPanel (`#326 <https://github.com/autowarefoundation/autoware_tools/issues/326>`_)
+* feat(rtc_manager_rviz_plugin): simplify enhance UI and code quality (`#322 <https://github.com/autowarefoundation/autoware_tools/issues/322>`_)
+  * feat(rtc_manager_rviz_plugin): simplify enhance UI and code quality
+  * docs(rtc_manager_rviz_plugin): update README with enhanced features and usage instructions
+  ---------
+* Contributors: Yukinari Hisaki
+
 0.4.0 (2025-11-16)
 ------------------
 * chore: add maintainers (`#293 <https://github.com/autowarefoundation/autoware_tools/issues/293>`_)
