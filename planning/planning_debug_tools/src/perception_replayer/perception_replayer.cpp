@@ -44,7 +44,7 @@ PerceptionReplayer::PerceptionReplayer(
   // Start timer callback
   timer = rclcpp::create_timer(
     this, get_clock(), std::chrono::milliseconds(static_cast<int>(delta_time * 1000)),
-    std::bind(&PerceptionReplayer::on_timer, this));
+    std::bind(&PerceptionReplayer::on_timer, this), callback_group_check_perception_);
 
   RCLCPP_INFO(get_logger(), "Start timer callback");
 }
@@ -70,11 +70,7 @@ void PerceptionReplayer::on_timer()
     widget->set_slider_timestamp(bag_timestamp);
   }
 
-  if (param_.detected_object) {
-    publish_empty_pointcloud(current_timestamp);
-  }
-
-  publish_topics_at_timestamp(bag_timestamp, current_timestamp);
+  publish_topics_at_timestamp(bag_timestamp, current_timestamp, false);
 }
 
 void PerceptionReplayer::on_set_rate(const QString & rate_text)
