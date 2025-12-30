@@ -2,6 +2,9 @@
 Changelog for package autoware_route_client
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.4.0 (2025-11-16)
 ------------------
 

@@ -2,6 +2,9 @@
 Changelog for package autoware_pointcloud_divider
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.4.0 (2025-11-16)
 ------------------
 

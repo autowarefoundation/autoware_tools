@@ -2,6 +2,9 @@
 Changelog for package simulator_compatibility_test
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.4.0 (2025-11-16)
 ------------------
 

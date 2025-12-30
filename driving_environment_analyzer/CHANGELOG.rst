@@ -2,6 +2,13 @@
 Changelog for package driving_environment_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(autoware_lanelet2_extension): replace ported autoware_lanelet2_extension in autoware_tools (`#318 <https://github.com/autowarefoundation/autoware_tools/issues/318>`_)
+  replace getLaneletLength3d with length3d
+* fix(driving_environment_analyzer): ignore deprecate warning (`#316 <https://github.com/autowarefoundation/autoware_tools/issues/316>`_)
+* Contributors: Mamoru Sobue, Sarun MUKDAPITAK
+
 0.4.0 (2025-11-16)
 ------------------
 
