@@ -81,7 +81,7 @@ start to test. After the test is completed, the results will be stored in the `o
 #### Perception Planning Mode
 
 - Download the rosbag files from the Google Drive
-  link [here](https://drive.google.com/drive/folders/1eJMEdt4WbU-W6MPXlNTkIhZtwpof0HcO?usp=sharing).
+  link <❌ link is no longer available.>.
 - Extract the zip file and set the path of the `.db3` files to parameters `path_bag_without_object`
   and `path_bag_with_object`.
 - You can start to test with the following command:
@@ -114,7 +114,7 @@ for `perception_planning` mode) parameters.**
 
 - To set `initialization_pose`, `entity_params`, `goal_pose`:
 - Run the AWSIM environment. Tutorial for AWSIM can be found
-  [here](https://autowarefoundation.github.io/AWSIM/main/GettingStarted/QuickStartDemo/).
+  [here](https://tier4.github.io/AWSIM/GettingStarted/QuickStartDemo/).
 - Run the e2e_simulator with the following command:
 
 ```bash
