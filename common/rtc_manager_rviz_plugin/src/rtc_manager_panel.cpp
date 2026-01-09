@@ -16,244 +16,47 @@
 
 #include "rtc_manager_panel.hpp"
 
-#include <QHBoxLayout>
-#include <QHeaderView>
 #include <QVBoxLayout>
 #include <rviz_common/display_context.hpp>
 
-#include <unique_identifier_msgs/msg/uuid.hpp>
-
-#include <algorithm>
 #include <memory>
 #include <string>
 
 namespace rviz_plugins
 {
-inline std::string Bool2String(const bool var)
+namespace
 {
-  return var ? "True" : "False";
-}
-inline bool uint2bool(uint8_t var)
-{
-  return var == static_cast<uint8_t>(0) ? false : true;
-}
 using std::placeholders::_1;
-using std::placeholders::_2;
-
-std::string getModuleName(const uint8_t module_type)
-{
-  switch (module_type) {
-    case Module::LANE_CHANGE_LEFT: {
-      return "lane_change_left";
-    }
-    case Module::LANE_CHANGE_RIGHT: {
-      return "lane_change_right";
-    }
-    case Module::EXT_REQUEST_LANE_CHANGE_LEFT: {
-      return "external_request_lane_change_left";
-    }
-    case Module::EXT_REQUEST_LANE_CHANGE_RIGHT: {
-      return "external_request_lane_change_right";
-    }
-    case Module::AVOIDANCE_BY_LC_LEFT: {
-      return "avoidance_by_lane_change_left";
-    }
-    case Module::AVOIDANCE_BY_LC_RIGHT: {
-      return "avoidance_by_lane_change_right";
-    }
-    case Module::AVOIDANCE_LEFT: {
-      return "static_obstacle_avoidance_left";
-    }
-    case Module::AVOIDANCE_RIGHT: {
-      return "static_obstacle_avoidance_right";
-    }
-    case Module::GOAL_PLANNER: {
-      return "goal_planner";
-    }
-    case Module::START_PLANNER: {
-      return "start_planner";
-    }
-    case Module::TRAFFIC_LIGHT: {
-      return "traffic_light";
-    }
-    case Module::INTERSECTION: {
-      return "intersection";
-    }
-    case Module::CROSSWALK: {
-      return "crosswalk";
-    }
-    case Module::BLIND_SPOT: {
-      return "blind_spot";
-    }
-    case Module::DETECTION_AREA: {
-      return "detection_area";
-    }
-    case Module::NO_STOPPING_AREA: {
-      return "no_stopping_area";
-    }
-    case Module::OCCLUSION_SPOT: {
-      return "occlusion_spot";
-    }
-    case Module::INTERSECTION_OCCLUSION: {
-      return "intersection_occlusion";
-    }
-  }
-  return "NONE";
-}
-
-bool isPathChangeModule(const uint8_t module_type)
-{
-  if (
-    module_type == Module::LANE_CHANGE_LEFT || module_type == Module::LANE_CHANGE_RIGHT ||
-    module_type == Module::EXT_REQUEST_LANE_CHANGE_LEFT ||
-    module_type == Module::EXT_REQUEST_LANE_CHANGE_RIGHT ||
-    module_type == Module::AVOIDANCE_BY_LC_LEFT || module_type == Module::AVOIDANCE_BY_LC_RIGHT ||
-    module_type == Module::AVOIDANCE_LEFT || module_type == Module::AVOIDANCE_RIGHT ||
-    module_type == Module::GOAL_PLANNER || module_type == Module::START_PLANNER) {
-    return true;
-  }
-  return false;
-}
+}  // namespace
 
 RTCManagerPanel::RTCManagerPanel(QWidget * parent) : rviz_common::Panel(parent)
 {
-  // TODO(tanaka): replace this magic number to Module::SIZE
-  const size_t module_size = 19;
-  auto_modes_.reserve(module_size);
-  auto * v_layout = new QVBoxLayout;
-  auto vertical_header = new QHeaderView(Qt::Vertical);
-  vertical_header->hide();
-  auto horizontal_header = new QHeaderView(Qt::Horizontal);
-  horizontal_header->setSectionResizeMode(QHeaderView::Stretch);
-  auto_mode_table_ = new QTableWidget();
-  auto_mode_table_->setColumnCount(4);
-  auto_mode_table_->setHorizontalHeaderLabels(
-    {"Module", "ToAutoMode", "ToManualMode", "ApprovalMode"});
-  auto_mode_table_->setVerticalHeader(vertical_header);
-  auto_mode_table_->setHorizontalHeader(horizontal_header);
-  const size_t num_modules = module_size;
-  auto_mode_table_->setRowCount(num_modules);
-  for (size_t i = 0; i < num_modules; i++) {
-    auto * rtc_auto_mode = new RTCAutoMode();
-    rtc_auto_mode->setParent(this);
-    // module
-    {
-      const uint8_t module_type = static_cast<uint8_t>(i);
-      rtc_auto_mode->module_name = getModuleName(module_type);
-      std::string module_name = rtc_auto_mode->module_name;
-      auto label = new QLabel(QString::fromStdString(module_name));
-      label->setAlignment(Qt::AlignCenter);
-      label->setText(QString::fromStdString(module_name));
-      if (isPathChangeModule(module_type))
-        label->setStyleSheet(BG_PURPLE);
-      else
-        label->setStyleSheet(BG_ORANGE);
-      auto_mode_table_->setCellWidget(i, 0, label);
-    }
-    // mode button
-    {
-      // auto mode button
-      rtc_auto_mode->auto_module_button_ptr = new QPushButton("auto mode");
-      rtc_auto_mode->auto_module_button_ptr->setCheckable(true);
-      connect(
-        rtc_auto_mode->auto_module_button_ptr, &QPushButton::clicked, rtc_auto_mode,
-        &RTCAutoMode::onChangeToAutoMode);
-      auto_mode_table_->setCellWidget(i, 1, rtc_auto_mode->auto_module_button_ptr);
-      // manual mode button
-      rtc_auto_mode->manual_module_button_ptr = new QPushButton("manual mode");
-      rtc_auto_mode->manual_module_button_ptr->setCheckable(true);
-      connect(
-        rtc_auto_mode->manual_module_button_ptr, &QPushButton::clicked, rtc_auto_mode,
-        &RTCAutoMode::onChangeToManualMode);
-      auto_mode_table_->setCellWidget(i, 2, rtc_auto_mode->manual_module_button_ptr);
-    }
-    // current mode
-    {
-      QString mode = QString::fromStdString("INIT");
-      rtc_auto_mode->auto_manual_mode_label = new QLabel(mode);
-      rtc_auto_mode->auto_manual_mode_label->setAlignment(Qt::AlignCenter);
-      rtc_auto_mode->auto_manual_mode_label->setText(mode);
-      auto_mode_table_->setCellWidget(i, 3, rtc_auto_mode->auto_manual_mode_label);
-    }
-    auto_modes_.emplace_back(rtc_auto_mode);
-  }
-  v_layout->addWidget(auto_mode_table_);
+  auto * main_layout = new QVBoxLayout;
 
-  num_rtc_status_ptr_ = new QLabel("Init");
-  v_layout->addWidget(num_rtc_status_ptr_);
+  // Auto mode panel visibility checkbox
+  show_auto_mode_panel_checkbox_ = new QCheckBox("Show Auto Mode Panel");
+  show_auto_mode_panel_checkbox_->setChecked(true);
+  connect(
+    show_auto_mode_panel_checkbox_, &QCheckBox::toggled, this,
+    &RTCManagerPanel::on_toggle_auto_mode_panel);
+  main_layout->addWidget(show_auto_mode_panel_checkbox_);
 
-  // lateral execution
-  auto * exe_path_change_layout = new QHBoxLayout;
-  {
-    exec_path_change_button_ptr_ = new QPushButton("Execute Path Change");
-    exec_path_change_button_ptr_->setCheckable(false);
-    exec_path_change_button_ptr_->setStyleSheet(BG_PURPLE);
-    connect(
-      exec_path_change_button_ptr_, &QPushButton::clicked, this,
-      &RTCManagerPanel::onClickExecutePathChange);
-    exe_path_change_layout->addWidget(exec_path_change_button_ptr_);
-    wait_path_change_button_ptr_ = new QPushButton("Wait Path Change");
-    wait_path_change_button_ptr_->setCheckable(false);
-    wait_path_change_button_ptr_->setStyleSheet(BG_PURPLE);
-    connect(
-      wait_path_change_button_ptr_, &QPushButton::clicked, this,
-      &RTCManagerPanel::onClickWaitPathChange);
-    exe_path_change_layout->addWidget(wait_path_change_button_ptr_);
-  }
-  v_layout->addLayout(exe_path_change_layout);
+  // Auto mode table
+  auto_mode_table_ = new RTCAutoModeTable(this);
+  main_layout->addWidget(auto_mode_table_);
 
-  // longitudinal execution
-  auto * exe_vel_change_layout = new QHBoxLayout;
-  {
-    exec_vel_change_button_ptr_ = new QPushButton("Execute Velocity Change");
-    exec_vel_change_button_ptr_->setCheckable(false);
-    exec_vel_change_button_ptr_->setStyleSheet(BG_ORANGE);
-    connect(
-      exec_vel_change_button_ptr_, &QPushButton::clicked, this,
-      &RTCManagerPanel::onClickExecuteVelChange);
-    exe_vel_change_layout->addWidget(exec_vel_change_button_ptr_);
-    wait_vel_change_button_ptr_ = new QPushButton("Wait Velocity Change");
-    wait_vel_change_button_ptr_->setCheckable(false);
-    wait_vel_change_button_ptr_->setStyleSheet(BG_ORANGE);
-    connect(
-      wait_vel_change_button_ptr_, &QPushButton::clicked, this,
-      &RTCManagerPanel::onClickWaitVelChange);
-    exe_vel_change_layout->addWidget(wait_vel_change_button_ptr_);
-  }
-  v_layout->addLayout(exe_vel_change_layout);
+  // Status table
+  status_table_ = new RTCStatusTableWidget(this);
+  main_layout->addWidget(status_table_);
 
-  // execution
-  auto * rtc_exe_layout = new QHBoxLayout;
-  {
-    exec_button_ptr_ = new QPushButton("Execute All");
-    exec_button_ptr_->setCheckable(false);
-    connect(exec_button_ptr_, &QPushButton::clicked, this, &RTCManagerPanel::onClickExecution);
-    rtc_exe_layout->addWidget(exec_button_ptr_);
-    wait_button_ptr_ = new QPushButton("Wait All");
-    wait_button_ptr_->setCheckable(false);
-    connect(wait_button_ptr_, &QPushButton::clicked, this, &RTCManagerPanel::onClickWait);
-    rtc_exe_layout->addWidget(wait_button_ptr_);
-  }
-  v_layout->addLayout(rtc_exe_layout);
+  // Activate button (text will be updated dynamically)
+  activate_button_ = new RTCCommandButton("Activate", bg_green, this);
+  activate_button_->set_enabled(false);
+  connect(
+    activate_button_, &RTCCommandButton::clicked, this, &RTCManagerPanel::on_click_activate_front);
+  main_layout->addWidget(activate_button_);
 
-  // statuses
-  auto * rtc_table_layout = new QHBoxLayout;
-  {
-    auto vertical_header = new QHeaderView(Qt::Vertical);
-    vertical_header->hide();
-    auto horizontal_header = new QHeaderView(Qt::Horizontal);
-    horizontal_header->setSectionResizeMode(QHeaderView::Stretch);
-    rtc_table_ = new QTableWidget();
-    rtc_table_->setColumnCount(column_size_);
-    rtc_table_->setHorizontalHeaderLabels(
-      {"ID", "Module", "AW\nSafe", "Recv\nCmd", "Auto\nMode", "State", "Start\nDistance",
-       "Finish\nDistance"});
-    rtc_table_->setVerticalHeader(vertical_header);
-    rtc_table_->setHorizontalHeader(horizontal_header);
-    rtc_table_layout->addWidget(rtc_table_);
-    v_layout->addLayout(rtc_table_layout);
-  }
-  setLayout(v_layout);
+  setLayout(main_layout);
 }
 
 void RTCManagerPanel::onInitialize()
@@ -263,244 +66,114 @@ void RTCManagerPanel::onInitialize()
   client_rtc_commands_ =
     raw_node_->create_client<CooperateCommands>("/api/external/set/rtc_commands");
 
-  for (size_t i = 0; i < auto_modes_.size(); i++) {
-    auto & a = auto_modes_.at(i);
-    // auto mode
-    a->enable_auto_mode_cli =
-      raw_node_->create_client<AutoMode>(enable_auto_mode_namespace_ + "/" + a->module_name);
-  }
+  auto_mode_table_->initialize_clients(raw_node_, AUTO_MODE_SERVICE_NAMESPACE);
 
   sub_rtc_status_ = raw_node_->create_subscription<CooperateStatusArray>(
-    "/api/external/get/rtc_status", 1, std::bind(&RTCManagerPanel::onRTCStatus, this, _1));
+    "/api/external/get/rtc_status", 1, std::bind(&RTCManagerPanel::on_rtc_status, this, _1));
+
+  sub_auto_mode_status_ = raw_node_->create_subscription<AutoModeStatusArray>(
+    "/api/external/get/rtc_auto_mode", 1,
+    std::bind(&RTCManagerPanel::on_auto_mode_status, this, _1));
 }
 
-void RTCAutoMode::onChangeToAutoMode()
+void RTCManagerPanel::on_toggle_auto_mode_panel(bool checked)
 {
-  AutoMode::Request::SharedPtr request = std::make_shared<AutoMode::Request>();
-  request->enable = true;
-  enable_auto_mode_cli->async_send_request(request);
-  auto_manual_mode_label->setText("AutoMode");
-  auto_manual_mode_label->setStyleSheet(BG_BLUE);
-  auto_module_button_ptr->setChecked(true);
-  manual_module_button_ptr->setChecked(false);
+  auto_mode_table_->setVisible(checked);
 }
 
-void RTCAutoMode::onChangeToManualMode()
+void RTCManagerPanel::save(rviz_common::Config config) const
 {
-  AutoMode::Request::SharedPtr request = std::make_shared<AutoMode::Request>();
-  request->enable = false;
-  enable_auto_mode_cli->async_send_request(request);
-  auto_manual_mode_label->setText("ManualMode");
-  auto_manual_mode_label->setStyleSheet(BG_YELLOW);
-  manual_module_button_ptr->setChecked(true);
-  auto_module_button_ptr->setChecked(false);
+  rviz_common::Panel::save(config);
+  config.mapSetValue("show_auto_mode_panel", show_auto_mode_panel_checkbox_->isChecked());
 }
 
-CooperateCommand setRTCCommandFromStatus(CooperateStatus & status)
+void RTCManagerPanel::load(const rviz_common::Config & config)
 {
-  CooperateCommand cooperate_command;
-  cooperate_command.uuid = status.uuid;
-  cooperate_command.module = status.module;
-  cooperate_command.command = status.command_status;
-  return cooperate_command;
-}
-
-void RTCManagerPanel::onClickChangeRequest(const bool is_path_change, const uint8_t command)
-{
-  if (!cooperate_statuses_ptr_) return;
-  if (cooperate_statuses_ptr_->statuses.empty()) return;
-  auto executable_cooperate_commands_request = std::make_shared<CooperateCommands::Request>();
-  executable_cooperate_commands_request->stamp = cooperate_statuses_ptr_->stamp;
-  // send coop request
-  for (auto status : cooperate_statuses_ptr_->statuses) {
-    if (is_path_change ^ isPathChangeModule(status.module.type)) continue;
-    CooperateCommand cooperate_command = setRTCCommandFromStatus(status);
-    cooperate_command.command.type = command;
-    executable_cooperate_commands_request->commands.emplace_back(cooperate_command);
-    //  To consider needs to change path step by step
-    if (is_path_change && !status.auto_mode && status.command_status.type ^ command) {
-      break;
-    }
+  rviz_common::Panel::load(config);
+  bool show_auto_mode_panel = true;
+  if (config.mapGetBool("show_auto_mode_panel", &show_auto_mode_panel)) {
+    show_auto_mode_panel_checkbox_->setChecked(show_auto_mode_panel);
+    auto_mode_table_->setVisible(show_auto_mode_panel);
   }
-  client_rtc_commands_->async_send_request(executable_cooperate_commands_request);
 }
 
-void RTCManagerPanel::onClickCommandRequest(const uint8_t command)
-{
-  if (!cooperate_statuses_ptr_) return;
-  if (cooperate_statuses_ptr_->statuses.empty()) return;
-  auto executable_cooperate_commands_request = std::make_shared<CooperateCommands::Request>();
-  executable_cooperate_commands_request->stamp = cooperate_statuses_ptr_->stamp;
-  // send coop request
-  for (auto status : cooperate_statuses_ptr_->statuses) {
-    CooperateCommand cooperate_command = setRTCCommandFromStatus(status);
-    cooperate_command.command.type = command;
-    executable_cooperate_commands_request->commands.emplace_back(cooperate_command);
-  }
-  client_rtc_commands_->async_send_request(executable_cooperate_commands_request);
-}
-
-void RTCManagerPanel::onClickExecuteVelChange()
-{
-  onClickChangeRequest(false, Command::ACTIVATE);
-}
-void RTCManagerPanel::onClickWaitVelChange()
-{
-  onClickChangeRequest(false, Command::DEACTIVATE);
-}
-void RTCManagerPanel::onClickExecutePathChange()
-{
-  onClickChangeRequest(true, Command::ACTIVATE);
-}
-void RTCManagerPanel::onClickWaitPathChange()
-{
-  onClickChangeRequest(true, Command::DEACTIVATE);
-}
-void RTCManagerPanel::onClickExecution()
-{
-  onClickCommandRequest(Command::ACTIVATE);
-}
-void RTCManagerPanel::onClickWait()
-{
-  onClickCommandRequest(Command::DEACTIVATE);
-}
-
-void RTCManagerPanel::onRTCStatus(const CooperateStatusArray::ConstSharedPtr msg)
+void RTCManagerPanel::on_rtc_status(const CooperateStatusArray::ConstSharedPtr msg)
 {
   cooperate_statuses_ptr_ = std::make_shared<CooperateStatusArray>(*msg);
-  rtc_table_->clearContents();
-  num_rtc_status_ptr_->setText(
-    QString::fromStdString("The Number of RTC Statuses: " + std::to_string(msg->statuses.size())));
-  if (msg->statuses.empty()) {
-    rtc_table_->update();
+  status_table_->update_statuses(msg);
+  update_front_module_button();
+}
+
+void RTCManagerPanel::on_auto_mode_status(const AutoModeStatusArray::ConstSharedPtr msg)
+{
+  auto_mode_table_->update_auto_mode_statuses(msg);
+}
+
+const CooperateStatus * RTCManagerPanel::find_activatable_module() const
+{
+  if (!cooperate_statuses_ptr_) {
+    return nullptr;
+  }
+
+  const CooperateStatus * front = nullptr;
+  for (const auto & status : cooperate_statuses_ptr_->statuses) {
+    if (status.start_distance < 0) {
+      continue;  // Skip already passed modules
+    }
+    if (status.auto_mode) {
+      if (status.safe || status.command_status.type == Command::ACTIVATE) {
+        continue;
+      }
+    } else {
+      if (status.command_status.type == Command::ACTIVATE) {
+        continue;
+      }
+    }
+    if (!front || status.start_distance < front->start_distance) {
+      front = &status;
+    }
+  }
+  return front;
+}
+
+void RTCManagerPanel::update_front_module_button()
+{
+  const auto * activatable = find_activatable_module();
+
+  if (activatable) {
+    activate_button_->update_module_name(get_module_name(activatable->module.type));
+    activate_button_->set_enabled(true);
+  } else {
+    activate_button_->update_module_name("N/A");
+    activate_button_->set_enabled(false);
+  }
+}
+
+void RTCManagerPanel::send_command_to(const CooperateStatus & status, uint8_t command)
+{
+  if (!cooperate_statuses_ptr_) {
     return;
   }
-  // this is to stable rtc display not to occupy too much
-  size_t min_display_size{5};
-  size_t max_display_size{10};
-  // rtc messages are already sorted by distance
-  rtc_table_->setRowCount(
-    std::max(min_display_size, std::min(msg->statuses.size(), max_display_size)));
-  int cnt = 0;
 
-  auto sorted_statuses = msg->statuses;
-  std::partition(sorted_statuses.begin(), sorted_statuses.end(), [](const auto & status) {
-    return !status.auto_mode && !uint2bool(status.command_status.type);
-  });
+  auto request = std::make_shared<CooperateCommands::Request>();
+  request->stamp = cooperate_statuses_ptr_->stamp;
 
-  for (auto status : sorted_statuses) {
-    if (static_cast<size_t>(cnt) >= max_display_size) {
-      rtc_table_->update();
-      return;
-    }
-    // uuid
-    {
-      std::stringstream uuid;
-      uuid << std::setw(4) << std::setfill('0') << static_cast<int>(status.uuid.uuid.at(0));
-      auto label = new QLabel(QString::fromStdString(uuid.str()));
-      label->setAlignment(Qt::AlignCenter);
-      label->setText(QString::fromStdString(uuid.str()));
-      rtc_table_->setCellWidget(cnt, 0, label);
-    }
+  auto cooperate_command = create_command_from_status(status);
+  cooperate_command.command.type = command;
+  request->commands.emplace_back(cooperate_command);
 
-    // module name
-    {
-      std::string module_name = getModuleName(status.module.type);
-      auto label = new QLabel(QString::fromStdString(module_name));
-      label->setAlignment(Qt::AlignCenter);
-      label->setText(QString::fromStdString(module_name));
-      rtc_table_->setCellWidget(cnt, 1, label);
-    }
-
-    // is aw safe
-    bool is_aw_safe = status.safe;
-    {
-      std::string is_safe = Bool2String(is_aw_safe);
-      auto label = new QLabel(QString::fromStdString(is_safe));
-      label->setAlignment(Qt::AlignCenter);
-      label->setText(QString::fromStdString(is_safe));
-      rtc_table_->setCellWidget(cnt, 2, label);
-    }
-
-    // is operator safe
-    const bool is_execute = uint2bool(status.command_status.type);
-    {
-      std::string text = is_execute ? "EXECUTE" : "WAIT";
-      if (status.auto_mode) text = "NONE";
-      auto label = new QLabel(QString::fromStdString(text));
-      label->setAlignment(Qt::AlignCenter);
-      label->setText(QString::fromStdString(text));
-      rtc_table_->setCellWidget(cnt, 3, label);
-    }
-
-    // is auto mode
-    const bool is_rtc_auto_mode = status.auto_mode;
-    {
-      std::string is_auto_mode = Bool2String(is_rtc_auto_mode);
-      auto label = new QLabel(QString::fromStdString(is_auto_mode));
-      label->setAlignment(Qt::AlignCenter);
-      label->setText(QString::fromStdString(is_auto_mode));
-      rtc_table_->setCellWidget(cnt, 4, label);
-    }
-
-    // State
-    std::string module_state = "NONE";
-    {
-      switch (status.state.type) {
-        case State::WAITING_FOR_EXECUTION:
-          module_state = "Waiting";
-          break;
-        case State::RUNNING:
-          module_state = "Running";
-          break;
-        case State::ABORTING:
-          module_state = "Aborting";
-          break;
-        case State::SUCCEEDED:
-          module_state = "Succeeded";
-          break;
-        case State::FAILED:
-          module_state = "Failed";
-          break;
-        default:
-          break;
-      }
-      auto label = new QLabel(QString::fromStdString(module_state));
-      label->setAlignment(Qt::AlignCenter);
-      label->setText(QString::fromStdString(module_state));
-      rtc_table_->setCellWidget(cnt, 5, label);
-    }
-
-    // start distance
-    {
-      std::string start_distance = std::to_string(status.start_distance);
-      auto label = new QLabel(QString::fromStdString(start_distance));
-      label->setAlignment(Qt::AlignCenter);
-      label->setText(QString::fromStdString(start_distance));
-      rtc_table_->setCellWidget(cnt, 6, label);
-    }
-
-    // finish distance
-    {
-      std::string finish_distance = std::to_string(status.finish_distance);
-      auto label = new QLabel(QString::fromStdString(finish_distance));
-      label->setAlignment(Qt::AlignCenter);
-      label->setText(QString::fromStdString(finish_distance));
-      rtc_table_->setCellWidget(cnt, 7, label);
-    }
-
-    // add color for recognition
-    if (is_rtc_auto_mode || (is_aw_safe && is_execute)) {
-      rtc_table_->cellWidget(cnt, 1)->setStyleSheet(BG_GREEN);
-    } else if (is_aw_safe || is_execute) {
-      rtc_table_->cellWidget(cnt, 1)->setStyleSheet(BG_YELLOW);
-    } else {
-      rtc_table_->cellWidget(cnt, 1)->setStyleSheet(BG_RED);
-    }
-    cnt++;
-  }
-  rtc_table_->update();
+  client_rtc_commands_->async_send_request(request);
 }
+
+void RTCManagerPanel::on_click_activate_front()
+{
+  const auto * front = find_activatable_module();
+  if (!front) {
+    return;
+  }
+  send_command_to(*front, Command::ACTIVATE);
+}
+
 }  // namespace rviz_plugins
 
 #include <pluginlib/class_list_macros.hpp>
