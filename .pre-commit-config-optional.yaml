@@ -5,6 +5,8 @@
 # https://pre-commit.ci/#configuration
 ci:
   autofix_commit_msg: "style(pre-commit-optional): autofix"
+  autoupdate_schedule: quarterly
+  autoupdate_commit_msg: "ci(pre-commit-optional): quarterly autoupdate"
 
 repos:
   - repo: https://github.com/tcort/markdown-link-check
