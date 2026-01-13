@@ -1,6 +1,6 @@
 <launch>
   <arg name="sensor_model" default="aip_x2_gen2" description="sensor model name (e.g. aip_x2_gen2)"/>
-  
+
   <arg name="transport_type" default="compressed"/>
   <arg name="interpolation_method" default="1"/>
 

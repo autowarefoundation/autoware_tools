@@ -11,5 +11,4 @@
     <arg name="transport" value="$(var transport_type)"/>
     <arg name="interpolation" value="$(var interpolation_method)"/>
   </include>
-
 </launch>
