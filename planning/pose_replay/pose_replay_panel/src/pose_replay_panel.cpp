@@ -116,7 +116,8 @@ void PoseReplayPanel::route_entry_factory(const string & uuid, const std::string
   dynamic_layout_->addLayout(layout);
 }
 
-void PoseReplayPanel::rename_route_button_activated(const std::string & name, const std::string & uuid)
+void PoseReplayPanel::rename_route_button_activated(
+  const std::string & name, const std::string & uuid)
 {
   bool ok;
   QString currentName = QString::fromStdString(name);

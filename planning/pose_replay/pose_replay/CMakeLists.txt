@@ -25,11 +25,11 @@ find_package(autoware_planning_msgs REQUIRED)
 # add_executable(topic_listener src/topic_listener.cpp)
 add_library(pose_replay_node_component SHARED src/pose_replay_node.cpp)
 
-ament_target_dependencies(pose_replay_node_component 
-	rclcpp 
-	geometry_msgs 
-	autoware_adapi_v1_msgs 
-	autoware_planning_msgs 
+ament_target_dependencies(pose_replay_node_component
+	rclcpp
+	geometry_msgs
+	autoware_adapi_v1_msgs
+	autoware_planning_msgs
 	pose_replay_interfaces
 	rclcpp_components
 )
