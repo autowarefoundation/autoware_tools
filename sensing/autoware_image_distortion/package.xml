@@ -3,9 +3,10 @@
 <package format="3">
   <name>autoware_image_distortion</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Image distortion rectification package for Autoware</description>
   <maintainer email="shotaro.nakamura@tier4.jp">shotaronakamura</maintainer>
-  <license>TODO: License declaration</license>
+  
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

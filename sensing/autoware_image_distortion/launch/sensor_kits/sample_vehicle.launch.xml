@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <launch>
   <arg name="transport_type" description="image transport type (raw or compressed)"/>
   <arg name="interpolation_method" description="0=Nearest, 1=Linear, 2=Cubic"/>
