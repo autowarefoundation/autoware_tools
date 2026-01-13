@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Image distortion rectification package for Autoware</description>
   <maintainer email="shotaro.nakamura@tier4.jp">shotaronakamura</maintainer>
-  
+
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
