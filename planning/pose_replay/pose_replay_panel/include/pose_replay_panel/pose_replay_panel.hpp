@@ -1,5 +1,5 @@
-#ifndef POSE_REPLAY_PANEL_HPP
-#define POSE_REPLAY_PANEL_HPP
+#ifndef POSE_REPLAY_PANEL__POSE_REPLAY_PANEL_HPP_
+#define POSE_REPLAY_PANEL__POSE_REPLAY_PANEL_HPP_
 
 #include "pose_replay_interfaces/srv/delete_route.hpp"
 #include "pose_replay_interfaces/srv/get_uuid_route.hpp"
@@ -48,7 +48,6 @@ private Q_SLOTS:
   void clear_layout(QLayout *);
   void sync_notif_callback(std_msgs::msg::String);
   void rename_route_button_activated(const std::string &, const std::string &);
-
 };
 }  // namespace pose_replay_panel
-#endif
+#endif  // POSE_REPLAY_PANEL__POSE_REPLAY_PANEL_HPP_

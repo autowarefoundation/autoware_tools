@@ -9,14 +9,14 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>rclcpp</depend>
-  <depend>geometry_msgs</depend>
-  <depend>yaml-cpp</depend> 
-  <depend>rclcpp_components</depend>
- 
   <depend>autoware_adapi_v1_msgs</depend>
-  <depend>autoware_planning_msgs</depend>	
+  <depend>autoware_planning_msgs</depend>
+  <depend>geometry_msgs</depend>
   <depend>pose_replay_interfaces</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_components</depend>
+  <depend>yaml-cpp</depend>
+
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
