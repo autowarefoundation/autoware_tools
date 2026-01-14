@@ -57,24 +57,17 @@ int main(int argc, char ** argv)
       "rosbag", "BAG");
     options << bag_option;
 
-    const QCommandLineOption noise_option(
-      QStringList() << "n"
-                    << "noise",
-      "apply perception noise to the objects when publishing repeated messages", "{true,false}",
-      "true");
-    options << noise_option;
-
-    const QCommandLineOption detected_object_option(
-      QStringList() << "d"
-                    << "detected-object",
-      "publish detected object");
-    options << detected_object_option;
-
     const QCommandLineOption tracked_object_option(
       QStringList() << "t"
                     << "tracked-object",
       "publish tracked object");
     options << tracked_object_option;
+
+    const QCommandLineOption noise_option(
+      QStringList() << "n"
+                    << "noise",
+      "apply perception noise to the objects when publishing repeated messages");
+    options << noise_option;
 
     const QCommandLineOption rosbag_format_option(
       QStringList() << "f"
@@ -132,11 +125,10 @@ int main(int argc, char ** argv)
     autoware::planning_debug_tools::PerceptionReproducerParam param;
     param.rosbag_path = parser.value(bag_option).toStdString();
     param.rosbag_format = parser.value(rosbag_format_option).toStdString();
-    param.detected_object = parser.isSet(detected_object_option);
     param.tracked_object = parser.isSet(tracked_object_option);
     param.search_radius = parser.value(search_radius_option).toDouble();
     param.reproduce_cool_down = parser.value(cool_down_option).toDouble();
-    param.noise = parser.value(noise_option).toLower() == "true";
+    param.noise = parser.isSet(noise_option);
     param.verbose = parser.isSet(verbose_option);
     param.publish_route = parser.isSet(pub_route_option);
 
@@ -147,8 +139,10 @@ int main(int argc, char ** argv)
 
     auto node = std::make_shared<autoware::planning_debug_tools::PerceptionReproducer>(
       param, rclcpp::NodeOptions());
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
 
-    rclcpp::spin(node);
+    executor.spin();
     rclcpp::shutdown();
   } catch (const std::exception & e) {
     std::cerr << "Exception in main(): " << e.what() << std::endl;
