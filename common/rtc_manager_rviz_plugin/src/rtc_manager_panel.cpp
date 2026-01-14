@@ -117,7 +117,7 @@ const CooperateStatus * RTCManagerPanel::find_activatable_module() const
 
   const CooperateStatus * front = nullptr;
   for (const auto & status : cooperate_statuses_ptr_->statuses) {
-    if (status.start_distance < 0) {
+    if (status.start_distance < RTC_MIN_START_DISTANCE) {
       continue;  // Skip already passed modules
     }
     if (status.auto_mode) {
