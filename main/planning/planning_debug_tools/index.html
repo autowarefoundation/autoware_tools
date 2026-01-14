@@ -4830,6 +4830,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#topics-from-rosbag" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topics from Rosbag
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#published-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Published Topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#how-it-works" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4878,6 +4900,28 @@
   
     <nav class="md-nav" aria-label="Perception replayer">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#topics-from-rosbag_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Topics from Rosbag
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#published-topics_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Published Topics
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#available-options_1" class="md-nav__link">
@@ -4953,7 +4997,7 @@
 <ul>
 <li><strong>Trajectory analyzer</strong>: visualizes the information (speed, curvature, yaw, etc) along the trajectory</li>
 <li><strong>Closest velocity checker</strong>: prints the velocity information indicated by each modules</li>
-<li><strong>Perception reproducer</strong>: generates detected objects from rosbag data in planning simulator environment</li>
+<li><strong>Perception reproducer</strong>: generates perception objects from rosbag data in planning simulator environment</li>
 <li><strong>processing time checker</strong>: displays processing_time of modules on the terminal</li>
 <li><strong>logging level updater</strong>: updates the logging level of the planning modules.</li>
 </ul>
@@ -5097,6 +5141,25 @@ add below example value to behavior velocity analyzer and set <code>is_publish_d
 </code></pre></div>
 <h2 id="perception-reproducer">Perception reproducer<a class="headerlink" href="#perception-reproducer" title="Permanent link">#</a></h2>
 <p>This script can overlay the perception results from the rosbag on the planning simulator synchronized with the simulator's ego pose.</p>
+<h3 id="topics-from-rosbag">Topics from Rosbag<a class="headerlink" href="#topics-from-rosbag" title="Permanent link">#</a></h3>
+<p>The following topics are loaded from the rosbag and replayed:</p>
+<ul>
+<li><code>/localization/kinematic_state</code> (nav_msgs/msg/Odometry): Ego vehicle odometry data</li>
+<li><code>/perception/object_recognition/tracking/objects</code> (autoware_perception_msgs/msg/TrackedObjects): Tracked objects (when <code>-t</code> option is used)</li>
+<li><code>/perception/object_recognition/objects</code> (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)</li>
+<li><code>/perception/traffic_light_recognition/traffic_signals</code> (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals</li>
+<li><code>/perception/occupancy_grid_map/map</code> (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)</li>
+</ul>
+<h3 id="published-topics">Published Topics<a class="headerlink" href="#published-topics" title="Permanent link">#</a></h3>
+<p>The following topics are published during replay:</p>
+<ul>
+<li><code>/perception/object_recognition/tracking/objects</code> or <code>/perception/object_recognition/objects</code>: Replayed perception objects</li>
+<li><code>/perception/traffic_light_recognition/traffic_signals</code>: Replayed traffic light signals</li>
+<li><code>/perception/occupancy_grid_map/map</code>: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)</li>
+<li><code>/perception_reproducer/rosbag_ego_odom</code>: Debug topic for recorded ego odometry</li>
+<li><code>/initialpose</code>: Initial pose (when <code>-p</code> option is used)</li>
+<li><code>/planning/mission_planning/goal</code>: Goal pose (when <code>-p</code> option is used)</li>
+</ul>
 <h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">#</a></h3>
 <p>Whenever the ego's position changes, a chronological <code>reproduce_sequence</code> queue is generated based on its position with a search radius (default to 2 m).
 If the queue is empty, the nearest odom message in the rosbag is added to the queue.
@@ -5109,12 +5172,11 @@ When publishing perception messages, the first element in the <code>reproduce_se
 <h3 id="available-options">Available Options<a class="headerlink" href="#available-options" title="Permanent link">#</a></h3>
 <ul>
 <li><code>-b</code>, <code>--bag</code>: Rosbag file path (required)</li>
-<li><code>-d</code>, <code>--detected-object</code>: Publish detected objects</li>
-<li><code>-t</code>, <code>--tracked-object</code>: Publish tracked objects</li>
+<li><code>-t</code>, <code>--tracked-object</code>: Publish tracked objects instead of predicted objects</li>
 <li><code>-r</code>, <code>--search-radius</code>: Set the search radius in meters (default: 1.5m). If set to 0, always publishes the nearest message</li>
 <li><code>-c</code>, <code>--reproduce-cool-down</code>: Set the cool down time in seconds (default: 80.0s)</li>
 <li><code>-p</code>, <code>--pub-route</code>: Initialize localization and publish a route based on poses from the rosbag</li>
-<li><code>-n</code>, <code>--noise</code>: Apply perception noise to objects when publishing repeated messages (default: True)</li>
+<li><code>-n</code>, <code>--noise</code>: Apply perception noise to objects when publishing repeated messages (default: False)</li>
 <li><code>-f</code>, <code>--rosbag-format</code>: Specify rosbag data format (default: "db3")</li>
 <li><code>-v</code>, <code>--verbose</code>: Output debug data</li>
 <li><code>-h</code>, <code>--help</code>: Show help message</li>
@@ -5128,7 +5190,7 @@ Then, run the script according to the following command.</p>
 <p>You can designate multiple rosbags in the directory.</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_reproducer<span class="w"> </span>-b<span class="w"> </span>&lt;dir-to-bag-files&gt;
 </code></pre></div>
-<p>Instead of publishing predicted objects, you can publish detected/tracked objects by designating <code>-d</code> or <code>-t</code>, respectively.</p>
+<p>Instead of publishing predicted objects, you can publish tracked objects by designating <code>-t</code>.</p>
 <p>The <code>--pub-route</code> option enables automatic route generation based on the rosbag data. When enabled, the script:</p>
 <ol>
 <li>Extracts the initial and goal poses from the beginning and end of the rosbag file</li>
@@ -5144,10 +5206,26 @@ Then, run the script according to the following command.</p>
 <p>In detail, this script publishes the data at a certain timestamp from the rosbag.
 The timestamp will increase according to the real time without any operation.
 By using the GUI, you can modify the timestamp by pausing, changing the rate or going back into the past.</p>
+<h3 id="topics-from-rosbag_1">Topics from Rosbag<a class="headerlink" href="#topics-from-rosbag_1" title="Permanent link">#</a></h3>
+<p>The following topics are loaded from the rosbag and replayed:</p>
+<ul>
+<li><code>/localization/kinematic_state</code> (nav_msgs/msg/Odometry): Ego vehicle odometry data</li>
+<li><code>/perception/object_recognition/tracking/objects</code> (autoware_perception_msgs/msg/TrackedObjects): Tracked objects (when <code>-t</code> option is used)</li>
+<li><code>/perception/object_recognition/objects</code> (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)</li>
+<li><code>/perception/traffic_light_recognition/traffic_signals</code> (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals</li>
+<li><code>/perception/occupancy_grid_map/map</code> (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)</li>
+</ul>
+<h3 id="published-topics_1">Published Topics<a class="headerlink" href="#published-topics_1" title="Permanent link">#</a></h3>
+<p>The following topics are published during replay:</p>
+<ul>
+<li><code>/perception/object_recognition/tracking/objects</code> or <code>/perception/object_recognition/objects</code>: Replayed perception objects</li>
+<li><code>/perception/traffic_light_recognition/traffic_signals</code>: Replayed traffic light signals</li>
+<li><code>/perception/occupancy_grid_map/map</code>: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)</li>
+<li><code>/perception_reproducer/rosbag_ego_odom</code>: Debug topic for recorded ego odometry</li>
+</ul>
 <h3 id="available-options_1">Available Options<a class="headerlink" href="#available-options_1" title="Permanent link">#</a></h3>
 <ul>
 <li><code>-b</code>, <code>--bag</code>: Rosbag file path (required)</li>
-<li><code>-d</code>, <code>--detected-object</code>: Publish detected objects</li>
 <li><code>-t</code>, <code>--tracked-object</code>: Publish tracked objects</li>
 <li><code>-f</code>, <code>--rosbag-format</code>: Specify rosbag data format (default: "db3")</li>
 <li><code>-v</code>, <code>--verbose</code>: Output debug data</li>
@@ -5163,7 +5241,7 @@ The GUI is launched as well with which a timestamp of rosbag can be managed.</p>
 <p>You can designate multiple rosbags in the directory.</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_replayer<span class="w"> </span>-b<span class="w"> </span>&lt;dir-to-bag-files&gt;
 </code></pre></div>
-<p>Instead of publishing predicted objects, you can publish detected/tracked objects by designating <code>-d</code> or <code>-t</code>, respectively.</p>
+<p>Instead of publishing predicted objects, you can publish tracked objects by designating <code>-t</code>.</p>
 <h2 id="processing-time-checker">Processing time checker<a class="headerlink" href="#processing-time-checker" title="Permanent link">#</a></h2>
 <p>The purpose of the Processing Time Subscriber is to monitor and visualize the processing times of various ROS 2 topics in a system. By providing a real-time terminal-based visualization, users can easily confirm the processing time performance as in the picture below.</p>
 <p><img alt="processing_time_checker" src="image/processing_time_checker.png"></p>
