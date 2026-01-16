@@ -116,6 +116,12 @@ void PerceptionReplayerCommon::load_rosbag(
     traffic_signals_topic,
     occupancy_grid_topic,
   };
+  
+  // Add reference image topics to filter
+  for (const auto & topic : param_.reference_image_topics) {
+    storage_filter.topics.push_back(topic);
+  }
+  
   reader->set_filter(storage_filter);
 
   // read all messages
@@ -162,6 +168,17 @@ void PerceptionReplayerCommon::load_rosbag(
             utils::deserialize_message<OccupancyGrid>(bag_message->serialized_data);
           const rclcpp::Time timestamp(bag_message->time_stamp);
           rosbag_occupancy_grid_data_.emplace_back(timestamp, *occupancy_grid_msg);
+        }
+
+        // deserialize reference image messages
+        for (const auto & ref_topic : param_.reference_image_topics) {
+          if (bag_message->topic_name == ref_topic) {
+            const auto image_msg =
+              utils::deserialize_message<CompressedImage>(bag_message->serialized_data);
+            const rclcpp::Time timestamp(bag_message->time_stamp);
+            rosbag_reference_image_data_[ref_topic].emplace_back(timestamp, *image_msg);
+            break;  // Found matching topic, no need to check others
+          }
         }
       } else {
         // count messages that couldn't be deserialized
@@ -241,6 +258,12 @@ PerceptionReplayerCommon::PerceptionReplayerCommon(
   goal_as_mission_planning_goal_pub_ =
     this->create_publisher<PoseStamped>("/planning/mission_planning/goal", 1);
 
+  // Create reference image publishers (1:1 topic mapping)
+  for (const auto & topic : param_.reference_image_topics) {
+    reference_image_pubs_[topic] = this->create_publisher<CompressedImage>(topic, 1);
+    RCLCPP_INFO(get_logger(), "Reference image enabled for topic: %s", topic.c_str());
+  }
+
   // create timer to periodically check and kill online perception nodes (0.1 Hz)
   // Use Reentrant callback group to allow parallel execution with other timers
   callback_group_check_perception_ =
@@ -289,6 +312,9 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp(
 
   publish_traffic_lights_at_timestamp(bag_timestamp, current_timestamp);
 
+  // publish reference images
+  publish_reference_images_at_timestamp(bag_timestamp, current_timestamp);
+
   // publish occupancy grid
   if (!rosbag_occupancy_grid_data_.empty()) {
     const size_t idx = utils::get_nearest_index(rosbag_occupancy_grid_data_, bag_timestamp);
@@ -321,6 +347,32 @@ void PerceptionReplayerCommon::publish_traffic_lights_at_timestamp(
     traffic_signals_pub_->publish(msg);
   }
 }
+
+void PerceptionReplayerCommon::publish_reference_images_at_timestamp(
+  const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp)
+{
+  for (const auto & topic : param_.reference_image_topics) {
+    // Check if we have data for this topic
+    auto it = rosbag_reference_image_data_.find(topic);
+    if (it == rosbag_reference_image_data_.end() || it->second.empty()) {
+      continue;
+    }
+
+    // Find nearest image by timestamp
+    const auto image_msg = utils::find_message_by_timestamp(it->second, bag_timestamp);
+
+    if (image_msg.has_value()) {
+      auto msg = image_msg.value();
+      msg.header.stamp = current_timestamp;
+      reference_image_pubs_[topic]->publish(msg);
+    } else {
+      RCLCPP_WARN_THROTTLE(
+        get_logger(), *get_clock(), 5000, "No reference image found for topic %s at timestamp %f",
+        topic.c_str(), bag_timestamp.seconds());
+    }
+  }
+}
+
 
 void PerceptionReplayerCommon::publish_recorded_ego_pose(rclcpp::Time bag_timestamp)
 {

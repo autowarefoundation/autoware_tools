@@ -105,6 +105,14 @@ int main(int argc, char ** argv)
       "output debug data.");
     options << verbose_option;
 
+    const QCommandLineOption ref_image_topics_option(
+      QStringList() << "reference-image-topics",
+      "comma-separated list of CompressedImage topics to load and publish "
+      "(e.g., '/camera/front/compressed,/camera/rear/compressed'). "
+      "Each topic will be loaded from rosbag and published to the same topic name.",
+      "topics", "");
+    options << ref_image_topics_option;
+
     for (const auto & option : options) {
       parser.addOption(option);
     }
@@ -131,6 +139,17 @@ int main(int argc, char ** argv)
     param.noise = parser.isSet(noise_option);
     param.verbose = parser.isSet(verbose_option);
     param.publish_route = parser.isSet(pub_route_option);
+
+    // Parse comma-separated reference image topics
+    const QString topics_str = parser.value(ref_image_topics_option);
+    if (!topics_str.isEmpty()) {
+      const QStringList topic_list = topics_str.split(',', Qt::SkipEmptyParts);
+      for (const auto & topic : topic_list) {
+        param.reference_image_topics.push_back(topic.trimmed().toStdString());
+      }
+      std::cout << "Reference image topics: " << param.reference_image_topics.size()
+                << " topics configured" << std::endl;
+    }
 
     if (param.rosbag_format != "sqlite3" && param.rosbag_format != "mcap") {
       std::cerr << "Error: invalid rosbag format: " << param.rosbag_format << std::endl;
