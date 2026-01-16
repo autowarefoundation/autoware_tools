@@ -4,7 +4,7 @@ This package contains several planning-related debug tools.
 
 - **Trajectory analyzer**: visualizes the information (speed, curvature, yaw, etc) along the trajectory
 - **Closest velocity checker**: prints the velocity information indicated by each modules
-- **Perception reproducer**: generates perception objects from rosbag data in planning simulator environment
+- **Perception reproducer**: generates perception objects and reference images from rosbag data in planning simulator environment
 - **processing time checker**: displays processing_time of modules on the terminal
 - **logging level updater**: updates the logging level of the planning modules.
 
@@ -202,6 +202,7 @@ The following topics are loaded from the rosbag and replayed:
 - `/perception/object_recognition/objects` (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)
 - `/perception/traffic_light_recognition/traffic_signals` (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals
 - `/perception/occupancy_grid_map/map` (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)
+- `<any CompressedImage topic>` (sensor_msgs/msg/CompressedImage): Reference images for visualization (when `--reference-image-topics` is used)
 
 ### Published Topics
 
@@ -210,6 +211,7 @@ The following topics are published during replay:
 - `/perception/object_recognition/tracking/objects` or `/perception/object_recognition/objects`: Replayed perception objects
 - `/perception/traffic_light_recognition/traffic_signals`: Replayed traffic light signals
 - `/perception/occupancy_grid_map/map`: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)
+- `<any CompressedImage topic>`: Replayed reference images (published to the same topic name as in the rosbag)
 - `/perception_reproducer/rosbag_ego_odom`: Debug topic for recorded ego odometry
 - `/initialpose`: Initial pose (when `-p` option is used)
 - `/planning/mission_planning/goal`: Goal pose (when `-p` option is used)
@@ -234,6 +236,7 @@ This design results in the following behavior:
 - `-p`, `--pub-route`: Initialize localization and publish a route based on poses from the rosbag
 - `-n`, `--noise`: Apply perception noise to objects when publishing repeated messages (default: False)
 - `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
+- `--reference-image-topics`: Comma-separated list of CompressedImage topics to load and publish (e.g., `"/sensing/camera/camera0/image_raw/compressed,/sensing/camera/camera1/image_raw/compressed"`)
 - `-v`, `--verbose`: Output debug data
 - `-h`, `--help`: Show help message
 
@@ -287,6 +290,7 @@ The following topics are loaded from the rosbag and replayed:
 - `/perception/object_recognition/objects` (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)
 - `/perception/traffic_light_recognition/traffic_signals` (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals
 - `/perception/occupancy_grid_map/map` (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)
+- `<any CompressedImage topic>` (sensor_msgs/msg/CompressedImage): Reference images for visualization
 
 ### Published Topics
 
@@ -295,6 +299,7 @@ The following topics are published during replay:
 - `/perception/object_recognition/tracking/objects` or `/perception/object_recognition/objects`: Replayed perception objects
 - `/perception/traffic_light_recognition/traffic_signals`: Replayed traffic light signals
 - `/perception/occupancy_grid_map/map`: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)
+- `<any CompressedImage topic>`: Replayed reference images
 - `/perception_reproducer/rosbag_ego_odom`: Debug topic for recorded ego odometry
 
 ### Available Options
