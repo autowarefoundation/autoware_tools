@@ -108,7 +108,7 @@ int main(int argc, char ** argv)
     const QCommandLineOption ref_image_topics_option(
       QStringList() << "reference-image-topics",
       "comma-separated list of CompressedImage topics to load and publish "
-      "(e.g., '/camera/front/compressed,/camera/rear/compressed'). "
+      "(e.g., '/sensing/camera/camera0/image_raw/compressed,/sensing/camera/camera1/image_raw/compressed'). "
       "Each topic will be loaded from rosbag and published to the same topic name.",
       "topics", "");
     options << ref_image_topics_option;
