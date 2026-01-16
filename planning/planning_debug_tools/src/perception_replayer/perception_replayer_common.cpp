@@ -116,12 +116,12 @@ void PerceptionReplayerCommon::load_rosbag(
     traffic_signals_topic,
     occupancy_grid_topic,
   };
-  
+
   // Add reference image topics to filter
   for (const auto & topic : param_.reference_image_topics) {
     storage_filter.topics.push_back(topic);
   }
-  
+
   reader->set_filter(storage_filter);
 
   // read all messages
@@ -372,7 +372,6 @@ void PerceptionReplayerCommon::publish_reference_images_at_timestamp(
     }
   }
 }
-
 
 void PerceptionReplayerCommon::publish_recorded_ego_pose(rclcpp::Time bag_timestamp)
 {
