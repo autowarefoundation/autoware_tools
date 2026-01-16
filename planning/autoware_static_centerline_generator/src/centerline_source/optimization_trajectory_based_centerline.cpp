@@ -285,7 +285,7 @@ void OptimizationTrajectoryBasedCenterline::init_path_generator_node(
   if (!path_generator_node_) {
     // initialize node, lanelet map and route
     path_generator_node_ =
-    std::make_shared<autoware::path_generator::PathGenerator>(create_node_options());
+      std::make_shared<autoware::path_generator::PathGenerator>(create_node_options());
 
     // NOTE: no need to register every time
     autoware::path_generator::PathGenerator::RouteManagerData path_generator_route_manager;
