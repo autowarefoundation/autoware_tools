@@ -282,20 +282,17 @@ void OptimizationTrajectoryBasedCenterline::init_path_generator_node(
   const geometry_msgs::msg::Pose current_pose, LaneletMapBin::ConstSharedPtr & map_bin_ptr,
   const LaneletRoute & route) const
 {
-  autoware::path_generator::PathGenerator::InputData path_generator_input;
-
   if (!path_generator_node_) {
     // initialize node, lanelet map and route
     path_generator_node_ =
       std::make_shared<autoware::path_generator::PathGenerator>(create_node_options());
 
     // NOTE: no need to register every time
-    path_generator_input.lanelet_map_bin_ptr = map_bin_ptr;
-    path_generator_input.route_ptr = std::make_shared<LaneletRoute>(route);
+    autoware::path_generator::PathGenerator::RouteManagerData path_generator_route_manager;
+    path_generator_route_manager.lanelet_map_bin_ptr = map_bin_ptr;
+    path_generator_route_manager.route_ptr = std::make_shared<LaneletRoute>(route);
+    path_generator_node_->initialize_route_manager(path_generator_route_manager, current_pose);
   }
-
-  path_generator_input.odometry_ptr = utils::convert_to_odometry(current_pose);
-  path_generator_node_->set_planner_data(path_generator_input);
 }
 
 std::shared_ptr<autoware::behavior_path_planner::PlannerData>
