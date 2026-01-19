@@ -6,13 +6,16 @@
 #include "pose_replay_interfaces/srv/set_route.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include <rcl_interfaces/msg/detail/set_parameters_result__struct.hpp>
+#include <rcl_interfaces/msg/set_parameters_result.hpp>
+#include <rclcpp/node_interfaces/node_parameters_interface.hpp>
+
 #include "autoware_adapi_v1_msgs/msg/route.hpp"
 #include "autoware_adapi_v1_msgs/srv/clear_route.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "std_msgs/msg/string.hpp"
 
-#include <uuid/uuid.h>
 #include <yaml-cpp/yaml.h>
 
 #include <fstream>
@@ -25,7 +28,7 @@
 
 using autoware_adapi_v1_msgs::msg::to_yaml;
 
-const std::string save_filepath = "output.yaml";
+// const std::string save_filepath = "output.yaml";
 using adapi_route = autoware_adapi_v1_msgs::msg::Route;
 
 struct NamedRoute
@@ -42,6 +45,22 @@ public:
   PoseReplayNode(const rclcpp::NodeOptions & options) : Node("pose_replay_node", options)
   {
     RCLCPP_INFO_STREAM(this->get_logger(), "pose_replay_node running...");
+
+    // new
+    this->declare_parameter("save_file_path", "~/.ros/output.yaml");
+    save_file_cb_ = this->add_on_set_parameters_callback(
+      [this](const std::vector<rclcpp::Parameter> & parameters) {
+        rcl_interfaces::msg::SetParametersResult result;
+        result.successful = true;
+        for (const auto & p : parameters) {
+          if (p.get_name() == "save_file_path") {
+            std::string path = p.get_value<std::string>();
+            read_routes(expand_home_path(path));
+          }
+        }
+
+        return result;
+      });
 
     route_set_subscription_ = this->create_subscription<adapi_route>(
       "/api/routing/route", 10, [this](const adapi_route & msg) { route_set_callback(msg); });
@@ -84,8 +103,32 @@ public:
         set_name_callback(request, response);
       });
 
-    read_routes(save_filepath);
-  };
+    // new
+    read_routes(get_save_path());
+  }
+
+  // optional?
+  std::string get_save_path()
+  {
+    std::string path = this->get_parameter("save_file_path").as_string();
+    return expand_home_path(path);
+  }
+
+  void set_save_path(const std::string & name)
+  {
+    this->set_parameter(rclcpp::Parameter("save_file_path", "~/.ros/" + name));
+  }
+
+  std::string expand_home_path(const std::string & path)
+  {
+    if (!path.empty() && path[0] == '~') {
+      const char * home = getenv("HOME");
+      if (home) {
+        return std::string(home) + path.substr(1);
+      }
+    }
+    return path;
+  }
 
   enum class actions { LOAD, DELETE_, UPDATE };
 
@@ -204,7 +247,8 @@ public:
 
     } catch (const YAML::BadFile & e) {
       RCLCPP_INFO(
-        this->get_logger(), "[set_route] Save file not found at path: %s.", save_filepath.c_str());
+        this->get_logger(), "[set_route] Save file not found at path: %s.",
+        get_save_path().c_str());
     } catch (const YAML::BadConversion & e) {
       RCLCPP_INFO(this->get_logger(), "[set_route] Bad conversion, yaml to pose: %s", e.what());
     }
@@ -231,7 +275,7 @@ public:
       return 1;
     };
 
-    std::ifstream yaml_file(save_filepath);
+    std::ifstream yaml_file(get_save_path());
 
     // Read and save to function scope
     std::vector<YAML::Node> docs = YAML::LoadAll(yaml_file);
@@ -253,13 +297,13 @@ public:
     }
 
     // Wipe file and re-write to save
-    clear_file(save_filepath);
+    clear_file(get_save_path());
     for (auto & d : docs) {
-      write_route(save_filepath, d, true);
+      write_route(get_save_path(), d, true);
     }
 
     // Update local node to sync
-    read_routes(save_filepath);
+    read_routes(get_save_path());
 
     return 0;
   }
@@ -285,7 +329,7 @@ public:
       return 1;
     }
 
-    std::ifstream yaml_file(save_filepath);
+    std::ifstream yaml_file(get_save_path());
 
     // Read and save to function scope
     std::vector<YAML::Node> docs = YAML::LoadAll(yaml_file);
@@ -309,13 +353,13 @@ public:
     }
 
     // Wipe file and re-write to save
-    clear_file(save_filepath);
+    clear_file(get_save_path());
     for (auto & d : docs) {
-      write_route(save_filepath, d, true);
+      write_route(get_save_path(), d, true);
     }
 
     // Update local node to sync
-    read_routes(save_filepath);
+    read_routes(get_save_path());
 
     return 0;
   }
@@ -406,10 +450,10 @@ public:
     if (routes.count(hash_uuid_str)) return;
 
     auto uuid_yaml_str = prepend_uuid_name(yaml_str);
-    write_route(save_filepath, uuid_yaml_str, true);
+    write_route(get_save_path(), uuid_yaml_str, true);
     RCLCPP_INFO(
-      this->get_logger(), "[route_set_callback] Route written to %s.", save_filepath.c_str());
-    read_routes(save_filepath);
+      this->get_logger(), "[route_set_callback] Route written to %s.", get_save_path().c_str());
+    read_routes(get_save_path());
 
     rviz_sync_request();
   }
@@ -496,6 +540,8 @@ public:
   rclcpp::Service<pose_replay_interfaces::srv::SetRoute>::SharedPtr set_route_service_;
   rclcpp::Service<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr delete_route_service_;
   rclcpp::Service<pose_replay_interfaces::srv::SetName>::SharedPtr set_name_service_;
+
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr save_file_cb_;
 
   uuid_route_map routes;
 };
