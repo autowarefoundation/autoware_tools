@@ -42,6 +42,7 @@ struct PerceptionReplayerCommonParam
   std::string rosbag_path;
   std::string rosbag_format;
   bool tracked_object;
+  std::vector<std::string> reference_image_topics;  // Topics for reference images
 };
 
 class PerceptionReplayerCommon : public rclcpp::Node
@@ -107,6 +108,14 @@ public:
    * @param current_timestamp
    */
   void publish_traffic_lights_at_timestamp(
+    const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp);
+
+  /**
+   * @brief Publish reference images at the given timestamp
+   * @param bag_timestamp
+   * @param current_timestamp
+   */
+  void publish_reference_images_at_timestamp(
     const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp);
 
 protected:
@@ -179,6 +188,10 @@ protected:
   std::vector<utils::DataStamped<TrafficLightGroupArray>> rosbag_traffic_signals_data_;
   std::vector<utils::DataStamped<OccupancyGrid>> rosbag_occupancy_grid_data_;
 
+  // Reference image data: topic name -> timestamped messages
+  std::unordered_map<std::string, std::vector<utils::DataStamped<CompressedImage>>>
+    rosbag_reference_image_data_;
+
   // load rosbag
   void load_rosbag(const std::string & rosbag_path, const std::string & rosbag_format);
   std::vector<std::string> find_rosbag_files(
@@ -207,6 +220,10 @@ protected:
   rclcpp::Publisher<PoseStamped>::SharedPtr goal_as_mission_planning_goal_pub_;
 
   rclcpp::Publisher<Odometry>::SharedPtr recorded_ego_pub_;
+
+  // Reference image publishers: topic name -> publisher
+  std::unordered_map<std::string, rclcpp::Publisher<CompressedImage>::SharedPtr>
+    reference_image_pubs_;
 };
 
 }  // namespace autoware::planning_debug_tools
