@@ -17,8 +17,9 @@ def generate_launch_description():
             composable_node_descriptions=[
                 ComposableNode(
                     package='pose_replay',
-                    plugin='PoseReplayNode',
+                    plugin='PoseReplay::PoseReplayNode',
                     name='pose_replay_node',
+                    namespace='pose_replay',
                     remappings=[],
                     parameters=[{"save_file_path": save_file}],
                     extra_arguments=[]),
