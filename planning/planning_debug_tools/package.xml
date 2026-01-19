@@ -39,6 +39,7 @@
   <depend>rosbag2_cpp</depend>
   <depend>rosbag2_storage</depend>
   <depend>rosbag2_transport</depend>
+  <depend>sensor_msgs</depend>
   <depend>tier4_planning_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
