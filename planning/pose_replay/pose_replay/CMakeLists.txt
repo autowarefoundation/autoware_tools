@@ -45,7 +45,7 @@ install(TARGETS pose_replay_node_component
 
 rclcpp_components_register_node(
 	pose_replay_node_component
-	PLUGIN "PoseReplayNode"
+	PLUGIN "PoseReplay::PoseReplayNode"
 	EXECUTABLE pose_replay_node
 )
 

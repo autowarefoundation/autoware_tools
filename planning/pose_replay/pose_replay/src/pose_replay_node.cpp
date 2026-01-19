@@ -27,9 +27,10 @@
 #include <vector>
 
 using autoware_adapi_v1_msgs::msg::to_yaml;
-
-// const std::string save_filepath = "output.yaml";
 using adapi_route = autoware_adapi_v1_msgs::msg::Route;
+
+namespace PoseReplay
+{
 
 struct NamedRoute
 {
@@ -46,7 +47,6 @@ public:
   {
     RCLCPP_INFO_STREAM(this->get_logger(), "pose_replay_node running...");
 
-    // new
     this->declare_parameter("save_file_path", "~/.ros/output.yaml");
     save_file_cb_ = this->add_on_set_parameters_callback(
       [this](const std::vector<rclcpp::Parameter> & parameters) {
@@ -70,17 +70,17 @@ public:
     goal_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
       "/planning/mission_planning/goal", 10);
     sync_notif_publisher_ =
-      this->create_publisher<std_msgs::msg::String>("/pose_replay/update", 10);
+      this->create_publisher<std_msgs::msg::String>("update", 10);
 
     get_routes_service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoutes>(
-      "/pose_replay/get_routes_service",
+      "get_routes_service",
       [this](
         const std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoutes::Request> & request,
         const std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoutes::Response> & response) {
         get_routes_callback(request, response);
       });
     set_route_service_ = this->create_service<pose_replay_interfaces::srv::SetRoute>(
-      "/pose_replay/set_route_service",
+      "set_route_service",
       [this](
         const std::shared_ptr<pose_replay_interfaces::srv::SetRoute::Request> & request,
         const std::shared_ptr<pose_replay_interfaces::srv::SetRoute::Response> & response) {
@@ -88,7 +88,7 @@ public:
       });
 
     delete_route_service_ = this->create_service<pose_replay_interfaces::srv::DeleteRoute>(
-      "/pose_replay/delete_route_service",
+      "delete_route_service",
       [this](
         const std::shared_ptr<pose_replay_interfaces::srv::DeleteRoute::Request> & request,
         const std::shared_ptr<pose_replay_interfaces::srv::DeleteRoute::Response> & response) {
@@ -96,7 +96,7 @@ public:
       });
 
     set_name_service_ = this->create_service<pose_replay_interfaces::srv::SetName>(
-      "/pose_replay/set_name_service",
+      "set_name_service",
       [this](
         const std::shared_ptr<pose_replay_interfaces::srv::SetName::Request> & request,
         const std::shared_ptr<pose_replay_interfaces::srv::SetName::Response> & response) {
@@ -546,5 +546,7 @@ public:
   uuid_route_map routes;
 };
 
+}  // namespace PoseReplay
+
 #include <rclcpp_components/register_node_macro.hpp>
-RCLCPP_COMPONENTS_REGISTER_NODE(PoseReplayNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(PoseReplay::PoseReplayNode)
