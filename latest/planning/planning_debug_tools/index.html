@@ -4997,7 +4997,7 @@
 <ul>
 <li><strong>Trajectory analyzer</strong>: visualizes the information (speed, curvature, yaw, etc) along the trajectory</li>
 <li><strong>Closest velocity checker</strong>: prints the velocity information indicated by each modules</li>
-<li><strong>Perception reproducer</strong>: generates perception objects from rosbag data in planning simulator environment</li>
+<li><strong>Perception reproducer</strong>: generates perception objects and reference images from rosbag data in planning simulator environment</li>
 <li><strong>processing time checker</strong>: displays processing_time of modules on the terminal</li>
 <li><strong>logging level updater</strong>: updates the logging level of the planning modules.</li>
 </ul>
@@ -5149,6 +5149,7 @@ add below example value to behavior velocity analyzer and set <code>is_publish_d
 <li><code>/perception/object_recognition/objects</code> (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)</li>
 <li><code>/perception/traffic_light_recognition/traffic_signals</code> (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals</li>
 <li><code>/perception/occupancy_grid_map/map</code> (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)</li>
+<li><code>&lt;any CompressedImage topic&gt;</code> (sensor_msgs/msg/CompressedImage): Reference images for visualization (when <code>--reference-image-topics</code> is used)</li>
 </ul>
 <h3 id="published-topics">Published Topics<a class="headerlink" href="#published-topics" title="Permanent link">#</a></h3>
 <p>The following topics are published during replay:</p>
@@ -5156,6 +5157,7 @@ add below example value to behavior velocity analyzer and set <code>is_publish_d
 <li><code>/perception/object_recognition/tracking/objects</code> or <code>/perception/object_recognition/objects</code>: Replayed perception objects</li>
 <li><code>/perception/traffic_light_recognition/traffic_signals</code>: Replayed traffic light signals</li>
 <li><code>/perception/occupancy_grid_map/map</code>: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)</li>
+<li><code>&lt;any CompressedImage topic&gt;</code>: Replayed reference images (published to the same topic name as in the rosbag)</li>
 <li><code>/perception_reproducer/rosbag_ego_odom</code>: Debug topic for recorded ego odometry</li>
 <li><code>/initialpose</code>: Initial pose (when <code>-p</code> option is used)</li>
 <li><code>/planning/mission_planning/goal</code>: Goal pose (when <code>-p</code> option is used)</li>
@@ -5178,6 +5180,7 @@ When publishing perception messages, the first element in the <code>reproduce_se
 <li><code>-p</code>, <code>--pub-route</code>: Initialize localization and publish a route based on poses from the rosbag</li>
 <li><code>-n</code>, <code>--noise</code>: Apply perception noise to objects when publishing repeated messages (default: False)</li>
 <li><code>-f</code>, <code>--rosbag-format</code>: Specify rosbag data format (default: "db3")</li>
+<li><code>--reference-image-topics</code>: Comma-separated list of CompressedImage topics to load and publish (e.g., <code>"/sensing/camera/camera0/image_raw/compressed,/sensing/camera/camera1/image_raw/compressed"</code>)</li>
 <li><code>-v</code>, <code>--verbose</code>: Output debug data</li>
 <li><code>-h</code>, <code>--help</code>: Show help message</li>
 </ul>
@@ -5214,6 +5217,7 @@ By using the GUI, you can modify the timestamp by pausing, changing the rate or 
 <li><code>/perception/object_recognition/objects</code> (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)</li>
 <li><code>/perception/traffic_light_recognition/traffic_signals</code> (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals</li>
 <li><code>/perception/occupancy_grid_map/map</code> (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)</li>
+<li><code>&lt;any CompressedImage topic&gt;</code> (sensor_msgs/msg/CompressedImage): Reference images for visualization</li>
 </ul>
 <h3 id="published-topics_1">Published Topics<a class="headerlink" href="#published-topics_1" title="Permanent link">#</a></h3>
 <p>The following topics are published during replay:</p>
@@ -5221,6 +5225,7 @@ By using the GUI, you can modify the timestamp by pausing, changing the rate or 
 <li><code>/perception/object_recognition/tracking/objects</code> or <code>/perception/object_recognition/objects</code>: Replayed perception objects</li>
 <li><code>/perception/traffic_light_recognition/traffic_signals</code>: Replayed traffic light signals</li>
 <li><code>/perception/occupancy_grid_map/map</code>: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)</li>
+<li><code>&lt;any CompressedImage topic&gt;</code>: Replayed reference images</li>
 <li><code>/perception_reproducer/rosbag_ego_odom</code>: Debug topic for recorded ego odometry</li>
 </ul>
 <h3 id="available-options_1">Available Options<a class="headerlink" href="#available-options_1" title="Permanent link">#</a></h3>
