@@ -8,6 +8,7 @@
 
 #include <rcl_interfaces/msg/detail/set_parameters_result__struct.hpp>
 #include <rcl_interfaces/msg/set_parameters_result.hpp>
+#include <rclcpp/logging.hpp>
 #include <rclcpp/node_interfaces/node_parameters_interface.hpp>
 
 #include "autoware_adapi_v1_msgs/msg/route.hpp"
@@ -32,6 +33,7 @@ using adapi_route = autoware_adapi_v1_msgs::msg::Route;
 namespace PoseReplay
 {
 
+// Separate into types file?
 struct NamedRoute
 {
   std::string name;
@@ -49,18 +51,7 @@ public:
 
     this->declare_parameter("save_file_path", "~/.ros/output.yaml");
     save_file_cb_ = this->add_on_set_parameters_callback(
-      [this](const std::vector<rclcpp::Parameter> & parameters) {
-        rcl_interfaces::msg::SetParametersResult result;
-        result.successful = true;
-        for (const auto & p : parameters) {
-          if (p.get_name() == "save_file_path") {
-            std::string path = p.get_value<std::string>();
-            read_routes(expand_home_path(path));
-          }
-        }
-
-        return result;
-      });
+      [this](const std::vector<rclcpp::Parameter> & parameters) {return set_save_file_path_callback(parameters);});
 
     route_set_subscription_ = this->create_subscription<adapi_route>(
       "/api/routing/route", 10, [this](const adapi_route & msg) { route_set_callback(msg); });
@@ -69,9 +60,9 @@ public:
       this->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 10);
     goal_pose_publisher_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
       "/planning/mission_planning/goal", 10);
-    sync_notif_publisher_ =
-      this->create_publisher<std_msgs::msg::String>("update", 10);
+    sync_notif_publisher_ = this->create_publisher<std_msgs::msg::String>("update", 10);
 
+    // review whether services should instead be listeners for topics
     get_routes_service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoutes>(
       "get_routes_service",
       [this](
@@ -79,6 +70,7 @@ public:
         const std::shared_ptr<pose_replay_interfaces::srv::GetUuidRoutes::Response> & response) {
         get_routes_callback(request, response);
       });
+
     set_route_service_ = this->create_service<pose_replay_interfaces::srv::SetRoute>(
       "set_route_service",
       [this](
@@ -103,12 +95,28 @@ public:
         set_name_callback(request, response);
       });
 
-    // new
     read_routes(get_save_path());
   }
 
-  // optional?
-  std::string get_save_path()
+  auto set_save_file_path_callback(
+    const std::vector<rclcpp::Parameter> & parameters) -> rcl_interfaces::msg::SetParametersResult
+  {
+    rcl_interfaces::msg::SetParametersResult result;
+    result.successful = false;
+    for (const auto & p : parameters) {
+      if (p.get_name() == "save_file_path") {
+        std::string path = p.get_value<std::string>();
+        read_routes(expand_home_path(path));
+        RCLCPP_INFO(this->get_logger(), "Path to route save file set as: %s", expand_home_path(path).c_str());
+        result.successful = true;
+      }
+    }
+
+    return result;
+  }
+
+  // optionals?
+  auto get_save_path() -> std::string
   {
     std::string path = this->get_parameter("save_file_path").as_string();
     return expand_home_path(path);
@@ -119,7 +127,8 @@ public:
     this->set_parameter(rclcpp::Parameter("save_file_path", "~/.ros/" + name));
   }
 
-  std::string expand_home_path(const std::string & path)
+  // think about failure condition
+  auto expand_home_path(const std::string & path) -> std::string
   {
     if (!path.empty() && path[0] == '~') {
       const char * home = getenv("HOME");
@@ -132,6 +141,7 @@ public:
 
   enum class actions { LOAD, DELETE_, UPDATE };
 
+  // how panel interprets the failures?
   constexpr auto services_api(
     const actions & command, const std::string & uuid = "", const std::string & name = "") -> int
   {
@@ -152,6 +162,7 @@ public:
     return 0;
   }
 
+  // is this the best way to sync?
   void rviz_sync_request()
   {
     std_msgs::msg::String stdmsg;
@@ -215,6 +226,7 @@ public:
       return 1;
     }
 
+    // put in a utils file?
     try {
       geometry_msgs::msg::PoseWithCovarianceStamped initialmsg;
 
@@ -270,6 +282,7 @@ public:
 
   auto delete_route(const std::string & uuid) -> int
   {
+    // interpret failure on panel?
     if (uuid.size() == 0) {
       RCLCPP_INFO(this->get_logger(), "[delete_route] No uuid given.");
       return 1;
@@ -458,6 +471,7 @@ public:
     rviz_sync_request();
   }
 
+  // move to utils
   auto yaml_to_map(YAML::Node root) -> uuid_route_map
   {
     autoware_adapi_v1_msgs::msg::Route msg;
