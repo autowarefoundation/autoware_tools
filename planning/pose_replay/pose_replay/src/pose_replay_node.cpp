@@ -51,7 +51,9 @@ public:
 
     this->declare_parameter("save_file_path", "~/.ros/output.yaml");
     save_file_cb_ = this->add_on_set_parameters_callback(
-      [this](const std::vector<rclcpp::Parameter> & parameters) {return set_save_file_path_callback(parameters);});
+      [this](const std::vector<rclcpp::Parameter> & parameters) {
+        return set_save_file_path_callback(parameters);
+      });
 
     route_set_subscription_ = this->create_subscription<adapi_route>(
       "/api/routing/route", 10, [this](const adapi_route & msg) { route_set_callback(msg); });
@@ -62,7 +64,6 @@ public:
       "/planning/mission_planning/goal", 10);
     sync_notif_publisher_ = this->create_publisher<std_msgs::msg::String>("update", 10);
 
-    // review whether services should instead be listeners for topics
     get_routes_service_ = this->create_service<pose_replay_interfaces::srv::GetUuidRoutes>(
       "get_routes_service",
       [this](
@@ -95,11 +96,13 @@ public:
         set_name_callback(request, response);
       });
 
+    // initial read, sync in the event of node restart
     read_routes(get_save_path());
+    rviz_sync_request();
   }
 
-  auto set_save_file_path_callback(
-    const std::vector<rclcpp::Parameter> & parameters) -> rcl_interfaces::msg::SetParametersResult
+  auto set_save_file_path_callback(const std::vector<rclcpp::Parameter> & parameters)
+    -> rcl_interfaces::msg::SetParametersResult
   {
     rcl_interfaces::msg::SetParametersResult result;
     result.successful = false;
@@ -107,7 +110,9 @@ public:
       if (p.get_name() == "save_file_path") {
         std::string path = p.get_value<std::string>();
         read_routes(expand_home_path(path));
-        RCLCPP_INFO(this->get_logger(), "Path to route save file set as: %s", expand_home_path(path).c_str());
+        rviz_sync_request();
+        RCLCPP_INFO(
+          this->get_logger(), "Path to route save file set as: %s", expand_home_path(path).c_str());
         result.successful = true;
       }
     }
@@ -115,7 +120,6 @@ public:
     return result;
   }
 
-  // optionals?
   auto get_save_path() -> std::string
   {
     std::string path = this->get_parameter("save_file_path").as_string();
@@ -127,7 +131,6 @@ public:
     this->set_parameter(rclcpp::Parameter("save_file_path", "~/.ros/" + name));
   }
 
-  // think about failure condition
   auto expand_home_path(const std::string & path) -> std::string
   {
     if (!path.empty() && path[0] == '~') {
@@ -141,8 +144,7 @@ public:
 
   enum class actions { LOAD, DELETE_, UPDATE };
 
-  // how panel interprets the failures?
-  constexpr auto services_api(
+  auto services_api(
     const actions & command, const std::string & uuid = "", const std::string & name = "") -> int
   {
     switch (command) {
@@ -162,7 +164,6 @@ public:
     return 0;
   }
 
-  // is this the best way to sync?
   void rviz_sync_request()
   {
     std_msgs::msg::String stdmsg;
@@ -226,7 +227,6 @@ public:
       return 1;
     }
 
-    // put in a utils file?
     try {
       geometry_msgs::msg::PoseWithCovarianceStamped initialmsg;
 
@@ -282,7 +282,6 @@ public:
 
   auto delete_route(const std::string & uuid) -> int
   {
-    // interpret failure on panel?
     if (uuid.size() == 0) {
       RCLCPP_INFO(this->get_logger(), "[delete_route] No uuid given.");
       return 1;
@@ -423,6 +422,11 @@ public:
     routes.insert(new_map.begin(), new_map.end());
   }
 
+  /*
+    Route duplication:
+    When setting intial and goal poses programmatically, the from subscription to /api/routing/route
+    saves the route and creates a duplicate. This hash is used to recognise duplicates and delete.
+  */
   auto route_yaml_to_hash(const std::string & yaml_str) -> std::string
   {
     YAML::Node node = YAML::Load(yaml_str);
@@ -451,7 +455,6 @@ public:
     return new_str;
   }
 
-  // TODO: Fix route duplication when setting route from save file using rviz panel.
   void route_set_callback(const adapi_route & msg)
   {
     if (msg.data.empty()) return;
@@ -471,7 +474,6 @@ public:
     rviz_sync_request();
   }
 
-  // move to utils
   auto yaml_to_map(YAML::Node root) -> uuid_route_map
   {
     autoware_adapi_v1_msgs::msg::Route msg;
@@ -538,9 +540,7 @@ public:
     }
 
     uuid_route_map map_obj = {
-      {root["uuid"].as<std::string>(), {root["name"].as<std::string>(), msg}}
-
-    };
+      {root["uuid"].as<std::string>(), {root["name"].as<std::string>(), msg}}};
     return map_obj;
   }
 

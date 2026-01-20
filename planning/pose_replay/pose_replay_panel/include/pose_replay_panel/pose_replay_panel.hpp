@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <rviz_common/panel.hpp>
+#include <rviz_common/ros_integration/ros_node_abstraction.hpp>
 #include <rviz_common/ros_integration/ros_node_abstraction_iface.hpp>
 
 #include "std_msgs/msg/string.hpp"
@@ -29,14 +30,17 @@ public:
 
 protected:
   std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
+
+  // new
+  rclcpp::Node::SharedPtr pose_replay_node_ptr_;
+  //
+
   rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr get_routes_client_;
   rclcpp::Client<pose_replay_interfaces::srv::SetRoute>::SharedPtr set_route_client_;
   rclcpp::Client<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr delete_route_client_;
   rclcpp::Client<pose_replay_interfaces::srv::SetName>::SharedPtr set_name_client_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sync_notif_subscriber_;
 
-  // QLabel* label_;
-  // QPushButton* sync_button_;
   QVBoxLayout * dynamic_layout_;
 
 private Q_SLOTS:
