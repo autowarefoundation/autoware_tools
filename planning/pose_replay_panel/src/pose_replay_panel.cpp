@@ -4,10 +4,12 @@
 #include <QMessageBox>
 #include <QString>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <pose_replay_panel/pose_replay_panel.hpp>
 #include <rviz_common/display_context.hpp>
 
 #include "std_msgs/msg/string.hpp"
+#include <qboxlayout.h>
 
 #include <chrono>
 #include <functional>
@@ -23,16 +25,21 @@ PoseReplayPanel::PoseReplayPanel(QWidget * parent) : Panel(parent)
 {
   const auto main_layout = new QVBoxLayout(this);
   main_layout->setAlignment(Qt::AlignTop);
+
+  const auto title_layout = new QHBoxLayout(this);
   const auto main_title = new QLabel("Route history");
   const auto save_btn = new QPushButton("Save current route");
+  title_layout->addWidget(main_title);
+  title_layout->addWidget(save_btn);
+
   QObject::connect(save_btn, &QPushButton::released, this, [this]() {
     node_abstract_->save_route();
     sync_read();
   });
+
   dynamic_layout_ = new QVBoxLayout(this);
   dynamic_layout_->setAlignment(Qt::AlignTop);
-  main_layout->addWidget(main_title);
-  main_layout->addWidget(save_btn);
+  main_layout->addLayout(title_layout);
   main_layout->addLayout(dynamic_layout_);
 }
 

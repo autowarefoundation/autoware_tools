@@ -18,6 +18,8 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <cstdio>
+#include <exception>
 #include <fstream>
 #include <functional>
 #include <memory>
@@ -105,11 +107,11 @@ public:
     return fetched_routes;
   }
 
-  auto load_route(const std::string & uuid) -> int
+  void load_route(const std::string & uuid)
   {
     if (uuid.size() == 0) {
       RCLCPP_INFO(node_->get_logger(), "[set_route] No uuid given.");
-      return 1;
+      return;
     }
 
     try {
@@ -149,15 +151,13 @@ public:
     } catch (const YAML::BadConversion & e) {
       RCLCPP_INFO(node_->get_logger(), "[set_route] Bad conversion, yaml to pose: %s", e.what());
     }
-
-    return 0;
   }
 
-  auto delete_route(const std::string & uuid) -> int
+  void delete_route(const std::string & uuid)
   {
     if (uuid.size() == 0) {
       RCLCPP_INFO(node_->get_logger(), "[delete_route] No uuid given.");
-      return 1;
+      return;
     };
 
     std::ifstream yaml_file(get_save_path());
@@ -189,15 +189,13 @@ public:
 
     // Update local node to sync
     read_routes(get_save_path());
-
-    return 0;
   }
 
-  auto set_name(const std::string & uuid, const std::string & new_name) -> int
+  void set_name(const std::string & uuid, const std::string & new_name)
   {
     if (uuid.size() == 0 || new_name.size() == 0) {
       RCLCPP_INFO(node_->get_logger(), "[set_name] Invalid empty uuid or name given.");
-      return 1;
+      return;
     }
 
     std::ifstream yaml_file(get_save_path());
@@ -231,8 +229,6 @@ public:
 
     // Update local node to sync
     read_routes(get_save_path());
-
-    return 0;
   }
 
   void clear_file(const std::string & filepath)
