@@ -34,8 +34,6 @@ protected:
 
 private Q_SLOTS:
   void route_entry_factory(const std::string &, const std::string &);
-  void set_route_button_activated(const std::string &);
-  void delete_route_button_activated(const std::string &);
   void sync_read();
   void clear_layout(QLayout *);
   void rename_route_button_activated(const std::string &, const std::string &);
