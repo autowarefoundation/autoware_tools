@@ -3,11 +3,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 
-#include <rcl_interfaces/msg/detail/set_parameters_result__struct.hpp>
-#include <rcl_interfaces/msg/set_parameters_result.hpp>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/node.hpp>
-#include <rclcpp/node_interfaces/node_parameters_interface.hpp>
 
 #include "autoware_adapi_v1_msgs/msg/route.hpp"
 #include "autoware_adapi_v1_msgs/srv/clear_route.hpp"
@@ -31,6 +28,8 @@ namespace pose_replay
 using autoware_adapi_v1_msgs::msg::to_yaml;
 using adapi_route = autoware_adapi_v1_msgs::msg::Route;
 
+const std::string save_file_path = "~/.ros/output.yaml";
+
 struct NamedRoute
 {
   std::string name;
@@ -50,12 +49,6 @@ class PoseReplayNode
 public:
   explicit PoseReplayNode(const rclcpp::Node::SharedPtr & node) : node_(node)
   {
-    node_->declare_parameter("save_file_path", "~/.ros/output.yaml");
-    save_file_cb_ = node_->add_on_set_parameters_callback(
-      [this](const std::vector<rclcpp::Parameter> & parameters) {
-        return set_save_file_path_callback(parameters);
-      });
-
     route_set_subscription_ = node_->create_subscription<adapi_route>(
       "/api/routing/route", 10, [this](const adapi_route & msg) { route_set_callback(msg); });
 
@@ -68,35 +61,7 @@ public:
     read_routes(get_save_path());
   }
 
-  auto set_save_file_path_callback(const std::vector<rclcpp::Parameter> & parameters)
-    -> rcl_interfaces::msg::SetParametersResult
-  {
-    rcl_interfaces::msg::SetParametersResult result;
-    result.successful = false;
-    for (const auto & p : parameters) {
-      if (p.get_name() == "save_file_path") {
-        std::string path = p.get_value<std::string>();
-        read_routes(expand_home_path(path));
-        RCLCPP_INFO(
-          node_->get_logger(), "Path to route save file set as: %s",
-          expand_home_path(path).c_str());
-        result.successful = true;
-      }
-    }
-
-    return result;
-  }
-
-  auto get_save_path() -> std::string
-  {
-    std::string path = node_->get_parameter("save_file_path").as_string();
-    return expand_home_path(path);
-  }
-
-  void set_save_path(const std::string & name)
-  {
-    node_->set_parameter(rclcpp::Parameter("save_file_path", "~/.ros/" + name));
-  }
+  auto get_save_path() -> std::string { return expand_home_path(save_file_path); }
 
   auto expand_home_path(const std::string & path) -> std::string
   {
@@ -433,8 +398,6 @@ public:
     initial_pose_publisher_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_publisher_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr sync_notif_publisher_;
-
-  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr save_file_cb_;
 
   uuid_route_map routes;
   adapi_route current_route;
