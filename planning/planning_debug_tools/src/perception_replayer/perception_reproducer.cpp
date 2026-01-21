@@ -17,6 +17,7 @@
 #include "utils.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <deque>
 #include <limits>
@@ -58,7 +59,7 @@ PerceptionReproducer::PerceptionReproducer(
     get_logger(), "Creating main timer with interval %.3f seconds", average_ego_odom_interval);
   timer_ = rclcpp::create_timer(
     this, get_clock(), std::chrono::duration<double>(average_ego_odom_interval),
-    std::bind(&PerceptionReproducer::on_timer, this));
+    std::bind(&PerceptionReproducer::on_timer, this), callback_group_check_perception_);
 
   if (param_.publish_route) {
     publish_recorded_ego_pose(get_bag_start_time());
@@ -89,12 +90,8 @@ void PerceptionReproducer::on_initialpose(
 
 void PerceptionReproducer::on_timer()
 {
+  const auto timer_start = std::chrono::high_resolution_clock::now();
   const auto current_timestamp = this->get_clock()->now();
-
-  // publish empty pointcloud if detected_object mode
-  if (param_.detected_object) {
-    publish_empty_pointcloud(current_timestamp);
-  }
 
   // check if ego_odom is available
   const auto ego_odom_opt = get_latest_ego_odom();
@@ -193,10 +190,6 @@ void PerceptionReproducer::on_timer()
 
       const auto pose_timestamp = rosbag_ego_odom_data_[ego_odom_idx].first;
 
-      // use common method to publish all messages with coordinate conversion
-      publish_topics_at_timestamp_with_coordinate_conversion(
-        pose_timestamp, current_timestamp, ego_odom, param_.noise && repeat_flag);
-
       // save the timestamp for potential repeat
       last_published_timestamp_ = pose_timestamp;
 
@@ -211,10 +204,18 @@ void PerceptionReproducer::on_timer()
   }();
 
   if (bag_timestamp.has_value()) {
-    publish_topics_at_timestamp_with_coordinate_conversion(
-      bag_timestamp.value(), current_timestamp, ego_odom, param_.noise && repeat_flag);
+    publish_topics_at_timestamp(
+      bag_timestamp.value(), current_timestamp, param_.noise && repeat_flag);
   } else {
     RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 3000, "No valid bag timestamp to publish.");
+  }
+
+  const auto timer_end = std::chrono::high_resolution_clock::now();
+  const auto total_time =
+    std::chrono::duration_cast<std::chrono::microseconds>(timer_end - timer_start).count() / 1000.0;
+
+  if (param_.verbose) {
+    RCLCPP_INFO(get_logger(), "on_timer processing time: %.3f ms", total_time);
   }
 }
 
@@ -264,66 +265,6 @@ std::vector<size_t> PerceptionReproducer::find_nearby_ego_odom_indices(
   }
 
   return nearby_indices;
-}
-
-void PerceptionReproducer::publish_topics_at_timestamp_with_coordinate_conversion(
-  const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp,
-  const Odometry & current_ego_odom, const bool apply_noise)
-{
-  // for debugging
-  recorded_ego_pub_->publish(find_ego_odom_by_timestamp(bag_timestamp));
-
-  // publish objects
-  if (param_.detected_object) {
-    const auto objects_msg =
-      utils::find_message_by_timestamp(rosbag_detected_objects_data_, bag_timestamp);
-    if (objects_msg.has_value()) {
-      auto msg = objects_msg.value();
-      if (apply_noise) {
-        msg = add_perception_noise(msg);
-      }
-      msg.header.stamp = current_timestamp;
-
-      // apply coordinate transformation using provided current ego odom
-      const auto log_ego_odom = find_ego_odom_by_timestamp(bag_timestamp);
-      utils::translate_objects_coordinate(current_ego_odom.pose.pose, log_ego_odom.pose.pose, msg);
-
-      auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<DetectedObjects>>(objects_pub_);
-      if (publisher) {
-        publisher->publish(msg);
-      }
-    }
-  } else if (param_.tracked_object) {
-    const auto objects_msg =
-      utils::find_message_by_timestamp(rosbag_tracked_objects_data_, bag_timestamp);
-    if (objects_msg.has_value()) {
-      auto msg = objects_msg.value();
-      if (apply_noise) {
-        msg = add_perception_noise(msg);
-      }
-      msg.header.stamp = current_timestamp;
-      auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<TrackedObjects>>(objects_pub_);
-      if (publisher) {
-        publisher->publish(msg);
-      }
-    }
-  } else {
-    const auto objects_msg =
-      utils::find_message_by_timestamp(rosbag_predicted_objects_data_, bag_timestamp);
-    if (objects_msg.has_value()) {
-      auto msg = objects_msg.value();
-      if (apply_noise) {
-        msg = add_perception_noise(msg);
-      }
-      msg.header.stamp = current_timestamp;
-      auto publisher = std::dynamic_pointer_cast<rclcpp::Publisher<PredictedObjects>>(objects_pub_);
-      if (publisher) {
-        publisher->publish(msg);
-      }
-    }
-  }
-
-  publish_traffic_lights_at_timestamp(bag_timestamp, current_timestamp);
 }
 
 }  // namespace autoware::planning_debug_tools

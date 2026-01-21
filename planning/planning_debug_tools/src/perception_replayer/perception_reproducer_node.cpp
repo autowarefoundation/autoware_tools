@@ -57,24 +57,17 @@ int main(int argc, char ** argv)
       "rosbag", "BAG");
     options << bag_option;
 
-    const QCommandLineOption noise_option(
-      QStringList() << "n"
-                    << "noise",
-      "apply perception noise to the objects when publishing repeated messages", "{true,false}",
-      "true");
-    options << noise_option;
-
-    const QCommandLineOption detected_object_option(
-      QStringList() << "d"
-                    << "detected-object",
-      "publish detected object");
-    options << detected_object_option;
-
     const QCommandLineOption tracked_object_option(
       QStringList() << "t"
                     << "tracked-object",
       "publish tracked object");
     options << tracked_object_option;
+
+    const QCommandLineOption noise_option(
+      QStringList() << "n"
+                    << "noise",
+      "apply perception noise to the objects when publishing repeated messages");
+    options << noise_option;
 
     const QCommandLineOption rosbag_format_option(
       QStringList() << "f"
@@ -112,6 +105,16 @@ int main(int argc, char ** argv)
       "output debug data.");
     options << verbose_option;
 
+    const QCommandLineOption ref_image_topics_option(
+      QStringList() << "reference-image-topics",
+      "comma-separated list of CompressedImage topics to load and publish "
+      "(e.g., "
+      "'/sensing/camera/camera0/image_raw/compressed,/sensing/camera/camera1/image_raw/"
+      "compressed'). "
+      "Each topic will be loaded from rosbag and published to the same topic name.",
+      "topics", "");
+    options << ref_image_topics_option;
+
     for (const auto & option : options) {
       parser.addOption(option);
     }
@@ -132,13 +135,23 @@ int main(int argc, char ** argv)
     autoware::planning_debug_tools::PerceptionReproducerParam param;
     param.rosbag_path = parser.value(bag_option).toStdString();
     param.rosbag_format = parser.value(rosbag_format_option).toStdString();
-    param.detected_object = parser.isSet(detected_object_option);
     param.tracked_object = parser.isSet(tracked_object_option);
     param.search_radius = parser.value(search_radius_option).toDouble();
     param.reproduce_cool_down = parser.value(cool_down_option).toDouble();
-    param.noise = parser.value(noise_option).toLower() == "true";
+    param.noise = parser.isSet(noise_option);
     param.verbose = parser.isSet(verbose_option);
     param.publish_route = parser.isSet(pub_route_option);
+
+    // Parse comma-separated reference image topics
+    const QString topics_str = parser.value(ref_image_topics_option);
+    if (!topics_str.isEmpty()) {
+      const QStringList topic_list = topics_str.split(',', Qt::SkipEmptyParts);
+      for (const auto & topic : topic_list) {
+        param.reference_image_topics.push_back(topic.trimmed().toStdString());
+      }
+      std::cout << "Reference image topics: " << param.reference_image_topics.size()
+                << " topics configured" << std::endl;
+    }
 
     if (param.rosbag_format != "sqlite3" && param.rosbag_format != "mcap") {
       std::cerr << "Error: invalid rosbag format: " << param.rosbag_format << std::endl;
@@ -147,8 +160,10 @@ int main(int argc, char ** argv)
 
     auto node = std::make_shared<autoware::planning_debug_tools::PerceptionReproducer>(
       param, rclcpp::NodeOptions());
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
 
-    rclcpp::spin(node);
+    executor.spin();
     rclcpp::shutdown();
   } catch (const std::exception & e) {
     std::cerr << "Exception in main(): " << e.what() << std::endl;

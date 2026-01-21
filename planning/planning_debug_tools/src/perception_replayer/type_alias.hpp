@@ -14,29 +14,29 @@
 
 #pragma once
 
-#include <autoware_perception_msgs/msg/detected_objects.hpp>
 #include <autoware_perception_msgs/msg/predicted_objects.hpp>
 #include <autoware_perception_msgs/msg/tracked_objects.hpp>
 #include <autoware_perception_msgs/msg/traffic_light_group.hpp>
 #include <autoware_perception_msgs/msg/traffic_light_group_array.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
+#include <nav_msgs/msg/occupancy_grid.hpp>
 #include <nav_msgs/msg/odometry.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
+#include <sensor_msgs/msg/compressed_image.hpp>
 #include <unique_identifier_msgs/msg/uuid.hpp>
 
 namespace autoware::planning_debug_tools
 {
 
-using autoware_perception_msgs::msg::DetectedObjects;
 using autoware_perception_msgs::msg::PredictedObjects;
 using autoware_perception_msgs::msg::TrackedObjects;
 using autoware_perception_msgs::msg::TrafficLightGroup;
 using autoware_perception_msgs::msg::TrafficLightGroupArray;
 using geometry_msgs::msg::PoseStamped;
 using geometry_msgs::msg::PoseWithCovarianceStamped;
+using nav_msgs::msg::OccupancyGrid;
 using nav_msgs::msg::Odometry;
-using sensor_msgs::msg::PointCloud2;
+using sensor_msgs::msg::CompressedImage;
 using unique_identifier_msgs::msg::UUID;
 
 }  // namespace autoware::planning_debug_tools

@@ -10,6 +10,7 @@
   <maintainer email="temkei.kem@tier4.jp">Temkei Kem</maintainer>
   <maintainer email="kyoichi.sugahara@tier4.jp">Kyoichi Sugahara</maintainer>
   <maintainer email="maxime.clement@tier4.jp">Maxime CLEMENT</maintainer>
+  <maintainer email="takumi.odashima@tier4.jp">Takumi Odashima</maintainer>
   <license>Apache License 2.0</license>
 
   <author email="takamasa.horibe@tier4.jp">Takamasa Horibe</author>
@@ -38,6 +39,7 @@
   <depend>rosbag2_cpp</depend>
   <depend>rosbag2_storage</depend>
   <depend>rosbag2_transport</depend>
+  <depend>sensor_msgs</depend>
   <depend>tier4_planning_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
