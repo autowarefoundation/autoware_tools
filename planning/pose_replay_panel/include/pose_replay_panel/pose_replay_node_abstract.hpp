@@ -1,5 +1,5 @@
-#ifndef POSE_REPLAY_NODE_ABSTRACT_H
-#define POSE_REPLAY_NODE_ABSTRACT_H
+#ifndef POSE_REPLAY_PANEL__POSE_REPLAY_NODE_ABSTRACT_HPP_
+#define POSE_REPLAY_PANEL__POSE_REPLAY_NODE_ABSTRACT_HPP_
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -416,4 +416,4 @@ private:
 
 }  // namespace pose_replay
 
-#endif
+#endif  // POSE_REPLAY_PANEL__POSE_REPLAY_NODE_ABSTRACT_HPP_

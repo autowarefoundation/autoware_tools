@@ -9,13 +9,13 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>autoware_adapi_v1_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>pluginlib</depend>
   <depend>qtbase5-dev</depend>
   <depend>rclcpp</depend>
   <depend>rviz2</depend>
   <depend>rviz_common</depend>
-  <depend>autoware_adapi_v1_msgs</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
