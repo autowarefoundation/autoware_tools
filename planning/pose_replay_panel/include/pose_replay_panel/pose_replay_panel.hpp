@@ -36,6 +36,7 @@ private Q_SLOTS:
   void route_entry_factory(const std::string &, const std::string &);
   void sync_read();
   void clear_layout(QLayout *);
+  void load_save_file_button_activated();
   void rename_route_button_activated(const std::string &, const std::string &);
 };
 }  // namespace pose_replay_panel

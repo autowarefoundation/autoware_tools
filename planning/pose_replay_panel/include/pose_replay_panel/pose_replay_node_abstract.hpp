@@ -5,6 +5,7 @@
 
 #include <rclcpp/logging.hpp>
 #include <rclcpp/node.hpp>
+#include <rclcpp/parameter.hpp>
 
 #include "autoware_adapi_v1_msgs/msg/route.hpp"
 #include "autoware_adapi_v1_msgs/srv/clear_route.hpp"
@@ -14,7 +15,7 @@
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp> 
+#include <boost/uuid/uuid_io.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -32,8 +33,6 @@ namespace pose_replay
 {
 
 using adapi_route = autoware_adapi_v1_msgs::msg::Route;
-
-const std::string save_file_path = "~/.ros/output.yaml";
 
 struct NamedRoute
 {
@@ -54,6 +53,21 @@ class PoseReplayNode
 public:
   explicit PoseReplayNode(const rclcpp::Node::SharedPtr & node) : node_(node)
   {
+    node_->declare_parameter("save_file_path", "~/.ros/pose_replay_history.yaml");
+    save_file_cb_ = node_->add_on_set_parameters_callback(
+      [this](const std::vector<rclcpp::Parameter> & parameters) {
+        rcl_interfaces::msg::SetParametersResult result;
+        result.successful = true;
+        for (const auto & p : parameters) {
+          if (p.get_name() == "save_file_path") {
+            std::string path = p.get_value<std::string>();
+            read_routes(expand_home_path(path));
+          }
+        }
+
+        return result;
+      });
+
     route_set_subscription_ = node_->create_subscription<adapi_route>(
       "/api/routing/route", 10, [this](const adapi_route & msg) { route_set_callback(msg); });
 
@@ -66,7 +80,15 @@ public:
     read_routes(get_save_path());
   }
 
-  auto get_save_path() -> std::string { return expand_home_path(save_file_path); }
+  auto get_save_path() -> std::string
+  {
+    return expand_home_path(node_->get_parameter("save_file_path").as_string());
+  }
+
+  void set_save_path(std::string new_path)
+  {
+    node_->set_parameters({rclcpp::Parameter("save_file_path", new_path)});
+  }
 
   auto expand_home_path(const std::string & path) -> std::string
   {
@@ -382,6 +404,8 @@ public:
     initial_pose_publisher_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr goal_pose_publisher_;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr sync_notif_publisher_;
+
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr save_file_cb_;
 
   uuid_route_map routes;
   adapi_route current_route;
