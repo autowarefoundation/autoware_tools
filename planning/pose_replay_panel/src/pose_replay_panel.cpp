@@ -96,7 +96,8 @@ void PoseReplayPanel::route_entry_factory(const std::string & uuid, const std::s
 void PoseReplayPanel::load_save_file_button_activated()
 {
   bool ok;
-  std::string edit_title = "Current save file: " + node_abstract_->get_save_path() + "\n" + "Enter save file path:";
+  std::string edit_title =
+    "Current save file: " + node_abstract_->get_save_path() + "\n" + "Enter save file path:";
   QString new_path = QInputDialog::getText(
     this, tr("Load save"), tr(edit_title.c_str()), QLineEdit::Normal, "", &ok);
   if (ok && !new_path.isEmpty()) {
