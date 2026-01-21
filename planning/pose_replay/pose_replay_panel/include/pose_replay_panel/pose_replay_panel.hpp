@@ -7,6 +7,8 @@
 #include "pose_replay_interfaces/srv/set_name.hpp"
 #include "pose_replay_interfaces/srv/set_route.hpp"
 
+#include "pose_replay_panel/pose_replay_logic.hpp"
+
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
@@ -35,13 +37,15 @@ protected:
   rclcpp::Node::SharedPtr pose_replay_node_ptr_;
   //
 
-  rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr get_routes_client_;
-  rclcpp::Client<pose_replay_interfaces::srv::SetRoute>::SharedPtr set_route_client_;
-  rclcpp::Client<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr delete_route_client_;
-  rclcpp::Client<pose_replay_interfaces::srv::SetName>::SharedPtr set_name_client_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sync_notif_subscriber_;
+  // rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoutes>::SharedPtr get_routes_client_;
+  // rclcpp::Client<pose_replay_interfaces::srv::SetRoute>::SharedPtr set_route_client_;
+  // rclcpp::Client<pose_replay_interfaces::srv::DeleteRoute>::SharedPtr delete_route_client_;
+  // rclcpp::Client<pose_replay_interfaces::srv::SetName>::SharedPtr set_name_client_;
+  // rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sync_notif_subscriber_;
 
   QVBoxLayout * dynamic_layout_;
+
+  std::unique_ptr<PoseReplay::PoseReplayLogic> logic_;
 
 private Q_SLOTS:
   void button_activated();
@@ -50,7 +54,7 @@ private Q_SLOTS:
   void delete_route_button_activated(const std::string &);
   void sync_read();
   void clear_layout(QLayout *);
-  void sync_notif_callback(std_msgs::msg::String);
+  // void sync_notif_callback(std_msgs::msg::String);
   void rename_route_button_activated(const std::string &, const std::string &);
 };
 }  // namespace pose_replay_panel

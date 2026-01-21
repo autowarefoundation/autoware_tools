@@ -2,6 +2,7 @@
 #include "pose_replay_interfaces/srv/get_uuid_routes.hpp"
 #include "pose_replay_interfaces/srv/set_name.hpp"
 #include "pose_replay_interfaces/srv/set_route.hpp"
+#include "pose_replay_panel/pose_replay_logic.hpp"
 
 #include <QInputDialog>
 #include <QMessageBox>
@@ -28,15 +29,10 @@ PoseReplayPanel::PoseReplayPanel(QWidget * parent) : Panel(parent)
   const auto main_layout = new QVBoxLayout(this);
   main_layout->setAlignment(Qt::AlignTop);
   const auto main_title = new QLabel("Route history");
-  //  sync_button_ = new QPushButton("Sync");
   dynamic_layout_ = new QVBoxLayout(this);
   dynamic_layout_->setAlignment(Qt::AlignTop);
-  //  main_layout->addWidget(sync_button_);
   main_layout->addWidget(main_title);
   main_layout->addLayout(dynamic_layout_);
-
-  //  QObject::connect(syncbutton_, &QPushButton::released, this,
-  //  &PoseReplayPanel::buttonActivated);
 }
 
 PoseReplayPanel::~PoseReplayPanel() = default;
@@ -44,20 +40,24 @@ PoseReplayPanel::~PoseReplayPanel() = default;
 void PoseReplayPanel::onInitialize()
 {
   node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
-
   rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
 
-  get_routes_client_ = node->create_client<pose_replay_interfaces::srv::GetUuidRoutes>(
-    "/pose_replay/get_routes_service");
-  set_route_client_ =
-    node->create_client<pose_replay_interfaces::srv::SetRoute>("/pose_replay/set_route_service");
-  delete_route_client_ = node->create_client<pose_replay_interfaces::srv::DeleteRoute>(
-    "/pose_replay/delete_route_service");
-  set_name_client_ =
-    node->create_client<pose_replay_interfaces::srv::SetName>("/pose_replay/set_name_service");
-  sync_notif_subscriber_ = node->create_subscription<std_msgs::msg::String>(
-    "/pose_replay/update", 10,
-    std::bind(&PoseReplayPanel::sync_notif_callback, this, std::placeholders::_1));
+  //// new
+  pose_replay_node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock()->get_raw_node();
+  logic_ = std::make_unique<PoseReplay::PoseReplayLogic>(pose_replay_node_ptr_);
+  ////
+
+  // get_routes_client_ = node->create_client<pose_replay_interfaces::srv::GetUuidRoutes>(
+  //   "/pose_replay/get_routes_service");
+  // set_route_client_ =
+  //   node->create_client<pose_replay_interfaces::srv::SetRoute>("/pose_replay/set_route_service");
+  // delete_route_client_ = node->create_client<pose_replay_interfaces::srv::DeleteRoute>(
+  //   "/pose_replay/delete_route_service");
+  // set_name_client_ =
+  //   node->create_client<pose_replay_interfaces::srv::SetName>("/pose_replay/set_name_service");
+  // sync_notif_subscriber_ = node->create_subscription<std_msgs::msg::String>(
+  //   "/pose_replay/update", 10,
+  //   std::bind(&PoseReplayPanel::sync_notif_callback, this, std::placeholders::_1));
 
   sync_read();
 }
@@ -65,32 +65,10 @@ void PoseReplayPanel::onInitialize()
 void PoseReplayPanel::sync_read()
 {
   clear_layout(dynamic_layout_);
-
-  auto request = std::make_shared<pose_replay_interfaces::srv::GetUuidRoutes::Request>();
-
-  if (!get_routes_client_->service_is_ready()) {
-    RCLCPP_WARN(rclcpp::get_logger("GetUuidRoutes"), "GetUuidRoutes service is not ready.");
-    return;
+  std::vector<PoseReplay::UuidName> fetched_routes = logic_->get_routes({});
+  for (auto & r : fetched_routes) {
+    PoseReplayPanel::route_entry_factory(r.uuid, r.name);
   }
-
-  get_routes_client_->async_send_request(
-    request,
-    [this](rclcpp::Client<pose_replay_interfaces::srv::GetUuidRoutes>::SharedFuture future) {
-      try {
-        const auto & response = future.get();
-        QMetaObject::invokeMethod(
-          this,
-          [this, response]() {
-            auto routes = response->routes.routes;
-            for (auto & r : routes) {
-              PoseReplayPanel::route_entry_factory(r.uuid, r.name);
-            }
-          },
-          Qt::QueuedConnection);
-      } catch (const std::exception & e) {
-        RCLCPP_ERROR(rclcpp::get_logger("PoseReplayPanel"), "Service call failed: %s", e.what());
-      }
-    });
 }
 
 void PoseReplayPanel::route_entry_factory(const string & uuid, const std::string & name)
@@ -126,94 +104,20 @@ void PoseReplayPanel::rename_route_button_activated(
     this, tr("Rename"), tr("Enter new route name:"), QLineEdit::Normal, currentName, &ok);
 
   if (ok && !newName.isEmpty()) {
-    auto request = std::make_shared<pose_replay_interfaces::srv::SetName::Request>();
-    request->uuid = uuid;
-    request->name = newName.toStdString();
-
-    if (!set_name_client_->service_is_ready()) {
-      RCLCPP_WARN(rclcpp::get_logger("SetNameService"), "SetName service is not ready.");
-      return;
-    }
-
-    set_name_client_->async_send_request(
-      request, [this](rclcpp::Client<pose_replay_interfaces::srv::SetName>::SharedFuture future) {
-        try {
-          const auto & response = future.get();
-
-          // Update the UI safely (in Qt thread)
-          QMetaObject::invokeMethod(
-            this,
-            [this, response]() {
-              RCLCPP_INFO(rclcpp::get_logger("PoseReplayPanel"), "%s", response->uuid.c_str());
-            },
-            Qt::QueuedConnection);
-        } catch (const std::exception & e) {
-          RCLCPP_ERROR(rclcpp::get_logger("PoseReplayPanel"), "Service call failed: %s", e.what());
-        }
-      });
+    logic_->set_name(uuid, newName.toStdString());
+    sync_read();
   }
 }
 
 void PoseReplayPanel::delete_route_button_activated(const std::string & uuid)
 {
-  auto request = std::make_shared<pose_replay_interfaces::srv::DeleteRoute::Request>();
-  request->uuid = uuid;
-
-  if (!delete_route_client_->service_is_ready()) {
-    RCLCPP_WARN(rclcpp::get_logger("DeleteRouteService"), "DeleteRoute service is not ready.");
-    return;
-  }
-
-  delete_route_client_->async_send_request(
-    request, [this](rclcpp::Client<pose_replay_interfaces::srv::DeleteRoute>::SharedFuture future) {
-      try {
-        const auto & response = future.get();
-
-        // Update the UI safely (in Qt thread)
-        QMetaObject::invokeMethod(
-          this,
-          [this, response]() {
-            RCLCPP_INFO(rclcpp::get_logger("PoseReplayPanel"), response->uuid.c_str());
-          },
-          Qt::QueuedConnection);
-      } catch (const std::exception & e) {
-        RCLCPP_ERROR(rclcpp::get_logger("PoseReplayPanel"), "Service call failed: %s", e.what());
-      }
-    });
+  logic_->delete_route(uuid);
+  sync_read();
 }
 
 void PoseReplayPanel::set_route_button_activated(const std::string & uuid)
 {
-  auto request = std::make_shared<pose_replay_interfaces::srv::SetRoute::Request>();
-  request->uuid = uuid;
-
-  if (!set_route_client_->service_is_ready()) {
-    RCLCPP_WARN(rclcpp::get_logger("SetRouteService"), "SetRoute service is not ready.");
-    return;
-  }
-
-  set_route_client_->async_send_request(
-    request, [this](rclcpp::Client<pose_replay_interfaces::srv::SetRoute>::SharedFuture future) {
-      try {
-        const auto & response = future.get();
-
-        // Update the UI safely (in Qt thread)
-        QMetaObject::invokeMethod(
-          this,
-          [this, response]() {
-            //            syncbutton_->setText(QString(response->start.position.x));
-          },
-          Qt::QueuedConnection);
-      } catch (const std::exception & e) {
-        RCLCPP_ERROR(rclcpp::get_logger("PoseReplayPanel"), "Service call failed: %s", e.what());
-      }
-    });
-}
-
-void PoseReplayPanel::sync_notif_callback(std_msgs::msg::String msg)
-{
-  RCLCPP_INFO(rclcpp::get_logger("PoseReplayPanel"), "%s notification received", msg.data.c_str());
-  sync_read();
+  logic_->load_route(uuid);
 }
 
 void PoseReplayPanel::clear_layout(QLayout * layout)
