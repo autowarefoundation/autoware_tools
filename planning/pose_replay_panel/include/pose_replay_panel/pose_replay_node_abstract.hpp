@@ -12,6 +12,10 @@
 #include "geometry_msgs/msg/pose_with_covariance_stamped.hpp"
 #include "std_msgs/msg/string.hpp"
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp> 
+
 #include <yaml-cpp/yaml.h>
 
 #include <fstream>
@@ -25,7 +29,6 @@
 namespace pose_replay
 {
 
-using autoware_adapi_v1_msgs::msg::to_yaml;
 using adapi_route = autoware_adapi_v1_msgs::msg::Route;
 
 const std::string save_file_path = "~/.ros/output.yaml";
@@ -278,24 +281,15 @@ public:
     routes.insert(new_map.begin(), new_map.end());
   }
 
-  /*
-    Deduplication depreciated. Routes now manually saved.
-  */
-  auto route_yaml_to_hash(const std::string & yaml_str) -> std::string
-  {
-    YAML::Node node = YAML::Load(yaml_str);
-    std::string yaml_str_to_hash = YAML::Dump(node);
-    std::string hash_uuid = std::to_string(std::hash<std::string>{}(yaml_str_to_hash));
-    return hash_uuid;
-  }
-
   auto prepend_uuid_name(const std::string & yaml_str) -> std::string
   {
-    std::string hash_uuid = route_yaml_to_hash(yaml_str);
+    boost::uuids::random_generator gen;
+    boost::uuids::uuid uuid_str = gen();
+
     std::ostringstream oss;
     oss << "name: \"New route"
         << "\"\n";
-    oss << "uuid: \"" << hash_uuid << "\"\n";
+    oss << "uuid: \"" << uuid_str << "\"\n";
     oss << yaml_str;
     std::string new_str = oss.str();
     return new_str;
@@ -308,12 +302,6 @@ public:
     if (current_route.data.empty()) return;
 
     std::string yaml_str = autoware_adapi_v1_msgs::msg::to_yaml(current_route);
-
-    /*
-      Deduplication depreciated. Possible redundant check for duplicates.
-    */
-    std::string hash_uuid_str = route_yaml_to_hash(yaml_str);
-    if (routes.count(hash_uuid_str)) return;
 
     auto uuid_yaml_str = prepend_uuid_name(yaml_str);
     write_route(get_save_path(), uuid_yaml_str, true);
