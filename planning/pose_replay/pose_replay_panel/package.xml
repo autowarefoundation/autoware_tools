@@ -11,7 +11,6 @@
 
   <depend>geometry_msgs</depend>
   <depend>pluginlib</depend>
-  <depend>pose_replay_interfaces</depend>
   <depend>qtbase5-dev</depend>
   <depend>rclcpp</depend>
   <depend>rviz2</depend>
