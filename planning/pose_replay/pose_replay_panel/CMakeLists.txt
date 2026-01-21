@@ -18,6 +18,7 @@ find_package(pluginlib REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Widgets Core Gui)
 
 find_package(geometry_msgs REQUIRED)
+find_package(autoware_adapi_v1_msgs REQUIRED)
 
 find_package(pose_replay_interfaces REQUIRED)
 
@@ -40,6 +41,7 @@ ament_target_dependencies(pose_replay_panel
   Qt5
   pose_replay_interfaces
   geometry_msgs
+  autoware_adapi_v1_msgs
 )
 install(TARGETS pose_replay_panel
         EXPORT export_pose_replay_panel
