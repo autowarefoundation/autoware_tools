@@ -300,6 +300,8 @@ public:
       RCLCPP_ERROR(node_->get_logger(), "[write_route] Cannot open file: %s.", filepath.c_str());
       throw std::runtime_error("[write_route] Cannot open file: " + filepath + ".");
     }
+
+    if (!o.is_open()) throw std::runtime_error("[write_route] Cannot open file: " + filepath + ".");
     o << "---\n" << value << "\n";
     o.close();
   }
