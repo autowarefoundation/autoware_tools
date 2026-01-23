@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="transport_type" description="image transport type (raw or compressed)"/>
+  <arg name="interpolation_method" description="0=Nearest, 1=Linear, 2=Cubic"/>
+
+  <let name="single_launch" value="$(find-pkg-share autoware_image_distortion)/launch/single_image_distortion.launch.xml"/>
+
+  <include file="$(var single_launch)">
+    <arg name="input_topic" value="/sensing/camera/camera0/image_raw"/>
+    <arg name="output_topic" value="/sensing/camera/camera0/image_rect"/>
+    <arg name="node_name" value="rectify_node_camera0"/>
+    <arg name="transport" value="$(var transport_type)"/>
+    <arg name="interpolation" value="$(var interpolation_method)"/>
+  </include>
+</launch>
