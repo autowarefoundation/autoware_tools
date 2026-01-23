@@ -1,5 +1,0 @@
-<library path="pose_replay_panel">
-  <class type="pose_replay_panel::PoseReplayPanel" base_class_type="rviz_common::Panel">
-    <description></description>
-  </class>
-</library>

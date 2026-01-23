@@ -1,5 +1,19 @@
-#ifndef POSE_REPLAY_PANEL__POSE_REPLAY_NODE_ABSTRACT_HPP_
-#define POSE_REPLAY_PANEL__POSE_REPLAY_NODE_ABSTRACT_HPP_
+// Copyright 2026 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef ROUTE_HISTORY__NODE_LOGIC_HPP_
+#define ROUTE_HISTORY__NODE_LOGIC_HPP_
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -29,7 +43,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace pose_replay
+namespace autoware::route_history
 {
 
 using adapi_route = autoware_adapi_v1_msgs::msg::Route;
@@ -48,12 +62,12 @@ struct UuidName
 
 using uuid_route_map = std::unordered_map<std::string, NamedRoute>;
 
-class PoseReplayNode
+class NodeLogic
 {
 public:
-  explicit PoseReplayNode(const rclcpp::Node::SharedPtr & node) : node_(node)
+  explicit NodeLogic(const rclcpp::Node::SharedPtr & node) : node_(node)
   {
-    node_->declare_parameter("save_file_path", "~/.ros/pose_replay_history.yaml");
+    node_->declare_parameter("save_file_path", "~/.ros/route_history.yaml");
     save_file_cb_ = node_->add_on_set_parameters_callback(
       [this](const std::vector<rclcpp::Parameter> & parameters) {
         rcl_interfaces::msg::SetParametersResult result;
@@ -165,7 +179,6 @@ public:
 
       initial_pose_publisher_->publish(initialmsg);
       goal_pose_publisher_->publish(goalmsg);
-
     } catch (const YAML::BadFile & e) {
       RCLCPP_INFO(
         node_->get_logger(), "[set_route] Save file not found at path: %s.",
@@ -180,7 +193,7 @@ public:
     if (uuid.size() == 0) {
       RCLCPP_INFO(node_->get_logger(), "[delete_route] No uuid given.");
       return;
-    };
+    }
 
     std::ifstream yaml_file(get_save_path());
 
@@ -414,6 +427,6 @@ private:
   rclcpp::Node::SharedPtr node_;
 };
 
-}  // namespace pose_replay
+}  // namespace autoware::route_history
 
-#endif  // POSE_REPLAY_PANEL__POSE_REPLAY_NODE_ABSTRACT_HPP_
+#endif  // ROUTE_HISTORY__NODE_LOGIC_HPP_

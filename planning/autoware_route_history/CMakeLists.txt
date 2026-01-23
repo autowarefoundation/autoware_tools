@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(pose_replay_panel)
+project(autoware_route_history)
 
 # RCLCPP/RCLCPP.HPP explicitly setting to C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -24,15 +24,15 @@ find_package(rviz_common REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 qt5_wrap_cpp(MOC_FILES
-  include/pose_replay_panel/pose_replay_panel.hpp
+  include/route_history/rviz_panel.hpp
 )
 
-add_library(pose_replay_panel SHARED src/pose_replay_panel.cpp ${MOC_FILES})
-target_include_directories(pose_replay_panel PUBLIC
+add_library(autoware_route_history SHARED src/rviz_panel.cpp ${MOC_FILES})
+target_include_directories(autoware_route_history PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-ament_target_dependencies(pose_replay_panel
+ament_target_dependencies(autoware_route_history
   pluginlib
   rviz_common
   Qt5
@@ -40,8 +40,8 @@ ament_target_dependencies(pose_replay_panel
   autoware_adapi_v1_msgs
 )
 
-install(TARGETS pose_replay_panel
-        EXPORT export_pose_replay_panel
+install(TARGETS autoware_route_history
+        EXPORT export_autoware_route_history
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin
@@ -53,7 +53,7 @@ install(FILES rviz_common_plugins.xml
         DESTINATION share/${PROJECT_NAME}
 )
 ament_export_include_directories(include)
-ament_export_targets(export_pose_replay_panel)
+ament_export_targets(export_autoware_route_history)
 pluginlib_export_plugin_description_file(rviz_common rviz_common_plugins.xml)
 #####
 

@@ -1,0 +1,5 @@
+<library path="autoware_route_history">
+  <class type="autoware::route_history::RouteHistoryPanel" base_class_type="rviz_common::Panel">
+    <description></description>
+  </class>
+</library>

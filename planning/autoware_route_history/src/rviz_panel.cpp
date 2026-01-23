@@ -1,11 +1,26 @@
-#include "pose_replay_panel/pose_replay_node_abstract.hpp"
+// Copyright 2026 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "route_history/rviz_panel.hpp"
+
+#include "route_history/node_logic.hpp"
 
 #include <QHBoxLayout>
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QString>
 #include <QVBoxLayout>
-#include <pose_replay_panel/pose_replay_panel.hpp>
 #include <rviz_common/display_context.hpp>
 
 #include "std_msgs/msg/string.hpp"
@@ -16,13 +31,13 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 
 using namespace std::literals::chrono_literals;
 
-namespace pose_replay_panel
+namespace autoware::route_history
 {
-
-PoseReplayPanel::PoseReplayPanel(QWidget * parent) : Panel(parent)
+RouteHistoryPanel::RouteHistoryPanel(QWidget * parent) : Panel(parent)
 {
   const auto main_layout = new QVBoxLayout(this);
   main_layout->setAlignment(Qt::AlignTop);
@@ -49,27 +64,27 @@ PoseReplayPanel::PoseReplayPanel(QWidget * parent) : Panel(parent)
   main_layout->addLayout(dynamic_layout_);
 }
 
-PoseReplayPanel::~PoseReplayPanel() = default;
+RouteHistoryPanel::~RouteHistoryPanel() = default;
 
-void PoseReplayPanel::onInitialize()
+void RouteHistoryPanel::onInitialize()
 {
   node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
   rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
   pose_replay_node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock()->get_raw_node();
-  node_abstract_ = std::make_unique<pose_replay::PoseReplayNode>(pose_replay_node_ptr_);
+  node_abstract_ = std::make_unique<autoware::route_history::NodeLogic>(pose_replay_node_ptr_);
   sync_read();
 }
 
-void PoseReplayPanel::sync_read()
+void RouteHistoryPanel::sync_read()
 {
   clear_layout(dynamic_layout_);
-  std::vector<pose_replay::UuidName> fetched_routes = node_abstract_->get_routes({});
+  std::vector<autoware::route_history::UuidName> fetched_routes = node_abstract_->get_routes({});
   for (auto & r : fetched_routes) {
-    PoseReplayPanel::route_entry_factory(r.uuid, r.name);
+    RouteHistoryPanel::route_entry_factory(r.uuid, r.name);
   }
 }
 
-void PoseReplayPanel::route_entry_factory(const std::string & uuid, const std::string & name)
+void RouteHistoryPanel::route_entry_factory(const std::string & uuid, const std::string & name)
 {
   auto layout = new QHBoxLayout();
   auto label = new QLabel(QString::fromStdString(name));
@@ -93,7 +108,7 @@ void PoseReplayPanel::route_entry_factory(const std::string & uuid, const std::s
   dynamic_layout_->addLayout(layout);
 }
 
-void PoseReplayPanel::load_save_file_button_activated()
+void RouteHistoryPanel::load_save_file_button_activated()
 {
   bool ok;
   std::string edit_title =
@@ -106,7 +121,7 @@ void PoseReplayPanel::load_save_file_button_activated()
   }
 }
 
-void PoseReplayPanel::rename_route_button_activated(
+void RouteHistoryPanel::rename_route_button_activated(
   const std::string & name, const std::string & uuid)
 {
   bool ok;
@@ -119,7 +134,7 @@ void PoseReplayPanel::rename_route_button_activated(
   }
 }
 
-void PoseReplayPanel::clear_layout(QLayout * layout)
+void RouteHistoryPanel::clear_layout(QLayout * layout)
 {
   if (!layout) return;
   QLayoutItem * item;
@@ -133,6 +148,6 @@ void PoseReplayPanel::clear_layout(QLayout * layout)
   }
 }
 
-}  // namespace pose_replay_panel
+}  // namespace autoware::route_history
 #include <pluginlib/class_list_macros.hpp>
-PLUGINLIB_EXPORT_CLASS(pose_replay_panel::PoseReplayPanel, rviz_common::Panel)
+PLUGINLIB_EXPORT_CLASS(autoware::route_history::RouteHistoryPanel, rviz_common::Panel)
