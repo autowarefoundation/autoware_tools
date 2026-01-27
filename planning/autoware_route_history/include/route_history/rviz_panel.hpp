@@ -37,7 +37,6 @@ class RouteHistoryPanel : public rviz_common::Panel
 {
   Q_OBJECT
 public:
-  // explicit RouteHistoryPanel(QWidget * parent = 0);
   explicit RouteHistoryPanel(QWidget * parent = nullptr);
   ~RouteHistoryPanel() override;
   void onInitialize() override;
