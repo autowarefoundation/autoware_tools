@@ -37,7 +37,8 @@ class RouteHistoryPanel : public rviz_common::Panel
 {
   Q_OBJECT
 public:
-  explicit RouteHistoryPanel(QWidget * parent = 0);
+  // explicit RouteHistoryPanel(QWidget * parent = 0);
+  explicit RouteHistoryPanel(QWidget * parent = nullptr);
   ~RouteHistoryPanel() override;
   void onInitialize() override;
 
@@ -45,7 +46,8 @@ protected:
   std::shared_ptr<rviz_common::ros_integration::RosNodeAbstractionIface> node_ptr_;
   rclcpp::Node::SharedPtr pose_replay_node_ptr_;
   std::unique_ptr<autoware::route_history::NodeLogic> node_abstract_;
-  QVBoxLayout * dynamic_layout_;
+
+  QVBoxLayout * dynamic_layout_{nullptr};
 
 private Q_SLOTS:
   void route_entry_factory(const std::string &, const std::string &);

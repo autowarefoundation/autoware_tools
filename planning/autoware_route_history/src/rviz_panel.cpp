@@ -42,7 +42,7 @@ RouteHistoryPanel::RouteHistoryPanel(QWidget * parent) : Panel(parent)
   const auto main_layout = new QVBoxLayout(this);
   main_layout->setAlignment(Qt::AlignTop);
 
-  const auto title_layout = new QHBoxLayout(this);
+  const auto title_layout = new QHBoxLayout();
   const auto main_title = new QLabel("Route history");
   const auto save_btn = new QPushButton("Save current route");
   const auto load_save_btn = new QPushButton("Load save file");
@@ -58,7 +58,7 @@ RouteHistoryPanel::RouteHistoryPanel(QWidget * parent) : Panel(parent)
   title_layout->addWidget(load_save_btn);
   title_layout->addWidget(save_btn);
 
-  dynamic_layout_ = new QVBoxLayout(this);
+  dynamic_layout_ = new QVBoxLayout();
   dynamic_layout_->setAlignment(Qt::AlignTop);
   main_layout->addLayout(title_layout);
   main_layout->addLayout(dynamic_layout_);
@@ -69,6 +69,12 @@ RouteHistoryPanel::~RouteHistoryPanel() = default;
 void RouteHistoryPanel::onInitialize()
 {
   node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock();
+
+  if (!node_ptr_) {
+    RCLCPP_ERROR(rclcpp::get_logger("RouteHistoryPanel"), "Failed to lock ROS node abstraction");
+    return;
+  }
+
   rclcpp::Node::SharedPtr node = node_ptr_->get_raw_node();
   pose_replay_node_ptr_ = getDisplayContext()->getRosNodeAbstraction().lock()->get_raw_node();
   node_abstract_ = std::make_unique<autoware::route_history::NodeLogic>(pose_replay_node_ptr_);

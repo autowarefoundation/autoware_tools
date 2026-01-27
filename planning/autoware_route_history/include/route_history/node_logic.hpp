@@ -67,18 +67,19 @@ class NodeLogic
 public:
   explicit NodeLogic(const rclcpp::Node::SharedPtr & node) : node_(node)
   {
-    node_->declare_parameter("save_file_path", "~/.ros/route_history.yaml");
+    if (!node_->has_parameter("save_file_path")) {
+      node_->declare_parameter("save_file_path", "~/.ros/route_history.yaml");
+    }
     save_file_cb_ = node_->add_on_set_parameters_callback(
       [this](const std::vector<rclcpp::Parameter> & parameters) {
         rcl_interfaces::msg::SetParametersResult result;
         result.successful = true;
         for (const auto & p : parameters) {
           if (p.get_name() == "save_file_path") {
-            std::string path = p.get_value<std::string>();
-            read_routes(expand_home_path(path));
+            std::string path = expand_home_path(p.get_value<std::string>());
+            this->read_routes(path);
           }
         }
-
         return result;
       });
 
@@ -92,6 +93,17 @@ public:
     sync_notif_publisher_ = node_->create_publisher<std_msgs::msg::String>("update", 10);
 
     read_routes(get_save_path());
+  }
+
+  ~NodeLogic()
+  {
+    save_file_cb_.reset();
+    route_set_subscription_.reset();
+    initial_pose_publisher_.reset();
+    goal_pose_publisher_.reset();
+    sync_notif_publisher_.reset();
+
+    RCLCPP_INFO(node_->get_logger(), "NogeLogic clean up successfull.");
   }
 
   auto get_save_path() -> std::string
