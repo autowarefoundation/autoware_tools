@@ -36,6 +36,7 @@ namespace autoware::route_history
 class RouteHistoryPanel : public rviz_common::Panel
 {
   Q_OBJECT
+
 public:
   explicit RouteHistoryPanel(QWidget * parent = nullptr);
   ~RouteHistoryPanel() override;
