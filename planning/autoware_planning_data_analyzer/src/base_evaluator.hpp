@@ -109,8 +109,13 @@ protected:
   {
     const auto topics = get_result_topics();
     for (const auto & [topic_name, topic_type] : topics) {
+      #ifdef ROS_DISTRO_HUMBLE
       const auto topic_info =
         rosbag2_storage::TopicMetadata{topic_name, topic_type, rmw_get_serialization_format(), ""};
+      #else
+      const auto topic_info = rosbag2_storage::TopicMetadata{
+        0, topic_name, topic_type, rmw_get_serialization_format(), {}, ""};
+      #endif
       bag_writer.create_topic(topic_info);
     }
   }
