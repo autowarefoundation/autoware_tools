@@ -41,9 +41,9 @@
 #include "std_msgs/msg/float32.hpp"
 #include "std_msgs/msg/int32.hpp"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/geometry/algorithms/correct.hpp>
 #include <boost/geometry/algorithms/distance.hpp>
-#include <boost/algorithm/string.hpp>
 
 #include <glog/logging.h>
 #include <lanelet2_core/LaneletMap.h>
