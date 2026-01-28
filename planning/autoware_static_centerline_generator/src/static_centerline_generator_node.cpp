@@ -33,6 +33,7 @@
 
 #include <autoware/geography_utils/lanelet2_projector.hpp>
 #include <autoware/mission_planner_universe/mission_planner_plugin.hpp>
+#include <autoware/qos_utils/qos_compatibility.hpp>
 #include <autoware/universe_utils/ros/marker_helper.hpp>
 #include <pluginlib/class_loader.hpp>
 
@@ -42,6 +43,7 @@
 
 #include <boost/geometry/algorithms/correct.hpp>
 #include <boost/geometry/algorithms/distance.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <glog/logging.h>
 #include <lanelet2_core/LaneletMap.h>
@@ -282,19 +284,19 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
     std::bind(
       &StaticCenterlineGeneratorNode::on_load_map, this, std::placeholders::_1,
       std::placeholders::_2),
-    rmw_qos_profile_services_default, callback_group_);
+    AUTOWARE_DEFAULT_SERVICES_QOS_PROFILE(), callback_group_);
   srv_plan_route_ = create_service<PlanRoute>(
     "/planning/static_centerline_generator/plan_route",
     std::bind(
       &StaticCenterlineGeneratorNode::on_plan_route, this, std::placeholders::_1,
       std::placeholders::_2),
-    rmw_qos_profile_services_default, callback_group_);
+    AUTOWARE_DEFAULT_SERVICES_QOS_PROFILE(), callback_group_);
   srv_plan_path_ = create_service<PlanPath>(
     "/planning/static_centerline_generator/plan_path",
     std::bind(
       &StaticCenterlineGeneratorNode::on_plan_path, this, std::placeholders::_1,
       std::placeholders::_2),
-    rmw_qos_profile_services_default, callback_group_);
+    AUTOWARE_DEFAULT_SERVICES_QOS_PROFILE(), callback_group_);
 
   // vehicle info
   vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
