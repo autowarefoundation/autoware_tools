@@ -17,6 +17,7 @@
 
 #include "buffer.hpp"
 #include "data_types.hpp"
+#include "serialized_bag_message.hpp"
 
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_storage/serialized_bag_message.hpp>
@@ -284,7 +285,7 @@ void process_and_append_message(
 
     // Override header timestamp with bag timestamp if option is enabled
     set_header_timestamp_if_needed(
-      msg, use_bag_timestamp, rclcpp::Time(serialized_message->time_stamp));
+      msg, use_bag_timestamp, rclcpp::Time(get_timestamp_ns(*serialized_message)));
 
     bag_data->append_message<MessageType>(topic_key, msg);
   } catch (const std::exception & e) {
