@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #ifndef PERCEPTION_REPLAYER__SERIALIZED_BAG_MESSAGE_HPP_
-#define PERCEPTION_REPLAYER__SERIALIZED_BAG_MESSAGE_HPP_ 
+#define PERCEPTION_REPLAYER__SERIALIZED_BAG_MESSAGE_HPP_
 
 #include <rosbag2_storage/serialized_bag_message.hpp>
 

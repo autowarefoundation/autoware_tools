@@ -13,8 +13,9 @@
 // limitations under the License.
 
 #include "base_evaluator.hpp"
-#include "serialized_bag_message.hpp"
+
 #include "metrics/trajectory_metrics.hpp"
+#include "serialized_bag_message.hpp"
 
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/reader.hpp>

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef PLANNING_DATA_ANALYZER__SERIALIZED_BAG_MESSAGE_HPP_
-#define PLANNING_DATA_ANALYZER__SERIALIZED_BAG_MESSAGE_HPP_ 
+#ifndef SERIALIZED_BAG_MESSAGE_HPP_
+#define SERIALIZED_BAG_MESSAGE_HPP_
 
 #include <rosbag2_storage/serialized_bag_message.hpp>
 
@@ -36,4 +36,4 @@ inline uint64_t get_timestamp_ns(const rosbag2_storage::SerializedBagMessage & b
 
 }  // namespace autoware::planning_data_analyzer
 
-#endif  // PLANNING_DATA_ANALYZER__SERIALIZED_BAG_MESSAGE_HPP_
+#endif  // SERIALIZED_BAG_MESSAGE_HPP_
