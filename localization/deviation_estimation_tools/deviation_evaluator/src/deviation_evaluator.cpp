@@ -14,10 +14,11 @@
 
 // cspell:words EKFDR, EKFGT
 
-#include "deviation_evaluator/deviation_evaluator.hpp"
+#include <deviation_evaluator/deviation_evaluator.hpp>
 
-#include "autoware/universe_utils/geometry/geometry.hpp"
-#include "rclcpp/logging.hpp"
+#include <autoware/universe_utils/geometry/geometry.hpp>
+#include <autoware/qos_utils/qos_compatibility.hpp>
+#include <rclcpp/logging.hpp>
 
 #include <algorithm>
 #include <functional>
@@ -68,9 +69,9 @@ DeviationEvaluator::DeviationEvaluator(
   errors_threshold_.long_radius = declare_parameter<double>("warn_ellipse_size") * wait_scale;
 
   client_trigger_ekf_dr_ =
-    create_client<std_srvs::srv::SetBool>("out_ekf_dr_trigger", rmw_qos_profile_services_default);
+    create_client<std_srvs::srv::SetBool>("out_ekf_dr_trigger", AUTOWARE_DEFAULT_SERVICES_QOS_PROFILE());
   client_trigger_ekf_gt_ =
-    create_client<std_srvs::srv::SetBool>("out_ekf_gt_trigger", rmw_qos_profile_services_default);
+    create_client<std_srvs::srv::SetBool>("out_ekf_gt_trigger", AUTOWARE_DEFAULT_SERVICES_QOS_PROFILE());
 
   if (declare_parameter<bool>("need_ekf_initial_trigger")) {
     while (!client_trigger_ekf_dr_->wait_for_service(1s)) {
