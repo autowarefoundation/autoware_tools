@@ -37,7 +37,10 @@ using namespace std::literals::chrono_literals;
 
 namespace autoware::route_history
 {
-RouteHistoryPanel::RouteHistoryPanel(QWidget * parent) : Panel(parent)
+// clang-format off
+RouteHistoryPanel::RouteHistoryPanel(QWidget * parent)
+: Panel(parent)
+// clang-format on
 {
   const auto main_layout = new QVBoxLayout(this);
   main_layout->setAlignment(Qt::AlignTop);
@@ -47,12 +50,15 @@ RouteHistoryPanel::RouteHistoryPanel(QWidget * parent) : Panel(parent)
   const auto save_btn = new QPushButton("Save current route");
   const auto load_save_btn = new QPushButton("Load save file");
 
-  QObject::connect(save_btn, &QPushButton::released, this, [this]() {
-    node_abstract_->save_route();
-    sync_read();
-  });
+  // clang-format off
   QObject::connect(
-    load_save_btn, &QPushButton::released, this, [this]() { load_save_file_button_activated(); });
+    save_btn, &QPushButton::released, this, [this]() {
+      node_abstract_->save_route();
+      sync_read();
+    });
+  QObject::connect(
+    load_save_btn, &QPushButton::released, this, [this]() {load_save_file_button_activated();});
+  // clang-format on
 
   title_layout->addWidget(main_title);
   title_layout->addWidget(load_save_btn);
@@ -94,18 +100,22 @@ void RouteHistoryPanel::route_entry_factory(const std::string & uuid, const std:
 {
   auto layout = new QHBoxLayout();
   auto label = new QLabel(QString::fromStdString(name));
+  // clang-format off
   auto load_btn = new QPushButton("Load");
   QObject::connect(
-    load_btn, &QPushButton::released, this, [this, uuid]() { node_abstract_->load_route(uuid); });
+    load_btn, &QPushButton::released, this, [this, uuid]() {node_abstract_->load_route(uuid);});
   auto rename_btn = new QPushButton("Rename");
-  QObject::connect(rename_btn, &QPushButton::released, this, [this, name, uuid]() {
-    rename_route_button_activated(name, uuid);
-  });
+  QObject::connect(
+    rename_btn, &QPushButton::released, this, [this, name, uuid]() {
+      rename_route_button_activated(name, uuid);
+    });
   auto delete_btn = new QPushButton("Delete");
-  QObject::connect(delete_btn, &QPushButton::released, this, [this, uuid]() {
-    node_abstract_->delete_route(uuid);
-    sync_read();
-  });
+  QObject::connect(
+    delete_btn, &QPushButton::released, this, [this, uuid]() {
+      node_abstract_->delete_route(uuid);
+      sync_read();
+    });
+  // clang-format on
 
   layout->addWidget(label);
   layout->addWidget(load_btn);

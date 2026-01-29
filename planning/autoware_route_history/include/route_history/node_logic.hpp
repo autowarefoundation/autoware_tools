@@ -65,7 +65,9 @@ using uuid_route_map = std::unordered_map<std::string, NamedRoute>;
 class NodeLogic
 {
 public:
-  explicit NodeLogic(const rclcpp::Node::SharedPtr & node) : node_(node)
+  // clang-format off
+  explicit NodeLogic(const rclcpp::Node::SharedPtr & node)
+  : node_(node)  // clang-format on
   {
     if (!node_->has_parameter("save_file_path")) {
       node_->declare_parameter("save_file_path", "~/.ros/route_history.yaml");
@@ -83,8 +85,10 @@ public:
         return result;
       });
 
+    // clang-format off
     route_set_subscription_ = node_->create_subscription<adapi_route>(
-      "/api/routing/route", 10, [this](const adapi_route & msg) { route_set_callback(msg); });
+      "/api/routing/route", 10, [this](const adapi_route & msg) {route_set_callback(msg);});
+    // clang-format on
 
     initial_pose_publisher_ =
       node_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 10);
@@ -214,7 +218,9 @@ public:
     yaml_file.close();
 
     // Delete from function scope
-    for (auto p = docs.begin(); p != docs.end();) {
+    // clang-format off
+    for (auto p = docs.begin(); p != docs.end(); ) {
+      // clang-format on
       if (!*p || !(*p)["uuid"]) {
         ++p;
         continue;
@@ -252,7 +258,9 @@ public:
     yaml_file.close();
 
     // Delete from function scope
-    for (auto p = docs.begin(); p != docs.end();) {
+    // clang-format off
+    for (auto p = docs.begin(); p != docs.end(); ) {
+      // clang-format on
       if (!*p || !(*p)["uuid"]) {
         ++p;
         continue;
@@ -284,9 +292,13 @@ public:
     o.open(filepath, std::ios::trunc);
   }
 
-  void clear_routes() { routes = {}; }
+  // clang-format off
+  void clear_routes() {routes = {};}
+  // clang-format on
 
-  template <typename T>
+  // clang-format off
+  template<typename T>
+  // clang-format on
   void write_route(const std::string & filepath, T & value, bool append = true)
   {
     std::ofstream o;
@@ -347,7 +359,9 @@ public:
     return new_str;
   }
 
-  void route_set_callback(const adapi_route & msg) { current_route = msg; }
+  // clang-format off
+  void route_set_callback(const adapi_route & msg) {current_route = msg;}
+  // clang-format on
 
   void save_route()
   {
