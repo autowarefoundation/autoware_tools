@@ -65,7 +65,8 @@ using uuid_route_map = std::unordered_map<std::string, NamedRoute>;
 class NodeLogic
 {
 public:
-  explicit NodeLogic(const rclcpp::Node::SharedPtr & node) : node_(node)
+  explicit NodeLogic(const rclcpp::Node::SharedPtr & node)
+  : node_(node)
   {
     if (!node_->has_parameter("save_file_path")) {
       node_->declare_parameter("save_file_path", "~/.ros/route_history.yaml");
@@ -84,7 +85,7 @@ public:
       });
 
     route_set_subscription_ = node_->create_subscription<adapi_route>(
-      "/api/routing/route", 10, [this](const adapi_route & msg) { route_set_callback(msg); });
+      "/api/routing/route", 10, [this](const adapi_route & msg) {route_set_callback(msg);});
 
     initial_pose_publisher_ =
       node_->create_publisher<geometry_msgs::msg::PoseWithCovarianceStamped>("/initialpose", 10);
@@ -103,7 +104,7 @@ public:
     goal_pose_publisher_.reset();
     sync_notif_publisher_.reset();
 
-    RCLCPP_INFO(node_->get_logger(), "NogeLogic clean up successfull.");
+    RCLCPP_INFO(node_->get_logger(), "NodeLogic clean up successful.");
   }
 
   auto get_save_path() -> std::string
@@ -163,34 +164,34 @@ public:
     }
 
     try {
-      geometry_msgs::msg::PoseWithCovarianceStamped initialmsg;
+      geometry_msgs::msg::PoseWithCovarianceStamped initial_msg;
 
-      initialmsg.header.frame_id = routes.at(uuid).route.header.frame_id;
+      initial_msg.header.frame_id = routes.at(uuid).route.header.frame_id;
 
-      initialmsg.pose.pose.position.x = routes.at(uuid).route.data[0].start.position.x;
-      initialmsg.pose.pose.position.y = routes.at(uuid).route.data[0].start.position.y;
-      initialmsg.pose.pose.position.z = routes.at(uuid).route.data[0].start.position.z;
+      initial_msg.pose.pose.position.x = routes.at(uuid).route.data[0].start.position.x;
+      initial_msg.pose.pose.position.y = routes.at(uuid).route.data[0].start.position.y;
+      initial_msg.pose.pose.position.z = routes.at(uuid).route.data[0].start.position.z;
 
-      initialmsg.pose.pose.orientation.x = routes.at(uuid).route.data[0].start.orientation.x;
-      initialmsg.pose.pose.orientation.y = routes.at(uuid).route.data[0].start.orientation.y;
-      initialmsg.pose.pose.orientation.z = routes.at(uuid).route.data[0].start.orientation.z;
-      initialmsg.pose.pose.orientation.w = routes.at(uuid).route.data[0].start.orientation.w;
+      initial_msg.pose.pose.orientation.x = routes.at(uuid).route.data[0].start.orientation.x;
+      initial_msg.pose.pose.orientation.y = routes.at(uuid).route.data[0].start.orientation.y;
+      initial_msg.pose.pose.orientation.z = routes.at(uuid).route.data[0].start.orientation.z;
+      initial_msg.pose.pose.orientation.w = routes.at(uuid).route.data[0].start.orientation.w;
 
-      geometry_msgs::msg::PoseStamped goalmsg;
+      geometry_msgs::msg::PoseStamped goal_msg;
 
-      goalmsg.header.frame_id = routes.at(uuid).route.header.frame_id;
+      goal_msg.header.frame_id = routes.at(uuid).route.header.frame_id;
 
-      goalmsg.pose.position.x = routes.at(uuid).route.data[0].goal.position.x;
-      goalmsg.pose.position.y = routes.at(uuid).route.data[0].goal.position.y;
-      goalmsg.pose.position.z = routes.at(uuid).route.data[0].goal.position.z;
+      goal_msg.pose.position.x = routes.at(uuid).route.data[0].goal.position.x;
+      goal_msg.pose.position.y = routes.at(uuid).route.data[0].goal.position.y;
+      goal_msg.pose.position.z = routes.at(uuid).route.data[0].goal.position.z;
 
-      goalmsg.pose.orientation.x = routes.at(uuid).route.data[0].goal.orientation.x;
-      goalmsg.pose.orientation.y = routes.at(uuid).route.data[0].goal.orientation.y;
-      goalmsg.pose.orientation.z = routes.at(uuid).route.data[0].goal.orientation.z;
-      goalmsg.pose.orientation.w = routes.at(uuid).route.data[0].goal.orientation.w;
+      goal_msg.pose.orientation.x = routes.at(uuid).route.data[0].goal.orientation.x;
+      goal_msg.pose.orientation.y = routes.at(uuid).route.data[0].goal.orientation.y;
+      goal_msg.pose.orientation.z = routes.at(uuid).route.data[0].goal.orientation.z;
+      goal_msg.pose.orientation.w = routes.at(uuid).route.data[0].goal.orientation.w;
 
-      initial_pose_publisher_->publish(initialmsg);
-      goal_pose_publisher_->publish(goalmsg);
+      initial_pose_publisher_->publish(initial_msg);
+      goal_pose_publisher_->publish(goal_msg);
     } catch (const YAML::BadFile & e) {
       RCLCPP_INFO(
         node_->get_logger(), "[set_route] Save file not found at path: %s.",
@@ -214,7 +215,7 @@ public:
     yaml_file.close();
 
     // Delete from function scope
-    for (auto p = docs.begin(); p != docs.end();) {
+    for (auto p = docs.begin(); p != docs.end(); ) {
       if (!*p || !(*p)["uuid"]) {
         ++p;
         continue;
@@ -252,7 +253,7 @@ public:
     yaml_file.close();
 
     // Delete from function scope
-    for (auto p = docs.begin(); p != docs.end();) {
+    for (auto p = docs.begin(); p != docs.end(); ) {
       if (!*p || !(*p)["uuid"]) {
         ++p;
         continue;
@@ -284,9 +285,9 @@ public:
     o.open(filepath, std::ios::trunc);
   }
 
-  void clear_routes() { routes = {}; }
+  void clear_routes() {routes = {};}
 
-  template <typename T>
+  template<typename T>
   void write_route(const std::string & filepath, T & value, bool append = true)
   {
     std::ofstream o;
@@ -301,7 +302,9 @@ public:
       throw std::runtime_error("[write_route] Cannot open file: " + filepath + ".");
     }
 
-    if (!o.is_open()) throw std::runtime_error("[write_route] Cannot open file: " + filepath + ".");
+    if (!o.is_open()) {
+      throw std::runtime_error("[write_route] Cannot open file: " + filepath + ".");
+    }
     o << "---\n" << value << "\n";
     o.close();
   }
@@ -345,7 +348,7 @@ public:
     return new_str;
   }
 
-  void route_set_callback(const adapi_route & msg) { current_route = msg; }
+  void route_set_callback(const adapi_route & msg) {current_route = msg;}
 
   void save_route()
   {
