@@ -1,0 +1,5 @@
+<library path="autoware_route_history">
+  <class type="autoware::route_history::RouteHistoryPanel" base_class_type="rviz_common::Panel">
+    <description>Custom RViz panel for the save and replay of recorded routes between poses in the Autoware planning tool.</description>
+  </class>
+</library>
