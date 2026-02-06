@@ -781,6 +781,7 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
   size_t centerline_idx = 0;
   bool is_end_lanelet = false;
   bool was_once_inside_lanelet = false;
+  lanelet::Id last_assigned_lane_id = route_lanelets.empty() ? 0 : route_lanelets.front().id();
   for (size_t lanelet_idx = centerline_front_lanelet_idx ? centerline_front_lanelet_idx.value() : 0;
        lanelet_idx < route_lanelets.size(); ++lanelet_idx) {
     const auto & lanelet = route_lanelets.at(lanelet_idx);
@@ -806,7 +807,8 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
       }
 
       // register the lane of the centerline point.
-      centerline_handler_.add_centerline_lane_id(lanelet.id());
+      last_assigned_lane_id = lanelet.id();
+      centerline_handler_.add_centerline_lane_id(last_assigned_lane_id);
       centerline_idx++;
 
       if (centerline_idx == centerline.size()) {
@@ -818,6 +820,13 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
     if (is_end_lanelet) {
       break;
     }
+  }
+
+  // 3. Assign lane_id to remaining centerline points that were not assigned
+  // This can happen if the centerline extends beyond the last lanelet
+  while (centerline_idx < centerline.size()) {
+    centerline_handler_.add_centerline_lane_id(last_assigned_lane_id);
+    centerline_idx++;
   }
 
   if (centerline.size() != centerline_handler_.get_centerline_lane_ids().size()) {
@@ -910,6 +919,14 @@ void StaticCenterlineGeneratorNode::validate_centerline()
 {
   const auto centerline = centerline_handler_.get_selected_centerline();
   const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
+
+  // Check if sizes match
+  if (centerline.size() != centerline_lane_ids.size()) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "Cannot validate centerline: size mismatch. centerline: "
+                      << centerline.size() << ", lane_ids: " << centerline_lane_ids.size());
+    return;
+  }
 
   const double dist_thresh_to_road_border =
     getRosParameter<double>("validation.dist_threshold_to_road_border");
@@ -1146,6 +1163,14 @@ void StaticCenterlineGeneratorNode::save_map()
 
   const auto centerline = centerline_handler_.get_selected_centerline();
   const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
+
+  // Check if sizes match
+  if (centerline.size() != centerline_lane_ids.size()) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "Cannot save map: size mismatch. centerline: "
+                      << centerline.size() << ", lane_ids: " << centerline_lane_ids.size());
+    return;
+  }
 
   const auto lanelet2_output_file_path = getRosParameter<std::string>("lanelet2_output_file_path");
 
