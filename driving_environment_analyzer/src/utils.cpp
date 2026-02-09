@@ -171,7 +171,7 @@ std::pair<double, double> getElevation(const lanelet::ConstLanelets & lanes)
   const auto to_ros_msg = [](const auto & line) {
     std::vector<geometry_msgs::msg::Point> points;
     std::for_each(line.begin(), line.end(), [&points](const auto & p) {
-      points.push_back(autoware::experimental::lanelet2_utils::to_ros);
+      points.push_back(autoware::experimental::lanelet2_utils::to_ros(p));
     });
     return points;
   };
