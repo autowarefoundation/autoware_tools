@@ -21,7 +21,7 @@ struct AppState
 
 void update_plot(int, void * data)
 {
-  auto * state = static_cast<AppState *>(data);
+  AppState * state = static_cast<AppState *>(data);
   
   traffic_rule_filter::Params params;
   params.traffic_light_filter.max_accel = state->max_accel_scaled / 10.0;
@@ -38,34 +38,75 @@ void update_plot(int, void * data)
   double current_acceleration = state->current_acceleration_scaled / 10.0;
   int res = std::max(1, state->resolution);
 
-  const int width = 800;
-  const int height = 600;
-  cv::Mat plot = cv::Mat::zeros(height, width, CV_8UC3);
-
-  // X axis: Velocity (0 to 40 m/s) -> 800 / 20 = 40
-  // Y axis: Distance (0 to 60 m) -> 600 / 10 = 60
+  const int margin_left = 60;
+  const int margin_bottom = 60;
+  const int margin_right = 160; // Extra space for legend
+  const int margin_top = 40;
   
+  const int plot_width = 800;
+  const int plot_height = 600;
+  
+  const int total_width = plot_width + margin_left + margin_right;
+  const int total_height = plot_height + margin_top + margin_bottom;
+  
+  cv::Mat plot = cv::Mat::zeros(total_height, total_width, CV_8UC3);
+
   const double max_v = 40.0;
   const double max_d = 60.0;
 
-  for (int y = 0; y < height; y += res) {
-    for (int x = 0; x < width; x += res) {
-      double v = (static_cast<double>(x) / width) * max_v;
-      double d = (1.0 - static_cast<double>(y) / height) * max_d;
+  // Draw Heatmap
+  for (int y = 0; y < plot_height; y += res) {
+    for (int x = 0; x < plot_width; x += res) {
+      double v = (static_cast<double>(x) / plot_width) * max_v;
+      double d = (1.0 - static_cast<double>(y) / plot_height) * max_d;
       
       bool can_pass = filter.can_pass_amber_light(d, v, current_acceleration);
       cv::Scalar color = can_pass ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255);
       
-      cv::rectangle(plot, cv::Point(x, y), cv::Point(x + res, y + res), color, cv::FILLED);
+      cv::rectangle(plot, 
+                    cv::Point(x + margin_left, y + margin_top), 
+                    cv::Point(x + margin_left + res, y + margin_top + res), 
+                    color, cv::FILLED);
     }
   }
 
-  // Draw axes and labels
-  cv::line(plot, cv::Point(0, height - 1), cv::Point(width, height - 1), cv::Scalar(255, 255, 255), 2);
-  cv::line(plot, cv::Point(0, 0), cv::Point(0, height), cv::Scalar(255, 255, 255), 2);
+  // Draw axes
+  cv::Point origin(margin_left, total_height - margin_bottom);
+  cv::Point x_end(margin_left + plot_width, total_height - margin_bottom);
+  cv::Point y_end(margin_left, margin_top);
   
-  cv::putText(plot, "Velocity (m/s)", cv::Point(width - 150, height - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
-  cv::putText(plot, "Distance (m)", cv::Point(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+  cv::line(plot, origin, x_end, cv::Scalar(255, 255, 255), 2);
+  cv::line(plot, origin, y_end, cv::Scalar(255, 255, 255), 2);
+
+  // X-axis Ticks and Scale (Velocity)
+  for (int v_int = 0; v_int <= static_cast<int>(max_v); v_int += 5) {
+    int x = margin_left + static_cast<int>((static_cast<double>(v_int) / max_v) * plot_width);
+    cv::line(plot, cv::Point(x, origin.y), cv::Point(x, origin.y + 5), cv::Scalar(255, 255, 255), 1);
+    cv::putText(plot, std::to_string(v_int), cv::Point(x - 10, origin.y + 20), 
+                cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
+  }
+  cv::putText(plot, "Velocity (m/s)", cv::Point(margin_left + plot_width / 2 - 50, origin.y + 45), 
+              cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+
+  // Y-axis Ticks and Scale (Distance)
+  for (int d_int = 0; d_int <= static_cast<int>(max_d); d_int += 10) {
+    int y = origin.y - static_cast<int>((static_cast<double>(d_int) / max_d) * plot_height);
+    cv::line(plot, cv::Point(origin.x - 5, y), cv::Point(origin.x, y), cv::Scalar(255, 255, 255), 1);
+    cv::putText(plot, std::to_string(d_int), cv::Point(origin.x - 30, y + 5), 
+                cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
+  }
+  cv::putText(plot, "Distance (m)", cv::Point(5, margin_top - 10), 
+              cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
+
+  // Legend
+  int legend_x = margin_left + plot_width + 20;
+  int legend_y = margin_top + 20;
+  
+  cv::rectangle(plot, cv::Point(legend_x, legend_y), cv::Point(legend_x + 20, legend_y + 20), cv::Scalar(0, 255, 0), cv::FILLED);
+  cv::putText(plot, "Can Pass", cv::Point(legend_x + 30, legend_y + 15), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
+  
+  cv::rectangle(plot, cv::Point(legend_x, legend_y + 30), cv::Point(legend_x + 20, legend_y + 50), cv::Scalar(0, 0, 255), cv::FILLED);
+  cv::putText(plot, "Must Stop", cv::Point(legend_x + 30, legend_y + 45), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
 
   cv::imshow("Amber Light Pass Logic", plot);
 }
