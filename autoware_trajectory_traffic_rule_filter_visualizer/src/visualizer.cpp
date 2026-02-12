@@ -3,56 +3,54 @@
 #include <opencv2/imgproc.hpp>
 #include <rclcpp/rclcpp.hpp>
 
-#include <iostream>
 #include <string>
-#include <vector>
+
+const std::string WINDOW_NAME = "Amber Light Pass Logic";
 
 struct AppState
 {
-  int max_accel_scaled = 20;            // 2.0 m/s^2
-  int max_jerk_scaled = 15;             // 1.5 m/s^3
-  int delay_response_time_scaled = 5;   // 0.5 s
-  int yellow_lamp_period_scaled = 30;   // 3.0 s
-  int yellow_light_stop_velocity_scaled = 2; // 0.2 m/s
-  int current_acceleration_scaled = 0;  // 0.0 m/s^2
-  int enable_pass_judge = 1;
-  int resolution = 5;                   // 5 pixels per unit
+  bool needs_redraw = true;
 };
 
-void update_plot(int, void * data)
+void on_trackbar(int, void * data)
 {
   AppState * state = static_cast<AppState *>(data);
+  state->needs_redraw = true;
+}
+
+void draw_plot(AppState &)
+{
+  cv::Rect rect = cv::getWindowImageRect(WINDOW_NAME);
+  int total_width = std::max(rect.width, 400);
+  int total_height = std::max(rect.height, 300);
+
+  const int margin_left = 60;
+  const int margin_bottom = 60;
+  const int margin_right = 160; 
+  const int margin_top = 40;
   
+  int plot_width = std::max(50, total_width - margin_left - margin_right);
+  int plot_height = std::max(50, total_height - margin_top - margin_bottom);
+  
+  cv::Mat plot = cv::Mat::zeros(total_height, total_width, CV_8UC3);
+
   traffic_rule_filter::Params params;
-  params.traffic_light_filter.max_accel = state->max_accel_scaled / 10.0;
-  params.traffic_light_filter.max_jerk = state->max_jerk_scaled / 10.0;
-  params.traffic_light_filter.delay_response_time = state->delay_response_time_scaled / 10.0;
-  params.traffic_light_filter.yellow_lamp_period = state->yellow_lamp_period_scaled / 10.0;
-  params.traffic_light_filter.yellow_light_stop_velocity = state->yellow_light_stop_velocity_scaled / 10.0;
-  params.traffic_light_filter.enable_pass_judge = state->enable_pass_judge != 0;
+  params.traffic_light_filter.max_accel = cv::getTrackbarPos("Max Accel (x0.1)", WINDOW_NAME) / 10.0;
+  params.traffic_light_filter.max_jerk = cv::getTrackbarPos("Max Jerk (x0.1)", WINDOW_NAME) / 10.0;
+  params.traffic_light_filter.delay_response_time = cv::getTrackbarPos("Delay (x0.1s)", WINDOW_NAME) / 10.0;
+  params.traffic_light_filter.yellow_lamp_period = cv::getTrackbarPos("Yellow (x0.1s)", WINDOW_NAME) / 10.0;
+  params.traffic_light_filter.yellow_light_stop_velocity = cv::getTrackbarPos("Stop V (x0.1)", WINDOW_NAME) / 10.0;
+  params.traffic_light_filter.enable_pass_judge = true;
   
   autoware::trajectory_traffic_rule_filter::plugin::TrafficLightFilter filter;
   filter.set_parameters(params);
   filter.set_logger(rclcpp::get_logger("amber_light_visualizer"));
   
-  double current_acceleration = state->current_acceleration_scaled / 10.0;
-  int res = std::max(1, state->resolution);
+  double current_acceleration = cv::getTrackbarPos("Current Acc (x0.1)", WINDOW_NAME) / 10.0;
+  int res = std::max(1, cv::getTrackbarPos("Resolution", WINDOW_NAME));
 
-  const int margin_left = 60;
-  const int margin_bottom = 60;
-  const int margin_right = 160; // Extra space for legend
-  const int margin_top = 40;
-  
-  const int plot_width = 800;
-  const int plot_height = 600;
-  
-  const int total_width = plot_width + margin_left + margin_right;
-  const int total_height = plot_height + margin_top + margin_bottom;
-  
-  cv::Mat plot = cv::Mat::zeros(total_height, total_width, CV_8UC3);
-
-  const double max_v = 40.0;
-  const double max_d = 60.0;
+  const double max_v = std::max(1.0, static_cast<double>(cv::getTrackbarPos("Plot Max V (m/s)", WINDOW_NAME)));
+  const double max_d = std::max(1.0, static_cast<double>(cv::getTrackbarPos("Plot Max D (m)", WINDOW_NAME)));
 
   // Draw Heatmap
   for (int y = 0; y < plot_height; y += res) {
@@ -63,9 +61,12 @@ void update_plot(int, void * data)
       bool can_pass = filter.can_pass_amber_light(d, v, current_acceleration);
       cv::Scalar color = can_pass ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255);
       
+      int block_w = std::min(res, plot_width - x);
+      int block_h = std::min(res, plot_height - y);
+
       cv::rectangle(plot, 
                     cv::Point(x + margin_left, y + margin_top), 
-                    cv::Point(x + margin_left + res, y + margin_top + res), 
+                    cv::Point(x + margin_left + block_w, y + margin_top + block_h), 
                     color, cv::FILLED);
     }
   }
@@ -79,7 +80,8 @@ void update_plot(int, void * data)
   cv::line(plot, origin, y_end, cv::Scalar(255, 255, 255), 2);
 
   // X-axis Ticks and Scale (Velocity)
-  for (int v_int = 0; v_int <= static_cast<int>(max_v); v_int += 5) {
+  int x_tick_step = (max_v > 50) ? 10 : 5;
+  for (int v_int = 0; v_int <= static_cast<int>(max_v); v_int += x_tick_step) {
     int x = margin_left + static_cast<int>((static_cast<double>(v_int) / max_v) * plot_width);
     cv::line(plot, cv::Point(x, origin.y), cv::Point(x, origin.y + 5), cv::Scalar(255, 255, 255), 1);
     cv::putText(plot, std::to_string(v_int), cv::Point(x - 10, origin.y + 20), 
@@ -89,7 +91,8 @@ void update_plot(int, void * data)
               cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 1);
 
   // Y-axis Ticks and Scale (Distance)
-  for (int d_int = 0; d_int <= static_cast<int>(max_d); d_int += 10) {
+  int y_tick_step = (max_d > 100) ? 20 : 10;
+  for (int d_int = 0; d_int <= static_cast<int>(max_d); d_int += y_tick_step) {
     int y = origin.y - static_cast<int>((static_cast<double>(d_int) / max_d) * plot_height);
     cv::line(plot, cv::Point(origin.x - 5, y), cv::Point(origin.x, y), cv::Scalar(255, 255, 255), 1);
     cv::putText(plot, std::to_string(d_int), cv::Point(origin.x - 30, y + 5), 
@@ -102,13 +105,15 @@ void update_plot(int, void * data)
   int legend_x = margin_left + plot_width + 20;
   int legend_y = margin_top + 20;
   
-  cv::rectangle(plot, cv::Point(legend_x, legend_y), cv::Point(legend_x + 20, legend_y + 20), cv::Scalar(0, 255, 0), cv::FILLED);
-  cv::putText(plot, "Can Pass", cv::Point(legend_x + 30, legend_y + 15), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
-  
-  cv::rectangle(plot, cv::Point(legend_x, legend_y + 30), cv::Point(legend_x + 20, legend_y + 50), cv::Scalar(0, 0, 255), cv::FILLED);
-  cv::putText(plot, "Must Stop", cv::Point(legend_x + 30, legend_y + 45), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
+  if (legend_x + 100 < total_width) {
+    cv::rectangle(plot, cv::Point(legend_x, legend_y), cv::Point(legend_x + 20, legend_y + 20), cv::Scalar(0, 255, 0), cv::FILLED);
+    cv::putText(plot, "Can Pass", cv::Point(legend_x + 30, legend_y + 15), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
+    
+    cv::rectangle(plot, cv::Point(legend_x, legend_y + 30), cv::Point(legend_x + 20, legend_y + 50), cv::Scalar(0, 0, 255), cv::FILLED);
+    cv::putText(plot, "Must Stop", cv::Point(legend_x + 30, legend_y + 45), cv::FONT_HERSHEY_SIMPLEX, 0.4, cv::Scalar(255, 255, 255), 1);
+  }
 
-  cv::imshow("Amber Light Pass Logic", plot);
+  cv::imshow(WINDOW_NAME, plot);
 }
 
 int main(int argc, char ** argv)
@@ -116,19 +121,52 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
   
   AppState state;
-  cv::namedWindow("Amber Light Pass Logic", cv::WINDOW_AUTOSIZE);
+  cv::namedWindow(WINDOW_NAME, cv::WINDOW_NORMAL);
+  cv::resizeWindow(WINDOW_NAME, 800, 600);
 
-  cv::createTrackbar("Max Accel (x0.1)", "Amber Light Pass Logic", &state.max_accel_scaled, 100, update_plot, &state);
-  cv::createTrackbar("Max Jerk (x0.1)", "Amber Light Pass Logic", &state.max_jerk_scaled, 100, update_plot, &state);
-  cv::createTrackbar("Delay (x0.1s)", "Amber Light Pass Logic", &state.delay_response_time_scaled, 50, update_plot, &state);
-  cv::createTrackbar("Yellow (x0.1s)", "Amber Light Pass Logic", &state.yellow_lamp_period_scaled, 100, update_plot, &state);
-  cv::createTrackbar("Stop V (x0.1)", "Amber Light Pass Logic", &state.yellow_light_stop_velocity_scaled, 50, update_plot, &state);
-  cv::createTrackbar("Current Acc (x0.1)", "Amber Light Pass Logic", &state.current_acceleration_scaled, 50, update_plot, &state);
-  cv::createTrackbar("Enable Pass Judge", "Amber Light Pass Logic", &state.enable_pass_judge, 1, update_plot, &state);
-  cv::createTrackbar("Resolution", "Amber Light Pass Logic", &state.resolution, 20, update_plot, &state);
+  cv::createTrackbar("Max Accel (x0.1)", WINDOW_NAME, nullptr, 100, on_trackbar, &state);
+  cv::createTrackbar("Max Jerk (x0.1)", WINDOW_NAME, nullptr, 100, on_trackbar, &state);
+  cv::createTrackbar("Delay (x0.1s)", WINDOW_NAME, nullptr, 50, on_trackbar, &state);
+  cv::createTrackbar("Yellow (x0.1s)", WINDOW_NAME, nullptr, 100, on_trackbar, &state);
+  cv::createTrackbar("Stop V (x0.1)", WINDOW_NAME, nullptr, 50, on_trackbar, &state);
+  cv::createTrackbar("Current Acc (x0.1)", WINDOW_NAME, nullptr, 50, on_trackbar, &state);
+  cv::createTrackbar("Enable Pass Judge", WINDOW_NAME, nullptr, 1, on_trackbar, &state);
+  cv::createTrackbar("Resolution", WINDOW_NAME, nullptr, 20, on_trackbar, &state);
+  cv::createTrackbar("Plot Max V (m/s)", WINDOW_NAME, nullptr, 100, on_trackbar, &state);
+  cv::createTrackbar("Plot Max D (m)", WINDOW_NAME, nullptr, 200, on_trackbar, &state);
 
-  update_plot(0, &state);
-  cv::waitKey(0);
+  // Set initial values
+  cv::setTrackbarPos("Max Accel (x0.1)", WINDOW_NAME, 20);
+  cv::setTrackbarPos("Max Jerk (x0.1)", WINDOW_NAME, 15);
+  cv::setTrackbarPos("Delay (x0.1s)", WINDOW_NAME, 5);
+  cv::setTrackbarPos("Yellow (x0.1s)", WINDOW_NAME, 30);
+  cv::setTrackbarPos("Stop V (x0.1)", WINDOW_NAME, 2);
+  cv::setTrackbarPos("Current Acc (x0.1)", WINDOW_NAME, 0);
+  cv::setTrackbarPos("Resolution", WINDOW_NAME, 5);
+  cv::setTrackbarPos("Plot Max V (m/s)", WINDOW_NAME, 20);
+  cv::setTrackbarPos("Plot Max D (m)", WINDOW_NAME, 40);
+
+  cv::waitKey(100); // Give time for window manager
+  cv::Rect prev_rect = cv::getWindowImageRect(WINDOW_NAME);
+
+  while (rclcpp::ok()) {
+    // Check if window exists
+    if (cv::getWindowProperty(WINDOW_NAME, cv::WND_PROP_AUTOSIZE) < 0) break;
+
+    cv::Rect curr_rect = cv::getWindowImageRect(WINDOW_NAME);
+    if (curr_rect.width != prev_rect.width || curr_rect.height != prev_rect.height) {
+      state.needs_redraw = true;
+      prev_rect = curr_rect;
+    }
+
+    if (state.needs_redraw) {
+      draw_plot(state);
+      state.needs_redraw = false;
+    }
+
+    int key = cv::waitKey(30);
+    if (key == 27) break; // ESC
+  }
 
   rclcpp::shutdown();
   return 0;
