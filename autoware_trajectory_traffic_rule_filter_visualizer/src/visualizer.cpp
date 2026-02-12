@@ -1,47 +1,11 @@
-#include <autoware/boundary_departure_checker/utils.hpp>
+#include <autoware/trajectory_traffic_rule_filter/filters/traffic_light_filter.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 #include <iostream>
 #include <string>
 #include <vector>
-
-struct AmberLightParams
-{
-  double max_accel;
-  double max_jerk;
-  double delay_response_time;
-  double yellow_lamp_period;
-  double yellow_light_stop_velocity;
-  bool enable_pass_judge;
-};
-
-// Reusing the logic from TrafficLightFilter::can_pass_amber_light
-bool can_pass_amber_light(
-  const double distance_to_stop_line, const double current_velocity,
-  const double current_acceleration, const AmberLightParams & params)
-{
-  const double reachable_distance = current_velocity * params.yellow_lamp_period;
-
-  const double pass_judge_line_distance =
-    autoware::boundary_departure_checker::utils::calc_judge_line_dist_with_jerk_limit(
-      current_velocity, current_acceleration, params.max_accel, params.max_jerk,
-      params.delay_response_time);
-
-  const bool distance_stoppable = pass_judge_line_distance < distance_to_stop_line;
-  const bool slow_velocity = current_velocity < params.yellow_light_stop_velocity;
-  const bool stoppable = distance_stoppable || slow_velocity;
-  const bool reachable = distance_to_stop_line < reachable_distance;
-
-  if (params.enable_pass_judge && !stoppable) {
-    if (!reachable) {
-      return false;
-    }
-  } else {
-    return false;
-  }
-  return true;
-}
 
 struct AppState
 {
@@ -57,15 +21,19 @@ struct AppState
 
 void update_plot(int, void * data)
 {
-  AppState * state = static_cast<AppState *>(data);
+  auto * state = static_cast<AppState *>(data);
   
-  AmberLightParams params;
-  params.max_accel = state->max_accel_scaled / 10.0;
-  params.max_jerk = state->max_jerk_scaled / 10.0;
-  params.delay_response_time = state->delay_response_time_scaled / 10.0;
-  params.yellow_lamp_period = state->yellow_lamp_period_scaled / 10.0;
-  params.yellow_light_stop_velocity = state->yellow_light_stop_velocity_scaled / 10.0;
-  params.enable_pass_judge = state->enable_pass_judge != 0;
+  traffic_rule_filter::Params params;
+  params.traffic_light_filter.max_accel = state->max_accel_scaled / 10.0;
+  params.traffic_light_filter.max_jerk = state->max_jerk_scaled / 10.0;
+  params.traffic_light_filter.delay_response_time = state->delay_response_time_scaled / 10.0;
+  params.traffic_light_filter.yellow_lamp_period = state->yellow_lamp_period_scaled / 10.0;
+  params.traffic_light_filter.yellow_light_stop_velocity = state->yellow_light_stop_velocity_scaled / 10.0;
+  params.traffic_light_filter.enable_pass_judge = state->enable_pass_judge != 0;
+  
+  autoware::trajectory_traffic_rule_filter::plugin::TrafficLightFilter filter;
+  filter.set_parameters(params);
+  filter.set_logger(rclcpp::get_logger("amber_light_visualizer"));
   
   double current_acceleration = state->current_acceleration_scaled / 10.0;
   int res = std::max(1, state->resolution);
@@ -85,7 +53,7 @@ void update_plot(int, void * data)
       double v = (static_cast<double>(x) / width) * max_v;
       double d = (1.0 - static_cast<double>(y) / height) * max_d;
       
-      bool can_pass = can_pass_amber_light(d, v, current_acceleration, params);
+      bool can_pass = filter.can_pass_amber_light(d, v, current_acceleration);
       cv::Scalar color = can_pass ? cv::Scalar(0, 255, 0) : cv::Scalar(0, 0, 255);
       
       cv::rectangle(plot, cv::Point(x, y), cv::Point(x + res, y + res), color, cv::FILLED);
@@ -104,9 +72,8 @@ void update_plot(int, void * data)
 
 int main(int argc, char ** argv)
 {
-  (void)argc;
-  (void)argv;
-
+  rclcpp::init(argc, argv);
+  
   AppState state;
   cv::namedWindow("Amber Light Pass Logic", cv::WINDOW_AUTOSIZE);
 
@@ -122,5 +89,6 @@ int main(int argc, char ** argv)
   update_plot(0, &state);
   cv::waitKey(0);
 
+  rclcpp::shutdown();
   return 0;
 }
