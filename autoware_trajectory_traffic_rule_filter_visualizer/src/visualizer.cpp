@@ -139,8 +139,8 @@ void draw_plot(AppState & state)
   params.traffic_light_filter.max_accel = -state.controls[0].value;
   params.traffic_light_filter.max_jerk = -state.controls[1].value;
   params.traffic_light_filter.delay_response_time = state.controls[2].value;
-  params.traffic_light_filter.yellow_lamp_period = state.controls[3].value;
-  params.traffic_light_filter.yellow_light_stop_velocity = state.controls[4].value;
+  params.traffic_light_filter.amber_lamp_period = state.controls[3].value;
+  params.traffic_light_filter.amber_light_stop_velocity = state.controls[4].value;
   params.traffic_light_filter.enable_pass_judge = state.controls[6].value > 0.5;
 
   autoware::trajectory_traffic_rule_filter::plugin::TrafficLightFilter filter;
