@@ -136,8 +136,8 @@ void draw_plot(AppState & state)
 
   // Parameters for the filter
   traffic_rule_filter::Params params;
-  params.traffic_light_filter.max_accel = state.controls[0].value;
-  params.traffic_light_filter.max_jerk = state.controls[1].value;
+  params.traffic_light_filter.max_accel = -state.controls[0].value;
+  params.traffic_light_filter.max_jerk = -state.controls[1].value;
   params.traffic_light_filter.delay_response_time = state.controls[2].value;
   params.traffic_light_filter.yellow_lamp_period = state.controls[3].value;
   params.traffic_light_filter.yellow_light_stop_velocity = state.controls[4].value;
