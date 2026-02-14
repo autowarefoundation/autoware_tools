@@ -2,6 +2,9 @@
 Changelog for package control_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.5.0 (2025-12-30)
 ------------------
 

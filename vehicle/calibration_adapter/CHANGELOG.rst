@@ -2,6 +2,9 @@
 Changelog for package calibration_adapter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.5.0 (2025-12-30)
 ------------------
 

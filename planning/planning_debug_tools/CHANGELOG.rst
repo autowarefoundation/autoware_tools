@@ -2,6 +2,27 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat: add Jazzy support for rosbag APIs (`#347 <https://github.com/autowarefoundation/autoware_tools/issues/347>`_)
+* feat(perception_reproducer): enable compressed image visualization (`#339 <https://github.com/autowarefoundation/autoware_tools/issues/339>`_)
+  * feat(perception_reproducer): support also searching and outputting images
+  * feat: update the default topic names in helping
+  * doc: update README for reference image setting
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* feat(perception_replayer, perception_reproducer): refactor code and publish occupancy_grid_map (`#328 <https://github.com/autowarefoundation/autoware_tools/issues/328>`_)
+  * fist commit
+  * remove unused code
+  * refactor code
+  * pre-commit
+  * fix noise bug
+  * fix killer timer
+  * refactor func
+  ---------
+* Contributors: Kem (TiankuiXian), Ryohsuke Mitsudome, Yuxuan Liu
+
 0.5.0 (2025-12-30)
 ------------------
 * feat(perception_replayer): cpp implementation of perception replayer (`#321 <https://github.com/autowarefoundation/autoware_tools/issues/321>`_)

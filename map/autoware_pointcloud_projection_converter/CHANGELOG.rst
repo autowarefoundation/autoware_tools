@@ -2,6 +2,11 @@
 Changelog for package autoware_pointcloud_projection_converter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(autoware_pointcloud_projection_converter): fix linking of geographiclib for jazzy (`#346 <https://github.com/autowarefoundation/autoware_tools/issues/346>`_)
+* Contributors: Ryohsuke Mitsudome
+
 0.5.0 (2025-12-30)
 ------------------
 
