@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>control_data_collecting_tool</name>
-  <version>0.5.0</version>
+  <version>0.6.0</version>
   <description>The pure pursuit control data collection tool package</description>
   <maintainer email="masayuki.aino@proxima-ai-tech.com">Masayuki Aino</maintainer>
   <maintainer email="asei.inoue@proxima-ai-tech.com">Asei Inoue</maintainer>
