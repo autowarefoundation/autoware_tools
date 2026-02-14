@@ -2,6 +2,11 @@
 Changelog for package autoware_position_error_evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.0 (2026-02-14)
+------------------
+* fix(autoware_position_error_evaluator): add compile option to avoid depracated declarations (`#334 <https://github.com/autowarefoundation/autoware_tools/issues/334>`_)
+* Contributors: Fumiya Watanabe
+
 0.5.0 (2025-12-30)
 ------------------
 * fix: to be consistent version in all package.xml(s)
