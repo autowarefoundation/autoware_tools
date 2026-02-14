@@ -2,8 +2,8 @@
 Changelog for package rtc_manager_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.0 (2026-02-14)
+------------------
 * fix(rtc_manager_rviz_plugin): introduce RTC_MIN_START_DISTANCE for module activation logic (`#338 <https://github.com/autowarefoundation/autoware_tools/issues/338>`_)
 * Contributors: Yukinari Hisaki
 

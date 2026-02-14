@@ -2,8 +2,8 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.0 (2026-02-14)
+------------------
 * feat: add Jazzy support for rosbag APIs (`#347 <https://github.com/autowarefoundation/autoware_tools/issues/347>`_)
 * feat(perception_reproducer): enable compressed image visualization (`#339 <https://github.com/autowarefoundation/autoware_tools/issues/339>`_)
   * feat(perception_reproducer): support also searching and outputting images

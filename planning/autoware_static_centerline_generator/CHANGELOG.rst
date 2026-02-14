@@ -2,8 +2,8 @@
 Changelog for package autoware_static_centerline_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.0 (2026-02-14)
+------------------
 * fix: unable to asign lanelet_id to centerpoint near the boundary line (`#350 <https://github.com/autowarefoundation/autoware_tools/issues/350>`_)
   Co-authored-by: t4-adc <grp-rd-1-adc-admin@tier4.jp>
 * feat(static_centerline_generator): use autoware_qos_utils and add missing headers (`#348 <https://github.com/autowarefoundation/autoware_tools/issues/348>`_)

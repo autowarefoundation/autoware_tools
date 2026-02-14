@@ -2,8 +2,8 @@
 Changelog for package driving_environment_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.0 (2026-02-14)
+------------------
 * refactor(planning): deprecate lanelet_extension geometry conversion function (`#351 <https://github.com/autowarefoundation/autoware_tools/issues/351>`_)
   * refactor(planning): deprecate lanelet_extension geometry conversion function
   * fix

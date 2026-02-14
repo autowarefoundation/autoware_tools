@@ -2,8 +2,8 @@
 Changelog for package reaction_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.0 (2026-02-14)
+------------------
 * chore: match package versions
 * feat(reaction_analyzer): move package from autoware_universe (`#329 <https://github.com/autowarefoundation/autoware_tools/issues/329>`_)
   this package is moved from https://github.com/autowarefoundation/autoware_universe/pull/11807

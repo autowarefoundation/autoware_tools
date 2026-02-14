@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>autoware_route_history</name>
-  <version>0.5.0</version>
+  <version>0.6.0</version>
   <description>Custom RViz panel for the save and replay of recorded routes between poses in the Autoware planning tool.</description>
   <maintainer email="lewisjohnsmith2@gmail.com">Lewis Smith</maintainer>
   <license>Apache-2.0</license>
