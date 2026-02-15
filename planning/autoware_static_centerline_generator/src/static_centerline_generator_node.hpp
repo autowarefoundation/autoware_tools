@@ -125,7 +125,7 @@ public:
 
 private:
   // load map
-  void load_map(const std::string & lanelet2_input_file_path);
+  void load_map(const std::string & lanelet2_input_dir_path);
   void on_load_map(
     const LoadMap::Request::SharedPtr request, const LoadMap::Response::SharedPtr response);
 
