@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="input_topic" default="image_raw"/>
+  <arg name="output_topic" default="image_rect"/>
+  <arg name="node_name" default="image_distortion_node"/>
+  <arg name="transport" default="raw"/>
+  <arg name="interpolation" default="1"/>
+
+  <node pkg="autoware_image_distortion" exec="image_distortion" name="$(var node_name)" output="screen">
+    <param name="input_topic" value="$(var input_topic)"/>
+    <param name="transport" value="$(var transport)"/>
+    <param name="interpolation" value="$(var interpolation)"/>
+    <remap from="output/image_rect" to="$(var output_topic)"/>
+  </node>
+</launch>

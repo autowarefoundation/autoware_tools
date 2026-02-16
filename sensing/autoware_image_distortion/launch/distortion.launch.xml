@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <arg name="sensor_model" default="aip_x2_gen2" description="sensor model name (e.g. aip_x2_gen2)"/>
+
+  <arg name="transport_type" default="compressed"/>
+  <arg name="interpolation_method" default="1"/>
+
+  <include file="$(find-pkg-share autoware_image_distortion)/launch/sensor_kits/$(var sensor_model).launch.xml">
+    <arg name="transport_type" value="$(var transport_type)"/>
+    <arg name="interpolation_method" value="$(var interpolation_method)"/>
+  </include>
+</launch>
