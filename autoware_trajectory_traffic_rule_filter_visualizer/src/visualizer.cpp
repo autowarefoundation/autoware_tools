@@ -45,16 +45,14 @@ struct AppState
 void init_controls(AppState & state)
 {
   state.controls = {
-    {"Max Accel", 0.0, 10.0, 2.0},
-    {"Max Jerk", 0.0, 10.0, 1.5},
+    {"Decel Limit", 0.0, 10.0, 2.8},
+    {"Jerk Limit", 0.0, 10.0, 5.0},
     {"Delay", 0.0, 5.0, 0.5},
-    {"Yellow Period", 0.0, 10.0, 3.0},
-    {"Stop Velocity", 0.0, 5.0, 0.2},
+    {"Crossing Time", 0.0, 10.0, 2.75},
     {"Current Accel", -5.0, 5.0, 0.0},
-    {"Pass Judge", 0.0, 1.0, 1.0, true},
-    {"Resolution", 1.0, 20.0, 5.0, false, true},
-    {"Plot Max V", 5.0, 100.0, 40.0, false, true},
-    {"Plot Max D", 10.0, 200.0, 60.0, false, true}};
+    {"Resolution", 1.0, 20.0, 20.0, false, true},
+    {"Plot Max V", 5.0, 100.0, 5.0, false, true},
+    {"Plot Max D", 10.0, 200.0, 10.0, false, true}};
 }
 
 void on_mouse(int event, int x, int y, int /*flags*/, void * userdata)
@@ -136,21 +134,20 @@ void draw_plot(AppState & state)
 
   // Parameters for the filter
   traffic_rule_filter::Params params;
-  params.traffic_light_filter.max_accel = -state.controls[0].value;
-  params.traffic_light_filter.max_jerk = -state.controls[1].value;
+  params.traffic_light_filter.deceleration_limit = state.controls[0].value;
+  params.traffic_light_filter.jerk_limit = state.controls[1].value;
   params.traffic_light_filter.delay_response_time = state.controls[2].value;
-  params.traffic_light_filter.amber_lamp_period = state.controls[3].value;
-  params.traffic_light_filter.amber_light_stop_velocity = state.controls[4].value;
-  params.traffic_light_filter.enable_pass_judge = state.controls[6].value > 0.5;
+  params.traffic_light_filter.crossing_time_limit = state.controls[3].value;
+  params.traffic_light_filter.treat_amber_light_as_red_light = false;
 
   autoware::trajectory_traffic_rule_filter::plugin::TrafficLightFilter filter;
   filter.set_parameters(params);
   filter.set_logger(rclcpp::get_logger("amber_light_visualizer"));
 
-  double current_acceleration = state.controls[5].value;
-  int res = std::max(1, static_cast<int>(state.controls[7].value));
-  const double max_v = state.controls[8].value;
-  const double max_d = state.controls[9].value;
+  double current_acceleration = state.controls[4].value;
+  int res = std::max(1, static_cast<int>(state.controls[5].value));
+  const double max_v = state.controls[6].value;
+  const double max_d = state.controls[7].value;
 
   // Draw Heatmap
   for (int y = 0; y < plot_height; y += res) {
@@ -158,7 +155,8 @@ void draw_plot(AppState & state)
       double v = (static_cast<double>(x) / plot_width) * max_v;
       double d = (1.0 - static_cast<double>(y) / plot_height) * max_d;
 
-      bool can_pass = filter.can_pass_amber_light(d, v, current_acceleration);
+      double time_to_cross = (v > 1e-3) ? (d / v) : 1e9;
+      bool can_pass = filter.can_pass_amber_light(d, v, current_acceleration, time_to_cross);
       cv::Scalar color = can_pass ? cv::Scalar(0, 200, 0) : cv::Scalar(0, 0, 200);
 
       int block_w = std::min(res, plot_width - x);
@@ -210,12 +208,12 @@ void draw_plot(AppState & state)
   if (legend_x + 80 < total_width) {
     cv::rectangle(plot, cv::Rect(legend_x, legend_y, 15, 15), cv::Scalar(0, 200, 0), cv::FILLED);
     cv::putText(
-      plot, "Pass", cv::Point(legend_x + 20, legend_y + 12), cv::FONT_HERSHEY_SIMPLEX, 0.4,
+      plot, "Allow", cv::Point(legend_x + 20, legend_y + 12), cv::FONT_HERSHEY_SIMPLEX, 0.4,
       cv::Scalar(255, 255, 255), 1);
     cv::rectangle(
       plot, cv::Rect(legend_x, legend_y + 25, 15, 15), cv::Scalar(0, 0, 200), cv::FILLED);
     cv::putText(
-      plot, "Stop", cv::Point(legend_x + 20, legend_y + 37), cv::FONT_HERSHEY_SIMPLEX, 0.4,
+      plot, "Reject", cv::Point(legend_x + 20, legend_y + 37), cv::FONT_HERSHEY_SIMPLEX, 0.4,
       cv::Scalar(255, 255, 255), 1);
   }
 
