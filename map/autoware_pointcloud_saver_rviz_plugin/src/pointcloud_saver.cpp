@@ -26,24 +26,15 @@
 #include "rviz_rendering/objects/line.hpp"
 
 #include <QString>  // NOLINT: cpplint is unable to handle the include order here
-#include <autoware_lanelet2_extension/utility/message_conversion.hpp>
-#include <autoware_lanelet2_extension/utility/query.hpp>
-#include <autoware_lanelet2_extension/utility/utilities.hpp>
-#include <autoware_utils/geometry/alt_geometry.hpp>
-#include <autoware_utils_geometry/geometry.hpp>
-#include <autoware_utils_pcl/transforms.hpp>
+#include <autoware_utils/geometry/geometry.hpp>
+#include <autoware_utils/transform/transforms.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <tf2_eigen/tf2_eigen.hpp>
 
 #include <geometry_msgs/msg/point.hpp>
 
-#include <OgreBillboardSet.h>
-#include <OgreManualObject.h>
-#include <OgreRay.h>
 #include <OgreSceneManager.h>
 #include <OgreSceneNode.h>
-#include <lanelet2_core/LaneletMap.h>
-#include <lanelet2_core/primitives/Lanelet.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
@@ -62,12 +53,17 @@ namespace autoware
 namespace pointcloud_saver_rviz_plugin
 {
 
+namespace
+{
+constexpr const char * SAVED_PCD_FILENAME = "saved_pointcloud.pcd";
+constexpr double POINT_ON_SEGMENT_EPS = 1e-12;
+}  // namespace
 PointCloudSaver::PointCloudSaver() : tf2_listener_(tf2_buffer_)
 {
   // shortcut_key_ = 'n';
 
   color_property_ = new rviz_common::properties::ColorProperty(
-    "Line color", Qt::darkYellow, "The topic on which to publish points.", getPropertyContainer(),
+    "Line color", Qt::green, "The topic on which to publish points.", getPropertyContainer(),
     SLOT(updateLineColor()), this);
 }
 
@@ -157,7 +153,8 @@ struct Point
   double y;
 };
 
-bool pointOnSegment(const Point & a, const Point & b, const Point & p, double eps = 1e-12)
+bool pointOnSegment(
+  const Point & a, const Point & b, const Point & p, double eps = POINT_ON_SEGMENT_EPS)
 {
   double cross = (p.y - a.y) * (b.x - a.x) - (p.x - a.x) * (b.y - a.y);
   if (std::fabs(cross) > eps) return false;
@@ -197,17 +194,16 @@ void PointCloudSaver::savePointCloud(std::vector<Ogre::Vector3> line_points)
     poly.push_back(Point{static_cast<double>(line_point.x), static_cast<double>(line_point.y)});
   }
 
-  pcl::shared_ptr<pcl::PointCloud<PointType>> sensor_points_in_fixed_frame(
-    new pcl::PointCloud<PointType>);
+  auto sensor_points_in_fixed_frame = std::make_shared<pcl::PointCloud<PointType>>();
   try {
     transform_sensor_measurement(
       sensor_points_->header.frame_id, context_->getFixedFrame().toStdString(), sensor_points_,
       sensor_points_in_fixed_frame);
   } catch (const std::exception & ex) {
-    std::stringstream message;
-    message << ex.what() << ". Please publish TF " << sensor_points_->header.frame_id << " to "
-            << context_->getFixedFrame().toStdString();
-    // RCLCPP_ERROR_STREAM_THROTTLE(this->get_logger(), *this->get_clock(), 1000, message.str());
+    std::cerr << "[PointCloudSaver::savePointCloud] Transform error: " << ex.what()
+              << ". Please publish TF '" << sensor_points_->header.frame_id << "' to '"
+              << context_->getFixedFrame().toStdString() << "'" << std::endl;
+    return;
   }
 
   pcl::PointCloud<PointType> save_points;
@@ -221,7 +217,7 @@ void PointCloudSaver::savePointCloud(std::vector<Ogre::Vector3> line_points)
   std::cout << "save_points.points.size() " << save_points.points.size() << std::endl;
 
   if (!save_points.points.empty()) {
-    pcl::io::savePCDFileBinary("saved_pointcloud.pcd", save_points);
+    pcl::io::savePCDFileBinary(SAVED_PCD_FILENAME, save_points);
   }
 }
 
@@ -249,26 +245,21 @@ void PointCloudSaver::transform_sensor_measurement(
     return;
   }
 
-  geometry_msgs::msg::TransformStamped transform;
-  try {
-    transform = tf2_buffer_.lookupTransform(target_frame, source_frame, tf2::TimePointZero);
-  } catch (const tf2::TransformException & ex) {
-    throw;
-  }
+  // May throw tf2::TransformException if transform is not available
+  geometry_msgs::msg::TransformStamped transform =
+    tf2_buffer_.lookupTransform(target_frame, source_frame, tf2::TimePointZero);
 
   const geometry_msgs::msg::PoseStamped target_to_source_pose_stamped =
-    autoware_utils_geometry::transform2pose(transform);
+    autoware_utils::transform2pose(transform);
   const Eigen::Matrix4f base_to_sensor_matrix =
     pose_to_matrix4f(target_to_source_pose_stamped.pose);
-  autoware_utils_pcl::transform_pointcloud(
+  autoware_utils::transform_pointcloud(
     *sensor_points_input_ptr, *sensor_points_output_ptr, base_to_sensor_matrix);
 }
 
 void PointCloudSaver::updateLineColor()
 {
   color_ = rviz_common::properties::qtToOgre(color_property_->getColor());
-  // line_->setColor(color);
-  color_ = Ogre::ColourValue(0, 1, 0, 1);
 
   line_viz->setLineWidth(0.3);
 }
