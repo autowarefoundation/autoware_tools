@@ -52,6 +52,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -107,11 +108,11 @@ void PCDDivider<PointT>::run()
   auto pcd_list = discoverPCDs(input_pcd_or_dir_);
 
   // Process pcd files
-  run(pcd_list);
+  run(pcd_list, false);
 }
 
 template <class PointT>
-void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
+void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names, bool meta_gen)
 {
   checkOutputDirectoryValidity();
 
@@ -119,26 +120,31 @@ void PCDDivider<PointT>::run(const std::vector<std::string> & pcd_names)
 
   for (const std::string & pcd_name : pcd_names) {
     if (!rclcpp::ok()) {
+      RCLCPP_INFO(logger_, "Quit");
+
       return;
     }
 
-    if (debug_mode_) {
-      RCLCPP_INFO(logger_, "Dividing file %s", pcd_name.c_str());
-    }
+    // if (debug_mode_) {
+    RCLCPP_INFO(logger_, "Dividing file %s", pcd_name.c_str());
+    // }
 
     do {
       auto cloud_ptr = loadPCD(pcd_name);
 
-      dividePointCloud(cloud_ptr);
+      dividePointCloud(cloud_ptr, meta_gen);
+      RCLCPP_ERROR(logger_, "Checking a segment");
     } while (reader_.good() && rclcpp::ok());
   }
 
-  saveTheRest();
+  if (!meta_gen) {
+    saveTheRest();
 
-  RCLCPP_INFO(logger_, "Merge and downsampling... ");
+    RCLCPP_INFO(logger_, "Merge and downsampling... ");
 
-  // Now merge and downsample
-  mergeAndDownsample();
+    // Now merge and downsample
+    mergeAndDownsample();
+  }
 
   std::string yaml_file_path = output_dir_ + "/pointcloud_map_metadata.yaml";
   saveGridInfoToYAML(yaml_file_path);
@@ -188,10 +194,13 @@ void PCDDivider<PointT>::savePCD(const std::string & path, const pcl::PointCloud
 }
 
 template <class PointT>
-void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
+void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr, bool meta_gen)
 {
   if (!cloud_ptr || cloud_ptr->size() <= 0) {
+    RCLCPP_ERROR(logger_, "Empty cloud input");
     return;
+  } else {
+    RCLCPP_ERROR(logger_, "Size of the input cloud = %lu", cloud_ptr->size());
   }
 
   for (const PointT p : *cloud_ptr) {
@@ -200,12 +209,21 @@ void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
       exit(EXIT_SUCCESS);
     }
 
-    auto tmp = pointToGrid2(p, grid_size_x_, grid_size_y_);
-    auto it = grid_to_cloud_.find(tmp);
+    auto grid_key = pointToGrid2(p, grid_size_x_, grid_size_y_);
+
+    grid_set_.insert(grid_key);
+
+    // If only want to generate metadata file, move to the next point
+    if (meta_gen) {
+      continue;
+    }
+
+    // Otherwise, distribute the point to the appropriate segment
+    auto it = grid_to_cloud_.find(grid_key);
 
     // If the grid has not existed yet, create a new one
     if (it == grid_to_cloud_.end()) {
-      auto & new_grid = grid_to_cloud_[tmp];
+      auto & new_grid = grid_to_cloud_[grid_key];
 
       std::get<0>(new_grid).reserve(max_block_size_);
 
@@ -227,11 +245,11 @@ void PCDDivider<PointT>::dividePointCloud(const PclCloudPtr & cloud_ptr)
         // Otherwise, update the seg_by_size_ if the change of size is significant
         if (cloud.size() - prev_size >= 10000) {
           prev_size = cloud.size();
-          auto seg_to_size_it = seg_to_size_itr_map_.find(tmp);
+          auto seg_to_size_it = seg_to_size_itr_map_.find(grid_key);
 
           if (seg_to_size_it == seg_to_size_itr_map_.end()) {
             auto size_it = seg_by_size_.insert(std::make_pair(prev_size, it));
-            seg_to_size_itr_map_[tmp] = size_it;
+            seg_to_size_itr_map_[grid_key] = size_it;
           } else {
             seg_by_size_.erase(seg_to_size_it->second);
             auto new_size_it = seg_by_size_.insert(std::make_pair(prev_size, it));
@@ -473,6 +491,17 @@ void PCDDivider<PointT>::saveGridInfoToYAML(const std::string & yaml_file_path)
   }
 
   yaml_file.close();
+
+  RCLCPP_INFO(logger_, "Save a yaml file at %s", yaml_file_path.c_str());
+}
+
+template <class PointT>
+void PCDDivider<PointT>::meta_generator()
+{
+  // Discover PCD files
+  auto pcd_list = discoverPCDs(input_pcd_or_dir_);
+
+  run(pcd_list, true);
 }
 
 template class PCDDivider<pcl::PointXYZ>;
