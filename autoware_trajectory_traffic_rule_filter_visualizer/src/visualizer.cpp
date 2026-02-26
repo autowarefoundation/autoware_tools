@@ -51,8 +51,8 @@ void init_controls(AppState & state)
     {"Crossing Time", 0.0, 10.0, 2.75},
     {"Current Accel", -5.0, 5.0, 0.0},
     {"Resolution", 1.0, 20.0, 20.0, false, true},
-    {"Plot Max V", 5.0, 100.0, 5.0, false, true},
-    {"Plot Max D", 10.0, 200.0, 10.0, false, true}};
+    {"Plot Max V", 1.0, 30.0, 1.0, false, true},
+    {"Plot Max D", 1.0, 50.0, 1.0, false, true}};
 }
 
 void on_mouse(int event, int x, int y, int /*flags*/, void * userdata)
