@@ -132,7 +132,7 @@ def parse_rosbag(bag_path: str, pose_topic: str, tp_topic: str, scan_topic: str)
 
     while reader.has_next():
         progress_bar.update(1)
-        (topic, data, stamp) = reader.read_next()
+        topic, data, stamp = reader.read_next()
 
         if topic == pose_topic:
             pose_msg = deserialize_message(data, PoseWithCovarianceStamped)

@@ -15,6 +15,7 @@
 # limitations under the License.
 # cspell:disable
 """Auto-discover and evaluate all OR segment bags in a directory."""
+
 import argparse
 from pathlib import Path
 import subprocess

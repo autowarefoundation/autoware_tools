@@ -16,6 +16,7 @@
 # cspell:disable
 
 """Rename a topic in a rosbag file."""
+
 import argparse
 from pathlib import Path
 
