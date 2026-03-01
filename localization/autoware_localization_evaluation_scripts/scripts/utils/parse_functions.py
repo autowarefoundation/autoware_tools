@@ -37,7 +37,7 @@ def parse_rosbag(rosbag_dir: str, target_topic_list: list[str], limit: int = 0) 
     topic_name_to_data = defaultdict(list)
     parse_num = 0
     while reader.has_next():
-        (topic, data, t) = reader.read_next()
+        topic, data, t = reader.read_next()
         msg_type = get_message(type_map[topic])
         msg = deserialize_message(data, msg_type)
         if topic in target_topic_list:
