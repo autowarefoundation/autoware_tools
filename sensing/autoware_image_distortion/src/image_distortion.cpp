@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <rclcpp/rclcpp.hpp>
-#include <image_transport/image_transport.hpp>
-#include <image_transport/camera_subscriber.hpp>
 #include <image_transport/camera_publisher.hpp>
 #include <image_transport/camera_subscriber.hpp>
 #include <image_transport/image_transport.hpp>
@@ -22,6 +19,7 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <image_geometry/pinhole_camera_model.h>
+
 #include <string>
 
 class ImageDistortion : public rclcpp::Node
