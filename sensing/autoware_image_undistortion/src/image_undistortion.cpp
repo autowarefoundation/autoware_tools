@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <rclcpp/rclcpp.hpp>
+#include <image_transport/image_transport.hpp>
+#include <image_transport/camera_subscriber.hpp>
 #include <image_transport/camera_publisher.hpp>
 #include <image_transport/camera_subscriber.hpp>
 #include <image_transport/image_transport.hpp>
@@ -20,7 +23,6 @@
 
 #include <cv_bridge/cv_bridge.h>
 #include <image_geometry/pinhole_camera_model.h>
-
 #include <string>
 
 class ImageUndistortion : public rclcpp::Node
@@ -80,7 +82,7 @@ private:
       out_info_msg->roi.height = roi.height;
       out_info_msg->roi.width = roi.width;
     }
-    out_info_msg->roi.do_rectify = false;
+    out_info_msg->roi.do_rectify = false; 
 
     pub_rect_.publish(out_img_msg, out_info_msg);
   }
