@@ -53,6 +53,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cinttypes>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -158,8 +159,8 @@ std::vector<lanelet::Id> check_lanelet_connection(
 
 void assign_centerline_points_to_lanelets(
   const std::vector<TrajectoryPoint> & optimized_traj_points,
-  const lanelet::ConstLanelets & route_lanelets,
-  PlanPath::Response::SharedPtr response, const rclcpp::Logger & logger)
+  const lanelet::ConstLanelets & route_lanelets, PlanPath::Response::SharedPtr response,
+  const rclcpp::Logger & logger)
 {
   std::vector<std::vector<geometry_msgs::msg::Point>> points_per_lanelet(route_lanelets.size());
   size_t current_lanelet_idx = 0;
@@ -168,8 +169,9 @@ void assign_centerline_points_to_lanelets(
   for (const auto & traj_point : optimized_traj_points) {
     const auto pt = convert_to_lanelet_point(traj_point.pose.position);
 
-    if (current_lanelet_idx < route_lanelets.size() &&
-        lanelet::geometry::inside(route_lanelets.at(current_lanelet_idx), pt)) {
+    if (
+      current_lanelet_idx < route_lanelets.size() &&
+      lanelet::geometry::inside(route_lanelets.at(current_lanelet_idx), pt)) {
       points_per_lanelet.at(current_lanelet_idx).push_back(traj_point.pose.position);
       continue;
     }
@@ -210,8 +212,9 @@ void assign_centerline_points_to_lanelets(
     } else {
       RCLCPP_WARN(
         logger,
-        "PlanPath: lanelet id %ld has no assigned points (trajectory may skip this segment).",
-        static_cast<long>(route_lanelets.at(i).id()));
+        "PlanPath: lanelet id %" PRId64
+        " has no assigned points (trajectory may skip this segment).",
+        static_cast<int64_t>(route_lanelets.at(i).id()));
     }
   }
 }

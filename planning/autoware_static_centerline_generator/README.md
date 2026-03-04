@@ -103,18 +103,18 @@ By default, footprint colors are:
 
 - Distance to lanelet boundary < 0.1 [m]: Red
 - Distance to lanelet boundary < 0.2 [m]: Orange
-- Distance to lanelet boundary < 0.3 [m]: Yello
+- Distance to lanelet boundary < 0.3 [m]: Yellow
 - Yaw difference exceeds jitter_deg_threshold (default is 40) [deg]: Blue
 
 ## Troubleshooting (VMB embedding)
 
 When embedding a fixed route from VMB, some routes may fail or produce incomplete centerlines. Common causes and remedies:
 
-| Symptom / Error | Cause | What to check |
-|-----------------|--------|----------------|
-| **LaneletsNotConnected** | The lane IDs in the route are not topologically connected (next lanelet of one is not the following in the list). | In VMB, ensure the selected lane sequence is connected in the map (no skipped lanes, correct direction). |
-| **PathNotFound** | Optimization returned no trajectory (e.g. goal_method, very sharp curve, or degenerate lane). | Check `goal_method` and route shape; try a shorter or simpler segment. |
-| **InvalidRoute** | Request had an empty route. | Ensure the route selection in VMB sends at least one lane ID. |
-| **InvalidLanelet** | Start/goal lanelet has no valid centerline (e.g. centerline has fewer than 2 points). | Fix or regenerate the map so that lanelets have valid centerlines. |
-| **Some lanelets with no points** | Optimized path does not pass through every selected lanelet, or points fall outside polygon (e.g. sharp curves). | Check terminal for `PlanPath: lanelet id X has no assigned points`. Adjust route or map; sharp curves may need manual centerline. |
-| **Points outside all lanelets** | Smoothed trajectory lies slightly outside lane polygons (boundaries or optimization). | Terminal logs: `X trajectory point(s) were outside all lanelet polygons`. Points are still assigned to the nearest segment; if embedding looks wrong, simplify the route or check map geometry. |
+| Symptom / Error                  | Cause                                                                                                             | What to check                                                                                                                                                                                   |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **LaneletsNotConnected**         | The lane IDs in the route are not topologically connected (next lanelet of one is not the following in the list). | In VMB, ensure the selected lane sequence is connected in the map (no skipped lanes, correct direction).                                                                                        |
+| **PathNotFound**                 | Optimization returned no trajectory (e.g. goal_method, very sharp curve, or degenerate lane).                     | Check `goal_method` and route shape; try a shorter or simpler segment.                                                                                                                          |
+| **InvalidRoute**                 | Request had an empty route.                                                                                       | Ensure the route selection in VMB sends at least one lane ID.                                                                                                                                   |
+| **InvalidLanelet**               | Start/goal lanelet has no valid centerline (e.g. centerline has fewer than 2 points).                             | Fix or regenerate the map so that lanelets have valid centerlines.                                                                                                                              |
+| **Some lanelets with no points** | Optimized path does not pass through every selected lanelet, or points fall outside polygon (e.g. sharp curves).  | Check terminal for `PlanPath: lanelet id X has no assigned points`. Adjust route or map; sharp curves may need manual centerline.                                                               |
+| **Points outside all lanelets**  | Smoothed trajectory lies slightly outside lane polygons (boundaries or optimization).                             | Terminal logs: `X trajectory point(s) were outside all lanelet polygons`. Points are still assigned to the nearest segment; if embedding looks wrong, simplify the route or check map geometry. |
