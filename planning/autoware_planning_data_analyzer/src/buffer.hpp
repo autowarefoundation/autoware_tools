@@ -115,6 +115,29 @@ struct Buffer : BufferBase
 
     return std::make_shared<T>(*closest_itr);
   }
+
+  auto get_latest_before_or_equal(const rcutils_time_point_value_t target_time) const
+    -> typename T::SharedPtr
+  {
+    if (msgs.empty()) {
+      return nullptr;
+    }
+
+    typename std::vector<T>::const_iterator latest_itr = msgs.end();
+    for (auto itr = msgs.begin(); itr != msgs.end(); ++itr) {
+      const auto stamp_ns = rclcpp::Time(itr->header.stamp).nanoseconds();
+      if (stamp_ns <= target_time) {
+        latest_itr = itr;
+      } else {
+        break;
+      }
+    }
+
+    if (latest_itr == msgs.end()) {
+      return nullptr;
+    }
+    return std::make_shared<T>(*latest_itr);
+  }
 };
 
 // Template specializations for messages without standard header.stamp

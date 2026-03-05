@@ -33,6 +33,8 @@ namespace autoware::planning_data_analyzer
 
 struct BagData
 {
+  std::string trajectory_topic_key{};
+  std::string gt_trajectory_topic_key{};
   // Template helper to create and configure buffer
   template <typename MessageType>
   void create_buffer(
@@ -55,8 +57,8 @@ struct BagData
     create_buffer<Odometry>("/localization/kinematic_state", buffer_duration_sec, max_buffer_msgs);
     create_buffer<AccelWithCovarianceStamped>(
       "/localization/acceleration", buffer_duration_sec, max_buffer_msgs);
-    create_buffer<Trajectory>(
-      "/planning/scenario_planning/trajectory", buffer_duration_sec, max_buffer_msgs);
+    trajectory_topic_key = "/planning/trajectory";
+    create_buffer<Trajectory>(trajectory_topic_key, buffer_duration_sec, max_buffer_msgs);
     create_buffer<PredictedObjects>(
       "/perception/object_recognition/objects", buffer_duration_sec, max_buffer_msgs);
     create_buffer<SteeringReport>(
@@ -74,7 +76,13 @@ struct BagData
     create_buffer<Odometry>(topic_names.odometry_topic, buffer_duration_sec, max_buffer_msgs);
     create_buffer<AccelWithCovarianceStamped>(
       topic_names.acceleration_topic, buffer_duration_sec, max_buffer_msgs);
-    create_buffer<Trajectory>(topic_names.trajectory_topic, buffer_duration_sec, max_buffer_msgs);
+    trajectory_topic_key = topic_names.trajectory_topic;
+    create_buffer<Trajectory>(trajectory_topic_key, buffer_duration_sec, max_buffer_msgs);
+    if (!topic_names.gt_trajectory_topic.empty()) {
+      gt_trajectory_topic_key = topic_names.gt_trajectory_topic;
+      create_buffer<Trajectory>(
+        topic_names.gt_trajectory_topic, buffer_duration_sec, max_buffer_msgs);
+    }
     create_buffer<PredictedObjects>(
       topic_names.objects_topic, buffer_duration_sec, max_buffer_msgs);
     create_buffer<SteeringReport>(topic_names.steering_topic, buffer_duration_sec, max_buffer_msgs);
@@ -108,12 +116,20 @@ struct BagData
     if (!synchronized_data->kinematic_state) return nullptr;
 
     // Get trajectory
-    // Find trajectory buffer
     std::shared_ptr<Buffer<Trajectory>> traj_buffer;
-    for (const auto & [topic, buffer] : buffers) {
-      if (auto tb = std::dynamic_pointer_cast<Buffer<Trajectory>>(buffer)) {
-        traj_buffer = tb;
-        break;
+    if (!trajectory_topic_key.empty()) {
+      auto traj_itr = buffers.find(trajectory_topic_key);
+      if (traj_itr != buffers.end()) {
+        traj_buffer = std::dynamic_pointer_cast<Buffer<Trajectory>>(traj_itr->second);
+      }
+    }
+    // Fallback for backward compatibility with legacy construction/configuration.
+    if (!traj_buffer) {
+      for (const auto & [topic, buffer] : buffers) {
+        if (auto tb = std::dynamic_pointer_cast<Buffer<Trajectory>>(buffer)) {
+          traj_buffer = tb;
+          break;
+        }
       }
     }
     if (traj_buffer) {
@@ -130,6 +146,20 @@ struct BagData
           synchronized_data->kinematic_state =
             odom_buffer->get_closest(traj_stamp_ns, tolerance_ms);
         }
+      }
+    }
+
+    if (traj_buffer && synchronized_data->trajectory && !gt_trajectory_topic_key.empty()) {
+      auto gt_itr = buffers.find(gt_trajectory_topic_key);
+      std::shared_ptr<Buffer<Trajectory>> gt_traj_buffer;
+      if (gt_itr != buffers.end()) {
+        gt_traj_buffer = std::dynamic_pointer_cast<Buffer<Trajectory>>(gt_itr->second);
+      }
+      if (gt_traj_buffer) {
+        const auto traj_stamp_ns =
+          rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+        synchronized_data->ground_truth_trajectory_msg =
+          gt_traj_buffer->get_latest_before_or_equal(traj_stamp_ns);
       }
     }
 

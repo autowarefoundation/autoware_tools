@@ -29,7 +29,11 @@ if(BUILD_TESTING)
   ament_add_gtest(test_metrics test/metrics/test_deviation_metrics.cpp)
   target_link_libraries(test_metrics ${PROJECT_NAME})
 
-  ament_add_gtest(test_offline_evaluation test/test_bag_handler.cpp test/test_replay_evaluation.cpp)
+  ament_add_gtest(test_offline_evaluation
+    test/test_bag_handler.cpp
+    test/test_replay_evaluation.cpp
+    test/test_open_loop_gt_source_mode.cpp
+  )
   target_link_libraries(test_offline_evaluation ${PROJECT_NAME})
   ament_target_dependencies(test_offline_evaluation autoware_test_utils)
 endif()
