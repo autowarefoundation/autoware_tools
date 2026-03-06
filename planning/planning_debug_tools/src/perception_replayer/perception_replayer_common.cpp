@@ -14,6 +14,7 @@
 
 #include "perception_replayer_common.hpp"
 
+#include "serialized_bag_message.hpp"
 #include "utils.hpp"
 
 #include <rosbag2_cpp/reader.hpp>
@@ -136,13 +137,13 @@ void PerceptionReplayerCommon::load_rosbag(
         if (bag_message->topic_name == ego_odom_topic) {
           const auto ego_odom_msg =
             utils::deserialize_message<Odometry>(bag_message->serialized_data);
-          const rclcpp::Time timestamp(bag_message->time_stamp);
+          const rclcpp::Time timestamp(get_timestamp_ns(*bag_message));
           rosbag_ego_odom_data_.emplace_back(timestamp, *ego_odom_msg);
         }
 
         // deserialize objects messages
         if (bag_message->topic_name == objects_topic) {
-          const rclcpp::Time timestamp(bag_message->time_stamp);
+          const rclcpp::Time timestamp(get_timestamp_ns(*bag_message));
           if (param_.tracked_object) {
             const auto objects_msg =
               utils::deserialize_message<TrackedObjects>(bag_message->serialized_data);
@@ -158,7 +159,7 @@ void PerceptionReplayerCommon::load_rosbag(
         if (bag_message->topic_name == traffic_signals_topic) {
           const auto traffic_signals_msg =
             utils::deserialize_message<TrafficLightGroupArray>(bag_message->serialized_data);
-          const rclcpp::Time timestamp(bag_message->time_stamp);
+          const rclcpp::Time timestamp(get_timestamp_ns(*bag_message));
           rosbag_traffic_signals_data_.emplace_back(timestamp, *traffic_signals_msg);
         }
 
@@ -166,7 +167,7 @@ void PerceptionReplayerCommon::load_rosbag(
         if (bag_message->topic_name == occupancy_grid_topic) {
           const auto occupancy_grid_msg =
             utils::deserialize_message<OccupancyGrid>(bag_message->serialized_data);
-          const rclcpp::Time timestamp(bag_message->time_stamp);
+          const rclcpp::Time timestamp(get_timestamp_ns(*bag_message));
           rosbag_occupancy_grid_data_.emplace_back(timestamp, *occupancy_grid_msg);
         }
 
@@ -175,7 +176,7 @@ void PerceptionReplayerCommon::load_rosbag(
           if (bag_message->topic_name == ref_topic) {
             const auto image_msg =
               utils::deserialize_message<CompressedImage>(bag_message->serialized_data);
-            const rclcpp::Time timestamp(bag_message->time_stamp);
+            const rclcpp::Time timestamp(get_timestamp_ns(*bag_message));
             rosbag_reference_image_data_[ref_topic].emplace_back(timestamp, *image_msg);
             break;  // Found matching topic, no need to check others
           }

@@ -2,6 +2,11 @@
 Changelog for package autoware_planning_data_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.0 (2026-02-14)
+------------------
+* feat: add Jazzy support for rosbag APIs (`#347 <https://github.com/autowarefoundation/autoware_tools/issues/347>`_)
+* Contributors: Ryohsuke Mitsudome
+
 0.5.0 (2025-12-30)
 ------------------
 * chore(planning_data_analyzer): add output dir in launch (`#327 <https://github.com/autowarefoundation/autoware_tools/issues/327>`_)

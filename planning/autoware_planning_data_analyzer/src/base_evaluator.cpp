@@ -15,6 +15,7 @@
 #include "base_evaluator.hpp"
 
 #include "metrics/trajectory_metrics.hpp"
+#include "serialized_bag_message.hpp"
 
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/reader.hpp>
@@ -55,7 +56,7 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   while (bag_reader.has_next() && rclcpp::ok()) {
     auto serialized_message = bag_reader.read_next();
     const auto & topic_name = serialized_message->topic_name;
-    rclcpp::Time msg_time(serialized_message->time_stamp);
+    rclcpp::Time msg_time(get_timestamp_ns(*serialized_message));
 
     // Update time range
     if (msg_time < bag_start_time) bag_start_time = msg_time;

@@ -2,6 +2,11 @@
 Changelog for package deviation_evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.0 (2026-02-14)
+------------------
+* feat(deviation_evaluator): use autoware_qos_utils for service qos settings (`#349 <https://github.com/autowarefoundation/autoware_tools/issues/349>`_)
+* Contributors: Ryohsuke Mitsudome
+
 0.5.0 (2025-12-30)
 ------------------
 

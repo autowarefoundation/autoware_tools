@@ -2,6 +2,9 @@
 Changelog for package autoware_pointcloud_saver_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.6.0 (2026-02-14)
+------------------
+
 0.5.0 (2025-12-30)
 ------------------
 * fix: to be consistent version in all package.xml(s)
