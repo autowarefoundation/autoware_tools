@@ -19,7 +19,6 @@
 #include "autoware/behavior_path_goal_planner_module/fixed_goal_planner_base.hpp"
 #include "autoware/path_generator/common_structs.hpp"
 #include "autoware/path_generator/node.hpp"
-#include "autoware/path_generator/utils.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "type_alias.hpp"
 
