@@ -151,7 +151,8 @@ public:
     const std::shared_ptr<SynchronizedData> & trajectory_data,
     const std::vector<std::shared_ptr<SynchronizedData>> & all_data);
 
-  std::optional<autoware_planning_msgs::msg::Trajectory> generate_ground_truth_trajectory_from_topic(
+  std::optional<autoware_planning_msgs::msg::Trajectory>
+  generate_ground_truth_trajectory_from_topic(
     const std::shared_ptr<SynchronizedData> & trajectory_data) const;
 
   /**

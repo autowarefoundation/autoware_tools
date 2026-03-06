@@ -106,7 +106,8 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   // Collect synchronized data
   for (const auto & kinematic_state : kinematic_states) {
     const auto timestamp = rclcpp::Time(kinematic_state->header.stamp).nanoseconds();
-    auto sync_data = bag_data->get_synchronized_data_at_time(timestamp, topic_names.sync_tolerance_ms);
+    auto sync_data =
+      bag_data->get_synchronized_data_at_time(timestamp, topic_names.sync_tolerance_ms);
 
     if (sync_data && sync_data->trajectory) {
       result.synchronized_data_list.push_back(sync_data);

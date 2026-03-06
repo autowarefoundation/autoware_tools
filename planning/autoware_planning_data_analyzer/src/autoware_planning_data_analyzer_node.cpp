@@ -49,9 +49,9 @@
 #include <iomanip>
 #include <memory>
 #include <optional>
-#include <stdexcept>
 #include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -88,8 +88,7 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   gt_source_mode_ = get_or_declare_parameter<std::string>(*this, "open_loop.gt_source_mode");
   gt_trajectory_topic_name_ =
     get_or_declare_parameter<std::string>(*this, "open_loop.gt_trajectory_topic");
-  gt_sync_tolerance_ms_ =
-    get_or_declare_parameter<double>(*this, "open_loop.gt_sync_tolerance_ms");
+  gt_sync_tolerance_ms_ = get_or_declare_parameter<double>(*this, "open_loop.gt_sync_tolerance_ms");
   objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
   tf_topic_name_ = get_or_declare_parameter<std::string>(*this, "tf_topic");
   acceleration_topic_name_ = get_or_declare_parameter<std::string>(*this, "acceleration_topic");
