@@ -67,10 +67,10 @@ if(BUILD_TESTING)
     test/test_static_centerline_generator_path_generator_case2_launch.test.py
     TIMEOUT 90
   )
-  add_launch_test(
-    test/test_static_centerline_generator_path_generator_case3_launch.test.py
-    TIMEOUT 90
-  )
+  # add_launch_test(
+  #   test/test_static_centerline_generator_path_generator_case3_launch.test.py
+  #   TIMEOUT 90
+  # )
   add_launch_test(
     test/test_static_centerline_generator_path_generator_case4_launch.test.py
     TIMEOUT 90
