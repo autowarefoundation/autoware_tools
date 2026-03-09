@@ -22,11 +22,18 @@
     map_marker_array: "/map/vector_map_marker"
     route_topic: "/planning/mission_planning/route"
     odometry_topic: "/localization/kinematic_state"
-    trajectory_topic: "/planning/generator/diffusion_planner/trajectory"
+    trajectory_topic: "/planning/trajectory"
     objects_topic: "/perception/object_recognition/objects"
     tf_topic: "/tf"
     acceleration_topic: "/localization/acceleration"
     steering_topic: "/vehicle/status/steering_status"
+
+    open_loop:
+      # "kinematic_state" (default): synthesize GT from odometry topic
+      # "gt_trajectory": use pre-generated GT trajectory topic directly
+      gt_source_mode: "kinematic_state"
+      gt_trajectory_topic: "/planning/ground_truth_trajectory"
+      gt_sync_tolerance_ms: 200.0
 
     # OR Scene Evaluation Configuration (only used when mode="or_scene")
     or_scene_evaluation:

@@ -35,6 +35,7 @@
 #include <limits>
 #include <memory>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -156,8 +157,32 @@ std::vector<OpenLoopEvaluator::EvaluationData> OpenLoopEvaluator::prepare_evalua
       continue;
     }
 
-    // Generate ground truth trajectory
-    auto ground_truth_opt = generate_ground_truth_trajectory(data, synchronized_data_list);
+    std::optional<autoware_planning_msgs::msg::Trajectory> ground_truth_opt;
+    if (gt_source_mode_ == GTSourceMode::GT_TRAJECTORY) {
+      // In gt_trajectory mode, tolerate short startup timing gaps by skipping frames
+      // where GT topic is missing/empty, instead of aborting the whole evaluation.
+      if (!data->ground_truth_trajectory_msg || data->ground_truth_trajectory_msg->points.empty()) {
+        RCLCPP_WARN(
+          logger_,
+          "Skipping trajectory at time %f in gt_trajectory mode - GT topic message was "
+          "missing or empty.",
+          data->timestamp.seconds());
+        continue;
+      }
+      ground_truth_opt = generate_ground_truth_trajectory_from_topic(data);
+      if (!ground_truth_opt.has_value()) {
+        // For per-trajectory prediction issues (e.g., too few predicted points, invalid timing,
+        // out-of-tolerance alignment), skip this frame and continue evaluating others.
+        RCLCPP_WARN(
+          logger_,
+          "Skipping trajectory at time %f in gt_trajectory mode - predicted trajectory was "
+          "invalid for evaluation (GT topic exists).",
+          data->timestamp.seconds());
+        continue;
+      }
+    } else {
+      ground_truth_opt = generate_ground_truth_trajectory(data, synchronized_data_list);
+    }
 
     if (!ground_truth_opt.has_value()) {
       RCLCPP_WARN(
@@ -171,6 +196,69 @@ std::vector<OpenLoopEvaluator::EvaluationData> OpenLoopEvaluator::prepare_evalua
   }
 
   return result;
+}
+
+std::optional<autoware_planning_msgs::msg::Trajectory>
+OpenLoopEvaluator::generate_ground_truth_trajectory_from_topic(
+  const std::shared_ptr<SynchronizedData> & trajectory_data) const
+{
+  if (!trajectory_data->trajectory || !trajectory_data->ground_truth_trajectory_msg) {
+    return std::nullopt;
+  }
+
+  const auto & predicted = *trajectory_data->trajectory;
+  const auto & gt_msg = *trajectory_data->ground_truth_trajectory_msg;
+  if (predicted.points.empty() || gt_msg.points.empty()) {
+    return std::nullopt;
+  }
+
+  autoware_planning_msgs::msg::Trajectory gt_for_eval;
+  gt_for_eval.header = predicted.header;
+  gt_for_eval.points.reserve(predicted.points.size());
+
+  // In GT topic mode, require valid trajectory timing.
+  if (predicted.points.size() < 2) {
+    RCLCPP_WARN(logger_, "GT trajectory mode requires at least 2 predicted trajectory points.");
+    return std::nullopt;
+  }
+
+  const double last_time = rclcpp::Duration(predicted.points.back().time_from_start).seconds();
+  if (last_time <= 0.0) {
+    RCLCPP_WARN(
+      logger_, "GT trajectory mode requires positive trajectory horizon. got=%f", last_time);
+    return std::nullopt;
+  }
+
+  double prev_time = -std::numeric_limits<double>::infinity();
+  for (const auto & pred_point : predicted.points) {
+    const double t = rclcpp::Duration(pred_point.time_from_start).seconds();
+    if (t + 1e-9 < prev_time) {
+      RCLCPP_WARN(
+        logger_,
+        "GT trajectory mode requires monotonic predicted time_from_start. prev=%f current=%f",
+        prev_time, t);
+      return std::nullopt;
+    }
+    prev_time = t;
+  }
+
+  for (const auto & pred_point : predicted.points) {
+    const auto abs_time =
+      rclcpp::Time(predicted.header.stamp) + rclcpp::Duration(pred_point.time_from_start);
+    const auto gt_pose = interpolate_ground_truth_from_trajectory(abs_time, gt_msg);
+    if (!gt_pose.has_value()) {
+      return std::nullopt;
+    }
+
+    autoware_planning_msgs::msg::TrajectoryPoint gt_point;
+    gt_point.pose = gt_pose.value();
+    gt_point.time_from_start = pred_point.time_from_start;
+    gt_point.longitudinal_velocity_mps = pred_point.longitudinal_velocity_mps;
+    gt_point.lateral_velocity_mps = pred_point.lateral_velocity_mps;
+    gt_point.heading_rate_rps = pred_point.heading_rate_rps;
+    gt_for_eval.points.push_back(gt_point);
+  }
+  return gt_for_eval;
 }
 
 std::optional<autoware_planning_msgs::msg::Trajectory>
@@ -404,7 +492,7 @@ std::optional<geometry_msgs::msg::Pose> OpenLoopEvaluator::interpolate_ground_tr
 
   // Binary search for bracketing indices (use nanoseconds)
   while (upper_idx - lower_idx > 1) {
-    const size_t mid_idx = (lower_idx + upper_idx) / 2;
+    const size_t mid_idx = lower_idx + (upper_idx - lower_idx) / 2;
     const int64_t mid_ns = ground_truth_data[mid_idx]->timestamp.nanoseconds();
     if (mid_ns <= target_ns) {
       lower_idx = mid_idx;
@@ -450,6 +538,86 @@ std::optional<geometry_msgs::msg::Pose> OpenLoopEvaluator::interpolate_ground_tr
   interpolated_pose.orientation = tf2::toMsg(q);
 
   return interpolated_pose;
+}
+
+std::optional<geometry_msgs::msg::Pose> OpenLoopEvaluator::interpolate_ground_truth_from_trajectory(
+  const rclcpp::Time & target_time,
+  const autoware_planning_msgs::msg::Trajectory & gt_trajectory) const
+{
+  if (gt_trajectory.points.empty()) {
+    return std::nullopt;
+  }
+
+  const auto gt_start = rclcpp::Time(gt_trajectory.header.stamp);
+  std::vector<rclcpp::Time> gt_abs_times;
+  gt_abs_times.reserve(gt_trajectory.points.size());
+  for (const auto & pt : gt_trajectory.points) {
+    gt_abs_times.push_back(gt_start + rclcpp::Duration(pt.time_from_start));
+  }
+
+  const auto target_ns = target_time.nanoseconds();
+  const auto front_ns = gt_abs_times.front().nanoseconds();
+  const auto back_ns = gt_abs_times.back().nanoseconds();
+  const auto tolerance_ns = static_cast<int64_t>(std::llround(gt_sync_tolerance_ms_ * 1e6));
+  if (target_ns < front_ns) {
+    if (front_ns - target_ns <= tolerance_ns) {
+      return gt_trajectory.points.front().pose;
+    }
+    return std::nullopt;
+  }
+  if (target_ns > back_ns) {
+    if (target_ns - back_ns <= tolerance_ns) {
+      return gt_trajectory.points.back().pose;
+    }
+    return std::nullopt;
+  }
+
+  if (target_ns == front_ns) {
+    return gt_trajectory.points.front().pose;
+  }
+  if (target_ns == back_ns) {
+    return gt_trajectory.points.back().pose;
+  }
+
+  size_t lower_idx = 0;
+  size_t upper_idx = gt_abs_times.size() - 1;
+  while (upper_idx - lower_idx > 1) {
+    const size_t mid = lower_idx + (upper_idx - lower_idx) / 2;
+    if (gt_abs_times[mid].nanoseconds() <= target_ns) {
+      lower_idx = mid;
+    } else {
+      upper_idx = mid;
+    }
+  }
+
+  const auto lower_ns = gt_abs_times[lower_idx].nanoseconds();
+  const auto upper_ns = gt_abs_times[upper_idx].nanoseconds();
+  const auto lower_dist_ns = target_ns - lower_ns;
+  const auto upper_dist_ns = upper_ns - target_ns;
+  if (std::min(lower_dist_ns, upper_dist_ns) > tolerance_ns) {
+    return std::nullopt;
+  }
+  const double dt_total = static_cast<double>(upper_ns - lower_ns) / 1e9;
+  const double dt_target = static_cast<double>(target_ns - lower_ns) / 1e9;
+  const double ratio = dt_total > 0.0 ? dt_target / dt_total : 0.0;
+
+  const auto & p1 = gt_trajectory.points[lower_idx].pose;
+  const auto & p2 = gt_trajectory.points[upper_idx].pose;
+  geometry_msgs::msg::Pose pose;
+  pose.position.x = p1.position.x + ratio * (p2.position.x - p1.position.x);
+  pose.position.y = p1.position.y + ratio * (p2.position.y - p1.position.y);
+  pose.position.z = p1.position.z + ratio * (p2.position.z - p1.position.z);
+
+  const double yaw1 = tf2::getYaw(p1.orientation);
+  const double yaw2 = tf2::getYaw(p2.orientation);
+  double yaw_diff = yaw2 - yaw1;
+  while (yaw_diff > M_PI) yaw_diff -= 2 * M_PI;
+  while (yaw_diff < -M_PI) yaw_diff += 2 * M_PI;
+  const double yaw_interp = yaw1 + ratio * yaw_diff;
+  tf2::Quaternion q;
+  q.setRPY(0.0, 0.0, yaw_interp);
+  pose.orientation = tf2::toMsg(q);
+  return pose;
 }
 
 void OpenLoopEvaluator::save_metrics_to_bag(
@@ -523,7 +691,7 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   gt_traj_msg.header.stamp = normalized_timestamp;
 
   if (!gt_traj_msg.points.empty()) {
-    bag_writer.write(gt_traj_msg, "/open_loop/ground_truth_trajectory", normalized_timestamp);
+    bag_writer.write(gt_traj_msg, "/ground_truth/trajectory", normalized_timestamp);
   }
 
   // Save perception objects if available
@@ -703,8 +871,8 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     {"/open_loop/metrics/trajectory_ttc_values", "std_msgs/msg/Float64MultiArray"},
     {"/open_loop/metrics/trajectory_lateral_deviations", "std_msgs/msg/Float64MultiArray"},
     {"/open_loop/metrics/trajectory_travel_distances", "std_msgs/msg/Float64MultiArray"},
-    {"/trajectory", "autoware_planning_msgs/msg/Trajectory"},
-    {"/open_loop/ground_truth_trajectory", "autoware_planning_msgs/msg/Trajectory"},
+    {"/planning/trajectory", "autoware_planning_msgs/msg/Trajectory"},
+    {"/ground_truth/trajectory", "autoware_planning_msgs/msg/Trajectory"},
     {"/perception/object_recognition/objects", "autoware_perception_msgs/msg/PredictedObjects"},
     {"/tf", "tf2_msgs/msg/TFMessage"},
     {"/tf_static", "tf2_msgs/msg/TFMessage"}};
@@ -718,6 +886,14 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
 
   // Use base class method to process bag and get synchronized data
   auto bag_result = process_bag_common(bag_path, evaluation_bag_writer, topic_names);
+
+  if (gt_source_mode_ == GTSourceMode::GT_TRAJECTORY) {
+    if (!bag_result.gt_trajectory_topic_seen || bag_result.gt_trajectory_message_count == 0) {
+      throw std::runtime_error(
+        "gt_trajectory mode requires GT topic '" + topic_names.gt_trajectory_topic +
+        "' to exist in the bag and contain at least one message.");
+    }
+  }
 
   // Run open-loop evaluation
   if (!bag_result.synchronized_data_list.empty()) {

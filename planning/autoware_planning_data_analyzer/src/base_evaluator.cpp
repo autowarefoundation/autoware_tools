@@ -70,6 +70,12 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
       process_and_append_message<Trajectory>(
         serialized_message, bag_data, topic_names.trajectory_topic, use_bag_timestamp, logger_);
     } else if (
+      !topic_names.gt_trajectory_topic.empty() && topic_name == topic_names.gt_trajectory_topic) {
+      result.gt_trajectory_topic_seen = true;
+      result.gt_trajectory_message_count++;
+      process_and_append_message<Trajectory>(
+        serialized_message, bag_data, topic_names.gt_trajectory_topic, use_bag_timestamp, logger_);
+    } else if (
       topic_name == topic_names.acceleration_topic && !topic_names.acceleration_topic.empty()) {
       process_and_append_message<AccelWithCovarianceStamped>(
         serialized_message, bag_data, topic_names.acceleration_topic, use_bag_timestamp, logger_);
@@ -87,8 +93,8 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   }
 
   // Get kinematic states at regular intervals
-  const double evaluation_interval_ms = 100.0;  // TODO(go-sakayori): make configurable
-  auto kinematic_states = bag_data->get_kinematic_states_at_interval(evaluation_interval_ms);
+  auto kinematic_states =
+    bag_data->get_kinematic_states_at_interval(topic_names.evaluation_interval_ms);
 
   if (kinematic_states.empty()) {
     RCLCPP_ERROR(logger_, "No kinematic states found in the rosbag");
@@ -98,10 +104,10 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   }
 
   // Collect synchronized data
-  const double sync_tolerance_ms = 50.0;  // TODO(go-sakayori): make configurable
   for (const auto & kinematic_state : kinematic_states) {
     const auto timestamp = rclcpp::Time(kinematic_state->header.stamp).nanoseconds();
-    auto sync_data = bag_data->get_synchronized_data_at_time(timestamp, sync_tolerance_ms);
+    auto sync_data =
+      bag_data->get_synchronized_data_at_time(timestamp, topic_names.sync_tolerance_ms);
 
     if (sync_data && sync_data->trajectory) {
       result.synchronized_data_list.push_back(sync_data);
@@ -195,7 +201,7 @@ void BaseEvaluator::write_trajectory_to_bag(
   if (sync_data && sync_data->trajectory) {
     Trajectory corrected_trajectory = *sync_data->trajectory;
     corrected_trajectory.header.stamp = normalized_timestamp;
-    bag_writer.write(corrected_trajectory, "/trajectory", normalized_timestamp);
+    bag_writer.write(corrected_trajectory, "/planning/trajectory", normalized_timestamp);
   }
 }
 

@@ -47,7 +47,38 @@ TEST_F(BagHandlerTest, BagDataConstruction)
   EXPECT_TRUE(bag_data->buffers.count("/tf"));
   EXPECT_TRUE(bag_data->buffers.count("/localization/kinematic_state"));
   EXPECT_TRUE(bag_data->buffers.count("/localization/acceleration"));
-  EXPECT_TRUE(bag_data->buffers.count("/planning/scenario_planning/trajectory"));
+  EXPECT_TRUE(bag_data->buffers.count("/planning/trajectory"));
   EXPECT_TRUE(bag_data->buffers.count("/perception/object_recognition/objects"));
   EXPECT_TRUE(bag_data->buffers.count("/vehicle/status/steering_status"));
+}
+
+TEST_F(BagHandlerTest, GetLatestBeforeOrEqual)
+{
+  autoware::planning_data_analyzer::Buffer<autoware::planning_data_analyzer::Trajectory> buffer;
+
+  autoware::planning_data_analyzer::Trajectory t1;
+  t1.header.stamp.sec = 1;
+  t1.header.stamp.nanosec = 0;
+  buffer.msgs.push_back(t1);
+
+  autoware::planning_data_analyzer::Trajectory t2;
+  t2.header.stamp.sec = 2;
+  t2.header.stamp.nanosec = 0;
+  buffer.msgs.push_back(t2);
+
+  autoware::planning_data_analyzer::Trajectory t3;
+  t3.header.stamp.sec = 3;
+  t3.header.stamp.nanosec = 0;
+  buffer.msgs.push_back(t3);
+
+  EXPECT_EQ(buffer.get_latest_before_or_equal(rclcpp::Time(0, 0).nanoseconds()), nullptr);
+  EXPECT_NE(buffer.get_latest_before_or_equal(rclcpp::Time(1, 0).nanoseconds()), nullptr);
+  EXPECT_EQ(
+    buffer.get_latest_before_or_equal(rclcpp::Time(1, 500000000).nanoseconds())->header.stamp.sec,
+    1);
+  EXPECT_EQ(
+    buffer.get_latest_before_or_equal(rclcpp::Time(2, 100000000).nanoseconds())->header.stamp.sec,
+    2);
+  EXPECT_EQ(
+    buffer.get_latest_before_or_equal(rclcpp::Time(10, 0).nanoseconds())->header.stamp.sec, 3);
 }
