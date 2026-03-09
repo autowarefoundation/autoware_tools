@@ -90,7 +90,7 @@ TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeSucceedsWithValidGTTopic)
   EXPECT_GT(metrics.front().displacement_errors.front(), 0.0);
 }
 
-TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeThrowsWhenGTIsMissing)
+TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeSkipsWhenGTIsMissing)
 {
   const rclcpp::Time start_time(20, 0);
   const auto prediction = make_trajectory(start_time, {0.0, 1.0, 2.0});
@@ -100,7 +100,8 @@ TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeThrowsWhenGTIsMissing)
     rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
     OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
 
-  EXPECT_THROW(evaluator.evaluate(sync_data_list, nullptr), std::runtime_error);
+  EXPECT_NO_THROW(evaluator.evaluate(sync_data_list, nullptr));
+  EXPECT_TRUE(evaluator.get_metrics().empty());
 }
 
 TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeUsesSyncToleranceForBoundaryInterpolation)
