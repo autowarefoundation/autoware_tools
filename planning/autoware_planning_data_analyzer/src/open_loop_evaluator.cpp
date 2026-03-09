@@ -159,12 +159,15 @@ std::vector<OpenLoopEvaluator::EvaluationData> OpenLoopEvaluator::prepare_evalua
 
     std::optional<autoware_planning_msgs::msg::Trajectory> ground_truth_opt;
     if (gt_source_mode_ == GTSourceMode::GT_TRAJECTORY) {
-      // Strict policy for GT source: GT message itself must exist and be non-empty.
+      // In gt_trajectory mode, tolerate short startup timing gaps by skipping frames
+      // where GT topic is missing/empty, instead of aborting the whole evaluation.
       if (!data->ground_truth_trajectory_msg || data->ground_truth_trajectory_msg->points.empty()) {
-        throw std::runtime_error(
-          "gt_trajectory mode requires a valid GT trajectory topic message, but it was "
-          "missing or empty for trajectory timestamp " +
-          std::to_string(data->timestamp.seconds()));
+        RCLCPP_WARN(
+          logger_,
+          "Skipping trajectory at time %f in gt_trajectory mode - GT topic message was "
+          "missing or empty.",
+          data->timestamp.seconds());
+        continue;
       }
       ground_truth_opt = generate_ground_truth_trajectory_from_topic(data);
       if (!ground_truth_opt.has_value()) {
@@ -239,8 +242,7 @@ OpenLoopEvaluator::generate_ground_truth_trajectory_from_topic(
     prev_time = t;
   }
 
-  for (size_t idx = 0; idx < predicted.points.size(); ++idx) {
-    const auto & pred_point = predicted.points[idx];
+  for (const auto & pred_point : predicted.points) {
     const auto abs_time =
       rclcpp::Time(predicted.header.stamp) + rclcpp::Duration(pred_point.time_from_start);
     const auto gt_pose = interpolate_ground_truth_from_trajectory(abs_time, gt_msg);
@@ -490,7 +492,7 @@ std::optional<geometry_msgs::msg::Pose> OpenLoopEvaluator::interpolate_ground_tr
 
   // Binary search for bracketing indices (use nanoseconds)
   while (upper_idx - lower_idx > 1) {
-    const size_t mid_idx = (lower_idx + upper_idx) / 2;
+    const size_t mid_idx = lower_idx + (upper_idx - lower_idx) / 2;
     const int64_t mid_ns = ground_truth_data[mid_idx]->timestamp.nanoseconds();
     if (mid_ns <= target_ns) {
       lower_idx = mid_idx;
@@ -580,7 +582,7 @@ std::optional<geometry_msgs::msg::Pose> OpenLoopEvaluator::interpolate_ground_tr
   size_t lower_idx = 0;
   size_t upper_idx = gt_abs_times.size() - 1;
   while (upper_idx - lower_idx > 1) {
-    const size_t mid = (lower_idx + upper_idx) / 2;
+    const size_t mid = lower_idx + (upper_idx - lower_idx) / 2;
     if (gt_abs_times[mid].nanoseconds() <= target_ns) {
       lower_idx = mid;
     } else {
