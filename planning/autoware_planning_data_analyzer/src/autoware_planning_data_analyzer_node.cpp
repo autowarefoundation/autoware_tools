@@ -51,6 +51,7 @@
 #include <optional>
 #include <set>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -82,10 +83,31 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   route_topic_name_ = get_or_declare_parameter<std::string>(*this, "route_topic");
   odometry_topic_name_ = get_or_declare_parameter<std::string>(*this, "odometry_topic");
   trajectory_topic_name_ = get_or_declare_parameter<std::string>(*this, "trajectory_topic");
+  evaluation_interval_ms_ = get_or_declare_parameter<double>(*this, "evaluation_interval_ms");
+  sync_tolerance_ms_ = get_or_declare_parameter<double>(*this, "sync_tolerance_ms");
+  gt_source_mode_ = get_or_declare_parameter<std::string>(*this, "open_loop.gt_source_mode");
+  gt_trajectory_topic_name_ =
+    get_or_declare_parameter<std::string>(*this, "open_loop.gt_trajectory_topic");
+  gt_sync_tolerance_ms_ = get_or_declare_parameter<double>(*this, "open_loop.gt_sync_tolerance_ms");
   objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
   tf_topic_name_ = get_or_declare_parameter<std::string>(*this, "tf_topic");
   acceleration_topic_name_ = get_or_declare_parameter<std::string>(*this, "acceleration_topic");
   steering_topic_name_ = get_or_declare_parameter<std::string>(*this, "steering_topic");
+
+  if (evaluation_interval_ms_ <= 0.0) {
+    throw std::runtime_error(
+      "Invalid evaluation_interval_ms: " + std::to_string(evaluation_interval_ms_) +
+      ". Expected > 0.");
+  }
+  if (sync_tolerance_ms_ < 0.0) {
+    throw std::runtime_error(
+      "Invalid sync_tolerance_ms: " + std::to_string(sync_tolerance_ms_) + ". Expected >= 0.");
+  }
+  if (gt_sync_tolerance_ms_ < 0.0) {
+    throw std::runtime_error(
+      "Invalid open_loop.gt_sync_tolerance_ms: " + std::to_string(gt_sync_tolerance_ms_) +
+      ". Expected >= 0.");
+  }
 
   // Read evaluation mode
   const auto mode_str = get_or_declare_parameter<std::string>(*this, "evaluation.mode");
@@ -225,14 +247,25 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
   topic_names.route_topic = route_topic_name_;
   topic_names.odometry_topic = odometry_topic_name_;
   topic_names.trajectory_topic = trajectory_topic_name_;
+  topic_names.gt_trajectory_topic = gt_trajectory_topic_name_;
   topic_names.objects_topic = objects_topic_name_;
   topic_names.tf_topic = tf_topic_name_;
   topic_names.acceleration_topic = acceleration_topic_name_;
   topic_names.steering_topic = steering_topic_name_;
+  topic_names.evaluation_interval_ms = evaluation_interval_ms_;
+  topic_names.sync_tolerance_ms = sync_tolerance_ms_;
 
   switch (evaluation_mode_) {
     case EvaluationMode::OPEN_LOOP: {
-      OpenLoopEvaluator evaluator(get_logger(), route_handler_);
+      OpenLoopEvaluator::GTSourceMode gt_mode = OpenLoopEvaluator::GTSourceMode::KINEMATIC_STATE;
+      if (gt_source_mode_ == "gt_trajectory") {
+        gt_mode = OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY;
+      } else if (gt_source_mode_ != "kinematic_state") {
+        throw std::runtime_error(
+          "Invalid open_loop.gt_source_mode: " + gt_source_mode_ +
+          ". Expected 'kinematic_state' or 'gt_trajectory'.");
+      }
+      OpenLoopEvaluator evaluator(get_logger(), route_handler_, gt_mode, gt_sync_tolerance_ms_);
       auto times =
         evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);
       start_time = times.first;

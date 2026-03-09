@@ -14,6 +14,7 @@
 
 #include "trajectory_metrics.hpp"
 
+#include <autoware/lanelet2_utils/geometry.hpp>
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
 #include <autoware_lanelet2_extension/utility/utilities.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
@@ -282,8 +283,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     const auto preferred_lanes = route_handler->getPreferredLanelets();
     if (!preferred_lanes.empty()) {
       for (size_t i = 0; i < num_points; ++i) {
-        const auto arc_coordinates =
-          lanelet::utils::getArcCoordinates(preferred_lanes, trajectory.points[i].pose);
+        const auto arc_coordinates = autoware::experimental::lanelet2_utils::get_arc_coordinates(
+          preferred_lanes, trajectory.points[i].pose);
         metrics.lateral_deviations[i] = arc_coordinates.distance;
       }
     }

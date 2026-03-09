@@ -145,6 +145,8 @@ protected:
     rclcpp::Time evaluation_start_time;
     rclcpp::Time evaluation_end_time;
     tf2_msgs::msg::TFMessage tf_static_msgs;
+    bool gt_trajectory_topic_seen = false;
+    size_t gt_trajectory_message_count = 0;
   };
 
   BagProcessingResult process_bag_common(

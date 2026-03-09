@@ -43,6 +43,7 @@ struct SynchronizedData
 {
   std::shared_ptr<Odometry> kinematic_state;
   std::shared_ptr<Trajectory> trajectory;
+  std::shared_ptr<Trajectory> ground_truth_trajectory_msg;
   std::shared_ptr<AccelWithCovarianceStamped> acceleration;
   std::shared_ptr<SteeringReport> steering_status;
   std::shared_ptr<PredictedObjects> objects;
@@ -56,10 +57,13 @@ struct TopicNames
   std::string route_topic;
   std::string odometry_topic;
   std::string trajectory_topic;
+  std::string gt_trajectory_topic;
   std::string objects_topic;
   std::string tf_topic;
   std::string acceleration_topic;
   std::string steering_topic;
+  double evaluation_interval_ms = 100.0;
+  double sync_tolerance_ms = 100.0;
 };
 
 }  // namespace autoware::planning_data_analyzer

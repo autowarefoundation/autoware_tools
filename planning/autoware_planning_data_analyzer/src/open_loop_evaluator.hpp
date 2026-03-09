@@ -83,10 +83,15 @@ struct OpenLoopEvaluationSummary
 class OpenLoopEvaluator : public BaseEvaluator
 {
 public:
+  enum class GTSourceMode { KINEMATIC_STATE, GT_TRAJECTORY };
   explicit OpenLoopEvaluator(
     rclcpp::Logger logger,
-    std::shared_ptr<autoware::route_handler::RouteHandler> route_handler = nullptr)
-  : BaseEvaluator(logger, route_handler)
+    std::shared_ptr<autoware::route_handler::RouteHandler> route_handler = nullptr,
+    GTSourceMode gt_source_mode = GTSourceMode::KINEMATIC_STATE,
+    double gt_sync_tolerance_ms = 200.0)
+  : BaseEvaluator(logger, route_handler),
+    gt_source_mode_(gt_source_mode),
+    gt_sync_tolerance_ms_(gt_sync_tolerance_ms)
   {
   }
 
@@ -146,6 +151,10 @@ public:
     const std::shared_ptr<SynchronizedData> & trajectory_data,
     const std::vector<std::shared_ptr<SynchronizedData>> & all_data);
 
+  std::optional<autoware_planning_msgs::msg::Trajectory>
+  generate_ground_truth_trajectory_from_topic(
+    const std::shared_ptr<SynchronizedData> & trajectory_data) const;
+
   /**
    * @brief Evaluate a single trajectory against ground truth
    * (Public for use by ORSceneEvaluator)
@@ -189,6 +198,10 @@ private:
     const rclcpp::Time & target_time,
     const std::vector<std::shared_ptr<SynchronizedData>> & ground_truth_data);
 
+  std::optional<geometry_msgs::msg::Pose> interpolate_ground_truth_from_trajectory(
+    const rclcpp::Time & target_time,
+    const autoware_planning_msgs::msg::Trajectory & gt_trajectory) const;
+
   /**
    * @brief Save evaluation metrics to bag
    */
@@ -204,6 +217,8 @@ private:
   std::vector<OpenLoopTrajectoryMetrics> metrics_list_;
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
   OpenLoopEvaluationSummary summary_;
+  GTSourceMode gt_source_mode_;
+  double gt_sync_tolerance_ms_;
 };
 
 }  // namespace autoware::planning_data_analyzer

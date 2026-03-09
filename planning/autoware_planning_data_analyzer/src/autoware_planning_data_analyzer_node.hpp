@@ -72,6 +72,11 @@ private:
   std::string route_topic_name_;
   std::string odometry_topic_name_;
   std::string trajectory_topic_name_;
+  double evaluation_interval_ms_ = 100.0;
+  double sync_tolerance_ms_ = 100.0;
+  std::string gt_source_mode_;
+  std::string gt_trajectory_topic_name_;
+  double gt_sync_tolerance_ms_ = 200.0;
   std::string objects_topic_name_;
   std::string tf_topic_name_;
   std::string acceleration_topic_name_;
