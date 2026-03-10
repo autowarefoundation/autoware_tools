@@ -25,6 +25,7 @@
 
 #include <visualization_msgs/msg/marker_array.hpp>
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
@@ -208,6 +209,15 @@ private:
   void save_metrics_to_bag(
     const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
     rosbag2_cpp::Writer & bag_writer);
+
+  /**
+   * @brief Save DLR-style ADE/FDE JSON result to bag
+   */
+  void save_dlr_style_result_to_bag(
+    const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
+    rosbag2_cpp::Writer & bag_writer);
+
+  std::string format_horizon_key(double seconds) const;
 
   /**
    * @brief Calculate summary statistics from all evaluations

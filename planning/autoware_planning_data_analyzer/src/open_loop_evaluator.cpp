@@ -25,6 +25,7 @@
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <std_msgs/msg/float64.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
+#include <std_msgs/msg/string.hpp>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <tf2_msgs/msg/tf_message.hpp>
 
@@ -32,9 +33,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 #include <limits>
 #include <memory>
 #include <numeric>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -641,6 +644,8 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   array_msg.data = metrics.ttc;
   bag_writer.write(array_msg, "/open_loop/metrics/ttc", message_timestamp);
 
+  save_dlr_style_result_to_bag(metrics, eval_data, bag_writer);
+
   // Save the precomputed ground truth trajectory directly
   autoware_planning_msgs::msg::Trajectory gt_traj_msg = ground_truth_trajectory;
   gt_traj_msg.header.stamp = message_timestamp;
@@ -806,9 +811,60 @@ nlohmann::json OpenLoopEvaluator::get_detailed_results_as_json() const
   return j;
 }
 
+std::string OpenLoopEvaluator::format_horizon_key(double seconds) const
+{
+  std::ostringstream stream;
+  stream << std::fixed << std::setprecision(3) << seconds;
+  auto formatted = stream.str();
+  formatted.erase(formatted.find_last_not_of('0') + 1);
+  if (!formatted.empty() && formatted.back() == '.') {
+    formatted.pop_back();
+  }
+  if (formatted.empty()) {
+    formatted = "0";
+  }
+  return formatted + "s";
+}
+
+void OpenLoopEvaluator::save_dlr_style_result_to_bag(
+  const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
+  rosbag2_cpp::Writer & bag_writer)
+{
+  const auto & trajectory_data = eval_data.synchronized_data;
+  if (!trajectory_data || !trajectory_data->trajectory) {
+    return;
+  }
+
+  nlohmann::json result_json;
+  result_json["Stamp"]["System"] = trajectory_data->bag_timestamp.seconds();
+  result_json["Stamp"]["ROS"] = trajectory_data->timestamp.seconds();
+
+  const auto & trajectory_points = trajectory_data->trajectory->points;
+  const size_t point_count =
+    std::min({trajectory_points.size(), metrics.ade.size(), metrics.displacement_errors.size()});
+  for (size_t index = 0; index < point_count; ++index) {
+    const auto horizon_sec =
+      rclcpp::Duration(trajectory_points.at(index).time_from_start).seconds();
+    const auto horizon_key = format_horizon_key(horizon_sec);
+    result_json["Frame"][horizon_key]["ADE"] = metrics.ade.at(index);
+    result_json["Frame"][horizon_key]["FDE"] = metrics.displacement_errors.at(index);
+  }
+
+  if (!result_json.contains("Frame")) {
+    result_json["Frame"] = nlohmann::json::object();
+  }
+
+  std_msgs::msg::String result_msg;
+  result_msg.data = result_json.dump();
+  bag_writer.write(
+    result_msg, "/driving_log_replayer/time_step_based_trajectory/results",
+    trajectory_data->bag_timestamp);
+}
+
 std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_topics() const
 {
   return {
+    {"/driving_log_replayer/time_step_based_trajectory/results", "std_msgs/msg/String"},
     {"/open_loop/metrics/ade", "std_msgs/msg/Float64MultiArray"},
     {"/open_loop/metrics/fde", "std_msgs/msg/Float64MultiArray"},
     {"/open_loop/metrics/ttc", "std_msgs/msg/Float64MultiArray"},
