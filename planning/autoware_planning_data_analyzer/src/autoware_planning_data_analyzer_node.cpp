@@ -47,6 +47,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <set>
@@ -61,6 +62,23 @@ namespace autoware::planning_data_analyzer
 using autoware_utils::create_marker_color;
 using autoware_utils_rclcpp::get_or_declare_parameter;
 
+namespace
+{
+
+std::filesystem::path resolve_bag_uri(const std::string & input_bag_path)
+{
+  const std::filesystem::path input_path(input_bag_path);
+  if (
+    std::filesystem::is_regular_file(input_path) &&
+    std::filesystem::exists(input_path.parent_path() / "metadata.yaml")) {
+    return input_path.parent_path();
+  }
+
+  return input_path;
+}
+
+}  // namespace
+
 AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   const rclcpp::NodeOptions & node_options)
 : Node("autoware_planning_data_analyzer", node_options),
@@ -69,7 +87,8 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   setup_evaluation_bag_writer();
 
   // Open bag file
-  bag_path_ = get_or_declare_parameter<std::string>(*this, "input_bag_path");
+  bag_path_ =
+    resolve_bag_uri(get_or_declare_parameter<std::string>(*this, "input_bag_path")).string();
   try {
     bag_reader_.open(bag_path_);
   } catch (const std::exception & e) {
@@ -125,14 +144,7 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
 
 AutowarePlanningDataAnalyzerNode::~AutowarePlanningDataAnalyzerNode()
 {
-  if (evaluation_bag_writer_) {
-    try {
-      evaluation_bag_writer_->close();
-      RCLCPP_INFO(get_logger(), "Evaluation bag writer closed successfully");
-    } catch (const std::exception & e) {
-      RCLCPP_ERROR(get_logger(), "Error closing evaluation bag writer: %s", e.what());
-    }
-  }
+  close_evaluation_bag_writer();
 }
 
 void AutowarePlanningDataAnalyzerNode::setup_evaluation_bag_writer()
@@ -147,14 +159,17 @@ void AutowarePlanningDataAnalyzerNode::setup_evaluation_bag_writer()
       throw std::runtime_error("Parameter 'output_dir' must be an absolute path.");
     }
 
-    // Generate output bag path (use .mcap extension to save directly as single file)
-    const auto output_bag_path = (output_dir_path / "mcap").string();
-
-    // Ensure output directory exists and is writable
     utils::ensure_directory_writable(output_dir_path, get_logger());
+    const auto temp_root = std::filesystem::temp_directory_path() / "planning_data_analyzer";
+    utils::ensure_directory_writable(temp_root, get_logger());
 
-    // Setup bag writer with MCAP format
-    const rosbag2_storage::StorageOptions storage_options{output_bag_path, "mcap"};
+    evaluation_metrics_bag_path_ = temp_root / "evaluation_metrics_tmp.mcap";
+    if (std::filesystem::exists(evaluation_metrics_bag_path_)) {
+      std::filesystem::remove_all(evaluation_metrics_bag_path_);
+    }
+
+    const rosbag2_storage::StorageOptions storage_options{
+      evaluation_metrics_bag_path_.string(), "mcap"};
     const rosbag2_cpp::ConverterOptions converter_options{
       rmw_get_serialization_format(), rmw_get_serialization_format()};
 
@@ -162,6 +177,147 @@ void AutowarePlanningDataAnalyzerNode::setup_evaluation_bag_writer()
   } catch (const std::exception & e) {
     RCLCPP_ERROR(get_logger(), "Failed to setup evaluation bag writer: %s", e.what());
     evaluation_bag_writer_ = nullptr;
+  }
+}
+
+void AutowarePlanningDataAnalyzerNode::close_evaluation_bag_writer()
+{
+  if (!evaluation_bag_writer_) {
+    return;
+  }
+
+  try {
+    evaluation_bag_writer_->close();
+    RCLCPP_INFO(get_logger(), "Evaluation bag writer closed successfully");
+  } catch (const std::exception & e) {
+    RCLCPP_ERROR(get_logger(), "Error closing evaluation bag writer: %s", e.what());
+  }
+  evaluation_bag_writer_.reset();
+}
+
+void AutowarePlanningDataAnalyzerNode::merge_bags(
+  const std::vector<std::filesystem::path> & input_bags,
+  const std::filesystem::path & output_bag) const
+{
+  rosbag2_cpp::Writer writer;
+  const rosbag2_storage::StorageOptions storage_options{output_bag.string(), "mcap"};
+  const rosbag2_cpp::ConverterOptions converter_options{
+    rmw_get_serialization_format(), rmw_get_serialization_format()};
+  writer.open(storage_options, converter_options);
+
+  std::set<std::string> added_topics;
+  std::vector<rosbag2_cpp::Reader> readers(input_bags.size());
+  std::vector<std::shared_ptr<rosbag2_storage::SerializedBagMessage>> next_messages(
+    input_bags.size());
+
+  for (size_t i = 0; i < input_bags.size(); ++i) {
+    readers[i].open(input_bags[i].string());
+
+    for (const auto & topic_metadata : readers[i].get_all_topics_and_types()) {
+      if (added_topics.insert(topic_metadata.name).second) {
+        writer.create_topic(topic_metadata);
+      }
+    }
+
+    if (readers[i].has_next()) {
+      next_messages[i] = readers[i].read_next();
+    }
+  }
+
+  while (true) {
+    size_t selected_index = input_bags.size();
+    uint64_t selected_timestamp = std::numeric_limits<uint64_t>::max();
+
+    for (size_t i = 0; i < next_messages.size(); ++i) {
+      if (!next_messages[i]) {
+        continue;
+      }
+
+      const auto timestamp = get_timestamp_ns(*next_messages[i]);
+      if (selected_index == input_bags.size() || timestamp < selected_timestamp) {
+        selected_index = i;
+        selected_timestamp = timestamp;
+      }
+    }
+
+    if (selected_index == input_bags.size()) {
+      break;
+    }
+
+    writer.write(next_messages[selected_index]);
+    if (readers[selected_index].has_next()) {
+      next_messages[selected_index] = readers[selected_index].read_next();
+    } else {
+      next_messages[selected_index].reset();
+    }
+  }
+
+  writer.close();
+}
+
+void AutowarePlanningDataAnalyzerNode::replace_input_bag_with_merged_evaluation()
+{
+  if (
+    evaluation_metrics_bag_path_.empty() ||
+    !std::filesystem::exists(evaluation_metrics_bag_path_)) {
+    return;
+  }
+
+  const std::filesystem::path input_bag_path(bag_path_);
+  const std::filesystem::path temp_root = evaluation_metrics_bag_path_.parent_path();
+  const std::filesystem::path merged_bag_path =
+    temp_root / (input_bag_path.filename().string() + ".tmp");
+  const std::filesystem::path backup_bag_path =
+    temp_root / (input_bag_path.filename().string() + ".bak");
+
+  const auto move_path =
+    [](const std::filesystem::path & source, const std::filesystem::path & target) {
+      if (std::filesystem::exists(target)) {
+        std::filesystem::remove_all(target);
+      }
+
+      try {
+        std::filesystem::rename(source, target);
+      } catch (const std::filesystem::filesystem_error &) {
+        std::filesystem::copy(
+          source, target,
+          std::filesystem::copy_options::recursive |
+            std::filesystem::copy_options::overwrite_existing);
+        std::filesystem::remove_all(source);
+      }
+    };
+
+  if (std::filesystem::exists(merged_bag_path)) {
+    std::filesystem::remove_all(merged_bag_path);
+  }
+  if (std::filesystem::exists(backup_bag_path)) {
+    std::filesystem::remove_all(backup_bag_path);
+  }
+
+  try {
+    merge_bags({input_bag_path, evaluation_metrics_bag_path_}, merged_bag_path);
+    move_path(input_bag_path, backup_bag_path);
+
+    try {
+      move_path(merged_bag_path, input_bag_path);
+    } catch (...) {
+      move_path(backup_bag_path, input_bag_path);
+      throw;
+    }
+
+    std::filesystem::remove_all(backup_bag_path);
+    std::filesystem::remove_all(evaluation_metrics_bag_path_);
+  } catch (...) {
+    if (std::filesystem::exists(merged_bag_path)) {
+      std::filesystem::remove_all(merged_bag_path);
+    }
+    if (std::filesystem::exists(backup_bag_path)) {
+      std::filesystem::remove_all(backup_bag_path);
+    }
+    if (std::filesystem::exists(evaluation_metrics_bag_path_)) {
+      std::filesystem::remove_all(evaluation_metrics_bag_path_);
+    }
+    throw;
   }
 }
 
@@ -174,10 +330,22 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
   tf2_msgs::msg::TFMessage tf_static_msg;
   std::vector<std::pair<tf2_msgs::msg::TFMessage, rclcpp::Time>> tf_messages;
 
+  bool bag_time_initialized = false;
+  rclcpp::Time bag_start_time(0, 0, RCL_ROS_TIME);
+  rclcpp::Time bag_end_time(0, 0, RCL_ROS_TIME);
+
   // Quick scan for route and tf messages
   while (bag_reader_.has_next() && rclcpp::ok()) {
     auto serialized_message = bag_reader_.read_next();
     const auto & topic_name = serialized_message->topic_name;
+    const rclcpp::Time message_time(get_timestamp_ns(*serialized_message));
+    if (!bag_time_initialized || message_time < bag_start_time) {
+      bag_start_time = message_time;
+    }
+    if (!bag_time_initialized || message_time > bag_end_time) {
+      bag_end_time = message_time;
+    }
+    bag_time_initialized = true;
 
     if (topic_name == map_topic_name_) {
       try {
@@ -362,12 +530,15 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
     }
   }
 
-  // Write tf_static at the beginning if available
+  if (!bag_time_initialized) {
+    bag_start_time = start_time;
+    bag_end_time = end_time;
+  }
+
   if (
-    !tf_static_msg.transforms.empty() && evaluation_bag_writer_ && start_time.seconds() > 0 &&
-    end_time.seconds() > 0) {
-    // Use start_time so timestamps align with rest of bag (not 0 which breaks Lichtblick)
-    rclcpp::Time tf_time = start_time;
+    !tf_static_msg.transforms.empty() && evaluation_bag_writer_ && bag_start_time.seconds() > 0 &&
+    bag_end_time.seconds() > 0) {
+    rclcpp::Time tf_time = bag_start_time;
 
     // Set timestamps in the transforms to start_time
     tf2_msgs::msg::TFMessage timestamped_tf_static = tf_static_msg;
@@ -378,8 +549,11 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
     evaluation_bag_writer_->write(timestamped_tf_static, "/tf_static", tf_time);
   }
 
-  // Write map and route markers with start_time (not 0)
-  write_map_and_route_markers_to_bag(start_time);
+  write_map_and_route_markers_to_bag(bag_start_time);
+
+  close_evaluation_bag_writer();
+  bag_reader_.close();
+  replace_input_bag_with_merged_evaluation();
 
   RCLCPP_INFO(get_logger(), "Evaluation complete");
   rclcpp::shutdown();

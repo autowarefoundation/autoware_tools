@@ -121,18 +121,8 @@ void OpenLoopEvaluator::evaluate(
     // Save to bag if writer provided
     if (bag_writer) {
       save_metrics_to_bag(metrics, eval_data, *bag_writer);
-
-      // Calculate normalized timestamp for trajectory point metrics
-      if (!first_bag_timestamp_set_) {
-        first_bag_timestamp_ = eval_data.synchronized_data->bag_timestamp;
-        first_bag_timestamp_set_ = true;
-      }
-      const auto relative_duration =
-        eval_data.synchronized_data->bag_timestamp - first_bag_timestamp_;
-      const rclcpp::Time normalized_timestamp =
-        rclcpp::Time(0, 0, RCL_ROS_TIME) + relative_duration;
-
-      save_trajectory_point_metrics_to_bag(trajectory_metrics, *bag_writer, normalized_timestamp);
+      save_trajectory_point_metrics_to_bag(
+        trajectory_metrics, *bag_writer, eval_data.synchronized_data->bag_timestamp);
     } else {
       RCLCPP_WARN(logger_, "No bag writer provided, metrics not saved to bag");
     }
@@ -624,81 +614,39 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
   rosbag2_cpp::Writer & bag_writer)
 {
-  const auto & trajectory_data = eval_data.synchronized_data;
   const auto & ground_truth_trajectory = eval_data.ground_truth_trajectory;
-
-  // Use a normalized timestamp for bag writing to ensure proper duration
-  // Start from 0 and use relative times from the first synchronized data point
-  if (!first_bag_timestamp_set_) {
-    first_bag_timestamp_ = trajectory_data->bag_timestamp;
-    first_bag_timestamp_set_ = true;
-  }
-
-  // Calculate relative timestamp from the first data point
-  const auto relative_duration = trajectory_data->bag_timestamp - first_bag_timestamp_;
-  const rclcpp::Time normalized_timestamp = rclcpp::Time(0, 0, RCL_ROS_TIME) + relative_duration;
+  const auto & trajectory_data = eval_data.synchronized_data;
+  const rclcpp::Time message_timestamp = trajectory_data->bag_timestamp;
 
   // Write point-wise metrics as Float64MultiArray
   std_msgs::msg::Float64MultiArray array_msg;
 
   // ADE
   array_msg.data = metrics.ade;
-  bag_writer.write(array_msg, "/open_loop/metrics/ade", normalized_timestamp);
+  bag_writer.write(array_msg, "/open_loop/metrics/ade", message_timestamp);
 
   // FDE
   array_msg.data = metrics.displacement_errors;
-  bag_writer.write(array_msg, "/open_loop/metrics/fde", normalized_timestamp);
+  bag_writer.write(array_msg, "/open_loop/metrics/fde", message_timestamp);
 
   // Lateral deviations array
   array_msg.data = metrics.lateral_deviations;
-  bag_writer.write(array_msg, "/open_loop/metrics/lateral_deviation", normalized_timestamp);
+  bag_writer.write(array_msg, "/open_loop/metrics/lateral_deviation", message_timestamp);
 
   // Longitudinal deviations array
   array_msg.data = metrics.longitudinal_deviations;
-  bag_writer.write(array_msg, "/open_loop/metrics/longitudinal_deviation", normalized_timestamp);
+  bag_writer.write(array_msg, "/open_loop/metrics/longitudinal_deviation", message_timestamp);
 
   // TTC values array
   array_msg.data = metrics.ttc;
-  bag_writer.write(array_msg, "/open_loop/metrics/ttc", normalized_timestamp);
-
-  // Write minimal TF for visualization (map -> base_link)
-  if (trajectory_data->kinematic_state) {
-    tf2_msgs::msg::TFMessage tf_msg;
-    geometry_msgs::msg::TransformStamped transform;
-
-    // Use the normalized timestamp for consistency
-    transform.header.stamp = normalized_timestamp;
-    transform.header.frame_id = "map";
-    transform.child_frame_id = "base_link";
-
-    // Use kinematic state pose as transform
-    transform.transform.translation.x = trajectory_data->kinematic_state->pose.pose.position.x;
-    transform.transform.translation.y = trajectory_data->kinematic_state->pose.pose.position.y;
-    transform.transform.translation.z = trajectory_data->kinematic_state->pose.pose.position.z;
-    transform.transform.rotation = trajectory_data->kinematic_state->pose.pose.orientation;
-
-    tf_msg.transforms.push_back(transform);
-
-    // Write TF with the normalized timestamp for consistency
-    bag_writer.write(tf_msg, "/tf", normalized_timestamp);
-  }
-
-  // Save the original trajectory using base class method
-  write_trajectory_to_bag(trajectory_data, bag_writer, normalized_timestamp);
+  bag_writer.write(array_msg, "/open_loop/metrics/ttc", message_timestamp);
 
   // Save the precomputed ground truth trajectory directly
   autoware_planning_msgs::msg::Trajectory gt_traj_msg = ground_truth_trajectory;
-  gt_traj_msg.header.stamp = normalized_timestamp;
+  gt_traj_msg.header.stamp = message_timestamp;
 
   if (!gt_traj_msg.points.empty()) {
-    bag_writer.write(gt_traj_msg, "/ground_truth/trajectory", normalized_timestamp);
-  }
-
-  // Save perception objects if available
-  if (trajectory_data->objects) {
-    autoware_perception_msgs::msg::PredictedObjects objects_msg = *(trajectory_data->objects);
-    objects_msg.header.stamp = normalized_timestamp;
-    bag_writer.write(objects_msg, "/perception/object_recognition/objects", normalized_timestamp);
+    bag_writer.write(gt_traj_msg, "/evaluation/compared_trajectory", message_timestamp);
   }
 }
 
@@ -872,7 +820,7 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     {"/open_loop/metrics/trajectory_lateral_deviations", "std_msgs/msg/Float64MultiArray"},
     {"/open_loop/metrics/trajectory_travel_distances", "std_msgs/msg/Float64MultiArray"},
     {"/planning/trajectory", "autoware_planning_msgs/msg/Trajectory"},
-    {"/ground_truth/trajectory", "autoware_planning_msgs/msg/Trajectory"},
+    {"/evaluation/compared_trajectory", "autoware_planning_msgs/msg/Trajectory"},
     {"/perception/object_recognition/objects", "autoware_perception_msgs/msg/PredictedObjects"},
     {"/tf", "tf2_msgs/msg/TFMessage"},
     {"/tf_static", "tf2_msgs/msg/TFMessage"}};

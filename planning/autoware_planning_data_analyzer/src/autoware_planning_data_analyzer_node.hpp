@@ -18,6 +18,7 @@
 #include "bag_handler.hpp"
 #include "rosbag2_cpp/reader.hpp"
 #include "rosbag2_cpp/writer.hpp"
+#include "serialized_bag_message.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info_utils.hpp>
@@ -30,6 +31,7 @@
 #include <visualization_msgs/msg/detail/marker_array__struct.hpp>
 
 #include <algorithm>
+#include <filesystem>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -54,6 +56,11 @@ private:
   enum class EvaluationMode { OPEN_LOOP, OR_SCENE };
 
   void setup_evaluation_bag_writer();
+  void close_evaluation_bag_writer();
+  void merge_bags(
+    const std::vector<std::filesystem::path> & input_bags,
+    const std::filesystem::path & output_bag) const;
+  void replace_input_bag_with_merged_evaluation();
   void run_evaluation();
   void write_map_and_route_markers_to_bag(const rclcpp::Time & reference_time);
   void create_route_markers(visualization_msgs::msg::MarkerArray & marker_array) const;
@@ -84,6 +91,7 @@ private:
 
   EvaluationMode evaluation_mode_;
   std::string bag_path_;
+  std::filesystem::path evaluation_metrics_bag_path_;
 
   rclcpp::TimerBase::SharedPtr map_check_timer_;
 
