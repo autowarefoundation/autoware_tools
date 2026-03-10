@@ -192,8 +192,12 @@ std::pair<rclcpp::Time, rclcpp::Time> ORSceneEvaluator::run_evaluation_from_bag(
   calculate_summary();
 
   // Save results
+  auto summary_json = get_summary_as_json();
   auto detailed_json = get_detailed_results_as_json();
-  save_json_results(detailed_json, bag_path, "or_scene", "or_scene_evaluation_results");
+  save_json_results(
+    summary_json, bag_path, "or_scene", "time_step_based_trajectory_metric.json", false);
+  save_json_results(
+    detailed_json, bag_path, "or_scene", "time_step_based_trajectory_result.jsonl", false);
 
   // Log summary
   RCLCPP_INFO(logger_, "OR scene evaluation complete:");
