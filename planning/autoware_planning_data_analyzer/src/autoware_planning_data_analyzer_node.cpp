@@ -142,15 +142,16 @@ void AutowarePlanningDataAnalyzerNode::setup_evaluation_bag_writer()
 
     // Get output directory
     auto output_dir = get_or_declare_parameter<std::string>(*this, "output_dir");
-
-    // Expand home directory if needed
-    output_dir = utils::expand_home_directory(output_dir);
+    const std::filesystem::path output_dir_path(output_dir);
+    if (output_dir.empty() || !output_dir_path.is_absolute()) {
+      throw std::runtime_error("Parameter 'output_dir' must be an absolute path.");
+    }
 
     // Generate output bag path (use .mcap extension to save directly as single file)
-    const auto output_bag_path = (std::filesystem::path(output_dir) / "mcap").string();
+    const auto output_bag_path = (output_dir_path / "mcap").string();
 
     // Ensure output directory exists and is writable
-    utils::ensure_directory_writable(output_dir, get_logger());
+    utils::ensure_directory_writable(output_dir_path, get_logger());
 
     // Setup bag writer with MCAP format
     const rosbag2_storage::StorageOptions storage_options{output_bag_path, "mcap"};
@@ -254,6 +255,11 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
   topic_names.steering_topic = steering_topic_name_;
   topic_names.evaluation_interval_ms = evaluation_interval_ms_;
   topic_names.sync_tolerance_ms = sync_tolerance_ms_;
+  auto output_dir = get_or_declare_parameter<std::string>(*this, "output_dir");
+  const std::filesystem::path output_dir_path(output_dir);
+  if (output_dir.empty() || !output_dir_path.is_absolute()) {
+    throw std::runtime_error("Parameter 'output_dir' must be an absolute path.");
+  }
 
   switch (evaluation_mode_) {
     case EvaluationMode::OPEN_LOOP: {
@@ -266,6 +272,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
           ". Expected 'kinematic_state' or 'gt_trajectory'.");
       }
       OpenLoopEvaluator evaluator(get_logger(), route_handler_, gt_mode, gt_sync_tolerance_ms_);
+      evaluator.set_json_output_dir(output_dir_path.string());
       auto times =
         evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);
       start_time = times.first;
@@ -298,6 +305,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       ORSceneEvaluator evaluator(
         get_logger(), route_handler_, time_window_sec, success_criteria, enable_debug_viz,
         debug_output_dir);
+      evaluator.set_json_output_dir(output_dir_path.string());
 
       // Set OR events JSON paths if provided
       const auto or_events_input_path =

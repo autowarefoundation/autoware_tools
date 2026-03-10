@@ -135,16 +135,21 @@ void BaseEvaluator::save_json_results(
   const nlohmann::json & json_output, const std::string & bag_path,
   const std::string & evaluation_mode, const std::string & output_filename) const
 {
-  // TODO(go-sakayori): make output directory configurable
-  const std::string json_output_path = "~/" + output_filename + ".json";
-  std::string expanded_path = json_output_path;
+  std::filesystem::path output_path;
+  if (!json_output_dir_.empty()) {
+    output_path = std::filesystem::path(json_output_dir_) / (output_filename + ".json");
+  } else {
+    const std::string json_output_path = "~/" + output_filename + ".json";
+    std::string expanded_path = json_output_path;
 
-  // Expand home directory if needed
-  if (expanded_path[0] == '~') {
-    const char * home = std::getenv("HOME");
-    if (home) {
-      expanded_path = std::string(home) + expanded_path.substr(1);
+    // Expand home directory if needed
+    if (!expanded_path.empty() && expanded_path[0] == '~') {
+      const char * home = std::getenv("HOME");
+      if (home) {
+        expanded_path = std::string(home) + expanded_path.substr(1);
+      }
     }
+    output_path = expanded_path;
   }
 
   // Add timestamp to filename
@@ -154,7 +159,7 @@ void BaseEvaluator::save_json_results(
   timestamp_ss << std::put_time(std::localtime(&time_t), "%Y%m%d_%H%M%S");
 
   // Create filename with timestamp
-  std::filesystem::path json_path(expanded_path);
+  std::filesystem::path json_path(output_path);
   std::string filename = json_path.stem().string() + "_" + timestamp_ss.str() + ".json";
   json_path = json_path.parent_path() / filename;
 

@@ -100,6 +100,8 @@ public:
     const std::string & bag_path, rosbag2_cpp::Writer * evaluation_bag_writer,
     const TopicNames & topic_names) = 0;
 
+  void set_json_output_dir(const std::string & output_dir) { json_output_dir_ = output_dir; }
+
 protected:
   /**
    * @brief Create topics in bag writer
@@ -197,6 +199,7 @@ protected:
 
   rclcpp::Logger logger_;
   std::shared_ptr<autoware::route_handler::RouteHandler> route_handler_;
+  std::string json_output_dir_;
 
   // For normalized timestamp calculation
   rclcpp::Time first_bag_timestamp_;
