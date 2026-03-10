@@ -164,8 +164,8 @@ protected:
    */
   void save_json_results(
     const nlohmann::json & json_output, const std::string & bag_path,
-    const std::string & evaluation_mode,
-    const std::string & output_filename = "evaluation_result") const;
+    const std::string & evaluation_mode, const std::string & output_filename = "evaluation_result",
+    bool add_timestamp = true) const;
 
   /**
    * @brief Write tf_static messages to evaluation bag

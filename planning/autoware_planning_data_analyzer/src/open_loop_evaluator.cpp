@@ -914,8 +914,10 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
     auto detailed_json = get_detailed_results_as_json();
 
     // Save using base class method
-    save_json_results(summary_json, bag_path, "open_loop", "open_loop_summary_results");
-    save_json_results(detailed_json, bag_path, "open_loop", "open_loop_detailed_results");
+    save_json_results(
+      summary_json, bag_path, "open_loop", "time_step_based_trajectory_metric.json", false);
+    save_json_results(
+      detailed_json, bag_path, "open_loop", "time_step_based_trajectory_result.jsonl", false);
 
     // Log summary
     RCLCPP_INFO(logger_, "Open-loop evaluation summary:");
