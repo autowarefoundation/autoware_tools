@@ -646,7 +646,7 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   gt_traj_msg.header.stamp = message_timestamp;
 
   if (!gt_traj_msg.points.empty()) {
-    bag_writer.write(gt_traj_msg, "/ground_truth/trajectory", message_timestamp);
+    bag_writer.write(gt_traj_msg, "/evaluation/compared_trajectory", message_timestamp);
   }
 }
 
@@ -820,7 +820,7 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     {"/open_loop/metrics/trajectory_lateral_deviations", "std_msgs/msg/Float64MultiArray"},
     {"/open_loop/metrics/trajectory_travel_distances", "std_msgs/msg/Float64MultiArray"},
     {"/planning/trajectory", "autoware_planning_msgs/msg/Trajectory"},
-    {"/ground_truth/trajectory", "autoware_planning_msgs/msg/Trajectory"},
+    {"/evaluation/compared_trajectory", "autoware_planning_msgs/msg/Trajectory"},
     {"/perception/object_recognition/objects", "autoware_perception_msgs/msg/PredictedObjects"},
     {"/tf", "tf2_msgs/msg/TFMessage"},
     {"/tf_static", "tf2_msgs/msg/TFMessage"}};
