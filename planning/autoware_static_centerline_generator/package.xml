@@ -17,6 +17,7 @@
 
   <depend>autoware_behavior_path_goal_planner_module</depend>
   <depend>autoware_behavior_path_planner_common</depend>
+  <depend>acados</depend>
   <depend>autoware_geography_utils</depend>
   <depend>autoware_interpolation</depend>
   <depend>autoware_lanelet2_extension</depend>
