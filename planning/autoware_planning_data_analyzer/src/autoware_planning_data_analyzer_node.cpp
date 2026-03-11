@@ -265,10 +265,10 @@ void AutowarePlanningDataAnalyzerNode::replace_input_bag_with_merged_evaluation(
 
   const std::filesystem::path input_bag_path(bag_path_);
   const std::filesystem::path temp_root = evaluation_metrics_bag_path_.parent_path();
-  const std::filesystem::path merged_bag_path =
-    temp_root / (input_bag_path.filename().string() + ".tmp");
-  const std::filesystem::path backup_bag_path =
-    temp_root / (input_bag_path.filename().string() + ".bak");
+  const std::filesystem::path merged_bag_parent = temp_root / "merged";
+  const std::filesystem::path backup_bag_parent = temp_root / "backup";
+  const std::filesystem::path merged_bag_path = merged_bag_parent / input_bag_path.filename();
+  const std::filesystem::path backup_bag_path = backup_bag_parent / input_bag_path.filename();
 
   const auto move_path =
     [](const std::filesystem::path & source, const std::filesystem::path & target) {
@@ -287,12 +287,14 @@ void AutowarePlanningDataAnalyzerNode::replace_input_bag_with_merged_evaluation(
       }
     };
 
-  if (std::filesystem::exists(merged_bag_path)) {
-    std::filesystem::remove_all(merged_bag_path);
+  if (std::filesystem::exists(merged_bag_parent)) {
+    std::filesystem::remove_all(merged_bag_parent);
   }
-  if (std::filesystem::exists(backup_bag_path)) {
-    std::filesystem::remove_all(backup_bag_path);
+  if (std::filesystem::exists(backup_bag_parent)) {
+    std::filesystem::remove_all(backup_bag_parent);
   }
+  std::filesystem::create_directories(merged_bag_parent);
+  std::filesystem::create_directories(backup_bag_parent);
 
   try {
     merge_bags({input_bag_path, evaluation_metrics_bag_path_}, merged_bag_path);
@@ -307,12 +309,18 @@ void AutowarePlanningDataAnalyzerNode::replace_input_bag_with_merged_evaluation(
 
     std::filesystem::remove_all(backup_bag_path);
     std::filesystem::remove_all(evaluation_metrics_bag_path_);
-  } catch (...) {
-    if (std::filesystem::exists(merged_bag_path)) {
-      std::filesystem::remove_all(merged_bag_path);
+    if (std::filesystem::exists(merged_bag_parent)) {
+      std::filesystem::remove_all(merged_bag_parent);
     }
-    if (std::filesystem::exists(backup_bag_path)) {
-      std::filesystem::remove_all(backup_bag_path);
+    if (std::filesystem::exists(backup_bag_parent)) {
+      std::filesystem::remove_all(backup_bag_parent);
+    }
+  } catch (...) {
+    if (std::filesystem::exists(merged_bag_parent)) {
+      std::filesystem::remove_all(merged_bag_parent);
+    }
+    if (std::filesystem::exists(backup_bag_parent)) {
+      std::filesystem::remove_all(backup_bag_parent);
     }
     if (std::filesystem::exists(evaluation_metrics_bag_path_)) {
       std::filesystem::remove_all(evaluation_metrics_bag_path_);

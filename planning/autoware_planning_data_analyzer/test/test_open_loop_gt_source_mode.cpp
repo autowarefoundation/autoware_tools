@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <sstream>
+
+#define private public
 #include "../src/open_loop_evaluator.hpp"
+#undef private
 
 #include <gtest/gtest.h>
 
@@ -124,4 +128,17 @@ TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeUsesSyncToleranceForBoundaryInt
     OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 120.0);
   EXPECT_NO_THROW(tolerant_evaluator.evaluate(sync_data_list, nullptr));
   EXPECT_EQ(tolerant_evaluator.get_metrics().size(), 1u);
+}
+
+TEST_F(OpenLoopGTSourceModeTest, FormatsDLRHorizonKeysAsExpected)
+{
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  EXPECT_EQ(evaluator.format_horizon_key(0.0), "0s");
+  EXPECT_EQ(evaluator.format_horizon_key(0.058), "0.058s");
+  EXPECT_EQ(evaluator.format_horizon_key(0.1), "0.1s");
+  EXPECT_EQ(evaluator.format_horizon_key(1.23), "1.23s");
+  EXPECT_EQ(evaluator.format_horizon_key(2.9999), "3s");
 }
