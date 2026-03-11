@@ -113,6 +113,8 @@ public:
 
   std::vector<OpenLoopTrajectoryMetrics> get_metrics() const { return metrics_list_; }
 
+  void set_metric_variant(const std::string & metric_variant) { metric_variant_ = metric_variant; }
+
   nlohmann::json get_summary_as_json() const override;
 
   nlohmann::json get_detailed_results_as_json() const override;
@@ -244,6 +246,15 @@ private:
     const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
     rosbag2_cpp::Writer & bag_writer);
 
+  void save_trajectory_point_metrics_to_bag_with_variant(
+    const metrics::TrajectoryPointMetrics & metrics, rosbag2_cpp::Writer & bag_writer,
+    const rclcpp::Time & normalized_timestamp) const;
+
+  std::string metric_topic(const std::string & metric_name) const;
+  std::string trajectory_metric_topic(const std::string & metric_name) const;
+  std::string compared_trajectory_topic() const;
+  std::string dlr_result_topic() const;
+
   std::string format_horizon_key(double seconds) const;
 
   /**
@@ -257,6 +268,7 @@ private:
   std::vector<OpenLoopTrajectoryMetrics> metrics_list_;
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
   OpenLoopEvaluationSummary summary_;
+  std::string metric_variant_;
   GTSourceMode gt_source_mode_;
   double gt_sync_tolerance_ms_;
 };
