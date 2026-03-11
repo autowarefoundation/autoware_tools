@@ -280,10 +280,10 @@ PerceptionReplayerCommon::PerceptionReplayerCommon(
   if (param_.publish_route) {
     rclcpp::QoS transient_local_qos(1);
     transient_local_qos.transient_local();
-    route_pub_ = this->create_publisher<LaneletRoute>(
-      "/planning/mission_planning/route", transient_local_qos);
-    route_state_pub_ = this->create_publisher<RouteState>(
-      "/planning/mission_planning/state", transient_local_qos);
+    route_pub_ =
+      this->create_publisher<LaneletRoute>("/planning/mission_planning/route", transient_local_qos);
+    route_state_pub_ =
+      this->create_publisher<RouteState>("/planning/mission_planning/state", transient_local_qos);
   }
 
   recorded_ego_as_initialpose_pub_ =
