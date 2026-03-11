@@ -92,11 +92,18 @@ int main(int argc, char ** argv)
       "seconds", "80.0");
     options << cool_down_option;
 
+    const QCommandLineOption set_goal_pose_option(
+      QStringList() << "s"
+                    << "set-goal-pose",
+      "set initial pose and goal pose from the beginning and end of the rosbag "
+      "to generate a route via mission planner. By default, this is disabled.");
+    options << set_goal_pose_option;
+
     const QCommandLineOption pub_route_option(
       QStringList() << "p"
                     << "pub-route",
-      "publish route created from the initial pose and goal pose retrieved from the beginning and "
-      "end of the rosbag. By default, route are not published.");
+      "publish route and route state topics from rosbag data with transient_local QoS. "
+      "Only publishes when the message changes (i.e., not redundantly).");
     options << pub_route_option;
 
     const QCommandLineOption verbose_option(
@@ -140,6 +147,7 @@ int main(int argc, char ** argv)
     param.reproduce_cool_down = parser.value(cool_down_option).toDouble();
     param.noise = parser.isSet(noise_option);
     param.verbose = parser.isSet(verbose_option);
+    param.set_goal_pose = parser.isSet(set_goal_pose_option);
     param.publish_route = parser.isSet(pub_route_option);
 
     // Parse comma-separated reference image topics

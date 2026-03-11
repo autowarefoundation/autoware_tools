@@ -108,6 +108,8 @@ void PerceptionReplayerCommon::load_rosbag(
   const std::string ego_odom_topic = "/localization/kinematic_state";
   const std::string traffic_signals_topic = "/perception/traffic_light_recognition/traffic_signals";
   const std::string occupancy_grid_topic = "/perception/occupancy_grid_map/map";
+  const std::string route_topic = "/planning/mission_planning/route";
+  const std::string route_state_topic = "/planning/mission_planning/state";
 
   // create topic filter
   rosbag2_storage::StorageFilter storage_filter;
@@ -117,6 +119,11 @@ void PerceptionReplayerCommon::load_rosbag(
     traffic_signals_topic,
     occupancy_grid_topic,
   };
+
+  if (param_.publish_route) {
+    storage_filter.topics.push_back(route_topic);
+    storage_filter.topics.push_back(route_state_topic);
+  }
 
   // Add reference image topics to filter
   for (const auto & topic : param_.reference_image_topics) {
@@ -169,6 +176,22 @@ void PerceptionReplayerCommon::load_rosbag(
             utils::deserialize_message<OccupancyGrid>(bag_message->serialized_data);
           const rclcpp::Time timestamp(get_timestamp_ns(*bag_message));
           rosbag_occupancy_grid_data_.emplace_back(timestamp, *occupancy_grid_msg);
+        }
+
+        // deserialize route messages
+        if (bag_message->topic_name == route_topic) {
+          const auto route_msg =
+            utils::deserialize_message<LaneletRoute>(bag_message->serialized_data);
+          const rclcpp::Time timestamp(get_timestamp_ns(*bag_message));
+          rosbag_route_data_.emplace_back(timestamp, *route_msg);
+        }
+
+        // deserialize route_state messages
+        if (bag_message->topic_name == route_state_topic) {
+          const auto route_state_msg =
+            utils::deserialize_message<RouteState>(bag_message->serialized_data);
+          const rclcpp::Time timestamp(get_timestamp_ns(*bag_message));
+          rosbag_route_state_data_.emplace_back(timestamp, *route_state_msg);
         }
 
         // deserialize reference image messages
@@ -254,6 +277,15 @@ PerceptionReplayerCommon::PerceptionReplayerCommon(
   occupancy_grid_pub_ =
     this->create_publisher<OccupancyGrid>("/perception/occupancy_grid_map/map", occupancy_grid_qos);
 
+  if (param_.publish_route) {
+    rclcpp::QoS transient_local_qos(1);
+    transient_local_qos.transient_local();
+    route_pub_ = this->create_publisher<LaneletRoute>(
+      "/planning/mission_planning/route", transient_local_qos);
+    route_state_pub_ = this->create_publisher<RouteState>(
+      "/planning/mission_planning/state", transient_local_qos);
+  }
+
   recorded_ego_as_initialpose_pub_ =
     this->create_publisher<PoseWithCovarianceStamped>("/initialpose", 1);
   goal_as_mission_planning_goal_pub_ =
@@ -323,6 +355,10 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp(
     msg.header.stamp = current_timestamp;
     occupancy_grid_pub_->publish(msg);
   }
+
+  if (param_.publish_route) {
+    publish_route_at_timestamp(bag_timestamp);
+  }
 }
 
 void PerceptionReplayerCommon::publish_traffic_lights_at_timestamp(
@@ -370,6 +406,47 @@ void PerceptionReplayerCommon::publish_reference_images_at_timestamp(
       RCLCPP_WARN_THROTTLE(
         get_logger(), *get_clock(), 5000, "No reference image found for topic %s at timestamp %f",
         topic.c_str(), bag_timestamp.seconds());
+    }
+  }
+}
+
+void PerceptionReplayerCommon::publish_route_at_timestamp(const rclcpp::Time & bag_timestamp)
+{
+  // Helper: find the index of the last message at or before bag_timestamp.
+  // Returns nullopt if there is no such message.
+  auto find_last_before = [](const auto & data, const rclcpp::Time & ts) -> std::optional<size_t> {
+    if (data.empty() || data.front().first > ts) {
+      return std::nullopt;
+    }
+    // binary search for rightmost element with timestamp <= ts
+    size_t lo = 0;
+    size_t hi = data.size();
+    while (lo < hi) {
+      const size_t mid = lo + (hi - lo) / 2;
+      if (data[mid].first <= ts) {
+        lo = mid + 1;
+      } else {
+        hi = mid;
+      }
+    }
+    return lo - 1;
+  };
+
+  // route
+  if (!rosbag_route_data_.empty()) {
+    const auto idx = find_last_before(rosbag_route_data_, bag_timestamp);
+    if (idx.has_value() && last_published_route_idx_ != idx.value()) {
+      route_pub_->publish(rosbag_route_data_[idx.value()].second);
+      last_published_route_idx_ = idx.value();
+    }
+  }
+
+  // route state
+  if (!rosbag_route_state_data_.empty()) {
+    const auto idx = find_last_before(rosbag_route_state_data_, bag_timestamp);
+    if (idx.has_value() && last_published_route_state_idx_ != idx.value()) {
+      route_state_pub_->publish(rosbag_route_state_data_[idx.value()].second);
+      last_published_route_state_idx_ = idx.value();
     }
   }
 }

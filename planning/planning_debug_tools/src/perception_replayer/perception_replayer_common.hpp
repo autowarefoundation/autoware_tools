@@ -42,6 +42,7 @@ struct PerceptionReplayerCommonParam
   std::string rosbag_path;
   std::string rosbag_format;
   bool tracked_object;
+  bool publish_route;
   std::vector<std::string> reference_image_topics;  // Topics for reference images
 };
 
@@ -118,6 +119,13 @@ public:
   void publish_reference_images_at_timestamp(
     const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp);
 
+  /**
+   * @brief Publish route and route state (transient_local) at the given timestamp.
+   * Only publishes when the message to publish differs from the last published one.
+   * @param bag_timestamp
+   */
+  void publish_route_at_timestamp(const rclcpp::Time & bag_timestamp);
+
 protected:
   const PerceptionReplayerCommonParam param_;
 
@@ -187,6 +195,8 @@ protected:
   std::vector<utils::DataStamped<TrackedObjects>> rosbag_tracked_objects_data_;
   std::vector<utils::DataStamped<TrafficLightGroupArray>> rosbag_traffic_signals_data_;
   std::vector<utils::DataStamped<OccupancyGrid>> rosbag_occupancy_grid_data_;
+  std::vector<utils::DataStamped<LaneletRoute>> rosbag_route_data_;
+  std::vector<utils::DataStamped<RouteState>> rosbag_route_state_data_;
 
   // Reference image data: topic name -> timestamped messages
   std::unordered_map<std::string, std::vector<utils::DataStamped<CompressedImage>>>
@@ -215,6 +225,12 @@ protected:
   rclcpp::PublisherBase::SharedPtr objects_pub_;
   rclcpp::Publisher<TrafficLightGroupArray>::SharedPtr traffic_signals_pub_;
   rclcpp::Publisher<OccupancyGrid>::SharedPtr occupancy_grid_pub_;
+  rclcpp::Publisher<LaneletRoute>::SharedPtr route_pub_;
+  rclcpp::Publisher<RouteState>::SharedPtr route_state_pub_;
+
+  // track last published index to avoid redundant publishes for transient_local topics
+  std::optional<size_t> last_published_route_idx_;
+  std::optional<size_t> last_published_route_state_idx_;
 
   rclcpp::Publisher<PoseWithCovarianceStamped>::SharedPtr recorded_ego_as_initialpose_pub_;
   rclcpp::Publisher<PoseStamped>::SharedPtr goal_as_mission_planning_goal_pub_;
