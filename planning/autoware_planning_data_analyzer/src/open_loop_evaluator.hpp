@@ -97,7 +97,10 @@ public:
   }
 
   /**
-   * @brief Evaluate trajectories against ground truth localization data
+   * @brief Evaluate synchronized trajectories against ground-truth data.
+   *
+   * Computes per-trajectory open-loop metrics and optionally writes the resulting
+   * metric topics and result messages to an evaluation bag.
    * @param synchronized_data_list List of synchronized bag data containing trajectories and
    * localization
    * @param bag_writer Optional writer to save evaluation results to a new bag
@@ -115,13 +118,19 @@ public:
   nlohmann::json get_detailed_results_as_json() const override;
 
   /**
-   * @brief Get topic definitions for open-loop evaluation results
+   * @brief Return the result topics produced by the open-loop evaluator.
+   *
+   * Includes both raw metric topics and the DLR-format ADE/FDE result topic
+   * written to the evaluation bag.
    * @return Vector of topic name and type pairs
    */
   std::vector<std::pair<std::string, std::string>> get_result_topics() const override;
 
   /**
-   * @brief Run open-loop evaluation from bag file
+   * @brief Run open-loop evaluation directly from a rosbag.
+   *
+   * Reads the configured input topics from the bag, performs evaluation, and
+   * optionally writes the generated outputs to an evaluation bag.
    * @param bag_path Path to the bag file
    * @param evaluation_bag_writer Optional bag writer for results
    * @param topic_names Topic names configuration
@@ -132,8 +141,10 @@ public:
     const TopicNames & topic_names) override;
 
   /**
-   * @brief Structure to hold synchronized data with its precomputed ground truth trajectory
-   * (Public for use by ORSceneEvaluator)
+   * @brief Input bundle for evaluating one synchronized trajectory sample.
+   *
+   * Stores the synchronized input data together with the precomputed ground-truth
+   * trajectory used for metric calculation.
    */
   struct EvaluationData
   {
@@ -142,8 +153,10 @@ public:
   };
 
   /**
-   * @brief Generate ground truth trajectory for a single synchronized data point
-   * (Public for use by ORSceneEvaluator)
+   * @brief Generate the ground-truth trajectory for one synchronized trajectory sample.
+   *
+   * Uses the configured ground-truth source to create the reference trajectory
+   * aligned with the evaluated prediction trajectory.
    * @param trajectory_data Data containing the trajectory
    * @param all_data All synchronized data for interpolation
    * @return Ground truth trajectory or nullopt if generation failed
@@ -157,8 +170,9 @@ public:
     const std::shared_ptr<SynchronizedData> & trajectory_data) const;
 
   /**
-   * @brief Evaluate a single trajectory against ground truth
-   * (Public for use by ORSceneEvaluator)
+   * @brief Evaluate one trajectory against its ground-truth trajectory.
+   *
+   * Computes point-wise and aggregate metrics for a single synchronized sample.
    * @param eval_data Evaluation data containing trajectory and ground truth
    * @return Metrics for this trajectory
    */
@@ -166,7 +180,10 @@ public:
 
 private:
   /**
-   * @brief Prepare evaluation data with ground truth trajectories
+   * @brief Build the list of valid evaluation inputs for open-loop analysis.
+   *
+   * Generates ground-truth trajectories and excludes samples that cannot be
+   * evaluated with the configured ground-truth source.
    * @param synchronized_data_list List of synchronized data
    * @return Vector of evaluation data with ground truth (invalid data excluded)
    */
@@ -174,13 +191,13 @@ private:
     const std::vector<std::shared_ptr<SynchronizedData>> & synchronized_data_list);
 
   /**
-   * @brief Calculate 2D Euclidean distance between two points
+   * @brief Compute planar Euclidean distance between two positions.
    */
   double calculate_distance_2d(
     const geometry_msgs::msg::Point & p1, const geometry_msgs::msg::Point & p2);
 
   /**
-   * @brief Calculate errors in vehicle coordinate frame
+   * @brief Compute longitudinal and lateral position errors in the vehicle frame.
    * @param trajectory_pose Trajectory pose (position and orientation)
    * @param ground_truth_pose Ground truth pose (position and orientation)
    * @return Pair of (longitudinal_error, lateral_error) in vehicle frame
@@ -190,7 +207,10 @@ private:
     const geometry_msgs::msg::Pose & ground_truth_pose);
 
   /**
-   * @brief Find ground truth data at a specific time using interpolation
+   * @brief Interpolate ground-truth pose at a requested timestamp.
+   *
+   * Searches neighboring synchronized ground-truth samples and interpolates a
+   * pose when the requested time lies within the available range.
    * @param target_time Time to interpolate ground truth
    * @param ground_truth_data List of ground truth data points
    * @return Interpolated pose or nullptr if interpolation not possible
@@ -204,14 +224,21 @@ private:
     const autoware_planning_msgs::msg::Trajectory & gt_trajectory) const;
 
   /**
-   * @brief Save evaluation metrics to bag
+   * @brief Write per-trajectory evaluation outputs to the result bag.
+   *
+   * Saves raw metric arrays, writes the DLR-format ADE/FDE result message, and
+   * stores the compared ground-truth trajectory for the evaluated sample.
    */
   void save_metrics_to_bag(
     const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
     rosbag2_cpp::Writer & bag_writer);
 
   /**
-   * @brief Save DLR-style ADE/FDE JSON result to bag
+   * @brief Write ADE/FDE results in the driving_log_replayer result format.
+   *
+   * Serializes the metrics into a JSON payload with top-level Result, Stamp,
+   * and Frame fields and writes it to
+   * /driving_log_replayer/time_step_based_trajectory/results as std_msgs/msg/String.
    */
   void save_dlr_style_result_to_bag(
     const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
@@ -220,7 +247,10 @@ private:
   std::string format_horizon_key(double seconds) const;
 
   /**
-   * @brief Calculate summary statistics from all evaluations
+   * @brief Aggregate summary statistics across all evaluated trajectories.
+   *
+   * Computes dataset-level ADE, FDE, lateral-deviation, coverage, and duration
+   * statistics from the collected per-trajectory metrics.
    */
   void calculate_summary();
 

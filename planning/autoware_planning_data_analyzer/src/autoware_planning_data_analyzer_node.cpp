@@ -309,6 +309,12 @@ void AutowarePlanningDataAnalyzerNode::replace_input_bag_with_merged_evaluation(
 
     std::filesystem::remove_all(backup_bag_path);
     std::filesystem::remove_all(evaluation_metrics_bag_path_);
+    if (std::filesystem::exists(merged_bag_parent)) {
+      std::filesystem::remove_all(merged_bag_parent);
+    }
+    if (std::filesystem::exists(backup_bag_parent)) {
+      std::filesystem::remove_all(backup_bag_parent);
+    }
   } catch (...) {
     if (std::filesystem::exists(merged_bag_parent)) {
       std::filesystem::remove_all(merged_bag_parent);

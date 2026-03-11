@@ -836,12 +836,17 @@ void OpenLoopEvaluator::save_dlr_style_result_to_bag(
   }
 
   nlohmann::json result_json;
-  result_json["Stamp"]["System"] = trajectory_data->bag_timestamp.seconds();
-  result_json["Stamp"]["ROS"] = trajectory_data->timestamp.seconds();
-
   const auto & trajectory_points = trajectory_data->trajectory->points;
   const size_t point_count =
     std::min({trajectory_points.size(), metrics.ade.size(), metrics.displacement_errors.size()});
+  const bool has_frame = point_count > 0;
+
+  result_json["Result"]["Success"] = has_frame;
+  result_json["Result"]["Summary"] =
+    has_frame ? "ADE/FDE metrics generated" : "ADE/FDE metrics unavailable";
+  result_json["Stamp"]["System"] = trajectory_data->bag_timestamp.seconds();
+  result_json["Stamp"]["ROS"] = trajectory_data->timestamp.seconds();
+
   for (size_t index = 0; index < point_count; ++index) {
     const auto horizon_sec =
       rclcpp::Duration(trajectory_points.at(index).time_from_start).seconds();
