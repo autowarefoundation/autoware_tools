@@ -439,6 +439,8 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
 
   switch (evaluation_mode_) {
     case EvaluationMode::OPEN_LOOP: {
+      const auto open_loop_metric_variant =
+        get_or_declare_parameter<std::string>(*this, "open_loop.metric_variant");
       OpenLoopEvaluator::GTSourceMode gt_mode = OpenLoopEvaluator::GTSourceMode::KINEMATIC_STATE;
       if (gt_source_mode_ == "gt_trajectory") {
         gt_mode = OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY;
@@ -449,6 +451,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       }
       OpenLoopEvaluator evaluator(get_logger(), route_handler_, gt_mode, gt_sync_tolerance_ms_);
       evaluator.set_json_output_dir(output_dir_path.string());
+      evaluator.set_metric_variant(open_loop_metric_variant);
       auto times =
         evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);
       start_time = times.first;

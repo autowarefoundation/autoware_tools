@@ -124,7 +124,7 @@ void OpenLoopEvaluator::evaluate(
     // Save to bag if writer provided
     if (bag_writer) {
       save_metrics_to_bag(metrics, eval_data, *bag_writer);
-      save_trajectory_point_metrics_to_bag(
+      save_trajectory_point_metrics_to_bag_with_variant(
         trajectory_metrics, *bag_writer, eval_data.synchronized_data->bag_timestamp);
     } else {
       RCLCPP_WARN(logger_, "No bag writer provided, metrics not saved to bag");
@@ -626,23 +626,23 @@ void OpenLoopEvaluator::save_metrics_to_bag(
 
   // ADE
   array_msg.data = metrics.ade;
-  bag_writer.write(array_msg, "/open_loop/metrics/ade", message_timestamp);
+  bag_writer.write(array_msg, metric_topic("ade"), message_timestamp);
 
   // FDE
   array_msg.data = metrics.displacement_errors;
-  bag_writer.write(array_msg, "/open_loop/metrics/fde", message_timestamp);
+  bag_writer.write(array_msg, metric_topic("fde"), message_timestamp);
 
   // Lateral deviations array
   array_msg.data = metrics.lateral_deviations;
-  bag_writer.write(array_msg, "/open_loop/metrics/lateral_deviation", message_timestamp);
+  bag_writer.write(array_msg, metric_topic("lateral_deviation"), message_timestamp);
 
   // Longitudinal deviations array
   array_msg.data = metrics.longitudinal_deviations;
-  bag_writer.write(array_msg, "/open_loop/metrics/longitudinal_deviation", message_timestamp);
+  bag_writer.write(array_msg, metric_topic("longitudinal_deviation"), message_timestamp);
 
   // TTC values array
   array_msg.data = metrics.ttc;
-  bag_writer.write(array_msg, "/open_loop/metrics/ttc", message_timestamp);
+  bag_writer.write(array_msg, metric_topic("ttc"), message_timestamp);
 
   save_dlr_style_result_to_bag(metrics, eval_data, bag_writer);
 
@@ -651,8 +651,75 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   gt_traj_msg.header.stamp = message_timestamp;
 
   if (!gt_traj_msg.points.empty()) {
-    bag_writer.write(gt_traj_msg, "/evaluation/compared_trajectory", message_timestamp);
+    bag_writer.write(gt_traj_msg, compared_trajectory_topic(), message_timestamp);
   }
+}
+
+void OpenLoopEvaluator::save_trajectory_point_metrics_to_bag_with_variant(
+  const metrics::TrajectoryPointMetrics & metrics, rosbag2_cpp::Writer & bag_writer,
+  const rclcpp::Time & normalized_timestamp) const
+{
+  {
+    std_msgs::msg::Float64MultiArray msg;
+    msg.data = metrics.lateral_accelerations;
+    bag_writer.write(msg, trajectory_metric_topic("lateral_accelerations"), normalized_timestamp);
+  }
+
+  {
+    std_msgs::msg::Float64MultiArray msg;
+    msg.data = metrics.longitudinal_jerks;
+    bag_writer.write(msg, trajectory_metric_topic("longitudinal_jerks"), normalized_timestamp);
+  }
+
+  {
+    std_msgs::msg::Float64MultiArray msg;
+    msg.data = metrics.ttc_values;
+    bag_writer.write(msg, trajectory_metric_topic("ttc_values"), normalized_timestamp);
+  }
+
+  {
+    std_msgs::msg::Float64MultiArray msg;
+    msg.data = metrics.lateral_deviations;
+    bag_writer.write(msg, trajectory_metric_topic("lateral_deviations"), normalized_timestamp);
+  }
+
+  {
+    std_msgs::msg::Float64MultiArray msg;
+    msg.data = metrics.travel_distances;
+    bag_writer.write(msg, trajectory_metric_topic("travel_distances"), normalized_timestamp);
+  }
+}
+
+std::string OpenLoopEvaluator::metric_topic(const std::string & metric_name) const
+{
+  if (metric_variant_.empty()) {
+    return "/open_loop/metrics/" + metric_name;
+  }
+  return "/open_loop/metrics/" + metric_variant_ + "/" + metric_name;
+}
+
+std::string OpenLoopEvaluator::trajectory_metric_topic(const std::string & metric_name) const
+{
+  if (metric_variant_.empty()) {
+    return "/trajectory/" + metric_name;
+  }
+  return "/trajectory/" + metric_variant_ + "/" + metric_name;
+}
+
+std::string OpenLoopEvaluator::compared_trajectory_topic() const
+{
+  if (metric_variant_.empty()) {
+    return "/evaluation/compared_trajectory";
+  }
+  return "/evaluation/compared_trajectory/" + metric_variant_;
+}
+
+std::string OpenLoopEvaluator::dlr_result_topic() const
+{
+  if (metric_variant_.empty()) {
+    return "/driving_log_replayer/time_step_based_trajectory/results";
+  }
+  return "/driving_log_replayer/time_step_based_trajectory/" + metric_variant_ + "/results";
 }
 
 void OpenLoopEvaluator::calculate_summary()
@@ -861,27 +928,25 @@ void OpenLoopEvaluator::save_dlr_style_result_to_bag(
 
   std_msgs::msg::String result_msg;
   result_msg.data = result_json.dump();
-  bag_writer.write(
-    result_msg, "/driving_log_replayer/time_step_based_trajectory/results",
-    trajectory_data->bag_timestamp);
+  bag_writer.write(result_msg, dlr_result_topic(), trajectory_data->bag_timestamp);
 }
 
 std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_topics() const
 {
   return {
-    {"/driving_log_replayer/time_step_based_trajectory/results", "std_msgs/msg/String"},
-    {"/open_loop/metrics/ade", "std_msgs/msg/Float64MultiArray"},
-    {"/open_loop/metrics/fde", "std_msgs/msg/Float64MultiArray"},
-    {"/open_loop/metrics/ttc", "std_msgs/msg/Float64MultiArray"},
-    {"/open_loop/metrics/lateral_deviation", "std_msgs/msg/Float64MultiArray"},
-    {"/open_loop/metrics/longitudinal_deviation", "std_msgs/msg/Float64MultiArray"},
-    {"/open_loop/metrics/trajectory_lateral_acceleration", "std_msgs/msg/Float64MultiArray"},
-    {"/open_loop/metrics/trajectory_longitudinal_jerk", "std_msgs/msg/Float64MultiArray"},
-    {"/open_loop/metrics/trajectory_ttc_values", "std_msgs/msg/Float64MultiArray"},
-    {"/open_loop/metrics/trajectory_lateral_deviations", "std_msgs/msg/Float64MultiArray"},
-    {"/open_loop/metrics/trajectory_travel_distances", "std_msgs/msg/Float64MultiArray"},
+    {dlr_result_topic(), "std_msgs/msg/String"},
+    {metric_topic("ade"), "std_msgs/msg/Float64MultiArray"},
+    {metric_topic("fde"), "std_msgs/msg/Float64MultiArray"},
+    {metric_topic("ttc"), "std_msgs/msg/Float64MultiArray"},
+    {metric_topic("lateral_deviation"), "std_msgs/msg/Float64MultiArray"},
+    {metric_topic("longitudinal_deviation"), "std_msgs/msg/Float64MultiArray"},
+    {trajectory_metric_topic("lateral_accelerations"), "std_msgs/msg/Float64MultiArray"},
+    {trajectory_metric_topic("longitudinal_jerks"), "std_msgs/msg/Float64MultiArray"},
+    {trajectory_metric_topic("ttc_values"), "std_msgs/msg/Float64MultiArray"},
+    {trajectory_metric_topic("lateral_deviations"), "std_msgs/msg/Float64MultiArray"},
+    {trajectory_metric_topic("travel_distances"), "std_msgs/msg/Float64MultiArray"},
     {"/planning/trajectory", "autoware_planning_msgs/msg/Trajectory"},
-    {"/evaluation/compared_trajectory", "autoware_planning_msgs/msg/Trajectory"},
+    {compared_trajectory_topic(), "autoware_planning_msgs/msg/Trajectory"},
     {"/perception/object_recognition/objects", "autoware_perception_msgs/msg/PredictedObjects"},
     {"/tf", "tf2_msgs/msg/TFMessage"},
     {"/tf_static", "tf2_msgs/msg/TFMessage"}};

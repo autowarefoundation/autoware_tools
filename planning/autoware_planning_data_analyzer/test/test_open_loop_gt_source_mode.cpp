@@ -20,7 +20,9 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <memory>
+#include <string>
 #include <vector>
 
 using autoware::planning_data_analyzer::OpenLoopEvaluator;
@@ -141,4 +143,33 @@ TEST_F(OpenLoopGTSourceModeTest, FormatsDLRHorizonKeysAsExpected)
   EXPECT_EQ(evaluator.format_horizon_key(0.1), "0.1s");
   EXPECT_EQ(evaluator.format_horizon_key(1.23), "1.23s");
   EXPECT_EQ(evaluator.format_horizon_key(2.9999), "3s");
+}
+
+TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
+{
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  evaluator.set_metric_variant("raw");
+
+  EXPECT_EQ(evaluator.metric_topic("ade"), "/open_loop/metrics/raw/ade");
+  EXPECT_EQ(
+    evaluator.trajectory_metric_topic("lateral_accelerations"),
+    "/trajectory/raw/lateral_accelerations");
+  EXPECT_EQ(evaluator.compared_trajectory_topic(), "/evaluation/compared_trajectory/raw");
+  EXPECT_EQ(
+    evaluator.dlr_result_topic(), "/driving_log_replayer/time_step_based_trajectory/raw/results");
+
+  const auto topics = evaluator.get_result_topics();
+  const auto has_topic = [&topics](const std::string & topic_name) {
+    return std::any_of(topics.begin(), topics.end(), [&topic_name](const auto & topic) {
+      return topic.first == topic_name;
+    });
+  };
+
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ade"));
+  EXPECT_TRUE(has_topic("/trajectory/raw/lateral_accelerations"));
+  EXPECT_TRUE(has_topic("/evaluation/compared_trajectory/raw"));
+  EXPECT_TRUE(has_topic("/driving_log_replayer/time_step_based_trajectory/raw/results"));
 }
