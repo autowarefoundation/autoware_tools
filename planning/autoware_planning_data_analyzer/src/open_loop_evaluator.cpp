@@ -37,6 +37,8 @@
 #include <limits>
 #include <memory>
 #include <numeric>
+#include <optional>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -78,6 +80,35 @@ Statistics<Container> calculate_statistics(const Container & values)
   stats.std_dev = std::sqrt(variance / values.size());
 
   return stats;
+}
+
+static void fill_horizon_json(
+  nlohmann::json & j,
+  const std::vector<std::pair<std::string, HorizonMetrics>> & horizons,
+  size_t num_points)
+{
+  for (const auto & [key, hm] : horizons) {
+    auto & f = j[key];
+    f["Result"]["Total"] = "Success";
+    f["Result"]["Frame"] = "Success";
+    f["Info"]["ADE"] = hm.ade;
+    f["Info"]["FDE"] = hm.fde;
+    f["Info"]["average_lateral_deviation"] = hm.average_lateral_deviation;
+    f["Info"]["max_lateral_deviation"] = hm.max_lateral_deviation;
+    f["Info"]["average_longitudinal_deviation"] = hm.average_longitudinal_deviation;
+    f["Info"]["max_longitudinal_deviation"] = hm.max_longitudinal_deviation;
+    f["Info"]["min_ttc"] = hm.min_ttc;
+    if (key == "full") {
+      f["Info"]["num_points"] = num_points;
+    }
+  }
+}
+
+static std::string result_summary(bool has_frame, size_t num_points)
+{
+  if (has_frame) return "Open-loop trajectory metrics generated";
+  return num_points <= 1u ? "Too few trajectory points"
+                          : "Open-loop trajectory metrics unavailable";
 }
 
 // Constructor implementation moved to header file
@@ -145,8 +176,14 @@ std::vector<OpenLoopEvaluator::EvaluationData> OpenLoopEvaluator::prepare_evalua
   std::vector<EvaluationData> result;
 
   for (const auto & data : synchronized_data_list) {
-    // Skip if no trajectory available
-    if (!data->trajectory || data->trajectory->points.empty()) {
+    if (!data->trajectory) {
+      continue;
+    }
+
+    const size_t num_pts = data->trajectory->points.size();
+    if (num_pts <= 1u) {
+      // Include frame in output as failure (no metrics); do not skip.
+      result.push_back({data, autoware_planning_msgs::msg::Trajectory{}});
       continue;
     }
 
@@ -359,8 +396,17 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
 
   metrics.num_points = trajectory.points.size();
   metrics.trajectory_timestamp = eval_data.synchronized_data->timestamp;
+  metrics.bag_timestamp = eval_data.synchronized_data->bag_timestamp;
 
-  if (metrics.num_points == 0) {
+  if (metrics.num_points <= 1u) {
+    if (metrics.num_points == 1u && !trajectory.points.empty()) {
+      metrics.trajectory_duration =
+        rclcpp::Duration(trajectory.points.back().time_from_start).seconds();
+    }
+    return metrics;
+  }
+
+  if (ground_truth_trajectory.points.size() != trajectory.points.size()) {
     return metrics;
   }
 
@@ -369,31 +415,49 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
   metrics.longitudinal_deviations.resize(metrics.num_points, 0.0);
   metrics.displacement_errors.resize(metrics.num_points, 0.0);
   metrics.ground_truth_poses.resize(metrics.num_points);
-  metrics.ttc.resize(metrics.num_points, std::numeric_limits<double>::max());
   metrics.ade.resize(metrics.num_points, 0.0);
+  metrics.ttc.resize(metrics.num_points, std::numeric_limits<double>::max());
+
+  // Running accumulators for per-horizon aggregate metrics
+  std::vector<double> lat_prefix_sum(metrics.num_points);
+  std::vector<double> lon_prefix_sum(metrics.num_points);
+  std::vector<double> lat_running_abs_max(metrics.num_points);
+  std::vector<double> lon_running_abs_max(metrics.num_points);
+  std::vector<double> ttc_running_min(metrics.num_points);
 
   // Evaluate each trajectory point against precomputed ground truth
+  double displacement_sum = 0.0;
+  double lat_sum = 0.0;
+  double lon_sum = 0.0;
+  double lat_max = 0.0;
+  double lon_max = 0.0;
+  double ttc_min = std::numeric_limits<double>::max();
+
   for (size_t i = 0; i < metrics.num_points; ++i) {
     const auto & traj_point = trajectory.points[i];
     const auto & gt_pose = ground_truth_trajectory.points[i].pose;
 
-    // Store ground truth pose
     metrics.ground_truth_poses[i] = gt_pose;
 
-    // Calculate displacement error
     metrics.displacement_errors[i] =
       autoware_utils_geometry::calc_distance2d(traj_point.pose.position, gt_pose.position);
-    metrics.ade[i] =
-      std::accumulate(
-        metrics.displacement_errors.begin(), metrics.displacement_errors.begin() + i + 1, 0.0) /
-      (i + 1);
+    displacement_sum += metrics.displacement_errors[i];
+    metrics.ade[i] = displacement_sum / (i + 1);
 
-    // Calculate errors in vehicle coordinate frame
     const auto [longitudinal_error, lateral_error] =
       calculate_errors_in_vehicle_frame(traj_point.pose, gt_pose);
 
     metrics.longitudinal_deviations[i] = longitudinal_error;
     metrics.lateral_deviations[i] = lateral_error;
+
+    lat_sum += std::abs(lateral_error);
+    lon_sum += std::abs(longitudinal_error);
+    lat_max = std::max(lat_max, std::abs(lateral_error));
+    lon_max = std::max(lon_max, std::abs(longitudinal_error));
+    lat_prefix_sum[i] = lat_sum;
+    lon_prefix_sum[i] = lon_sum;
+    lat_running_abs_max[i] = lat_max;
+    lon_running_abs_max[i] = lon_max;
 
     // TTC calculation - using current objects from synchronized data
     // Note: This is a simplified approach using the objects from the current frame
@@ -419,7 +483,10 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
       metrics.ttc[i] = ttc_at_point;
     }
     */
-    (void)objects_at_time;  // Suppress unused variable warning
+    (void)objects_at_time;
+
+    ttc_min = std::min(ttc_min, metrics.ttc[i]);
+    ttc_running_min[i] = ttc_min;
   }
 
   // Calculate trajectory duration
@@ -433,6 +500,39 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
   if (!trajectory.points.empty()) {
     metrics.evaluation_end_time = eval_data.synchronized_data->timestamp +
                                   rclcpp::Duration(trajectory.points.back().time_from_start);
+  }
+
+  // Pre-compute per-horizon metrics
+  constexpr double kHorizonToleranceSec = 0.1;
+  auto compute_horizon = [&](size_t cutoff) -> HorizonMetrics {
+    const double n = static_cast<double>(cutoff + 1);
+    return {metrics.ade[cutoff],        metrics.displacement_errors[cutoff],
+            lat_prefix_sum[cutoff] / n, lat_running_abs_max[cutoff],
+            lon_prefix_sum[cutoff] / n, lon_running_abs_max[cutoff],
+            ttc_running_min[cutoff]};
+  };
+
+  if (metrics.num_points > 1u) {
+    metrics.horizon_results.emplace_back("full", compute_horizon(metrics.num_points - 1));
+  }
+
+  for (const double horizon : evaluation_horizons_) {
+    std::optional<size_t> cutoff;
+    for (size_t i = 0; i < metrics.num_points; ++i) {
+      const double t = rclcpp::Duration(trajectory.points[i].time_from_start).seconds();
+      if (t <= horizon + 1e-6) {
+        cutoff = i;
+      } else {
+        break;
+      }
+    }
+    if (!cutoff.has_value()) continue;
+    const double actual_t = rclcpp::Duration(trajectory.points[*cutoff].time_from_start).seconds();
+    if (horizon - actual_t > kHorizonToleranceSec) continue;
+
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(1) << horizon << "s";
+    metrics.horizon_results.emplace_back(oss.str(), compute_horizon(*cutoff));
   }
 
   return metrics;
@@ -673,12 +773,6 @@ void OpenLoopEvaluator::save_trajectory_point_metrics_to_bag_with_variant(
 
   {
     std_msgs::msg::Float64MultiArray msg;
-    msg.data = metrics.ttc_values;
-    bag_writer.write(msg, trajectory_metric_topic("ttc_values"), normalized_timestamp);
-  }
-
-  {
-    std_msgs::msg::Float64MultiArray msg;
     msg.data = metrics.lateral_deviations;
     bag_writer.write(msg, trajectory_metric_topic("lateral_deviations"), normalized_timestamp);
   }
@@ -736,17 +830,16 @@ void OpenLoopEvaluator::calculate_summary()
   std::vector<double> lateral_dev_values;
 
   for (const auto & metrics : metrics_list_) {
-    // All trajectories in metrics_list_ have valid ground truth (guaranteed by
-    // prepare_evaluation_data) Calculate ADE (average displacement error) from point-wise errors
+    if (metrics.num_points <= 1u) {
+      continue;
+    }
     const double ade = metrics.ade.empty() ? 0.0 : metrics.ade.back();
     ade_values.push_back(ade);
 
-    // FDE is the last displacement error
     const double fde =
       metrics.displacement_errors.empty() ? 0.0 : metrics.displacement_errors.back();
     fde_values.push_back(fde);
 
-    // Calculate mean lateral deviation
     const double mean_lateral_dev =
       std::accumulate(metrics.lateral_deviations.begin(), metrics.lateral_deviations.end(), 0.0) /
       (metrics.lateral_deviations.empty() ? 1.0 : metrics.lateral_deviations.size());
@@ -793,104 +886,146 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
 {
   nlohmann::json j;
 
-  j["total_trajectories"] = summary_.total_trajectories;
-  j["valid_trajectories"] = summary_.valid_trajectories;
-  j["fully_valid_trajectories"] = summary_.fully_valid_trajectories;
-  j["mean_coverage_ratio"] = summary_.mean_coverage_ratio;
-  j["total_evaluation_duration_sec"] = summary_.total_evaluation_duration;
+  auto compute_mean = [](const std::vector<double> & v) -> double {
+    return v.empty() ? 0.0 : std::accumulate(v.begin(), v.end(), 0.0) / v.size();
+  };
+  auto compute_std_dev = [](const std::vector<double> & v) -> double {
+    if (v.size() < 2) return 0.0;
+    const double m = std::accumulate(v.begin(), v.end(), 0.0) / v.size();
+    double var = 0.0;
+    for (const double x : v) var += (x - m) * (x - m);
+    return std::sqrt(var / v.size());
+  };
+  auto compute_percentile = [](const std::vector<double> & sorted, double p) -> double {
+    if (sorted.empty()) return 0.0;
+    if (sorted.size() == 1) return sorted[0];
+    const double idx = p * static_cast<double>(sorted.size() - 1);
+    const size_t lo = static_cast<size_t>(std::floor(idx));
+    const size_t hi = std::min(lo + 1, sorted.size() - 1);
+    const double frac = idx - static_cast<double>(lo);
+    return sorted[lo] * (1.0 - frac) + sorted[hi] * frac;
+  };
 
-  j["ade"]["mean"] = summary_.mean_ade;
-  j["ade"]["std"] = summary_.std_ade;
-  j["ade"]["max"] = summary_.max_ade;
+  auto emit_metric = [&](
+                       const std::string & horizon_key, const std::string & metric_name,
+                       const std::string & desc, const std::vector<double> & vals) {
+    const std::string prefix = horizon_key + "/" + metric_name;
+    std::vector<double> sorted = vals;
+    std::sort(sorted.begin(), sorted.end());
+    j[prefix + "/description"] = desc;
+    j[prefix + "/mean"] = compute_mean(vals);
+    j[prefix + "/min"] = sorted.empty() ? 0.0 : sorted.front();
+    j[prefix + "/max"] = sorted.empty() ? 0.0 : sorted.back();
+    j[prefix + "/std"] = compute_std_dev(vals);
+    j[prefix + "/percentile_95"] = compute_percentile(sorted, 0.95);
+    j[prefix + "/percentile_99"] = compute_percentile(sorted, 0.99);
+  };
 
-  j["fde"]["mean"] = summary_.mean_fde;
-  j["fde"]["std"] = summary_.std_fde;
-  j["fde"]["max"] = summary_.max_fde;
+  std::set<std::string> all_keys;
+  for (const auto & m : metrics_list_) {
+    for (const auto & p : m.horizon_results) all_keys.insert(p.first);
+  }
+  for (const auto & tag : all_keys) {
+    std::vector<double> ade_vals, fde_vals;
+    std::vector<double> avg_lat_vals, max_lat_vals, avg_lon_vals, max_lon_vals;
+    std::vector<double> min_ttc_vals;
+    for (const auto & m : metrics_list_) {
+      const auto it = std::find_if(
+        m.horizon_results.begin(), m.horizon_results.end(),
+        [&tag](const auto & p) { return p.first == tag; });
+      if (it == m.horizon_results.end()) continue;
+      const auto & hm = it->second;
+      ade_vals.push_back(hm.ade);
+      fde_vals.push_back(hm.fde);
+      avg_lat_vals.push_back(hm.average_lateral_deviation);
+      max_lat_vals.push_back(hm.max_lateral_deviation);
+      avg_lon_vals.push_back(hm.average_longitudinal_deviation);
+      max_lon_vals.push_back(hm.max_longitudinal_deviation);
+      min_ttc_vals.push_back(hm.min_ttc);
+    }
 
-  j["lateral_deviation"]["mean"] = summary_.mean_lateral_deviation;
-  j["lateral_deviation"]["std"] = summary_.std_lateral_deviation;
-  j["lateral_deviation"]["max"] = summary_.max_lateral_deviation;
+    j[tag + "/count"] = ade_vals.size();
+
+    emit_metric(tag, "ade", "Average Displacement Error within " + tag + " horizon [m]", ade_vals);
+    emit_metric(tag, "fde", "Final Displacement Error at " + tag + " horizon [m]", fde_vals);
+    emit_metric(
+      tag, "average_lateral_deviation", "Average lateral deviation within " + tag + " horizon [m]",
+      avg_lat_vals);
+    emit_metric(
+      tag, "max_lateral_deviation", "Max lateral deviation within " + tag + " horizon [m]",
+      max_lat_vals);
+    emit_metric(
+      tag, "average_longitudinal_deviation",
+      "Average longitudinal deviation within " + tag + " horizon [m]", avg_lon_vals);
+    emit_metric(
+      tag, "max_longitudinal_deviation",
+      "Max longitudinal deviation within " + tag + " horizon [m]", max_lon_vals);
+    emit_metric(
+      tag, "min_ttc", "Minimum Time To Collision within " + tag + " horizon [s]", min_ttc_vals);
+  }
 
   return j;
 }
 
 nlohmann::json OpenLoopEvaluator::get_detailed_results_as_json() const
 {
-  nlohmann::json j;
+  nlohmann::json results = nlohmann::json::array();
 
+  for (const auto & metrics : metrics_list_) {
+    const bool has_frame = !metrics.horizon_results.empty();
+    nlohmann::json entry;
+    entry["Result"]["Success"] = has_frame;
+    entry["Result"]["Summary"] = result_summary(has_frame, metrics.num_points);
+    entry["Stamp"]["System"] = metrics.bag_timestamp.seconds();
+    entry["Stamp"]["ROS"] = metrics.trajectory_timestamp.seconds();
+    entry["Frame"] = nlohmann::json::object();
+    fill_horizon_json(entry["Frame"], metrics.horizon_results, metrics.num_points);
+    results.push_back(entry);
+  }
+
+  nlohmann::json j;
+  j["results"] = results;
+  return j;
+}
+
+nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
+{
+  nlohmann::json j;
   j["summary"] = get_summary_as_json();
 
   nlohmann::json trajectories = nlohmann::json::array();
   for (size_t i = 0; i < metrics_list_.size(); ++i) {
-    const auto & metrics = metrics_list_[i];
+    const auto & m = metrics_list_[i];
     nlohmann::json traj;
 
-    traj["timestamp_sec"] = metrics.trajectory_timestamp.seconds();
-    traj["num_points"] = metrics.num_points;
-    traj["trajectory_duration_sec"] = metrics.trajectory_duration;
+    traj["timestamp_sec"] = m.trajectory_timestamp.seconds();
+    traj["bag_timestamp_sec"] = m.bag_timestamp.seconds();
+    traj["num_points"] = m.num_points;
+    traj["trajectory_duration_sec"] = m.trajectory_duration;
 
-    // Calculate aggregate metrics from point-wise data
-    const double ade = metrics.ade.empty() ? 0.0 : metrics.ade.back();
-    const double fde =
-      metrics.displacement_errors.empty() ? 0.0 : metrics.displacement_errors.back();
+    traj["ade"] = m.ade;
+    traj["displacement_errors"] = m.displacement_errors;
+    traj["lateral_deviations"] = m.lateral_deviations;
+    traj["longitudinal_deviations"] = m.longitudinal_deviations;
+    traj["ttc"] = m.ttc;
 
-    traj["ade"] = ade;
-    traj["fde"] = fde;
+    traj["horizon_results"] = nlohmann::json::object();
+    fill_horizon_json(traj["horizon_results"], m.horizon_results, m.num_points);
 
-    // Calculate lateral deviation statistics
-    if (!metrics.lateral_deviations.empty()) {
-      const double mean_lateral =
-        std::accumulate(metrics.lateral_deviations.begin(), metrics.lateral_deviations.end(), 0.0) /
-        metrics.lateral_deviations.size();
-      const double max_lateral =
-        *std::max_element(metrics.lateral_deviations.begin(), metrics.lateral_deviations.end());
-
-      traj["mean_lateral_deviation"] = std::abs(mean_lateral);
-      traj["max_lateral_deviation"] = std::abs(max_lateral);
-    }
-
-    // Calculate min TTC
-    const auto min_ttc_it = std::min_element(metrics.ttc.begin(), metrics.ttc.end());
-    const double min_ttc =
-      (min_ttc_it != metrics.ttc.end()) ? *min_ttc_it : std::numeric_limits<double>::max();
-    traj["min_ttc"] = min_ttc;
-
-    // Include point-wise data if needed
-    traj["lateral_deviations"] = metrics.lateral_deviations;
-    traj["displacement_errors"] = metrics.displacement_errors;
-
-    // Add trajectory point metrics if available
     if (i < trajectory_point_metrics_list_.size()) {
-      const auto & point_metrics = trajectory_point_metrics_list_[i];
-      traj["trajectory_point_metrics"]["lateral_accelerations"] =
-        point_metrics.lateral_accelerations;
-      traj["trajectory_point_metrics"]["longitudinal_jerks"] = point_metrics.longitudinal_jerks;
-      traj["trajectory_point_metrics"]["ttc_values"] = point_metrics.ttc_values;
-      traj["trajectory_point_metrics"]["lateral_deviations"] = point_metrics.lateral_deviations;
-      traj["trajectory_point_metrics"]["travel_distances"] = point_metrics.travel_distances;
+      const auto & pm = trajectory_point_metrics_list_[i];
+      traj["trajectory_point_metrics"]["lateral_accelerations"] = pm.lateral_accelerations;
+      traj["trajectory_point_metrics"]["longitudinal_jerks"] = pm.longitudinal_jerks;
+      traj["trajectory_point_metrics"]["ttc_values"] = pm.ttc_values;
+      traj["trajectory_point_metrics"]["lateral_deviations"] = pm.lateral_deviations;
+      traj["trajectory_point_metrics"]["travel_distances"] = pm.travel_distances;
     }
 
     trajectories.push_back(traj);
   }
-
   j["trajectories"] = trajectories;
 
   return j;
-}
-
-std::string OpenLoopEvaluator::format_horizon_key(double seconds) const
-{
-  std::ostringstream stream;
-  stream << std::fixed << std::setprecision(3) << seconds;
-  auto formatted = stream.str();
-  formatted.erase(formatted.find_last_not_of('0') + 1);
-  if (!formatted.empty() && formatted.back() == '.') {
-    formatted.pop_back();
-  }
-  if (formatted.empty()) {
-    formatted = "0";
-  }
-  return formatted + "s";
 }
 
 void OpenLoopEvaluator::save_dlr_style_result_to_bag(
@@ -902,29 +1037,14 @@ void OpenLoopEvaluator::save_dlr_style_result_to_bag(
     return;
   }
 
+  const bool has_frame = !metrics.horizon_results.empty();
   nlohmann::json result_json;
-  const auto & trajectory_points = trajectory_data->trajectory->points;
-  const size_t point_count =
-    std::min({trajectory_points.size(), metrics.ade.size(), metrics.displacement_errors.size()});
-  const bool has_frame = point_count > 0;
-
   result_json["Result"]["Success"] = has_frame;
-  result_json["Result"]["Summary"] =
-    has_frame ? "ADE/FDE metrics generated" : "ADE/FDE metrics unavailable";
+  result_json["Result"]["Summary"] = result_summary(has_frame, metrics.num_points);
   result_json["Stamp"]["System"] = trajectory_data->bag_timestamp.seconds();
   result_json["Stamp"]["ROS"] = trajectory_data->timestamp.seconds();
-
-  for (size_t index = 0; index < point_count; ++index) {
-    const auto horizon_sec =
-      rclcpp::Duration(trajectory_points.at(index).time_from_start).seconds();
-    const auto horizon_key = format_horizon_key(horizon_sec);
-    result_json["Frame"][horizon_key]["ADE"] = metrics.ade.at(index);
-    result_json["Frame"][horizon_key]["FDE"] = metrics.displacement_errors.at(index);
-  }
-
-  if (!result_json.contains("Frame")) {
-    result_json["Frame"] = nlohmann::json::object();
-  }
+  result_json["Frame"] = nlohmann::json::object();
+  fill_horizon_json(result_json["Frame"], metrics.horizon_results, metrics.num_points);
 
   std_msgs::msg::String result_msg;
   result_msg.data = result_json.dump();
@@ -986,18 +1106,22 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
     // Get and save evaluation results
     auto summary_json = get_summary_as_json();
     auto detailed_json = get_detailed_results_as_json();
+    auto full_json = get_full_results_as_json();
 
-    // Save using base class method
     save_json_results(
-      summary_json, bag_path, "open_loop", "time_step_based_trajectory_metric.json", false);
+      summary_json, bag_path, "open_loop", "time_step_based_trajectory_metric.json", false, false);
+    save_jsonl_results(detailed_json["results"], "time_step_based_trajectory_result.jsonl");
     save_json_results(
-      detailed_json, bag_path, "open_loop", "time_step_based_trajectory_result.jsonl", false);
+      full_json, bag_path, "open_loop", "time_step_based_trajectory_detailed_result.json", false,
+      true);
 
     // Log summary
     RCLCPP_INFO(logger_, "Open-loop evaluation summary:");
-    if (summary_json.contains("ade") && summary_json["ade"].contains("mean")) {
-      RCLCPP_INFO(logger_, "  Mean ADE: %.3f m", static_cast<double>(summary_json["ade"]["mean"]));
-      RCLCPP_INFO(logger_, "  Mean FDE: %.3f m", static_cast<double>(summary_json["fde"]["mean"]));
+    if (summary_json.contains("full/ade/mean")) {
+      RCLCPP_INFO(
+        logger_, "  Mean ADE (full): %.3f m", static_cast<double>(summary_json["full/ade/mean"]));
+      RCLCPP_INFO(
+        logger_, "  Mean FDE (full): %.3f m", static_cast<double>(summary_json["full/fde/mean"]));
     }
   }
 

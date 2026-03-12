@@ -132,19 +132,6 @@ TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeUsesSyncToleranceForBoundaryInt
   EXPECT_EQ(tolerant_evaluator.get_metrics().size(), 1u);
 }
 
-TEST_F(OpenLoopGTSourceModeTest, FormatsDLRHorizonKeysAsExpected)
-{
-  OpenLoopEvaluator evaluator(
-    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
-    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
-
-  EXPECT_EQ(evaluator.format_horizon_key(0.0), "0s");
-  EXPECT_EQ(evaluator.format_horizon_key(0.058), "0.058s");
-  EXPECT_EQ(evaluator.format_horizon_key(0.1), "0.1s");
-  EXPECT_EQ(evaluator.format_horizon_key(1.23), "1.23s");
-  EXPECT_EQ(evaluator.format_horizon_key(2.9999), "3s");
-}
-
 TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
 {
   OpenLoopEvaluator evaluator(
