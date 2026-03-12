@@ -99,6 +99,12 @@ int main(int argc, char ** argv)
       "end of the rosbag. By default, route are not published.");
     options << pub_route_option;
 
+    const QCommandLineOption replay_route_option(
+      QStringList() << "replay-route",
+      "replay route and route state topics from rosbag data with transient_local QoS. "
+      "Only publishes when the message changes (i.e., not redundantly).");
+    options << replay_route_option;
+
     const QCommandLineOption verbose_option(
       QStringList() << "v"
                     << "verbose",
@@ -141,6 +147,7 @@ int main(int argc, char ** argv)
     param.noise = parser.isSet(noise_option);
     param.verbose = parser.isSet(verbose_option);
     param.publish_route = parser.isSet(pub_route_option);
+    param.replay_route = parser.isSet(replay_route_option);
 
     // Parse comma-separated reference image topics
     const QString topics_str = parser.value(ref_image_topics_option);
