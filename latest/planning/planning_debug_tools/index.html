@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
     
     
       
@@ -5226,6 +5226,8 @@ add below example value to behavior velocity analyzer and set <code>is_publish_d
 <li><code>/perception/object_recognition/objects</code> (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)</li>
 <li><code>/perception/traffic_light_recognition/traffic_signals</code> (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals</li>
 <li><code>/perception/occupancy_grid_map/map</code> (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)</li>
+<li><code>/planning/mission_planning/route</code> (autoware_planning_msgs/msg/LaneletRoute): Route data (with transient_local QoS, when <code>--replay-route</code> option is used)</li>
+<li><code>/planning/mission_planning/state</code> (autoware_planning_msgs/msg/RouteState): Route state data (with transient_local QoS, when <code>--replay-route</code> option is used)</li>
 <li><code>&lt;any CompressedImage topic&gt;</code> (sensor_msgs/msg/CompressedImage): Reference images for visualization (when <code>--reference-image-topics</code> is used)</li>
 </ul>
 <h3 id="published-topics">Published Topics<a class="headerlink" href="#published-topics" title="Permanent link">#</a></h3>
@@ -5234,6 +5236,8 @@ add below example value to behavior velocity analyzer and set <code>is_publish_d
 <li><code>/perception/object_recognition/tracking/objects</code> or <code>/perception/object_recognition/objects</code>: Replayed perception objects</li>
 <li><code>/perception/traffic_light_recognition/traffic_signals</code>: Replayed traffic light signals</li>
 <li><code>/perception/occupancy_grid_map/map</code>: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)</li>
+<li><code>/planning/mission_planning/route</code>: Replayed route (published with transient_local QoS, only when the message changes; when <code>--replay-route</code> option is used)</li>
+<li><code>/planning/mission_planning/state</code>: Replayed route state (published with transient_local QoS, only when the message changes; when <code>--replay-route</code> option is used)</li>
 <li><code>&lt;any CompressedImage topic&gt;</code>: Replayed reference images (published to the same topic name as in the rosbag)</li>
 <li><code>/perception_reproducer/rosbag_ego_odom</code>: Debug topic for recorded ego odometry</li>
 <li><code>/initialpose</code>: Initial pose (when <code>-p</code> option is used)</li>
@@ -5255,6 +5259,7 @@ When publishing perception messages, the first element in the <code>reproduce_se
 <li><code>-r</code>, <code>--search-radius</code>: Set the search radius in meters (default: 1.5m). If set to 0, always publishes the nearest message</li>
 <li><code>-c</code>, <code>--reproduce-cool-down</code>: Set the cool down time in seconds (default: 80.0s)</li>
 <li><code>-p</code>, <code>--pub-route</code>: Initialize localization and publish a route based on poses from the rosbag</li>
+<li><code>--replay-route</code>: Replay route and route state topics from rosbag data with transient_local QoS (only publishes when the message changes)</li>
 <li><code>-n</code>, <code>--noise</code>: Apply perception noise to objects when publishing repeated messages (default: False)</li>
 <li><code>-f</code>, <code>--rosbag-format</code>: Specify rosbag data format (default: "db3")</li>
 <li><code>--reference-image-topics</code>: Comma-separated list of CompressedImage topics to load and publish (e.g., <code>"/sensing/camera/camera0/image_raw/compressed,/sensing/camera/camera1/image_raw/compressed"</code>)</li>
@@ -5280,6 +5285,10 @@ Then, run the script according to the following command.</p>
 <p>Example usage with route publication:</p>
 <div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_reproducer<span class="w"> </span>-b<span class="w"> </span>&lt;bag-file&gt;<span class="w"> </span>-p
 </code></pre></div>
+<p>The <code>--replay-route</code> option enables replaying of route and route state topics directly from the rosbag data. These topics use transient_local QoS and are only published when the message content changes (avoiding redundant publishes). This is useful when you want to replay the exact route that was recorded in the rosbag.</p>
+<p>Example usage with route replaying:</p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_reproducer<span class="w"> </span>-b<span class="w"> </span>&lt;bag-file&gt;<span class="w"> </span>--replay-route
+</code></pre></div>
 <h2 id="perception-replayer">Perception replayer<a class="headerlink" href="#perception-replayer" title="Permanent link">#</a></h2>
 <p>A part of the feature is under development.</p>
 <p>This script can overlay the perception results from the rosbag on the planning simulator.</p>
@@ -5294,6 +5303,8 @@ By using the GUI, you can modify the timestamp by pausing, changing the rate or 
 <li><code>/perception/object_recognition/objects</code> (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)</li>
 <li><code>/perception/traffic_light_recognition/traffic_signals</code> (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals</li>
 <li><code>/perception/occupancy_grid_map/map</code> (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)</li>
+<li><code>/planning/mission_planning/route</code> (autoware_planning_msgs/msg/LaneletRoute): Route data (with transient_local QoS, when <code>--replay-route</code> option is used)</li>
+<li><code>/planning/mission_planning/state</code> (autoware_planning_msgs/msg/RouteState): Route state data (with transient_local QoS, when <code>--replay-route</code> option is used)</li>
 <li><code>&lt;any CompressedImage topic&gt;</code> (sensor_msgs/msg/CompressedImage): Reference images for visualization</li>
 </ul>
 <h3 id="published-topics_1">Published Topics<a class="headerlink" href="#published-topics_1" title="Permanent link">#</a></h3>
@@ -5302,6 +5313,8 @@ By using the GUI, you can modify the timestamp by pausing, changing the rate or 
 <li><code>/perception/object_recognition/tracking/objects</code> or <code>/perception/object_recognition/objects</code>: Replayed perception objects</li>
 <li><code>/perception/traffic_light_recognition/traffic_signals</code>: Replayed traffic light signals</li>
 <li><code>/perception/occupancy_grid_map/map</code>: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)</li>
+<li><code>/planning/mission_planning/route</code>: Replayed route (published with transient_local QoS, only when the message changes; when <code>--replay-route</code> option is used)</li>
+<li><code>/planning/mission_planning/state</code>: Replayed route state (published with transient_local QoS, only when the message changes; when <code>--replay-route</code> option is used)</li>
 <li><code>&lt;any CompressedImage topic&gt;</code>: Replayed reference images</li>
 <li><code>/perception_reproducer/rosbag_ego_odom</code>: Debug topic for recorded ego odometry</li>
 </ul>
@@ -5309,6 +5322,7 @@ By using the GUI, you can modify the timestamp by pausing, changing the rate or 
 <ul>
 <li><code>-b</code>, <code>--bag</code>: Rosbag file path (required)</li>
 <li><code>-t</code>, <code>--tracked-object</code>: Publish tracked objects</li>
+<li><code>--replay-route</code>: Replay route and route state topics from rosbag data with transient_local QoS (only publishes when the message changes)</li>
 <li><code>-f</code>, <code>--rosbag-format</code>: Specify rosbag data format (default: "db3")</li>
 <li><code>-v</code>, <code>--verbose</code>: Output debug data</li>
 <li><code>-h</code>, <code>--help</code>: Show help message</li>
