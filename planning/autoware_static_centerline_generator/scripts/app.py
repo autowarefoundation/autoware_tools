@@ -146,6 +146,24 @@ def post_planned_path():
             ),
             400,
         )
+    elif res.message == "PathNotFound":
+        return (
+            jsonify(
+                code=res.message,
+                message="Path planning failed (no trajectory from optimizer). Check route shape and parameters.",
+            ),
+            404,
+        )
+    elif res.message == "InvalidRoute":
+        return jsonify(code=res.message, message="Route is empty or invalid."), 400
+    elif res.message == "InvalidLanelet":
+        return (
+            jsonify(
+                code=res.message,
+                message="Lanelet invalid or centerline too short (e.g. degenerate lanelet).",
+            ),
+            400,
+        )
     elif res.message != "":
         return (
             jsonify(
