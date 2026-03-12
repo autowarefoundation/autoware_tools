@@ -36,7 +36,7 @@ struct PerceptionReproducerParam : public PerceptionReplayerCommonParam
   double reproduce_cool_down;
   bool noise;
   bool verbose;
-  bool set_goal_pose;
+  bool publish_route;
 };
 
 class PerceptionReproducer : public PerceptionReplayerCommon

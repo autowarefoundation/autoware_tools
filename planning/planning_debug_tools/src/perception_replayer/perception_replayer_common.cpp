@@ -120,7 +120,7 @@ void PerceptionReplayerCommon::load_rosbag(
     occupancy_grid_topic,
   };
 
-  if (param_.publish_route) {
+  if (param_.replay_route) {
     storage_filter.topics.push_back(route_topic);
     storage_filter.topics.push_back(route_state_topic);
   }
@@ -277,7 +277,7 @@ PerceptionReplayerCommon::PerceptionReplayerCommon(
   occupancy_grid_pub_ =
     this->create_publisher<OccupancyGrid>("/perception/occupancy_grid_map/map", occupancy_grid_qos);
 
-  if (param_.publish_route) {
+  if (param_.replay_route) {
     rclcpp::QoS transient_local_qos(1);
     transient_local_qos.transient_local();
     route_pub_ =
@@ -356,7 +356,7 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp(
     occupancy_grid_pub_->publish(msg);
   }
 
-  if (param_.publish_route) {
+  if (param_.replay_route) {
     publish_route_at_timestamp(bag_timestamp);
   }
 }

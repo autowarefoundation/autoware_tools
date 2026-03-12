@@ -42,7 +42,7 @@ struct PerceptionReplayerCommonParam
   std::string rosbag_path;
   std::string rosbag_format;
   bool tracked_object;
-  bool publish_route;
+  bool replay_route;
   std::vector<std::string> reference_image_topics;  // Topics for reference images
 };
 

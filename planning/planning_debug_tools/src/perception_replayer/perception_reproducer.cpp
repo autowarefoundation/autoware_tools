@@ -61,7 +61,7 @@ PerceptionReproducer::PerceptionReproducer(
     this, get_clock(), std::chrono::duration<double>(average_ego_odom_interval),
     std::bind(&PerceptionReproducer::on_timer, this), callback_group_check_perception_);
 
-  if (param_.set_goal_pose) {
+  if (param_.publish_route) {
     publish_recorded_ego_pose(get_bag_start_time());
     // temporarily add a sleep because sometimes the route is not generated correctly without it.
     // Need to consider a proper solution.
