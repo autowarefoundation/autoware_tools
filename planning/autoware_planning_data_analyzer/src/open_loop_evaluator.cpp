@@ -83,8 +83,7 @@ Statistics<Container> calculate_statistics(const Container & values)
 }
 
 static void fill_horizon_json(
-  nlohmann::json & j,
-  const std::vector<std::pair<std::string, HorizonMetrics>> & horizons,
+  nlohmann::json & j, const std::vector<std::pair<std::string, HorizonMetrics>> & horizons,
   size_t num_points)
 {
   for (const auto & [key, hm] : horizons) {
