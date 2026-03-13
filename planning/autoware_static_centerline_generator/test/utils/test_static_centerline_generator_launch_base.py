@@ -51,7 +51,7 @@ def generate_test_description_impl(
         launch_description.append(DeclareLaunchArgument("mode", default_value=mode))
     if map_path:
         launch_description.append(
-            DeclareLaunchArgument("lanelet2_input_file_path", default_value=map_path)
+            DeclareLaunchArgument("lanelet2_input_dir_path", default_value=map_path)
         )
     if centerline_source:
         launch_description.append(

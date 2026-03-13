@@ -15,7 +15,6 @@
 #include "static_centerline_generator_node.hpp"
 
 #include "autoware/map_loader/lanelet2_map_loader_node.hpp"
-#include "autoware/map_projection_loader/load_info_from_lanelet2_map.hpp"
 #include "autoware/map_projection_loader/map_projection_loader.hpp"
 #include "autoware/motion_utils/resample/resample.hpp"
 #include "autoware/motion_utils/trajectory/conversion.hpp"
@@ -334,13 +333,14 @@ void StaticCenterlineGeneratorNode::visualize_selected_centerline()
 void StaticCenterlineGeneratorNode::generate_centerline()
 {
   // declare planning setting parameters
-  const auto lanelet2_input_file_path = declare_parameter<std::string>("lanelet2_input_file_path");
-  if (lanelet2_input_file_path == "") {
-    throw std::invalid_argument("The `lanelet2_input_file_path` is empty.");
+  const auto lanelet2_input_dir_path = declare_parameter<std::string>("lanelet2_input_dir_path");
+  if (lanelet2_input_dir_path == "") {
+    throw std::invalid_argument(
+      "The `lanelet2_input_dir_path` is empty. Please set a directory path. (Not a file path)");
   }
 
   // process
-  load_map(lanelet2_input_file_path);
+  load_map(lanelet2_input_dir_path);
   const auto whole_centerline_with_route = generate_whole_centerline_with_route();
   centerline_handler_ = CenterlineHandler(whole_centerline_with_route);
 
@@ -473,22 +473,28 @@ CenterlineWithRoute StaticCenterlineGeneratorNode::generate_whole_centerline_wit
   return centerline_with_route;
 }
 
-void StaticCenterlineGeneratorNode::load_map(const std::string & lanelet2_input_file_path)
+void StaticCenterlineGeneratorNode::load_map(const std::string & lanelet2_input_dir_path)
 {
+  // construct file paths from directory path
+  const std::string lanelet2_map_file_path = lanelet2_input_dir_path + "/lanelet2_map.osm";
+  const std::string map_projector_info_file_path =
+    lanelet2_input_dir_path + "/map_projector_info.yaml";
+
   // copy the input LL2 map to the temporary file for debugging
   const std::string debug_input_file_dir{"/tmp/autoware_static_centerline_generator/input/"};
   std::filesystem::create_directories(debug_input_file_dir);
   std::filesystem::copy(
-    lanelet2_input_file_path, debug_input_file_dir + "lanelet2_map.osm",
+    lanelet2_map_file_path, debug_input_file_dir + "lanelet2_map.osm",
     std::filesystem::copy_options::overwrite_existing);
 
   // load map by the map_loader package
   map_bin_ptr_ = [&]() -> LaneletMapBin::ConstSharedPtr {
-    // load map
-    map_projector_info_ = std::make_unique<MapProjectorInfo>(
-      autoware::map_projection_loader::load_info_from_lanelet2_map(lanelet2_input_file_path));
+    // load map projector info
+    map_projector_info_ =
+      std::make_unique<MapProjectorInfo>(autoware::map_projection_loader::load_map_projector_info(
+        map_projector_info_file_path, lanelet2_map_file_path));
     const auto map_ptr = autoware::map_loader::Lanelet2MapLoaderNode::load_map(
-      lanelet2_input_file_path, *map_projector_info_);
+      lanelet2_map_file_path, *map_projector_info_);
     if (!map_ptr) {
       return nullptr;
     }
@@ -496,7 +502,7 @@ void StaticCenterlineGeneratorNode::load_map(const std::string & lanelet2_input_
     // NOTE: The original map is stored here since the centerline will be added to all the
     //       lanelet when lanelet::utils::overwriteLaneletCenterline is called.
     original_map_ptr_ = autoware::map_loader::Lanelet2MapLoaderNode::load_map(
-      lanelet2_input_file_path, *map_projector_info_);
+      lanelet2_map_file_path, *map_projector_info_);
 
     // overwrite more dense centerline
     // NOTE: overwriteLaneletsCenterlineWithWaypoints is used only in real time calculation.
@@ -504,7 +510,7 @@ void StaticCenterlineGeneratorNode::load_map(const std::string & lanelet2_input_
 
     // create map bin msg
     const auto map_bin_msg = autoware::map_loader::Lanelet2MapLoaderNode::create_map_bin_msg(
-      map_ptr, lanelet2_input_file_path, now());
+      map_ptr, lanelet2_map_file_path, now());
 
     return std::make_shared<LaneletMapBin>(map_bin_msg);
   }();
@@ -528,16 +534,21 @@ void StaticCenterlineGeneratorNode::load_map(const std::string & lanelet2_input_
 void StaticCenterlineGeneratorNode::on_load_map(
   const LoadMap::Request::SharedPtr request, const LoadMap::Response::SharedPtr response)
 {
-  const std::string tmp_lanelet2_input_file_path = "/tmp/input_lanelet2_map.osm";
+  const std::string tmp_lanelet2_input_dir_path = "/tmp/input_lanelet2_map";
+  const std::string tmp_lanelet2_input_file_path =
+    tmp_lanelet2_input_dir_path + "/lanelet2_map.osm";
 
-  // save map file temporarily since load map's input must be a file
+  // create temporary directory
+  std::filesystem::create_directories(tmp_lanelet2_input_dir_path);
+
+  // save map file temporarily since load map's input must be a directory
   std::ofstream map_writer;
   map_writer.open(tmp_lanelet2_input_file_path, std::ios::out);
   map_writer << request->map;
   map_writer.close();
 
-  // load map from the saved map file
-  load_map(tmp_lanelet2_input_file_path);
+  // load map from the saved map directory
+  load_map(tmp_lanelet2_input_dir_path);
 
   if (map_bin_ptr_) {
     return;
