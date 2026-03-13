@@ -133,8 +133,8 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
 
 void BaseEvaluator::save_json_results(
   const nlohmann::json & json_output, const std::string & bag_path,
-  const std::string & evaluation_mode, const std::string & output_filename,
-  bool add_timestamp) const
+  const std::string & evaluation_mode, const std::string & output_filename, bool add_timestamp,
+  bool include_evaluation_info) const
 {
   std::filesystem::path output_path;
   if (!json_output_dir_.empty()) {
@@ -168,23 +168,50 @@ void BaseEvaluator::save_json_results(
     json_path = json_path.parent_path() / filename;
   }
 
-  // Create mutable copy to add evaluation info
-  nlohmann::json json_with_info = json_output;
+  nlohmann::json json_to_write = json_output;
+  if (include_evaluation_info) {
+    json_to_write["evaluation_info"]["timestamp"] = timestamp_string;
+    json_to_write["evaluation_info"]["bag_path"] = bag_path;
+    json_to_write["evaluation_info"]["evaluation_mode"] = evaluation_mode;
+  }
 
-  // Add evaluation info
-  json_with_info["evaluation_info"]["timestamp"] = timestamp_string;
-  json_with_info["evaluation_info"]["bag_path"] = bag_path;
-  json_with_info["evaluation_info"]["evaluation_mode"] = evaluation_mode;
-
-  // Write JSON file
   std::ofstream json_file(json_path);
   if (json_file.is_open()) {
-    json_file << json_with_info.dump(2);  // Pretty print with 2 spaces
+    json_file << json_to_write.dump(2);  // Pretty print with 2 spaces
     json_file.close();
     RCLCPP_INFO(logger_, "JSON results saved to: %s", json_path.c_str());
   } else {
     RCLCPP_ERROR(logger_, "Failed to save JSON results to: %s", json_path.c_str());
   }
+}
+
+void BaseEvaluator::save_jsonl_results(
+  const nlohmann::json & results_array, const std::string & output_filename) const
+{
+  std::filesystem::path output_path;
+  if (!json_output_dir_.empty()) {
+    output_path = std::filesystem::path(json_output_dir_) / output_filename;
+  } else {
+    std::string expanded_path = "~/" + output_filename;
+    if (!expanded_path.empty() && expanded_path[0] == '~') {
+      const char * home = std::getenv("HOME");
+      if (home) {
+        expanded_path = std::string(home) + expanded_path.substr(1);
+      }
+    }
+    output_path = expanded_path;
+  }
+
+  std::ofstream out(output_path);
+  if (!out.is_open()) {
+    RCLCPP_ERROR(logger_, "Failed to save JSONL results to: %s", output_path.c_str());
+    return;
+  }
+  for (const auto & obj : results_array) {
+    out << obj.dump() << '\n';
+  }
+  out.close();
+  RCLCPP_INFO(logger_, "JSONL results saved to: %s", output_path.c_str());
 }
 
 void BaseEvaluator::write_tf_static_to_bag(

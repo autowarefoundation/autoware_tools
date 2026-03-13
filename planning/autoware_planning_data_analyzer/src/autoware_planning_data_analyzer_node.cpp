@@ -449,9 +449,12 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
           "Invalid open_loop.gt_source_mode: " + gt_source_mode_ +
           ". Expected 'kinematic_state' or 'gt_trajectory'.");
       }
+      const auto evaluation_horizons =
+        get_or_declare_parameter<std::vector<double>>(*this, "open_loop.evaluation_horizons");
       OpenLoopEvaluator evaluator(get_logger(), route_handler_, gt_mode, gt_sync_tolerance_ms_);
       evaluator.set_json_output_dir(output_dir_path.string());
       evaluator.set_metric_variant(open_loop_metric_variant);
+      evaluator.set_evaluation_horizons(evaluation_horizons);
       auto times =
         evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);
       start_time = times.first;

@@ -165,7 +165,16 @@ protected:
   void save_json_results(
     const nlohmann::json & json_output, const std::string & bag_path,
     const std::string & evaluation_mode, const std::string & output_filename = "evaluation_result",
-    bool add_timestamp = true) const;
+    bool add_timestamp = true, bool include_evaluation_info = true) const;
+
+  /**
+   * @brief Save an array of JSON objects as JSONL (one object per line)
+   * @param results_array Array of JSON objects, each with Result, Frame, Stamp
+   * @param output_filename Base filename for output (e.g.
+   * "time_step_based_trajectory_result.jsonl")
+   */
+  void save_jsonl_results(
+    const nlohmann::json & results_array, const std::string & output_filename) const;
 
   /**
    * @brief Write tf_static messages to evaluation bag
