@@ -35,6 +35,17 @@
 namespace autoware::planning_data_analyzer
 {
 
+struct HorizonMetrics
+{
+  double ade;
+  double fde;
+  double average_lateral_deviation;
+  double max_lateral_deviation;
+  double average_longitudinal_deviation;
+  double max_longitudinal_deviation;
+  double min_ttc;
+};
+
 struct OpenLoopTrajectoryMetrics
 {
   // Point-wise metrics
@@ -46,6 +57,9 @@ struct OpenLoopTrajectoryMetrics
   std::vector<double> ade;                  // Average Displacement Error at each trajectory point
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
 
+  // Per-horizon metrics in insertion order: "full" first, then "1s", "2s", ...
+  std::vector<std::pair<std::string, HorizonMetrics>> horizon_results;
+
   // Ground truth trajectory for this evaluation
   std::vector<geometry_msgs::msg::Pose> ground_truth_poses;  // Interpolated ground truth poses
 
@@ -53,7 +67,8 @@ struct OpenLoopTrajectoryMetrics
   size_t num_points;           // Number of trajectory points
   double trajectory_duration;  // Total trajectory duration in seconds
 
-  rclcpp::Time trajectory_timestamp;   // When the trajectory was published
+  rclcpp::Time trajectory_timestamp;   // When the trajectory was published (ROS time)
+  rclcpp::Time bag_timestamp;          // Corresponding bag/system timestamp
   rclcpp::Time evaluation_start_time;  // Start time of evaluation window
   rclcpp::Time evaluation_end_time;    // End time of evaluation window
 };
@@ -115,9 +130,20 @@ public:
 
   void set_metric_variant(const std::string & metric_variant) { metric_variant_ = metric_variant; }
 
+  void set_evaluation_horizons(const std::vector<double> & horizons)
+  {
+    evaluation_horizons_ = horizons;
+  }
+
   nlohmann::json get_summary_as_json() const override;
 
   nlohmann::json get_detailed_results_as_json() const override;
+
+  /**
+   * @brief Full results JSON: summary + per-trajectory per-point data + evaluation_info when saved.
+   * For machine consumption / debugging; not human-readable at scale.
+   */
+  nlohmann::json get_full_results_as_json() const;
 
   /**
    * @brief Return the result topics produced by the open-loop evaluator.
@@ -255,8 +281,6 @@ private:
   std::string compared_trajectory_topic() const;
   std::string dlr_result_topic() const;
 
-  std::string format_horizon_key(double seconds) const;
-
   /**
    * @brief Aggregate summary statistics across all evaluated trajectories.
    *
@@ -271,6 +295,7 @@ private:
   std::string metric_variant_;
   GTSourceMode gt_source_mode_;
   double gt_sync_tolerance_ms_;
+  std::vector<double> evaluation_horizons_;
 };
 
 }  // namespace autoware::planning_data_analyzer
