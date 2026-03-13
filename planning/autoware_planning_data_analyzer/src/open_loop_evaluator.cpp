@@ -82,6 +82,31 @@ Statistics<Container> calculate_statistics(const Container & values)
   return stats;
 }
 
+static double compute_mean(const std::vector<double> & v)
+{
+  return v.empty() ? 0.0 : std::accumulate(v.begin(), v.end(), 0.0) / v.size();
+}
+
+static double compute_std_dev(const std::vector<double> & v)
+{
+  if (v.size() < 2) return 0.0;
+  const double m = std::accumulate(v.begin(), v.end(), 0.0) / v.size();
+  double var = 0.0;
+  for (const double x : v) var += (x - m) * (x - m);
+  return std::sqrt(var / v.size());
+}
+
+static double compute_percentile(const std::vector<double> & sorted, double p)
+{
+  if (sorted.empty()) return 0.0;
+  if (sorted.size() == 1) return sorted[0];
+  const double idx = p * static_cast<double>(sorted.size() - 1);
+  const size_t lo = static_cast<size_t>(std::floor(idx));
+  const size_t hi = std::min(lo + 1, sorted.size() - 1);
+  const double frac = idx - static_cast<double>(lo);
+  return sorted[lo] * (1.0 - frac) + sorted[hi] * frac;
+}
+
 static void fill_horizon_json(
   nlohmann::json & j, const std::vector<std::pair<std::string, HorizonMetrics>> & horizons,
   size_t num_points)
@@ -163,10 +188,6 @@ void OpenLoopEvaluator::evaluate(
 
   // Calculate summary statistics
   calculate_summary();
-
-  RCLCPP_INFO(
-    logger_, "Overall: Mean ADE=%.3fm (±%.3fm), Mean FDE=%.3fm (±%.3fm)", summary_.mean_ade,
-    summary_.std_ade, summary_.mean_fde, summary_.std_fde);
 }
 
 std::vector<OpenLoopEvaluator::EvaluationData> OpenLoopEvaluator::prepare_evaluation_data(
@@ -885,26 +906,6 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
 {
   nlohmann::json j;
 
-  auto compute_mean = [](const std::vector<double> & v) -> double {
-    return v.empty() ? 0.0 : std::accumulate(v.begin(), v.end(), 0.0) / v.size();
-  };
-  auto compute_std_dev = [](const std::vector<double> & v) -> double {
-    if (v.size() < 2) return 0.0;
-    const double m = std::accumulate(v.begin(), v.end(), 0.0) / v.size();
-    double var = 0.0;
-    for (const double x : v) var += (x - m) * (x - m);
-    return std::sqrt(var / v.size());
-  };
-  auto compute_percentile = [](const std::vector<double> & sorted, double p) -> double {
-    if (sorted.empty()) return 0.0;
-    if (sorted.size() == 1) return sorted[0];
-    const double idx = p * static_cast<double>(sorted.size() - 1);
-    const size_t lo = static_cast<size_t>(std::floor(idx));
-    const size_t hi = std::min(lo + 1, sorted.size() - 1);
-    const double frac = idx - static_cast<double>(lo);
-    return sorted[lo] * (1.0 - frac) + sorted[hi] * frac;
-  };
-
   auto emit_metric = [&](
                        const std::string & horizon_key, const std::string & metric_name,
                        const std::string & desc, const std::vector<double> & vals) {
@@ -1113,15 +1114,6 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
     save_json_results(
       full_json, bag_path, "open_loop", "time_step_based_trajectory_detailed_result.json", false,
       true);
-
-    // Log summary
-    RCLCPP_INFO(logger_, "Open-loop evaluation summary:");
-    if (summary_json.contains("full/ade/mean")) {
-      RCLCPP_INFO(
-        logger_, "  Mean ADE (full): %.3f m", static_cast<double>(summary_json["full/ade/mean"]));
-      RCLCPP_INFO(
-        logger_, "  Mean FDE (full): %.3f m", static_cast<double>(summary_json["full/fde/mean"]));
-    }
   }
 
   RCLCPP_INFO(logger_, "Open-loop evaluation complete");
