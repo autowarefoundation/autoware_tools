@@ -15,6 +15,7 @@
 # limitations under the License.
 # cspell:disable
 """Merge multiple model result bags for a single OR segment."""
+
 import argparse
 from pathlib import Path
 import shutil
