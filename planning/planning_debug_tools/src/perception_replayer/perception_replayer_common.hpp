@@ -122,9 +122,11 @@ public:
   /**
    * @brief Publish route and route state (transient_local) at the given timestamp.
    * Only publishes when the message to publish differs from the last published one.
-   * @param bag_timestamp
+   * @param bag_timestamp Used to select messages from the rosbag.
+   * @param current_timestamp Stamp written on published messages (replay clock).
    */
-  void publish_route_at_timestamp(const rclcpp::Time & bag_timestamp);
+  void publish_route_at_timestamp(
+    const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp);
 
 protected:
   const PerceptionReplayerCommonParam param_;
@@ -231,6 +233,8 @@ protected:
   // track last published index to avoid redundant publishes for transient_local topics
   std::optional<size_t> last_published_route_idx_;
   std::optional<size_t> last_published_route_state_idx_;
+  /// Last time route_state was published (replay clock); used for periodic re-publish.
+  std::optional<rclcpp::Time> last_route_state_publish_replay_time_;
 
   rclcpp::Publisher<PoseWithCovarianceStamped>::SharedPtr recorded_ego_as_initialpose_pub_;
   rclcpp::Publisher<PoseStamped>::SharedPtr goal_as_mission_planning_goal_pub_;

@@ -357,7 +357,7 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp(
   }
 
   if (param_.replay_route) {
-    publish_route_at_timestamp(bag_timestamp);
+    publish_route_at_timestamp(bag_timestamp, current_timestamp);
   }
 }
 
@@ -410,7 +410,8 @@ void PerceptionReplayerCommon::publish_reference_images_at_timestamp(
   }
 }
 
-void PerceptionReplayerCommon::publish_route_at_timestamp(const rclcpp::Time & bag_timestamp)
+void PerceptionReplayerCommon::publish_route_at_timestamp(
+  const rclcpp::Time & bag_timestamp, const rclcpp::Time & current_timestamp)
 {
   // Helper: find the index of the last message at or before bag_timestamp.
   // Returns nullopt if there is no such message.
@@ -436,17 +437,32 @@ void PerceptionReplayerCommon::publish_route_at_timestamp(const rclcpp::Time & b
   if (!rosbag_route_data_.empty()) {
     const auto idx = find_last_before(rosbag_route_data_, bag_timestamp);
     if (idx.has_value() && last_published_route_idx_ != idx.value()) {
-      route_pub_->publish(rosbag_route_data_[idx.value()].second);
+      auto route_msg = rosbag_route_data_[idx.value()].second;
+      route_msg.header.stamp = current_timestamp;
+      route_pub_->publish(route_msg);
       last_published_route_idx_ = idx.value();
     }
   }
 
-  // route state
+  // route state: publish when bag index changes, or re-publish every 5s (replay time)
   if (!rosbag_route_state_data_.empty()) {
     const auto idx = find_last_before(rosbag_route_state_data_, bag_timestamp);
-    if (idx.has_value() && last_published_route_state_idx_ != idx.value()) {
-      route_state_pub_->publish(rosbag_route_state_data_[idx.value()].second);
-      last_published_route_state_idx_ = idx.value();
+    if (idx.has_value()) {
+      const bool index_changed = !last_published_route_state_idx_.has_value() ||
+                                 last_published_route_state_idx_.value() != idx.value();
+      constexpr double k_route_state_republish_period_sec = 10.0;
+      const bool period_elapsed =
+        !last_route_state_publish_replay_time_.has_value() ||
+        (current_timestamp - last_route_state_publish_replay_time_.value()).seconds() >=
+          k_route_state_republish_period_sec;
+
+      if (index_changed || period_elapsed) {
+        auto route_state_msg = rosbag_route_state_data_[idx.value()].second;
+        route_state_msg.stamp = current_timestamp;
+        route_state_pub_->publish(route_state_msg);
+        last_published_route_state_idx_ = idx.value();
+        last_route_state_publish_replay_time_ = current_timestamp;
+      }
     }
   }
 }
