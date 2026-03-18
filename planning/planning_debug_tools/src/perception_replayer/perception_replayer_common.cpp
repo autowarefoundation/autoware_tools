@@ -448,14 +448,13 @@ void PerceptionReplayerCommon::publish_route_at_timestamp(
   if (!rosbag_route_state_data_.empty()) {
     const auto idx = find_last_before(rosbag_route_state_data_, bag_timestamp);
     if (idx.has_value()) {
-      const bool index_changed =
-        !last_published_route_state_idx_.has_value() ||
-        last_published_route_state_idx_.value() != idx.value();
+      const bool index_changed = !last_published_route_state_idx_.has_value() ||
+                                 last_published_route_state_idx_.value() != idx.value();
       constexpr double k_route_state_republish_period_sec = 10.0;
       const bool period_elapsed =
         !last_route_state_publish_replay_time_.has_value() ||
         (current_timestamp - last_route_state_publish_replay_time_.value()).seconds() >=
-        k_route_state_republish_period_sec;
+          k_route_state_republish_period_sec;
 
       if (index_changed || period_elapsed) {
         auto route_state_msg = rosbag_route_state_data_[idx.value()].second;
