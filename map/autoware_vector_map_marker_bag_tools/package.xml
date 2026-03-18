@@ -4,7 +4,7 @@
   <name>autoware_vector_map_marker_bag_tools</name>
   <version>0.1.0</version>
   <description>Tools to insert /map/vector_map_marker into rosbag2 bags.</description>
-  <maintainer email="satoshi@example.com">satoshi</maintainer>
+  <maintainer email="satoshi.ota@tier4.jp">Satoshi OTA</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
