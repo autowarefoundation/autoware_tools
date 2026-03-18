@@ -146,7 +146,7 @@ def create_reader(bag_dir: str) -> SequentialReader:
         reader.open(storage_options, get_converter_options())
     except RuntimeError as exc:
         error_message = str(exc)
-        if storage_id != "mcap" or "unindexed MCAP file" not in error_message:
+        if storage_id != "mcap" or "not indexed MCAP file" not in error_message:
             raise
         print(f"[info] Reindexing input bag: {bag_dir}", file=sys.stderr)
         Reindexer().reindex(storage_options)
