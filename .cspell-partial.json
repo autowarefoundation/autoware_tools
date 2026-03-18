@@ -29,6 +29,11 @@
     "usecols",
     "velb",
     "viridis",
-    "zdata"
+    "zdata",
+    "pgid",
+    "getpgid",
+    "killpg",
+    "preexec",
+    "setsid"
   ]
 }
