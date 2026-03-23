@@ -134,13 +134,19 @@ void draw_plot(AppState & state)
   }
 
   // Set parameters on the node
-  state.node->set_parameter(rclcpp::Parameter("traffic_light.deceleration_limit", state.controls[0].value));
+  state.node->set_parameter(
+    rclcpp::Parameter("traffic_light.deceleration_limit", state.controls[0].value));
   state.node->set_parameter(rclcpp::Parameter("traffic_light.jerk_limit", state.controls[1].value));
-  state.node->set_parameter(rclcpp::Parameter("traffic_light.delay_response_time", state.controls[2].value));
-  state.node->set_parameter(rclcpp::Parameter("traffic_light.crossing_time_limit", state.controls[3].value));
-  state.node->set_parameter(rclcpp::Parameter("traffic_light.treat_amber_light_as_red_light", false));
-  state.node->set_parameter(rclcpp::Parameter("traffic_light.checked_trajectory_length.deceleration_limit", 2.0));
-  state.node->set_parameter(rclcpp::Parameter("traffic_light.checked_trajectory_length.jerk_limit", 4.0));
+  state.node->set_parameter(
+    rclcpp::Parameter("traffic_light.delay_response_time", state.controls[2].value));
+  state.node->set_parameter(
+    rclcpp::Parameter("traffic_light.crossing_time_limit", state.controls[3].value));
+  state.node->set_parameter(
+    rclcpp::Parameter("traffic_light.treat_amber_light_as_red_light", false));
+  state.node->set_parameter(
+    rclcpp::Parameter("traffic_light.checked_trajectory_length.deceleration_limit", 2.0));
+  state.node->set_parameter(
+    rclcpp::Parameter("traffic_light.checked_trajectory_length.jerk_limit", 4.0));
 
   namespace traffic_rule = autoware::trajectory_validator::plugin::traffic_rule;
   traffic_rule::TrafficLightFilter filter;
@@ -228,7 +234,7 @@ int main(int argc, char ** argv)
 
   AppState state;
   state.node = std::make_shared<rclcpp::Node>("amber_light_visualizer");
-  
+
   // Declare parameters on the node with allow_undeclared_parameters=true to simplify
   auto options = rclcpp::NodeOptions().allow_undeclared_parameters(true);
   state.node = std::make_shared<rclcpp::Node>("amber_light_visualizer", options);
