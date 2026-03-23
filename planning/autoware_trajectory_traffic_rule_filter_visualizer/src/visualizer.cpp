@@ -1,4 +1,4 @@
-#include <autoware/trajectory_traffic_rule_filter/filters/traffic_light_filter.hpp>
+#include <autoware/trajectory_validator/filters/traffic_rule/traffic_light_filter.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -21,7 +21,7 @@ struct Control
   bool is_int = false;
 
   // UI position
-  cv::Rect rect;
+  cv::Rect rect{};
 
   std::string format_value() const
   {
@@ -40,6 +40,7 @@ struct AppState
   bool needs_redraw = true;
   std::vector<Control> controls;
   int active_control = -1;
+  std::shared_ptr<rclcpp::Node> node;
 };
 
 void init_controls(AppState & state)
@@ -132,17 +133,18 @@ void draw_plot(AppState & state)
     }
   }
 
-  // Parameters for the filter
-  traffic_rule_filter::Params params;
-  params.traffic_light_filter.deceleration_limit = state.controls[0].value;
-  params.traffic_light_filter.jerk_limit = state.controls[1].value;
-  params.traffic_light_filter.delay_response_time = state.controls[2].value;
-  params.traffic_light_filter.crossing_time_limit = state.controls[3].value;
-  params.traffic_light_filter.treat_amber_light_as_red_light = false;
+  // Set parameters on the node
+  state.node->set_parameter(rclcpp::Parameter("traffic_light.deceleration_limit", state.controls[0].value));
+  state.node->set_parameter(rclcpp::Parameter("traffic_light.jerk_limit", state.controls[1].value));
+  state.node->set_parameter(rclcpp::Parameter("traffic_light.delay_response_time", state.controls[2].value));
+  state.node->set_parameter(rclcpp::Parameter("traffic_light.crossing_time_limit", state.controls[3].value));
+  state.node->set_parameter(rclcpp::Parameter("traffic_light.treat_amber_light_as_red_light", false));
+  state.node->set_parameter(rclcpp::Parameter("traffic_light.checked_trajectory_length.deceleration_limit", 2.0));
+  state.node->set_parameter(rclcpp::Parameter("traffic_light.checked_trajectory_length.jerk_limit", 4.0));
 
-  autoware::trajectory_traffic_rule_filter::plugin::TrafficLightFilter filter;
-  filter.set_parameters(params);
-  filter.set_logger(rclcpp::get_logger("amber_light_visualizer"));
+  namespace traffic_rule = autoware::trajectory_validator::plugin::traffic_rule;
+  traffic_rule::TrafficLightFilter filter;
+  filter.set_parameters(*state.node);
 
   double current_acceleration = state.controls[4].value;
   int res = std::max(1, static_cast<int>(state.controls[5].value));
@@ -225,6 +227,12 @@ int main(int argc, char ** argv)
   rclcpp::init(argc, argv);
 
   AppState state;
+  state.node = std::make_shared<rclcpp::Node>("amber_light_visualizer");
+  
+  // Declare parameters on the node with allow_undeclared_parameters=true to simplify
+  auto options = rclcpp::NodeOptions().allow_undeclared_parameters(true);
+  state.node = std::make_shared<rclcpp::Node>("amber_light_visualizer", options);
+
   init_controls(state);
 
   cv::namedWindow(WINDOW_NAME, cv::WINDOW_NORMAL);

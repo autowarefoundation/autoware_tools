@@ -9,7 +9,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>autoware_trajectory_traffic_rule_filter</depend>
+  <depend>autoware_trajectory_validator</depend>
   <depend>opencv</depend>
   <depend>rclcpp</depend>
 
