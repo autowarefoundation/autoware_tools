@@ -74,6 +74,7 @@ void init_controls(AppState & state)
 
 void on_mouse(int event, int x, int y, int /*flags*/, void * userdata)
 {
+  // cspell: ignore LBUTTONDOWN, LBUTTONUP
   AppState * state = static_cast<AppState *>(userdata);
 
   if (event == cv::EVENT_LBUTTONDOWN) {
