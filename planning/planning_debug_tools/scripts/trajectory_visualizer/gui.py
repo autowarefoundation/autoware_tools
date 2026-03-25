@@ -16,7 +16,9 @@
 # cspell:disable
 import tkinter as tk
 from tkinter import ttk
+from collections import Counter
 
+from autoware_internal_planning_msgs.msg import CandidateTrajectories
 from autoware_internal_planning_msgs.msg import PathWithLaneId
 from autoware_planning_msgs.msg import Path
 from autoware_planning_msgs.msg import Trajectory
@@ -24,6 +26,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from plotter import Plotter
 from ros2_interface import ROS2Interface
 from trajectory_data import get_data_functions
+from trajectory_data import get_reference_arc_from_curvature
 from trajectory_node_graph import TrajectoryNodeGraph
 
 
@@ -40,6 +43,7 @@ class TkinterApp:
         self.axis_options = get_data_functions()
         self.current_x_axis_selection = tk.StringVar()
         self.current_y_axis_selection = tk.StringVar()
+        self.current_y_zoom = tk.DoubleVar(value=1.0)
 
         # --- Main Frames ---
         self.left_frame = ttk.Frame(self.root, padding="10")
@@ -79,6 +83,19 @@ class TkinterApp:
         self.y_axis_dropdown.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
         self.y_axis_dropdown.current(1)  # Set default selection
 
+        ttk.Label(self.left_frame, text="Y zoom:").grid(row=2, column=0, padx=5, pady=(10, 0), sticky="w")
+        self.y_zoom_scale = ttk.Scale(
+            self.left_frame,
+            from_=1.0,
+            to=10.0,
+            variable=self.current_y_zoom,
+            orient=tk.HORIZONTAL,
+            command=self.update_y_zoom,
+        )
+        self.y_zoom_scale.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
+        self.y_zoom_value_label = ttk.Label(self.left_frame, text="1.0x")
+        self.y_zoom_value_label.grid(row=3, column=1, padx=5, pady=5, sticky="w")
+
         # Set initial selection from config
         for i in range(len(axis_option_keys)):
             if axis_option_keys[i].casefold().startswith(config["initial_axis"]["x"].casefold()):
@@ -92,10 +109,10 @@ class TkinterApp:
 
         # Listbox with Multiple Selection
         ttk.Label(self.left_frame, text="Topics:").grid(
-            row=2, column=0, columnspan=2, padx=5, pady=5, sticky="w"
+            row=4, column=0, columnspan=2, padx=5, pady=5, sticky="w"
         )
         self.listbox_frame = ttk.Frame(self.left_frame)
-        self.listbox_frame.grid(row=3, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+        self.listbox_frame.grid(row=5, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
         self.listbox_scrollbar_y = ttk.Scrollbar(self.listbox_frame, orient=tk.VERTICAL)
         self.listbox_scrollbar_x = ttk.Scrollbar(self.listbox_frame, orient=tk.HORIZONTAL)
@@ -115,7 +132,7 @@ class TkinterApp:
         self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Allow listbox to expand
-        self.left_frame.grid_rowconfigure(3, weight=1)
+        self.left_frame.grid_rowconfigure(5, weight=1)
         self.left_frame.grid_columnconfigure(0, weight=1)
         self.left_frame.grid_columnconfigure(1, weight=1)
 
@@ -123,7 +140,7 @@ class TkinterApp:
         self.refresh_button = ttk.Button(
             self.left_frame, text="Refresh List", command=self.refresh_topic_list
         )
-        self.refresh_button.grid(row=4, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
+        self.refresh_button.grid(row=6, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
         # --- Mid Frame --- Button to hide/show the left frame
         self.hide_button = ttk.Button(
             self.mid_frame, text="<", command=self.hide_show_left_frame, width=1
@@ -138,6 +155,7 @@ class TkinterApp:
         self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.msg_per_topic = {}
+        self.plotter.set_y_zoom_factor(self.current_y_zoom.get())
         self.refresh_topic_list()
         # Auto-select initial topics from config
         self.select_initial_topics()
@@ -322,6 +340,80 @@ class TkinterApp:
     def update(self, topic, msg):
         self.msg_per_topic[topic] = msg
 
+    def _get_candidate_generator_names(self, msg):
+        generator_names = {}
+        for info in getattr(msg, "generator_info", []):
+            generator_id = tuple(getattr(info.generator_id, "uuid", []))
+            generator_name = getattr(getattr(info, "generator_name", None), "data", "")
+            if generator_id:
+                generator_names[generator_id] = generator_name
+        return generator_names
+
+    def _format_generator_plot_name(self, topic, generator_name, generator_id, duplicate_count, index):
+        if generator_name:
+            plot_name = f"{topic} [{generator_name}]"
+            if duplicate_count <= 1:
+                return plot_name
+            if generator_id:
+                suffix = "".join(f"{value:02x}" for value in generator_id[:4])
+                return f"{plot_name} ({suffix})"
+            return f"{plot_name} #{index}"
+
+        if generator_id:
+            suffix = "".join(f"{value:02x}" for value in generator_id[:4])
+            return f"{topic} [{suffix}]"
+        return f"{topic} #{index}"
+
+    def _get_candidate_plot_entries(self, topic, msg):
+        generator_names = self._get_candidate_generator_names(msg)
+        candidates = list(getattr(msg, "candidate_trajectories", []))
+        base_names = []
+        for candidate in candidates:
+            generator_id = tuple(getattr(candidate.generator_id, "uuid", []))
+            generator_name = generator_names.get(generator_id, "")
+            if generator_name:
+                base_names.append(generator_name)
+            elif generator_id:
+                base_names.append("".join(f"{value:02x}" for value in generator_id[:4]))
+            else:
+                base_names.append("")
+        duplicate_counts = Counter(base_names)
+        plot_entries = []
+        for index, candidate in enumerate(candidates):
+            generator_id = tuple(getattr(candidate.generator_id, "uuid", []))
+            generator_name = generator_names.get(generator_id, "")
+            base_name = base_names[index]
+            plot_name = self._format_generator_plot_name(
+                topic, generator_name, generator_id, duplicate_counts[base_name], index
+            )
+            plot_entries.append((plot_name, candidate))
+        return plot_entries
+
+    def _get_expected_plot_names(self):
+        plot_names = []
+        for topic, msg_type in self.topics:
+            msg = self.msg_per_topic.get(topic)
+            if msg_type.endswith("CandidateTrajectories"):
+                if msg is not None:
+                    plot_names.extend(
+                        [plot_name for plot_name, _ in self._get_candidate_plot_entries(topic, msg)]
+                    )
+                continue
+            plot_names.append(topic)
+        return plot_names
+
+    def _get_plot_entries(self):
+        plot_entries = []
+        for topic, msg_type in self.topics:
+            msg = self.msg_per_topic.get(topic)
+            if msg is None:
+                continue
+            if msg_type.endswith("CandidateTrajectories"):
+                plot_entries.extend(self._get_candidate_plot_entries(topic, msg))
+            else:
+                plot_entries.append((topic, msg))
+        return plot_entries
+
     def _update_topics_from_selection(self, topic_indexes):
         """Update self.topics based on listbox selection."""
         selected_topics = []
@@ -348,6 +440,7 @@ class TkinterApp:
         self.msg_per_topic.clear()
         x_axis_selection = self.current_x_axis_selection.get()
         y_axis_selection = self.current_y_axis_selection.get()
+        self.plotter.reset_y_limits()
 
         # Map listbox indexes to actual topic indexes
         selected_topics = []
@@ -368,7 +461,10 @@ class TkinterApp:
             topic_idx += 1
             listbox_idx += 1
 
-        self.plotter.init_plot(x_axis_selection, y_axis_selection, [t[0] for t in selected_topics])
+        initial_plot_names = [
+            topic for topic, msg_type in selected_topics if not msg_type.endswith("CandidateTrajectories")
+        ]
+        self.plotter.init_plot(x_axis_selection, y_axis_selection, initial_plot_names)
         for topic, msg_type in selected_topics:
             if msg_type.endswith("Trajectory"):
                 self.ros_interface.add_callback(
@@ -382,6 +478,12 @@ class TkinterApp:
                     PathWithLaneId,
                     lambda msg, captured_topic=topic: self.update(captured_topic, msg),
                 )
+            elif msg_type.endswith("CandidateTrajectories"):
+                self.ros_interface.add_callback(
+                    topic,
+                    CandidateTrajectories,
+                    lambda msg, captured_topic=topic: self.update(captured_topic, msg),
+                )
             elif msg_type.endswith("Path"):
                 self.ros_interface.add_callback(
                     topic, Path, lambda msg, captured_topic=topic: self.update(captured_topic, msg)
@@ -393,14 +495,29 @@ class TkinterApp:
         x_axis_fns = self.axis_options[x_axis_selection]
         y_axis_fns = self.axis_options[y_axis_selection]
         shift_x_data = "Arc Length" in x_axis_selection
+        show_reference_arc = shift_x_data and "Curvature" in y_axis_selection
         ego_odom = self.ros_interface.ego_odom
-        for topic, traj in self.msg_per_topic.items():
+        plot_names = self._get_expected_plot_names()
+        self.plotter.set_reference_arc_visibility(show_reference_arc)
+        if list(self.plotter.plots.keys()) != plot_names or (
+            show_reference_arc and list(self.plotter.arc_plots.keys()) != plot_names
+        ):
+            self.plotter.sync_plots(plot_names)
+
+        y_data_list = []
+        for topic, traj in self._get_plot_entries():
             if shift_x_data:
                 x_data = x_axis_fns.trajectory_fn(traj, ego_odom)
             else:
                 x_data = x_axis_fns.trajectory_fn(traj)
             y_data = y_axis_fns.trajectory_fn(traj)
+            y_data_list.append(y_data)
             self.plotter.update_data(topic, x_data, y_data)
+            if show_reference_arc:
+                arc_x, arc_y = get_reference_arc_from_curvature(x_data, y_data)
+                self.plotter.update_reference_arc_data(topic, arc_x, arc_y)
+        if self.plotter.fixed_y_limits is None:
+            self.plotter.update_fixed_y_limits(y_data_list)
         if ego_odom is not None:
             self.plotter.update_ego_data(x_axis_fns.ego_fn(ego_odom), y_axis_fns.ego_fn(ego_odom))
         self.plotter.replot()
@@ -410,7 +527,15 @@ class TkinterApp:
         """Update plot axis labels when dropdown selection changes."""
         x_axis_selection = self.current_x_axis_selection.get()
         y_axis_selection = self.current_y_axis_selection.get()
+        self.plotter.reset_y_limits()
         self.plotter.update_labels(x_axis_selection, y_axis_selection)
+        self.canvas.draw_idle()
+
+    def update_y_zoom(self, value):
+        zoom_factor = float(value)
+        self.y_zoom_value_label.config(text=f"{zoom_factor:.1f}x")
+        self.plotter.set_y_zoom_factor(zoom_factor)
+        self.plotter.replot()
         self.canvas.draw_idle()
 
 

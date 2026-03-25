@@ -108,6 +108,31 @@ def get_times(msg):
     return times
 
 
+def get_reference_arc_from_curvature(arc_lengths, curvatures, epsilon=1e-9):
+    if len(arc_lengths) == 0 or len(curvatures) == 0:
+        return [], []
+
+    sample_count = min(len(arc_lengths), len(curvatures))
+    arc_x = []
+    arc_y = []
+
+    for arc_length, curvature in zip(arc_lengths[:sample_count], curvatures[:sample_count]):
+        if not np.isfinite(arc_length) or not np.isfinite(curvature):
+            continue
+
+        if np.abs(curvature) < epsilon:
+            arc_x.append(arc_length)
+            arc_y.append(0.0)
+            continue
+
+        radius = 1.0 / curvature
+        theta = arc_length * curvature
+        arc_x.append(radius * np.sin(theta))
+        arc_y.append(radius * (1.0 - np.cos(theta)))
+
+    return arc_x, arc_y
+
+
 def calculate_curvature_2d(msg):
     """
     Calculate the curvature at each point of a 2D trajectory.
