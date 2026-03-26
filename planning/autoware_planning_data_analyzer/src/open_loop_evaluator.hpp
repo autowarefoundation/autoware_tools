@@ -39,6 +39,8 @@ struct HorizonMetrics
 {
   double ade;
   double fde;
+  double ahe;
+  double fhe;
   double average_lateral_deviation;
   double max_lateral_deviation;
   double average_longitudinal_deviation;
@@ -55,6 +57,8 @@ struct OpenLoopTrajectoryMetrics
     longitudinal_deviations;  // Longitudinal deviation at each trajectory point (in vehicle frame)
   std::vector<double> displacement_errors;  // Euclidean distance at each trajectory point
   std::vector<double> ade;                  // Average Displacement Error at each trajectory point
+  std::vector<double> ahe;                  // Average heading error at each trajectory point [rad]
+  std::vector<double> heading_errors;       // Absolute heading error at each trajectory point [rad]
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
 
   // Per-horizon metrics in insertion order: "full" first, then "1s", "2s", ...

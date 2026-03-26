@@ -19,6 +19,7 @@
 #include <autoware/motion_utils/trajectory/conversion.hpp>
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
+#include <autoware_utils_math/normalization.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/reader.hpp>
 
@@ -117,6 +118,8 @@ static void fill_horizon_json(
     f["Result"]["Frame"] = "Success";
     f["Info"]["ADE"] = hm.ade;
     f["Info"]["FDE"] = hm.fde;
+    f["Info"]["AHE"] = hm.ahe;
+    f["Info"]["FHE"] = hm.fhe;
     f["Info"]["average_lateral_deviation"] = hm.average_lateral_deviation;
     f["Info"]["max_lateral_deviation"] = hm.max_lateral_deviation;
     f["Info"]["average_longitudinal_deviation"] = hm.average_longitudinal_deviation;
@@ -436,11 +439,14 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
   metrics.displacement_errors.resize(metrics.num_points, 0.0);
   metrics.ground_truth_poses.resize(metrics.num_points);
   metrics.ade.resize(metrics.num_points, 0.0);
+  metrics.ahe.resize(metrics.num_points, 0.0);
+  metrics.heading_errors.resize(metrics.num_points, 0.0);
   metrics.ttc.resize(metrics.num_points, std::numeric_limits<double>::max());
 
   // Running accumulators for per-horizon aggregate metrics
   std::vector<double> lat_prefix_sum(metrics.num_points);
   std::vector<double> lon_prefix_sum(metrics.num_points);
+  std::vector<double> heading_prefix_sum(metrics.num_points);
   std::vector<double> lat_running_abs_max(metrics.num_points);
   std::vector<double> lon_running_abs_max(metrics.num_points);
   std::vector<double> ttc_running_min(metrics.num_points);
@@ -449,6 +455,7 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
   double displacement_sum = 0.0;
   double lat_sum = 0.0;
   double lon_sum = 0.0;
+  double heading_sum = 0.0;
   double lat_max = 0.0;
   double lon_max = 0.0;
   double ttc_min = std::numeric_limits<double>::max();
@@ -466,16 +473,23 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
 
     const auto [longitudinal_error, lateral_error] =
       calculate_errors_in_vehicle_frame(traj_point.pose, gt_pose);
+    const double pred_yaw = tf2::getYaw(traj_point.pose.orientation);
+    const double gt_yaw = tf2::getYaw(gt_pose.orientation);
+    const double heading_error = std::abs(autoware_utils_math::normalize_radian(pred_yaw - gt_yaw));
 
     metrics.longitudinal_deviations[i] = longitudinal_error;
     metrics.lateral_deviations[i] = lateral_error;
+    metrics.heading_errors[i] = heading_error;
 
     lat_sum += std::abs(lateral_error);
     lon_sum += std::abs(longitudinal_error);
+    heading_sum += heading_error;
+    metrics.ahe[i] = heading_sum / (i + 1);
     lat_max = std::max(lat_max, std::abs(lateral_error));
     lon_max = std::max(lon_max, std::abs(longitudinal_error));
     lat_prefix_sum[i] = lat_sum;
     lon_prefix_sum[i] = lon_sum;
+    heading_prefix_sum[i] = heading_sum;
     lat_running_abs_max[i] = lat_max;
     lon_running_abs_max[i] = lon_max;
 
@@ -526,10 +540,16 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
   constexpr double kHorizonToleranceSec = 0.1;
   auto compute_horizon = [&](size_t cutoff) -> HorizonMetrics {
     const double n = static_cast<double>(cutoff + 1);
-    return {metrics.ade[cutoff],        metrics.displacement_errors[cutoff],
-            lat_prefix_sum[cutoff] / n, lat_running_abs_max[cutoff],
-            lon_prefix_sum[cutoff] / n, lon_running_abs_max[cutoff],
-            ttc_running_min[cutoff]};
+    return {
+      metrics.ade[cutoff],
+      metrics.displacement_errors[cutoff],
+      heading_prefix_sum[cutoff] / n,
+      metrics.heading_errors[cutoff],
+      lat_prefix_sum[cutoff] / n,
+      lat_running_abs_max[cutoff],
+      lon_prefix_sum[cutoff] / n,
+      lon_running_abs_max[cutoff],
+      ttc_running_min[cutoff]};
   };
 
   if (metrics.num_points > 1u) {
@@ -752,6 +772,14 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   array_msg.data = metrics.displacement_errors;
   bag_writer.write(array_msg, metric_topic("fde"), message_timestamp);
 
+  // AHE
+  array_msg.data = metrics.ahe;
+  bag_writer.write(array_msg, metric_topic("ahe"), message_timestamp);
+
+  // FHE
+  array_msg.data = metrics.heading_errors;
+  bag_writer.write(array_msg, metric_topic("fhe"), message_timestamp);
+
   // Lateral deviations array
   array_msg.data = metrics.lateral_deviations;
   bag_writer.write(array_msg, metric_topic("lateral_deviation"), message_timestamp);
@@ -926,7 +954,7 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
     for (const auto & p : m.horizon_results) all_keys.insert(p.first);
   }
   for (const auto & tag : all_keys) {
-    std::vector<double> ade_vals, fde_vals;
+    std::vector<double> ade_vals, fde_vals, ahe_vals, fhe_vals;
     std::vector<double> avg_lat_vals, max_lat_vals, avg_lon_vals, max_lon_vals;
     std::vector<double> min_ttc_vals;
     for (const auto & m : metrics_list_) {
@@ -937,6 +965,8 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
       const auto & hm = it->second;
       ade_vals.push_back(hm.ade);
       fde_vals.push_back(hm.fde);
+      ahe_vals.push_back(hm.ahe);
+      fhe_vals.push_back(hm.fhe);
       avg_lat_vals.push_back(hm.average_lateral_deviation);
       max_lat_vals.push_back(hm.max_lateral_deviation);
       avg_lon_vals.push_back(hm.average_longitudinal_deviation);
@@ -948,6 +978,8 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
 
     emit_metric(tag, "ade", "Average Displacement Error within " + tag + " horizon [m]", ade_vals);
     emit_metric(tag, "fde", "Final Displacement Error at " + tag + " horizon [m]", fde_vals);
+    emit_metric(tag, "ahe", "Average Heading Error within " + tag + " horizon [rad]", ahe_vals);
+    emit_metric(tag, "fhe", "Final Heading Error at " + tag + " horizon [rad]", fhe_vals);
     emit_metric(
       tag, "average_lateral_deviation", "Average lateral deviation within " + tag + " horizon [m]",
       avg_lat_vals);
@@ -1004,7 +1036,9 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["trajectory_duration_sec"] = m.trajectory_duration;
 
     traj["ade"] = m.ade;
+    traj["ahe"] = m.ahe;
     traj["displacement_errors"] = m.displacement_errors;
+    traj["heading_errors"] = m.heading_errors;
     traj["lateral_deviations"] = m.lateral_deviations;
     traj["longitudinal_deviations"] = m.longitudinal_deviations;
     traj["ttc"] = m.ttc;
@@ -1057,6 +1091,8 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     {dlr_result_topic(), "std_msgs/msg/String"},
     {metric_topic("ade"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("fde"), "std_msgs/msg/Float64MultiArray"},
+    {metric_topic("ahe"), "std_msgs/msg/Float64MultiArray"},
+    {metric_topic("fhe"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("ttc"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("lateral_deviation"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("longitudinal_deviation"), "std_msgs/msg/Float64MultiArray"},

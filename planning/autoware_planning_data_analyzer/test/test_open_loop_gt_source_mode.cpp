@@ -22,6 +22,7 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
@@ -142,6 +143,7 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
   evaluator.set_metric_variant("raw");
 
   EXPECT_EQ(evaluator.metric_topic("ade"), "/open_loop/metrics/raw/ade");
+  EXPECT_EQ(evaluator.metric_topic("ahe"), "/open_loop/metrics/raw/ahe");
   EXPECT_EQ(
     evaluator.trajectory_metric_topic("lateral_accelerations"),
     "/trajectory/raw/lateral_accelerations");
@@ -157,7 +159,70 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
   };
 
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ade"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ahe"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/fhe"));
   EXPECT_TRUE(has_topic("/trajectory/raw/lateral_accelerations"));
   EXPECT_TRUE(has_topic("/evaluation/compared_trajectory/raw"));
   EXPECT_TRUE(has_topic("/driving_log_replayer/time_step_based_trajectory/raw/results"));
+}
+
+TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)
+{
+  const rclcpp::Time start_time(40, 0);
+  auto prediction = make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0});
+  const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0}));
+
+  prediction.points[0].pose.orientation.z = std::sin((-M_PI + 0.1) * 0.5);
+  prediction.points[0].pose.orientation.w = std::cos((-M_PI + 0.1) * 0.5);
+  gt->points[0].pose.orientation.z = std::sin((M_PI - 0.1) * 0.5);
+  gt->points[0].pose.orientation.w = std::cos((M_PI - 0.1) * 0.5);
+
+  prediction.points[1].pose.orientation.z = std::sin(0.2 * 0.5);
+  prediction.points[1].pose.orientation.w = std::cos(0.2 * 0.5);
+  gt->points[1].pose.orientation.w = 1.0;
+
+  prediction.points[2].pose.orientation.z = std::sin((-0.3) * 0.5);
+  prediction.points[2].pose.orientation.w = std::cos((-0.3) * 0.5);
+  gt->points[2].pose.orientation.w = 1.0;
+
+  prediction.points[3].pose.orientation.z = std::sin(0.4 * 0.5);
+  prediction.points[3].pose.orientation.w = std::cos(0.4 * 0.5);
+  gt->points[3].pose.orientation.w = 1.0;
+
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{make_sync_data(prediction, gt)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+  evaluator.set_evaluation_horizons({0.2});
+
+  evaluator.evaluate(sync_data_list, nullptr);
+  const auto metrics = evaluator.get_metrics();
+  ASSERT_EQ(metrics.size(), 1u);
+  ASSERT_EQ(metrics.front().ahe.size(), 4u);
+  ASSERT_EQ(metrics.front().heading_errors.size(), 4u);
+
+  EXPECT_NEAR(metrics.front().ahe[0], 0.2, 1e-6);
+  EXPECT_NEAR(metrics.front().ahe[1], 0.2, 1e-6);
+  EXPECT_NEAR(metrics.front().ahe[2], 0.233333333333, 1e-6);
+  EXPECT_NEAR(metrics.front().ahe[3], 0.275, 1e-6);
+  EXPECT_NEAR(metrics.front().heading_errors[0], 0.2, 1e-6);
+  EXPECT_NEAR(metrics.front().heading_errors[1], 0.2, 1e-6);
+  EXPECT_NEAR(metrics.front().heading_errors[2], 0.3, 1e-6);
+  EXPECT_NEAR(metrics.front().heading_errors[3], 0.4, 1e-6);
+
+  ASSERT_EQ(metrics.front().horizon_results.size(), 2u);
+  EXPECT_EQ(metrics.front().horizon_results[0].first, "full");
+  EXPECT_NEAR(metrics.front().horizon_results[0].second.ahe, 0.275, 1e-6);
+  EXPECT_NEAR(metrics.front().horizon_results[0].second.fhe, 0.4, 1e-6);
+
+  EXPECT_EQ(metrics.front().horizon_results[1].first, "0.2s");
+  EXPECT_NEAR(metrics.front().horizon_results[1].second.ahe, 0.233333333333, 1e-6);
+  EXPECT_NEAR(metrics.front().horizon_results[1].second.fhe, 0.3, 1e-6);
+
+  const auto summary_json = evaluator.get_summary_as_json();
+  EXPECT_NEAR(summary_json["full/ahe/mean"].get<double>(), 0.275, 1e-6);
+  EXPECT_NEAR(summary_json["full/fhe/mean"].get<double>(), 0.4, 1e-6);
+  EXPECT_NEAR(summary_json["0.2s/ahe/mean"].get<double>(), 0.233333333333, 1e-6);
+  EXPECT_NEAR(summary_json["0.2s/fhe/mean"].get<double>(), 0.3, 1e-6);
 }
