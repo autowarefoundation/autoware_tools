@@ -103,7 +103,7 @@ class TkinterApp:
         ttk.Label(self.left_frame, text="Y zoom:").grid(row=5, column=0, padx=5, pady=(10, 0), sticky="w")
         self.y_zoom_scale = ttk.Scale(
             self.left_frame,
-            from_=1.0,
+            from_=0.1,
             to=10.0,
             variable=self.current_y_zoom,
             orient=tk.HORIZONTAL,
@@ -182,7 +182,7 @@ class TkinterApp:
         return axis_option_keys[fallback_index]
 
     def _create_plot_config(self, x_axis: str, y_axis: str, y_zoom: float = 1.0):
-        return {"name": "", "x_axis": x_axis, "y_axis": y_axis, "y_zoom": max(y_zoom, 1.0)}
+        return {"name": "", "x_axis": x_axis, "y_axis": y_axis, "y_zoom": max(y_zoom, 1e-3)}
 
     def _load_initial_plot_configs(self, config, axis_option_keys):
         initial_plots = config.get("initial_plots", [])
@@ -234,7 +234,7 @@ class TkinterApp:
 
         self.plot_configs[self.active_plot_index]["x_axis"] = self.current_x_axis_selection.get()
         self.plot_configs[self.active_plot_index]["y_axis"] = self.current_y_axis_selection.get()
-        self.plot_configs[self.active_plot_index]["y_zoom"] = max(self.current_y_zoom.get(), 1.0)
+        self.plot_configs[self.active_plot_index]["y_zoom"] = max(self.current_y_zoom.get(), 1e-3)
 
     def on_plot_select(self, event):  # noqa: ARG002 unused-argument
         selection = self.plot_listbox.curselection()
@@ -628,8 +628,7 @@ class TkinterApp:
                     arc_x, arc_y = get_reference_arc_from_curvature(x_data, y_data)
                     self.plotter.update_reference_arc_data(plot_index, topic, arc_x, arc_y)
 
-            if self.plotter.fixed_y_limits[plot_index] is None:
-                self.plotter.update_fixed_y_limits(plot_index, y_data_list)
+            self.plotter.update_fixed_y_limits(plot_index, y_data_list)
             if ego_odom is not None:
                 self.plotter.update_ego_data(
                     plot_index,
@@ -658,7 +657,7 @@ class TkinterApp:
         if not self.plot_configs:
             return
 
-        self.plot_configs[self.active_plot_index]["y_zoom"] = max(zoom_factor, 1.0)
+        self.plot_configs[self.active_plot_index]["y_zoom"] = max(zoom_factor, 1e-3)
         self.plotter.set_y_zoom_factor(self.active_plot_index, zoom_factor)
         self.plotter.replot()
         self.canvas.draw_idle()
