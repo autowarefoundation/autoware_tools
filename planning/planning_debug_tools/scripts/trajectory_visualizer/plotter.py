@@ -31,6 +31,7 @@ class Plotter:
         self.arc_plots = []
         self.arc_y_limits = []
         self.ego_plots = []
+        self.legend_dirty = []
         self.y_zoom_factors = []
         self.fixed_y_limits = []
         self.axis_labels = []
@@ -62,15 +63,24 @@ class Plotter:
         self.arc_plots = [{} for _ in range(plot_count)]
         self.arc_y_limits = [None for _ in range(plot_count)]
         self.ego_plots = [None for _ in range(plot_count)]
+        self.legend_dirty = [True for _ in range(plot_count)]
         self.fixed_y_limits = [None for _ in range(plot_count)]
         self.y_zoom_factors = [1.0 for _ in range(plot_count)]
         self.axis_labels = [("", "") for _ in range(plot_count)]
         self.plot_names = []
 
     def _update_legend(self, plot_index: int):
+        if not self.legend_dirty[plot_index]:
+            return
+
         handles, labels = self.axes[plot_index].get_legend_handles_labels()
         if handles:
             self.axes[plot_index].legend()
+        else:
+            legend = self.axes[plot_index].get_legend()
+            if legend is not None:
+                legend.remove()
+        self.legend_dirty[plot_index] = False
 
     def _sync_axis_plots(self, plot_index: int, plot_names: list[str], colors: dict[str, tuple]):
         ax = self.axes[plot_index]
@@ -79,11 +89,14 @@ class Plotter:
         for name in removed_names:
             current_plots[name].remove()
             del current_plots[name]
+        if removed_names:
+            self.legend_dirty[plot_index] = True
 
         synced_plots = {}
         for name in plot_names:
             if name not in current_plots:
                 (current_plots[name],) = ax.plot([], [], marker="o", linestyle="-", alpha=0.6)
+                self.legend_dirty[plot_index] = True
             current_plots[name].set_label(name)
             current_plots[name].set_color(colors[name])
             synced_plots[name] = current_plots[name]
@@ -93,6 +106,7 @@ class Plotter:
             (self.ego_plots[plot_index],) = ax.plot(
                 [], [], marker="x", label="ego", alpha=1.0, color="black"
             )
+            self.legend_dirty[plot_index] = True
 
         arc_ax = self.arc_axes[plot_index]
         if arc_ax is None:
@@ -123,6 +137,7 @@ class Plotter:
         self.arc_y_limits[plot_index] = None
         self.plots[plot_index] = {}
         self.ego_plots[plot_index] = None
+        self.legend_dirty[plot_index] = True
         self.axis_labels[plot_index] = (x_label, y_label)
         self._configure_axes(self.axes[plot_index], x_label, y_label)
         colors = self._get_color_map(plot_names)
@@ -133,6 +148,7 @@ class Plotter:
         if len(self.axes) != max(len(plot_configs), 1):
             self._build_layout(plot_configs)
 
+        plot_names_changed = self.plot_names != list(plot_names)
         colors = self._get_color_map(plot_names)
         for plot_index, plot_config in enumerate(plot_configs):
             x_label = plot_config["x_axis"]
@@ -144,9 +160,9 @@ class Plotter:
                 self._reset_axis(plot_index, x_label, y_label, plot_names)
                 continue
 
-            self._configure_axes(self.axes[plot_index], x_label, y_label)
-            self._sync_axis_plots(plot_index, plot_names, colors)
-            self._update_legend(plot_index)
+            if plot_names_changed:
+                self._sync_axis_plots(plot_index, plot_names, colors)
+                self._update_legend(plot_index)
 
         self.plot_names = list(plot_names)
 
@@ -208,8 +224,9 @@ class Plotter:
                 self.arc_axes[plot_index].set_ylabel("y [m]", fontsize=8)
                 self.arc_axes[plot_index].tick_params(axis="both", labelsize=8)
                 self.arc_axes[plot_index].set_aspect("auto")
-            colors = self._get_color_map(plot_names)
-            self._sync_axis_plots(plot_index, plot_names, colors)
+            if self.arc_axes[plot_index] is None or list(self.arc_plots[plot_index].keys()) != plot_names:
+                colors = self._get_color_map(plot_names)
+                self._sync_axis_plots(plot_index, plot_names, colors)
             return
 
         if self.arc_axes[plot_index] is not None:

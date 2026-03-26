@@ -167,6 +167,7 @@ class TkinterApp:
         self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.msg_per_topic = {}
+        self.needs_replot = True
         self._refresh_plot_listbox()
         self._set_axis_controls_from_active_plot()
         self.refresh_topic_list()
@@ -257,7 +258,7 @@ class TkinterApp:
         self._refresh_plot_listbox()
         self._set_axis_controls_from_active_plot()
         self.plotter.init_plot(self.plot_configs, self._get_expected_plot_names())
-        self.canvas.draw_idle()
+        self.needs_replot = True
 
     def remove_plot(self):
         if len(self.plot_configs) <= 1:
@@ -269,7 +270,7 @@ class TkinterApp:
         self._refresh_plot_listbox()
         self._set_axis_controls_from_active_plot()
         self.plotter.init_plot(self.plot_configs, self._get_expected_plot_names())
-        self.canvas.draw_idle()
+        self.needs_replot = True
 
     def on_listbox_select(self, event):  # noqa: ARG002 unused-argument
         """Handle listbox selection event, preventing node separator selection."""
@@ -450,6 +451,7 @@ class TkinterApp:
 
     def update(self, topic, msg):
         self.msg_per_topic[topic] = msg
+        self.needs_replot = True
 
     def _get_candidate_generator_names(self, msg):
         generator_names = {}
@@ -575,6 +577,7 @@ class TkinterApp:
             topic for topic, msg_type in selected_topics if not msg_type.endswith("CandidateTrajectories")
         ]
         self.plotter.init_plot(self.plot_configs, initial_plot_names)
+        self.needs_replot = True
         for topic, msg_type in selected_topics:
             if msg_type.endswith("Trajectory"):
                 self.ros_interface.add_callback(
@@ -600,6 +603,9 @@ class TkinterApp:
                 )
 
     def replot(self):
+        if not self.needs_replot:
+            return
+
         self._sync_active_plot_config()
         ego_odom = self.ros_interface.ego_odom
         plot_names = self._get_expected_plot_names()
@@ -638,6 +644,7 @@ class TkinterApp:
                 )
         self.plotter.replot()
         self.canvas.draw_idle()
+        self.needs_replot = False
 
     def update_axis_labels(self, event=None):
         """Update plot axis labels when dropdown selection changes."""
@@ -649,8 +656,7 @@ class TkinterApp:
             self.current_y_axis_selection.get(),
             self._get_expected_plot_names(),
         )
-        self.plotter.replot()
-        self.canvas.draw_idle()
+        self.needs_replot = True
 
     def update_y_zoom(self, value):
         zoom_factor = float(value)
@@ -660,8 +666,7 @@ class TkinterApp:
 
         self.plot_configs[self.active_plot_index]["y_zoom"] = max(zoom_factor, 1e-3)
         self.plotter.set_y_zoom_factor(self.active_plot_index, zoom_factor)
-        self.plotter.replot()
-        self.canvas.draw_idle()
+        self.needs_replot = True
 
 
 if __name__ == "__main__":
