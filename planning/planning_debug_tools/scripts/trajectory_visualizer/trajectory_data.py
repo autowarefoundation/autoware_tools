@@ -100,6 +100,19 @@ def get_arc_lengths(msg, zero_pose=None):
     return arc_lengths
 
 
+def get_delta_arc_lengths(msg):
+    points = _get_points(msg)
+    if len(points) == 0:
+        return []
+    if len(points) == 1:
+        return [np.nan]
+
+    delta_arc_lengths = [np.nan]
+    for index in range(1, len(points)):
+        delta_arc_lengths.append(_dist(points[index - 1], points[index]))
+    return delta_arc_lengths
+
+
 def get_times(msg):
     points = _get_points(msg)
     if len(points) > 0 and not hasattr(points[0], "time_from_start"):
@@ -458,6 +471,7 @@ def get_data_functions() -> dict:
     return {
         "Index": DataFunction(index_values, zero_fn),
         "Arc Length [m]": DataFunction(get_arc_lengths, zero_fn),
+        "Delta Arc Length ds [m]": DataFunction(get_delta_arc_lengths, zero_fn),
         "Velocity [m/s]": DataFunction(get_velocites, get_velocity),
         "Times [s]": DataFunction(get_times, zero_fn),
         "Delta Times dt [s]": DataFunction(get_delta_times, zero_fn),
