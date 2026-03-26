@@ -41,9 +41,12 @@ class TkinterApp:
 
         # Predetermined list for the dropdown
         self.axis_options = get_data_functions()
+        axis_option_keys = [str(key) for key in self.axis_options.keys()]
         self.current_x_axis_selection = tk.StringVar()
         self.current_y_axis_selection = tk.StringVar()
         self.current_y_zoom = tk.DoubleVar(value=1.0)
+        self.plot_configs = self._load_initial_plot_configs(config, axis_option_keys)
+        self.active_plot_index = 0
 
         # --- Main Frames ---
         self.left_frame = ttk.Frame(self.root, padding="10")
@@ -60,30 +63,44 @@ class TkinterApp:
         self.root.grid_rowconfigure(0, weight=1)
 
         # --- Left Frame Widgets ---
-        axis_option_keys = [str(key) for key in self.axis_options.keys()]
+        ttk.Label(self.left_frame, text="Plots:").grid(
+            row=0, column=0, columnspan=2, padx=5, pady=5, sticky="w"
+        )
+        self.plot_listbox = tk.Listbox(
+            self.left_frame,
+            height=4,
+            exportselection=False,
+        )
+        self.plot_listbox.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+        self.plot_listbox.bind("<<ListboxSelect>>", self.on_plot_select)
+
+        self.add_plot_button = ttk.Button(self.left_frame, text="Add Plot", command=self.add_plot)
+        self.add_plot_button.grid(row=2, column=0, padx=5, pady=5, sticky="ew")
+        self.remove_plot_button = ttk.Button(
+            self.left_frame, text="Remove Plot", command=self.remove_plot
+        )
+        self.remove_plot_button.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
 
         # Dropdown List (Combobox)
-        ttk.Label(self.left_frame, text="X-axis:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        ttk.Label(self.left_frame, text="X-axis:").grid(row=3, column=0, padx=5, pady=5, sticky="w")
         self.x_axis_dropdown = ttk.Combobox(
             self.left_frame,
             textvariable=self.current_x_axis_selection,
             values=axis_option_keys,
             state="readonly",
         )
-        self.x_axis_dropdown.grid(row=1, column=0, padx=5, pady=5, sticky="ew")
-        self.x_axis_dropdown.current(0)  # Set default selection
+        self.x_axis_dropdown.grid(row=4, column=0, padx=5, pady=5, sticky="ew")
         # Dropdown List (Combobox)
-        ttk.Label(self.left_frame, text="Y-axis:").grid(row=0, column=1, padx=5, pady=5, sticky="w")
+        ttk.Label(self.left_frame, text="Y-axis:").grid(row=3, column=1, padx=5, pady=5, sticky="w")
         self.y_axis_dropdown = ttk.Combobox(
             self.left_frame,
             textvariable=self.current_y_axis_selection,
             values=axis_option_keys,
             state="readonly",
         )
-        self.y_axis_dropdown.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-        self.y_axis_dropdown.current(1)  # Set default selection
+        self.y_axis_dropdown.grid(row=4, column=1, padx=5, pady=5, sticky="ew")
 
-        ttk.Label(self.left_frame, text="Y zoom:").grid(row=2, column=0, padx=5, pady=(10, 0), sticky="w")
+        ttk.Label(self.left_frame, text="Y zoom:").grid(row=5, column=0, padx=5, pady=(10, 0), sticky="w")
         self.y_zoom_scale = ttk.Scale(
             self.left_frame,
             from_=1.0,
@@ -92,16 +109,9 @@ class TkinterApp:
             orient=tk.HORIZONTAL,
             command=self.update_y_zoom,
         )
-        self.y_zoom_scale.grid(row=3, column=0, padx=5, pady=5, sticky="ew")
+        self.y_zoom_scale.grid(row=6, column=0, padx=5, pady=5, sticky="ew")
         self.y_zoom_value_label = ttk.Label(self.left_frame, text="1.0x")
-        self.y_zoom_value_label.grid(row=3, column=1, padx=5, pady=5, sticky="w")
-
-        # Set initial selection from config
-        for i in range(len(axis_option_keys)):
-            if axis_option_keys[i].casefold().startswith(config["initial_axis"]["x"].casefold()):
-                self.x_axis_dropdown.current(i)
-            if axis_option_keys[i].casefold().startswith(config["initial_axis"]["y"].casefold()):
-                self.y_axis_dropdown.current(i)
+        self.y_zoom_value_label.grid(row=6, column=1, padx=5, pady=5, sticky="w")
 
         # bind dropdown selection events to update axis labels
         self.x_axis_dropdown.bind("<<ComboboxSelected>>", self.update_axis_labels)
@@ -109,10 +119,10 @@ class TkinterApp:
 
         # Listbox with Multiple Selection
         ttk.Label(self.left_frame, text="Topics:").grid(
-            row=4, column=0, columnspan=2, padx=5, pady=5, sticky="w"
+            row=7, column=0, columnspan=2, padx=5, pady=5, sticky="w"
         )
         self.listbox_frame = ttk.Frame(self.left_frame)
-        self.listbox_frame.grid(row=5, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+        self.listbox_frame.grid(row=8, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
         self.listbox_scrollbar_y = ttk.Scrollbar(self.listbox_frame, orient=tk.VERTICAL)
         self.listbox_scrollbar_x = ttk.Scrollbar(self.listbox_frame, orient=tk.HORIZONTAL)
@@ -132,7 +142,8 @@ class TkinterApp:
         self.listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Allow listbox to expand
-        self.left_frame.grid_rowconfigure(5, weight=1)
+        self.left_frame.grid_rowconfigure(1, weight=0)
+        self.left_frame.grid_rowconfigure(8, weight=1)
         self.left_frame.grid_columnconfigure(0, weight=1)
         self.left_frame.grid_columnconfigure(1, weight=1)
 
@@ -140,7 +151,7 @@ class TkinterApp:
         self.refresh_button = ttk.Button(
             self.left_frame, text="Refresh List", command=self.refresh_topic_list
         )
-        self.refresh_button.grid(row=6, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
+        self.refresh_button.grid(row=9, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
         # --- Mid Frame --- Button to hide/show the left frame
         self.hide_button = ttk.Button(
             self.mid_frame, text="<", command=self.hide_show_left_frame, width=1
@@ -150,15 +161,115 @@ class TkinterApp:
         # --- Right Frame Widgets ---
         # Matplotlib Plot Area
         self.plotter = Plotter()
+        self.plotter.init_plot(self.plot_configs, [])
         self.canvas = FigureCanvasTkAgg(self.plotter.fig, master=self.right_frame)
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         self.msg_per_topic = {}
-        self.plotter.set_y_zoom_factor(self.current_y_zoom.get())
+        self._refresh_plot_listbox()
+        self._set_axis_controls_from_active_plot()
         self.refresh_topic_list()
         # Auto-select initial topics from config
         self.select_initial_topics()
+
+    def _match_axis_option(self, axis_option_keys, prefix, fallback_index):
+        if not prefix:
+            return axis_option_keys[fallback_index]
+        for axis_option in axis_option_keys:
+            if axis_option.casefold().startswith(prefix.casefold()):
+                return axis_option
+        return axis_option_keys[fallback_index]
+
+    def _create_plot_config(self, x_axis: str, y_axis: str, y_zoom: float = 1.0):
+        return {"name": "", "x_axis": x_axis, "y_axis": y_axis, "y_zoom": max(y_zoom, 1.0)}
+
+    def _load_initial_plot_configs(self, config, axis_option_keys):
+        initial_plots = config.get("initial_plots", [])
+        if initial_plots:
+            plot_configs = []
+            for plot_config in initial_plots:
+                x_axis = self._match_axis_option(axis_option_keys, plot_config.get("x", ""), 0)
+                y_axis = self._match_axis_option(axis_option_keys, plot_config.get("y", ""), 1)
+                plot_configs.append(
+                    self._create_plot_config(x_axis, y_axis, float(plot_config.get("y_zoom", 1.0)))
+                )
+            return plot_configs
+
+        initial_axis = config.get("initial_axis", {})
+        return [
+            self._create_plot_config(
+                self._match_axis_option(axis_option_keys, initial_axis.get("x", ""), 0),
+                self._match_axis_option(axis_option_keys, initial_axis.get("y", ""), 1),
+            )
+        ]
+
+    def _refresh_plot_listbox(self):
+        self.plot_listbox.delete(0, tk.END)
+        for index, plot_config in enumerate(self.plot_configs):
+            plot_config["name"] = f"Plot {index + 1}"
+            self.plot_listbox.insert(tk.END, plot_config["name"])
+
+        if not self.plot_configs:
+            return
+
+        self.active_plot_index = max(0, min(self.active_plot_index, len(self.plot_configs) - 1))
+        self.plot_listbox.selection_clear(0, tk.END)
+        self.plot_listbox.selection_set(self.active_plot_index)
+        self.plot_listbox.activate(self.active_plot_index)
+
+    def _set_axis_controls_from_active_plot(self):
+        if not self.plot_configs:
+            return
+
+        plot_config = self.plot_configs[self.active_plot_index]
+        self.current_x_axis_selection.set(plot_config["x_axis"])
+        self.current_y_axis_selection.set(plot_config["y_axis"])
+        self.current_y_zoom.set(plot_config["y_zoom"])
+        self.y_zoom_value_label.config(text=f"{plot_config['y_zoom']:.1f}x")
+
+    def _sync_active_plot_config(self):
+        if not self.plot_configs:
+            return
+
+        self.plot_configs[self.active_plot_index]["x_axis"] = self.current_x_axis_selection.get()
+        self.plot_configs[self.active_plot_index]["y_axis"] = self.current_y_axis_selection.get()
+        self.plot_configs[self.active_plot_index]["y_zoom"] = max(self.current_y_zoom.get(), 1.0)
+
+    def on_plot_select(self, event):  # noqa: ARG002 unused-argument
+        selection = self.plot_listbox.curselection()
+        if not selection:
+            return
+
+        self._sync_active_plot_config()
+        self.active_plot_index = selection[0]
+        self._set_axis_controls_from_active_plot()
+
+    def add_plot(self):
+        self._sync_active_plot_config()
+        active_plot = self.plot_configs[self.active_plot_index]
+        self.plot_configs.append(
+            self._create_plot_config(
+                active_plot["x_axis"], active_plot["y_axis"], active_plot["y_zoom"]
+            )
+        )
+        self.active_plot_index = len(self.plot_configs) - 1
+        self._refresh_plot_listbox()
+        self._set_axis_controls_from_active_plot()
+        self.plotter.init_plot(self.plot_configs, self._get_expected_plot_names())
+        self.canvas.draw_idle()
+
+    def remove_plot(self):
+        if len(self.plot_configs) <= 1:
+            return
+
+        self._sync_active_plot_config()
+        self.plot_configs.pop(self.active_plot_index)
+        self.active_plot_index = min(self.active_plot_index, len(self.plot_configs) - 1)
+        self._refresh_plot_listbox()
+        self._set_axis_controls_from_active_plot()
+        self.plotter.init_plot(self.plot_configs, self._get_expected_plot_names())
+        self.canvas.draw_idle()
 
     def on_listbox_select(self, event):  # noqa: ARG002 unused-argument
         """Handle listbox selection event, preventing node separator selection."""
@@ -438,8 +549,7 @@ class TkinterApp:
     def _plot_without_updating_topics(self, topic_indexes):
         self.ros_interface.remove_callbacks()
         self.msg_per_topic.clear()
-        x_axis_selection = self.current_x_axis_selection.get()
-        y_axis_selection = self.current_y_axis_selection.get()
+        self._sync_active_plot_config()
         self.plotter.reset_y_limits()
 
         # Map listbox indexes to actual topic indexes
@@ -464,7 +574,7 @@ class TkinterApp:
         initial_plot_names = [
             topic for topic, msg_type in selected_topics if not msg_type.endswith("CandidateTrajectories")
         ]
-        self.plotter.init_plot(x_axis_selection, y_axis_selection, initial_plot_names)
+        self.plotter.init_plot(self.plot_configs, initial_plot_names)
         for topic, msg_type in selected_topics:
             if msg_type.endswith("Trajectory"):
                 self.ros_interface.add_callback(
@@ -490,51 +600,66 @@ class TkinterApp:
                 )
 
     def replot(self):
-        x_axis_selection = self.current_x_axis_selection.get()
-        y_axis_selection = self.current_y_axis_selection.get()
-        x_axis_fns = self.axis_options[x_axis_selection]
-        y_axis_fns = self.axis_options[y_axis_selection]
-        shift_x_data = "Arc Length" in x_axis_selection
-        show_reference_arc = shift_x_data and "Curvature" in y_axis_selection
+        self._sync_active_plot_config()
         ego_odom = self.ros_interface.ego_odom
         plot_names = self._get_expected_plot_names()
-        self.plotter.set_reference_arc_visibility(show_reference_arc)
-        if list(self.plotter.plots.keys()) != plot_names or (
-            show_reference_arc and list(self.plotter.arc_plots.keys()) != plot_names
-        ):
-            self.plotter.sync_plots(plot_names)
+        plot_entries = self._get_plot_entries()
+        self.plotter.configure_plots(self.plot_configs, plot_names)
 
-        y_data_list = []
-        for topic, traj in self._get_plot_entries():
-            if shift_x_data:
-                x_data = x_axis_fns.trajectory_fn(traj, ego_odom)
-            else:
-                x_data = x_axis_fns.trajectory_fn(traj)
-            y_data = y_axis_fns.trajectory_fn(traj)
-            y_data_list.append(y_data)
-            self.plotter.update_data(topic, x_data, y_data)
-            if show_reference_arc:
-                arc_x, arc_y = get_reference_arc_from_curvature(x_data, y_data)
-                self.plotter.update_reference_arc_data(topic, arc_x, arc_y)
-        if self.plotter.fixed_y_limits is None:
-            self.plotter.update_fixed_y_limits(y_data_list)
-        if ego_odom is not None:
-            self.plotter.update_ego_data(x_axis_fns.ego_fn(ego_odom), y_axis_fns.ego_fn(ego_odom))
+        for plot_index, plot_config in enumerate(self.plot_configs):
+            x_axis_selection = plot_config["x_axis"]
+            y_axis_selection = plot_config["y_axis"]
+            x_axis_fns = self.axis_options[x_axis_selection]
+            y_axis_fns = self.axis_options[y_axis_selection]
+            shift_x_data = "Arc Length" in x_axis_selection
+            show_reference_arc = shift_x_data and "Curvature" in y_axis_selection
+            self.plotter.set_reference_arc_visibility(plot_index, show_reference_arc, plot_names)
+
+            y_data_list = []
+            for topic, traj in plot_entries:
+                if shift_x_data:
+                    x_data = x_axis_fns.trajectory_fn(traj, ego_odom)
+                else:
+                    x_data = x_axis_fns.trajectory_fn(traj)
+                y_data = y_axis_fns.trajectory_fn(traj)
+                y_data_list.append(y_data)
+                self.plotter.update_data(plot_index, topic, x_data, y_data)
+                if show_reference_arc:
+                    arc_x, arc_y = get_reference_arc_from_curvature(x_data, y_data)
+                    self.plotter.update_reference_arc_data(plot_index, topic, arc_x, arc_y)
+
+            if self.plotter.fixed_y_limits[plot_index] is None:
+                self.plotter.update_fixed_y_limits(plot_index, y_data_list)
+            if ego_odom is not None:
+                self.plotter.update_ego_data(
+                    plot_index,
+                    x_axis_fns.ego_fn(ego_odom),
+                    y_axis_fns.ego_fn(ego_odom),
+                )
         self.plotter.replot()
         self.canvas.draw_idle()
 
     def update_axis_labels(self, event=None):
         """Update plot axis labels when dropdown selection changes."""
-        x_axis_selection = self.current_x_axis_selection.get()
-        y_axis_selection = self.current_y_axis_selection.get()
-        self.plotter.reset_y_limits()
-        self.plotter.update_labels(x_axis_selection, y_axis_selection)
+        self._sync_active_plot_config()
+        self.plotter.reset_y_limits(self.active_plot_index)
+        self.plotter.update_labels(
+            self.active_plot_index,
+            self.current_x_axis_selection.get(),
+            self.current_y_axis_selection.get(),
+            self._get_expected_plot_names(),
+        )
+        self.plotter.replot()
         self.canvas.draw_idle()
 
     def update_y_zoom(self, value):
         zoom_factor = float(value)
         self.y_zoom_value_label.config(text=f"{zoom_factor:.1f}x")
-        self.plotter.set_y_zoom_factor(zoom_factor)
+        if not self.plot_configs:
+            return
+
+        self.plot_configs[self.active_plot_index]["y_zoom"] = max(zoom_factor, 1.0)
+        self.plotter.set_y_zoom_factor(self.active_plot_index, zoom_factor)
         self.plotter.replot()
         self.canvas.draw_idle()
 

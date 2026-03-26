@@ -14,11 +14,13 @@ This tool allow the visualization of Autoware trajectory messages (`autoware_pla
 2. **A window will pop up:** This window will be used to visualize trajectories.
 
 3. **Choose what to plot:**
-   - **X-axis and Y-axis:** Use the dropdown menus at the top left to select what data you want on the X and Y axes of the graph (e.g., "Time" vs. "Velocity").
-   - **Topics:** The list in the middle left shows available trajectory topics. Check the boxes to select which trajectories you want to see on the plot.
+   - **Plots:** Use `Add Plot` and `Remove Plot` to manage multiple subplots. Select a plot from the list to edit its settings.
+   - **X-axis and Y-axis:** Use the dropdown menus to select what data the active subplot uses on each axis.
+   - **Y zoom:** Adjust the vertical zoom factor independently for the active subplot.
+   - **Topics:** The list in the middle left shows available trajectory topics. The selected topics are shared by all subplots.
    - **Refresh List:** Press the "Refresh List" button to update the list of available topics. This is useful if new trajectory data becomes available.
 
-4. **See the plot:** The right side of the window shows the plot of the selected trajectory data.
+4. **See the plots:** The right side of the window shows one subplot per configured plot.
 
 ## Code structure
 
@@ -29,6 +31,18 @@ This tool allow the visualization of Autoware trajectory messages (`autoware_pla
 - `trajectory_data.py`: This file calculates different properties of the trajectory, like velocity, curvature, etc. It provides the data that can be plotted.
 - `trajectory_node_graph.py`: This script analyzes the node graph structure to determine topic display order. It generates `graph_config.yaml` which contains the node and topic dependency information.
 - `graph_config.yaml`: Configuration file that stores the node graph structure for topic ordering.
+
+## Initial plot configuration
+
+`config.yaml` supports multiple initial subplots through `initial_plots`:
+
+```yaml
+initial_plots:
+   - {x: arc, y: vel, y_zoom: 1.0}
+   - {x: arc, y: curvature, y_zoom: 2.0}
+```
+
+Each entry selects the initial x-axis, y-axis, and y-zoom for one subplot. The legacy `initial_axis` field is still accepted as a fallback and creates a single subplot.
 
 ## Topic display ordering
 
