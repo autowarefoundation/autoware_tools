@@ -19,6 +19,7 @@
 #include <autoware/motion_utils/trajectory/conversion.hpp>
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
+#include <autoware_utils_math/normalization.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/reader.hpp>
 
@@ -135,11 +136,6 @@ static std::string result_summary(bool has_frame, size_t num_points)
   if (has_frame) return "Open-loop trajectory metrics generated";
   return num_points <= 1u ? "Too few trajectory points"
                           : "Open-loop trajectory metrics unavailable";
-}
-
-static double wrap_angle(const double angle)
-{
-  return std::atan2(std::sin(angle), std::cos(angle));
 }
 
 // Constructor implementation moved to header file
@@ -443,6 +439,7 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
   metrics.displacement_errors.resize(metrics.num_points, 0.0);
   metrics.ground_truth_poses.resize(metrics.num_points);
   metrics.ade.resize(metrics.num_points, 0.0);
+  metrics.ahe.resize(metrics.num_points, 0.0);
   metrics.heading_errors.resize(metrics.num_points, 0.0);
   metrics.ttc.resize(metrics.num_points, std::numeric_limits<double>::max());
 
@@ -478,7 +475,8 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
       calculate_errors_in_vehicle_frame(traj_point.pose, gt_pose);
     const double pred_yaw = tf2::getYaw(traj_point.pose.orientation);
     const double gt_yaw = tf2::getYaw(gt_pose.orientation);
-    const double heading_error = std::abs(wrap_angle(pred_yaw - gt_yaw));
+    const double heading_error =
+      std::abs(autoware_utils_math::normalize_radian(pred_yaw - gt_yaw));
 
     metrics.longitudinal_deviations[i] = longitudinal_error;
     metrics.lateral_deviations[i] = lateral_error;
@@ -487,6 +485,7 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
     lat_sum += std::abs(lateral_error);
     lon_sum += std::abs(longitudinal_error);
     heading_sum += heading_error;
+    metrics.ahe[i] = heading_sum / (i + 1);
     lat_max = std::max(lat_max, std::abs(lateral_error));
     lon_max = std::max(lon_max, std::abs(longitudinal_error));
     lat_prefix_sum[i] = lat_sum;
@@ -774,7 +773,7 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   bag_writer.write(array_msg, metric_topic("fde"), message_timestamp);
 
   // AHE
-  array_msg.data = metrics.heading_errors;
+  array_msg.data = metrics.ahe;
   bag_writer.write(array_msg, metric_topic("ahe"), message_timestamp);
 
   // FHE
@@ -1037,6 +1036,7 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["trajectory_duration_sec"] = m.trajectory_duration;
 
     traj["ade"] = m.ade;
+    traj["ahe"] = m.ahe;
     traj["displacement_errors"] = m.displacement_errors;
     traj["heading_errors"] = m.heading_errors;
     traj["lateral_deviations"] = m.lateral_deviations;

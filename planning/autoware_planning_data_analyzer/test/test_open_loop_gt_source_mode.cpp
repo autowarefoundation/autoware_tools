@@ -199,8 +199,13 @@ TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)
   evaluator.evaluate(sync_data_list, nullptr);
   const auto metrics = evaluator.get_metrics();
   ASSERT_EQ(metrics.size(), 1u);
+  ASSERT_EQ(metrics.front().ahe.size(), 4u);
   ASSERT_EQ(metrics.front().heading_errors.size(), 4u);
 
+  EXPECT_NEAR(metrics.front().ahe[0], 0.2, 1e-6);
+  EXPECT_NEAR(metrics.front().ahe[1], 0.2, 1e-6);
+  EXPECT_NEAR(metrics.front().ahe[2], 0.233333333333, 1e-6);
+  EXPECT_NEAR(metrics.front().ahe[3], 0.275, 1e-6);
   EXPECT_NEAR(metrics.front().heading_errors[0], 0.2, 1e-6);
   EXPECT_NEAR(metrics.front().heading_errors[1], 0.2, 1e-6);
   EXPECT_NEAR(metrics.front().heading_errors[2], 0.3, 1e-6);
