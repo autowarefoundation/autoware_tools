@@ -20,12 +20,16 @@ import matplotlib.pyplot as plt
 
 
 class Plotter:
+    REFERENCE_ARC_MIN_Y_PADDING = 0.5
+    REFERENCE_ARC_Y_PADDING_RATIO = 0.1
+
     def __init__(self):
         self.fig = plt.figure()
         self.axes = []
         self.plots = []
         self.arc_axes = []
         self.arc_plots = []
+        self.arc_y_limits = []
         self.ego_plots = []
         self.y_zoom_factors = []
         self.fixed_y_limits = []
@@ -56,6 +60,7 @@ class Plotter:
         self.plots = [{} for _ in range(plot_count)]
         self.arc_axes = [None for _ in range(plot_count)]
         self.arc_plots = [{} for _ in range(plot_count)]
+        self.arc_y_limits = [None for _ in range(plot_count)]
         self.ego_plots = [None for _ in range(plot_count)]
         self.fixed_y_limits = [None for _ in range(plot_count)]
         self.y_zoom_factors = [1.0 for _ in range(plot_count)]
@@ -115,6 +120,7 @@ class Plotter:
         self.axes[plot_index].clear()
         self.arc_axes[plot_index] = None
         self.arc_plots[plot_index] = {}
+        self.arc_y_limits[plot_index] = None
         self.plots[plot_index] = {}
         self.ego_plots[plot_index] = None
         self.axis_labels[plot_index] = (x_label, y_label)
@@ -201,7 +207,7 @@ class Plotter:
                 self.arc_axes[plot_index].set_xlabel("x [m]", fontsize=8)
                 self.arc_axes[plot_index].set_ylabel("y [m]", fontsize=8)
                 self.arc_axes[plot_index].tick_params(axis="both", labelsize=8)
-                self.arc_axes[plot_index].set_aspect("equal", adjustable="box")
+                self.arc_axes[plot_index].set_aspect("auto")
             colors = self._get_color_map(plot_names)
             self._sync_axis_plots(plot_index, plot_names, colors)
             return
@@ -210,6 +216,7 @@ class Plotter:
             self.arc_axes[plot_index].remove()
             self.arc_axes[plot_index] = None
         self.arc_plots[plot_index] = {}
+        self.arc_y_limits[plot_index] = None
 
     def update_data(self, plot_index: int, name, x_data, y_data):
         if name not in self.plots[plot_index]:
@@ -236,6 +243,33 @@ class Plotter:
         self._configure_axes(self.axes[plot_index], x_label, y_label)
         self._update_legend(plot_index)
 
+    def _apply_reference_arc_y_padding(self, plot_index: int):
+        arc_ax = self.arc_axes[plot_index]
+        if arc_ax is None:
+            return
+
+        if self.arc_y_limits[plot_index] is None:
+            y_min, y_max = arc_ax.get_ylim()
+            if not (math.isfinite(y_min) and math.isfinite(y_max)):
+                return
+
+            y_range = y_max - y_min
+            padding = max(
+                y_range * self.REFERENCE_ARC_Y_PADDING_RATIO,
+                self.REFERENCE_ARC_MIN_Y_PADDING,
+            )
+            if y_range <= 0.0:
+                y_center = 0.5 * (y_min + y_max)
+                self.arc_y_limits[plot_index] = (y_center - padding, y_center + padding)
+            else:
+                self.arc_y_limits[plot_index] = (y_min - padding, y_max + padding)
+
+        padded_y_limits = self.arc_y_limits[plot_index]
+        if padded_y_limits is None:
+            return
+
+        arc_ax.set_ylim(*padded_y_limits)
+
     def replot(self):
         for plot_index, ax in enumerate(self.axes):
             ax.relim()
@@ -244,4 +278,5 @@ class Plotter:
             if self.arc_axes[plot_index] is not None:
                 self.arc_axes[plot_index].relim()
                 self.arc_axes[plot_index].autoscale_view()
+                self._apply_reference_arc_y_padding(plot_index)
             self._update_legend(plot_index)

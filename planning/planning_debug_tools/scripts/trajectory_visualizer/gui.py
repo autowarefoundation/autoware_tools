@@ -628,7 +628,8 @@ class TkinterApp:
                     arc_x, arc_y = get_reference_arc_from_curvature(x_data, y_data)
                     self.plotter.update_reference_arc_data(plot_index, topic, arc_x, arc_y)
 
-            self.plotter.update_fixed_y_limits(plot_index, y_data_list)
+            if self.plotter.fixed_y_limits[plot_index] is None:
+                self.plotter.update_fixed_y_limits(plot_index, y_data_list)
             if ego_odom is not None:
                 self.plotter.update_ego_data(
                     plot_index,

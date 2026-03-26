@@ -42,7 +42,7 @@ initial_plots:
    - {x: arc, y: curvature, y_zoom: 2.0}
 ```
 
-Each entry selects the initial x-axis, y-axis, and y-zoom for one subplot. `y_zoom: 1.0` fits the current data range, values above `1.0` zoom in, and values below `1.0` zoom out. The legacy `initial_axis` field is still accepted as a fallback and creates a single subplot.
+Each entry selects the initial x-axis, y-axis, and y-zoom for one subplot. `y_zoom: 1.0` keeps the subplot's baseline y-range, values above `1.0` zoom in, and values below `1.0` zoom out. The legacy `initial_axis` field is still accepted as a fallback and creates a single subplot.
 
 ## Topic display ordering
 
