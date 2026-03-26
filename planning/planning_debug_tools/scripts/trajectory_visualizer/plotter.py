@@ -181,10 +181,10 @@ class Plotter:
     def set_y_zoom_factor(self, plot_index: int, zoom_factor: float):
         self.y_zoom_factors[plot_index] = max(zoom_factor, 1e-3)
 
-    def update_fixed_y_limits(self, plot_index: int, y_data_list):
+    def _collect_valid_range(self, data_list):
         valid_values = []
-        for y_data in y_data_list:
-            for value in y_data:
+        for data in data_list:
+            for value in data:
                 if value is None:
                     continue
                 numeric_value = float(value)
@@ -192,15 +192,59 @@ class Plotter:
                     valid_values.append(numeric_value)
 
         if not valid_values:
+            return None
+
+        return min(valid_values), max(valid_values)
+
+    def _expand_range(self, current_limits, next_limits):
+        if next_limits is None:
+            return current_limits
+        if current_limits is None:
+            return next_limits
+        return (
+            min(current_limits[0], next_limits[0]),
+            max(current_limits[1], next_limits[1]),
+        )
+
+    def _build_padded_reference_arc_limits(self, y_limits):
+        if y_limits is None:
+            return None
+
+        y_min, y_max = y_limits
+        y_range = y_max - y_min
+        padding = max(
+            y_range * self.REFERENCE_ARC_Y_PADDING_RATIO,
+            self.REFERENCE_ARC_MIN_Y_PADDING,
+        )
+        if y_range <= 0.0:
+            y_center = 0.5 * (y_min + y_max)
+            return (y_center - padding, y_center + padding)
+        return (y_min - padding, y_max + padding)
+
+    def update_fixed_y_limits(self, plot_index: int, y_data_list):
+        y_limits = self._collect_valid_range(y_data_list)
+        if y_limits is None:
             return
 
-        y_min = min(valid_values)
-        y_max = max(valid_values)
+        y_min, y_max = y_limits
         if y_min == y_max:
             padding = max(abs(y_min) * 0.1, 1.0)
             y_min -= padding
             y_max += padding
-        self.fixed_y_limits[plot_index] = (y_min, y_max)
+        self.fixed_y_limits[plot_index] = self._expand_range(
+            self.fixed_y_limits[plot_index],
+            (y_min, y_max),
+        )
+
+    def update_reference_arc_y_limits(self, plot_index: int, y_data_list):
+        if self.arc_axes[plot_index] is None:
+            return
+
+        padded_limits = self._build_padded_reference_arc_limits(self._collect_valid_range(y_data_list))
+        self.arc_y_limits[plot_index] = self._expand_range(
+            self.arc_y_limits[plot_index],
+            padded_limits,
+        )
 
     def _apply_fixed_y_limits(self, plot_index: int):
         if self.fixed_y_limits[plot_index] is None:
@@ -269,17 +313,7 @@ class Plotter:
             y_min, y_max = arc_ax.get_ylim()
             if not (math.isfinite(y_min) and math.isfinite(y_max)):
                 return
-
-            y_range = y_max - y_min
-            padding = max(
-                y_range * self.REFERENCE_ARC_Y_PADDING_RATIO,
-                self.REFERENCE_ARC_MIN_Y_PADDING,
-            )
-            if y_range <= 0.0:
-                y_center = 0.5 * (y_min + y_max)
-                self.arc_y_limits[plot_index] = (y_center - padding, y_center + padding)
-            else:
-                self.arc_y_limits[plot_index] = (y_min - padding, y_max + padding)
+            self.arc_y_limits[plot_index] = self._build_padded_reference_arc_limits((y_min, y_max))
 
         padded_y_limits = self.arc_y_limits[plot_index]
         if padded_y_limits is None:

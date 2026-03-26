@@ -622,6 +622,7 @@ class TkinterApp:
             self.plotter.set_reference_arc_visibility(plot_index, show_reference_arc, plot_names)
 
             y_data_list = []
+            reference_arc_y_data_list = []
             for topic, traj in plot_entries:
                 if shift_x_data:
                     x_data = x_axis_fns.trajectory_fn(traj, ego_odom)
@@ -633,9 +634,11 @@ class TkinterApp:
                 if show_reference_arc:
                     arc_x, arc_y = get_reference_arc_from_curvature(x_data, y_data)
                     self.plotter.update_reference_arc_data(plot_index, topic, arc_x, arc_y)
+                    reference_arc_y_data_list.append(arc_y)
 
-            if self.plotter.fixed_y_limits[plot_index] is None:
-                self.plotter.update_fixed_y_limits(plot_index, y_data_list)
+            self.plotter.update_fixed_y_limits(plot_index, y_data_list)
+            if show_reference_arc:
+                self.plotter.update_reference_arc_y_limits(plot_index, reference_arc_y_data_list)
             if ego_odom is not None:
                 self.plotter.update_ego_data(
                     plot_index,
