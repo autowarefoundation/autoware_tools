@@ -24,6 +24,9 @@ from shapely.geometry import Point
 from tf_transformations import euler_from_quaternion
 
 
+NOMINAL_WHEEL_BASE = 2.79
+
+
 def _dist(p1: TrajectoryPoint, p2: TrajectoryPoint):
     dx = p1.pose.position.x - p2.pose.position.x
     dy = p1.pose.position.y - p2.pose.position.y
@@ -253,6 +256,18 @@ def calculate_menger_curvature(msg):
     return curvatures
 
 
+def _curvature_to_steering_angles(curvatures, wheel_base=NOMINAL_WHEEL_BASE):
+    return np.arctan(wheel_base * np.asarray(curvatures, dtype=float)).tolist()
+
+
+def get_steering_angles(msg):
+    return _curvature_to_steering_angles(calculate_curvature_2d(msg))
+
+
+def get_steering_angles_menger(msg):
+    return _curvature_to_steering_angles(calculate_menger_curvature(msg))
+
+
 def get_accelerations(msg):
     points = _get_points(msg)
     if len(points) == 0:
@@ -361,6 +376,8 @@ def get_data_functions() -> dict:
         "Times [s]": DataFunction(get_times, zero_fn),
         "Curvature (derivatives) [m⁻¹]": DataFunction(calculate_curvature_2d, zero_fn),
         "Curvature (Menger) [m⁻¹]": DataFunction(calculate_menger_curvature, zero_fn),
+        "Steering Angle (derivatives) [rad]": DataFunction(get_steering_angles, zero_fn),
+        "Steering Angle (Menger) [rad]": DataFunction(get_steering_angles_menger, zero_fn),
         "Acceleration [m/s²]": DataFunction(get_accelerations, zero_fn),  # TODO: get accel
         "Relative angles [rad]": DataFunction(relative_angles, zero_fn),
         "X values": DataFunction(x_values, x_value),
