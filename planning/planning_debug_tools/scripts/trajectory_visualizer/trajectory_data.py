@@ -24,7 +24,20 @@ from shapely.geometry import Point
 from tf_transformations import euler_from_quaternion
 
 
-NOMINAL_WHEEL_BASE = 2.79
+NOMINAL_WHEEL_BASE = 4.76012
+
+
+def get_nominal_wheel_base():
+    return NOMINAL_WHEEL_BASE
+
+
+def set_nominal_wheel_base(wheel_base: float):
+    global NOMINAL_WHEEL_BASE
+
+    validated_wheel_base = float(wheel_base)
+    if validated_wheel_base <= 0.0:
+        raise ValueError("wheel_base must be positive")
+    NOMINAL_WHEEL_BASE = validated_wheel_base
 
 
 def _dist(p1: TrajectoryPoint, p2: TrajectoryPoint):
@@ -280,7 +293,9 @@ def calculate_menger_curvature(msg):
     return curvatures
 
 
-def _curvature_to_steering_angles(curvatures, wheel_base=NOMINAL_WHEEL_BASE):
+def _curvature_to_steering_angles(curvatures, wheel_base=None):
+    if wheel_base is None:
+        wheel_base = get_nominal_wheel_base()
     return np.arctan(wheel_base * np.asarray(curvatures, dtype=float)).tolist()
 
 

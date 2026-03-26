@@ -26,7 +26,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from plotter import Plotter
 from ros2_interface import ROS2Interface
 from trajectory_data import get_data_functions
+from trajectory_data import get_nominal_wheel_base
 from trajectory_data import get_reference_arc_from_curvature
+from trajectory_data import set_nominal_wheel_base
 from trajectory_node_graph import TrajectoryNodeGraph
 
 
@@ -45,6 +47,7 @@ class TkinterApp:
         self.current_x_axis_selection = tk.StringVar()
         self.current_y_axis_selection = tk.StringVar()
         self.current_y_zoom = tk.DoubleVar(value=1.0)
+        self.current_wheel_base = tk.StringVar(value=f"{get_nominal_wheel_base():.5f}")
         self.plot_configs = self._load_initial_plot_configs(config, axis_option_keys)
         self.active_plot_index = 0
 
@@ -100,7 +103,21 @@ class TkinterApp:
         )
         self.y_axis_dropdown.grid(row=4, column=1, padx=5, pady=5, sticky="ew")
 
-        ttk.Label(self.left_frame, text="Y zoom:").grid(row=5, column=0, padx=5, pady=(10, 0), sticky="w")
+        ttk.Label(self.left_frame, text="Wheel base [m]:").grid(
+            row=5, column=0, padx=5, pady=(10, 0), sticky="w"
+        )
+        self.wheel_base_entry = ttk.Entry(self.left_frame, textvariable=self.current_wheel_base)
+        self.wheel_base_entry.grid(row=6, column=0, padx=5, pady=5, sticky="ew")
+        self.wheel_base_entry.bind("<Return>", self.apply_wheel_base)
+        self.wheel_base_entry.bind("<FocusOut>", self.apply_wheel_base)
+        self.wheel_base_button = ttk.Button(
+            self.left_frame,
+            text="Apply Wheel Base",
+            command=self.apply_wheel_base,
+        )
+        self.wheel_base_button.grid(row=6, column=1, padx=5, pady=5, sticky="ew")
+
+        ttk.Label(self.left_frame, text="Y zoom:").grid(row=7, column=0, padx=5, pady=(10, 0), sticky="w")
         self.y_zoom_scale = ttk.Scale(
             self.left_frame,
             from_=0.1,
@@ -109,15 +126,15 @@ class TkinterApp:
             orient=tk.HORIZONTAL,
             command=self.update_y_zoom,
         )
-        self.y_zoom_scale.grid(row=6, column=0, padx=5, pady=5, sticky="ew")
+        self.y_zoom_scale.grid(row=8, column=0, padx=5, pady=5, sticky="ew")
         self.y_zoom_value_label = ttk.Label(self.left_frame, text="1.0x")
-        self.y_zoom_value_label.grid(row=6, column=1, padx=5, pady=5, sticky="w")
+        self.y_zoom_value_label.grid(row=8, column=1, padx=5, pady=5, sticky="w")
         self.auto_rescale_button = ttk.Button(
             self.left_frame,
             text="Auto Rescale",
             command=self.auto_rescale_active_plot,
         )
-        self.auto_rescale_button.grid(row=7, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
+        self.auto_rescale_button.grid(row=9, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
 
         # bind dropdown selection events to update axis labels
         self.x_axis_dropdown.bind("<<ComboboxSelected>>", self.update_axis_labels)
@@ -125,10 +142,10 @@ class TkinterApp:
 
         # Listbox with Multiple Selection
         ttk.Label(self.left_frame, text="Topics:").grid(
-            row=8, column=0, columnspan=2, padx=5, pady=5, sticky="w"
+            row=10, column=0, columnspan=2, padx=5, pady=5, sticky="w"
         )
         self.listbox_frame = ttk.Frame(self.left_frame)
-        self.listbox_frame.grid(row=9, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+        self.listbox_frame.grid(row=11, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
         self.listbox_scrollbar_y = ttk.Scrollbar(self.listbox_frame, orient=tk.VERTICAL)
         self.listbox_scrollbar_x = ttk.Scrollbar(self.listbox_frame, orient=tk.HORIZONTAL)
@@ -149,7 +166,7 @@ class TkinterApp:
 
         # Allow listbox to expand
         self.left_frame.grid_rowconfigure(1, weight=0)
-        self.left_frame.grid_rowconfigure(9, weight=1)
+        self.left_frame.grid_rowconfigure(11, weight=1)
         self.left_frame.grid_columnconfigure(0, weight=1)
         self.left_frame.grid_columnconfigure(1, weight=1)
 
@@ -157,7 +174,7 @@ class TkinterApp:
         self.refresh_button = ttk.Button(
             self.left_frame, text="Refresh List", command=self.refresh_topic_list
         )
-        self.refresh_button.grid(row=10, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
+        self.refresh_button.grid(row=12, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
         # --- Mid Frame --- Button to hide/show the left frame
         self.hide_button = ttk.Button(
             self.mid_frame, text="<", command=self.hide_show_left_frame, width=1
@@ -682,6 +699,17 @@ class TkinterApp:
 
         self.plot_configs[self.active_plot_index]["y_zoom"] = max(zoom_factor, 1e-3)
         self.plotter.set_y_zoom_factor(self.active_plot_index, zoom_factor)
+        self.needs_replot = True
+
+    def apply_wheel_base(self, event=None):  # noqa: ARG002 unused-argument
+        try:
+            set_nominal_wheel_base(float(self.current_wheel_base.get()))
+        except ValueError:
+            self.current_wheel_base.set(f"{get_nominal_wheel_base():.5f}")
+            return
+
+        self.current_wheel_base.set(f"{get_nominal_wheel_base():.5f}")
+        self.plotter.reset_y_limits()
         self.needs_replot = True
 
 
