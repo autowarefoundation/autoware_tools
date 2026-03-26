@@ -111,6 +111,17 @@ def get_times(msg):
     return times
 
 
+def get_delta_times(msg):
+    times = get_times(msg)
+    if len(times) <= 1:
+        return [np.nan for _ in times]
+
+    delta_times = [np.nan]
+    for index in range(1, len(times)):
+        delta_times.append(times[index] - times[index - 1])
+    return delta_times
+
+
 def get_reference_arc_from_curvature(arc_lengths, curvatures, epsilon=1e-9):
     if len(arc_lengths) == 0 or len(curvatures) == 0:
         return [], []
@@ -449,6 +460,7 @@ def get_data_functions() -> dict:
         "Arc Length [m]": DataFunction(get_arc_lengths, zero_fn),
         "Velocity [m/s]": DataFunction(get_velocites, get_velocity),
         "Times [s]": DataFunction(get_times, zero_fn),
+        "Delta Times dt [s]": DataFunction(get_delta_times, zero_fn),
         "Curvature (derivatives) [m⁻¹]": DataFunction(calculate_curvature_2d, zero_fn),
         "Curvature (Menger) [m⁻¹]": DataFunction(calculate_menger_curvature, zero_fn),
         "Steering Angle (derivatives) [rad]": DataFunction(get_steering_angles, zero_fn),
