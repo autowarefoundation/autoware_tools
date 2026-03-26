@@ -112,6 +112,12 @@ class TkinterApp:
         self.y_zoom_scale.grid(row=6, column=0, padx=5, pady=5, sticky="ew")
         self.y_zoom_value_label = ttk.Label(self.left_frame, text="1.0x")
         self.y_zoom_value_label.grid(row=6, column=1, padx=5, pady=5, sticky="w")
+        self.auto_rescale_button = ttk.Button(
+            self.left_frame,
+            text="Auto Rescale",
+            command=self.auto_rescale_active_plot,
+        )
+        self.auto_rescale_button.grid(row=7, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
 
         # bind dropdown selection events to update axis labels
         self.x_axis_dropdown.bind("<<ComboboxSelected>>", self.update_axis_labels)
@@ -119,10 +125,10 @@ class TkinterApp:
 
         # Listbox with Multiple Selection
         ttk.Label(self.left_frame, text="Topics:").grid(
-            row=7, column=0, columnspan=2, padx=5, pady=5, sticky="w"
+            row=8, column=0, columnspan=2, padx=5, pady=5, sticky="w"
         )
         self.listbox_frame = ttk.Frame(self.left_frame)
-        self.listbox_frame.grid(row=8, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+        self.listbox_frame.grid(row=9, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
         self.listbox_scrollbar_y = ttk.Scrollbar(self.listbox_frame, orient=tk.VERTICAL)
         self.listbox_scrollbar_x = ttk.Scrollbar(self.listbox_frame, orient=tk.HORIZONTAL)
@@ -143,7 +149,7 @@ class TkinterApp:
 
         # Allow listbox to expand
         self.left_frame.grid_rowconfigure(1, weight=0)
-        self.left_frame.grid_rowconfigure(8, weight=1)
+        self.left_frame.grid_rowconfigure(9, weight=1)
         self.left_frame.grid_columnconfigure(0, weight=1)
         self.left_frame.grid_columnconfigure(1, weight=1)
 
@@ -151,7 +157,7 @@ class TkinterApp:
         self.refresh_button = ttk.Button(
             self.left_frame, text="Refresh List", command=self.refresh_topic_list
         )
-        self.refresh_button.grid(row=9, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
+        self.refresh_button.grid(row=10, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
         # --- Mid Frame --- Button to hide/show the left frame
         self.hide_button = ttk.Button(
             self.mid_frame, text="<", command=self.hide_show_left_frame, width=1
@@ -270,6 +276,13 @@ class TkinterApp:
         self._refresh_plot_listbox()
         self._set_axis_controls_from_active_plot()
         self.plotter.init_plot(self.plot_configs, self._get_expected_plot_names())
+        self.needs_replot = True
+
+    def auto_rescale_active_plot(self):
+        if not self.plot_configs:
+            return
+
+        self.plotter.reset_y_limits(self.active_plot_index)
         self.needs_replot = True
 
     def on_listbox_select(self, event):  # noqa: ARG002 unused-argument

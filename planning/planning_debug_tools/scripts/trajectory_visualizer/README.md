@@ -17,6 +17,7 @@ This tool allow the visualization of Autoware trajectory messages (`autoware_pla
    - **Plots:** Use `Add Plot` and `Remove Plot` to manage multiple subplots. Select a plot from the list to edit its settings.
    - **X-axis and Y-axis:** Use the dropdown menus to select what data the active subplot uses on each axis.
    - **Y zoom:** Adjust the vertical zoom factor independently for the active subplot. Values above `1.0x` zoom in, and values below `1.0x` zoom out.
+   - **Auto Rescale:** Recompute the active subplot's vertical range from the currently buffered data.
    - **Topics:** The list in the middle left shows available trajectory topics. The selected topics are shared by all subplots.
    - **Refresh List:** Press the "Refresh List" button to update the list of available topics. This is useful if new trajectory data becomes available.
 

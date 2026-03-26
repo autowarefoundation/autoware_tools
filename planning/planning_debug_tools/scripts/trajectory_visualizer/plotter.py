@@ -175,8 +175,10 @@ class Plotter:
     def reset_y_limits(self, plot_index: int | None = None):
         if plot_index is None:
             self.fixed_y_limits = [None for _ in self.fixed_y_limits]
+            self.arc_y_limits = [None for _ in self.arc_y_limits]
             return
         self.fixed_y_limits[plot_index] = None
+        self.arc_y_limits[plot_index] = None
 
     def set_y_zoom_factor(self, plot_index: int, zoom_factor: float):
         self.y_zoom_factors[plot_index] = max(zoom_factor, 1e-3)
