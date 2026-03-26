@@ -260,12 +260,43 @@ def _curvature_to_steering_angles(curvatures, wheel_base=NOMINAL_WHEEL_BASE):
     return np.arctan(wheel_base * np.asarray(curvatures, dtype=float)).tolist()
 
 
+def _differentiate_by_time(values, times_sec, epsilon=1e-9):
+    if len(values) <= 1 or len(values) != len(times_sec):
+        return [0.0 for _ in values]
+
+    rates = [0.0 for _ in values]
+
+    for index in range(len(values)):
+        if index == 0:
+            delta_time = times_sec[1] - times_sec[0]
+            delta_value = values[1] - values[0]
+        elif index == len(values) - 1:
+            delta_time = times_sec[-1] - times_sec[-2]
+            delta_value = values[-1] - values[-2]
+        else:
+            delta_time = times_sec[index + 1] - times_sec[index - 1]
+            delta_value = values[index + 1] - values[index - 1]
+
+        if abs(delta_time) > epsilon:
+            rates[index] = delta_value / delta_time
+
+    return rates
+
+
 def get_steering_angles(msg):
     return _curvature_to_steering_angles(calculate_curvature_2d(msg))
 
 
 def get_steering_angles_menger(msg):
     return _curvature_to_steering_angles(calculate_menger_curvature(msg))
+
+
+def get_steering_angle_rates(msg):
+    return _differentiate_by_time(get_steering_angles(msg), get_times(msg))
+
+
+def get_steering_angle_rates_menger(msg):
+    return _differentiate_by_time(get_steering_angles_menger(msg), get_times(msg))
 
 
 def get_accelerations(msg):
@@ -378,6 +409,12 @@ def get_data_functions() -> dict:
         "Curvature (Menger) [m⁻¹]": DataFunction(calculate_menger_curvature, zero_fn),
         "Steering Angle (derivatives) [rad]": DataFunction(get_steering_angles, zero_fn),
         "Steering Angle (Menger) [rad]": DataFunction(get_steering_angles_menger, zero_fn),
+        "Steering Angle Rate (derivatives) [rad/s]": DataFunction(
+            get_steering_angle_rates, zero_fn
+        ),
+        "Steering Angle Rate (Menger) [rad/s]": DataFunction(
+            get_steering_angle_rates_menger, zero_fn
+        ),
         "Acceleration [m/s²]": DataFunction(get_accelerations, zero_fn),  # TODO: get accel
         "Relative angles [rad]": DataFunction(relative_angles, zero_fn),
         "X values": DataFunction(x_values, x_value),
