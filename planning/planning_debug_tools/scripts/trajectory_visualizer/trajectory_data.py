@@ -326,6 +326,50 @@ def relative_angles(msg):
     return angles
 
 
+def lateral_errors(msg, epsilon=1e-9):
+    points = _get_points(msg)
+    if len(points) <= 2:
+        return [0.0 for _ in points]
+
+    errors = [0.0 for _ in points]
+    for index in range(1, len(points) - 1):
+        prev_point = points[index - 1].pose.position
+        current_point = points[index].pose.position
+        next_point = points[index + 1].pose.position
+
+        direction_x = next_point.x - prev_point.x
+        direction_y = next_point.y - prev_point.y
+        direction_norm = np.hypot(direction_x, direction_y)
+        if direction_norm <= epsilon:
+            continue
+
+        offset_x = current_point.x - prev_point.x
+        offset_y = current_point.y - prev_point.y
+        cross_product = direction_x * offset_y - direction_y * offset_x
+        errors[index] = cross_product / direction_norm
+
+    return errors
+
+
+def lateral_errors_from_previous_heading(msg):
+    points = _get_points(msg)
+    if len(points) <= 1:
+        return [0.0 for _ in points]
+
+    errors = [0.0]
+    for index in range(1, len(points)):
+        previous_point = points[index - 1].pose.position
+        current_point = points[index].pose.position
+        previous_yaw = _get_yaw_from_quaternion(points[index - 1].pose.orientation)
+
+        delta_x = current_point.x - previous_point.x
+        delta_y = current_point.y - previous_point.y
+        lateral_error = -np.sin(previous_yaw) * delta_x + np.cos(previous_yaw) * delta_y
+        errors.append(lateral_error)
+
+    return errors
+
+
 def x_values(msg):
     points = _get_points(msg)
     return [p.pose.position.x for p in points]
@@ -416,6 +460,10 @@ def get_data_functions() -> dict:
             get_steering_angle_rates_menger, zero_fn
         ),
         "Acceleration [m/s²]": DataFunction(get_accelerations, zero_fn),  # TODO: get accel
+        "Lateral Error [m]": DataFunction(lateral_errors, zero_fn),
+        "Lateral Error (previous heading) [m]": DataFunction(
+            lateral_errors_from_previous_heading, zero_fn
+        ),
         "Relative angles [rad]": DataFunction(relative_angles, zero_fn),
         "X values": DataFunction(x_values, x_value),
         "Y values": DataFunction(y_values, y_value),
