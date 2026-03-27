@@ -47,6 +47,7 @@ class TkinterApp:
         self.current_x_axis_selection = tk.StringVar()
         self.current_y_axis_selection = tk.StringVar()
         self.current_y_zoom = tk.DoubleVar(value=1.0)
+        self.current_show_reference_arc = tk.BooleanVar(value=True)
         self.current_wheel_base = tk.StringVar(value=f"{get_nominal_wheel_base():.5f}")
         self.plot_configs = self._load_initial_plot_configs(config, axis_option_keys)
         self.active_plot_index = 0
@@ -117,7 +118,15 @@ class TkinterApp:
         )
         self.wheel_base_button.grid(row=6, column=1, padx=5, pady=5, sticky="ew")
 
-        ttk.Label(self.left_frame, text="Y zoom:").grid(row=7, column=0, padx=5, pady=(10, 0), sticky="w")
+        self.reference_arc_checkbutton = ttk.Checkbutton(
+            self.left_frame,
+            text="Show reference arc",
+            variable=self.current_show_reference_arc,
+            command=self.update_reference_arc_visibility,
+        )
+        self.reference_arc_checkbutton.grid(row=7, column=0, columnspan=2, padx=5, pady=5, sticky="w")
+
+        ttk.Label(self.left_frame, text="Y zoom:").grid(row=8, column=0, padx=5, pady=(10, 0), sticky="w")
         self.y_zoom_scale = ttk.Scale(
             self.left_frame,
             from_=0.1,
@@ -126,15 +135,15 @@ class TkinterApp:
             orient=tk.HORIZONTAL,
             command=self.update_y_zoom,
         )
-        self.y_zoom_scale.grid(row=8, column=0, padx=5, pady=5, sticky="ew")
+        self.y_zoom_scale.grid(row=9, column=0, padx=5, pady=5, sticky="ew")
         self.y_zoom_value_label = ttk.Label(self.left_frame, text="1.0x")
-        self.y_zoom_value_label.grid(row=8, column=1, padx=5, pady=5, sticky="w")
+        self.y_zoom_value_label.grid(row=9, column=1, padx=5, pady=5, sticky="w")
         self.auto_rescale_button = ttk.Button(
             self.left_frame,
             text="Auto Rescale",
             command=self.auto_rescale_active_plot,
         )
-        self.auto_rescale_button.grid(row=9, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
+        self.auto_rescale_button.grid(row=10, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
 
         # bind dropdown selection events to update axis labels
         self.x_axis_dropdown.bind("<<ComboboxSelected>>", self.update_axis_labels)
@@ -142,10 +151,10 @@ class TkinterApp:
 
         # Listbox with Multiple Selection
         ttk.Label(self.left_frame, text="Topics:").grid(
-            row=10, column=0, columnspan=2, padx=5, pady=5, sticky="w"
+            row=11, column=0, columnspan=2, padx=5, pady=5, sticky="w"
         )
         self.listbox_frame = ttk.Frame(self.left_frame)
-        self.listbox_frame.grid(row=11, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+        self.listbox_frame.grid(row=12, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
         self.listbox_scrollbar_y = ttk.Scrollbar(self.listbox_frame, orient=tk.VERTICAL)
         self.listbox_scrollbar_x = ttk.Scrollbar(self.listbox_frame, orient=tk.HORIZONTAL)
@@ -166,7 +175,7 @@ class TkinterApp:
 
         # Allow listbox to expand
         self.left_frame.grid_rowconfigure(1, weight=0)
-        self.left_frame.grid_rowconfigure(11, weight=1)
+        self.left_frame.grid_rowconfigure(12, weight=1)
         self.left_frame.grid_columnconfigure(0, weight=1)
         self.left_frame.grid_columnconfigure(1, weight=1)
 
@@ -174,7 +183,7 @@ class TkinterApp:
         self.refresh_button = ttk.Button(
             self.left_frame, text="Refresh List", command=self.refresh_topic_list
         )
-        self.refresh_button.grid(row=12, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
+        self.refresh_button.grid(row=13, column=0, columnspan=2, padx=5, pady=10, sticky="ew")
         # --- Mid Frame --- Button to hide/show the left frame
         self.hide_button = ttk.Button(
             self.mid_frame, text="<", command=self.hide_show_left_frame, width=1
@@ -205,8 +214,20 @@ class TkinterApp:
                 return axis_option
         return axis_option_keys[fallback_index]
 
-    def _create_plot_config(self, x_axis: str, y_axis: str, y_zoom: float = 1.0):
-        return {"name": "", "x_axis": x_axis, "y_axis": y_axis, "y_zoom": max(y_zoom, 1e-3)}
+    def _create_plot_config(
+        self,
+        x_axis: str,
+        y_axis: str,
+        y_zoom: float = 1.0,
+        show_reference_arc: bool = True,
+    ):
+        return {
+            "name": "",
+            "x_axis": x_axis,
+            "y_axis": y_axis,
+            "y_zoom": max(y_zoom, 1e-3),
+            "show_reference_arc": show_reference_arc,
+        }
 
     def _load_initial_plot_configs(self, config, axis_option_keys):
         initial_plots = config.get("initial_plots", [])
@@ -216,7 +237,12 @@ class TkinterApp:
                 x_axis = self._match_axis_option(axis_option_keys, plot_config.get("x", ""), 0)
                 y_axis = self._match_axis_option(axis_option_keys, plot_config.get("y", ""), 1)
                 plot_configs.append(
-                    self._create_plot_config(x_axis, y_axis, float(plot_config.get("y_zoom", 1.0)))
+                    self._create_plot_config(
+                        x_axis,
+                        y_axis,
+                        float(plot_config.get("y_zoom", 1.0)),
+                        bool(plot_config.get("show_reference_arc", True)),
+                    )
                 )
             return plot_configs
 
@@ -250,6 +276,7 @@ class TkinterApp:
         self.current_x_axis_selection.set(plot_config["x_axis"])
         self.current_y_axis_selection.set(plot_config["y_axis"])
         self.current_y_zoom.set(plot_config["y_zoom"])
+        self.current_show_reference_arc.set(plot_config.get("show_reference_arc", True))
         self.y_zoom_value_label.config(text=f"{plot_config['y_zoom']:.1f}x")
 
     def _sync_active_plot_config(self):
@@ -259,6 +286,9 @@ class TkinterApp:
         self.plot_configs[self.active_plot_index]["x_axis"] = self.current_x_axis_selection.get()
         self.plot_configs[self.active_plot_index]["y_axis"] = self.current_y_axis_selection.get()
         self.plot_configs[self.active_plot_index]["y_zoom"] = max(self.current_y_zoom.get(), 1e-3)
+        self.plot_configs[self.active_plot_index]["show_reference_arc"] = bool(
+            self.current_show_reference_arc.get()
+        )
 
     def on_plot_select(self, event):  # noqa: ARG002 unused-argument
         selection = self.plot_listbox.curselection()
@@ -648,7 +678,11 @@ class TkinterApp:
             x_axis_fns = self.axis_options[x_axis_selection]
             y_axis_fns = self.axis_options[y_axis_selection]
             shift_x_data = "Arc Length" in x_axis_selection
-            show_reference_arc = shift_x_data and "Curvature" in y_axis_selection
+            show_reference_arc = (
+                plot_config.get("show_reference_arc", True)
+                and shift_x_data
+                and "Curvature" in y_axis_selection
+            )
             self.plotter.set_reference_arc_visibility(plot_index, show_reference_arc, plot_names)
 
             y_data_list = []
@@ -699,6 +733,15 @@ class TkinterApp:
 
         self.plot_configs[self.active_plot_index]["y_zoom"] = max(zoom_factor, 1e-3)
         self.plotter.set_y_zoom_factor(self.active_plot_index, zoom_factor)
+        self.needs_replot = True
+
+    def update_reference_arc_visibility(self):
+        if not self.plot_configs:
+            return
+
+        self.plot_configs[self.active_plot_index]["show_reference_arc"] = bool(
+            self.current_show_reference_arc.get()
+        )
         self.needs_replot = True
 
     def apply_wheel_base(self, event=None):  # noqa: ARG002 unused-argument
