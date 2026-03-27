@@ -5,7 +5,7 @@ initial_topics: # initial topics to plot and their type
   - [/planning/scenario_planning/lane_driving/behavior_planning/path, Path]
   - [/planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id, PathWithLaneId]
 initial_plots: # initial subplot definitions (enough to match the start of each metric name)
-  - {x: arc, y: vel, y_zoom: 1.0}
+  - { x: arc, y: vel, y_zoom: 1.0 }
 initial_axis: # initial metrics to plot (enough to match the start of the metric name, not case sensitive)
   x: arc
   y: vel

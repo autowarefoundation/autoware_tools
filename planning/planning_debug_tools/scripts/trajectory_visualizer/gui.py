@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # cspell:disable
+from collections import Counter
 import tkinter as tk
 from tkinter import ttk
-from collections import Counter
 
 from autoware_internal_planning_msgs.msg import CandidateTrajectories
 from autoware_internal_planning_msgs.msg import PathWithLaneId
@@ -124,9 +124,13 @@ class TkinterApp:
             variable=self.current_show_reference_arc,
             command=self.update_reference_arc_visibility,
         )
-        self.reference_arc_checkbutton.grid(row=7, column=0, columnspan=2, padx=5, pady=5, sticky="w")
+        self.reference_arc_checkbutton.grid(
+            row=7, column=0, columnspan=2, padx=5, pady=5, sticky="w"
+        )
 
-        ttk.Label(self.left_frame, text="Y zoom:").grid(row=8, column=0, padx=5, pady=(10, 0), sticky="w")
+        ttk.Label(self.left_frame, text="Y zoom:").grid(
+            row=8, column=0, padx=5, pady=(10, 0), sticky="w"
+        )
         self.y_zoom_scale = ttk.Scale(
             self.left_frame,
             from_=0.1,
@@ -522,7 +526,9 @@ class TkinterApp:
                 generator_names[generator_id] = generator_name
         return generator_names
 
-    def _format_generator_plot_name(self, topic, generator_name, generator_id, duplicate_count, index):
+    def _format_generator_plot_name(
+        self, topic, generator_name, generator_id, duplicate_count, index
+    ):
         if generator_name:
             plot_name = f"{topic} [{generator_name}]"
             if duplicate_count <= 1:
@@ -634,7 +640,9 @@ class TkinterApp:
             listbox_idx += 1
 
         initial_plot_names = [
-            topic for topic, msg_type in selected_topics if not msg_type.endswith("CandidateTrajectories")
+            topic
+            for topic, msg_type in selected_topics
+            if not msg_type.endswith("CandidateTrajectories")
         ]
         self.plotter.init_plot(self.plot_configs, initial_plot_names)
         self.needs_replot = True

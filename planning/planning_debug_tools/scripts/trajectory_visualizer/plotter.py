@@ -242,7 +242,9 @@ class Plotter:
         if self.arc_axes[plot_index] is None:
             return
 
-        padded_limits = self._build_padded_reference_arc_limits(self._collect_valid_range(y_data_list))
+        padded_limits = self._build_padded_reference_arc_limits(
+            self._collect_valid_range(y_data_list)
+        )
         self.arc_y_limits[plot_index] = self._expand_range(
             self.arc_y_limits[plot_index],
             padded_limits,
@@ -263,14 +265,19 @@ class Plotter:
     def set_reference_arc_visibility(self, plot_index: int, visible: bool, plot_names: list[str]):
         if visible:
             if self.arc_axes[plot_index] is None:
-                self.arc_axes[plot_index] = self.axes[plot_index].inset_axes([0.62, 0.08, 0.34, 0.34])
+                self.arc_axes[plot_index] = self.axes[plot_index].inset_axes(
+                    [0.62, 0.08, 0.34, 0.34]
+                )
                 self.arc_axes[plot_index].grid(True)
                 self.arc_axes[plot_index].set_title("Arc from k-l", fontsize=9)
                 self.arc_axes[plot_index].set_xlabel("x [m]", fontsize=8)
                 self.arc_axes[plot_index].set_ylabel("y [m]", fontsize=8)
                 self.arc_axes[plot_index].tick_params(axis="both", labelsize=8)
                 self.arc_axes[plot_index].set_aspect("auto")
-            if self.arc_axes[plot_index] is None or list(self.arc_plots[plot_index].keys()) != plot_names:
+            if (
+                self.arc_axes[plot_index] is None
+                or list(self.arc_plots[plot_index].keys()) != plot_names
+            ):
                 colors = self._get_color_map(plot_names)
                 self._sync_axis_plots(plot_index, plot_names, colors)
             return

@@ -23,7 +23,6 @@ from shapely.geometry import LineString
 from shapely.geometry import Point
 from tf_transformations import euler_from_quaternion
 
-
 NOMINAL_WHEEL_BASE = 4.76012
 
 

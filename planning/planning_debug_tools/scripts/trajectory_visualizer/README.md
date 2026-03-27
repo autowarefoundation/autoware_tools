@@ -39,8 +39,8 @@ This tool allow the visualization of Autoware trajectory messages (`autoware_pla
 
 ```yaml
 initial_plots:
-   - {x: arc, y: vel, y_zoom: 1.0}
-   - {x: arc, y: curvature, y_zoom: 2.0}
+  - { x: arc, y: vel, y_zoom: 1.0 }
+  - { x: arc, y: curvature, y_zoom: 2.0 }
 ```
 
 Each entry selects the initial x-axis, y-axis, and y-zoom for one subplot. `y_zoom: 1.0` keeps the subplot's baseline y-range, values above `1.0` zoom in, and values below `1.0` zoom out. The legacy `initial_axis` field is still accepted as a fallback and creates a single subplot.
