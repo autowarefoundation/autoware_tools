@@ -161,9 +161,61 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ade"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ahe"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/fhe"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/history_comfort"));
+  EXPECT_TRUE(has_topic("/trajectory/raw/longitudinal_accelerations"));
   EXPECT_TRUE(has_topic("/trajectory/raw/lateral_accelerations"));
+  EXPECT_TRUE(has_topic("/trajectory/raw/lateral_jerks"));
+  EXPECT_TRUE(has_topic("/trajectory/raw/jerk_magnitudes"));
+  EXPECT_TRUE(has_topic("/trajectory/raw/yaw_rates"));
+  EXPECT_TRUE(has_topic("/trajectory/raw/yaw_accelerations"));
   EXPECT_TRUE(has_topic("/evaluation/compared_trajectory/raw"));
   EXPECT_TRUE(has_topic("/driving_log_replayer/time_step_based_trajectory/raw/results"));
+}
+
+TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomfortableTrajectories)
+{
+  const rclcpp::Time start_time(50, 0);
+
+  auto comfortable_prediction = make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5});
+  auto uncomfortable_prediction = make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5});
+  const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5}));
+
+  for (size_t i = 0; i < comfortable_prediction.points.size(); ++i) {
+    comfortable_prediction.points[i].longitudinal_velocity_mps = 2.0;
+    uncomfortable_prediction.points[i].longitudinal_velocity_mps = 2.0;
+  }
+
+  uncomfortable_prediction.points[1].longitudinal_velocity_mps = 3.0;
+  uncomfortable_prediction.points[2].longitudinal_velocity_mps = 5.0;
+  uncomfortable_prediction.points[3].longitudinal_velocity_mps = 6.0;
+
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{
+    make_sync_data(comfortable_prediction, gt), make_sync_data(uncomfortable_prediction, gt)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  evaluator.evaluate(sync_data_list, nullptr);
+
+  const auto metrics = evaluator.get_metrics();
+  ASSERT_EQ(metrics.size(), 2u);
+  EXPECT_DOUBLE_EQ(metrics[0].history_comfort, 1.0);
+  EXPECT_DOUBLE_EQ(metrics[1].history_comfort, 0.0);
+
+  const auto full_json = evaluator.get_full_results_as_json();
+  ASSERT_EQ(full_json["trajectories"].size(), 2u);
+  EXPECT_DOUBLE_EQ(full_json["trajectories"][0]["history_comfort"].get<double>(), 1.0);
+  EXPECT_DOUBLE_EQ(full_json["trajectories"][1]["history_comfort"].get<double>(), 0.0);
+  EXPECT_DOUBLE_EQ(
+    full_json["trajectories"][0]["trajectory_point_metrics"]["history_comfort"].get<double>(), 1.0);
+  EXPECT_DOUBLE_EQ(
+    full_json["trajectories"][1]["trajectory_point_metrics"]["history_comfort"].get<double>(), 0.0);
+
+  const auto summary_json = evaluator.get_summary_as_json();
+  EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/mean"].get<double>(), 0.5);
+  EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/min"].get<double>(), 0.0);
+  EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/max"].get<double>(), 1.0);
 }
 
 TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)

@@ -28,11 +28,17 @@ namespace autoware::planning_data_analyzer::metrics
 // Structure for trajectory point-wise metrics
 struct TrajectoryPointMetrics
 {
+  std::vector<double> longitudinal_accelerations;
   std::vector<double> lateral_accelerations;
+  std::vector<double> lateral_jerks;
+  std::vector<double> jerk_magnitudes;
   std::vector<double> longitudinal_jerks;
+  std::vector<double> yaw_rates;
+  std::vector<double> yaw_accelerations;
   std::vector<double> ttc_values;
   std::vector<double> lateral_deviations;
   std::vector<double> travel_distances;
+  double history_comfort{0.0};
 };
 
 /**

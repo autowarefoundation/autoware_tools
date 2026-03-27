@@ -60,6 +60,7 @@ struct OpenLoopTrajectoryMetrics
   std::vector<double> ahe;                  // Average heading error at each trajectory point [rad]
   std::vector<double> heading_errors;       // Absolute heading error at each trajectory point [rad]
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
+  double history_comfort{0.0};              // Binary comfort subscore for the trajectory
 
   // Per-horizon metrics in insertion order: "full" first, then "1s", "2s", ...
   std::vector<std::pair<std::string, HorizonMetrics>> horizon_results;

@@ -170,13 +170,13 @@ void OpenLoopEvaluator::evaluate(
 
   // Evaluate each trajectory with its ground truth
   for (const auto & eval_data : evaluation_data_list) {
-    // Evaluate trajectory
-    auto metrics = evaluate_trajectory(eval_data);
-    metrics_list_.push_back(metrics);
-
     // Calculate trajectory point metrics
     auto trajectory_metrics =
       metrics::calculate_trajectory_point_metrics(eval_data.synchronized_data, route_handler_);
+    // Evaluate trajectory
+    auto metrics = evaluate_trajectory(eval_data);
+    metrics.history_comfort = trajectory_metrics.history_comfort;
+    metrics_list_.push_back(metrics);
     trajectory_point_metrics_list_.push_back(trajectory_metrics);
 
     // Save to bag if writer provided
@@ -792,6 +792,10 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   array_msg.data = metrics.ttc;
   bag_writer.write(array_msg, metric_topic("ttc"), message_timestamp);
 
+  std_msgs::msg::Float64 scalar_msg;
+  scalar_msg.data = metrics.history_comfort;
+  bag_writer.write(scalar_msg, metric_topic("history_comfort"), message_timestamp);
+
   save_dlr_style_result_to_bag(metrics, eval_data, bag_writer);
 
   // Save the precomputed ground truth trajectory directly
@@ -809,14 +813,45 @@ void OpenLoopEvaluator::save_trajectory_point_metrics_to_bag_with_variant(
 {
   {
     std_msgs::msg::Float64MultiArray msg;
+    msg.data = metrics.longitudinal_accelerations;
+    bag_writer.write(
+      msg, trajectory_metric_topic("longitudinal_accelerations"), normalized_timestamp);
+  }
+
+  {
+    std_msgs::msg::Float64MultiArray msg;
     msg.data = metrics.lateral_accelerations;
     bag_writer.write(msg, trajectory_metric_topic("lateral_accelerations"), normalized_timestamp);
   }
 
   {
     std_msgs::msg::Float64MultiArray msg;
+    msg.data = metrics.lateral_jerks;
+    bag_writer.write(msg, trajectory_metric_topic("lateral_jerks"), normalized_timestamp);
+  }
+
+  {
+    std_msgs::msg::Float64MultiArray msg;
+    msg.data = metrics.jerk_magnitudes;
+    bag_writer.write(msg, trajectory_metric_topic("jerk_magnitudes"), normalized_timestamp);
+  }
+
+  {
+    std_msgs::msg::Float64MultiArray msg;
     msg.data = metrics.longitudinal_jerks;
     bag_writer.write(msg, trajectory_metric_topic("longitudinal_jerks"), normalized_timestamp);
+  }
+
+  {
+    std_msgs::msg::Float64MultiArray msg;
+    msg.data = metrics.yaw_rates;
+    bag_writer.write(msg, trajectory_metric_topic("yaw_rates"), normalized_timestamp);
+  }
+
+  {
+    std_msgs::msg::Float64MultiArray msg;
+    msg.data = metrics.yaw_accelerations;
+    bag_writer.write(msg, trajectory_metric_topic("yaw_accelerations"), normalized_timestamp);
   }
 
   {
@@ -996,6 +1031,15 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
       tag, "min_ttc", "Minimum Time To Collision within " + tag + " horizon [s]", min_ttc_vals);
   }
 
+  std::vector<double> history_comfort_values;
+  history_comfort_values.reserve(metrics_list_.size());
+  for (const auto & m : metrics_list_) {
+    history_comfort_values.push_back(m.history_comfort);
+  }
+  emit_metric(
+    "aggregate", "history_comfort", "Binary history comfort subscore across trajectories [-]",
+    history_comfort_values);
+
   return j;
 }
 
@@ -1042,17 +1086,25 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["lateral_deviations"] = m.lateral_deviations;
     traj["longitudinal_deviations"] = m.longitudinal_deviations;
     traj["ttc"] = m.ttc;
+    traj["history_comfort"] = m.history_comfort;
 
     traj["horizon_results"] = nlohmann::json::object();
     fill_horizon_json(traj["horizon_results"], m.horizon_results, m.num_points);
 
     if (i < trajectory_point_metrics_list_.size()) {
       const auto & pm = trajectory_point_metrics_list_[i];
+      traj["trajectory_point_metrics"]["longitudinal_accelerations"] =
+        pm.longitudinal_accelerations;
       traj["trajectory_point_metrics"]["lateral_accelerations"] = pm.lateral_accelerations;
+      traj["trajectory_point_metrics"]["lateral_jerks"] = pm.lateral_jerks;
+      traj["trajectory_point_metrics"]["jerk_magnitudes"] = pm.jerk_magnitudes;
       traj["trajectory_point_metrics"]["longitudinal_jerks"] = pm.longitudinal_jerks;
+      traj["trajectory_point_metrics"]["yaw_rates"] = pm.yaw_rates;
+      traj["trajectory_point_metrics"]["yaw_accelerations"] = pm.yaw_accelerations;
       traj["trajectory_point_metrics"]["ttc_values"] = pm.ttc_values;
       traj["trajectory_point_metrics"]["lateral_deviations"] = pm.lateral_deviations;
       traj["trajectory_point_metrics"]["travel_distances"] = pm.travel_distances;
+      traj["trajectory_point_metrics"]["history_comfort"] = pm.history_comfort;
     }
 
     trajectories.push_back(traj);
@@ -1094,10 +1146,16 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     {metric_topic("ahe"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("fhe"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("ttc"), "std_msgs/msg/Float64MultiArray"},
+    {metric_topic("history_comfort"), "std_msgs/msg/Float64"},
     {metric_topic("lateral_deviation"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("longitudinal_deviation"), "std_msgs/msg/Float64MultiArray"},
+    {trajectory_metric_topic("longitudinal_accelerations"), "std_msgs/msg/Float64MultiArray"},
     {trajectory_metric_topic("lateral_accelerations"), "std_msgs/msg/Float64MultiArray"},
+    {trajectory_metric_topic("lateral_jerks"), "std_msgs/msg/Float64MultiArray"},
+    {trajectory_metric_topic("jerk_magnitudes"), "std_msgs/msg/Float64MultiArray"},
     {trajectory_metric_topic("longitudinal_jerks"), "std_msgs/msg/Float64MultiArray"},
+    {trajectory_metric_topic("yaw_rates"), "std_msgs/msg/Float64MultiArray"},
+    {trajectory_metric_topic("yaw_accelerations"), "std_msgs/msg/Float64MultiArray"},
     {trajectory_metric_topic("ttc_values"), "std_msgs/msg/Float64MultiArray"},
     {trajectory_metric_topic("lateral_deviations"), "std_msgs/msg/Float64MultiArray"},
     {trajectory_metric_topic("travel_distances"), "std_msgs/msg/Float64MultiArray"},
