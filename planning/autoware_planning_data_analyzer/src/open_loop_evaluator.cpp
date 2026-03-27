@@ -171,8 +171,8 @@ void OpenLoopEvaluator::evaluate(
   // Evaluate each trajectory with its ground truth
   for (const auto & eval_data : evaluation_data_list) {
     // Calculate trajectory point metrics
-    auto trajectory_metrics =
-      metrics::calculate_trajectory_point_metrics(eval_data.synchronized_data, route_handler_);
+    auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
+      eval_data.synchronized_data, route_handler_, history_comfort_params_);
     // Evaluate trajectory
     auto metrics = evaluate_trajectory(eval_data);
     metrics.history_comfort = trajectory_metrics.history_comfort;

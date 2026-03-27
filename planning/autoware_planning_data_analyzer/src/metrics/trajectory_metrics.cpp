@@ -14,13 +14,13 @@
 
 #include "trajectory_metrics.hpp"
 
+#include "history_comfort.hpp"
+
 #include <autoware/lanelet2_utils/geometry.hpp>
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
 #include <autoware_lanelet2_extension/utility/utilities.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
 #include <tf2/LinearMath/Vector3.hpp>
-
-#include <tf2/utils.h>
 
 #include <algorithm>
 #include <cmath>
@@ -33,15 +33,6 @@ namespace autoware::planning_data_analyzer::metrics
 
 namespace
 {
-
-constexpr double kFiniteDifferenceEpsilon = 1.0e-3;
-constexpr double kHistoryComfortMaxLongitudinalAcceleration = 2.40;
-constexpr double kHistoryComfortMinLongitudinalAcceleration = -4.05;
-constexpr double kHistoryComfortMaxLateralAcceleration = 4.89;
-constexpr double kHistoryComfortMaxJerkMagnitude = 8.37;
-constexpr double kHistoryComfortMaxLongitudinalJerk = 4.13;
-constexpr double kHistoryComfortMaxYawRate = 0.95;
-constexpr double kHistoryComfortMaxYawAcceleration = 1.93;
 
 /**
  * @brief Get velocity in world coordinate frame from trajectory point
@@ -196,32 +187,12 @@ double calculate_time_to_collision(
   return std::min(ttc, max_ttc_value);
 }
 
-double calculate_time_resolution(
-  const autoware_planning_msgs::msg::TrajectoryPoint & point,
-  const autoware_planning_msgs::msg::TrajectoryPoint & next_point)
-{
-  const double time_diff = rclcpp::Duration(next_point.time_from_start).seconds() -
-                           rclcpp::Duration(point.time_from_start).seconds();
-  return time_diff > kFiniteDifferenceEpsilon ? time_diff : kFiniteDifferenceEpsilon;
-}
-
-double normalize_angle(const double angle)
-{
-  return std::atan2(std::sin(angle), std::cos(angle));
-}
-
-void replicate_last_value(std::vector<double> & values)
-{
-  if (values.size() > 1U) {
-    values.back() = values[values.size() - 2];
-  }
-}
-
 }  // namespace
 
 TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const std::shared_ptr<SynchronizedData> & sync_data,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
+  const HistoryComfortParameters & history_comfort_params)
 {
   TrajectoryPointMetrics metrics;
 
@@ -233,13 +204,6 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const size_t num_points = trajectory.points.size();
 
   // Initialize vectors
-  metrics.longitudinal_accelerations.resize(num_points, 0.0);
-  metrics.lateral_accelerations.resize(num_points, 0.0);
-  metrics.lateral_jerks.resize(num_points, 0.0);
-  metrics.jerk_magnitudes.resize(num_points, 0.0);
-  metrics.longitudinal_jerks.resize(num_points, 0.0);
-  metrics.yaw_rates.resize(num_points, 0.0);
-  metrics.yaw_accelerations.resize(num_points, 0.0);
   metrics.ttc_values.resize(num_points, std::numeric_limits<double>::max());
   metrics.lateral_deviations.resize(num_points, 0.0);
   metrics.travel_distances.resize(num_points, 0.0);
@@ -248,46 +212,7 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     return metrics;
   }
 
-  // Calculate point-wise kinematic signals used by the comprehensive open-loop metrics.
-  for (size_t i = 0; i < num_points - 1; ++i) {
-    const double time_resolution =
-      calculate_time_resolution(trajectory.points[i], trajectory.points[i + 1]);
-
-    metrics.longitudinal_accelerations[i] = (trajectory.points[i + 1].longitudinal_velocity_mps -
-                                             trajectory.points[i].longitudinal_velocity_mps) /
-                                            time_resolution;
-    metrics.lateral_accelerations[i] =
-      (trajectory.points[i + 1].lateral_velocity_mps - trajectory.points[i].lateral_velocity_mps) /
-      time_resolution;
-
-    const double yaw_delta = normalize_angle(
-      tf2::getYaw(trajectory.points[i + 1].pose.orientation) -
-      tf2::getYaw(trajectory.points[i].pose.orientation));
-    metrics.yaw_rates[i] = yaw_delta / time_resolution;
-  }
-  replicate_last_value(metrics.longitudinal_accelerations);
-  replicate_last_value(metrics.lateral_accelerations);
-  replicate_last_value(metrics.yaw_rates);
-
-  // Calculate higher-order derivatives for comfort checks.
-  for (size_t i = 0; i < num_points - 1; ++i) {
-    const double time_resolution =
-      calculate_time_resolution(trajectory.points[i], trajectory.points[i + 1]);
-
-    metrics.longitudinal_jerks[i] =
-      (metrics.longitudinal_accelerations[i + 1] - metrics.longitudinal_accelerations[i]) /
-      time_resolution;
-    metrics.lateral_jerks[i] =
-      (metrics.lateral_accelerations[i + 1] - metrics.lateral_accelerations[i]) / time_resolution;
-    metrics.jerk_magnitudes[i] =
-      std::hypot(metrics.longitudinal_jerks[i], metrics.lateral_jerks[i]);
-    metrics.yaw_accelerations[i] =
-      (metrics.yaw_rates[i + 1] - metrics.yaw_rates[i]) / time_resolution;
-  }
-  replicate_last_value(metrics.longitudinal_jerks);
-  replicate_last_value(metrics.lateral_jerks);
-  replicate_last_value(metrics.jerk_magnitudes);
-  replicate_last_value(metrics.yaw_accelerations);
+  calculate_history_comfort_metrics(trajectory, history_comfort_params, metrics);
 
   // Calculate TTC for each point (based on autoware_trajectory_ranker implementation)
   constexpr double max_ttc_value = 10.0;  // Maximum TTC value in seconds
@@ -330,34 +255,6 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     metrics.travel_distances[i] =
       autoware::motion_utils::calcSignedArcLength(trajectory.points, 0, i);
   }
-
-  const bool longitudinal_acceleration_ok = std::all_of(
-    metrics.longitudinal_accelerations.begin(), metrics.longitudinal_accelerations.end(),
-    [](const double ax) {
-      return kHistoryComfortMinLongitudinalAcceleration < ax &&
-             ax < kHistoryComfortMaxLongitudinalAcceleration;
-    });
-  const bool lateral_acceleration_ok = std::all_of(
-    metrics.lateral_accelerations.begin(), metrics.lateral_accelerations.end(),
-    [](const double ay) { return std::abs(ay) < kHistoryComfortMaxLateralAcceleration; });
-  const bool jerk_magnitude_ok = std::all_of(
-    metrics.jerk_magnitudes.begin(), metrics.jerk_magnitudes.end(),
-    [](const double jerk) { return std::abs(jerk) < kHistoryComfortMaxJerkMagnitude; });
-  const bool longitudinal_jerk_ok = std::all_of(
-    metrics.longitudinal_jerks.begin(), metrics.longitudinal_jerks.end(),
-    [](const double jerk) { return std::abs(jerk) < kHistoryComfortMaxLongitudinalJerk; });
-  const bool yaw_rate_ok = std::all_of(
-    metrics.yaw_rates.begin(), metrics.yaw_rates.end(),
-    [](const double yaw_rate) { return std::abs(yaw_rate) < kHistoryComfortMaxYawRate; });
-  const bool yaw_acceleration_ok = std::all_of(
-    metrics.yaw_accelerations.begin(), metrics.yaw_accelerations.end(),
-    [](const double yaw_accel) { return std::abs(yaw_accel) < kHistoryComfortMaxYawAcceleration; });
-
-  metrics.history_comfort = longitudinal_acceleration_ok && lateral_acceleration_ok &&
-                                jerk_magnitude_ok && longitudinal_jerk_ok && yaw_rate_ok &&
-                                yaw_acceleration_ok
-                              ? 1.0
-                              : 0.0;
 
   return metrics;
 }
