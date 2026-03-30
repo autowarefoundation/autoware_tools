@@ -27,6 +27,8 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -188,6 +190,56 @@ double calculate_time_to_collision(
   return std::min(ttc, max_ttc_value);
 }
 
+void append_unique_lanelet(
+  const lanelet::ConstLanelet & lanelet, lanelet::ConstLanelets & lanelets,
+  std::unordered_set<lanelet::Id> & seen_ids)
+{
+  if (seen_ids.insert(lanelet.id()).second) {
+    lanelets.push_back(lanelet);
+  }
+}
+
+void append_shared_lanelets(
+  const lanelet::ConstLanelet & lanelet,
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
+  lanelet::ConstLanelets & lanelets, std::unordered_set<lanelet::Id> & seen_ids)
+{
+  append_unique_lanelet(lanelet, lanelets, seen_ids);
+
+  for (const auto & left_lanelet :
+       route_handler->getAllLeftSharedLinestringLanelets(lanelet, false, false)) {
+    append_unique_lanelet(left_lanelet, lanelets, seen_ids);
+  }
+  for (const auto & right_lanelet :
+       route_handler->getAllRightSharedLinestringLanelets(lanelet, false, false)) {
+    append_unique_lanelet(right_lanelet, lanelets, seen_ids);
+  }
+}
+
+lanelet::ConstLanelets collect_route_relevant_lanelets_for_trajectory(
+  const autoware_planning_msgs::msg::Trajectory & trajectory,
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
+{
+  lanelet::ConstLanelets drivable_lanelets;
+  if (!route_handler || !route_handler->isHandlerReady()) {
+    return drivable_lanelets;
+  }
+
+  std::unordered_set<lanelet::Id> seen_ids;
+  for (const auto & lanelet : route_handler->getPreferredLanelets()) {
+    append_shared_lanelets(lanelet, route_handler, drivable_lanelets, seen_ids);
+  }
+
+  for (const auto & point : trajectory.points) {
+    const auto road_lanelets = route_handler->getRoadLaneletsAtPose(point.pose);
+    for (const auto & lanelet : road_lanelets) {
+      append_shared_lanelets(lanelet, route_handler, drivable_lanelets, seen_ids);
+    }
+  }
+
+  return drivable_lanelets;
+}
+
 }  // namespace
 
 TrajectoryPointMetrics calculate_trajectory_point_metrics(
@@ -215,10 +267,18 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   }
 
   calculate_history_comfort_metrics(trajectory, history_comfort_params, metrics);
-  if (route_handler && route_handler->isHandlerReady()) {
-    const auto drivable_lanelets = route_handler->getPreferredLanelets();
-    metrics.drivable_area_compliance =
+  if (!route_handler) {
+    metrics.drivable_area_compliance_reason = "unavailable_no_route_handler";
+  } else if (!route_handler->isHandlerReady()) {
+    metrics.drivable_area_compliance_reason = "unavailable_route_handler_not_ready";
+  } else {
+    const auto drivable_lanelets =
+      collect_route_relevant_lanelets_for_trajectory(trajectory, route_handler);
+    const auto drivable_area_compliance =
       calculate_drivable_area_compliance(trajectory, drivable_lanelets, vehicle_info);
+    metrics.drivable_area_compliance = drivable_area_compliance.score;
+    metrics.drivable_area_compliance_available = drivable_area_compliance.available;
+    metrics.drivable_area_compliance_reason = drivable_area_compliance.reason;
   }
 
   // Calculate TTC for each point (based on autoware_trajectory_ranker implementation)

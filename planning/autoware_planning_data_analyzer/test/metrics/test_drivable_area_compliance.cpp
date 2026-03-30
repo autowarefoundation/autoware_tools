@@ -65,18 +65,32 @@ autoware::vehicle_info_utils::VehicleInfo make_vehicle_info()
 
 }  // namespace
 
-TEST(DrivableAreaComplianceTest, ReturnsOneWhenAllFootprintCornersStayInsideLanelets)
+TEST(DrivableAreaComplianceTest, ReturnsOneWhenFullFootprintStaysInsideFusedDrivableArea)
 {
-  const auto score = autoware::planning_data_analyzer::metrics::calculate_drivable_area_compliance(
+  const auto result = autoware::planning_data_analyzer::metrics::calculate_drivable_area_compliance(
     make_trajectory(0.0), make_drivable_lanelets(), make_vehicle_info());
 
-  EXPECT_DOUBLE_EQ(score, 1.0);
+  EXPECT_TRUE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 1.0);
+  EXPECT_EQ(result.reason, "compliant");
 }
 
-TEST(DrivableAreaComplianceTest, ReturnsZeroWhenAnyFootprintCornerLeavesLanelets)
+TEST(DrivableAreaComplianceTest, ReturnsZeroWhenAnyFootprintLeavesFusedDrivableArea)
 {
-  const auto score = autoware::planning_data_analyzer::metrics::calculate_drivable_area_compliance(
+  const auto result = autoware::planning_data_analyzer::metrics::calculate_drivable_area_compliance(
     make_trajectory(1.5), make_drivable_lanelets(), make_vehicle_info());
 
-  EXPECT_DOUBLE_EQ(score, 0.0);
+  EXPECT_TRUE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 0.0);
+  EXPECT_EQ(result.reason, "non_compliant_footprint_outside_drivable_area");
+}
+
+TEST(DrivableAreaComplianceTest, ReturnsUnavailableWhenRequiredInputsAreMissing)
+{
+  const auto result = autoware::planning_data_analyzer::metrics::calculate_drivable_area_compliance(
+    make_trajectory(0.0), {}, autoware::vehicle_info_utils::VehicleInfo{});
+
+  EXPECT_FALSE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 0.0);
+  EXPECT_EQ(result.reason, "unavailable_no_drivable_lanelets");
 }

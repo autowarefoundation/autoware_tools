@@ -89,7 +89,8 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   } catch (const std::exception & e) {
     RCLCPP_WARN(
       get_logger(),
-      "Vehicle info parameters are unavailable. Drivable area compliance will remain 0.0: %s",
+      "Vehicle info parameters are unavailable. Drivable area compliance will be marked "
+      "unavailable: %s",
       e.what());
     vehicle_info_ = autoware::vehicle_info_utils::VehicleInfo{};
   }

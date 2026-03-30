@@ -21,10 +21,19 @@
 
 #include <lanelet2_core/primitives/Lanelet.h>
 
+#include <string>
+
 namespace autoware::planning_data_analyzer::metrics
 {
 
-double calculate_drivable_area_compliance(
+struct DrivableAreaComplianceResult
+{
+  double score{0.0};
+  bool available{false};
+  std::string reason{"unavailable"};
+};
+
+DrivableAreaComplianceResult calculate_drivable_area_compliance(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const lanelet::ConstLanelets & drivable_lanelets,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info);

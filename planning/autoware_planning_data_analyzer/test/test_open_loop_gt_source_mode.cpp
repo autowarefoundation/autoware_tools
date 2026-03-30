@@ -219,6 +219,34 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/max"].get<double>(), 1.0);
 }
 
+TEST_F(OpenLoopGTSourceModeTest, DACUnavailableReasonIsReportedWhenRouteHandlerIsMissing)
+{
+  const rclcpp::Time start_time(60, 0);
+  const auto prediction = make_trajectory(start_time, {0.0, 1.0, 2.0});
+  const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 1.0, 2.0}));
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{make_sync_data(prediction, gt)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  evaluator.evaluate(sync_data_list, nullptr);
+
+  const auto full_json = evaluator.get_full_results_as_json();
+  ASSERT_EQ(full_json["trajectories"].size(), 1u);
+  EXPECT_FALSE(full_json["trajectories"][0]["drivable_area_compliance_available"].get<bool>());
+  EXPECT_EQ(
+    full_json["trajectories"][0]["drivable_area_compliance_reason"].get<std::string>(),
+    "unavailable_no_route_handler");
+
+  const auto summary_json = evaluator.get_summary_as_json();
+  ASSERT_TRUE(summary_json.contains("aggregate/drivable_area_compliance_reason_counts"));
+  EXPECT_EQ(
+    summary_json["aggregate/drivable_area_compliance_reason_counts"]["unavailable_no_route_handler"]
+      .get<std::size_t>(),
+    1u);
+}
+
 TEST_F(
   OpenLoopGTSourceModeTest,
   HistoryComfortUsesYawRateForLateralAccelerationWhenLateralVelocityIsZero)
@@ -317,4 +345,8 @@ TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)
   EXPECT_NEAR(summary_json["0.2s/ahe/mean"].get<double>(), 0.233333333333, 1e-6);
   EXPECT_NEAR(summary_json["0.2s/fhe/mean"].get<double>(), 0.3, 1e-6);
   EXPECT_DOUBLE_EQ(summary_json["aggregate/drivable_area_compliance/mean"].get<double>(), 0.0);
+  EXPECT_EQ(
+    summary_json["aggregate/drivable_area_compliance_available_count"].get<std::size_t>(), 0u);
+  EXPECT_EQ(
+    summary_json["aggregate/drivable_area_compliance_unavailable_count"].get<std::size_t>(), 1u);
 }

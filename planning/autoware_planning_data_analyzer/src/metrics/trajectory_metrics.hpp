@@ -21,6 +21,7 @@
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -53,6 +54,8 @@ struct TrajectoryPointMetrics
   std::vector<double> travel_distances;
   double history_comfort{0.0};
   double drivable_area_compliance{0.0};
+  bool drivable_area_compliance_available{false};
+  std::string drivable_area_compliance_reason{"unavailable"};
 };
 
 /**

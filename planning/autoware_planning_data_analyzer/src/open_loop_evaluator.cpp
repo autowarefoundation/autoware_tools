@@ -24,6 +24,7 @@
 #include <rosbag2_cpp/reader.hpp>
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
+#include <std_msgs/msg/bool.hpp>
 #include <std_msgs/msg/float64.hpp>
 #include <std_msgs/msg/float64_multi_array.hpp>
 #include <std_msgs/msg/string.hpp>
@@ -36,6 +37,7 @@
 #include <cmath>
 #include <iomanip>
 #include <limits>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -177,6 +179,9 @@ void OpenLoopEvaluator::evaluate(
     auto metrics = evaluate_trajectory(eval_data);
     metrics.history_comfort = trajectory_metrics.history_comfort;
     metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
+    metrics.drivable_area_compliance_available =
+      trajectory_metrics.drivable_area_compliance_available;
+    metrics.drivable_area_compliance_reason = trajectory_metrics.drivable_area_compliance_reason;
     metrics_list_.push_back(metrics);
     trajectory_point_metrics_list_.push_back(trajectory_metrics);
 
@@ -798,6 +803,13 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   bag_writer.write(scalar_msg, metric_topic("history_comfort"), message_timestamp);
   scalar_msg.data = metrics.drivable_area_compliance;
   bag_writer.write(scalar_msg, metric_topic("drivable_area_compliance"), message_timestamp);
+  std_msgs::msg::Bool availability_msg;
+  availability_msg.data = metrics.drivable_area_compliance_available;
+  bag_writer.write(
+    availability_msg, metric_topic("drivable_area_compliance_available"), message_timestamp);
+  std_msgs::msg::String reason_msg;
+  reason_msg.data = metrics.drivable_area_compliance_reason;
+  bag_writer.write(reason_msg, metric_topic("drivable_area_compliance_reason"), message_timestamp);
 
   save_dlr_style_result_to_bag(metrics, eval_data, bag_writer);
 
@@ -1044,13 +1056,24 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
     history_comfort_values);
   std::vector<double> drivable_area_compliance_values;
   drivable_area_compliance_values.reserve(metrics_list_.size());
+  std::size_t drivable_area_compliance_available_count = 0;
+  std::map<std::string, std::size_t> drivable_area_compliance_reason_counts;
   for (const auto & m : metrics_list_) {
-    drivable_area_compliance_values.push_back(m.drivable_area_compliance);
+    ++drivable_area_compliance_reason_counts[m.drivable_area_compliance_reason];
+    if (m.drivable_area_compliance_available) {
+      drivable_area_compliance_values.push_back(m.drivable_area_compliance);
+      ++drivable_area_compliance_available_count;
+    }
   }
   emit_metric(
     "aggregate", "drivable_area_compliance",
     "Binary drivable area compliance subscore across trajectories [-]",
     drivable_area_compliance_values);
+  j["aggregate/drivable_area_compliance_available_count"] =
+    drivable_area_compliance_available_count;
+  j["aggregate/drivable_area_compliance_unavailable_count"] =
+    metrics_list_.size() - drivable_area_compliance_available_count;
+  j["aggregate/drivable_area_compliance_reason_counts"] = drivable_area_compliance_reason_counts;
 
   return j;
 }
@@ -1100,6 +1123,8 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["ttc"] = m.ttc;
     traj["history_comfort"] = m.history_comfort;
     traj["drivable_area_compliance"] = m.drivable_area_compliance;
+    traj["drivable_area_compliance_available"] = m.drivable_area_compliance_available;
+    traj["drivable_area_compliance_reason"] = m.drivable_area_compliance_reason;
 
     traj["horizon_results"] = nlohmann::json::object();
     fill_horizon_json(traj["horizon_results"], m.horizon_results, m.num_points);
@@ -1119,6 +1144,10 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
       traj["trajectory_point_metrics"]["travel_distances"] = pm.travel_distances;
       traj["trajectory_point_metrics"]["history_comfort"] = pm.history_comfort;
       traj["trajectory_point_metrics"]["drivable_area_compliance"] = pm.drivable_area_compliance;
+      traj["trajectory_point_metrics"]["drivable_area_compliance_available"] =
+        pm.drivable_area_compliance_available;
+      traj["trajectory_point_metrics"]["drivable_area_compliance_reason"] =
+        pm.drivable_area_compliance_reason;
     }
 
     trajectories.push_back(traj);
@@ -1162,6 +1191,8 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     {metric_topic("ttc"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("history_comfort"), "std_msgs/msg/Float64"},
     {metric_topic("drivable_area_compliance"), "std_msgs/msg/Float64"},
+    {metric_topic("drivable_area_compliance_available"), "std_msgs/msg/Bool"},
+    {metric_topic("drivable_area_compliance_reason"), "std_msgs/msg/String"},
     {metric_topic("lateral_deviation"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("longitudinal_deviation"), "std_msgs/msg/Float64MultiArray"},
     {trajectory_metric_topic("longitudinal_accelerations"), "std_msgs/msg/Float64MultiArray"},
