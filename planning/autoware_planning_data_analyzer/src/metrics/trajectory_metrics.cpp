@@ -14,13 +14,13 @@
 
 #include "trajectory_metrics.hpp"
 
+#include "history_comfort.hpp"
+
 #include <autoware/lanelet2_utils/geometry.hpp>
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
 #include <autoware_lanelet2_extension/utility/utilities.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
 #include <tf2/LinearMath/Vector3.hpp>
-
-#include <tf2/utils.h>
 
 #include <algorithm>
 #include <cmath>
@@ -191,7 +191,8 @@ double calculate_time_to_collision(
 
 TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const std::shared_ptr<SynchronizedData> & sync_data,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
+  const HistoryComfortParameters & history_comfort_params)
 {
   TrajectoryPointMetrics metrics;
 
@@ -203,56 +204,15 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const size_t num_points = trajectory.points.size();
 
   // Initialize vectors
-  metrics.lateral_accelerations.resize(num_points, 0.0);
-  metrics.longitudinal_jerks.resize(num_points, 0.0);
   metrics.ttc_values.resize(num_points, std::numeric_limits<double>::max());
   metrics.lateral_deviations.resize(num_points, 0.0);
   metrics.travel_distances.resize(num_points, 0.0);
 
-  // Calculate lateral acceleration from lateral velocity difference
-  constexpr double epsilon = 1.0e-3;
-  for (size_t i = 0; i < num_points - 1; ++i) {
-    const double time_diff = rclcpp::Duration(trajectory.points[i + 1].time_from_start).seconds() -
-                             rclcpp::Duration(trajectory.points[i].time_from_start).seconds();
-    const double time_resolution = time_diff > epsilon ? time_diff : epsilon;
-
-    const double lateral_acc =
-      (trajectory.points[i + 1].lateral_velocity_mps - trajectory.points[i].lateral_velocity_mps) /
-      time_resolution;
-    metrics.lateral_accelerations[i] = lateral_acc;
-  }
-  if (num_points > 0) {
-    metrics.lateral_accelerations[num_points - 1] = metrics.lateral_accelerations[num_points - 2];
+  if (num_points == 0U) {
+    return metrics;
   }
 
-  // Calculate longitudinal jerk from velocity differences
-  std::vector<double> longitudinal_accelerations(num_points, 0.0);
-  for (size_t i = 0; i < num_points - 1; ++i) {
-    const double time_diff = rclcpp::Duration(trajectory.points[i + 1].time_from_start).seconds() -
-                             rclcpp::Duration(trajectory.points[i].time_from_start).seconds();
-    const double time_resolution = time_diff > epsilon ? time_diff : epsilon;
-
-    longitudinal_accelerations[i] = (trajectory.points[i + 1].longitudinal_velocity_mps -
-                                     trajectory.points[i].longitudinal_velocity_mps) /
-                                    time_resolution;
-  }
-  if (num_points > 0) {
-    longitudinal_accelerations[num_points - 1] = longitudinal_accelerations[num_points - 2];
-  }
-
-  // Calculate jerk from acceleration differences
-  for (size_t i = 0; i < num_points - 1; ++i) {
-    const double time_diff = rclcpp::Duration(trajectory.points[i + 1].time_from_start).seconds() -
-                             rclcpp::Duration(trajectory.points[i].time_from_start).seconds();
-    const double time_resolution = time_diff > epsilon ? time_diff : epsilon;
-
-    const double jerk =
-      (longitudinal_accelerations[i + 1] - longitudinal_accelerations[i]) / time_resolution;
-    metrics.longitudinal_jerks[i] = jerk;
-  }
-  if (num_points > 0) {
-    metrics.longitudinal_jerks[num_points - 1] = metrics.longitudinal_jerks[num_points - 2];
-  }
+  calculate_history_comfort_metrics(trajectory, history_comfort_params, metrics);
 
   // Calculate TTC for each point (based on autoware_trajectory_ranker implementation)
   constexpr double max_ttc_value = 10.0;  // Maximum TTC value in seconds
