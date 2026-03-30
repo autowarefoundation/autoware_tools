@@ -86,6 +86,7 @@ private:
   std::string gt_trajectory_topic_name_;
   double gt_sync_tolerance_ms_ = 200.0;
   metrics::HistoryComfortParameters history_comfort_params_;
+  autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   std::string objects_topic_name_;
   std::string tf_topic_name_;
   std::string acceleration_topic_name_;

@@ -163,6 +163,7 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/fhe"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/history_comfort"));
   EXPECT_TRUE(has_topic("/trajectory/raw/longitudinal_accelerations"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/drivable_area_compliance"));
   EXPECT_TRUE(has_topic("/trajectory/raw/lateral_accelerations"));
   EXPECT_TRUE(has_topic("/trajectory/raw/lateral_jerks"));
   EXPECT_TRUE(has_topic("/trajectory/raw/jerk_magnitudes"));
@@ -315,4 +316,5 @@ TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)
   EXPECT_NEAR(summary_json["full/fhe/mean"].get<double>(), 0.4, 1e-6);
   EXPECT_NEAR(summary_json["0.2s/ahe/mean"].get<double>(), 0.233333333333, 1e-6);
   EXPECT_NEAR(summary_json["0.2s/fhe/mean"].get<double>(), 0.3, 1e-6);
+  EXPECT_DOUBLE_EQ(summary_json["aggregate/drivable_area_compliance/mean"].get<double>(), 0.0);
 }

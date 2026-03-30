@@ -172,10 +172,11 @@ void OpenLoopEvaluator::evaluate(
   for (const auto & eval_data : evaluation_data_list) {
     // Calculate trajectory point metrics
     auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
-      eval_data.synchronized_data, route_handler_, history_comfort_params_);
+      eval_data.synchronized_data, route_handler_, history_comfort_params_, vehicle_info_);
     // Evaluate trajectory
     auto metrics = evaluate_trajectory(eval_data);
     metrics.history_comfort = trajectory_metrics.history_comfort;
+    metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
     metrics_list_.push_back(metrics);
     trajectory_point_metrics_list_.push_back(trajectory_metrics);
 
@@ -795,6 +796,8 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   std_msgs::msg::Float64 scalar_msg;
   scalar_msg.data = metrics.history_comfort;
   bag_writer.write(scalar_msg, metric_topic("history_comfort"), message_timestamp);
+  scalar_msg.data = metrics.drivable_area_compliance;
+  bag_writer.write(scalar_msg, metric_topic("drivable_area_compliance"), message_timestamp);
 
   save_dlr_style_result_to_bag(metrics, eval_data, bag_writer);
 
@@ -1039,6 +1042,15 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
   emit_metric(
     "aggregate", "history_comfort", "Binary history comfort subscore across trajectories [-]",
     history_comfort_values);
+  std::vector<double> drivable_area_compliance_values;
+  drivable_area_compliance_values.reserve(metrics_list_.size());
+  for (const auto & m : metrics_list_) {
+    drivable_area_compliance_values.push_back(m.drivable_area_compliance);
+  }
+  emit_metric(
+    "aggregate", "drivable_area_compliance",
+    "Binary drivable area compliance subscore across trajectories [-]",
+    drivable_area_compliance_values);
 
   return j;
 }
@@ -1087,6 +1099,7 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["longitudinal_deviations"] = m.longitudinal_deviations;
     traj["ttc"] = m.ttc;
     traj["history_comfort"] = m.history_comfort;
+    traj["drivable_area_compliance"] = m.drivable_area_compliance;
 
     traj["horizon_results"] = nlohmann::json::object();
     fill_horizon_json(traj["horizon_results"], m.horizon_results, m.num_points);
@@ -1105,6 +1118,7 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
       traj["trajectory_point_metrics"]["lateral_deviations"] = pm.lateral_deviations;
       traj["trajectory_point_metrics"]["travel_distances"] = pm.travel_distances;
       traj["trajectory_point_metrics"]["history_comfort"] = pm.history_comfort;
+      traj["trajectory_point_metrics"]["drivable_area_compliance"] = pm.drivable_area_compliance;
     }
 
     trajectories.push_back(traj);
@@ -1147,6 +1161,7 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     {metric_topic("fhe"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("ttc"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("history_comfort"), "std_msgs/msg/Float64"},
+    {metric_topic("drivable_area_compliance"), "std_msgs/msg/Float64"},
     {metric_topic("lateral_deviation"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("longitudinal_deviation"), "std_msgs/msg/Float64MultiArray"},
     {trajectory_metric_topic("longitudinal_accelerations"), "std_msgs/msg/Float64MultiArray"},

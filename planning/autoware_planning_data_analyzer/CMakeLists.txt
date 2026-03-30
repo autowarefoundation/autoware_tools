@@ -12,6 +12,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/or_scene_evaluator.cpp
   src/metrics/deviation_metrics.cpp
   src/metrics/history_comfort.cpp
+  src/metrics/drivable_area_compliance.cpp
   src/metrics/trajectory_metrics.cpp
   src/utils/bag_utils.cpp
   src/utils/json_utils.cpp
@@ -27,7 +28,11 @@ rclcpp_components_register_node(${PROJECT_NAME}
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
 
-  ament_add_gtest(test_metrics test/metrics/test_deviation_metrics.cpp)
+  ament_add_gtest(
+    test_metrics
+    test/metrics/test_deviation_metrics.cpp
+    test/metrics/test_drivable_area_compliance.cpp
+  )
   target_link_libraries(test_metrics ${PROJECT_NAME})
 
   ament_add_gtest(test_offline_evaluation

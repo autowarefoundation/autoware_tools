@@ -14,6 +14,7 @@
 
 #include "trajectory_metrics.hpp"
 
+#include "drivable_area_compliance.hpp"
 #include "history_comfort.hpp"
 
 #include <autoware/lanelet2_utils/geometry.hpp>
@@ -192,7 +193,8 @@ double calculate_time_to_collision(
 TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const std::shared_ptr<SynchronizedData> & sync_data,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
-  const HistoryComfortParameters & history_comfort_params)
+  const HistoryComfortParameters & history_comfort_params,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
 {
   TrajectoryPointMetrics metrics;
 
@@ -213,6 +215,11 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   }
 
   calculate_history_comfort_metrics(trajectory, history_comfort_params, metrics);
+  if (route_handler && route_handler->isHandlerReady()) {
+    const auto drivable_lanelets = route_handler->getPreferredLanelets();
+    metrics.drivable_area_compliance =
+      calculate_drivable_area_compliance(trajectory, drivable_lanelets, vehicle_info);
+  }
 
   // Calculate TTC for each point (based on autoware_trajectory_ranker implementation)
   constexpr double max_ttc_value = 10.0;  // Maximum TTC value in seconds
