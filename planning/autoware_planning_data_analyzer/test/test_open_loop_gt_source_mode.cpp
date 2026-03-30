@@ -218,6 +218,44 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/max"].get<double>(), 1.0);
 }
 
+TEST_F(
+  OpenLoopGTSourceModeTest,
+  HistoryComfortUsesYawRateForLateralAccelerationWhenLateralVelocityIsZero)
+{
+  const rclcpp::Time start_time(55, 0);
+
+  auto turning_prediction = make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0});
+  const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0}));
+
+  for (size_t i = 0; i < turning_prediction.points.size(); ++i) {
+    turning_prediction.points[i].longitudinal_velocity_mps = 10.0;
+    turning_prediction.points[i].lateral_velocity_mps = 0.0;
+  }
+
+  for (size_t i = 0; i < turning_prediction.points.size(); ++i) {
+    const double yaw = 0.05 * static_cast<double>(i);
+    turning_prediction.points[i].pose.orientation.z = std::sin(yaw * 0.5);
+    turning_prediction.points[i].pose.orientation.w = std::cos(yaw * 0.5);
+  }
+
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{
+    make_sync_data(turning_prediction, gt)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  evaluator.evaluate(sync_data_list, nullptr);
+
+  const auto metrics = evaluator.get_metrics();
+  ASSERT_EQ(metrics.size(), 1u);
+  EXPECT_DOUBLE_EQ(metrics[0].history_comfort, 0.0);
+
+  const auto full_json = evaluator.get_full_results_as_json();
+  ASSERT_EQ(full_json["trajectories"].size(), 1u);
+  EXPECT_DOUBLE_EQ(full_json["trajectories"][0]["history_comfort"].get<double>(), 0.0);
+}
+
 TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)
 {
   const rclcpp::Time start_time(40, 0);

@@ -1,4 +1,4 @@
-// Copyright 2025 TIER IV, Inc.
+// Copyright 2026 TIER IV, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -43,6 +44,20 @@ void backfill_last_value_from_previous(std::vector<double> & values)
   if (values.size() > 1U) {
     values.back() = values[values.size() - 2];
   }
+}
+
+bool is_within(const std::vector<double> & values, const double min_value, const double max_value)
+{
+  return std::all_of(values.begin(), values.end(), [min_value, max_value](const double value) {
+    return min_value < value && value < max_value;
+  });
+}
+
+bool is_abs_within(const std::vector<double> & values, const double max_abs_value)
+{
+  return std::all_of(values.begin(), values.end(), [max_abs_value](const double value) {
+    return std::abs(value) < max_abs_value;
+  });
 }
 
 }  // namespace
@@ -69,17 +84,15 @@ void calculate_history_comfort_metrics(
       trajectory.points[i], trajectory.points[i + 1],
       history_comfort_params.finite_difference_epsilon);
 
-    metrics.longitudinal_accelerations[i] = (trajectory.points[i + 1].longitudinal_velocity_mps -
-                                             trajectory.points[i].longitudinal_velocity_mps) /
-                                            time_resolution;
-    metrics.lateral_accelerations[i] =
-      (trajectory.points[i + 1].lateral_velocity_mps - trajectory.points[i].lateral_velocity_mps) /
-      time_resolution;
-
     const double yaw_delta = autoware_utils_math::normalize_radian(
       tf2::getYaw(trajectory.points[i + 1].pose.orientation) -
       tf2::getYaw(trajectory.points[i].pose.orientation));
     metrics.yaw_rates[i] = yaw_delta / time_resolution;
+    metrics.longitudinal_accelerations[i] = (trajectory.points[i + 1].longitudinal_velocity_mps -
+                                             trajectory.points[i].longitudinal_velocity_mps) /
+                                            time_resolution;
+    metrics.lateral_accelerations[i] =
+      trajectory.points[i].longitudinal_velocity_mps * metrics.yaw_rates[i];
   }
   backfill_last_value_from_previous(metrics.longitudinal_accelerations);
   backfill_last_value_from_previous(metrics.lateral_accelerations);
@@ -105,37 +118,18 @@ void calculate_history_comfort_metrics(
   backfill_last_value_from_previous(metrics.jerk_magnitudes);
   backfill_last_value_from_previous(metrics.yaw_accelerations);
 
-  const bool longitudinal_acceleration_ok = std::all_of(
-    metrics.longitudinal_accelerations.begin(), metrics.longitudinal_accelerations.end(),
-    [&history_comfort_params](const double ax) {
-      return history_comfort_params.min_longitudinal_acceleration < ax &&
-             ax < history_comfort_params.max_longitudinal_acceleration;
-    });
-  const bool lateral_acceleration_ok = std::all_of(
-    metrics.lateral_accelerations.begin(), metrics.lateral_accelerations.end(),
-    [&history_comfort_params](const double ay) {
-      return std::abs(ay) < history_comfort_params.max_lateral_acceleration;
-    });
-  const bool jerk_magnitude_ok = std::all_of(
-    metrics.jerk_magnitudes.begin(), metrics.jerk_magnitudes.end(),
-    [&history_comfort_params](const double jerk) {
-      return std::abs(jerk) < history_comfort_params.max_jerk_magnitude;
-    });
-  const bool longitudinal_jerk_ok = std::all_of(
-    metrics.longitudinal_jerks.begin(), metrics.longitudinal_jerks.end(),
-    [&history_comfort_params](const double jerk) {
-      return std::abs(jerk) < history_comfort_params.max_longitudinal_jerk;
-    });
-  const bool yaw_rate_ok = std::all_of(
-    metrics.yaw_rates.begin(), metrics.yaw_rates.end(),
-    [&history_comfort_params](const double yaw_rate) {
-      return std::abs(yaw_rate) < history_comfort_params.max_yaw_rate;
-    });
-  const bool yaw_acceleration_ok = std::all_of(
-    metrics.yaw_accelerations.begin(), metrics.yaw_accelerations.end(),
-    [&history_comfort_params](const double yaw_accel) {
-      return std::abs(yaw_accel) < history_comfort_params.max_yaw_acceleration;
-    });
+  const bool longitudinal_acceleration_ok = is_within(
+    metrics.longitudinal_accelerations, history_comfort_params.min_longitudinal_acceleration,
+    history_comfort_params.max_longitudinal_acceleration);
+  const bool lateral_acceleration_ok =
+    is_abs_within(metrics.lateral_accelerations, history_comfort_params.max_lateral_acceleration);
+  const bool jerk_magnitude_ok =
+    is_abs_within(metrics.jerk_magnitudes, history_comfort_params.max_jerk_magnitude);
+  const bool longitudinal_jerk_ok =
+    is_abs_within(metrics.longitudinal_jerks, history_comfort_params.max_longitudinal_jerk);
+  const bool yaw_rate_ok = is_abs_within(metrics.yaw_rates, history_comfort_params.max_yaw_rate);
+  const bool yaw_acceleration_ok =
+    is_abs_within(metrics.yaw_accelerations, history_comfort_params.max_yaw_acceleration);
 
   metrics.history_comfort = longitudinal_acceleration_ok && lateral_acceleration_ok &&
                                 jerk_magnitude_ok && longitudinal_jerk_ok && yaw_rate_ok &&
