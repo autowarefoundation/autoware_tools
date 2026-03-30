@@ -25,14 +25,32 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
+struct HistoryComfortParameters
+{
+  double finite_difference_epsilon{1.0e-3};
+  double max_longitudinal_acceleration{2.40};
+  double min_longitudinal_acceleration{-4.05};
+  double max_lateral_acceleration{4.89};
+  double max_jerk_magnitude{8.37};
+  double max_longitudinal_jerk{4.13};
+  double max_yaw_rate{0.95};
+  double max_yaw_acceleration{1.93};
+};
+
 // Structure for trajectory point-wise metrics
 struct TrajectoryPointMetrics
 {
+  std::vector<double> longitudinal_accelerations;
   std::vector<double> lateral_accelerations;
+  std::vector<double> lateral_jerks;
+  std::vector<double> jerk_magnitudes;
   std::vector<double> longitudinal_jerks;
+  std::vector<double> yaw_rates;
+  std::vector<double> yaw_accelerations;
   std::vector<double> ttc_values;
   std::vector<double> lateral_deviations;
   std::vector<double> travel_distances;
+  double history_comfort{0.0};
 };
 
 /**
@@ -43,7 +61,8 @@ struct TrajectoryPointMetrics
  */
 TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const std::shared_ptr<SynchronizedData> & sync_data,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler = nullptr);
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler = nullptr,
+  const HistoryComfortParameters & history_comfort_params = HistoryComfortParameters{});
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

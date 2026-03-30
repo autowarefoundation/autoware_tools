@@ -108,6 +108,22 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   gt_trajectory_topic_name_ =
     get_or_declare_parameter<std::string>(*this, "open_loop.gt_trajectory_topic");
   gt_sync_tolerance_ms_ = get_or_declare_parameter<double>(*this, "open_loop.gt_sync_tolerance_ms");
+  history_comfort_params_.finite_difference_epsilon =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.finite_difference_epsilon");
+  history_comfort_params_.max_longitudinal_acceleration =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.max_longitudinal_acceleration");
+  history_comfort_params_.min_longitudinal_acceleration =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.min_longitudinal_acceleration");
+  history_comfort_params_.max_lateral_acceleration =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.max_lateral_acceleration");
+  history_comfort_params_.max_jerk_magnitude =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.max_jerk_magnitude");
+  history_comfort_params_.max_longitudinal_jerk =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.max_longitudinal_jerk");
+  history_comfort_params_.max_yaw_rate =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.max_yaw_rate");
+  history_comfort_params_.max_yaw_acceleration =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.max_yaw_acceleration");
   objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
   tf_topic_name_ = get_or_declare_parameter<std::string>(*this, "tf_topic");
   acceleration_topic_name_ = get_or_declare_parameter<std::string>(*this, "acceleration_topic");
@@ -451,7 +467,8 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       }
       const auto evaluation_horizons =
         get_or_declare_parameter<std::vector<double>>(*this, "open_loop.evaluation_horizons");
-      OpenLoopEvaluator evaluator(get_logger(), route_handler_, gt_mode, gt_sync_tolerance_ms_);
+      OpenLoopEvaluator evaluator(
+        get_logger(), route_handler_, gt_mode, gt_sync_tolerance_ms_, history_comfort_params_);
       evaluator.set_json_output_dir(output_dir_path.string());
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_evaluation_horizons(evaluation_horizons);

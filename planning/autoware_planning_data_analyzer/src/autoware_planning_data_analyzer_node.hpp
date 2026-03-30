@@ -16,6 +16,7 @@
 #define AUTOWARE_PLANNING_DATA_ANALYZER_NODE_HPP_
 
 #include "bag_handler.hpp"
+#include "metrics/trajectory_metrics.hpp"
 #include "rosbag2_cpp/reader.hpp"
 #include "rosbag2_cpp/writer.hpp"
 #include "serialized_bag_message.hpp"
@@ -84,6 +85,7 @@ private:
   std::string gt_source_mode_;
   std::string gt_trajectory_topic_name_;
   double gt_sync_tolerance_ms_ = 200.0;
+  metrics::HistoryComfortParameters history_comfort_params_;
   std::string objects_topic_name_;
   std::string tf_topic_name_;
   std::string acceleration_topic_name_;

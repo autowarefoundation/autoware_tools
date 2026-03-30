@@ -17,6 +17,7 @@
 
 #include "bag_handler.hpp"
 #include "base_evaluator.hpp"
+#include "metrics/trajectory_metrics.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <nlohmann/json.hpp>
@@ -60,6 +61,7 @@ struct OpenLoopTrajectoryMetrics
   std::vector<double> ahe;                  // Average heading error at each trajectory point [rad]
   std::vector<double> heading_errors;       // Absolute heading error at each trajectory point [rad]
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
+  double history_comfort{0.0};              // Binary comfort subscore for the trajectory
 
   // Per-horizon metrics in insertion order: "full" first, then "1s", "2s", ...
   std::vector<std::pair<std::string, HorizonMetrics>> horizon_results;
@@ -108,8 +110,10 @@ public:
     rclcpp::Logger logger,
     std::shared_ptr<autoware::route_handler::RouteHandler> route_handler = nullptr,
     GTSourceMode gt_source_mode = GTSourceMode::KINEMATIC_STATE,
-    double gt_sync_tolerance_ms = 200.0)
+    double gt_sync_tolerance_ms = 200.0,
+    metrics::HistoryComfortParameters history_comfort_params = {})
   : BaseEvaluator(logger, route_handler),
+    history_comfort_params_(std::move(history_comfort_params)),
     gt_source_mode_(gt_source_mode),
     gt_sync_tolerance_ms_(gt_sync_tolerance_ms)
   {
@@ -295,6 +299,7 @@ private:
 
   std::vector<OpenLoopTrajectoryMetrics> metrics_list_;
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
+  metrics::HistoryComfortParameters history_comfort_params_;
   OpenLoopEvaluationSummary summary_;
   std::string metric_variant_;
   GTSourceMode gt_source_mode_;

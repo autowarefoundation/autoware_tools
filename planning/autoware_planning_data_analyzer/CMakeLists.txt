@@ -11,6 +11,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/or_event_extractor.cpp
   src/or_scene_evaluator.cpp
   src/metrics/deviation_metrics.cpp
+  src/metrics/history_comfort.cpp
   src/metrics/trajectory_metrics.cpp
   src/utils/bag_utils.cpp
   src/utils/json_utils.cpp
