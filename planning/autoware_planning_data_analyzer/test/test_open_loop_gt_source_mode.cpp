@@ -162,6 +162,7 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ahe"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/fhe"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/history_comfort"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/lane_keeping"));
   EXPECT_TRUE(has_topic("/trajectory/raw/longitudinal_accelerations"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/drivable_area_compliance"));
   EXPECT_TRUE(has_topic("/trajectory/raw/lateral_accelerations"));
@@ -217,6 +218,8 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/mean"].get<double>(), 0.5);
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/min"].get<double>(), 0.0);
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/max"].get<double>(), 1.0);
+  EXPECT_EQ(summary_json["aggregate/lane_keeping_available_count"].get<std::size_t>(), 0u);
+  EXPECT_EQ(summary_json["aggregate/lane_keeping_unavailable_count"].get<std::size_t>(), 2u);
 }
 
 TEST_F(OpenLoopGTSourceModeTest, DACUnavailableReasonIsReportedWhenRouteHandlerIsMissing)
@@ -234,12 +237,21 @@ TEST_F(OpenLoopGTSourceModeTest, DACUnavailableReasonIsReportedWhenRouteHandlerI
 
   const auto full_json = evaluator.get_full_results_as_json();
   ASSERT_EQ(full_json["trajectories"].size(), 1u);
+  EXPECT_FALSE(full_json["trajectories"][0]["lane_keeping_available"].get<bool>());
+  EXPECT_EQ(
+    full_json["trajectories"][0]["lane_keeping_reason"].get<std::string>(),
+    "unavailable_no_route_handler");
   EXPECT_FALSE(full_json["trajectories"][0]["drivable_area_compliance_available"].get<bool>());
   EXPECT_EQ(
     full_json["trajectories"][0]["drivable_area_compliance_reason"].get<std::string>(),
     "unavailable_no_route_handler");
 
   const auto summary_json = evaluator.get_summary_as_json();
+  ASSERT_TRUE(summary_json.contains("aggregate/lane_keeping_reason_counts"));
+  EXPECT_EQ(
+    summary_json["aggregate/lane_keeping_reason_counts"]["unavailable_no_route_handler"]
+      .get<std::size_t>(),
+    1u);
   ASSERT_TRUE(summary_json.contains("aggregate/drivable_area_compliance_reason_counts"));
   EXPECT_EQ(
     summary_json["aggregate/drivable_area_compliance_reason_counts"]["unavailable_no_route_handler"]
