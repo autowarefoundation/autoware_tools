@@ -171,7 +171,8 @@ void OpenLoopEvaluator::evaluate(
   }
 
   // Evaluate each trajectory with its ground truth
-  for (const auto & eval_data : evaluation_data_list) {
+  for (std::size_t i = 0; i < evaluation_data_list.size(); ++i) {
+    const auto & eval_data = evaluation_data_list.at(i);
     // Calculate trajectory point metrics
     auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
       eval_data.synchronized_data, route_handler_, history_comfort_params_, lane_keeping_params_,
@@ -179,6 +180,26 @@ void OpenLoopEvaluator::evaluate(
     // Evaluate trajectory
     auto metrics = evaluate_trajectory(eval_data);
     metrics.history_comfort = trajectory_metrics.history_comfort;
+    if (i == 0U) {
+      metrics.extended_comfort = 0.0;
+      metrics.extended_comfort_available = false;
+      metrics.extended_comfort_reason = "unavailable_no_previous_trajectory";
+    } else {
+      const auto & previous_eval_data = evaluation_data_list.at(i - 1U);
+      const auto & previous_trajectory = previous_eval_data.synchronized_data->trajectory;
+      const auto & current_trajectory = eval_data.synchronized_data->trajectory;
+      if (!previous_trajectory || !current_trajectory) {
+        metrics.extended_comfort = 0.0;
+        metrics.extended_comfort_available = false;
+        metrics.extended_comfort_reason = "unavailable_missing_trajectory";
+      } else {
+        const auto extended_comfort_result = metrics::calculate_extended_comfort(
+          *previous_trajectory, *current_trajectory, extended_comfort_parameters_);
+        metrics.extended_comfort = extended_comfort_result.score;
+        metrics.extended_comfort_available = extended_comfort_result.available;
+        metrics.extended_comfort_reason = extended_comfort_result.reason;
+      }
+    }
     metrics.lane_keeping = trajectory_metrics.lane_keeping;
     metrics.lane_keeping_available = trajectory_metrics.lane_keeping_available;
     metrics.lane_keeping_reason = trajectory_metrics.lane_keeping_reason;
@@ -805,15 +826,21 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   std_msgs::msg::Float64 scalar_msg;
   scalar_msg.data = metrics.history_comfort;
   bag_writer.write(scalar_msg, metric_topic("history_comfort"), message_timestamp);
+  scalar_msg.data = metrics.extended_comfort;
+  bag_writer.write(scalar_msg, metric_topic("extended_comfort"), message_timestamp);
   scalar_msg.data = metrics.lane_keeping;
   bag_writer.write(scalar_msg, metric_topic("lane_keeping"), message_timestamp);
   scalar_msg.data = metrics.drivable_area_compliance;
   bag_writer.write(scalar_msg, metric_topic("drivable_area_compliance"), message_timestamp);
   std_msgs::msg::Bool availability_msg;
+  availability_msg.data = metrics.extended_comfort_available;
+  bag_writer.write(availability_msg, metric_topic("extended_comfort_available"), message_timestamp);
   availability_msg.data = metrics.drivable_area_compliance_available;
   bag_writer.write(
     availability_msg, metric_topic("drivable_area_compliance_available"), message_timestamp);
   std_msgs::msg::String reason_msg;
+  reason_msg.data = metrics.extended_comfort_reason;
+  bag_writer.write(reason_msg, metric_topic("extended_comfort_reason"), message_timestamp);
   reason_msg.data = metrics.drivable_area_compliance_reason;
   bag_writer.write(reason_msg, metric_topic("drivable_area_compliance_reason"), message_timestamp);
 
@@ -1060,6 +1087,25 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
   emit_metric(
     "aggregate", "history_comfort", "Binary history comfort subscore across trajectories [-]",
     history_comfort_values);
+  std::vector<double> extended_comfort_values;
+  extended_comfort_values.reserve(metrics_list_.size());
+  std::size_t extended_comfort_available_count = 0;
+  std::map<std::string, std::size_t> extended_comfort_reason_counts;
+  for (const auto & m : metrics_list_) {
+    ++extended_comfort_reason_counts[m.extended_comfort_reason];
+    if (m.extended_comfort_available) {
+      extended_comfort_values.push_back(m.extended_comfort);
+      ++extended_comfort_available_count;
+    }
+  }
+  emit_metric(
+    "aggregate", "extended_comfort",
+    "Binary extended comfort subscore across consecutive trajectories [-]",
+    extended_comfort_values);
+  j["aggregate/extended_comfort_available_count"] = extended_comfort_available_count;
+  j["aggregate/extended_comfort_unavailable_count"] =
+    metrics_list_.size() - extended_comfort_available_count;
+  j["aggregate/extended_comfort_reason_counts"] = extended_comfort_reason_counts;
   std::vector<double> lane_keeping_values;
   lane_keeping_values.reserve(metrics_list_.size());
   std::size_t lane_keeping_available_count = 0;
@@ -1146,6 +1192,9 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["longitudinal_deviations"] = m.longitudinal_deviations;
     traj["ttc"] = m.ttc;
     traj["history_comfort"] = m.history_comfort;
+    traj["extended_comfort"] = m.extended_comfort;
+    traj["extended_comfort_available"] = m.extended_comfort_available;
+    traj["extended_comfort_reason"] = m.extended_comfort_reason;
     traj["lane_keeping"] = m.lane_keeping;
     traj["lane_keeping_available"] = m.lane_keeping_available;
     traj["lane_keeping_reason"] = m.lane_keeping_reason;
@@ -1220,6 +1269,9 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     {metric_topic("fhe"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("ttc"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("history_comfort"), "std_msgs/msg/Float64"},
+    {metric_topic("extended_comfort"), "std_msgs/msg/Float64"},
+    {metric_topic("extended_comfort_available"), "std_msgs/msg/Bool"},
+    {metric_topic("extended_comfort_reason"), "std_msgs/msg/String"},
     {metric_topic("lane_keeping"), "std_msgs/msg/Float64"},
     {metric_topic("drivable_area_compliance"), "std_msgs/msg/Float64"},
     {metric_topic("drivable_area_compliance_available"), "std_msgs/msg/Bool"},

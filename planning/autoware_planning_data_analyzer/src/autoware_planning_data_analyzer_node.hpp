@@ -16,6 +16,7 @@
 #define AUTOWARE_PLANNING_DATA_ANALYZER_NODE_HPP_
 
 #include "bag_handler.hpp"
+#include "metrics/extended_comfort.hpp"
 #include "metrics/trajectory_metrics.hpp"
 #include "rosbag2_cpp/reader.hpp"
 #include "rosbag2_cpp/writer.hpp"
@@ -86,6 +87,7 @@ private:
   std::string gt_trajectory_topic_name_;
   double gt_sync_tolerance_ms_ = 200.0;
   metrics::HistoryComfortParameters history_comfort_params_;
+  metrics::ExtendedComfortParameters extended_comfort_parameters_;
   metrics::LaneKeepingParameters lane_keeping_params_;
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   std::string objects_topic_name_;

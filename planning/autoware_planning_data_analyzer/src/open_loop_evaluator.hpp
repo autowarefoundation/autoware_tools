@@ -17,6 +17,7 @@
 
 #include "bag_handler.hpp"
 #include "base_evaluator.hpp"
+#include "metrics/extended_comfort.hpp"
 #include "metrics/lane_keeping.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
@@ -64,7 +65,10 @@ struct OpenLoopTrajectoryMetrics
   std::vector<double> heading_errors;       // Absolute heading error at each trajectory point [rad]
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
   double history_comfort{0.0};              // Binary comfort subscore for the trajectory
-  double lane_keeping{0.0};                 // Binary lane keeping subscore for the trajectory
+  double extended_comfort{0.0};             // Binary extended comfort subscore
+  bool extended_comfort_available{false};
+  std::string extended_comfort_reason{"unavailable"};
+  double lane_keeping{0.0};  // Binary lane keeping subscore for the trajectory
   bool lane_keeping_available{false};
   std::string lane_keeping_reason{"unavailable"};
   double drivable_area_compliance{0.0};  // Binary drivable area compliance subscore
@@ -153,6 +157,11 @@ public:
   void set_evaluation_horizons(const std::vector<double> & horizons)
   {
     evaluation_horizons_ = horizons;
+  }
+
+  void set_extended_comfort_parameters(const metrics::ExtendedComfortParameters & parameters)
+  {
+    extended_comfort_parameters_ = parameters;
   }
 
   nlohmann::json get_summary_as_json() const override;
@@ -312,6 +321,7 @@ private:
   std::vector<OpenLoopTrajectoryMetrics> metrics_list_;
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
   metrics::HistoryComfortParameters history_comfort_params_;
+  metrics::ExtendedComfortParameters extended_comfort_parameters_{};
   metrics::LaneKeepingParameters lane_keeping_params_;
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   OpenLoopEvaluationSummary summary_;

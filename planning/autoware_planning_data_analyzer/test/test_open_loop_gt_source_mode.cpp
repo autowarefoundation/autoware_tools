@@ -162,6 +162,9 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ahe"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/fhe"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/history_comfort"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/extended_comfort"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/extended_comfort_available"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/extended_comfort_reason"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/lane_keeping"));
   EXPECT_TRUE(has_topic("/trajectory/raw/longitudinal_accelerations"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/drivable_area_compliance"));
@@ -218,6 +221,8 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/mean"].get<double>(), 0.5);
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/min"].get<double>(), 0.0);
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/max"].get<double>(), 1.0);
+  EXPECT_EQ(summary_json["aggregate/extended_comfort_available_count"].get<std::size_t>(), 1u);
+  EXPECT_EQ(summary_json["aggregate/extended_comfort_unavailable_count"].get<std::size_t>(), 1u);
   EXPECT_EQ(summary_json["aggregate/lane_keeping_available_count"].get<std::size_t>(), 0u);
   EXPECT_EQ(summary_json["aggregate/lane_keeping_unavailable_count"].get<std::size_t>(), 2u);
 }
@@ -255,6 +260,55 @@ TEST_F(OpenLoopGTSourceModeTest, DACUnavailableReasonIsReportedWhenRouteHandlerI
   ASSERT_TRUE(summary_json.contains("aggregate/drivable_area_compliance_reason_counts"));
   EXPECT_EQ(
     summary_json["aggregate/drivable_area_compliance_reason_counts"]["unavailable_no_route_handler"]
+      .get<std::size_t>(),
+    1u);
+}
+
+TEST_F(OpenLoopGTSourceModeTest, ExtendedComfortAvailabilityIsReportedAcrossConsecutivePlans)
+{
+  const rclcpp::Time start_time(65, 0);
+  auto first_prediction = make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5});
+  auto second_prediction =
+    make_trajectory(start_time + rclcpp::Duration::from_seconds(0.1), {0.0, 0.5, 1.1, 1.7});
+  const auto first_gt =
+    std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5}));
+  const auto second_gt = std::make_shared<Trajectory>(
+    make_trajectory(start_time + rclcpp::Duration::from_seconds(0.1), {0.0, 0.5, 1.1, 1.7}));
+
+  for (auto * prediction : {&first_prediction, &second_prediction}) {
+    for (size_t i = 0; i < prediction->points.size(); ++i) {
+      prediction->points[i].longitudinal_velocity_mps = 2.0 + 0.1 * static_cast<double>(i);
+    }
+  }
+
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{
+    make_sync_data(first_prediction, first_gt), make_sync_data(second_prediction, second_gt)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  evaluator.evaluate(sync_data_list, nullptr);
+
+  const auto metrics = evaluator.get_metrics();
+  ASSERT_EQ(metrics.size(), 2u);
+  EXPECT_FALSE(metrics[0].extended_comfort_available);
+  EXPECT_EQ(metrics[0].extended_comfort_reason, "unavailable_no_previous_trajectory");
+  EXPECT_TRUE(metrics[1].extended_comfort_available);
+  EXPECT_EQ(metrics[1].extended_comfort_reason, "available");
+  EXPECT_DOUBLE_EQ(metrics[1].extended_comfort, 1.0);
+
+  const auto full_json = evaluator.get_full_results_as_json();
+  ASSERT_EQ(full_json["trajectories"].size(), 2u);
+  EXPECT_FALSE(full_json["trajectories"][0]["extended_comfort_available"].get<bool>());
+  EXPECT_TRUE(full_json["trajectories"][1]["extended_comfort_available"].get<bool>());
+
+  const auto summary_json = evaluator.get_summary_as_json();
+  EXPECT_DOUBLE_EQ(summary_json["aggregate/extended_comfort/mean"].get<double>(), 1.0);
+  EXPECT_EQ(summary_json["aggregate/extended_comfort_available_count"].get<std::size_t>(), 1u);
+  EXPECT_EQ(summary_json["aggregate/extended_comfort_unavailable_count"].get<std::size_t>(), 1u);
+  EXPECT_EQ(
+    summary_json["aggregate/extended_comfort_reason_counts"]["unavailable_no_previous_trajectory"]
       .get<std::size_t>(),
     1u);
 }
