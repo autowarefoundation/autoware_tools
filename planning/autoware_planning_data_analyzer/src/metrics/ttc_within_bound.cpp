@@ -18,7 +18,6 @@
 #include <autoware_utils_geometry/boost_geometry.hpp>
 #include <autoware_utils_geometry/boost_polygon_utils.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
-#include <autoware_utils_math/normalization.hpp>
 #include <tf2/LinearMath/Vector3.hpp>
 
 #include <boost/geometry.hpp>

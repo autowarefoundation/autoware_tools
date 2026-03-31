@@ -325,7 +325,7 @@ typename std::enable_if<has_header_stamp<MessageType>::value, void>::type
 set_header_timestamp_if_needed(
   MessageType & msg, bool use_bag_timestamp, const rclcpp::Time & bag_time)
 {
-  if (use_bag_timestamp && msg.header.stamp != rclcpp::Time(0)) {
+  if (use_bag_timestamp && msg.header.stamp == rclcpp::Time(0)) {
     msg.header.stamp = bag_time;
   }
 }
@@ -336,7 +336,7 @@ typename std::enable_if<
 set_header_timestamp_if_needed(
   MessageType & msg, bool use_bag_timestamp, const rclcpp::Time & bag_time)
 {
-  if (use_bag_timestamp && msg.stamp != rclcpp::Time(0)) {
+  if (use_bag_timestamp && msg.stamp == rclcpp::Time(0)) {
     msg.stamp = bag_time;
   }
 }

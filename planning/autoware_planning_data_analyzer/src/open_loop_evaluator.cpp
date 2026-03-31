@@ -65,8 +65,7 @@ std::shared_ptr<SynchronizedData> clone_with_trajectory(
   return cloned;
 }
 
-metrics::EpdmsMetricSnapshot build_epdms_snapshot(
-  const OpenLoopTrajectoryMetrics & metrics, const metrics::TrajectoryPointMetrics & point_metrics)
+metrics::EpdmsMetricSnapshot build_epdms_snapshot(const OpenLoopTrajectoryMetrics & metrics)
 {
   metrics::EpdmsMetricSnapshot snapshot;
   snapshot.history_comfort = metrics.history_comfort;
@@ -88,23 +87,6 @@ metrics::EpdmsMetricSnapshot build_epdms_snapshot(
   snapshot.driving_direction_compliance_available = metrics.driving_direction_compliance_available;
   snapshot.traffic_light_compliance = metrics.traffic_light_compliance;
   snapshot.traffic_light_compliance_available = metrics.traffic_light_compliance_available;
-
-  snapshot.history_comfort = point_metrics.history_comfort;
-  snapshot.history_comfort_available = true;
-  snapshot.time_to_collision_within_bound = point_metrics.time_to_collision_within_bound;
-  snapshot.time_to_collision_within_bound_available =
-    point_metrics.time_to_collision_within_bound_available;
-  snapshot.lane_keeping = point_metrics.lane_keeping;
-  snapshot.lane_keeping_available = point_metrics.lane_keeping_available;
-  snapshot.drivable_area_compliance = point_metrics.drivable_area_compliance;
-  snapshot.drivable_area_compliance_available = point_metrics.drivable_area_compliance_available;
-  snapshot.no_at_fault_collision = point_metrics.no_at_fault_collision;
-  snapshot.no_at_fault_collision_available = point_metrics.no_at_fault_collision_available;
-  snapshot.driving_direction_compliance = point_metrics.driving_direction_compliance;
-  snapshot.driving_direction_compliance_available =
-    point_metrics.driving_direction_compliance_available;
-  snapshot.traffic_light_compliance = point_metrics.traffic_light_compliance;
-  snapshot.traffic_light_compliance_available = point_metrics.traffic_light_compliance_available;
   return snapshot;
 }
 
@@ -338,7 +320,7 @@ void OpenLoopEvaluator::evaluate(
     human_snapshot.traffic_light_compliance_available =
       human_point_metrics.traffic_light_compliance_available;
 
-    const auto agent_snapshot = build_epdms_snapshot(metrics, trajectory_metrics);
+    const auto agent_snapshot = build_epdms_snapshot(metrics);
     const auto human_filter_metrics =
       metrics::calculate_human_filter_metrics(agent_snapshot, human_snapshot);
     const auto synthetic_epdms =
