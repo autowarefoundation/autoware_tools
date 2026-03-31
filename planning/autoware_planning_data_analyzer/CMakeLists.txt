@@ -11,10 +11,15 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/or_event_extractor.cpp
   src/or_scene_evaluator.cpp
   src/metrics/deviation_metrics.cpp
+  src/metrics/ego_progress.cpp
+  src/metrics/driving_direction_compliance.cpp
   src/metrics/history_comfort.cpp
   src/metrics/lane_keeping.cpp
   src/metrics/drivable_area_compliance.cpp
   src/metrics/extended_comfort.cpp
+  src/metrics/ttc_within_bound.cpp
+  src/metrics/no_at_fault_collision.cpp
+  src/metrics/traffic_light_compliance.cpp
   src/metrics/trajectory_metrics.cpp
   src/utils/bag_utils.cpp
   src/utils/json_utils.cpp
@@ -33,9 +38,14 @@ if(BUILD_TESTING)
   ament_add_gtest(
     test_metrics
     test/metrics/test_deviation_metrics.cpp
+    test/metrics/test_driving_direction_compliance.cpp
     test/metrics/test_lane_keeping.cpp
+    test/metrics/test_ego_progress.cpp
     test/metrics/test_drivable_area_compliance.cpp
     test/metrics/test_extended_comfort.cpp
+    test/metrics/test_ttc_within_bound.cpp
+    test/metrics/test_no_at_fault_collision.cpp
+    test/metrics/test_traffic_light_compliance.cpp
   )
   target_link_libraries(test_metrics ${PROJECT_NAME})
 

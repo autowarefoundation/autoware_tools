@@ -20,6 +20,20 @@
 namespace autoware::planning_data_analyzer
 {
 
+namespace
+{
+
+int64_t candidate_trajectories_stamp_ns(
+  const autoware::planning_data_analyzer::CandidateTrajectories & msg)
+{
+  if (msg.candidate_trajectories.empty()) {
+    return 0;
+  }
+  return rclcpp::Time(msg.candidate_trajectories.front().header.stamp).nanoseconds();
+}
+
+}  // namespace
+
 // Template specializations for SteeringReport (uses stamp instead of header.stamp)
 template <>
 bool Buffer<SteeringReport>::ready() const
@@ -171,6 +185,96 @@ auto Buffer<TFMessage>::get_closest(
   }
 
   return std::make_shared<TFMessage>(*closest_itr);
+}
+
+template <>
+bool Buffer<CandidateTrajectories>::ready() const
+{
+  if (msgs.empty()) {
+    return false;
+  }
+
+  return candidate_trajectories_stamp_ns(msgs.back()) - candidate_trajectories_stamp_ns(msgs.front()) >
+         buffer_time_ns;
+}
+
+template <>
+void Buffer<CandidateTrajectories>::remove_old_data(const rcutils_time_point_value_t now)
+{
+  const auto itr = std::remove_if(msgs.begin(), msgs.end(), [&now](const auto & msg) {
+    return candidate_trajectories_stamp_ns(msg) < now;
+  });
+  msgs.erase(itr, msgs.end());
+}
+
+template <>
+auto Buffer<CandidateTrajectories>::get(const rcutils_time_point_value_t now) const
+  -> CandidateTrajectories::SharedPtr
+{
+  const auto itr = std::find_if(msgs.begin(), msgs.end(), [&now](const auto & msg) {
+    return candidate_trajectories_stamp_ns(msg) > now;
+  });
+
+  if (itr == msgs.end()) {
+    return nullptr;
+  }
+
+  return std::make_shared<CandidateTrajectories>(*itr);
+}
+
+template <>
+auto Buffer<CandidateTrajectories>::get_closest(
+  const rcutils_time_point_value_t target_time, const double tolerance_ms) const
+  -> CandidateTrajectories::SharedPtr
+{
+  if (msgs.empty()) {
+    return nullptr;
+  }
+
+  const double tolerance_ns = tolerance_ms * 1e6;
+
+  auto closest_itr = msgs.begin();
+  double min_diff =
+    std::abs(static_cast<double>(candidate_trajectories_stamp_ns(*closest_itr) - target_time));
+
+  for (auto itr = msgs.begin(); itr != msgs.end(); ++itr) {
+    const double diff =
+      std::abs(static_cast<double>(candidate_trajectories_stamp_ns(*itr) - target_time));
+    if (diff < min_diff) {
+      min_diff = diff;
+      closest_itr = itr;
+    }
+  }
+
+  if (min_diff > tolerance_ns) {
+    return nullptr;
+  }
+
+  return std::make_shared<CandidateTrajectories>(*closest_itr);
+}
+
+template <>
+auto Buffer<CandidateTrajectories>::get_latest_before_or_equal(
+  const rcutils_time_point_value_t target_time) const -> CandidateTrajectories::SharedPtr
+{
+  if (msgs.empty()) {
+    return nullptr;
+  }
+
+  typename std::vector<CandidateTrajectories>::const_iterator latest_itr = msgs.end();
+  for (auto itr = msgs.begin(); itr != msgs.end(); ++itr) {
+    const auto stamp_ns = candidate_trajectories_stamp_ns(*itr);
+    if (stamp_ns <= target_time) {
+      latest_itr = itr;
+    } else {
+      break;
+    }
+  }
+
+  if (latest_itr == msgs.end()) {
+    return nullptr;
+  }
+  return std::make_shared<CandidateTrajectories>(*latest_itr);
 }
 
 }  // namespace autoware::planning_data_analyzer

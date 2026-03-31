@@ -81,6 +81,7 @@ private:
   std::string route_topic_name_;
   std::string odometry_topic_name_;
   std::string trajectory_topic_name_;
+  std::string candidate_trajectories_topic_name_;
   double evaluation_interval_ms_ = 100.0;
   double sync_tolerance_ms_ = 100.0;
   std::string gt_source_mode_;
@@ -91,6 +92,7 @@ private:
   metrics::LaneKeepingParameters lane_keeping_params_;
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   std::string objects_topic_name_;
+  std::string traffic_signals_topic_name_;
   std::string tf_topic_name_;
   std::string acceleration_topic_name_;
   std::string steering_topic_name_;

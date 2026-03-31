@@ -18,6 +18,8 @@
 #include "bag_handler.hpp"
 #include "base_evaluator.hpp"
 #include "metrics/extended_comfort.hpp"
+#include "metrics/ego_progress.hpp"
+#include "metrics/driving_direction_compliance.hpp"
 #include "metrics/lane_keeping.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
@@ -30,6 +32,7 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 
 #include <cstddef>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -68,12 +71,32 @@ struct OpenLoopTrajectoryMetrics
   double extended_comfort{0.0};             // Binary extended comfort subscore
   bool extended_comfort_available{false};
   std::string extended_comfort_reason{"unavailable"};
-  double lane_keeping{0.0};  // Binary lane keeping subscore for the trajectory
+  double time_to_collision_within_bound{0.0};
+  bool time_to_collision_within_bound_available{false};
+  std::string time_to_collision_within_bound_reason{"unavailable"};
+  double time_to_collision_infraction_time_s{std::numeric_limits<double>::infinity()};
+  double lane_keeping{0.0};                 // Binary lane keeping subscore for the trajectory
   bool lane_keeping_available{false};
   std::string lane_keeping_reason{"unavailable"};
-  double drivable_area_compliance{0.0};  // Binary drivable area compliance subscore
+  double ego_progress{0.0};                 // Proposal-relative ego progress subscore
+  bool ego_progress_available{false};
+  std::string ego_progress_reason{"unavailable"};
+  double ego_progress_raw_m{0.0};
+  double ego_progress_best_raw_m{0.0};
+  double drivable_area_compliance{0.0};     // Binary drivable area compliance subscore
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};
+  double no_at_fault_collision{0.0};
+  bool no_at_fault_collision_available{false};
+  std::string no_at_fault_collision_reason{"unavailable"};
+  double time_to_at_fault_collision_s{std::numeric_limits<double>::infinity()};
+  double driving_direction_compliance{0.0};
+  bool driving_direction_compliance_available{false};
+  std::string driving_direction_compliance_reason{"unavailable"};
+  double max_oncoming_progress_m{0.0};
+  double traffic_light_compliance{0.0};
+  bool traffic_light_compliance_available{false};
+  std::string traffic_light_compliance_reason{"unavailable"};
 
   // Per-horizon metrics in insertion order: "full" first, then "1s", "2s", ...
   std::vector<std::pair<std::string, HorizonMetrics>> horizon_results;
@@ -125,10 +148,12 @@ public:
     double gt_sync_tolerance_ms = 200.0,
     metrics::HistoryComfortParameters history_comfort_params = {},
     metrics::LaneKeepingParameters lane_keeping_params = {},
+    metrics::DrivingDirectionComplianceParameters driving_direction_params = {},
     autoware::vehicle_info_utils::VehicleInfo vehicle_info = {})
   : BaseEvaluator(logger, route_handler),
     history_comfort_params_(std::move(history_comfort_params)),
     lane_keeping_params_(std::move(lane_keeping_params)),
+    driving_direction_params_(std::move(driving_direction_params)),
     vehicle_info_(std::move(vehicle_info)),
     gt_source_mode_(gt_source_mode),
     gt_sync_tolerance_ms_(gt_sync_tolerance_ms)
@@ -323,6 +348,7 @@ private:
   metrics::HistoryComfortParameters history_comfort_params_;
   metrics::ExtendedComfortParameters extended_comfort_parameters_{};
   metrics::LaneKeepingParameters lane_keeping_params_;
+  metrics::DrivingDirectionComplianceParameters driving_direction_params_;
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   OpenLoopEvaluationSummary summary_;
   std::string metric_variant_;

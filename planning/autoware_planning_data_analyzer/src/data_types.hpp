@@ -18,6 +18,8 @@
 #include <rclcpp/rclcpp.hpp>
 
 #include <autoware_perception_msgs/msg/predicted_objects.hpp>
+#include <autoware_internal_planning_msgs/msg/candidate_trajectories.hpp>
+#include <autoware_perception_msgs/msg/traffic_light_group_array.hpp>
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 #include <autoware_vehicle_msgs/msg/steering_report.hpp>
 #include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
@@ -32,9 +34,11 @@ namespace autoware::planning_data_analyzer
 
 // Type aliases for ROS messages
 using Trajectory = autoware_planning_msgs::msg::Trajectory;
+using CandidateTrajectories = autoware_internal_planning_msgs::msg::CandidateTrajectories;
 using TFMessage = tf2_msgs::msg::TFMessage;
 using Odometry = nav_msgs::msg::Odometry;
 using PredictedObjects = autoware_perception_msgs::msg::PredictedObjects;
+using TrafficLightGroupArray = autoware_perception_msgs::msg::TrafficLightGroupArray;
 using AccelWithCovarianceStamped = geometry_msgs::msg::AccelWithCovarianceStamped;
 using SteeringReport = autoware_vehicle_msgs::msg::SteeringReport;
 
@@ -43,10 +47,12 @@ struct SynchronizedData
 {
   std::shared_ptr<Odometry> kinematic_state;
   std::shared_ptr<Trajectory> trajectory;
+  std::shared_ptr<CandidateTrajectories> candidate_trajectories;
   std::shared_ptr<Trajectory> ground_truth_trajectory_msg;
   std::shared_ptr<AccelWithCovarianceStamped> acceleration;
   std::shared_ptr<SteeringReport> steering_status;
   std::shared_ptr<PredictedObjects> objects;
+  std::shared_ptr<TrafficLightGroupArray> traffic_signals;
   rclcpp::Time timestamp;
   rclcpp::Time bag_timestamp;
 };
@@ -57,8 +63,10 @@ struct TopicNames
   std::string route_topic;
   std::string odometry_topic;
   std::string trajectory_topic;
+  std::string candidate_trajectories_topic;
   std::string gt_trajectory_topic;
   std::string objects_topic;
+  std::string traffic_signals_topic;
   std::string tf_topic;
   std::string acceleration_topic;
   std::string steering_topic;

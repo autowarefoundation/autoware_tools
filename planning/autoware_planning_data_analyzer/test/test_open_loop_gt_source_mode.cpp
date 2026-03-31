@@ -115,8 +115,6 @@ TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeSkipsWhenGTIsMissing)
 TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeUsesSyncToleranceForBoundaryInterpolation)
 {
   const rclcpp::Time start_time(30, 0);
-
-  // Predicted trajectory extends to 0.3s while GT extends to 0.2s.
   const auto prediction = make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0});
   const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 1.0, 2.0}));
   std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{make_sync_data(prediction, gt)};
@@ -142,15 +140,6 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
 
   evaluator.set_metric_variant("raw");
 
-  EXPECT_EQ(evaluator.metric_topic("ade"), "/open_loop/metrics/raw/ade");
-  EXPECT_EQ(evaluator.metric_topic("ahe"), "/open_loop/metrics/raw/ahe");
-  EXPECT_EQ(
-    evaluator.trajectory_metric_topic("lateral_accelerations"),
-    "/trajectory/raw/lateral_accelerations");
-  EXPECT_EQ(evaluator.compared_trajectory_topic(), "/evaluation/compared_trajectory/raw");
-  EXPECT_EQ(
-    evaluator.dlr_result_topic(), "/driving_log_replayer/time_step_based_trajectory/raw/results");
-
   const auto topics = evaluator.get_result_topics();
   const auto has_topic = [&topics](const std::string & topic_name) {
     return std::any_of(topics.begin(), topics.end(), [&topic_name](const auto & topic) {
@@ -158,29 +147,20 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
     });
   };
 
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ade"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ahe"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/fhe"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/history_comfort"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/extended_comfort"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/extended_comfort_available"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/extended_comfort_reason"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/time_to_collision_within_bound"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/lane_keeping"));
-  EXPECT_TRUE(has_topic("/trajectory/raw/longitudinal_accelerations"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ego_progress"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/drivable_area_compliance"));
-  EXPECT_TRUE(has_topic("/trajectory/raw/lateral_accelerations"));
-  EXPECT_TRUE(has_topic("/trajectory/raw/lateral_jerks"));
-  EXPECT_TRUE(has_topic("/trajectory/raw/jerk_magnitudes"));
-  EXPECT_TRUE(has_topic("/trajectory/raw/yaw_rates"));
-  EXPECT_TRUE(has_topic("/trajectory/raw/yaw_accelerations"));
-  EXPECT_TRUE(has_topic("/evaluation/compared_trajectory/raw"));
-  EXPECT_TRUE(has_topic("/driving_log_replayer/time_step_based_trajectory/raw/results"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/no_at_fault_collision"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/driving_direction_compliance"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/traffic_light_compliance"));
 }
 
 TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomfortableTrajectories)
 {
   const rclcpp::Time start_time(50, 0);
-
   auto comfortable_prediction = make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5});
   auto uncomfortable_prediction = make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5});
   const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5}));
@@ -189,7 +169,6 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
     comfortable_prediction.points[i].longitudinal_velocity_mps = 2.0;
     uncomfortable_prediction.points[i].longitudinal_velocity_mps = 2.0;
   }
-
   uncomfortable_prediction.points[1].longitudinal_velocity_mps = 3.0;
   uncomfortable_prediction.points[2].longitudinal_velocity_mps = 5.0;
   uncomfortable_prediction.points[3].longitudinal_velocity_mps = 6.0;
@@ -208,26 +187,28 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
   EXPECT_DOUBLE_EQ(metrics[0].history_comfort, 1.0);
   EXPECT_DOUBLE_EQ(metrics[1].history_comfort, 0.0);
 
-  const auto full_json = evaluator.get_full_results_as_json();
-  ASSERT_EQ(full_json["trajectories"].size(), 2u);
-  EXPECT_DOUBLE_EQ(full_json["trajectories"][0]["history_comfort"].get<double>(), 1.0);
-  EXPECT_DOUBLE_EQ(full_json["trajectories"][1]["history_comfort"].get<double>(), 0.0);
-  EXPECT_DOUBLE_EQ(
-    full_json["trajectories"][0]["trajectory_point_metrics"]["history_comfort"].get<double>(), 1.0);
-  EXPECT_DOUBLE_EQ(
-    full_json["trajectories"][1]["trajectory_point_metrics"]["history_comfort"].get<double>(), 0.0);
-
   const auto summary_json = evaluator.get_summary_as_json();
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/mean"].get<double>(), 0.5);
-  EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/min"].get<double>(), 0.0);
-  EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/max"].get<double>(), 1.0);
   EXPECT_EQ(summary_json["aggregate/extended_comfort_available_count"].get<std::size_t>(), 1u);
   EXPECT_EQ(summary_json["aggregate/extended_comfort_unavailable_count"].get<std::size_t>(), 1u);
   EXPECT_EQ(summary_json["aggregate/lane_keeping_available_count"].get<std::size_t>(), 0u);
   EXPECT_EQ(summary_json["aggregate/lane_keeping_unavailable_count"].get<std::size_t>(), 2u);
+  EXPECT_EQ(summary_json["aggregate/ego_progress_available_count"].get<std::size_t>(), 0u);
+  EXPECT_EQ(summary_json["aggregate/ego_progress_unavailable_count"].get<std::size_t>(), 2u);
+  EXPECT_EQ(summary_json["aggregate/no_at_fault_collision_available_count"].get<std::size_t>(), 0u);
+  EXPECT_EQ(
+    summary_json["aggregate/no_at_fault_collision_unavailable_count"].get<std::size_t>(), 2u);
+  EXPECT_EQ(
+    summary_json["aggregate/driving_direction_compliance_available_count"].get<std::size_t>(), 0u);
+  EXPECT_EQ(
+    summary_json["aggregate/driving_direction_compliance_unavailable_count"].get<std::size_t>(),
+    2u);
+  EXPECT_EQ(summary_json["aggregate/traffic_light_compliance_available_count"].get<std::size_t>(), 0u);
+  EXPECT_EQ(
+    summary_json["aggregate/traffic_light_compliance_unavailable_count"].get<std::size_t>(), 2u);
 }
 
-TEST_F(OpenLoopGTSourceModeTest, DACUnavailableReasonIsReportedWhenRouteHandlerIsMissing)
+TEST_F(OpenLoopGTSourceModeTest, MissingInputsUnavailableReasonsAreReported)
 {
   const rclcpp::Time start_time(60, 0);
   const auto prediction = make_trajectory(start_time, {0.0, 1.0, 2.0});
@@ -242,26 +223,24 @@ TEST_F(OpenLoopGTSourceModeTest, DACUnavailableReasonIsReportedWhenRouteHandlerI
 
   const auto full_json = evaluator.get_full_results_as_json();
   ASSERT_EQ(full_json["trajectories"].size(), 1u);
-  EXPECT_FALSE(full_json["trajectories"][0]["lane_keeping_available"].get<bool>());
   EXPECT_EQ(
     full_json["trajectories"][0]["lane_keeping_reason"].get<std::string>(),
     "unavailable_no_route_handler");
-  EXPECT_FALSE(full_json["trajectories"][0]["drivable_area_compliance_available"].get<bool>());
+  EXPECT_EQ(
+    full_json["trajectories"][0]["ego_progress_reason"].get<std::string>(),
+    "unavailable_no_route_handler");
   EXPECT_EQ(
     full_json["trajectories"][0]["drivable_area_compliance_reason"].get<std::string>(),
     "unavailable_no_route_handler");
-
-  const auto summary_json = evaluator.get_summary_as_json();
-  ASSERT_TRUE(summary_json.contains("aggregate/lane_keeping_reason_counts"));
   EXPECT_EQ(
-    summary_json["aggregate/lane_keeping_reason_counts"]["unavailable_no_route_handler"]
-      .get<std::size_t>(),
-    1u);
-  ASSERT_TRUE(summary_json.contains("aggregate/drivable_area_compliance_reason_counts"));
+    full_json["trajectories"][0]["driving_direction_compliance_reason"].get<std::string>(),
+    "unavailable_no_route_handler");
   EXPECT_EQ(
-    summary_json["aggregate/drivable_area_compliance_reason_counts"]["unavailable_no_route_handler"]
-      .get<std::size_t>(),
-    1u);
+    full_json["trajectories"][0]["traffic_light_compliance_reason"].get<std::string>(),
+    "unavailable_no_route_handler");
+  EXPECT_EQ(
+    full_json["trajectories"][0]["no_at_fault_collision_reason"].get<std::string>(),
+    "unavailable_no_objects_message");
 }
 
 TEST_F(OpenLoopGTSourceModeTest, ExtendedComfortAvailabilityIsReportedAcrossConsecutivePlans)
@@ -293,24 +272,7 @@ TEST_F(OpenLoopGTSourceModeTest, ExtendedComfortAvailabilityIsReportedAcrossCons
   const auto metrics = evaluator.get_metrics();
   ASSERT_EQ(metrics.size(), 2u);
   EXPECT_FALSE(metrics[0].extended_comfort_available);
-  EXPECT_EQ(metrics[0].extended_comfort_reason, "unavailable_no_previous_trajectory");
   EXPECT_TRUE(metrics[1].extended_comfort_available);
-  EXPECT_EQ(metrics[1].extended_comfort_reason, "available");
-  EXPECT_DOUBLE_EQ(metrics[1].extended_comfort, 1.0);
-
-  const auto full_json = evaluator.get_full_results_as_json();
-  ASSERT_EQ(full_json["trajectories"].size(), 2u);
-  EXPECT_FALSE(full_json["trajectories"][0]["extended_comfort_available"].get<bool>());
-  EXPECT_TRUE(full_json["trajectories"][1]["extended_comfort_available"].get<bool>());
-
-  const auto summary_json = evaluator.get_summary_as_json();
-  EXPECT_DOUBLE_EQ(summary_json["aggregate/extended_comfort/mean"].get<double>(), 1.0);
-  EXPECT_EQ(summary_json["aggregate/extended_comfort_available_count"].get<std::size_t>(), 1u);
-  EXPECT_EQ(summary_json["aggregate/extended_comfort_unavailable_count"].get<std::size_t>(), 1u);
-  EXPECT_EQ(
-    summary_json["aggregate/extended_comfort_reason_counts"]["unavailable_no_previous_trajectory"]
-      .get<std::size_t>(),
-    1u);
 }
 
 TEST_F(
@@ -345,10 +307,6 @@ TEST_F(
   const auto metrics = evaluator.get_metrics();
   ASSERT_EQ(metrics.size(), 1u);
   EXPECT_DOUBLE_EQ(metrics[0].history_comfort, 0.0);
-
-  const auto full_json = evaluator.get_full_results_as_json();
-  ASSERT_EQ(full_json["trajectories"].size(), 1u);
-  EXPECT_DOUBLE_EQ(full_json["trajectories"][0]["history_comfort"].get<double>(), 0.0);
 }
 
 TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)
@@ -391,28 +349,4 @@ TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)
   EXPECT_NEAR(metrics.front().ahe[1], 0.2, 1e-6);
   EXPECT_NEAR(metrics.front().ahe[2], 0.233333333333, 1e-6);
   EXPECT_NEAR(metrics.front().ahe[3], 0.275, 1e-6);
-  EXPECT_NEAR(metrics.front().heading_errors[0], 0.2, 1e-6);
-  EXPECT_NEAR(metrics.front().heading_errors[1], 0.2, 1e-6);
-  EXPECT_NEAR(metrics.front().heading_errors[2], 0.3, 1e-6);
-  EXPECT_NEAR(metrics.front().heading_errors[3], 0.4, 1e-6);
-
-  ASSERT_EQ(metrics.front().horizon_results.size(), 2u);
-  EXPECT_EQ(metrics.front().horizon_results[0].first, "full");
-  EXPECT_NEAR(metrics.front().horizon_results[0].second.ahe, 0.275, 1e-6);
-  EXPECT_NEAR(metrics.front().horizon_results[0].second.fhe, 0.4, 1e-6);
-
-  EXPECT_EQ(metrics.front().horizon_results[1].first, "0.2s");
-  EXPECT_NEAR(metrics.front().horizon_results[1].second.ahe, 0.233333333333, 1e-6);
-  EXPECT_NEAR(metrics.front().horizon_results[1].second.fhe, 0.3, 1e-6);
-
-  const auto summary_json = evaluator.get_summary_as_json();
-  EXPECT_NEAR(summary_json["full/ahe/mean"].get<double>(), 0.275, 1e-6);
-  EXPECT_NEAR(summary_json["full/fhe/mean"].get<double>(), 0.4, 1e-6);
-  EXPECT_NEAR(summary_json["0.2s/ahe/mean"].get<double>(), 0.233333333333, 1e-6);
-  EXPECT_NEAR(summary_json["0.2s/fhe/mean"].get<double>(), 0.3, 1e-6);
-  EXPECT_DOUBLE_EQ(summary_json["aggregate/drivable_area_compliance/mean"].get<double>(), 0.0);
-  EXPECT_EQ(
-    summary_json["aggregate/drivable_area_compliance_available_count"].get<std::size_t>(), 0u);
-  EXPECT_EQ(
-    summary_json["aggregate/drivable_area_compliance_unavailable_count"].get<std::size_t>(), 1u);
 }

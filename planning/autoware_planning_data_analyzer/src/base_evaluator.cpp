@@ -70,6 +70,11 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
       process_and_append_message<Trajectory>(
         serialized_message, bag_data, topic_names.trajectory_topic, use_bag_timestamp, logger_);
     } else if (
+      !topic_names.candidate_trajectories_topic.empty() &&
+      topic_name == topic_names.candidate_trajectories_topic) {
+      process_and_append_message<CandidateTrajectories>(
+        serialized_message, bag_data, topic_names.candidate_trajectories_topic, false, logger_);
+    } else if (
       !topic_names.gt_trajectory_topic.empty() && topic_name == topic_names.gt_trajectory_topic) {
       result.gt_trajectory_topic_seen = true;
       result.gt_trajectory_message_count++;
@@ -86,6 +91,12 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
     } else if (topic_name == topic_names.objects_topic) {
       process_and_append_message<PredictedObjects>(
         serialized_message, bag_data, topic_names.objects_topic, use_bag_timestamp, logger_);
+    } else if (
+      topic_name == topic_names.traffic_signals_topic && !topic_names.traffic_signals_topic.empty())
+    {
+      process_and_append_message<TrafficLightGroupArray>(
+        serialized_message, bag_data, topic_names.traffic_signals_topic, use_bag_timestamp,
+        logger_);
     } else if (topic_name == topic_names.tf_topic) {
       process_and_append_message<TFMessage>(
         serialized_message, bag_data, topic_names.tf_topic, false, logger_);
