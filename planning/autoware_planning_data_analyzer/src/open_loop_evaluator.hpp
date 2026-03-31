@@ -65,7 +65,9 @@ struct OpenLoopTrajectoryMetrics
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
   double history_comfort{0.0};              // Binary comfort subscore for the trajectory
   double lane_keeping{0.0};                 // Binary lane keeping subscore for the trajectory
-  double drivable_area_compliance{0.0};     // Binary drivable area compliance subscore
+  bool lane_keeping_available{false};
+  std::string lane_keeping_reason{"unavailable"};
+  double drivable_area_compliance{0.0};  // Binary drivable area compliance subscore
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};
 

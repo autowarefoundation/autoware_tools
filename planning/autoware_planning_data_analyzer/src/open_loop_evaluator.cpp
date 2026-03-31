@@ -180,6 +180,8 @@ void OpenLoopEvaluator::evaluate(
     auto metrics = evaluate_trajectory(eval_data);
     metrics.history_comfort = trajectory_metrics.history_comfort;
     metrics.lane_keeping = trajectory_metrics.lane_keeping;
+    metrics.lane_keeping_available = trajectory_metrics.lane_keeping_available;
+    metrics.lane_keeping_reason = trajectory_metrics.lane_keeping_reason;
     metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
     metrics.drivable_area_compliance_available =
       trajectory_metrics.drivable_area_compliance_available;
@@ -1060,12 +1062,22 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
     history_comfort_values);
   std::vector<double> lane_keeping_values;
   lane_keeping_values.reserve(metrics_list_.size());
+  std::size_t lane_keeping_available_count = 0;
+  std::map<std::string, std::size_t> lane_keeping_reason_counts;
   for (const auto & m : metrics_list_) {
-    lane_keeping_values.push_back(m.lane_keeping);
+    ++lane_keeping_reason_counts[m.lane_keeping_reason];
+    if (m.lane_keeping_available) {
+      lane_keeping_values.push_back(m.lane_keeping);
+      ++lane_keeping_available_count;
+    }
   }
   emit_metric(
     "aggregate", "lane_keeping", "Binary lane keeping subscore across trajectories [-]",
     lane_keeping_values);
+  j["aggregate/lane_keeping_available_count"] = lane_keeping_available_count;
+  j["aggregate/lane_keeping_unavailable_count"] =
+    metrics_list_.size() - lane_keeping_available_count;
+  j["aggregate/lane_keeping_reason_counts"] = lane_keeping_reason_counts;
   std::vector<double> drivable_area_compliance_values;
   drivable_area_compliance_values.reserve(metrics_list_.size());
   std::size_t drivable_area_compliance_available_count = 0;
@@ -1135,6 +1147,8 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["ttc"] = m.ttc;
     traj["history_comfort"] = m.history_comfort;
     traj["lane_keeping"] = m.lane_keeping;
+    traj["lane_keeping_available"] = m.lane_keeping_available;
+    traj["lane_keeping_reason"] = m.lane_keeping_reason;
     traj["drivable_area_compliance"] = m.drivable_area_compliance;
     traj["drivable_area_compliance_available"] = m.drivable_area_compliance_available;
     traj["drivable_area_compliance_reason"] = m.drivable_area_compliance_reason;
@@ -1157,6 +1171,8 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
       traj["trajectory_point_metrics"]["travel_distances"] = pm.travel_distances;
       traj["trajectory_point_metrics"]["history_comfort"] = pm.history_comfort;
       traj["trajectory_point_metrics"]["lane_keeping"] = pm.lane_keeping;
+      traj["trajectory_point_metrics"]["lane_keeping_available"] = pm.lane_keeping_available;
+      traj["trajectory_point_metrics"]["lane_keeping_reason"] = pm.lane_keeping_reason;
       traj["trajectory_point_metrics"]["drivable_area_compliance"] = pm.drivable_area_compliance;
       traj["trajectory_point_metrics"]["drivable_area_compliance_available"] =
         pm.drivable_area_compliance_available;

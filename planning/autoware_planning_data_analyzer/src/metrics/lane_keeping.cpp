@@ -16,38 +16,40 @@
 
 #include <cmath>
 #include <optional>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
 
 double calculate_lane_keeping_score(
-  const std::vector<LaneKeepingSample> & samples, const LaneKeepingParameters & parameters)
+  const std::vector<LaneKeepingEvaluationPoint> & evaluation_points,
+  const LaneKeepingParameters & parameters)
 {
   if (
-    samples.empty() || parameters.max_lateral_deviation < 0.0 ||
+    evaluation_points.empty() || parameters.max_lateral_deviation < 0.0 ||
     parameters.max_continuous_violation_time < 0.0) {
     return 0.0;
   }
 
   std::optional<rclcpp::Duration> violation_start_time;
 
-  for (const auto & sample : samples) {
-    if (sample.is_in_intersection || !std::isfinite(sample.lateral_deviation)) {
+  for (const auto & evaluation_point : evaluation_points) {
+    if (evaluation_point.is_in_intersection || !std::isfinite(evaluation_point.lateral_deviation)) {
       violation_start_time.reset();
       continue;
     }
 
-    if (std::abs(sample.lateral_deviation) <= parameters.max_lateral_deviation) {
+    if (std::abs(evaluation_point.lateral_deviation) <= parameters.max_lateral_deviation) {
       violation_start_time.reset();
       continue;
     }
 
     if (!violation_start_time.has_value()) {
-      violation_start_time = sample.time_from_start;
+      violation_start_time = evaluation_point.time_from_start;
     }
 
     const double violation_duration =
-      (sample.time_from_start - violation_start_time.value()).seconds();
+      (evaluation_point.time_from_start - violation_start_time.value()).seconds();
     if (violation_duration >= parameters.max_continuous_violation_time) {
       return 0.0;
     }

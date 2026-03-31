@@ -236,13 +236,6 @@ std::optional<lanelet::ConstLanelet> find_reference_lanelet(
     return closest_lanelet;
   }
 
-  const auto road_lanelets = route_handler->getRoadLaneletsAtPose(pose);
-  for (const auto & lanelet : road_lanelets) {
-    if (route_handler->isRouteLanelet(lanelet)) {
-      return lanelet;
-    }
-  }
-
   return std::nullopt;
 }
 
@@ -312,29 +305,47 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     }
   }
 
-  std::vector<LaneKeepingSample> lane_keeping_samples;
-  lane_keeping_samples.reserve(num_points);
+  std::vector<LaneKeepingEvaluationPoint> lane_keeping_evaluation_points;
+  lane_keeping_evaluation_points.reserve(num_points);
 
   // Calculate lateral deviation from the local route lane at each pose.
-  if (route_handler && route_handler->isHandlerReady()) {
+  if (!route_handler) {
+    metrics.lane_keeping_reason = "unavailable_no_route_handler";
+  } else if (!route_handler->isHandlerReady()) {
+    metrics.lane_keeping_reason = "unavailable_route_handler_not_ready";
+  } else {
     for (size_t i = 0; i < num_points; ++i) {
       const auto & point = trajectory.points[i];
       const auto reference_lanelet = find_reference_lanelet(point.pose, route_handler);
       if (!reference_lanelet.has_value()) {
         metrics.lateral_deviations[i] = std::numeric_limits<double>::quiet_NaN();
-        continue;
+        lane_keeping_evaluation_points.push_back(
+          LaneKeepingEvaluationPoint{point.time_from_start, metrics.lateral_deviations[i], false});
+      } else {
+        metrics.lateral_deviations[i] =
+          autoware::experimental::lanelet2_utils::get_lateral_distance_to_centerline(
+            reference_lanelet.value(), point.pose);
+        lane_keeping_evaluation_points.push_back(
+          LaneKeepingEvaluationPoint{
+            point.time_from_start, metrics.lateral_deviations[i],
+            autoware::experimental::lanelet2_utils::is_intersection_lanelet(
+              reference_lanelet.value())});
       }
-
-      metrics.lateral_deviations[i] =
-        autoware::experimental::lanelet2_utils::get_lateral_distance_to_centerline(
-          reference_lanelet.value(), point.pose);
-      lane_keeping_samples.push_back(LaneKeepingSample{
-        point.time_from_start, metrics.lateral_deviations[i],
-        autoware::experimental::lanelet2_utils::is_intersection_lanelet(
-          reference_lanelet.value())});
     }
   }
-  metrics.lane_keeping = calculate_lane_keeping_score(lane_keeping_samples, lane_keeping_params);
+  const auto has_finite_lane_keeping_sample = std::any_of(
+    lane_keeping_evaluation_points.begin(), lane_keeping_evaluation_points.end(),
+    [](const auto & evaluation_point) {
+      return std::isfinite(evaluation_point.lateral_deviation);
+    });
+  if (has_finite_lane_keeping_sample) {
+    metrics.lane_keeping =
+      calculate_lane_keeping_score(lane_keeping_evaluation_points, lane_keeping_params);
+    metrics.lane_keeping_available = true;
+    metrics.lane_keeping_reason = "available";
+  } else if (metrics.lane_keeping_reason == "unavailable") {
+    metrics.lane_keeping_reason = "unavailable_no_reference_lanelet";
+  }
 
   // Calculate travel distances using motion_utils
   for (size_t i = 0; i < num_points; ++i) {

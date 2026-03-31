@@ -16,18 +16,19 @@
 
 #include <gtest/gtest.h>
 
+#include <limits>
 #include <vector>
 
+using autoware::planning_data_analyzer::metrics::LaneKeepingEvaluationPoint;
 using autoware::planning_data_analyzer::metrics::LaneKeepingParameters;
-using autoware::planning_data_analyzer::metrics::LaneKeepingSample;
 
 namespace
 {
 
-LaneKeepingSample make_sample(
+LaneKeepingEvaluationPoint make_evaluation_point(
   const double seconds, const double lateral_deviation, const bool is_in_intersection = false)
 {
-  return LaneKeepingSample{
+  return LaneKeepingEvaluationPoint{
     rclcpp::Duration::from_seconds(seconds), lateral_deviation, is_in_intersection};
 }
 
@@ -35,54 +36,71 @@ LaneKeepingSample make_sample(
 
 TEST(LaneKeepingTest, ReturnsOneWhenAllDeviationsStayWithinThreshold)
 {
-  const std::vector<LaneKeepingSample> samples{
-    make_sample(0.0, 0.1), make_sample(1.0, -0.3), make_sample(2.0, 0.5)};
+  const std::vector<LaneKeepingEvaluationPoint> evaluation_points{
+    make_evaluation_point(0.0, 0.1), make_evaluation_point(1.0, -0.3),
+    make_evaluation_point(2.0, 0.5)};
 
   const auto score = autoware::planning_data_analyzer::metrics::calculate_lane_keeping_score(
-    samples, LaneKeepingParameters{0.5, 2.0});
+    evaluation_points, LaneKeepingParameters{0.5, 2.0});
 
   EXPECT_DOUBLE_EQ(score, 1.0);
 }
 
 TEST(LaneKeepingTest, ReturnsOneForShortThresholdSpike)
 {
-  const std::vector<LaneKeepingSample> samples{
-    make_sample(0.0, 0.0), make_sample(0.5, 0.8), make_sample(1.0, 0.1)};
+  const std::vector<LaneKeepingEvaluationPoint> evaluation_points{
+    make_evaluation_point(0.0, 0.0), make_evaluation_point(0.5, 0.8),
+    make_evaluation_point(1.0, 0.1)};
 
   const auto score = autoware::planning_data_analyzer::metrics::calculate_lane_keeping_score(
-    samples, LaneKeepingParameters{0.5, 2.0});
+    evaluation_points, LaneKeepingParameters{0.5, 2.0});
 
   EXPECT_DOUBLE_EQ(score, 1.0);
 }
 
 TEST(LaneKeepingTest, ReturnsZeroForContinuousViolationLongerThanWindow)
 {
-  const std::vector<LaneKeepingSample> samples{
-    make_sample(0.0, 0.7), make_sample(1.0, 0.8), make_sample(2.1, 0.9)};
+  const std::vector<LaneKeepingEvaluationPoint> evaluation_points{
+    make_evaluation_point(0.0, 0.7), make_evaluation_point(1.0, 0.8),
+    make_evaluation_point(2.1, 0.9)};
 
   const auto score = autoware::planning_data_analyzer::metrics::calculate_lane_keeping_score(
-    samples, LaneKeepingParameters{0.5, 2.0});
+    evaluation_points, LaneKeepingParameters{0.5, 2.0});
 
   EXPECT_DOUBLE_EQ(score, 0.0);
 }
 
 TEST(LaneKeepingTest, IgnoresViolationsInsideIntersections)
 {
-  const std::vector<LaneKeepingSample> samples{
-    make_sample(0.0, 0.8, true), make_sample(1.0, 0.9, true), make_sample(2.5, 0.1, false)};
+  const std::vector<LaneKeepingEvaluationPoint> evaluation_points{
+    make_evaluation_point(0.0, 0.8, true), make_evaluation_point(1.0, 0.9, true),
+    make_evaluation_point(2.5, 0.1, false)};
 
   const auto score = autoware::planning_data_analyzer::metrics::calculate_lane_keeping_score(
-    samples, LaneKeepingParameters{0.5, 2.0});
+    evaluation_points, LaneKeepingParameters{0.5, 2.0});
 
   EXPECT_DOUBLE_EQ(score, 1.0);
 }
 
 TEST(LaneKeepingTest, ReturnsZeroWhenSamplesAreEmpty)
 {
-  const std::vector<LaneKeepingSample> samples;
+  const std::vector<LaneKeepingEvaluationPoint> evaluation_points;
 
   const auto score = autoware::planning_data_analyzer::metrics::calculate_lane_keeping_score(
-    samples, LaneKeepingParameters{0.5, 2.0});
+    evaluation_points, LaneKeepingParameters{0.5, 2.0});
 
   EXPECT_DOUBLE_EQ(score, 0.0);
+}
+
+TEST(LaneKeepingTest, NonFiniteGapBreaksContinuousViolationWindow)
+{
+  const std::vector<LaneKeepingEvaluationPoint> evaluation_points{
+    make_evaluation_point(0.0, 0.7),
+    make_evaluation_point(1.0, std::numeric_limits<double>::quiet_NaN()),
+    make_evaluation_point(2.1, 0.9)};
+
+  const auto score = autoware::planning_data_analyzer::metrics::calculate_lane_keeping_score(
+    evaluation_points, LaneKeepingParameters{0.5, 2.0});
+
+  EXPECT_DOUBLE_EQ(score, 1.0);
 }

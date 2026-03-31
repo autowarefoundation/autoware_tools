@@ -55,6 +55,8 @@ struct TrajectoryPointMetrics
   std::vector<double> travel_distances;
   double history_comfort{0.0};
   double lane_keeping{0.0};
+  bool lane_keeping_available{false};
+  std::string lane_keeping_reason{"unavailable"};
   double drivable_area_compliance{0.0};
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};

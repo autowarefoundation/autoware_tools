@@ -28,15 +28,21 @@ struct LaneKeepingParameters
   double max_continuous_violation_time{2.0};
 };
 
-struct LaneKeepingSample
+struct LaneKeepingEvaluationPoint
 {
   rclcpp::Duration time_from_start{0, 0};
   double lateral_deviation{0.0};
   bool is_in_intersection{false};
 };
 
+/**
+ * @brief Evaluate the binary lane-keeping subscore for one trajectory.
+ *
+ * Returns `0.0` when the continuous over-threshold duration reaches the configured limit,
+ * otherwise returns `1.0`.
+ */
 double calculate_lane_keeping_score(
-  const std::vector<LaneKeepingSample> & samples,
+  const std::vector<LaneKeepingEvaluationPoint> & evaluation_points,
   const LaneKeepingParameters & parameters = LaneKeepingParameters{});
 
 }  // namespace autoware::planning_data_analyzer::metrics

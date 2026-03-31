@@ -135,9 +135,9 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   history_comfort_params_.max_yaw_acceleration =
     get_or_declare_parameter<double>(*this, "open_loop.hc.max_yaw_acceleration");
   lane_keeping_params_.max_lateral_deviation =
-    get_or_declare_parameter<double>(*this, "open_loop.lk.max_lateral_deviation");
+    get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_lateral_deviation");
   lane_keeping_params_.max_continuous_violation_time =
-    get_or_declare_parameter<double>(*this, "open_loop.lk.max_continuous_violation_time");
+    get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_continuous_violation_time");
   objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
   tf_topic_name_ = get_or_declare_parameter<std::string>(*this, "tf_topic");
   acceleration_topic_name_ = get_or_declare_parameter<std::string>(*this, "acceleration_topic");
