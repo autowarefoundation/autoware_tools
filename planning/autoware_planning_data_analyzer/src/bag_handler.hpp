@@ -97,8 +97,10 @@ struct BagData
     }
     create_buffer<PredictedObjects>(
       topic_names.objects_topic, buffer_duration_sec, max_buffer_msgs);
-    create_buffer<TrafficLightGroupArray>(
-      topic_names.traffic_signals_topic, buffer_duration_sec, max_buffer_msgs);
+    if (!topic_names.traffic_signals_topic.empty()) {
+      create_buffer<TrafficLightGroupArray>(
+        topic_names.traffic_signals_topic, buffer_duration_sec, max_buffer_msgs);
+    }
     create_buffer<SteeringReport>(topic_names.steering_topic, buffer_duration_sec, max_buffer_msgs);
   }
 

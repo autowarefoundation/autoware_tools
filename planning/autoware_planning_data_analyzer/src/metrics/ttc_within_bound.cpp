@@ -28,6 +28,8 @@
 #include <limits>
 #include <optional>
 #include <string>
+#include <tf2/LinearMath/Vector3.hpp>
+#include <tf2/utils.h>
 #include <unordered_set>
 
 namespace autoware::planning_data_analyzer::metrics
