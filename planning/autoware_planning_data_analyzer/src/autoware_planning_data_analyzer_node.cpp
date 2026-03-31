@@ -134,6 +134,16 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
     get_or_declare_parameter<double>(*this, "open_loop.hc.max_yaw_rate");
   history_comfort_params_.max_yaw_acceleration =
     get_or_declare_parameter<double>(*this, "open_loop.hc.max_yaw_acceleration");
+  extended_comfort_parameters_.max_acceleration_rms =
+    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.max_acceleration_rms");
+  extended_comfort_parameters_.max_jerk_rms =
+    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.max_jerk_rms");
+  extended_comfort_parameters_.max_yaw_rate_rms =
+    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.max_yaw_rate_rms");
+  extended_comfort_parameters_.max_yaw_acceleration_rms =
+    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.max_yaw_acceleration_rms");
+  extended_comfort_parameters_.finite_difference_epsilon =
+    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.finite_difference_epsilon");
   lane_keeping_params_.max_lateral_deviation =
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_lateral_deviation");
   lane_keeping_params_.max_continuous_violation_time =
@@ -487,6 +497,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       evaluator.set_json_output_dir(output_dir_path.string());
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_evaluation_horizons(evaluation_horizons);
+      evaluator.set_extended_comfort_parameters(extended_comfort_parameters_);
       auto times =
         evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);
       start_time = times.first;

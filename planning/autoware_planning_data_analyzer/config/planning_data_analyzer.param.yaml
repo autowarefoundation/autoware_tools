@@ -49,6 +49,12 @@
       # ADE/FDE are reported at these horizons plus "full" (entire trajectory).
       # Trajectories shorter than a horizon are excluded from that horizon with 0.1s tolerance.
       evaluation_horizons: [1.0, 2.0, 4.0, 8.0]
+      extended_comfort:
+        max_acceleration_rms: 0.7  # Maximum RMS acceleration discrepancy between consecutive plans [m/s^2]
+        max_jerk_rms: 0.5  # Maximum RMS jerk discrepancy between consecutive plans [m/s^3]
+        max_yaw_rate_rms: 0.1  # Maximum RMS yaw-rate discrepancy between consecutive plans [rad/s]
+        max_yaw_acceleration_rms: 0.1  # Maximum RMS yaw-acceleration discrepancy between consecutive plans [rad/s^2]
+        finite_difference_epsilon: 0.001  # Minimum delta time used for EC finite differences [s]
       lane_keep:
         max_lateral_deviation: 0.5  # Maximum absolute lateral deviation allowed for LK [m]
         max_continuous_violation_time: 2.0  # Continuous over-threshold duration allowed for LK [s]

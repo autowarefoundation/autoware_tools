@@ -14,6 +14,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/metrics/history_comfort.cpp
   src/metrics/lane_keeping.cpp
   src/metrics/drivable_area_compliance.cpp
+  src/metrics/extended_comfort.cpp
   src/metrics/trajectory_metrics.cpp
   src/utils/bag_utils.cpp
   src/utils/json_utils.cpp
@@ -34,6 +35,7 @@ if(BUILD_TESTING)
     test/metrics/test_deviation_metrics.cpp
     test/metrics/test_lane_keeping.cpp
     test/metrics/test_drivable_area_compliance.cpp
+    test/metrics/test_extended_comfort.cpp
   )
   target_link_libraries(test_metrics ${PROJECT_NAME})
 
