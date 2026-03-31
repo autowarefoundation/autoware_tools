@@ -12,6 +12,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/or_scene_evaluator.cpp
   src/metrics/deviation_metrics.cpp
   src/metrics/history_comfort.cpp
+  src/metrics/lane_keeping.cpp
   src/metrics/drivable_area_compliance.cpp
   src/metrics/trajectory_metrics.cpp
   src/utils/bag_utils.cpp
@@ -31,6 +32,7 @@ if(BUILD_TESTING)
   ament_add_gtest(
     test_metrics
     test/metrics/test_deviation_metrics.cpp
+    test/metrics/test_lane_keeping.cpp
     test/metrics/test_drivable_area_compliance.cpp
   )
   target_link_libraries(test_metrics ${PROJECT_NAME})

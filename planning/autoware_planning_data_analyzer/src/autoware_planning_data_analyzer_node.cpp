@@ -134,6 +134,10 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
     get_or_declare_parameter<double>(*this, "open_loop.hc.max_yaw_rate");
   history_comfort_params_.max_yaw_acceleration =
     get_or_declare_parameter<double>(*this, "open_loop.hc.max_yaw_acceleration");
+  lane_keeping_params_.max_lateral_deviation =
+    get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_lateral_deviation");
+  lane_keeping_params_.max_continuous_violation_time =
+    get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_continuous_violation_time");
   objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
   tf_topic_name_ = get_or_declare_parameter<std::string>(*this, "tf_topic");
   acceleration_topic_name_ = get_or_declare_parameter<std::string>(*this, "acceleration_topic");
@@ -479,7 +483,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
         get_or_declare_parameter<std::vector<double>>(*this, "open_loop.evaluation_horizons");
       OpenLoopEvaluator evaluator(
         get_logger(), route_handler_, gt_mode, gt_sync_tolerance_ms_, history_comfort_params_,
-        vehicle_info_);
+        lane_keeping_params_, vehicle_info_);
       evaluator.set_json_output_dir(output_dir_path.string());
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_evaluation_horizons(evaluation_horizons);

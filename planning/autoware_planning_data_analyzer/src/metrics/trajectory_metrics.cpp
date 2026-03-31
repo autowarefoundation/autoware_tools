@@ -18,6 +18,7 @@
 #include "history_comfort.hpp"
 
 #include <autoware/lanelet2_utils/geometry.hpp>
+#include <autoware/lanelet2_utils/intersection.hpp>
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
 #include <autoware_lanelet2_extension/utility/utilities.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
@@ -27,6 +28,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -221,12 +223,29 @@ lanelet::ConstLanelets collect_route_relevant_lanelets_for_trajectory(
   return drivable_lanelets;
 }
 
+std::optional<lanelet::ConstLanelet> find_reference_lanelet(
+  const geometry_msgs::msg::Pose & pose,
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
+{
+  if (!route_handler || !route_handler->isHandlerReady()) {
+    return std::nullopt;
+  }
+
+  lanelet::ConstLanelet closest_lanelet;
+  if (route_handler->getClosestLaneletWithinRoute(pose, &closest_lanelet)) {
+    return closest_lanelet;
+  }
+
+  return std::nullopt;
+}
+
 }  // namespace
 
 TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const std::shared_ptr<SynchronizedData> & sync_data,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
   const HistoryComfortParameters & history_comfort_params,
+  const LaneKeepingParameters & lane_keeping_params,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
 {
   TrajectoryPointMetrics metrics;
@@ -286,16 +305,46 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     }
   }
 
-  // Calculate lateral deviation from preferred lane
-  if (route_handler && route_handler->isHandlerReady()) {
-    const auto preferred_lanes = route_handler->getPreferredLanelets();
-    if (!preferred_lanes.empty()) {
-      for (size_t i = 0; i < num_points; ++i) {
-        const auto arc_coordinates = autoware::experimental::lanelet2_utils::get_arc_coordinates(
-          preferred_lanes, trajectory.points[i].pose);
-        metrics.lateral_deviations[i] = arc_coordinates.distance;
+  std::vector<LaneKeepingEvaluationPoint> lane_keeping_evaluation_points;
+  lane_keeping_evaluation_points.reserve(num_points);
+
+  // Calculate lateral deviation from the local route lane at each pose.
+  if (!route_handler) {
+    metrics.lane_keeping_reason = "unavailable_no_route_handler";
+  } else if (!route_handler->isHandlerReady()) {
+    metrics.lane_keeping_reason = "unavailable_route_handler_not_ready";
+  } else {
+    for (size_t i = 0; i < num_points; ++i) {
+      const auto & point = trajectory.points[i];
+      const auto reference_lanelet = find_reference_lanelet(point.pose, route_handler);
+      if (!reference_lanelet.has_value()) {
+        metrics.lateral_deviations[i] = std::numeric_limits<double>::quiet_NaN();
+        lane_keeping_evaluation_points.push_back(
+          LaneKeepingEvaluationPoint{point.time_from_start, metrics.lateral_deviations[i], false});
+      } else {
+        metrics.lateral_deviations[i] =
+          autoware::experimental::lanelet2_utils::get_lateral_distance_to_centerline(
+            reference_lanelet.value(), point.pose);
+        lane_keeping_evaluation_points.push_back(
+          LaneKeepingEvaluationPoint{
+            point.time_from_start, metrics.lateral_deviations[i],
+            autoware::experimental::lanelet2_utils::is_intersection_lanelet(
+              reference_lanelet.value())});
       }
     }
+  }
+  const auto has_finite_lane_keeping_sample = std::any_of(
+    lane_keeping_evaluation_points.begin(), lane_keeping_evaluation_points.end(),
+    [](const auto & evaluation_point) {
+      return std::isfinite(evaluation_point.lateral_deviation);
+    });
+  if (has_finite_lane_keeping_sample) {
+    metrics.lane_keeping =
+      calculate_lane_keeping_score(lane_keeping_evaluation_points, lane_keeping_params);
+    metrics.lane_keeping_available = true;
+    metrics.lane_keeping_reason = "available";
+  } else if (metrics.lane_keeping_reason == "unavailable") {
+    metrics.lane_keeping_reason = "unavailable_no_reference_lanelet";
   }
 
   // Calculate travel distances using motion_utils
