@@ -11,6 +11,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/or_event_extractor.cpp
   src/or_scene_evaluator.cpp
   src/metrics/deviation_metrics.cpp
+  src/metrics/epdms_aggregation.cpp
   src/metrics/ego_progress.cpp
   src/metrics/driving_direction_compliance.cpp
   src/metrics/history_comfort.cpp
@@ -39,6 +40,7 @@ if(BUILD_TESTING)
     test_metrics
     test/metrics/test_deviation_metrics.cpp
     test/metrics/test_driving_direction_compliance.cpp
+    test/metrics/test_epdms_aggregation.cpp
     test/metrics/test_lane_keeping.cpp
     test/metrics/test_ego_progress.cpp
     test/metrics/test_drivable_area_compliance.cpp

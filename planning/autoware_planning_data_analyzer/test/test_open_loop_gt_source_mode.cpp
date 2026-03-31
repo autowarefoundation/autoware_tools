@@ -209,6 +209,45 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
     summary_json["aggregate/traffic_light_compliance_unavailable_count"].get<std::size_t>(), 2u);
 }
 
+TEST_F(OpenLoopGTSourceModeTest, HumanFilterPromotesAgentHistoryComfortWhenHumanIsAlsoZero)
+{
+  const rclcpp::Time start_time(55, 0);
+  auto prediction = make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5});
+  auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5}));
+
+  for (size_t i = 0; i < prediction.points.size(); ++i) {
+    prediction.points[i].longitudinal_velocity_mps = 2.0;
+    gt->points[i].longitudinal_velocity_mps = 2.0;
+  }
+  prediction.points[1].longitudinal_velocity_mps = 3.0;
+  prediction.points[2].longitudinal_velocity_mps = 5.0;
+  prediction.points[3].longitudinal_velocity_mps = 6.0;
+  gt->points[1].longitudinal_velocity_mps = 3.0;
+  gt->points[2].longitudinal_velocity_mps = 5.0;
+  gt->points[3].longitudinal_velocity_mps = 6.0;
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+  evaluator.evaluate({make_sync_data(prediction, gt)}, nullptr);
+
+  const auto full_json = evaluator.get_full_results_as_json();
+  ASSERT_EQ(full_json["trajectories"].size(), 1u);
+  EXPECT_DOUBLE_EQ(full_json["trajectories"][0]["history_comfort"].get<double>(), 0.0);
+  EXPECT_DOUBLE_EQ(
+    full_json["trajectories"][0]["human_reference"]["history_comfort"].get<double>(), 0.0);
+  EXPECT_TRUE(
+    full_json["trajectories"][0]["human_filtered"]["history_comfort_filter_applied"].get<bool>());
+  EXPECT_DOUBLE_EQ(
+    full_json["trajectories"][0]["human_filtered"]["history_comfort"].get<double>(), 1.0);
+
+  const auto summary_json = evaluator.get_summary_as_json();
+  EXPECT_EQ(
+    summary_json["aggregate/human_filter_applied_counts/history_comfort"].get<std::size_t>(), 1u);
+  EXPECT_DOUBLE_EQ(
+    summary_json["aggregate/human_filtered/history_comfort/mean"].get<double>(), 1.0);
+}
+
 TEST_F(OpenLoopGTSourceModeTest, MissingInputsUnavailableReasonsAreReported)
 {
   const rclcpp::Time start_time(60, 0);

@@ -19,6 +19,7 @@
 #include "base_evaluator.hpp"
 #include "metrics/driving_direction_compliance.hpp"
 #include "metrics/ego_progress.hpp"
+#include "metrics/epdms_aggregation.hpp"
 #include "metrics/extended_comfort.hpp"
 #include "metrics/lane_keeping.hpp"
 #include "metrics/trajectory_metrics.hpp"
@@ -345,6 +346,8 @@ private:
 
   std::vector<OpenLoopTrajectoryMetrics> metrics_list_;
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
+  std::vector<metrics::HumanFilterMetrics> human_filter_metrics_list_;
+  std::vector<metrics::SyntheticEpdmsMetrics> synthetic_epdms_metrics_list_;
   metrics::HistoryComfortParameters history_comfort_params_;
   metrics::ExtendedComfortParameters extended_comfort_parameters_{};
   metrics::LaneKeepingParameters lane_keeping_params_;
