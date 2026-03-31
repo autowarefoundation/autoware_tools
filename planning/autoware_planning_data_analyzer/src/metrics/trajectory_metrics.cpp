@@ -199,23 +199,6 @@ void append_unique_lanelet(
   }
 }
 
-void append_shared_lanelets(
-  const lanelet::ConstLanelet & lanelet,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
-  lanelet::ConstLanelets & lanelets, std::unordered_set<lanelet::Id> & seen_ids)
-{
-  append_unique_lanelet(lanelet, lanelets, seen_ids);
-
-  for (const auto & left_lanelet :
-       route_handler->getAllLeftSharedLinestringLanelets(lanelet, false, false)) {
-    append_unique_lanelet(left_lanelet, lanelets, seen_ids);
-  }
-  for (const auto & right_lanelet :
-       route_handler->getAllRightSharedLinestringLanelets(lanelet, false, false)) {
-    append_unique_lanelet(right_lanelet, lanelets, seen_ids);
-  }
-}
-
 lanelet::ConstLanelets collect_route_relevant_lanelets_for_trajectory(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
@@ -226,14 +209,12 @@ lanelet::ConstLanelets collect_route_relevant_lanelets_for_trajectory(
   }
 
   std::unordered_set<lanelet::Id> seen_ids;
-  for (const auto & lanelet : route_handler->getPreferredLanelets()) {
-    append_shared_lanelets(lanelet, route_handler, drivable_lanelets, seen_ids);
-  }
-
   for (const auto & point : trajectory.points) {
-    const auto road_lanelets = route_handler->getRoadLaneletsAtPose(point.pose);
-    for (const auto & lanelet : road_lanelets) {
-      append_shared_lanelets(lanelet, route_handler, drivable_lanelets, seen_ids);
+    for (const auto & lanelet : route_handler->getRoadLaneletsAtPose(point.pose)) {
+      if (!route_handler->isRouteLanelet(lanelet)) {
+        continue;
+      }
+      append_unique_lanelet(lanelet, drivable_lanelets, seen_ids);
     }
   }
 
