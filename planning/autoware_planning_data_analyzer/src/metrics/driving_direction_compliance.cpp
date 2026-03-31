@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {

@@ -92,8 +92,8 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
       process_and_append_message<PredictedObjects>(
         serialized_message, bag_data, topic_names.objects_topic, use_bag_timestamp, logger_);
     } else if (
-      topic_name == topic_names.traffic_signals_topic && !topic_names.traffic_signals_topic.empty())
-    {
+      topic_name == topic_names.traffic_signals_topic &&
+      !topic_names.traffic_signals_topic.empty()) {
       process_and_append_message<TrafficLightGroupArray>(
         serialized_message, bag_data, topic_names.traffic_signals_topic, use_bag_timestamp,
         logger_);

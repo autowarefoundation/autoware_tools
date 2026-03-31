@@ -25,6 +25,7 @@
 
 #include <lanelet2_core/utility/Utilities.h>
 
+#include <memory>
 #include <optional>
 #include <unordered_set>
 #include <vector>

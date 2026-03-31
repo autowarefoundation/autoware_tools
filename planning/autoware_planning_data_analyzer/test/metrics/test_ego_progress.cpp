@@ -16,6 +16,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 TEST(EgoProgressTest, ReturnsUnavailableWhenSelectedTrajectoryIsMissing)
 {
   const auto result =

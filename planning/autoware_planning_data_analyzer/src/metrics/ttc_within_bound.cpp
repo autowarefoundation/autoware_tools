@@ -19,17 +19,19 @@
 #include <autoware_utils_geometry/boost_polygon_utils.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
 #include <autoware_utils_math/normalization.hpp>
+#include <tf2/LinearMath/Vector3.hpp>
 
 #include <boost/geometry.hpp>
+
+#include <tf2/utils.h>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <string>
-#include <tf2/LinearMath/Vector3.hpp>
-#include <tf2/utils.h>
 #include <unordered_set>
 
 namespace autoware::planning_data_analyzer::metrics
