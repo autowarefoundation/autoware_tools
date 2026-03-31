@@ -84,6 +84,16 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
 : Node("autoware_planning_data_analyzer", node_options),
   route_handler_{std::make_shared<autoware::route_handler::RouteHandler>()}
 {
+  try {
+    vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
+  } catch (const std::exception & e) {
+    RCLCPP_WARN(
+      get_logger(),
+      "Vehicle info parameters are unavailable. Drivable area compliance will be marked "
+      "unavailable: %s",
+      e.what());
+    vehicle_info_ = autoware::vehicle_info_utils::VehicleInfo{};
+  }
   setup_evaluation_bag_writer();
 
   // Open bag file
@@ -468,7 +478,8 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       const auto evaluation_horizons =
         get_or_declare_parameter<std::vector<double>>(*this, "open_loop.evaluation_horizons");
       OpenLoopEvaluator evaluator(
-        get_logger(), route_handler_, gt_mode, gt_sync_tolerance_ms_, history_comfort_params_);
+        get_logger(), route_handler_, gt_mode, gt_sync_tolerance_ms_, history_comfort_params_,
+        vehicle_info_);
       evaluator.set_json_output_dir(output_dir_path.string());
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_evaluation_horizons(evaluation_horizons);
