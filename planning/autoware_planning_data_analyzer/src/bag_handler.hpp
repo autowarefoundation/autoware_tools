@@ -181,8 +181,8 @@ struct BagData
       auto candidate_itr = buffers.find(candidate_trajectories_topic_key);
       std::shared_ptr<Buffer<CandidateTrajectories>> candidate_buffer;
       if (candidate_itr != buffers.end()) {
-        candidate_buffer = std::dynamic_pointer_cast<Buffer<CandidateTrajectories>>(
-          candidate_itr->second);
+        candidate_buffer =
+          std::dynamic_pointer_cast<Buffer<CandidateTrajectories>>(candidate_itr->second);
       }
       if (candidate_buffer) {
         const auto traj_stamp_ns =
@@ -329,7 +329,8 @@ set_header_timestamp_if_needed(
 }
 
 template <typename MessageType>
-typename std::enable_if<!has_header_stamp<MessageType>::value && has_stamp<MessageType>::value, void>::type
+typename std::enable_if<
+  !has_header_stamp<MessageType>::value && has_stamp<MessageType>::value, void>::type
 set_header_timestamp_if_needed(
   MessageType & msg, bool use_bag_timestamp, const rclcpp::Time & bag_time)
 {
@@ -340,7 +341,8 @@ set_header_timestamp_if_needed(
 
 // Template helper for messages without header - does nothing
 template <typename MessageType>
-typename std::enable_if<!has_header_stamp<MessageType>::value && !has_stamp<MessageType>::value, void>::type
+typename std::enable_if<
+  !has_header_stamp<MessageType>::value && !has_stamp<MessageType>::value, void>::type
 set_header_timestamp_if_needed(MessageType &, bool, const rclcpp::Time &)
 {
   // No-op for messages without header.stamp

@@ -17,9 +17,9 @@
 
 #include "bag_handler.hpp"
 #include "base_evaluator.hpp"
-#include "metrics/extended_comfort.hpp"
-#include "metrics/ego_progress.hpp"
 #include "metrics/driving_direction_compliance.hpp"
+#include "metrics/ego_progress.hpp"
+#include "metrics/extended_comfort.hpp"
 #include "metrics/lane_keeping.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
@@ -75,15 +75,15 @@ struct OpenLoopTrajectoryMetrics
   bool time_to_collision_within_bound_available{false};
   std::string time_to_collision_within_bound_reason{"unavailable"};
   double time_to_collision_infraction_time_s{std::numeric_limits<double>::infinity()};
-  double lane_keeping{0.0};                 // Binary lane keeping subscore for the trajectory
+  double lane_keeping{0.0};  // Binary lane keeping subscore for the trajectory
   bool lane_keeping_available{false};
   std::string lane_keeping_reason{"unavailable"};
-  double ego_progress{0.0};                 // Proposal-relative ego progress subscore
+  double ego_progress{0.0};  // Proposal-relative ego progress subscore
   bool ego_progress_available{false};
   std::string ego_progress_reason{"unavailable"};
   double ego_progress_raw_m{0.0};
   double ego_progress_best_raw_m{0.0};
-  double drivable_area_compliance{0.0};     // Binary drivable area compliance subscore
+  double drivable_area_compliance{0.0};  // Binary drivable area compliance subscore
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};
   double no_at_fault_collision{0.0};

@@ -14,12 +14,12 @@
 
 #include "trajectory_metrics.hpp"
 
-#include "driving_direction_compliance.hpp"
 #include "drivable_area_compliance.hpp"
+#include "driving_direction_compliance.hpp"
 #include "history_comfort.hpp"
-#include "ttc_within_bound.hpp"
 #include "no_at_fault_collision.hpp"
 #include "traffic_light_compliance.hpp"
+#include "ttc_within_bound.hpp"
 
 #include <autoware/lanelet2_utils/geometry.hpp>
 #include <autoware/lanelet2_utils/intersection.hpp>
@@ -312,14 +312,14 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
 
   calculate_history_comfort_metrics(trajectory, history_comfort_params, metrics);
 
-  const auto ttc_within_bound = calculate_ttc_within_bound(
-    trajectory, sync_data->objects, vehicle_info, route_handler);
+  const auto ttc_within_bound =
+    calculate_ttc_within_bound(trajectory, sync_data->objects, vehicle_info, route_handler);
   metrics.time_to_collision_within_bound = ttc_within_bound.score;
   metrics.time_to_collision_within_bound_available = ttc_within_bound.available;
   metrics.time_to_collision_within_bound_reason = ttc_within_bound.reason;
   metrics.time_to_collision_infraction_time_s = ttc_within_bound.infraction_time_s;
-  const auto no_at_fault_collision = calculate_no_at_fault_collision(
-    trajectory, sync_data->objects, vehicle_info, route_handler);
+  const auto no_at_fault_collision =
+    calculate_no_at_fault_collision(trajectory, sync_data->objects, vehicle_info, route_handler);
   metrics.no_at_fault_collision = no_at_fault_collision.score;
   metrics.no_at_fault_collision_available = no_at_fault_collision.available;
   metrics.no_at_fault_collision_reason = no_at_fault_collision.reason;
@@ -338,9 +338,10 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
           trajectory.points.at(i - 1).pose.position, trajectory.points.at(i).pose.position);
       }
       const auto & point = trajectory.points.at(i);
-      driving_direction_evaluation_points.push_back(DrivingDirectionEvaluationPoint{
-        point.time_from_start, progress_m, !is_pose_in_route_lane(point.pose, route_handler),
-        is_pose_in_intersection(point.pose, route_handler)});
+      driving_direction_evaluation_points.push_back(
+        DrivingDirectionEvaluationPoint{
+          point.time_from_start, progress_m, !is_pose_in_route_lane(point.pose, route_handler),
+          is_pose_in_intersection(point.pose, route_handler)});
     }
 
     const auto ddc_result = calculate_driving_direction_compliance(

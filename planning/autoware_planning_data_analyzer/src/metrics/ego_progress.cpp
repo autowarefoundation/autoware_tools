@@ -114,8 +114,7 @@ double calculate_trajectory_similarity(const Trajectory & lhs, const Trajectory 
 }
 
 std::optional<size_t> find_selected_candidate_index(
-  const Trajectory & selected_trajectory,
-  const CandidateTrajectories & candidate_trajectories)
+  const Trajectory & selected_trajectory, const CandidateTrajectories & candidate_trajectories)
 {
   if (candidate_trajectories.candidate_trajectories.empty()) {
     return std::nullopt;

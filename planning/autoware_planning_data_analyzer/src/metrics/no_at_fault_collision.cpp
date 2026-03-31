@@ -17,11 +17,11 @@
 #include <autoware/object_recognition_utils/object_classification.hpp>
 #include <autoware_utils_geometry/boost_polygon_utils.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
-#include <tf2/utils.h>
 
 #include <boost/geometry.hpp>
 
 #include <lanelet2_core/geometry/Lanelet.h>
+#include <tf2/utils.h>
 
 #include <algorithm>
 #include <array>
@@ -46,8 +46,7 @@ namespace bg = boost::geometry;
 
 constexpr double kStoppedSpeedThreshold = 5.0e-2;
 
-enum class CollisionType
-{
+enum class CollisionType {
   StoppedEgo,
   StoppedTrack,
   ActiveRear,
@@ -247,8 +246,7 @@ std::optional<EgoAreaFlags> compute_ego_area_flags(
 bool is_agent_type(const autoware_perception_msgs::msg::PredictedObject & object)
 {
   using autoware_perception_msgs::msg::ObjectClassification;
-  const auto label =
-    autoware::object_recognition_utils::getHighestProbLabel(object.classification);
+  const auto label = autoware::object_recognition_utils::getHighestProbLabel(object.classification);
   return autoware::object_recognition_utils::isVehicle(label) ||
          label == ObjectClassification::PEDESTRIAN || label == ObjectClassification::ANIMAL;
 }
@@ -303,18 +301,16 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
         continue;
       }
 
-      const auto collision_type =
-        classify_collision(point, *object_state, vehicle_info);
+      const auto collision_type = classify_collision(point, *object_state, vehicle_info);
 
-      const bool front_or_stopped_track =
-        collision_type == CollisionType::ActiveFront ||
-        collision_type == CollisionType::StoppedTrack;
+      const bool front_or_stopped_track = collision_type == CollisionType::ActiveFront ||
+                                          collision_type == CollisionType::StoppedTrack;
       const bool lateral_collision = collision_type == CollisionType::ActiveLateral;
 
       if (front_or_stopped_track) {
         result.score = is_agent_type(object) ? 0.0 : 0.5;
-        result.reason =
-          is_agent_type(object) ? "at_fault_collision_with_agent" : "at_fault_collision_with_non_agent";
+        result.reason = is_agent_type(object) ? "at_fault_collision_with_agent"
+                                              : "at_fault_collision_with_non_agent";
         result.infraction_time_s = query_time_s;
         return result;
       }
@@ -324,8 +320,9 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
         if (!ego_area_flags.has_value()) {
           result.available = false;
           result.score = 0.0;
-          result.reason = !route_handler ? "unavailable_no_route_handler_for_lateral_assessment"
-                                         : "unavailable_route_handler_not_ready_for_lateral_assessment";
+          result.reason = !route_handler
+                            ? "unavailable_no_route_handler_for_lateral_assessment"
+                            : "unavailable_route_handler_not_ready_for_lateral_assessment";
           return result;
         }
 

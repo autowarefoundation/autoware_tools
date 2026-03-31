@@ -203,7 +203,8 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
   EXPECT_EQ(
     summary_json["aggregate/driving_direction_compliance_unavailable_count"].get<std::size_t>(),
     2u);
-  EXPECT_EQ(summary_json["aggregate/traffic_light_compliance_available_count"].get<std::size_t>(), 0u);
+  EXPECT_EQ(
+    summary_json["aggregate/traffic_light_compliance_available_count"].get<std::size_t>(), 0u);
   EXPECT_EQ(
     summary_json["aggregate/traffic_light_compliance_unavailable_count"].get<std::size_t>(), 2u);
 }

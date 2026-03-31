@@ -29,8 +29,7 @@ DrivingDirectionEvaluationPoint make_point(
   builtin_interfaces::msg::Duration duration{};
   duration.sec = static_cast<int32_t>(t_s);
   duration.nanosec = static_cast<uint32_t>((t_s - static_cast<double>(duration.sec)) * 1e9);
-  return DrivingDirectionEvaluationPoint{
-    duration, progress_m, oncoming, intersection};
+  return DrivingDirectionEvaluationPoint{duration, progress_m, oncoming, intersection};
 }
 
 }  // namespace
@@ -78,7 +77,8 @@ TEST(DrivingDirectionCompliance, LargeOncomingProgressFails)
 TEST(DrivingDirectionCompliance, IntersectionSamplesAreIgnored)
 {
   const std::vector<DrivingDirectionEvaluationPoint> points{
-    make_point(0.0, 0.0, false), make_point(0.1, 3.0, true, true), make_point(0.2, 2.0, true, true)};
+    make_point(0.0, 0.0, false), make_point(0.1, 3.0, true, true),
+    make_point(0.2, 2.0, true, true)};
   const auto result = calculate_driving_direction_compliance(points);
   EXPECT_TRUE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 1.0);

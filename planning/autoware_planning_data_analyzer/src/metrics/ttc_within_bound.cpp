@@ -74,7 +74,8 @@ geometry_msgs::msg::Pose project_pose(
 }
 
 Polygon2d create_pose_footprint(
-  const geometry_msgs::msg::Pose & pose, const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
+  const geometry_msgs::msg::Pose & pose,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
 {
   const auto local_footprint = vehicle_info.createFootprint(0.0);
   Polygon2d polygon;
@@ -217,7 +218,8 @@ TTCWithinBoundResult calculate_ttc_within_bound(
     const bool ego_in_intersection = is_pose_in_intersection(point.pose, route_handler);
 
     for (const double future_offset_s : kFutureProjectionOffsetsSec) {
-      const double query_time_s = rclcpp::Duration(point.time_from_start).seconds() + future_offset_s;
+      const double query_time_s =
+        rclcpp::Duration(point.time_from_start).seconds() + future_offset_s;
       const auto projected_pose = project_pose(point.pose, velocity_world, future_offset_s);
       const auto ego_polygon = create_pose_footprint(projected_pose, vehicle_info);
 
@@ -240,8 +242,7 @@ TTCWithinBoundResult calculate_ttc_within_bound(
 
         if (
           is_agent_ahead(point.pose, *object_pose) ||
-          (ego_in_intersection && !is_agent_behind(point.pose, *object_pose)))
-        {
+          (ego_in_intersection && !is_agent_behind(point.pose, *object_pose))) {
           result.score = 0.0;
           result.reason = "collision_within_bound";
           result.infraction_time_s = rclcpp::Duration(point.time_from_start).seconds();

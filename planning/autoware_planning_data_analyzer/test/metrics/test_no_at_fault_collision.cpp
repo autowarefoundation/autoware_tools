@@ -14,14 +14,16 @@
 
 #include "../../src/metrics/no_at_fault_collision.hpp"
 
+#include <autoware_utils_geometry/geometry.hpp>
+#include <autoware_vehicle_info_utils/vehicle_info.hpp>
+
 #include <autoware_perception_msgs/msg/object_classification.hpp>
 #include <autoware_perception_msgs/msg/predicted_object.hpp>
 #include <autoware_perception_msgs/msg/predicted_objects.hpp>
 #include <autoware_perception_msgs/msg/predicted_path.hpp>
 #include <autoware_perception_msgs/msg/shape.hpp>
 #include <autoware_planning_msgs/msg/trajectory.hpp>
-#include <autoware_vehicle_info_utils/vehicle_info.hpp>
-#include <autoware_utils_geometry/geometry.hpp>
+
 #include <gtest/gtest.h>
 
 #include <memory>

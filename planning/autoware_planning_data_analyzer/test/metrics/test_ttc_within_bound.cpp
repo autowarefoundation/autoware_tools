@@ -14,13 +14,15 @@
 
 #include "../../src/metrics/ttc_within_bound.hpp"
 
+#include <autoware_utils_geometry/geometry.hpp>
+#include <autoware_vehicle_info_utils/vehicle_info.hpp>
+
 #include <autoware_perception_msgs/msg/predicted_object.hpp>
 #include <autoware_perception_msgs/msg/predicted_objects.hpp>
 #include <autoware_perception_msgs/msg/predicted_path.hpp>
 #include <autoware_perception_msgs/msg/shape.hpp>
 #include <autoware_planning_msgs/msg/trajectory.hpp>
-#include <autoware_vehicle_info_utils/vehicle_info.hpp>
-#include <autoware_utils_geometry/geometry.hpp>
+
 #include <gtest/gtest.h>
 
 #include <memory>
@@ -71,7 +73,8 @@ autoware_planning_msgs::msg::Trajectory make_straight_trajectory(const double sp
   return trajectory;
 }
 
-autoware_perception_msgs::msg::PredictedObject make_stationary_object(const double x, const double y)
+autoware_perception_msgs::msg::PredictedObject make_stationary_object(
+  const double x, const double y)
 {
   autoware_perception_msgs::msg::PredictedObject object;
   object.kinematics.initial_pose_with_covariance.pose = make_pose(x, y);

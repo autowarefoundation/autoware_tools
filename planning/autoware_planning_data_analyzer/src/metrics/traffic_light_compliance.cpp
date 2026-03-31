@@ -22,6 +22,7 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
 #include <boost/geometry/algorithms/within.hpp>
+
 #include <lanelet2_core/utility/Utilities.h>
 
 #include <optional>

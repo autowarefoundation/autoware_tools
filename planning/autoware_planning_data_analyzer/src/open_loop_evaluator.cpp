@@ -234,7 +234,8 @@ void OpenLoopEvaluator::evaluate(
       trajectory_metrics.driving_direction_compliance_reason;
     metrics.max_oncoming_progress_m = trajectory_metrics.max_oncoming_progress_m;
     metrics.traffic_light_compliance = trajectory_metrics.traffic_light_compliance;
-    metrics.traffic_light_compliance_available = trajectory_metrics.traffic_light_compliance_available;
+    metrics.traffic_light_compliance_available =
+      trajectory_metrics.traffic_light_compliance_available;
     metrics.traffic_light_compliance_reason = trajectory_metrics.traffic_light_compliance_reason;
     metrics_list_.push_back(metrics);
     trajectory_point_metrics_list_.push_back(trajectory_metrics);
@@ -882,8 +883,7 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   bag_writer.write(availability_msg, metric_topic("lane_keeping_available"), message_timestamp);
   availability_msg.data = metrics.time_to_collision_within_bound_available;
   bag_writer.write(
-    availability_msg, metric_topic("time_to_collision_within_bound_available"),
-    message_timestamp);
+    availability_msg, metric_topic("time_to_collision_within_bound_available"), message_timestamp);
   availability_msg.data = metrics.ego_progress_available;
   bag_writer.write(availability_msg, metric_topic("ego_progress_available"), message_timestamp);
   availability_msg.data = metrics.drivable_area_compliance_available;
@@ -913,7 +913,8 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   reason_msg.data = metrics.no_at_fault_collision_reason;
   bag_writer.write(reason_msg, metric_topic("no_at_fault_collision_reason"), message_timestamp);
   reason_msg.data = metrics.driving_direction_compliance_reason;
-  bag_writer.write(reason_msg, metric_topic("driving_direction_compliance_reason"), message_timestamp);
+  bag_writer.write(
+    reason_msg, metric_topic("driving_direction_compliance_reason"), message_timestamp);
   reason_msg.data = metrics.traffic_light_compliance_reason;
   bag_writer.write(reason_msg, metric_topic("traffic_light_compliance_reason"), message_timestamp);
 
@@ -1233,7 +1234,8 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
     "aggregate", "ego_progress", "Proposal-relative ego progress subscore across trajectories [-]",
     ego_progress_values);
   j["aggregate/ego_progress_available_count"] = ego_progress_available_count;
-  j["aggregate/ego_progress_unavailable_count"] = metrics_list_.size() - ego_progress_available_count;
+  j["aggregate/ego_progress_unavailable_count"] =
+    metrics_list_.size() - ego_progress_available_count;
   j["aggregate/ego_progress_reason_counts"] = ego_progress_reason_counts;
   std::vector<double> drivable_area_compliance_values;
   drivable_area_compliance_values.reserve(metrics_list_.size());
@@ -1302,8 +1304,7 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
     driving_direction_compliance_values);
   emit_metric(
     "aggregate", "max_oncoming_progress_m",
-    "Maximum rolling 1s oncoming progress across trajectories [m]",
-    max_oncoming_progress_values);
+    "Maximum rolling 1s oncoming progress across trajectories [m]", max_oncoming_progress_values);
   j["aggregate/driving_direction_compliance_available_count"] =
     driving_direction_compliance_available_count;
   j["aggregate/driving_direction_compliance_unavailable_count"] =

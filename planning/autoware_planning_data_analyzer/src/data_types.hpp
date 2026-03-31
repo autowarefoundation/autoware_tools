@@ -17,8 +17,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <autoware_perception_msgs/msg/predicted_objects.hpp>
 #include <autoware_internal_planning_msgs/msg/candidate_trajectories.hpp>
+#include <autoware_perception_msgs/msg/predicted_objects.hpp>
 #include <autoware_perception_msgs/msg/traffic_light_group_array.hpp>
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 #include <autoware_vehicle_msgs/msg/steering_report.hpp>

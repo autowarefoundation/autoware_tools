@@ -194,7 +194,8 @@ bool Buffer<CandidateTrajectories>::ready() const
     return false;
   }
 
-  return candidate_trajectories_stamp_ns(msgs.back()) - candidate_trajectories_stamp_ns(msgs.front()) >
+  return candidate_trajectories_stamp_ns(msgs.back()) -
+           candidate_trajectories_stamp_ns(msgs.front()) >
          buffer_time_ns;
 }
 
