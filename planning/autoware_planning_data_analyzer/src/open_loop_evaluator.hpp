@@ -17,6 +17,7 @@
 
 #include "bag_handler.hpp"
 #include "base_evaluator.hpp"
+#include "metrics/lane_keeping.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
@@ -63,6 +64,7 @@ struct OpenLoopTrajectoryMetrics
   std::vector<double> heading_errors;       // Absolute heading error at each trajectory point [rad]
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
   double history_comfort{0.0};              // Binary comfort subscore for the trajectory
+  double lane_keeping{0.0};                 // Binary lane keeping subscore for the trajectory
   double drivable_area_compliance{0.0};     // Binary drivable area compliance subscore
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};
@@ -116,9 +118,11 @@ public:
     GTSourceMode gt_source_mode = GTSourceMode::KINEMATIC_STATE,
     double gt_sync_tolerance_ms = 200.0,
     metrics::HistoryComfortParameters history_comfort_params = {},
+    metrics::LaneKeepingParameters lane_keeping_params = {},
     autoware::vehicle_info_utils::VehicleInfo vehicle_info = {})
   : BaseEvaluator(logger, route_handler),
     history_comfort_params_(std::move(history_comfort_params)),
+    lane_keeping_params_(std::move(lane_keeping_params)),
     vehicle_info_(std::move(vehicle_info)),
     gt_source_mode_(gt_source_mode),
     gt_sync_tolerance_ms_(gt_sync_tolerance_ms)
@@ -306,6 +310,7 @@ private:
   std::vector<OpenLoopTrajectoryMetrics> metrics_list_;
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
   metrics::HistoryComfortParameters history_comfort_params_;
+  metrics::LaneKeepingParameters lane_keeping_params_;
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   OpenLoopEvaluationSummary summary_;
   std::string metric_variant_;

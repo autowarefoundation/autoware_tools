@@ -49,6 +49,9 @@
       # ADE/FDE are reported at these horizons plus "full" (entire trajectory).
       # Trajectories shorter than a horizon are excluded from that horizon with 0.1s tolerance.
       evaluation_horizons: [1.0, 2.0, 4.0, 8.0]
+      lk:
+        max_lateral_deviation: 0.5  # Maximum absolute lateral deviation allowed for LK [m]
+        max_continuous_violation_time: 2.0  # Continuous over-threshold duration allowed for LK [s]
 
     # OR Scene Evaluation Configuration (only used when mode="or_scene")
     or_scene_evaluation:

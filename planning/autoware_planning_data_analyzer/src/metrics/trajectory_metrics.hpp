@@ -16,6 +16,7 @@
 #define METRICS__TRAJECTORY_METRICS_HPP_
 
 #include "../data_types.hpp"
+#include "lane_keeping.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
@@ -53,6 +54,7 @@ struct TrajectoryPointMetrics
   std::vector<double> lateral_deviations;
   std::vector<double> travel_distances;
   double history_comfort{0.0};
+  double lane_keeping{0.0};
   double drivable_area_compliance{0.0};
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};
@@ -68,6 +70,7 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const std::shared_ptr<SynchronizedData> & sync_data,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler = nullptr,
   const HistoryComfortParameters & history_comfort_params = HistoryComfortParameters{},
+  const LaneKeepingParameters & lane_keeping_params = LaneKeepingParameters{},
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info =
     autoware::vehicle_info_utils::VehicleInfo{});
 

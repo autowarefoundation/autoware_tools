@@ -162,6 +162,7 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ahe"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/fhe"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/history_comfort"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/lane_keeping"));
   EXPECT_TRUE(has_topic("/trajectory/raw/longitudinal_accelerations"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/drivable_area_compliance"));
   EXPECT_TRUE(has_topic("/trajectory/raw/lateral_accelerations"));
@@ -217,6 +218,7 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/mean"].get<double>(), 0.5);
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/min"].get<double>(), 0.0);
   EXPECT_DOUBLE_EQ(summary_json["aggregate/history_comfort/max"].get<double>(), 1.0);
+  EXPECT_DOUBLE_EQ(summary_json["aggregate/lane_keeping/mean"].get<double>(), 0.0);
 }
 
 TEST_F(OpenLoopGTSourceModeTest, DACUnavailableReasonIsReportedWhenRouteHandlerIsMissing)
