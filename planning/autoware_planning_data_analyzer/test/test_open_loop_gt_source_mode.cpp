@@ -156,6 +156,10 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/no_at_fault_collision"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/driving_direction_compliance"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/traffic_light_compliance"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_raw"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_raw_available"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_human_filtered"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_human_filtered_available"));
 }
 
 TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomfortableTrajectories)

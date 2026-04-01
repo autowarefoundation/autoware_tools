@@ -332,7 +332,7 @@ void OpenLoopEvaluator::evaluate(
 
     // Save to bag if writer provided
     if (bag_writer) {
-      save_metrics_to_bag(metrics, eval_data, *bag_writer);
+      save_metrics_to_bag(metrics, synthetic_epdms, eval_data, *bag_writer);
       save_trajectory_point_metrics_to_bag_with_variant(
         trajectory_metrics, *bag_writer, eval_data.synchronized_data->bag_timestamp);
     } else {
@@ -905,7 +905,8 @@ std::optional<geometry_msgs::msg::Pose> OpenLoopEvaluator::interpolate_ground_tr
 }
 
 void OpenLoopEvaluator::save_metrics_to_bag(
-  const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
+  const OpenLoopTrajectoryMetrics & metrics,
+  const metrics::SyntheticEpdmsMetrics & synthetic_epdms, const EvaluationData & eval_data,
   rosbag2_cpp::Writer & bag_writer)
 {
   const auto & ground_truth_trajectory = eval_data.ground_truth_trajectory;
@@ -966,6 +967,11 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   bag_writer.write(scalar_msg, metric_topic("max_oncoming_progress_m"), message_timestamp);
   scalar_msg.data = metrics.traffic_light_compliance;
   bag_writer.write(scalar_msg, metric_topic("traffic_light_compliance"), message_timestamp);
+  scalar_msg.data = synthetic_epdms.raw_epdms;
+  bag_writer.write(scalar_msg, metric_topic("synthetic_epdms_raw"), message_timestamp);
+  scalar_msg.data = synthetic_epdms.human_filtered_epdms;
+  bag_writer.write(
+    scalar_msg, metric_topic("synthetic_epdms_human_filtered"), message_timestamp);
   std_msgs::msg::Bool availability_msg;
   availability_msg.data = metrics.extended_comfort_available;
   bag_writer.write(availability_msg, metric_topic("extended_comfort_available"), message_timestamp);
@@ -988,6 +994,12 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   availability_msg.data = metrics.traffic_light_compliance_available;
   bag_writer.write(
     availability_msg, metric_topic("traffic_light_compliance_available"), message_timestamp);
+  availability_msg.data = synthetic_epdms.raw_available;
+  bag_writer.write(
+    availability_msg, metric_topic("synthetic_epdms_raw_available"), message_timestamp);
+  availability_msg.data = synthetic_epdms.human_filtered_available;
+  bag_writer.write(
+    availability_msg, metric_topic("synthetic_epdms_human_filtered_available"), message_timestamp);
   std_msgs::msg::String reason_msg;
   reason_msg.data = metrics.extended_comfort_reason;
   bag_writer.write(reason_msg, metric_topic("extended_comfort_reason"), message_timestamp);
@@ -1857,6 +1869,10 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     {metric_topic("traffic_light_compliance"), "std_msgs/msg/Float64"},
     {metric_topic("traffic_light_compliance_available"), "std_msgs/msg/Bool"},
     {metric_topic("traffic_light_compliance_reason"), "std_msgs/msg/String"},
+    {metric_topic("synthetic_epdms_raw"), "std_msgs/msg/Float64"},
+    {metric_topic("synthetic_epdms_raw_available"), "std_msgs/msg/Bool"},
+    {metric_topic("synthetic_epdms_human_filtered"), "std_msgs/msg/Float64"},
+    {metric_topic("synthetic_epdms_human_filtered_available"), "std_msgs/msg/Bool"},
     {metric_topic("lateral_deviation"), "std_msgs/msg/Float64MultiArray"},
     {metric_topic("longitudinal_deviation"), "std_msgs/msg/Float64MultiArray"},
     {trajectory_metric_topic("longitudinal_accelerations"), "std_msgs/msg/Float64MultiArray"},

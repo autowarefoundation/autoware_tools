@@ -313,7 +313,8 @@ private:
    * stores the compared ground-truth trajectory for the evaluated sample.
    */
   void save_metrics_to_bag(
-    const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
+    const OpenLoopTrajectoryMetrics & metrics,
+    const metrics::SyntheticEpdmsMetrics & synthetic_epdms, const EvaluationData & eval_data,
     rosbag2_cpp::Writer & bag_writer);
 
   /**
