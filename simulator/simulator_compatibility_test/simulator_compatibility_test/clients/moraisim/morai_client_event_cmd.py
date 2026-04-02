@@ -31,10 +31,8 @@ def main(args=None):
         rclpy.spin_once(event_cmd_client)
         if event_cmd_client.future.done():
             result_msg = event_cmd_client.future.result()
-            event_cmd_client.get_logger().info(
-                f"Change Control Mode : \
-                {result_msg.response.gear}"
-            )
+            event_cmd_client.get_logger().info(f"Change Control Mode : \
+                {result_msg.response.gear}")
             break
 
     event_cmd_client.destroy_node()
