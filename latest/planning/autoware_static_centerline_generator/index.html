@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4936,8 +4936,8 @@ Currently there is no documentation about Vector Map Builder's operation for thi
 <li>http server to connect path planning server and Vector Map Builder</li>
 </ul>
 <p>with the following command by designating <code>&lt;vehicle_model&gt;</code></p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_static_centerline_generator<span class="w"> </span>run_planning_server.launch.xml<span class="w"> </span>vehicle_model:<span class="o">=</span>&lt;vehicle-model&gt;
-</code></pre></div>
+<p><code>sh
+ros2 launch autoware_static_centerline_generator run_planning_server.launch.xml vehicle_model:=&lt;vehicle-model&gt;</code></p>
 <p>FYI, port ID of the http server is 4010 by default.</p>
 <h3 id="command-line-interface">Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permanent link">#</a></h3>
 <p>The optimized centerline can be generated from the command line interface by designating</p>
@@ -4952,8 +4952,8 @@ Currently there is no documentation about Vector Map Builder's operation for thi
 <li><code>&lt;goal-method&gt;</code> (not mandatory, <code>path_generator</code> or <code>behavior_path_planner</code> only)</li>
 <li><code>&lt;lanelet-sequence&gt;</code> (not mandatory)</li>
 </ul>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_static_centerline_generator<span class="w"> </span>static_centerline_generator.launch.xml<span class="w"> </span>run_backgrond:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>lanelet2_input_file_path:<span class="o">=</span>&lt;input-osm-path&gt;<span class="w"> </span>lanelet2_output_file_path:<span class="o">=</span>&lt;output-osm-path&gt;<span class="w"> </span>start_lanelet_id:<span class="o">=</span>&lt;start-lane-id&gt;<span class="w"> </span>start_pose:<span class="o">=</span>&lt;start-pose&gt;<span class="w"> </span>end_lanelet_id:<span class="o">=</span>&lt;end-lane-id&gt;<span class="w"> </span>end_pose:<span class="o">=</span>&lt;end-pose&gt;<span class="w"> </span>vehicle_model:<span class="o">=</span>&lt;vehicle-model&gt;<span class="w"> </span>goal_method:<span class="o">=</span>&lt;goal-method&gt;<span class="w"> </span>lanelet_sequence:<span class="o">=</span>&lt;lanelet-sequence&gt;
-</code></pre></div>
+<p><code>sh
+ros2 launch autoware_static_centerline_generator static_centerline_generator.launch.xml run_backgrond:=false lanelet2_input_file_path:=&lt;input-osm-path&gt; lanelet2_output_file_path:=&lt;output-osm-path&gt; start_lanelet_id:=&lt;start-lane-id&gt; start_pose:=&lt;start-pose&gt; end_lanelet_id:=&lt;end-lane-id&gt; end_pose:=&lt;end-pose&gt; vehicle_model:=&lt;vehicle-model&gt; goal_method:=&lt;goal-method&gt; lanelet_sequence:=&lt;lanelet-sequence&gt;</code></p>
 <p><strong>Note that <code>&lt;goal-method&gt;:=behavior_path_planner</code> is not currently supported.</strong></p>
 <p>The default output map path containing the optimized centerline locates <code>/tmp/autoware_static_centerline_generator/lanelet2_map.osm</code>.
 If you want to change the output map path, you can remap the path by designating <code>&lt;output-osm-path&gt;</code>.</p>
@@ -5102,7 +5102,7 @@ These can be identified using the <code>unsafe footprints</code> marker.</p>
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

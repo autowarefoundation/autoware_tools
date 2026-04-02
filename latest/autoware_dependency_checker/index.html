@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4854,19 +4854,18 @@ The following table shows the matching between dependency names and headers:</p>
 </tbody>
 </table>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code># build
-$ cd to/autoware_tools
+<p>```Text</p>
+<h1 id="build">build<a class="headerlink" href="#build" title="Permanent link">#</a></h1>
+<p>$ cd to/autoware_tools
 $ colcon build --symlink-install --cmake-args --packages-up-to autoware_dependency_checker
-$ source
-
-# run
-$ cd to/your/autoware
+$ source</p>
+<h1 id="run">run<a class="headerlink" href="#run" title="Permanent link">#</a></h1>
+<p>$ cd to/your/autoware
+$ ros2 run autoware_dependency_checker dependency_checker.sh</p>
+<h1 id="run-in-some-package">run in some package<a class="headerlink" href="#run-in-some-package" title="Permanent link">#</a></h1>
+<p>$ cd to/some/package
 $ ros2 run autoware_dependency_checker dependency_checker.sh
-
-# run in some package
-$ cd to/some/package
-$ ros2 run autoware_dependency_checker dependency_checker.sh
-</code></pre></div></div>
+```</p></div>
 
 
 
@@ -4957,7 +4956,7 @@ $ ros2 run autoware_dependency_checker dependency_checker.sh
       
         <script src="../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4856,51 +4856,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="How to Run Parameter Estimator">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#how-to-check-the-estimated-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How to check the estimated parameters
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#data-preprocessing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Data preprocessing
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Data preprocessing">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#examine-the-results-of-processing-the-input-data" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Examine the results of processing the input data
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -4962,8 +4917,8 @@
 <h2 id="how-to-run-parameter-estimator">How to Run Parameter Estimator<a class="headerlink" href="#how-to-run-parameter-estimator" title="Permanent link">#</a></h2>
 <p>Note: You need to build the Autoware beforehand.</p>
 <p>The following command will start the parameter estimation node.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>parameter_estimator<span class="w"> </span>parameter_estimator.launch.xml<span class="w"> </span>vehicle_model:<span class="o">=</span>lexus
-</code></pre></div>
+<p><code>sh
+ros2 launch parameter_estimator parameter_estimator.launch.xml vehicle_model:=lexus</code></p>
 <ul>
 <li>The following arguments are using to select the estimator, default is true<ul>
 <li>select_gear_ratio_estimator</li>
@@ -4974,12 +4929,13 @@
 <li>To deselect the specific estimator, you need to set estimator to false</li>
 <li>Example, the following command will only launch gear ratio estimator</li>
 </ul>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>parameter_estimator<span class="w"> </span>parameter_estimator.launch.xml<span class="w"> </span>vehicle_model:<span class="o">=</span>lexus<span class="w"> </span>select_steer_offset_estimator:<span class="o">=</span><span class="nb">false</span><span class="w"> </span>select_wheel_base_estimator:<span class="o">=</span><span class="nb">false</span>
-</code></pre></div>
+<p><code>sh
+ros2 launch parameter_estimator parameter_estimator.launch.xml vehicle_model:=lexus select_steer_offset_estimator:=false select_wheel_base_estimator:=false</code></p>
 <p>If you want to launch with Rviz, use the following launch file. <strong>Currently unavailable</strong></p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Launch parameter Estimator with the Autoware</span>
-$<span class="w"> </span>ros2<span class="w"> </span>launch<span class="w"> </span>parameter_estimator<span class="w"> </span>parameter_estimator_with_simulation.launch.xml<span class="w"> </span>map_path:<span class="o">=</span>.../kashiwanoha2/<span class="w"> </span>vehicle_model:<span class="o">=</span>jpntaxi<span class="w"> </span>sensor_model:<span class="o">=</span>aip_xx1<span class="w"> </span>rviz:<span class="o">=</span><span class="nb">true</span>
-</code></pre></div>
+<p>```sh</p>
+<h1 id="launch-parameter-estimator-with-the-autoware">Launch parameter Estimator with the Autoware<a class="headerlink" href="#launch-parameter-estimator-with-the-autoware" title="Permanent link">#</a></h1>
+<p>$ ros2 launch parameter_estimator parameter_estimator_with_simulation.launch.xml map_path:=.../kashiwanoha2/ vehicle_model:=jpntaxi sensor_model:=aip_xx1 rviz:=true
+```</p>
 <h3 id="how-to-check-the-estimated-parameters">How to check the estimated parameters<a class="headerlink" href="#how-to-check-the-estimated-parameters" title="Permanent link">#</a></h3>
 <p>The necessary information is plotted in the plot_juggler, which displays the following information from top to bottom.</p>
 <ul>
@@ -5125,7 +5081,7 @@ $<span class="w"> </span>ros2<span class="w"> </span>launch<span class="w"> </sp
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

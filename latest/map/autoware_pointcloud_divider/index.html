@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4918,18 +4918,18 @@
 <li>When loading <code>XYZ</code>-only data, the <code>intensity</code> field is assigned 0.</li>
 </ul>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>&lt;PATH_TO_pilot-auto.*&gt;<span class="w"> </span><span class="c1"># OR &lt;PATH_TO_autoware&gt;</span>
-<span class="nb">cd</span><span class="w"> </span>src/
-git<span class="w"> </span>clone<span class="w"> </span>git@github.com:autowarefoundation/autoware_tools.git
-<span class="nb">cd</span><span class="w"> </span>..
-colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>--catkin-skip-building-tests<span class="w"> </span>--symlink-install<span class="w"> </span>--packages-up-to<span class="w"> </span>autoware_pointcloud_divider
-</code></pre></div>
+<p><code>bash
+cd &lt;PATH_TO_pilot-auto.*&gt; # OR &lt;PATH_TO_autoware&gt;
+cd src/
+git clone git@github.com:autowarefoundation/autoware_tools.git
+cd ..
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-tests --symlink-install --packages-up-to autoware_pointcloud_divider</code></p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
 <ul>
 <li>
 <p>Select directory, process all files found with <code>find $INPUT_DIR -name "*.pcd"</code>.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_pointcloud_divider<span class="w"> </span>pointcloud_divider.launch.xml<span class="w"> </span>input_pcd_or_dir:<span class="o">=</span>&lt;INPUT_DIR&gt;<span class="w"> </span>output_pcd_dir:<span class="o">=</span>&lt;OUTPUT_DIR&gt;<span class="w"> </span>prefix:<span class="o">=</span>&lt;PREFIX&gt;<span class="w"> </span><span class="o">[</span>use_large_grid:<span class="o">=</span>true/false<span class="o">]</span><span class="w"> </span><span class="o">[</span>leaf_size:<span class="o">=</span>&lt;LEAF_SIZE&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>grid_size_x:<span class="o">=</span>&lt;GRID_SIZE_X&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>grid_size_y:<span class="o">=</span>&lt;GRID_SIZE_Y&gt;<span class="o">]</span>
-</code></pre></div>
+<p><code>bash
+ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=&lt;INPUT_DIR&gt; output_pcd_dir:=&lt;OUTPUT_DIR&gt; prefix:=&lt;PREFIX&gt; [use_large_grid:=true/false] [leaf_size:=&lt;LEAF_SIZE&gt;] [grid_size_x:=&lt;GRID_SIZE_X&gt;] [grid_size_y:=&lt;GRID_SIZE_Y&gt;]</code></p>
 <table>
 <thead>
 <tr>
@@ -5050,13 +5050,13 @@ colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span cla
 <ol>
 <li>
 <p>Dividing point clouds without downsampling.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_pointcloud_divider<span class="w"> </span>pointcloud_divider.launch.xml<span class="w"> </span>input_pcd_or_dir:<span class="o">=</span>&lt;INPUT_DIR&gt;<span class="w"> </span>output_pcd_dir:<span class="o">=</span>&lt;OUTPUT_DIR&gt;<span class="w"> </span>prefix:<span class="o">=</span><span class="nb">test</span><span class="w"> </span>leaf_size:<span class="o">=</span>-0.1
-</code></pre></div>
+<p><code>bash
+ ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=&lt;INPUT_DIR&gt; output_pcd_dir:=&lt;OUTPUT_DIR&gt; prefix:=test leaf_size:=-0.1</code></p>
 </li>
 <li>
 <p>Dividing and downsampling point clouds.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_pointcloud_divider<span class="w"> </span>pointcloud_divider.launch.xml<span class="w"> </span>input_pcd_or_dir:<span class="o">=</span>&lt;INPUT_DIR&gt;<span class="w"> </span>output_pcd_dir:<span class="o">=</span>&lt;OUTPUT_DIR&gt;<span class="w"> </span>prefix:<span class="o">=</span><span class="nb">test</span>
-</code></pre></div>
+<p><code>bash
+ ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml input_pcd_or_dir:=&lt;INPUT_DIR&gt; output_pcd_dir:=&lt;OUTPUT_DIR&gt; prefix:=test</code></p>
 </li>
 </ol>
 <h2 id="metadata-yaml-format">Metadata YAML Format<a class="headerlink" href="#metadata-yaml-format" title="Permanent link">#</a></h2>
@@ -5067,13 +5067,13 @@ colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span cla
 </ul>
 <p>Additionally, the file contains entries for individual point cloud files (<code>.pcd</code> files) and their corresponding grid coordinates. The key is the file name, and the value is a list containing the X and Y coordinates of the lower-left corner of the grid cell associated with that file. The grid cell's boundaries can be calculated using the <code>x_resolution</code> and <code>y_resolution</code> values.</p>
 <p>For example:</p>
-<div class="highlight"><pre><span></span><code><span class="nt">x_resolution</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100.0</span>
-<span class="nt">y_resolution</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">150.0</span>
-<span class="nt">A.pcd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1200</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2500</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># -&gt; 1200 &lt;= x &lt;= 1300, 2500 &lt;= y &lt;= 2650</span>
-<span class="nt">B.pcd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1300</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2500</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># -&gt; 1300 &lt;= x &lt;= 1400, 2500 &lt;= y &lt;= 2650</span>
-<span class="nt">C.pcd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1200</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2650</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># -&gt; 1200 &lt;= x &lt;= 1300, 2650 &lt;= y &lt;= 2800</span>
-<span class="nt">D.pcd</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1400</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2650</span><span class="p p-Indicator">]</span><span class="w"> </span><span class="c1"># -&gt; 1400 &lt;= x &lt;= 1500, 2650 &lt;= y &lt;= 2800</span>
-</code></pre></div>
+<p><code>yaml
+x_resolution: 100.0
+y_resolution: 150.0
+A.pcd: [1200, 2500] # -&gt; 1200 &lt;= x &lt;= 1300, 2500 &lt;= y &lt;= 2650
+B.pcd: [1300, 2500] # -&gt; 1300 &lt;= x &lt;= 1400, 2500 &lt;= y &lt;= 2650
+C.pcd: [1200, 2650] # -&gt; 1200 &lt;= x &lt;= 1300, 2650 &lt;= y &lt;= 2800
+D.pcd: [1400, 2650] # -&gt; 1400 &lt;= x &lt;= 1500, 2650 &lt;= y &lt;= 2800</code></p>
 <h2 id="license">LICENSE<a class="headerlink" href="#license" title="Permanent link">#</a></h2>
 <p>Parts of files grid_info.hpp, pcd_divider.hpp, and pcd_divider.cpp are copied from <a href="https://github.com/MapIV/pointcloud_divider">MapIV's pointcloud_divider</a> and are under <a href="LICENSE">BSD-3-Clauses</a> license. The remaining code are under <a href="../../LICENSE">Apache License 2.0</a></p></div>
 
@@ -5182,7 +5182,7 @@ colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span cla
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

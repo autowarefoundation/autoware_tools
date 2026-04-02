@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4910,29 +4910,29 @@
 <p>Because there are no available ROS 2 CLI commands to list loggers, there isn't a straightforward way to check your logger name. Additionally, the following assumes that you already know which node you're working with.</p>
 <h3 id="for-logger-as-a-class-member-variable">For logger as a class member variable<a class="headerlink" href="#for-logger-as-a-class-member-variable" title="Permanent link">#</a></h3>
 <p>If your class doesn't have an <code>rclcpp::Logger</code> member variable, you can start by including one yourself:</p>
-<div class="highlight"><pre><span></span><code><span class="k">mutable</span><span class="w"> </span><span class="n">rclcpp</span><span class="o">::</span><span class="n">Logger</span><span class="w"> </span><span class="n">logger_</span><span class="p">;</span>
-</code></pre></div>
+<p><code>c++
+mutable rclcpp::Logger logger_;</code></p>
 <p>If your node already has a logger, it should, under normal circumstances, be similar to the node's name.</p>
 <p>For instance, if the node name is <code>/some_component/some_node/node_child</code>, the <code>logger_name</code> would be <code>some_component.some_node.node_child</code>.</p>
 <p>Should your log not print as expected, one approach is to initially set your logging level in the code to info, like so:</p>
-<div class="highlight"><pre><span></span><code><span class="n">RCLCPP_INFO</span><span class="p">(</span><span class="n">logger_</span><span class="p">,</span><span class="w"> </span><span class="s">"Print something here."</span><span class="p">);</span>
-</code></pre></div>
+<p><code>c++
+RCLCPP_INFO(logger_, "Print something here.");</code></p>
 <p>This will result in something like the following being printed in the terminal:</p>
-<div class="highlight"><pre><span></span><code><span class="o">[</span>component_container_mt-36<span class="o">]</span><span class="w"> </span><span class="o">[</span>INFO<span class="w"> </span><span class="m">1711949149</span>.735437551<span class="o">]</span><span class="w"> </span><span class="o">[</span>logger_name<span class="o">]</span>:<span class="w"> </span>Print<span class="w"> </span>something<span class="w"> </span>here.<span class="w"> </span><span class="o">(</span>func<span class="o">()</span><span class="w"> </span>at<span class="w"> </span>/path/to/code:line_number<span class="o">)</span>
-</code></pre></div>
+<p><code>shell
+[component_container_mt-36] [INFO 1711949149.735437551] [logger_name]: Print something here. (func() at /path/to/code:line_number)</code></p>
 <p>Afterward, you can simply copy the <code>logger_name</code>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Remember to revert your code to the appropriate logging level after testing.
-</p><div class="highlight"><pre><span></span><code><span class="n">RCLCPP_DEBUG</span><span class="p">(</span><span class="n">logger_</span><span class="p">,</span><span class="w"> </span><span class="s">"Print something here."</span><span class="p">);</span>
-</code></pre></div>
+<code>c++
+RCLCPP_DEBUG(logger_, "Print something here.");</code></p>
 </div>
 <h3 id="for-libraries">For libraries<a class="headerlink" href="#for-libraries" title="Permanent link">#</a></h3>
 <p>When dealing with libraries, such as utility functions, you may need to add the logger manually. Here's an example:</p>
-<div class="highlight"><pre><span></span><code><span class="n">RCLCPP_WARN</span><span class="p">(</span>
-<span class="w">  </span><span class="n">rclcpp</span><span class="o">::</span><span class="n">get_logger</span><span class="p">(</span><span class="s">"some_component"</span><span class="p">).</span><span class="n">get_child</span><span class="p">(</span><span class="s">"some_child"</span><span class="p">).</span><span class="n">get_child</span><span class="p">(</span><span class="s">"some_child2"</span><span class="p">),</span>
-<span class="w">      </span><span class="s">"Print something here."</span><span class="p">);</span>
-</code></pre></div>
+<p><code>c++
+RCLCPP_WARN(
+  rclcpp::get_logger("some_component").get_child("some_child").get_child("some_child2"),
+      "Print something here.");</code></p>
 <p>In this scenario, the <code>logger_name</code> would be <code>some_component.some_child.some_child2</code>.</p></div>
 
 
@@ -5040,7 +5040,7 @@
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4871,8 +4871,8 @@
 <li><strong>Source an Autoware workspace:</strong> the workspace needs to contain the <code>autoware_planning_msgs</code> package.</li>
 <li>
 <p><strong>Run the script:</strong></p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>visualizer.py
-</code></pre></div>
+<p><code>bash
+ python visualizer.py</code></p>
 </li>
 <li>
 <p><strong>A window will pop up:</strong> This window will be used to visualize trajectories.</p>
@@ -4906,8 +4906,8 @@
 <li><strong>When using rosbag playback (Autoware not running):</strong> The tool uses the pre-generated <code>graph_config.yaml</code> to obtain the graph structure information for topic ordering.</li>
 <li>
 <p><strong>Updating graph_config.yaml:</strong> When the planning/control node or topic structure in Autoware changes, you can regenerate <code>graph_config.yaml</code> by running:</p>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>trajectory_node_graph.py
-</code></pre></div>
+<p><code>bash
+python3 trajectory_node_graph.py</code></p>
 <p>Note: Autoware must be running when executing this command to capture the current node graph structure.</p>
 </li>
 </ul>
@@ -5023,7 +5023,7 @@
       
         <script src="../../../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

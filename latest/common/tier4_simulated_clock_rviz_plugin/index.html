@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4895,8 +4895,8 @@
 <ol>
 <li>
 <p>Launch <a href="https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#1-launch-autoware">planning simulator</a> with <code>use_sim_time:=true</code>.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_launch<span class="w"> </span>planning_simulator.launch.xml<span class="w"> </span>map_path:<span class="o">=</span><span class="nv">$HOME</span>/autoware_map/sample-map-planning<span class="w"> </span>vehicle_model:<span class="o">=</span>sample_vehicle<span class="w"> </span>sensor_model:<span class="o">=</span>sample_sensor_kit<span class="w"> </span>use_sim_time:<span class="o">=</span><span class="nb">true</span>
-</code></pre></div>
+<p><code>shell
+ ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_map/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit use_sim_time:=true</code></p>
 <blockquote>
 <p><span style="color: orange; font-weight: bold;">Warning</span>
 If you launch the planning simulator without adding the <code>tier4_simulated_clock_rviz_plugin</code>, your simulation will not be running. You'll not even be able to place the initial and the goal poses.</p>
@@ -5034,7 +5034,7 @@ If you set the time step too large, your simulation will go haywire.</p>
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

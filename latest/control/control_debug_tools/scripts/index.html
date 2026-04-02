@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4812,17 +4812,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#how-it-works" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How it Works
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -4858,13 +4847,13 @@ Mismatched parameters can lead to unexpected behavior of the ego vehicle.</p>
 <ol>
 <li>
 <p><strong>Source Workspace</strong>: Make sure your Autoware workspace (containing <code>autoware_launch</code>, the relevant vehicle description package, etc.) is sourced in your terminal:</p>
-<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/path/to/your/autoware_ws/install/setup.bash
-</code></pre></div>
+<p><code>bash
+ source /path/to/your/autoware_ws/install/setup.bash</code></p>
 </li>
 <li>
 <p><strong>Run the Script</strong>: Execute the script using Python 3.</p>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>/path/to/parameter_checker_script.py<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span>
-</code></pre></div>
+<p><code>bash
+ python3 /path/to/parameter_checker_script.py [OPTIONS]</code></p>
 </li>
 <li>
 <p><strong>Options</strong>:</p>
@@ -4885,17 +4874,16 @@ Mismatched parameters can lead to unexpected behavior of the ego vehicle.</p>
 </li>
 </ol>
 <p><strong>Example:</strong></p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Check parameters for the default sample vehicle</span>
-python3<span class="w"> </span>parameter_checker_script.py
-
-<span class="c1"># Check parameters for a specific vehicle ID 'my_vehicle'</span>
-python3<span class="w"> </span>parameter_checker_script.py<span class="w"> </span>--vehicle_id<span class="w"> </span>my_vehicle
-
-<span class="c1"># Check parameters using a custom vehicle description and overriding the MPC file</span>
-python3<span class="w"> </span>parameter_checker_script.py<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--vehicle_description<span class="w"> </span>my_vehicle_description<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--mpc_param_file<span class="w"> </span>/path/to/custom_mpc.param.yaml
-</code></pre></div>
+<p>```bash</p>
+<h1 id="check-parameters-for-the-default-sample-vehicle">Check parameters for the default sample vehicle<a class="headerlink" href="#check-parameters-for-the-default-sample-vehicle" title="Permanent link">#</a></h1>
+<p>python3 parameter_checker_script.py</p>
+<h1 id="check-parameters-for-a-specific-vehicle-id-my_vehicle">Check parameters for a specific vehicle ID 'my_vehicle'<a class="headerlink" href="#check-parameters-for-a-specific-vehicle-id-my_vehicle" title="Permanent link">#</a></h1>
+<p>python3 parameter_checker_script.py --vehicle_id my_vehicle</p>
+<h1 id="check-parameters-using-a-custom-vehicle-description-and-overriding-the-mpc-file">Check parameters using a custom vehicle description and overriding the MPC file<a class="headerlink" href="#check-parameters-using-a-custom-vehicle-description-and-overriding-the-mpc-file" title="Permanent link">#</a></h1>
+<p>python3 parameter_checker_script.py \
+  --vehicle_description my_vehicle_description \
+  --mpc_param_file /path/to/custom_mpc.param.yaml
+```</p>
 <p>The script will print the paths of the files being compared and then output any detected inconsistencies in red.</p>
 <h2 id="how-it-works">How it Works<a class="headerlink" href="#how-it-works" title="Permanent link">#</a></h2>
 <ol>
@@ -5046,7 +5034,7 @@ python3<span class="w"> </span>parameter_checker_script.py<span class="w"> </spa
       
         <script src="../../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

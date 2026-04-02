@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4871,109 +4871,109 @@
 <p>The scripts are used for the result rosbags of localization, particularly the result_bag from <code>driving_log_replayer_v2</code>.</p>
 <p><a href="https://tier4.github.io/driving_log_replayer_v2/quick_start/setup/">https://tier4.github.io/driving_log_replayer_v2/quick_start/setup/</a></p>
 <p>As a test, execute <code>driving_log_replayer_v2</code> with the following command:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>driving_log_replayer_v2<span class="w"> </span>driving_log_replayer_v2.launch.py<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>scenario_path:<span class="o">=</span><span class="nv">$HOME</span>/driving_log_replayer_v2/localization.yaml
-</code></pre></div>
+<p><code>bash
+ros2 launch driving_log_replayer_v2 driving_log_replayer_v2.launch.py \
+    scenario_path:=$HOME/driving_log_replayer_v2/localization.yaml</code></p>
 <p>Then, use the scripts for processing the result_bag:</p>
-<div class="highlight"><pre><span></span><code><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/result_bag
-</code></pre></div>
+<p><code>bash
+$HOME/driving_log_replayer_v2/out/latest/result_bag</code></p>
 <h2 id="plot_diagnosticspy">plot_diagnostics.py<a class="headerlink" href="#plot_diagnosticspy" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>plot_diagnostics.py<span class="w"> </span><span class="se">\</span>
-<span class="w">   </span>&lt;rosbag_path&gt;<span class="w"> </span><span class="se">\</span>
-<span class="w">   </span>--save_dir<span class="o">=</span>/your/path<span class="w"> </span><span class="o">(</span>default:rosbag_path/../<span class="o">)</span>
-</code></pre></div>
+<p><code>bash
+ros2 run autoware_localization_evaluation_scripts plot_diagnostics.py \
+   &lt;rosbag_path&gt; \
+   --save_dir=/your/path (default:rosbag_path/../)</code></p>
 <p>[Example]</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>plot_diagnostics.py<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/result_bag
-<span class="o">[</span>INFO<span class="o">]</span><span class="w"> </span><span class="o">[</span><span class="m">1740561002</span>.740748735<span class="o">]</span><span class="w"> </span><span class="o">[</span>rosbag2_storage<span class="o">]</span>:<span class="w"> </span>Opened<span class="w"> </span>database<span class="w"> </span><span class="s1">'$HOME/driving_log_replayer_v2/out/latest/result_bag/result_bag_0.db3'</span><span class="w"> </span><span class="k">for</span><span class="w"> </span>READ_ONLY.
-<span class="nv">save_dir</span><span class="o">=</span>PosixPath<span class="o">(</span><span class="s1">'$HOME/driving_log_replayer_v2/out/latest/diagnostics_result'</span><span class="o">)</span>
-</code></pre></div>
+<p><code>bash
+$ ros2 run autoware_localization_evaluation_scripts plot_diagnostics.py \
+    $HOME/driving_log_replayer_v2/out/latest/result_bag
+[INFO] [1740561002.740748735] [rosbag2_storage]: Opened database '$HOME/driving_log_replayer_v2/out/latest/result_bag/result_bag_0.db3' for READ_ONLY.
+save_dir=PosixPath('$HOME/driving_log_replayer_v2/out/latest/diagnostics_result')</code></p>
 <p>This command outputs each diagnostic (tsv) and plot result (png).</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>tree<span class="w"> </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/diagnostics_result
-<span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/diagnostics_result
-├──<span class="w"> </span>gyro_bias_validator__gyro_bias_validator.png
-├──<span class="w"> </span>gyro_bias_validator__gyro_bias_validator.tsv
-├──<span class="w"> </span>localization__ekf_localizer.png
-├──<span class="w"> </span>localization__ekf_localizer.tsv
-├──<span class="w"> </span>localization__pose_instability_detector.png
-├──<span class="w"> </span>localization__pose_instability_detector.tsv
-├──<span class="w"> </span>localization_error_monitor__ellipse_error_status.png
-├──<span class="w"> </span>localization_error_monitor__ellipse_error_status.tsv
-├──<span class="w"> </span>ndt_scan_matcher__scan_matching_status.png
-└──<span class="w"> </span>ndt_scan_matcher__scan_matching_status.tsv
-
-<span class="m">0</span><span class="w"> </span>directories,<span class="w"> </span><span class="m">10</span><span class="w"> </span>files
-</code></pre></div>
+<p>```bash
+$ tree $HOME/driving_log_replayer_v2/out/latest/diagnostics_result
+$HOME/driving_log_replayer_v2/out/latest/diagnostics_result
+├── gyro_bias_validator__gyro_bias_validator.png
+├── gyro_bias_validator__gyro_bias_validator.tsv
+├── localization__ekf_localizer.png
+├── localization__ekf_localizer.tsv
+├── localization__pose_instability_detector.png
+├── localization__pose_instability_detector.tsv
+├── localization_error_monitor__ellipse_error_status.png
+├── localization_error_monitor__ellipse_error_status.tsv
+├── ndt_scan_matcher__scan_matching_status.png
+└── ndt_scan_matcher__scan_matching_status.tsv</p>
+<p>0 directories, 10 files
+```</p>
 <p>[Example : ndt_scan_matcher__scan_matching_status.png]</p>
 <p><img alt="ndt_scan_matcher__scan_matching_status.png" src="media/ndt_scan_matcher__scan_matching_status.png"></p>
 <h2 id="extract_pose_from_rosbagpy">extract_pose_from_rosbag.py<a class="headerlink" href="#extract_pose_from_rosbagpy" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>extract_pose_from_rosbag.py<span class="w"> </span><span class="se">\</span>
-<span class="w">   </span>&lt;rosbag_path&gt;<span class="w"> </span><span class="se">\</span>
-<span class="w">   </span>--save_dir<span class="o">=</span>/your/path<span class="w"> </span><span class="o">(</span>default:rosbag_path/../<span class="o">)</span>
-</code></pre></div>
+<p><code>bash
+ros2 run autoware_localization_evaluation_scripts extract_pose_from_rosbag.py \
+   &lt;rosbag_path&gt; \
+   --save_dir=/your/path (default:rosbag_path/../)</code></p>
 <p>[Example]</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>extract_pose_from_rosbag.py<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/result_bag<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--target_topics<span class="w"> </span><span class="s2">"/localization/kinematic_state"</span><span class="w"> </span><span class="se">\</span>
-<span class="w">                    </span><span class="s2">"/localization/pose_estimator/pose_with_covariance"</span>
-</code></pre></div>
+<p><code>bash
+$ ros2 run autoware_localization_evaluation_scripts extract_pose_from_rosbag.py \
+    $HOME/driving_log_replayer_v2/out/latest/result_bag \
+    --target_topics "/localization/kinematic_state" \
+                    "/localization/pose_estimator/pose_with_covariance"</code></p>
 <p>This command outputs tsv files for each pose.</p>
 <p>The file names are the topic names with “/” replaced with “__”.</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>tree<span class="w"> </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv
-<span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv
-├──<span class="w"> </span>localization__kinematic_state.tsv
-└──<span class="w"> </span>localization__pose_estimator__pose_with_covariance.tsv
-
-<span class="m">0</span><span class="w"> </span>directories,<span class="w"> </span><span class="m">2</span><span class="w"> </span>files
-</code></pre></div>
+<p>```bash
+$ tree $HOME/driving_log_replayer_v2/out/latest/pose_tsv
+$HOME/driving_log_replayer_v2/out/latest/pose_tsv
+├── localization__kinematic_state.tsv
+└── localization__pose_estimator__pose_with_covariance.tsv</p>
+<p>0 directories, 2 files
+```</p>
 <h2 id="compare_trajectoriespy">compare_trajectories.py<a class="headerlink" href="#compare_trajectoriespy" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>compare_trajectories.py<span class="w"> </span><span class="se">\</span>
-<span class="w">   </span>&lt;tsv_file_subject&gt;<span class="w"> </span>&lt;tsv_file_reference&gt;
-</code></pre></div>
+<p><code>bash
+ros2 run autoware_localization_evaluation_scripts compare_trajectories.py \
+   &lt;tsv_file_subject&gt; &lt;tsv_file_reference&gt;</code></p>
 <p>[Example]</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>compare_trajectories.py<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state.tsv<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv/localization__pose_estimator__pose_with_covariance.tsv
-</code></pre></div>
+<p><code>bash
+$ ros2 run autoware_localization_evaluation_scripts compare_trajectories.py \
+    $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state.tsv \
+    $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__pose_estimator__pose_with_covariance.tsv</code></p>
 <p>This command outputs tsv files for each pose.</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>tree<span class="w"> </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_result
-<span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_result
-├──<span class="w"> </span>compare_trajectories.png
-├──<span class="w"> </span>relative_pose.png
-├──<span class="w"> </span>relative_pose.tsv
-└──<span class="w"> </span>relative_pose_summary.tsv
-
-<span class="m">0</span><span class="w"> </span>directories,<span class="w"> </span><span class="m">4</span><span class="w"> </span>files
-</code></pre></div>
+<p>```bash
+$ tree $HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_result
+$HOME/driving_log_replayer_v2/out/latest/pose_tsv/localization__kinematic_state_result
+├── compare_trajectories.png
+├── relative_pose.png
+├── relative_pose.tsv
+└── relative_pose_summary.tsv</p>
+<p>0 directories, 4 files
+```</p>
 <h2 id="diagnostics_flag_checkpy">diagnostics_flag_check.py<a class="headerlink" href="#diagnostics_flag_checkpy" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>diagnostics_flag_check.py<span class="w"> </span><span class="se">\</span>
-<span class="w">   </span>&lt;path_to_scenario_file&gt;<span class="w"> </span>&lt;directory_to_diagnostics_result&gt;
-</code></pre></div>
+<p><code>bash
+ros2 run autoware_localization_evaluation_scripts diagnostics_flag_check.py \
+   &lt;path_to_scenario_file&gt; &lt;directory_to_diagnostics_result&gt;</code></p>
 <p>[Example]</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>diagnostics_flag_check.py<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>./scenario.yml<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/latest/result_archive/diagnostics_result
-</code></pre></div>
+<p><code>bash
+$ ros2 run autoware_localization_evaluation_scripts diagnostics_flag_check.py \
+    ./scenario.yml \
+    $HOME/driving_log_replayer_v2/out/latest/result_archive/diagnostics_result</code></p>
 <p>This command checks whether a diagnostics have been positive/negative at a specific timing.
 The diagnostics flag to observe should be defined in the input scenario file in the format like below.</p>
-<div class="highlight"><pre><span></span><code><span class="nt">Evaluation</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">Conditions</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">DiagnosticsFlagCheck</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">pose_is_passed_delay_gate</span><span class="p">:</span>
-<span class="w">        </span><span class="nt">flag1</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">positive</span>
-<span class="w">          </span><span class="nt">timing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">at</span>
-<span class="w">          </span><span class="nt">sec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">113</span>
-<span class="w">          </span><span class="nt">nanosec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">750000000</span>
-<span class="w">          </span><span class="nt">window</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">500000000</span>
-<span class="w">          </span><span class="nt">entirely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="w">        </span><span class="nt">flag2</span><span class="p">:</span>
-<span class="w">          </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">negative</span>
-<span class="w">          </span><span class="nt">timing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">before</span>
-<span class="w">          </span><span class="nt">sec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">110</span>
-<span class="w">          </span><span class="nt">nanosec</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
-<span class="w">          </span><span class="nt">entirely</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-</code></pre></div>
+<p><code>yaml
+Evaluation:
+  Conditions:
+    DiagnosticsFlagCheck:
+      pose_is_passed_delay_gate:
+        flag1:
+          type: positive
+          timing: at
+          sec: 113
+          nanosec: 750000000
+          window: 500000000
+          entirely: false
+        flag2:
+          type: negative
+          timing: before
+          sec: 110
+          nanosec: 0
+          entirely: true</code></p>
 <p>A diagnostics can have multiple flags and each flag should have the following fields. (Some have exceptions)</p>
 <table>
 <thead>
@@ -5061,16 +5061,16 @@ The diagnostics flag to observe should be defined in the input scenario file in 
 </tbody>
 </table>
 <h2 id="analyze_rosbags_parallelpy">analyze_rosbags_parallel.py<a class="headerlink" href="#analyze_rosbags_parallelpy" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>analyze_rosbags_parallel.py<span class="w"> </span><span class="se">\</span>
-<span class="w">   </span>&lt;result_dir&gt;<span class="w"> </span>--parallel_num<span class="w"> </span><span class="m">2</span>
-</code></pre></div>
+<p><code>bash
+ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
+   &lt;result_dir&gt; --parallel_num 2</code></p>
 <p>[Example]</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>analyze_rosbags_parallel.py<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--parallel_num<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--topic_subject<span class="w"> </span><span class="s2">"/localization/kinematic_state"</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--topic_reference<span class="w"> </span><span class="s2">"/localization/pose_estimator/pose_with_covariance"</span>
-</code></pre></div>
+<p><code>bash
+$ ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
+    $HOME/driving_log_replayer_v2/out/ \
+    --parallel_num 2 \
+    --topic_subject "/localization/kinematic_state" \
+    --topic_reference "/localization/pose_estimator/pose_with_covariance"</code></p>
 <p>This command performs the above three analysis on the subdirectories of the target directory and outputs the results regarding the following criteria.
 You can see the results in a JSON file named <code>summary.json</code>.</p>
 <table>
@@ -5117,24 +5117,24 @@ You can see the results in a JSON file named <code>summary.json</code>.</p>
 <p><code>analyze_rosbags_parallel.py</code> has an optional argument <code>--scenario_file</code> to pass a scenario file (formatted by Driving Log Replayer) to the script.
 If the scenario file has a condition named <code>OverallCriteriaMask</code> like below, the script <code>analyze_rosbags_parallel.py</code> will skip the criterion if it is set to <code>false</code>.
 The <code>OverallCriteriaMask</code> block must be under <code>Evaluation -&gt; Conditions</code>. <strong>Note that the scenario file is not required</strong> and the script will automatically set the mask to <code>true</code> if no scenario file is given OR there is no <code>OverallCriteriaMask</code> in the scenario file.</p>
-<div class="highlight"><pre><span></span><code><span class="nt">Evaluation</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">Conditions</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">OverallCriteriaMask</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">mean_relative_position</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="w">      </span><span class="nt">mean_relative_angle</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="w">      </span><span class="nt">mean_relative_linear_velocity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">      </span><span class="nt">mean_relative_angular_velocity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<span class="w">      </span><span class="nt">mean_relative_acceleration</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-<span class="w">      </span><span class="nt">diagnostics_not_ok_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
-</code></pre></div>
+<p><code>yaml
+Evaluation:
+  Conditions:
+    OverallCriteriaMask:
+      mean_relative_position: false
+      mean_relative_angle: false
+      mean_relative_linear_velocity: true
+      mean_relative_angular_velocity: true
+      mean_relative_acceleration: false
+      diagnostics_not_ok_rate: false</code></p>
 <p>[Example]</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>autoware_localization_evaluation_scripts<span class="w"> </span>analyze_rosbags_parallel.py<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span><span class="nv">$HOME</span>/driving_log_replayer_v2/out/<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--parallel_num<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--topic_subject<span class="w"> </span><span class="s2">"/localization/kinematic_state"</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--topic_reference<span class="w"> </span><span class="s2">"/localization/pose_estimator/pose_with_covariance"</span><span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--scenario_file<span class="w"> </span>/path/to/scenario.yml
-</code></pre></div></div>
+<p><code>bash
+$ ros2 run autoware_localization_evaluation_scripts analyze_rosbags_parallel.py \
+    $HOME/driving_log_replayer_v2/out/ \
+    --parallel_num 2 \
+    --topic_subject "/localization/kinematic_state" \
+    --topic_reference "/localization/pose_estimator/pose_with_covariance" \
+    --scenario_file /path/to/scenario.yml</code></p></div>
 
 
 
@@ -5241,7 +5241,7 @@ The <code>OverallCriteriaMask</code> block must be under <code>Evaluation -&gt; 
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

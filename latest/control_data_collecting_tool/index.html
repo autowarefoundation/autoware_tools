@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4980,8 +4980,8 @@
 <ol>
 <li>
 <p>Launch Autoware.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_launch<span class="w"> </span>planning_simulator.launch.xml<span class="w"> </span>map_path:<span class="o">=</span><span class="nv">$HOME</span>/autoware_map/sample-map-planning<span class="w"> </span>vehicle_model:<span class="o">=</span>sample_vehicle<span class="w"> </span>sensor_model:<span class="o">=</span>sample_sensor_kit
-</code></pre></div>
+<p><code>bash
+  ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_map/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit</code></p>
 </li>
 <li>
 <p>Set an initial pose, see <a href="https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#2-set-an-initial-pose-for-the-ego-vehicle">here</a>.</p>
@@ -4991,8 +4991,8 @@
 </li>
 <li>
 <p>Launch control_data_collecting_tool.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>control_data_collecting_tool<span class="w"> </span>control_data_collecting_tool.launch.py<span class="w"> </span>map_path:<span class="o">=</span><span class="nv">$HOME</span>/autoware_map/sample-map-planning<span class="w"> </span>accel_brake_map_path:<span class="o">=</span>/path/to/your/accel_brake_map_dir
-</code></pre></div>
+<p><code>bash
+  ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning accel_brake_map_path:=/path/to/your/accel_brake_map_dir</code></p>
 <p>- If you use the <code>along_road</code> course, please specify the same map for <code>map_path</code> as the one used when launching Autoware. <code>map_path</code> is not necessary when using courses other than <code>along_road</code>.</p>
 <p>- If you set CONTROL_MODE to actuation_cmd or external_actuation_cmd, please specify the directory where the accel/brake maps used by your control system are located.</p>
 <p>- Control data collecting tool automatically records topics included in <code>config/topics.yaml</code> when the above command is executed. Topics will be saved in rosbag2 format in the current directory.</p>
@@ -5244,8 +5244,8 @@ In the sections labeled `velocity = const (velocity_on_curve)` in the legend, th
 </li>
 <li>
 <p>If you want to stop data collecting automatic driving, run the following command</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>/data_collecting_stop_request<span class="w"> </span>std_msgs/msg/Bool<span class="w"> </span><span class="s2">"data: true"</span><span class="w"> </span>--once
-</code></pre></div>
+<p><code>bash
+  ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: true" --once</code></p>
 <blockquote>
 <p>[!NOTE]
 When the car crosses the green boundary line, a similar stopping procedure will be automatically triggered.</p>
@@ -5253,8 +5253,8 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 </li>
 <li>
 <p>If you want to restart data collecting automatic driving, run the following command</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>topic<span class="w"> </span>pub<span class="w"> </span>/data_collecting_stop_request<span class="w"> </span>std_msgs/msg/Bool<span class="w"> </span><span class="s2">"data: false"</span><span class="w"> </span>--once
-</code></pre></div>
+<p><code>bash
+  ros2 topic pub /data_collecting_stop_request std_msgs/msg/Bool "data: false" --once</code></p>
 </li>
 </ol>
 <!-- prettier-ignore-end -->
@@ -5270,17 +5270,17 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 </li>
 <li>
 <p>In the <code>scripts/masks</code> directory, run</p>
-<div class="highlight"><pre><span></span><code><span class="n">python3</span> <span class="n">mask_selector</span><span class="o">.</span><span class="n">py</span>
-</code></pre></div>
+<p><code>Python3
+ python3 mask_selector.py</code></p>
 <p>then, matplotlib windows for selecting the collection range of the speed-acceleration heatmap, speed-steering angle heatmap, and speed-steer rate heatmap will be displayed, one for each.</p>
 <p><img src="resource/mask_selection.png" width="480"></p>
 <p>In these windows, you can modify the heatmaps by clicking or dragging within them. Once you've made your changes, pressing <code>Ctrl+C</code> in the terminal will automatically save the updated maps.</p>
 <p>Afterward, rebuild the <code>control_data_collecting_tool</code> using the following command</p>
-<div class="highlight"><pre><span></span><code>colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>-DCMAKE_CXX_FLAGS<span class="o">=</span><span class="s2">"-w"</span><span class="w"> </span>--symlink-install<span class="w"> </span>--continue-on-error<span class="w"> </span>--packages-up-to<span class="w"> </span>control_data_collecting_tool
-</code></pre></div>
+<p><code>bash
+ colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-w" --symlink-install --continue-on-error --packages-up-to control_data_collecting_tool</code></p>
 <p>and relaunch the control_data_collecting_tool with</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>control_data_collecting_tool<span class="w"> </span>control_data_collecting_tool.launch.py<span class="w"> </span>map_path:<span class="o">=</span><span class="nv">$HOME</span>/autoware_map/sample-map-planning
-</code></pre></div>
+<p><code>bash
+ ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning</code></p>
 <p>This will allow you to see the selected mask applied.</p>
 <p><img src="resource/original.png" width="480"></p>
 </li>
@@ -5297,24 +5297,24 @@ When the car crosses the green boundary line, a similar stopping procedure will 
 <li>
 <p>Acceleration phase
    The vehicle accelerates by setting <code>target_velocity</code> as follows until its speed exceeds <code>target_velocity_on_section</code>.</p>
-<div class="highlight"><pre><span></span><code>  <span class="c1"># b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately</span>
-  <span class="n">target_velocity</span> <span class="o">=</span> <span class="n">current_velocity</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">target_acceleration_on_section</span><span class="p">)</span> <span class="o">/</span> <span class="n">acc_kp</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">+</span> <span class="n">sine_curve</span><span class="p">)</span>
-</code></pre></div>
+<p><code>Python3
+   # b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately
+   target_velocity = current_velocity + abs(target_acceleration_on_section) / acc_kp * (b + sine_curve)</code></p>
 <p><code>current_velocity</code> is a current velocity of vehicle and <code>acc_kp</code> accel command proportional gain in pure pursuit algorithm. <code>sine_curve</code> is a sine wave added to partially mitigate situations where the vehicle fails to achieve the target acceleration.</p>
 </li>
 <li>
 <p>Constant speed phase
    When the vehicle reaches <code>target_velocity_on_section</code>, <code>target_velocity</code> is defined as follows to allow the vehicle to run around the target speed for a certain period of time.</p>
-<div class="highlight"><pre><span></span><code>  <span class="c1"># b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately</span>
-  <span class="n">target_velocity</span> <span class="o">=</span> <span class="n">target_velocity_on_section</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">sine_curve</span>
-</code></pre></div>
+<p><code>Python3
+   # b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately
+   target_velocity = target_velocity_on_section + b + sine_curve</code></p>
 </li>
 <li>
 <p>Deceleration phase
    In the deceleration phase, similar to the acceleration phase, <code>target_velocity</code> is defined as follows to ensure the vehicle decelerates.</p>
-<div class="highlight"><pre><span></span><code>  <span class="c1"># b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately</span>
-  <span class="n">target_velocity</span> <span class="o">=</span> <span class="n">current_velocity</span> <span class="o">-</span> <span class="nb">abs</span><span class="p">(</span><span class="n">target_acceleration_on_section</span><span class="p">)</span> <span class="o">/</span> <span class="n">acc_kp</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">+</span> <span class="n">sine_curve</span><span class="p">)</span>
-</code></pre></div>
+<p><code>Python3
+   # b is constant variable and sine_curve is derived from appropriate amplitude and period, defined separately
+   target_velocity = current_velocity - abs(target_acceleration_on_section) / acc_kp * (b + sine_curve)</code></p>
 <p>After decelerating to a sufficiently low speed, return to step i.</p>
 </li>
 </ol>
@@ -6144,7 +6144,7 @@ This section is generated to achieve nearly straight movement within the outer c
       
         <script src="../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       
