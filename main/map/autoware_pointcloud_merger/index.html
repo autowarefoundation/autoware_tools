@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4889,18 +4889,18 @@
 <li>When loading <code>XYZ</code>-only data, the <code>intensity</code> field is assigned 0.</li>
 </ul>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>&lt;PATH_TO_pilot-auto.*&gt;<span class="w"> </span><span class="c1"># OR &lt;PATH_TO_autoware&gt;</span>
-<span class="nb">cd</span><span class="w"> </span>src/
-git<span class="w"> </span>clone<span class="w"> </span>git@github.com:autowarefoundation/autoware_tools.git
-<span class="nb">cd</span><span class="w"> </span>..
-colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>--catkin-skip-building-tests<span class="w"> </span>--symlink-install<span class="w"> </span>--packages-up-to<span class="w"> </span>autoware_pointcloud_merger
-</code></pre></div>
+<p><code>bash
+cd &lt;PATH_TO_pilot-auto.*&gt; # OR &lt;PATH_TO_autoware&gt;
+cd src/
+git clone git@github.com:autowarefoundation/autoware_tools.git
+cd ..
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-tests --symlink-install --packages-up-to autoware_pointcloud_merger</code></p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
 <ul>
 <li>
 <p>Merger all PCD files from the input directory into a single output PCD</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_pointcloud_merger<span class="w"> </span>pointcloud_merger.launch.xml<span class="w"> </span>input_pcd_dir:<span class="o">=</span>&lt;INPUT_DIR&gt;<span class="w"> </span>output_pcd:<span class="o">=</span>&lt;OUTPUT_PCD&gt;
-</code></pre></div>
+<p><code>bash
+ros2 launch autoware_pointcloud_merger pointcloud_merger.launch.xml input_pcd_dir:=&lt;INPUT_DIR&gt; output_pcd:=&lt;OUTPUT_PCD&gt;</code></p>
 <table>
 <thead>
 <tr>
@@ -5072,7 +5072,7 @@ colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span cla
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

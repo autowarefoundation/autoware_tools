@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4916,96 +4916,95 @@
 <h3 id="tf2pose">tf2pose<a class="headerlink" href="#tf2pose" title="Permanent link">#</a></h3>
 <p>This tool converts any <code>tf</code> to <code>pose</code> topic.<br>
 With this tool, for example, you can plot <code>x</code> values of <code>tf</code> in <code>rqt_multiplot</code>.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>tier4_debug_tools<span class="w"> </span>tf2pose<span class="w"> </span><span class="o">{</span>tf_from<span class="o">}</span><span class="w"> </span><span class="o">{</span>tf_to<span class="o">}</span><span class="w"> </span><span class="o">{</span>hz<span class="o">}</span>
-</code></pre></div>
+<p><code>sh
+ros2 run tier4_debug_tools tf2pose {tf_from} {tf_to} {hz}</code></p>
 <p>Example:</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>tier4_debug_tools<span class="w"> </span>tf2pose<span class="w"> </span>base_link<span class="w"> </span>ndt_base_link<span class="w"> </span><span class="m">100</span>
-
-$<span class="w"> </span>ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/tf2pose/pose<span class="w"> </span>-n1
+<p>```sh
+$ ros2 run tier4_debug_tools tf2pose base_link ndt_base_link 100</p>
+<p>$ ros2 topic echo /tf2pose/pose -n1
 header:
-<span class="w">  </span>seq:<span class="w"> </span><span class="m">13</span>
-<span class="w">  </span>stamp:
-<span class="w">    </span>secs:<span class="w"> </span><span class="m">1605168366</span>
-<span class="w">    </span>nsecs:<span class="w"> </span><span class="m">549174070</span>
-<span class="w">  </span>frame_id:<span class="w"> </span><span class="s2">"base_link"</span>
+  seq: 13
+  stamp:
+    secs: 1605168366
+    nsecs: 549174070
+  frame_id: "base_link"
 pose:
-<span class="w">  </span>position:
-<span class="w">    </span>x:<span class="w"> </span><span class="m">0</span>.0387684271191
-<span class="w">    </span>y:<span class="w"> </span>-0.00320360406477
-<span class="w">    </span>z:<span class="w"> </span><span class="m">0</span>.000276674520819
-<span class="w">  </span>orientation:
-<span class="w">    </span>x:<span class="w"> </span><span class="m">0</span>.000335221893885
-<span class="w">    </span>y:<span class="w"> </span><span class="m">0</span>.000122020672186
-<span class="w">    </span>z:<span class="w"> </span>-0.00539673212896
-<span class="w">    </span>w:<span class="w"> </span><span class="m">0</span>.999985368502
----
-</code></pre></div>
+  position:
+    x: 0.0387684271191
+    y: -0.00320360406477
+    z: 0.000276674520819
+  orientation:
+    x: 0.000335221893885
+    y: 0.000122020672186
+    z: -0.00539673212896
+    w: 0.999985368502</p>
+<hr>
+<p>```</p>
 <h3 id="pose2tf">pose2tf<a class="headerlink" href="#pose2tf" title="Permanent link">#</a></h3>
 <p>This tool converts any <code>pose</code> topic to <code>tf</code>.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>tier4_debug_tools<span class="w"> </span>pose2tf<span class="w"> </span><span class="o">{</span>pose_topic_name<span class="o">}</span><span class="w"> </span><span class="o">{</span>tf_name<span class="o">}</span>
-</code></pre></div>
+<p><code>sh
+ros2 run tier4_debug_tools pose2tf {pose_topic_name} {tf_name}</code></p>
 <p>Example:</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>tier4_debug_tools<span class="w"> </span>pose2tf<span class="w"> </span>/localization/pose_estimator/pose<span class="w"> </span>ndt_pose
-
-$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>tf<span class="w"> </span>tf_echo<span class="w"> </span>ndt_pose<span class="w"> </span>ndt_base_link<span class="w"> </span><span class="m">100</span>
-At<span class="w"> </span><span class="nb">time</span><span class="w"> </span><span class="m">1605168365</span>.449
--<span class="w"> </span>Translation:<span class="w"> </span><span class="o">[</span><span class="m">0</span>.000,<span class="w"> </span><span class="m">0</span>.000,<span class="w"> </span><span class="m">0</span>.000<span class="o">]</span>
--<span class="w"> </span>Rotation:<span class="w"> </span><span class="k">in</span><span class="w"> </span>Quaternion<span class="w"> </span><span class="o">[</span><span class="m">0</span>.000,<span class="w"> </span><span class="m">0</span>.000,<span class="w"> </span><span class="m">0</span>.000,<span class="w"> </span><span class="m">1</span>.000<span class="o">]</span>
-<span class="w">            </span><span class="k">in</span><span class="w"> </span>RPY<span class="w"> </span><span class="o">(</span>radian<span class="o">)</span><span class="w"> </span><span class="o">[</span><span class="m">0</span>.000,<span class="w"> </span>-0.000,<span class="w"> </span><span class="m">0</span>.000<span class="o">]</span>
-<span class="w">            </span><span class="k">in</span><span class="w"> </span>RPY<span class="w"> </span><span class="o">(</span>degree<span class="o">)</span><span class="w"> </span><span class="o">[</span><span class="m">0</span>.000,<span class="w"> </span>-0.000,<span class="w"> </span><span class="m">0</span>.000<span class="o">]</span>
-</code></pre></div>
+<p>```sh
+$ ros2 run tier4_debug_tools pose2tf /localization/pose_estimator/pose ndt_pose</p>
+<p>$ ros2 run tf tf_echo ndt_pose ndt_base_link 100
+At time 1605168365.449
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.000, 1.000]
+            in RPY (radian) [0.000, -0.000, 0.000]
+            in RPY (degree) [0.000, -0.000, 0.000]
+```</p>
 <h3 id="stop_reason2pose">stop_reason2pose<a class="headerlink" href="#stop_reason2pose" title="Permanent link">#</a></h3>
 <p>This tool extracts <code>pose</code> from <code>stop_reasons</code>.<br>
 Topics without numbers such as <code>/stop_reason2pose/pose/detection_area</code> are the nearest stop_reasons, and topics with numbers are individual stop_reasons that are roughly matched with previous ones.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>tier4_debug_tools<span class="w"> </span>stop_reason2pose<span class="w"> </span><span class="o">{</span>stop_reason_topic_name<span class="o">}</span>
-</code></pre></div>
+<p><code>sh
+ros2 run tier4_debug_tools stop_reason2pose {stop_reason_topic_name}</code></p>
 <p>Example:</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>tier4_debug_tools<span class="w"> </span>stop_reason2pose<span class="w"> </span>/planning/scenario_planning/status/stop_reasons
-
-$<span class="w"> </span>ros2<span class="w"> </span>topic<span class="w"> </span>list<span class="w"> </span><span class="p">|</span><span class="w"> </span>ag<span class="w"> </span>stop_reason2pose
+<p>```sh
+$ ros2 run tier4_debug_tools stop_reason2pose /planning/scenario_planning/status/stop_reasons</p>
+<p>$ ros2 topic list | ag stop_reason2pose
 /stop_reason2pose/pose/detection_area
 /stop_reason2pose/pose/detection_area_1
 /stop_reason2pose/pose/obstacle_stop
-/stop_reason2pose/pose/obstacle_stop_1
-
-$<span class="w"> </span>ros2<span class="w"> </span>topic<span class="w"> </span><span class="nb">echo</span><span class="w"> </span>/stop_reason2pose/pose/detection_area<span class="w"> </span>-n1
+/stop_reason2pose/pose/obstacle_stop_1</p>
+<p>$ ros2 topic echo /stop_reason2pose/pose/detection_area -n1
 header:
-<span class="w">  </span>seq:<span class="w"> </span><span class="m">1</span>
-<span class="w">  </span>stamp:
-<span class="w">    </span>secs:<span class="w"> </span><span class="m">1605168355</span>
-<span class="w">    </span>nsecs:<span class="w">    </span><span class="m">821713</span>
-<span class="w">  </span>frame_id:<span class="w"> </span><span class="s2">"map"</span>
+  seq: 1
+  stamp:
+    secs: 1605168355
+    nsecs:    821713
+  frame_id: "map"
 pose:
-<span class="w">  </span>position:
-<span class="w">    </span>x:<span class="w"> </span><span class="m">60608</span>.8433457
-<span class="w">    </span>y:<span class="w"> </span><span class="m">43886</span>.2410876
-<span class="w">    </span>z:<span class="w"> </span><span class="m">44</span>.9078212441
-<span class="w">  </span>orientation:
-<span class="w">    </span>x:<span class="w"> </span><span class="m">0</span>.0
-<span class="w">    </span>y:<span class="w"> </span><span class="m">0</span>.0
-<span class="w">    </span>z:<span class="w"> </span>-0.190261378408
-<span class="w">    </span>w:<span class="w"> </span><span class="m">0</span>.981733470901
----
-</code></pre></div>
+  position:
+    x: 60608.8433457
+    y: 43886.2410876
+    z: 44.9078212441
+  orientation:
+    x: 0.0
+    y: 0.0
+    z: -0.190261378408
+    w: 0.981733470901</p>
+<hr>
+<p>```</p>
 <h3 id="stop_reason2tf">stop_reason2tf<a class="headerlink" href="#stop_reason2tf" title="Permanent link">#</a></h3>
 <p>This is an all-in-one script that uses <code>tf2pose</code>, <code>pose2tf</code>, and <code>stop_reason2pose</code>.<br>
 With this tool, you can view the relative position from base_link to the nearest stop_reason.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>tier4_debug_tools<span class="w"> </span>stop_reason2tf<span class="w"> </span><span class="o">{</span>stop_reason_name<span class="o">}</span>
-</code></pre></div>
+<p><code>sh
+ros2 run tier4_debug_tools stop_reason2tf {stop_reason_name}</code></p>
 <p>Example:</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ros2<span class="w"> </span>run<span class="w"> </span>tier4_debug_tools<span class="w"> </span>stop_reason2tf<span class="w"> </span>obstacle_stop
-At<span class="w"> </span><span class="nb">time</span><span class="w"> </span><span class="m">1605168359</span>.501
--<span class="w"> </span>Translation:<span class="w"> </span><span class="o">[</span><span class="m">0</span>.291,<span class="w"> </span>-0.095,<span class="w"> </span><span class="m">0</span>.266<span class="o">]</span>
--<span class="w"> </span>Rotation:<span class="w"> </span><span class="k">in</span><span class="w"> </span>Quaternion<span class="w"> </span><span class="o">[</span><span class="m">0</span>.007,<span class="w"> </span><span class="m">0</span>.011,<span class="w"> </span>-0.005,<span class="w"> </span><span class="m">1</span>.000<span class="o">]</span>
-<span class="w">            </span><span class="k">in</span><span class="w"> </span>RPY<span class="w"> </span><span class="o">(</span>radian<span class="o">)</span><span class="w"> </span><span class="o">[</span><span class="m">0</span>.014,<span class="w"> </span><span class="m">0</span>.023,<span class="w"> </span>-0.010<span class="o">]</span>
-<span class="w">            </span><span class="k">in</span><span class="w"> </span>RPY<span class="w"> </span><span class="o">(</span>degree<span class="o">)</span><span class="w"> </span><span class="o">[</span><span class="m">0</span>.825,<span class="w"> </span><span class="m">1</span>.305,<span class="w"> </span>-0.573<span class="o">]</span>
-</code></pre></div>
+<p><code>sh
+$ ros2 run tier4_debug_tools stop_reason2tf obstacle_stop
+At time 1605168359.501
+- Translation: [0.291, -0.095, 0.266]
+- Rotation: in Quaternion [0.007, 0.011, -0.005, 1.000]
+            in RPY (radian) [0.014, 0.023, -0.010]
+            in RPY (degree) [0.825, 1.305, -0.573]</code></p>
 <h3 id="lateral_error_publisher">lateral_error_publisher<a class="headerlink" href="#lateral_error_publisher" title="Permanent link">#</a></h3>
 <p>This node calculate the control error and localization error in the trajectory normal direction as shown in the figure below.</p>
 <p><img alt="lateral_error_publisher_overview" src="media/lateral_error_publisher.svg"></p>
 <p>Set the reference trajectory, vehicle pose and ground truth pose in the launch file.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>tier4_debug_tools<span class="w"> </span>lateral_error_publisher.launch.xml
-</code></pre></div></div>
+<p><code>sh
+ros2 launch tier4_debug_tools lateral_error_publisher.launch.xml</code></p></div>
 
 
 
@@ -5112,7 +5111,7 @@ At<span class="w"> </span><span class="nb">time</span><span class="w"> </span><s
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

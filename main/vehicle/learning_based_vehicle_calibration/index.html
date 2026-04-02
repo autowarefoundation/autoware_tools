@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4820,100 +4820,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#2-longitudinal-dynamics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Longitudinal Dynamics
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Overview
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#input-data-software" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Input Data Software
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#1-longitudinal-dynamics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Longitudinal Dynamics
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="1. Longitudinal Dynamics">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#record-data-software-case" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Record Data Software Case
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#data-preprocessing" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Data Preprocessing
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#neural-network-training-and-visualization" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Neural Network Training and Visualization
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#evaluation-and-results" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Evaluation and Results
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -4943,26 +4849,27 @@
 <h2 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">#</a></h2>
 <h3 id="1-installation">1. Installation<a class="headerlink" href="#1-installation" title="Permanent link">#</a></h3>
 <p>Navigate to <code>autoware/src/tools/vehicle/learning_based_vehicle_calibration</code> and install the required libraries:</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># It is recommended to do this in a miniconda environment</span>
-<span class="c1"># There are 2 stages: data collection and calibration.</span>
-<span class="c1"># These requirements are only needed for the calibration step.</span>
-pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-</code></pre></div>
+<p>```bash</p>
+<h1 id="it-is-recommended-to-do-this-in-a-miniconda-environment">It is recommended to do this in a miniconda environment<a class="headerlink" href="#it-is-recommended-to-do-this-in-a-miniconda-environment" title="Permanent link">#</a></h1>
+<h1 id="there-are-2-stages-data-collection-and-calibration">There are 2 stages: data collection and calibration.<a class="headerlink" href="#there-are-2-stages-data-collection-and-calibration" title="Permanent link">#</a></h1>
+<h1 id="these-requirements-are-only-needed-for-the-calibration-step">These requirements are only needed for the calibration step.<a class="headerlink" href="#these-requirements-are-only-needed-for-the-calibration-step" title="Permanent link">#</a></h1>
+<p>pip install -r requirements.txt
+```</p>
 <h3 id="2-longitudinal-dynamics">2. Longitudinal Dynamics<a class="headerlink" href="#2-longitudinal-dynamics" title="Permanent link">#</a></h3>
 <p>To start collecting data, launch in your workspace:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>learning_based_vehicle_calibration<span class="w"> </span>calibration_launch.py
-</code></pre></div>
+<p><code>bash
+ros2 launch learning_based_vehicle_calibration calibration_launch.py</code></p>
 <p>Inside this launch file there is a variable called 'Recovery_Mode', set to False by default. If while you were collecting data the software stopped for some reasons or something happened causing the interruption of your collection process, you can collect data recovering from previous breaking points by setting the variable to True. This way it will update the csv tables you have already started to collect without the need to start from scratch.</p>
 <p>You can visualize the collection process from the terminal.</p>
 <p><img alt="data_collection1" src="imgs/data_collection1.png"></p>
 <p>Otherwise, we built some custom messages for representing the progress that are being published on the following topics:</p>
-<div class="highlight"><pre><span></span><code>/scenarios_collection_longitudinal_throttling
-
-/scenarios_collection_longitudinal_braking
-</code></pre></div>
+<p>```bash
+/scenarios_collection_longitudinal_throttling</p>
+<p>/scenarios_collection_longitudinal_braking
+```</p>
 <p>Once you have collected the data, in order to train and build your black box models, for both throttling and braking scenarios, launch:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>learning_based_vehicle_calibration<span class="w"> </span>neural_network_launch.py
-</code></pre></div>
+<p><code>bash
+ros2 launch learning_based_vehicle_calibration neural_network_launch.py</code></p>
 <p>You will obtain the acceleration and braking calibration maps and visualize how the neural network fits the data:</p>
 <p><img alt="NN_throttle" src="imgs/NN_throttle.png"></p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h2>
@@ -4974,25 +4881,26 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 <h2 id="input-data-software">Input Data Software<a class="headerlink" href="#input-data-software" title="Permanent link">#</a></h2>
 <p>Configure the Autoware to publish the necessary topics. Then launch Autoware.</p>
 <p>It is recommended to record the topics we need to collect in order to train our model. The data we need to record are the pitch angle, the linear acceleration, the velocity, the braking and throttling values and the steering angle (make sure to modify the name of the topics according to your vehicle):</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>bag<span class="w"> </span>record<span class="w"> </span>/sensing/gnss/chc/pitch<span class="w"> </span>/vehicle/status/actuation_status<span class="w"> </span>/vehicle/status/steering_status<span class="w"> </span>/vehicle/status/velocity_status<span class="w"> </span>/vehicle/status/imu
-</code></pre></div>
+<p><code>bash
+ros2 bag record /sensing/gnss/chc/pitch /vehicle/status/actuation_status /vehicle/status/steering_status /vehicle/status/velocity_status /vehicle/status/imu</code></p>
 <ul>
 <li><strong>data_field: rosbag should contains brake_paddle, throttle_paddle, velocity, steering, imu and pitch</strong></li>
 </ul>
 <p>Data's values and units of measure are as follows:</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># brake paddle value (frome 0 to 1, float)</span>
-/vehicle/status/actuation_status<span class="w"> </span>-&gt;<span class="w"> </span>status.brake_status
-<span class="c1"># throttle paddle value (frome 0 to 1, float)</span>
-/vehicle/status/actuation_status<span class="w"> </span>-&gt;<span class="w"> </span>status.accel_status
-<span class="c1"># velocity value (unit is m/s, float)</span>
-/vehicle/status/velocity_status<span class="w"> </span>-&gt;<span class="w"> </span>longitudinal_velocity
-<span class="c1"># steering value (from 0 to 0.5 [radians], float)</span>
-/vehicle/status/steering_status<span class="w"> </span>-&gt;<span class="w"> </span>steering_tire_angle
-<span class="c1"># imu data(unit is rad/s or m/s)</span>
-/vehicle/status/imu<span class="w"> </span>-&gt;<span class="w"> </span>linear_acceleration.x
-<span class="c1"># pitch angle (unit is degrees)</span>
-/sensing/gnss/chc/pitch<span class="w"> </span>-&gt;<span class="w"> </span>data
-</code></pre></div>
+<p>```bash</p>
+<h1 id="brake-paddle-value-frome-0-to-1-float">brake paddle value (frome 0 to 1, float)<a class="headerlink" href="#brake-paddle-value-frome-0-to-1-float" title="Permanent link">#</a></h1>
+<p>/vehicle/status/actuation_status -&gt; status.brake_status</p>
+<h1 id="throttle-paddle-value-frome-0-to-1-float">throttle paddle value (frome 0 to 1, float)<a class="headerlink" href="#throttle-paddle-value-frome-0-to-1-float" title="Permanent link">#</a></h1>
+<p>/vehicle/status/actuation_status -&gt; status.accel_status</p>
+<h1 id="velocity-value-unit-is-ms-float">velocity value (unit is m/s, float)<a class="headerlink" href="#velocity-value-unit-is-ms-float" title="Permanent link">#</a></h1>
+<p>/vehicle/status/velocity_status -&gt; longitudinal_velocity</p>
+<h1 id="steering-value-from-0-to-05-radians-float">steering value (from 0 to 0.5 [radians], float)<a class="headerlink" href="#steering-value-from-0-to-05-radians-float" title="Permanent link">#</a></h1>
+<p>/vehicle/status/steering_status -&gt; steering_tire_angle</p>
+<h1 id="imu-dataunit-is-rads-or-ms">imu data(unit is rad/s or m/s)<a class="headerlink" href="#imu-dataunit-is-rads-or-ms" title="Permanent link">#</a></h1>
+<p>/vehicle/status/imu -&gt; linear_acceleration.x</p>
+<h1 id="pitch-angle-unit-is-degrees">pitch angle (unit is degrees)<a class="headerlink" href="#pitch-angle-unit-is-degrees" title="Permanent link">#</a></h1>
+<p>/sensing/gnss/chc/pitch -&gt; data
+```</p>
 <p>When you run the calibration, data_monitor script is launched automatically.</p>
 <p>Thanks to data_monitor script, we can make sure that we are receiving all the topics correctly, without any delay and any problem.</p>
 <p>You can have a look at the following examples:</p>
@@ -5054,11 +4962,10 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 <p>Since raw data collected by human are noisy and non-uniform, preprocessing is an essential step to ensure high quality data.</p>
 <p>First, we applied a mean filter to smooth data with a window size of 20 (which can be tuned).</p>
 <p>After having collected the data and having saved them in csv format, you can visualize them by launching the following scrips:</p>
-<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>src/tools/vehicle/learning_based_vehicle_calibration/scripts/throttle_data_visualization.py
-
-
-python3<span class="w"> </span>src/tools/vehicle/learning_based_vehicle_calibration/scripts/brake_data_visualization.py
-</code></pre></div>
+<p>```bash
+python3 src/tools/vehicle/learning_based_vehicle_calibration/scripts/throttle_data_visualization.py</p>
+<p>python3 src/tools/vehicle/learning_based_vehicle_calibration/scripts/brake_data_visualization.py
+```</p>
 <p>This way, we can have an idea about the distribution of our data.</p>
 <p><img alt="throttle_data" src="imgs/throttle_data.png"></p>
 <p><img alt="brake_data" src="imgs/brake_data.png"></p>
@@ -5072,8 +4979,8 @@ python3<span class="w"> </span>src/tools/vehicle/learning_based_vehicle_calibrat
 <p>Now we can split the dataset into training set (80%) and testing set (20%) and we are ready for the training stage.</p>
 <p>We chose the ReLu function as the activation function, mean square error as the cost function and Adam optimizer, all in Pytorch.</p>
 <p>To start the training of the throttling and braking models and visualize their shapes and metrics, we can launch:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>learning_based_vehicle_calibration<span class="w"> </span>neural_network_launch.py
-</code></pre></div>
+<p><code>bash
+ros2 launch learning_based_vehicle_calibration neural_network_launch.py</code></p>
 <p><img alt="NN_throttle" src="imgs/NN_throttle.png"></p>
 <p><img alt="NN_brake" src="imgs/NN_brake.png"></p>
 <p>When you launch this script, the training stage begins and when it is done, the software generates the acceleration and braking offline tables: <code>accel_map.csv</code> and <code>brake_map.csv</code> in your working directory.</p>
@@ -5194,7 +5101,7 @@ python3<span class="w"> </span>src/tools/vehicle/learning_based_vehicle_calibrat
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

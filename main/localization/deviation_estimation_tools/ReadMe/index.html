@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -5283,8 +5283,8 @@
 <li>the bias of velocity and yaw rate</li>
 </ul>
 <p>Launch the node with the following command. Make sure you set the correct parameters (see Sec. 2).</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>deviation_estimator<span class="w"> </span>deviation_estimator.launch.xml
-</code></pre></div>
+<p><code>sh
+ros2 launch deviation_estimator deviation_estimator.launch.xml</code></p>
 <p>Then, you need to run either ROS bag or <code>autoware_launch</code> to provide <code>pose</code> and <code>twist</code> to <code>deviation_estimator</code>.</p>
 <p>If you are using rosbag, it should contain the following topics:</p>
 <ul>
@@ -5296,8 +5296,8 @@
 </ul>
 <p>NOTE that the pose and twist must be estimated with default parameters (see <code>known issues</code> section for detail).</p>
 <p>Play the rosbag in a different terminal:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>bag<span class="w"> </span>play<span class="w"> </span>YOUR_BAG<span class="w"> </span><span class="c1"># You can also play in a faster rate, e.g. -r 5</span>
-</code></pre></div>
+<p><code>sh
+ros2 bag play YOUR_BAG # You can also play in a faster rate, e.g. -r 5</code></p>
 <p>You can check the results in the following three output files:</p>
 <ol>
 <li>IMU parameters (default: <code>$HOME/imu_corrector.param.yaml</code>)</li>
@@ -5307,67 +5307,72 @@
 <details><summary>sample input (rosbag)</summary>
 <p>
 
-</p><div class="highlight"><pre><span></span><code>Files:<span class="w">             </span>localized_sensors_0.db3
-Bag<span class="w"> </span>size:<span class="w">          </span><span class="m">9</span>.6<span class="w"> </span>MiB
-Storage<span class="w"> </span>id:<span class="w">        </span>sqlite3
-Duration:<span class="w">          </span><span class="m">76</span>.539s
-Start:<span class="w">             </span>Jul<span class="w">  </span><span class="m">8</span><span class="w"> </span><span class="m">2022</span><span class="w"> </span><span class="m">11</span>:21:41.220<span class="w"> </span><span class="o">(</span><span class="m">1657246901</span>.220<span class="o">)</span>
-End:<span class="w">               </span>Jul<span class="w">  </span><span class="m">8</span><span class="w"> </span><span class="m">2022</span><span class="w"> </span><span class="m">11</span>:22:57.759<span class="w"> </span><span class="o">(</span><span class="m">1657246977</span>.759<span class="o">)</span>
-Messages:<span class="w">          </span><span class="m">32855</span>
-Topic<span class="w"> </span>information:<span class="w"> </span>Topic:<span class="w"> </span>/localization/pose_estimator/pose_with_covariance<span class="w"> </span><span class="p">|</span><span class="w"> </span>Type:<span class="w"> </span>geometry_msgs/msg/PoseWithCovarianceStamped<span class="w"> </span><span class="p">|</span><span class="w"> </span>Count:<span class="w"> </span><span class="m">2162</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>Serialization<span class="w"> </span>Format:<span class="w"> </span>cdr
-<span class="w">                   </span>Topic:<span class="w"> </span>/clock<span class="w"> </span><span class="p">|</span><span class="w"> </span>Type:<span class="w"> </span>rosgraph_msgs/msg/Clock<span class="w"> </span><span class="p">|</span><span class="w"> </span>Count:<span class="w"> </span><span class="m">57309</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>Serialization<span class="w"> </span>Format:<span class="w"> </span>cdr
-<span class="w">                   </span>Topic:<span class="w"> </span>/tf_static<span class="w"> </span><span class="p">|</span><span class="w"> </span>Type:<span class="w"> </span>tf2_msgs/msg/TFMessage<span class="w"> </span><span class="p">|</span><span class="w"> </span>Count:<span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>Serialization<span class="w"> </span>Format:<span class="w"> </span>cdr
-<span class="w">                   </span>Topic:<span class="w"> </span>/sensing/imu/tamagawa/imu_raw<span class="w"> </span><span class="p">|</span><span class="w"> </span>Type:<span class="w"> </span>sensor_msgs/msg/Imu<span class="w"> </span><span class="p">|</span><span class="w"> </span>Count:<span class="w"> </span><span class="m">8076</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>Serialization<span class="w"> </span>Format:<span class="w"> </span>cdr
-<span class="w">                   </span>Topic:<span class="w"> </span>/vehicle/status/velocity_status<span class="w"> </span><span class="p">|</span><span class="w"> </span>Type:<span class="w"> </span>autoware_vehicle_msgs/msg/VelocityReport<span class="w"> </span><span class="p">|</span><span class="w"> </span>Count:<span class="w"> </span><span class="m">8275</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>Serialization<span class="w"> </span>Format:<span class="w"> </span>cdr
-</code></pre></div>
+```sh
+Files:             localized_sensors_0.db3
+Bag size:          9.6 MiB
+Storage id:        sqlite3
+Duration:          76.539s
+Start:             Jul  8 2022 11:21:41.220 (1657246901.220)
+End:               Jul  8 2022 11:22:57.759 (1657246977.759)
+Messages:          32855
+Topic information: Topic: /localization/pose_estimator/pose_with_covariance | Type: geometry_msgs/msg/PoseWithCovarianceStamped | Count: 2162 | Serialization Format: cdr
+                   Topic: /clock | Type: rosgraph_msgs/msg/Clock | Count: 57309 | Serialization Format: cdr
+                   Topic: /tf_static | Type: tf2_msgs/msg/TFMessage | Count: 2 | Serialization Format: cdr
+                   Topic: /sensing/imu/tamagawa/imu_raw | Type: sensor_msgs/msg/Imu | Count: 8076 | Serialization Format: cdr
+                   Topic: /vehicle/status/velocity_status | Type: autoware_vehicle_msgs/msg/VelocityReport | Count: 8275 | Serialization Format: cdr
 
+```
 
+</p>
 </details>
 
 <details><summary>sample output (output.txt)</summary>
 <p>
 
-</p><div class="highlight"><pre><span></span><code><span class="c1"># Validation results</span>
-<span class="c1"># value: [min, max]</span>
-<span class="o">[</span>OK<span class="o">]</span><span class="w"> </span>coef_vx:<span class="w"> </span><span class="o">[</span><span class="m">0</span>.99538,<span class="w"> </span><span class="m">0</span>.99593<span class="o">]</span>
-<span class="o">[</span>OK<span class="o">]</span><span class="w"> </span>stddev_vx:<span class="w"> </span><span class="o">[</span><span class="m">0</span>.17192,<span class="w"> </span><span class="m">0</span>.19161<span class="o">]</span>
-<span class="o">[</span>OK<span class="o">]</span><span class="w"> </span>angular_velocity_offset_x:<span class="w"> </span><span class="o">[</span>-0.00742,<span class="w"> </span>-0.00727<span class="o">]</span>
-<span class="o">[</span>OK<span class="o">]</span><span class="w"> </span>angular_velocity_offset_y:<span class="w"> </span><span class="o">[</span>-0.00119,<span class="w"> </span>-0.00115<span class="o">]</span>
-<span class="o">[</span>OK<span class="o">]</span><span class="w"> </span>angular_velocity_offset_z:<span class="w"> </span><span class="o">[</span><span class="m">0</span>.00635,<span class="w"> </span><span class="m">0</span>.00641<span class="o">]</span>
-<span class="o">[</span>OK<span class="o">]</span><span class="w"> </span>angular_velocity_stddev_xx:<span class="w"> </span><span class="o">[</span><span class="m">0</span>.04151,<span class="w"> </span><span class="m">0</span>.04258<span class="o">]</span>
-<span class="o">[</span>OK<span class="o">]</span><span class="w"> </span>angular_velocity_stddev_yy:<span class="w"> </span><span class="o">[</span><span class="m">0</span>.04151,<span class="w"> </span><span class="m">0</span>.04258<span class="o">]</span>
-<span class="o">[</span>OK<span class="o">]</span><span class="w"> </span>angular_velocity_stddev_zz:<span class="w"> </span><span class="o">[</span><span class="m">0</span>.04151,<span class="w"> </span><span class="m">0</span>.04258<span class="o">]</span>
-</code></pre></div>
+```sh
+# Validation results
+# value: [min, max]
+[OK] coef_vx: [0.99538, 0.99593]
+[OK] stddev_vx: [0.17192, 0.19161]
+[OK] angular_velocity_offset_x: [-0.00742, -0.00727]
+[OK] angular_velocity_offset_y: [-0.00119, -0.00115]
+[OK] angular_velocity_offset_z: [0.00635, 0.00641]
+[OK] angular_velocity_stddev_xx: [0.04151, 0.04258]
+[OK] angular_velocity_stddev_yy: [0.04151, 0.04258]
+[OK] angular_velocity_stddev_zz: [0.04151, 0.04258]
+```
 
-
+</p>
 </details>
 
 <details><summary>sample output (imu_corrector.param.yaml)</summary>
 
-<div class="highlight"><pre><span></span><code><span class="c1"># Estimated by deviation_estimator</span>
+```sh
+# Estimated by deviation_estimator
 /**:
-<span class="w">  </span>ros__parameters:
-<span class="w">    </span>angular_velocity_stddev_xx:<span class="w"> </span><span class="m">0</span>.01798
-<span class="w">    </span>angular_velocity_stddev_yy:<span class="w"> </span><span class="m">0</span>.01798
-<span class="w">    </span>angular_velocity_stddev_zz:<span class="w"> </span><span class="m">0</span>.01798
-<span class="w">    </span>angular_velocity_offset_x:<span class="w"> </span>-0.00952
-<span class="w">    </span>angular_velocity_offset_y:<span class="w"> </span>-0.00095
-<span class="w">    </span>angular_velocity_offset_z:<span class="w"> </span><span class="m">0</span>.00607
-</code></pre></div>
+  ros__parameters:
+    angular_velocity_stddev_xx: 0.01798
+    angular_velocity_stddev_yy: 0.01798
+    angular_velocity_stddev_zz: 0.01798
+    angular_velocity_offset_x: -0.00952
+    angular_velocity_offset_y: -0.00095
+    angular_velocity_offset_z: 0.00607
+```
 
 <p>
 </p></details>
 
 <details><summary>sample output (vehicle_velocity_converter.param.yaml)</summary>
 
-<div class="highlight"><pre><span></span><code><span class="c1"># Estimated by deviation_estimator</span>
+```sh
+# Estimated by deviation_estimator
 /**:
-<span class="w">  </span>ros__parameters:
-<span class="w">    </span>speed_scale_factor:<span class="w"> </span><span class="m">0</span>.99507
-<span class="w">    </span>velocity_stddev_xx:<span class="w"> </span><span class="m">0</span>.16708
-<span class="w">    </span>velocity_stddev_xx:<span class="w"> </span><span class="m">0</span>.1<span class="w"> </span><span class="c1"># Default value</span>
-<span class="w">    </span>frame_id:<span class="w"> </span>base_link<span class="w"> </span><span class="c1"># Default value</span>
-</code></pre></div>
+  ros__parameters:
+    speed_scale_factor: 0.99507
+    velocity_stddev_xx: 0.16708
+    velocity_stddev_xx: 0.1 # Default value
+    frame_id: base_link # Default value
+```
 
 <p>
 </p></details>
@@ -5376,25 +5381,26 @@ Topic<span class="w"> </span>information:<span class="w"> </span>Topic:<span cla
 
 If you build normally, a binary will be generated under `install/deviation_estimator/lib/`.
 
-<div class="highlight"><pre><span></span><code>colcon<span class="w"> </span>build<span class="w"> </span>--symlink-install<span class="w"> </span>--cmake-args<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>--packages-up-to<span class="w"> </span>deviation_estimator
-<span class="nb">source</span><span class="w"> </span>~/autoware/install/setup.bash
-~/autoware/install/deviation_estimator/lib/deviation_estimator/deviation_estimator_unit_tool<span class="w"> </span>&lt;path_to_rosbag&gt;
-</code></pre></div>
+```sh
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-up-to deviation_estimator
+source ~/autoware/install/setup.bash
+~/autoware/install/deviation_estimator/lib/deviation_estimator/deviation_estimator_unit_tool <path_to_rosbag>
+```
 
 <p>
-</p></details>
+</p></path_to_rosbag></details>
 
 <h3 id="b-evaluation-step">B. Evaluation step<a class="headerlink" href="#b-evaluation-step" title="Permanent link">#</a></h3>
 <p>Here, you can evaluate the estimated standard deviation and bias using a package <code>deviation_evaluator</code>.
 Execute the following command:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>deviation_evaluator<span class="w"> </span>deviation_evaluator.launch.xml<span class="w"> </span>map_path:<span class="o">=</span>MAP_PATH<span class="w"> </span>rviz:<span class="o">=</span><span class="nb">true</span><span class="w"> </span>in_imu:<span class="o">=</span>YOUR_IMU_TOPIC_NAME<span class="w"> </span>in_wheel_odometry:<span class="o">=</span>YOUR_VELOCITY_TOPIC_NAME
-ros2<span class="w"> </span>bag<span class="w"> </span>play<span class="w"> </span>YOUR_BAG
-</code></pre></div>
+<p><code>sh
+ros2 launch deviation_evaluator deviation_evaluator.launch.xml map_path:=MAP_PATH rviz:=true in_imu:=YOUR_IMU_TOPIC_NAME in_wheel_odometry:=YOUR_VELOCITY_TOPIC_NAME
+ros2 bag play YOUR_BAG</code></p>
 <h3 id="c-visualization-step">C. Visualization step<a class="headerlink" href="#c-visualization-step" title="Permanent link">#</a></h3>
 <p>After the evaluation, run the following command to generate the final results in <code>$HOME/deviation_evaluator_sample</code>.</p>
-<div class="highlight"><pre><span></span><code>pip3<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-ros2<span class="w"> </span>launch<span class="w"> </span>deviation_evaluator<span class="w"> </span>deviation_evaluation_visualizer.launch.xml
-</code></pre></div>
+<p><code>sh
+pip3 install -r requirements.txt
+ros2 launch deviation_evaluator deviation_evaluation_visualizer.launch.xml</code></p>
 <p>Done!</p>
 <h2 id="2-description-of-deviation-estimator">2. Description of Deviation Estimator<a class="headerlink" href="#2-description-of-deviation-estimator" title="Permanent link">#</a></h2>
 <h3 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h3>
@@ -5410,9 +5416,9 @@ ros2<span class="w"> </span>launch<span class="w"> </span>deviation_evaluator<sp
 </ul>
 <h3 id="launch">Launch<a class="headerlink" href="#launch" title="Permanent link">#</a></h3>
 <p>The <code>deviation_estimator</code> can be launched with the following command.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>deviation_estimator<span class="w"> </span>deviation_estimator.launch.xml
-ros2<span class="w"> </span>bag<span class="w"> </span>play<span class="w"> </span>YOUR_BAG<span class="w"> </span><span class="c1"># You can also play in a faster rate, e.g. -r 5</span>
-</code></pre></div>
+<p><code>sh
+ros2 launch deviation_estimator deviation_estimator.launch.xml
+ros2 bag play YOUR_BAG # You can also play in a faster rate, e.g. -r 5</code></p>
 <p>The parameters and input topic names can be seen in the <code>deviation_estimator.launch.xml</code> file.
 <code>YOUR_BAG</code> should include all the required inputs written below.</p>
 <h3 id="inputs-outputs">Inputs / Outputs<a class="headerlink" href="#inputs-outputs" title="Permanent link">#</a></h3>
@@ -5563,9 +5569,9 @@ Note that the final estimation takes into account the bias.</p>
 <h2 id="3-description-of-deviation-evaluator">3. Description of Deviation Evaluator<a class="headerlink" href="#3-description-of-deviation-evaluator" title="Permanent link">#</a></h2>
 <p>You can use <code>deviation_evaluator</code> for evaluating the estimated standard deviation parameters.
 This can be run with the following command:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>deviation_evaluator<span class="w"> </span>deviation_evaluator.launch.xml<span class="w"> </span>map_path:<span class="o">=</span>MAP_PATH<span class="w"> </span>rviz:<span class="o">=</span><span class="nb">true</span><span class="w"> </span>in_imu:<span class="o">=</span>YOUR_IMU_TOPIC_NAME<span class="w"> </span>in_wheel_odometry:<span class="o">=</span>YOUR_VELOCITY_TOPIC_NAME
-ros2<span class="w"> </span>bag<span class="w"> </span>play<span class="w"> </span>YOUR_BAG
-</code></pre></div>
+<p><code>sh
+ros2 launch deviation_evaluator deviation_evaluator.launch.xml map_path:=MAP_PATH rviz:=true in_imu:=YOUR_IMU_TOPIC_NAME in_wheel_odometry:=YOUR_VELOCITY_TOPIC_NAME
+ros2 bag play YOUR_BAG</code></p>
 <p>All the ros2bag and config files will be stored in <code>$HOME/deviation_evaluator_sample</code> (you can change this with <code>save_dir</code> parameter in the launch file).</p>
 <h3 id="features">Features<a class="headerlink" href="#features" title="Permanent link">#</a></h3>
 <h4 id="a-visualization-of-confidence-ellipse">A. Visualization of confidence ellipse<a class="headerlink" href="#a-visualization-of-confidence-ellipse" title="Permanent link">#</a></h4>
@@ -5805,7 +5811,7 @@ ros2<span class="w"> </span>bag<span class="w"> </span>play<span class="w"> </sp
       
         <script src="../../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

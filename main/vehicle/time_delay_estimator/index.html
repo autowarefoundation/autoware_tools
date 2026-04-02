@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4961,8 +4961,8 @@
 <h2 id="how-to-run-time-delay-estimator">How to Run Time Delay Estimator<a class="headerlink" href="#how-to-run-time-delay-estimator" title="Permanent link">#</a></h2>
 <p>Note: You need to build the Autoware beforehand.</p>
 <p>The following command will start the delay estimation node.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>time_delay_estimator<span class="w"> </span>time_delay_estimator.launch.xml<span class="w"> </span>is_showing_debug_graph:<span class="o">=</span><span class="nb">true</span>
-</code></pre></div>
+<p><code>bash
+ros2 launch time_delay_estimator time_delay_estimator.launch.xml is_showing_debug_graph:=true</code></p>
 <p align="center">
 <img src="./media/time_delay_estimator.gif" width="1280">
 </p>
@@ -5061,8 +5061,8 @@ If the superposition of input and response is good, we can say that we have a go
 <h3 id="test-wip">Test <strong>WIP</strong><a class="headerlink" href="#test-wip" title="Permanent link">#</a></h3>
 <p>Execute the following command to perform an estimation on the sample data.
 This test should be used to see the characteristics when the parameters are changed.</p>
-<div class="highlight"><pre><span></span><code>roslaunch<span class="w"> </span>time_delay_estimator<span class="w"> </span>test_time_delay_estimator.launch
-</code></pre></div></div>
+<p><code>sh
+roslaunch time_delay_estimator test_time_delay_estimator.launch</code></p></div>
 
 
 
@@ -5153,7 +5153,7 @@ This test should be used to see the characteristics when the parameters are chan
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

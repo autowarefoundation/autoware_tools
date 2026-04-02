@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4861,15 +4861,15 @@
 <h2 id="how-to-visualize">How to visualize<a class="headerlink" href="#how-to-visualize" title="Permanent link">#</a></h2>
 <h3 id="collect-data">Collect data<a class="headerlink" href="#collect-data" title="Permanent link">#</a></h3>
 <h4 id="launch-data-collector-node">launch data collector node<a class="headerlink" href="#launch-data-collector-node" title="Permanent link">#</a></h4>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>pitch_checker<span class="w"> </span>pitch_checker.launch.xml
-</code></pre></div>
+<p><code>sh
+ros2 launch pitch_checker pitch_checker.launch.xml</code></p>
 <h4 id="save-file-to-data">save file to data<a class="headerlink" href="#save-file-to-data" title="Permanent link">#</a></h4>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>service<span class="w"> </span>call<span class="w"> </span>/pitch_checker/save_flag<span class="w"> </span>std_srvs/srv/Trigger<span class="w"> </span><span class="o">{}</span>
-</code></pre></div>
+<p><code>sh
+ros2 service call /pitch_checker/save_flag std_srvs/srv/Trigger {}</code></p>
 <p>(The pitch data is saved at <code>&lt;YOUR WORKSPACE&gt;/install/pitch_checker/share/pitch_checker/pitch.csv</code>)</p>
 <h3 id="visualize-data">Visualize data<a class="headerlink" href="#visualize-data" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>pitch_checker<span class="w"> </span>view_pitch.launch.xml
-</code></pre></div>
+<p><code>sh
+ros2 launch pitch_checker view_pitch.launch.xml</code></p>
 <p>The <code>view_pitch.launch</code> loads the data stored in the default path and visualize it is as below. The pitch angle [rad] is shown on the left plot, the value of the z-coordinate [m] on the right plot.</p>
 <p><img alt="sample pic" src="data/pitch_sample.png"></p></div>
 
@@ -4978,7 +4978,7 @@
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

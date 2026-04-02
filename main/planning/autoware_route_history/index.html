@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4892,10 +4892,10 @@
 <h2 id="motivation">Motivation<a class="headerlink" href="#motivation" title="Permanent link">#</a></h2>
 <p>The repeatable testing of a specific route is slowed by the need to replot. This may be done manually through "Add goal pose" and similar toolbar tools, but use of the GUI is prone to inaccuracy. Alternatively, if poses are recorded separately, service calls may uses. This RViz panel aims to streamline this process.</p>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">#</a></h2>
-<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/autoware_tools/planning
-colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>autoware_route_history
-<span class="nb">source</span><span class="w"> </span>install/setup.bash
-</code></pre></div>
+<p><code>sh
+cd ~/autoware_tools/planning
+colcon build --packages-select autoware_route_history
+source install/setup.bash</code></p>
 <p>After launching the planning tool the RouteHistory panel will be discoverable.
 Panels &gt; Add New Panel &gt; RouteHistoryPanel &gt; OK.</p>
 <h2 id="output-files">Output Files<a class="headerlink" href="#output-files" title="Permanent link">#</a></h2>
@@ -5017,7 +5017,7 @@ Panels &gt; Add New Panel &gt; RouteHistoryPanel &gt; OK.</p>
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -5086,8 +5086,8 @@
 <a href="doc-stop-reason-visualizer/">see the details</a></p>
 <h3 id="how-to-use">How to use<a class="headerlink" href="#how-to-use" title="Permanent link">#</a></h3>
 <p>please launch the analyzer node</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>planning_debug_tools<span class="w"> </span>trajectory_analyzer.launch.xml
-</code></pre></div>
+<p><code>bash
+ros2 launch planning_debug_tools trajectory_analyzer.launch.xml</code></p>
 <p>and visualize the analyzed data on the plot juggler following below.</p>
 <h4 id="setup-plotjuggler">setup PlotJuggler<a class="headerlink" href="#setup-plotjuggler" title="Permanent link">#</a></h4>
 <p>For the first time, please add the following code to reactive script and save it as the picture below!
@@ -5095,91 +5095,85 @@
 <p>You can customize what you plot by editing this code.</p>
 <p><img alt="image" src="image/lua.png"></p>
 <p>in Global code</p>
-<div class="highlight"><pre><span></span><code><span class="nv">behavior_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'/planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id/debug_info'</span>
-<span class="nv">behavior_velocity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'/planning/scenario_planning/lane_driving/behavior_planning/path/debug_info'</span>
-<span class="nv">motion_avoid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'/planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory/debug_info'</span>
-<span class="nv">motion_smoother_latacc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'/planning/scenario_planning/motion_velocity_smoother/debug/trajectory_lateral_acc_filtered/debug_info'</span>
-<span class="nv">motion_smoother</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'/planning/trajectory/debug_info'</span>
-</code></pre></div>
+<p><code>lua
+behavior_path = '/planning/scenario_planning/lane_driving/behavior_planning/path_with_lane_id/debug_info'
+behavior_velocity = '/planning/scenario_planning/lane_driving/behavior_planning/path/debug_info'
+motion_avoid = '/planning/scenario_planning/lane_driving/motion_planning/path_optimizer/trajectory/debug_info'
+motion_smoother_latacc = '/planning/scenario_planning/motion_velocity_smoother/debug/trajectory_lateral_acc_filtered/debug_info'
+motion_smoother = '/planning/trajectory/debug_info'</code></p>
 <p>in function(tracker_time)</p>
-<div class="highlight"><pre><span></span><code><span class="nf">PlotCurvatureOverArclength</span><span class="p">(</span><span class="s1">'k_behavior_path'</span><span class="p">,</span><span class="w"> </span><span class="nv">behavior_path</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotCurvatureOverArclength</span><span class="p">(</span><span class="s1">'k_behavior_velocity'</span><span class="p">,</span><span class="w"> </span><span class="nv">behavior_velocity</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotCurvatureOverArclength</span><span class="p">(</span><span class="s1">'k_motion_avoid'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_avoid</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotCurvatureOverArclength</span><span class="p">(</span><span class="s1">'k_motion_smoother'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_smoother</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-
-<span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="s1">'v_behavior_path'</span><span class="p">,</span><span class="w"> </span><span class="nv">behavior_path</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="s1">'v_behavior_velocity'</span><span class="p">,</span><span class="w"> </span><span class="nv">behavior_velocity</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="s1">'v_motion_avoid'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_avoid</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="s1">'v_motion_smoother_latacc'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_smoother_latacc</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="s1">'v_motion_smoother'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_smoother</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-
-<span class="nf">PlotAccelerationOverArclength</span><span class="p">(</span><span class="s1">'a_behavior_path'</span><span class="p">,</span><span class="w"> </span><span class="nv">behavior_path</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotAccelerationOverArclength</span><span class="p">(</span><span class="s1">'a_behavior_velocity'</span><span class="p">,</span><span class="w"> </span><span class="nv">behavior_velocity</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotAccelerationOverArclength</span><span class="p">(</span><span class="s1">'a_motion_avoid'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_avoid</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotAccelerationOverArclength</span><span class="p">(</span><span class="s1">'a_motion_smoother_latacc'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_smoother_latacc</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotAccelerationOverArclength</span><span class="p">(</span><span class="s1">'a_motion_smoother'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_smoother</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-
-<span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="s1">'yaw_behavior_path'</span><span class="p">,</span><span class="w"> </span><span class="nv">behavior_path</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="s1">'yaw_behavior_velocity'</span><span class="p">,</span><span class="w"> </span><span class="nv">behavior_velocity</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="s1">'yaw_motion_avoid'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_avoid</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="s1">'yaw_motion_smoother_latacc'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_smoother_latacc</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="s1">'yaw_motion_smoother'</span><span class="p">,</span><span class="w"> </span><span class="nv">motion_smoother</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-
-<span class="nf">PlotCurrentVelocity</span><span class="p">(</span><span class="s1">'localization_kinematic_state'</span><span class="p">,</span><span class="w"> </span><span class="s1">'/localization/kinematic_state'</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-</code></pre></div>
+<p>```lua
+PlotCurvatureOverArclength('k_behavior_path', behavior_path, tracker_time)
+PlotCurvatureOverArclength('k_behavior_velocity', behavior_velocity, tracker_time)
+PlotCurvatureOverArclength('k_motion_avoid', motion_avoid, tracker_time)
+PlotCurvatureOverArclength('k_motion_smoother', motion_smoother, tracker_time)</p>
+<p>PlotVelocityOverArclength('v_behavior_path', behavior_path, tracker_time)
+PlotVelocityOverArclength('v_behavior_velocity', behavior_velocity, tracker_time)
+PlotVelocityOverArclength('v_motion_avoid', motion_avoid, tracker_time)
+PlotVelocityOverArclength('v_motion_smoother_latacc', motion_smoother_latacc, tracker_time)
+PlotVelocityOverArclength('v_motion_smoother', motion_smoother, tracker_time)</p>
+<p>PlotAccelerationOverArclength('a_behavior_path', behavior_path, tracker_time)
+PlotAccelerationOverArclength('a_behavior_velocity', behavior_velocity, tracker_time)
+PlotAccelerationOverArclength('a_motion_avoid', motion_avoid, tracker_time)
+PlotAccelerationOverArclength('a_motion_smoother_latacc', motion_smoother_latacc, tracker_time)
+PlotAccelerationOverArclength('a_motion_smoother', motion_smoother, tracker_time)</p>
+<p>PlotYawOverArclength('yaw_behavior_path', behavior_path, tracker_time)
+PlotYawOverArclength('yaw_behavior_velocity', behavior_velocity, tracker_time)
+PlotYawOverArclength('yaw_motion_avoid', motion_avoid, tracker_time)
+PlotYawOverArclength('yaw_motion_smoother_latacc', motion_smoother_latacc, tracker_time)
+PlotYawOverArclength('yaw_motion_smoother', motion_smoother, tracker_time)</p>
+<p>PlotCurrentVelocity('localization_kinematic_state', '/localization/kinematic_state', tracker_time)
+```</p>
 <p>in Function Library
 <img alt="image" src="image/script.png"></p>
 <!-- cspell:ignore Timeseries -->
 <!-- Ignore cspell errors caused by external factors -->
 
-<div class="highlight"><pre><span></span><code><span class="kr">function</span><span class="w"> </span><span class="nf">PlotValue</span><span class="p">(</span><span class="nv">name</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">,</span><span class="w"> </span><span class="nv">value</span><span class="p">)</span>
-<span class="w">  </span><span class="nv">new_series</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">ScatterXY</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="nv">name</span><span class="p">)</span>
-<span class="w">  </span><span class="nv">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span>
-<span class="w">  </span><span class="kr">while</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span><span class="w"> </span><span class="kr">do</span>
-<span class="w">    </span><span class="nv">series_k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">TimeseriesView</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="w"> </span><span class="nb">string.format</span><span class="p">(</span><span class="w"> </span><span class="s2">"%s/"</span><span class="o">..</span><span class="nv">value</span><span class="o">..</span><span class="s2">"[%d]"</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">index</span><span class="p">)</span><span class="w"> </span><span class="p">)</span>
-<span class="w">    </span><span class="nv">series_s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">TimeseriesView</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="w"> </span><span class="nb">string.format</span><span class="p">(</span><span class="w"> </span><span class="s2">"%s/arclength[%d]"</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">index</span><span class="p">)</span><span class="w"> </span><span class="p">)</span>
-<span class="w">    </span><span class="nv">series_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">TimeseriesView</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="w"> </span><span class="nb">string.format</span><span class="p">(</span><span class="w"> </span><span class="s2">"%s/size"</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">)</span><span class="w"> </span><span class="p">)</span>
+<p>```lua</p>
+<p>function PlotValue(name, path, timestamp, value)
+  new_series = ScatterXY.new(name)
+  index = 0
+  while(true) do
+    series_k = TimeseriesView.find( string.format( "%s/"..value.."[%d]", path, index) )
+    series_s = TimeseriesView.find( string.format( "%s/arclength[%d]", path, index) )
+    series_size = TimeseriesView.find( string.format( "%s/size", path) )</p>
+<div class="codehilite"><pre><span></span><code>if series_k == nil or series_s == nil then break end
 
-<span class="w">    </span><span class="kr">if</span><span class="w"> </span><span class="nv">series_k</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="nv">series_s</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="kr">then</span><span class="w"> </span><span class="kr">break</span><span class="w"> </span><span class="kr">end</span>
+k = series_k:atTime(timestamp)
+s = series_s:atTime(timestamp)
+size = series_size:atTime(timestamp)
 
-<span class="w">    </span><span class="nv">k</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">series_k</span><span class="p">:</span><span class="nf">atTime</span><span class="p">(</span><span class="nv">timestamp</span><span class="p">)</span>
-<span class="w">    </span><span class="nv">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">series_s</span><span class="p">:</span><span class="nf">atTime</span><span class="p">(</span><span class="nv">timestamp</span><span class="p">)</span>
-<span class="w">    </span><span class="nv">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">series_size</span><span class="p">:</span><span class="nf">atTime</span><span class="p">(</span><span class="nv">timestamp</span><span class="p">)</span>
+if index &gt;= size then break end
 
-<span class="w">    </span><span class="kr">if</span><span class="w"> </span><span class="nv">index</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="kr">then</span><span class="w"> </span><span class="kr">break</span><span class="w"> </span><span class="kr">end</span>
-
-<span class="w">    </span><span class="nv">new_series</span><span class="p">:</span><span class="nf">push_back</span><span class="p">(</span><span class="nv">s</span><span class="p">,</span><span class="nv">k</span><span class="p">)</span>
-<span class="w">    </span><span class="nv">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">index</span><span class="o">+</span><span class="mi">1</span>
-<span class="w">  </span><span class="kr">end</span>
-<span class="kr">end</span>
-
-<span class="kr">function</span><span class="w"> </span><span class="nf">PlotCurvatureOverArclength</span><span class="p">(</span><span class="nv">name</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">)</span>
-<span class="w">  </span><span class="nf">PlotValue</span><span class="p">(</span><span class="nv">name</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">,</span><span class="s2">"curvature"</span><span class="p">)</span>
-<span class="kr">end</span>
-
-<span class="kr">function</span><span class="w"> </span><span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="nv">name</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">)</span>
-<span class="w">  </span><span class="nf">PlotValue</span><span class="p">(</span><span class="nv">name</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">,</span><span class="s2">"velocity"</span><span class="p">)</span>
-<span class="kr">end</span>
-
-<span class="kr">function</span><span class="w"> </span><span class="nf">PlotAccelerationOverArclength</span><span class="p">(</span><span class="nv">name</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">)</span>
-<span class="w">  </span><span class="nf">PlotValue</span><span class="p">(</span><span class="nv">name</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">,</span><span class="s2">"acceleration"</span><span class="p">)</span>
-<span class="kr">end</span>
-
-<span class="kr">function</span><span class="w"> </span><span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="nv">name</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">)</span>
-<span class="w">  </span><span class="nf">PlotValue</span><span class="p">(</span><span class="nv">name</span><span class="p">,</span><span class="w"> </span><span class="nv">path</span><span class="p">,</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">,</span><span class="s2">"yaw"</span><span class="p">)</span>
-<span class="kr">end</span>
-
-<span class="kr">function</span><span class="w"> </span><span class="nf">PlotCurrentVelocity</span><span class="p">(</span><span class="nv">name</span><span class="p">,</span><span class="w"> </span><span class="nv">kinematics_name</span><span class="p">,</span><span class="w"> </span><span class="nv">timestamp</span><span class="p">)</span>
-<span class="w">  </span><span class="nv">new_series</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">ScatterXY</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="nv">name</span><span class="p">)</span>
-<span class="w">  </span><span class="nv">series_v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">TimeseriesView</span><span class="p">.</span><span class="nf">find</span><span class="p">(</span><span class="w"> </span><span class="nb">string.format</span><span class="p">(</span><span class="w"> </span><span class="s2">"%s/twist/twist/linear/x"</span><span class="p">,</span><span class="w"> </span><span class="nv">kinematics_name</span><span class="p">))</span>
-<span class="w">  </span><span class="kr">if</span><span class="w"> </span><span class="nv">series_v</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="kr">then</span>
-<span class="w">    </span><span class="nb">print</span><span class="p">(</span><span class="s2">"error"</span><span class="p">)</span>
-<span class="w">    </span><span class="kr">return</span>
-<span class="w">  </span><span class="kr">end</span>
-<span class="w">  </span><span class="nv">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">series_v</span><span class="p">:</span><span class="nf">atTime</span><span class="p">(</span><span class="nv">timestamp</span><span class="p">)</span>
-<span class="w">  </span><span class="nv">new_series</span><span class="p">:</span><span class="nf">push_back</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="nv">v</span><span class="p">)</span>
-<span class="kr">end</span>
+new_series:push_back(s,k)
+index = index+1
 </code></pre></div>
+
+<p>end
+end</p>
+<p>function PlotCurvatureOverArclength(name, path, timestamp)
+  PlotValue(name, path, timestamp,"curvature")
+end</p>
+<p>function PlotVelocityOverArclength(name, path, timestamp)
+  PlotValue(name, path, timestamp,"velocity")
+end</p>
+<p>function PlotAccelerationOverArclength(name, path, timestamp)
+  PlotValue(name, path, timestamp,"acceleration")
+end</p>
+<p>function PlotYawOverArclength(name, path, timestamp)
+  PlotValue(name, path, timestamp,"yaw")
+end</p>
+<p>function PlotCurrentVelocity(name, kinematics_name, timestamp)
+  new_series = ScatterXY.new(name)
+  series_v = TimeseriesView.find( string.format( "%s/twist/twist/linear/x", kinematics_name))
+  if series_v == nil then
+    print("error")
+    return
+  end
+  v = series_v:atTime(timestamp)
+  new_series:push_back(0.0, v)
+end
+```</p>
 <p>Then, run the plot juggler.</p>
 <h3 id="how-to-customize-the-plot">How to customize the plot<a class="headerlink" href="#how-to-customize-the-plot" title="Permanent link">#</a></h3>
 <p>Add Path/PathWithLaneIds/Trajectory topics you want to plot in the <code>trajectory_analyzer.launch.xml</code>, then the analyzed topics for these messages will be published with <code>TrajectoryDebugINfo.msg</code> type. You can then visualize these data by editing the reactive script on the PlotJuggler.</p>
@@ -5188,34 +5182,33 @@
 <h2 id="closest-velocity-checker">Closest velocity checker<a class="headerlink" href="#closest-velocity-checker" title="Permanent link">#</a></h2>
 <p>This node prints the velocity information indicated by planning/control modules on a terminal. For trajectories calculated by planning modules, the target velocity on the trajectory point which is closest to the ego vehicle is printed. For control commands calculated by control modules, the target velocity and acceleration is directly printed. This feature would be helpful for purposes such as "<em>investigating the reason why the vehicle does not move</em>".</p>
 <p>You can launch by</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>closest_velocity_checker.py
-</code></pre></div>
+<p><code>bash
+ros2 run planning_debug_tools closest_velocity_checker.py</code></p>
 <p><img alt="closest-velocity-checker" src="image/closest-velocity-checker.png"></p>
 <h2 id="trajectory-visualizer">Trajectory visualizer<a class="headerlink" href="#trajectory-visualizer" title="Permanent link">#</a></h2>
 <p>The old version of the trajectory analyzer. It is written in Python and more flexible, but very slow.</p>
 <h2 id="for-other-use-case-experimental">For other use case (experimental)<a class="headerlink" href="#for-other-use-case-experimental" title="Permanent link">#</a></h2>
 <p>To see behavior velocity planner's internal plath with lane id
 add below example value to behavior velocity analyzer and set <code>is_publish_debug_path: true</code></p>
-<div class="highlight"><pre><span></span><code><span class="nv">crosswalk</span><span class="w"> </span><span class="o">=</span><span class="s1">'/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/crosswalk/debug_info'</span>
-<span class="nv">intersection</span><span class="w"> </span><span class="o">=</span><span class="s1">'/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/intersection/debug_info'</span>
-<span class="nv">traffic_light</span><span class="w"> </span><span class="o">=</span><span class="s1">'/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/traffic_light/debug_info'</span>
-<span class="nv">merge_from_private</span><span class="w"> </span><span class="o">=</span><span class="s1">'/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/merge_from_private/debug_info'</span>
-<span class="nv">occlusion_spot</span><span class="w"> </span><span class="o">=</span><span class="s1">'/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/occlusion_spot/debug_info'</span>
-</code></pre></div>
-<div class="highlight"><pre><span></span><code><span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="s1">'v_crosswalk'</span><span class="p">,</span><span class="w"> </span><span class="nv">crosswalk</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="s1">'v_intersection'</span><span class="p">,</span><span class="w"> </span><span class="nv">intersection</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="s1">'v_merge_from_private'</span><span class="p">,</span><span class="w"> </span><span class="nv">merge_from_private</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="s1">'v_traffic_light'</span><span class="p">,</span><span class="w"> </span><span class="nv">traffic_light</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotVelocityOverArclength</span><span class="p">(</span><span class="s1">'v_occlusion'</span><span class="p">,</span><span class="w"> </span><span class="nv">occlusion_spot</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-
-<span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="s1">'yaw_crosswalk'</span><span class="p">,</span><span class="w"> </span><span class="nv">crosswalk</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="s1">'yaw_intersection'</span><span class="p">,</span><span class="w"> </span><span class="nv">intersection</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="s1">'yaw_merge_from_private'</span><span class="p">,</span><span class="w"> </span><span class="nv">merge_from_private</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="s1">'yaw_traffic_light'</span><span class="p">,</span><span class="w"> </span><span class="nv">traffic_light</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-<span class="nf">PlotYawOverArclength</span><span class="p">(</span><span class="s1">'yaw_occlusion'</span><span class="p">,</span><span class="w"> </span><span class="nv">occlusion_spot</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-
-<span class="nf">PlotCurrentVelocity</span><span class="p">(</span><span class="s1">'localization_kinematic_state'</span><span class="p">,</span><span class="w"> </span><span class="s1">'/localization/kinematic_state'</span><span class="p">,</span><span class="w"> </span><span class="nv">tracker_time</span><span class="p">)</span>
-</code></pre></div>
+<p><code>lua
+crosswalk ='/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/crosswalk/debug_info'
+intersection ='/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/intersection/debug_info'
+traffic_light ='/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/traffic_light/debug_info'
+merge_from_private ='/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/merge_from_private/debug_info'
+occlusion_spot ='/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/debug/path_with_lane_id/occlusion_spot/debug_info'</code></p>
+<p>```lua
+PlotVelocityOverArclength('v_crosswalk', crosswalk, tracker_time)
+PlotVelocityOverArclength('v_intersection', intersection, tracker_time)
+PlotVelocityOverArclength('v_merge_from_private', merge_from_private, tracker_time)
+PlotVelocityOverArclength('v_traffic_light', traffic_light, tracker_time)
+PlotVelocityOverArclength('v_occlusion', occlusion_spot, tracker_time)</p>
+<p>PlotYawOverArclength('yaw_crosswalk', crosswalk, tracker_time)
+PlotYawOverArclength('yaw_intersection', intersection, tracker_time)
+PlotYawOverArclength('yaw_merge_from_private', merge_from_private, tracker_time)
+PlotYawOverArclength('yaw_traffic_light', traffic_light, tracker_time)
+PlotYawOverArclength('yaw_occlusion', occlusion_spot, tracker_time)</p>
+<p>PlotCurrentVelocity('localization_kinematic_state', '/localization/kinematic_state', tracker_time)
+```</p>
 <h2 id="perception-reproducer">Perception reproducer<a class="headerlink" href="#perception-reproducer" title="Permanent link">#</a></h2>
 <p>This script can overlay the perception results from the rosbag on the planning simulator synchronized with the simulator's ego pose.</p>
 <h3 id="topics-from-rosbag">Topics from Rosbag<a class="headerlink" href="#topics-from-rosbag" title="Permanent link">#</a></h3>
@@ -5270,11 +5263,11 @@ When publishing perception messages, the first element in the <code>reproduce_se
 <p>First, launch the planning simulator, and put the ego pose.
 Then, run the script according to the following command.</p>
 <p>By designating a rosbag, perception reproducer can be launched.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_reproducer<span class="w"> </span>-b<span class="w"> </span>&lt;bag-file&gt;
-</code></pre></div>
+<p><code>bash
+ros2 run planning_debug_tools perception_reproducer -b &lt;bag-file&gt;</code></p>
 <p>You can designate multiple rosbags in the directory.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_reproducer<span class="w"> </span>-b<span class="w"> </span>&lt;dir-to-bag-files&gt;
-</code></pre></div>
+<p><code>bash
+ros2 run planning_debug_tools perception_reproducer -b &lt;dir-to-bag-files&gt;</code></p>
 <p>Instead of publishing predicted objects, you can publish tracked objects by designating <code>-t</code>.</p>
 <p>The <code>--pub-route</code> option enables automatic route generation based on the rosbag data. When enabled, the script:</p>
 <ol>
@@ -5283,12 +5276,12 @@ Then, run the script according to the following command.</p>
 <li>Generates and publishes a route to the goal pose</li>
 </ol>
 <p>Example usage with route publication:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_reproducer<span class="w"> </span>-b<span class="w"> </span>&lt;bag-file&gt;<span class="w"> </span>-p
-</code></pre></div>
+<p><code>bash
+ros2 run planning_debug_tools perception_reproducer -b &lt;bag-file&gt; -p</code></p>
 <p>The <code>--replay-route</code> option enables replaying of route and route state topics directly from the rosbag data. These topics use transient_local QoS and are only published when the message content changes (avoiding redundant publishes). This is useful when you want to replay the exact route that was recorded in the rosbag.</p>
 <p>Example usage with route replaying:</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_reproducer<span class="w"> </span>-b<span class="w"> </span>&lt;bag-file&gt;<span class="w"> </span>--replay-route
-</code></pre></div>
+<p><code>bash
+ros2 run planning_debug_tools perception_reproducer -b &lt;bag-file&gt; --replay-route</code></p>
 <h2 id="perception-replayer">Perception replayer<a class="headerlink" href="#perception-replayer" title="Permanent link">#</a></h2>
 <p>A part of the feature is under development.</p>
 <p>This script can overlay the perception results from the rosbag on the planning simulator.</p>
@@ -5332,18 +5325,18 @@ By using the GUI, you can modify the timestamp by pausing, changing the rate or 
 Then, run the script according to the following command.</p>
 <p>By designating a rosbag, perception replayer can be launched.
 The GUI is launched as well with which a timestamp of rosbag can be managed.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_replayer<span class="w"> </span>-b<span class="w"> </span>&lt;bag-file&gt;
-</code></pre></div>
+<p><code>bash
+ros2 run planning_debug_tools perception_replayer -b &lt;bag-file&gt;</code></p>
 <p>You can designate multiple rosbags in the directory.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>perception_replayer<span class="w"> </span>-b<span class="w"> </span>&lt;dir-to-bag-files&gt;
-</code></pre></div>
+<p><code>bash
+ros2 run planning_debug_tools perception_replayer -b &lt;dir-to-bag-files&gt;</code></p>
 <p>Instead of publishing predicted objects, you can publish tracked objects by designating <code>-t</code>.</p>
 <h2 id="processing-time-checker">Processing time checker<a class="headerlink" href="#processing-time-checker" title="Permanent link">#</a></h2>
 <p>The purpose of the Processing Time Subscriber is to monitor and visualize the processing times of various ROS 2 topics in a system. By providing a real-time terminal-based visualization, users can easily confirm the processing time performance as in the picture below.</p>
 <p><img alt="processing_time_checker" src="image/processing_time_checker.png"></p>
 <p>You can run the program by the following command.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>processing_time_checker.py<span class="w"> </span>-f<span class="w"> </span>&lt;update-hz&gt;<span class="w"> </span>-m<span class="w"> </span>&lt;max-bar-time&gt;
-</code></pre></div>
+<p><code>bash
+ros2 run planning_debug_tools processing_time_checker.py -f &lt;update-hz&gt; -m &lt;max-bar-time&gt;</code></p>
 <p>This program subscribes to ROS 2 topics that have a suffix of <code>processing_time_ms</code>.</p>
 <p>The program allows users to customize two parameters via command-line arguments:</p>
 <ul>
@@ -5353,8 +5346,8 @@ The GUI is launched as well with which a timestamp of rosbag can be managed.</p>
 <p>By adjusting these parameters, users can tailor the display to their specific monitoring needs.</p>
 <h2 id="logging-level-updater">Logging Level Updater<a class="headerlink" href="#logging-level-updater" title="Permanent link">#</a></h2>
 <p>The purpose of the Logging Level Updater is to update the logging level of the planning modules via ROS 2 service. Users can easily update the logging level for debugging.</p>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>planning_debug_tools<span class="w"> </span>update_logger_level.sh<span class="w"> </span>&lt;module-name&gt;<span class="w"> </span>&lt;logger-level&gt;
-</code></pre></div>
+<p><code>bash
+ros2 run planning_debug_tools update_logger_level.sh &lt;module-name&gt; &lt;logger-level&gt;</code></p>
 <p><code>&lt;logger-level&gt;</code> will be <code>DEBUG</code>, <code>INFO</code>, <code>WARN</code>, or <code>ERROR</code>.</p>
 <p><img alt="logging_level_updater" src="image/logging_level_updater.png"></p>
 <p>When you have a typo of the planning module, the script will show the available modules.</p>
@@ -5465,7 +5458,7 @@ The GUI is launched as well with which a timestamp of rosbag can be managed.</p>
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

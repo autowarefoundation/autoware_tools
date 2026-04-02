@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4856,69 +4856,8 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#multi-model-pipeline" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Multi-Model Pipeline
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#output-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Output Files
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Parameters
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Parameters">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#utility-scripts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Utility Scripts
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#for-more-information" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        For More Information
-      
-    </span>
-  </a>
   
 </li>
       
@@ -4952,31 +4891,33 @@
 </ol>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">#</a></h2>
 <h3 id="open-loop-evaluation">Open Loop Evaluation<a class="headerlink" href="#open-loop-evaluation" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_planning_data_analyzer<span class="w"> </span>autoware_planning_data_analyzer_node<span class="w"> </span>--ros-args<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-p<span class="w"> </span>bag_path:<span class="o">=</span>~/my_bag<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-p<span class="w"> </span>evaluation.mode:<span class="o">=</span>open_loop<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-p<span class="w"> </span>trajectory_topic:<span class="o">=</span>/planning/trajectory<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-p<span class="w"> </span>json_output_path:<span class="o">=</span>~/results.json
-</code></pre></div>
+<p><code>sh
+ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --ros-args \
+  -p bag_path:=~/my_bag \
+  -p evaluation.mode:=open_loop \
+  -p trajectory_topic:=/planning/trajectory \
+  -p json_output_path:=~/results.json</code></p>
 <h3 id="or-scene-evaluation">OR Scene Evaluation<a class="headerlink" href="#or-scene-evaluation" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Using the unified script</span>
-./install/autoware_planning_data_analyzer/share/autoware_planning_data_analyzer/scripts/run_evaluation.sh<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-b<span class="w"> </span>~/result_bag.mcap<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-m<span class="w"> </span>or_scene<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-t<span class="w"> </span>/planning/diffusion_planner/trajectory<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-o<span class="w"> </span>~/results<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--live<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--viz
-</code></pre></div>
+<p>```sh</p>
+<h1 id="using-the-unified-script">Using the unified script<a class="headerlink" href="#using-the-unified-script" title="Permanent link">#</a></h1>
+<p>./install/autoware_planning_data_analyzer/share/autoware_planning_data_analyzer/scripts/run_evaluation.sh \
+  -b ~/result_bag.mcap \
+  -m or_scene \
+  -t /planning/diffusion_planner/trajectory \
+  -o ~/results \
+  --live \
+  --viz
+```</p>
 <h3 id="multi-model-pipeline">Multi-Model Pipeline<a class="headerlink" href="#multi-model-pipeline" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Evaluate multiple models from DLR results</span>
-./install/autoware_planning_data_analyzer/share/autoware_planning_data_analyzer/scripts/multi_model_pipeline.sh<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--scenario<span class="w"> </span>~/dataset/scenario.yaml<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--trajectory<span class="w"> </span>/planning/model_a/trajectory<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--trajectory<span class="w"> </span>/planning/model_b/trajectory<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--output<span class="w"> </span>~/comparison<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>--viz
-</code></pre></div>
+<p>```sh</p>
+<h1 id="evaluate-multiple-models-from-dlr-results">Evaluate multiple models from DLR results<a class="headerlink" href="#evaluate-multiple-models-from-dlr-results" title="Permanent link">#</a></h1>
+<p>./install/autoware_planning_data_analyzer/share/autoware_planning_data_analyzer/scripts/multi_model_pipeline.sh \
+  --scenario ~/dataset/scenario.yaml \
+  --trajectory /planning/model_a/trajectory \
+  --trajectory /planning/model_b/trajectory \
+  --output ~/comparison \
+  --viz
+```</p>
 <h2 id="output-files">Output Files<a class="headerlink" href="#output-files" title="Permanent link">#</a></h2>
 <ul>
 <li><strong><code>evaluation_result.json</code></strong> - Detailed metrics (ADE, FDE, TTC, etc.) and summary statistics</li>
@@ -5115,7 +5056,7 @@
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

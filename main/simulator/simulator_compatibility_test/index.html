@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -5066,10 +5066,10 @@
 </ol>
 <h2 id="test-procedures-for-test_sim_common_manual_testing">Test Procedures for test_sim_common_manual_testing<a class="headerlink" href="#test-procedures-for-test_sim_common_manual_testing" title="Permanent link">#</a></h2>
 <h3 id="build-process-before-test">Build process before test<a class="headerlink" href="#build-process-before-test" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>install/setup.bash
-colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>simulator_compatibility_test
-<span class="nb">cd</span><span class="w"> </span>src/universe/autoware.universe/tools/simulator_test/simulator_compatibility_test/test_sim_common_manual_testing
-</code></pre></div>
+<p><code>bash
+source install/setup.bash
+colcon build --packages-select simulator_compatibility_test
+cd src/universe/autoware.universe/tools/simulator_test/simulator_compatibility_test/test_sim_common_manual_testing</code></p>
 <p>To run each test case manually</p>
 <h3 id="test-case-1">Test Case #1<a class="headerlink" href="#test-case-1" title="Permanent link">#</a></h3>
 <ol>
@@ -5077,8 +5077,8 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
 <li>Load a map and an ego vehicle for the test</li>
 <li>
 <p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_01_control_mode_and_report.py
-</code></pre></div>
+<p><code>bash
+ python -m pytest test_01_control_mode_and_report.py</code></p>
 </li>
 <li>
 <p>Check if expected behavior is created within the simulator</p>
@@ -5095,8 +5095,8 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
 <li>Load a map and an ego vehicle for the test (If a map and an ego are loaded already, skip this part)</li>
 <li>
 <p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_02_change_gear_and_report.py
-</code></pre></div>
+<p><code>bash
+ python -m pytest test_02_change_gear_and_report.py</code></p>
 </li>
 <li>
 <p>Check if expected behavior is created within the simulator</p>
@@ -5115,8 +5115,8 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
 <li>Load a map and an ego vehicle for the test (If a map and an ego are loaded already, skip this part)</li>
 <li>
 <p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_03_longitudinal_command_and_report.py
-</code></pre></div>
+<p><code>bash
+ python -m pytest test_03_longitudinal_command_and_report.py</code></p>
 </li>
 <li>
 <p>Check if expected behavior is created within the simulator</p>
@@ -5135,8 +5135,8 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
 <li>Load a map and an ego vehicle for the test (If a map and an ego are loaded already, skip this part)</li>
 <li>
 <p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_04_lateral_command_and_report.py
-</code></pre></div>
+<p><code>bash
+ python -m pytest test_04_lateral_command_and_report.py</code></p>
 </li>
 <li>
 <p>Check if expected behavior is created within the simulator</p>
@@ -5155,8 +5155,8 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
 <li>Load a map and an ego vehicle for the test (If a map and an ego are loaded already, skip this part)</li>
 <li>
 <p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_05_turn_indicators_cmd_and_report.py
-</code></pre></div>
+<p><code>bash
+ python -m pytest test_05_turn_indicators_cmd_and_report.py</code></p>
 </li>
 <li>
 <p>Check if expected behavior is created within the simulator</p>
@@ -5174,8 +5174,8 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
 <li>Load a map and an ego vehicle for the test (If a map and an ego are loaded already, skip this part)</li>
 <li>
 <p>Run the test using the following command</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>test_06_hazard_lights_cmd_and_report.py
-</code></pre></div>
+<p><code>bash
+ python -m pytest test_06_hazard_lights_cmd_and_report.py</code></p>
 </li>
 <li>
 <p>Check if expected behavior is created within the simulator</p>
@@ -5188,10 +5188,10 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
 </ol>
 <h2 id="test-procedures-for-test_morai_sim">Test Procedures for test_morai_sim<a class="headerlink" href="#test-procedures-for-test_morai_sim" title="Permanent link">#</a></h2>
 <h3 id="build-process-before-test_1">Build process before test<a class="headerlink" href="#build-process-before-test_1" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>install/setup.bash
-colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<span class="w"> </span>simulator_compatibility_test
-<span class="nb">cd</span><span class="w"> </span>src/universe/autoware.universe/tools/simulator_test/simulator_compatibility_test/test_morai_sim
-</code></pre></div>
+<p><code>bash
+source install/setup.bash
+colcon build --packages-select simulator_compatibility_test
+cd src/universe/autoware.universe/tools/simulator_test/simulator_compatibility_test/test_morai_sim</code></p>
 <p>Detailed process</p>
 <p>(WIP)</p>
 <h2 id="inner-workings-algorithms">Inner-workings / Algorithms<a class="headerlink" href="#inner-workings-algorithms" title="Permanent link">#</a></h2>
@@ -5389,7 +5389,7 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-select<spa
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       

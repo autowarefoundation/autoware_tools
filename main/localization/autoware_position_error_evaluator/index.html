@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -4841,222 +4841,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#build-instructions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Build Instructions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Usage
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Usage">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-operation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Basic Operation
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#important-notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Important Notes
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#measurement-types" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Measurement Types
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#inputs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Inputs
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#outputs" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Outputs
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Outputs">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#csv-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CSV Files
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#screenshot-naming" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Screenshot Naming
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#file-structure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        File Structure
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#line-detection-algorithm" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Line Detection Algorithm
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#file-management" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        File Management
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-parameters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Configuration Parameters
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#automatic-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Automatic Configuration
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#troubleshooting" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Troubleshooting
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Troubleshooting">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#screenshot-issues" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Screenshot Issues
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#csv-file-issues" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        CSV File Issues
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#map-detection-issues" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Map Detection Issues
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -5116,17 +4900,18 @@
 </ul>
 </li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="c1"># Install system dependencies</span>
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>imagemagick<span class="w"> </span>x11-apps
-</code></pre></div>
+<p>```bash</p>
+<h1 id="install-system-dependencies">Install system dependencies<a class="headerlink" href="#install-system-dependencies" title="Permanent link">#</a></h1>
+<p>sudo apt install imagemagick x11-apps
+```</p>
 <h2 id="build-instructions">Build Instructions<a class="headerlink" href="#build-instructions" title="Permanent link">#</a></h2>
 <p>Adding the usual Autoware installation and build instructions, please do vcs import the repository and build the package.</p>
-<div class="highlight"><pre><span></span><code>vcs<span class="w"> </span>import<span class="w"> </span>&lt;<span class="w"> </span>tools.repos
-<span class="nb">source</span><span class="w"> </span>/opt/ros/humble/setup.bash
-rosdep<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>--from-paths<span class="w"> </span>src<span class="w"> </span>--ignore-src<span class="w"> </span>--rosdistro<span class="w"> </span><span class="nv">$ROS_DISTRO</span>
-rosdep<span class="w"> </span>update
-colcon<span class="w"> </span>build<span class="w"> </span>--packages-up-to<span class="w"> </span>autoware_position_error_evaluator
-</code></pre></div>
+<p><code>bash
+vcs import &lt; tools.repos
+source /opt/ros/humble/setup.bash
+rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
+rosdep update
+colcon build --packages-up-to autoware_position_error_evaluator</code></p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
 <h3 id="basic-operation">Basic Operation<a class="headerlink" href="#basic-operation" title="Permanent link">#</a></h3>
 <ol>
@@ -5226,10 +5011,10 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-up-to<span
 <h3 id="csv-files">CSV Files<a class="headerlink" href="#csv-files" title="Permanent link">#</a></h3>
 <h4 id="measurement-csv">measurement CSV<a class="headerlink" href="#measurement-csv" title="Permanent link">#</a></h4>
 <p>The tool generates CSV files with the following format:</p>
-<div class="highlight"><pre><span></span><code>measurement_number,x_error,y_error,yaw_error
+<p><code>csv
+measurement_number,x_error,y_error,yaw_error
 1,0.123456,NaN,2.345678
-2,NaN,0.567890,1.234567
-</code></pre></div>
+2,NaN,0.567890,1.234567</code></p>
 <ul>
 <li><code>measurement_number</code>: Sequential measurement counter</li>
 <li><code>x_error</code>: Longitudinal error in meters (stop line measurements)</li>
@@ -5239,10 +5024,10 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-up-to<span
 </ul>
 <h4 id="trajectory-csv">trajectory CSV<a class="headerlink" href="#trajectory-csv" title="Permanent link">#</a></h4>
 <p>To show the measured points, the tool generates trajectory CSV files with the following format:</p>
-<div class="highlight"><pre><span></span><code>x,y,z,yaw
+<p><code>csv
+x,y,z,yaw
 1.0,2.0,0.0,0.0
-1.1,2.1,0.0,0.1
-</code></pre></div>
+1.1,2.1,0.0,0.1</code></p>
 <ul>
 <li><code>x</code>, <code>y</code>, <code>z</code>: Vehicle position in meters</li>
 <li><code>yaw</code>: Vehicle orientation in radians</li>
@@ -5252,14 +5037,14 @@ colcon<span class="w"> </span>build<span class="w"> </span>--packages-up-to<span
 <code>measurement_YYYYMMDD_HHMMSS_NN.png</code>
 where NN is the zero-padded measurement number.</p>
 <h3 id="file-structure">File Structure<a class="headerlink" href="#file-structure" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code>~/autoware_position_error_evaluator/
+<p><code>Text
+~/autoware_position_error_evaluator/
 ├── position_error_evaluation_YYYYMMDD_HHMMSS.csv
 ├── trajectory_YYYYMMDD_HHMMSS.csv
 └── screenshots_YYYYMMDD_HHMMSS/
     ├── measurement_YYYYMMDD_HHMMSS_01.png
     ├── measurement_YYYYMMDD_HHMMSS_02.png
-    └── ...
-</code></pre></div>
+    └── ...</code></p>
 <h2 id="line-detection-algorithm">Line Detection Algorithm<a class="headerlink" href="#line-detection-algorithm" title="Permanent link">#</a></h2>
 <ol>
 <li><strong>Perpendicular Foot Calculation</strong>: Finds closest point on reference line</li>
@@ -5309,13 +5094,13 @@ where NN is the zero-padded measurement number.</p>
 <p>The tool automatically configures output directories and filenames based on system timestamp. No additional configuration files are required.</p>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">#</a></h2>
 <h3 id="screenshot-issues">Screenshot Issues<a class="headerlink" href="#screenshot-issues" title="Permanent link">#</a></h3>
-<div class="highlight"><pre><span></span><code><span class="c1"># Test ImageMagick installation</span>
-import<span class="w"> </span>-window<span class="w"> </span>root<span class="w"> </span>test_screenshot.png
-
-<span class="c1"># Check X11 access</span>
-<span class="nb">echo</span><span class="w"> </span><span class="nv">$DISPLAY</span>
-xhost<span class="w"> </span>+local:
-</code></pre></div>
+<p>```bash</p>
+<h1 id="test-imagemagick-installation">Test ImageMagick installation<a class="headerlink" href="#test-imagemagick-installation" title="Permanent link">#</a></h1>
+<p>import -window root test_screenshot.png</p>
+<h1 id="check-x11-access">Check X11 access<a class="headerlink" href="#check-x11-access" title="Permanent link">#</a></h1>
+<p>echo $DISPLAY
+xhost +local:
+```</p>
 <h3 id="csv-file-issues">CSV File Issues<a class="headerlink" href="#csv-file-issues" title="Permanent link">#</a></h3>
 <ul>
 <li>Check write permissions in home directory</li>
@@ -5434,7 +5219,7 @@ xhost<span class="w"> </span>+local:
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+        <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
         <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
       
