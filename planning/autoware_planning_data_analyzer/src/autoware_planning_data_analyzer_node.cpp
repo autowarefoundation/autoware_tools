@@ -112,6 +112,8 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   route_topic_name_ = get_or_declare_parameter<std::string>(*this, "route_topic");
   odometry_topic_name_ = get_or_declare_parameter<std::string>(*this, "odometry_topic");
   trajectory_topic_name_ = get_or_declare_parameter<std::string>(*this, "trajectory_topic");
+  candidate_trajectories_topic_name_ =
+    get_or_declare_parameter<std::string>(*this, "candidate_trajectories_topic");
   evaluation_interval_ms_ = get_or_declare_parameter<double>(*this, "evaluation_interval_ms");
   sync_tolerance_ms_ = get_or_declare_parameter<double>(*this, "sync_tolerance_ms");
   gt_source_mode_ = get_or_declare_parameter<std::string>(*this, "open_loop.gt_source_mode");
@@ -134,11 +136,23 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
     get_or_declare_parameter<double>(*this, "open_loop.hc.max_yaw_rate");
   history_comfort_params_.max_yaw_acceleration =
     get_or_declare_parameter<double>(*this, "open_loop.hc.max_yaw_acceleration");
+  extended_comfort_parameters_.max_acceleration_rms =
+    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.max_acceleration_rms");
+  extended_comfort_parameters_.max_jerk_rms =
+    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.max_jerk_rms");
+  extended_comfort_parameters_.max_yaw_rate_rms =
+    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.max_yaw_rate_rms");
+  extended_comfort_parameters_.max_yaw_acceleration_rms =
+    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.max_yaw_acceleration_rms");
+  extended_comfort_parameters_.finite_difference_epsilon =
+    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.finite_difference_epsilon");
   lane_keeping_params_.max_lateral_deviation =
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_lateral_deviation");
   lane_keeping_params_.max_continuous_violation_time =
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_continuous_violation_time");
   objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
+  traffic_signals_topic_name_ =
+    get_or_declare_parameter<std::string>(*this, "traffic_signals_topic");
   tf_topic_name_ = get_or_declare_parameter<std::string>(*this, "tf_topic");
   acceleration_topic_name_ = get_or_declare_parameter<std::string>(*this, "acceleration_topic");
   steering_topic_name_ = get_or_declare_parameter<std::string>(*this, "steering_topic");
@@ -454,8 +468,10 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
   topic_names.route_topic = route_topic_name_;
   topic_names.odometry_topic = odometry_topic_name_;
   topic_names.trajectory_topic = trajectory_topic_name_;
+  topic_names.candidate_trajectories_topic = candidate_trajectories_topic_name_;
   topic_names.gt_trajectory_topic = gt_trajectory_topic_name_;
   topic_names.objects_topic = objects_topic_name_;
+  topic_names.traffic_signals_topic = traffic_signals_topic_name_;
   topic_names.tf_topic = tf_topic_name_;
   topic_names.acceleration_topic = acceleration_topic_name_;
   topic_names.steering_topic = steering_topic_name_;
@@ -483,10 +499,11 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
         get_or_declare_parameter<std::vector<double>>(*this, "open_loop.evaluation_horizons");
       OpenLoopEvaluator evaluator(
         get_logger(), route_handler_, gt_mode, gt_sync_tolerance_ms_, history_comfort_params_,
-        lane_keeping_params_, vehicle_info_);
+        lane_keeping_params_, metrics::DrivingDirectionComplianceParameters{}, vehicle_info_);
       evaluator.set_json_output_dir(output_dir_path.string());
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_evaluation_horizons(evaluation_horizons);
+      evaluator.set_extended_comfort_parameters(extended_comfort_parameters_);
       auto times =
         evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);
       start_time = times.first;

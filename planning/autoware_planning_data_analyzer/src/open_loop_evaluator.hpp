@@ -17,6 +17,10 @@
 
 #include "bag_handler.hpp"
 #include "base_evaluator.hpp"
+#include "metrics/driving_direction_compliance.hpp"
+#include "metrics/ego_progress.hpp"
+#include "metrics/epdms_aggregation.hpp"
+#include "metrics/extended_comfort.hpp"
 #include "metrics/lane_keeping.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
@@ -29,6 +33,7 @@
 #include <visualization_msgs/msg/marker_array.hpp>
 
 #include <cstddef>
+#include <limits>
 #include <map>
 #include <memory>
 #include <string>
@@ -64,12 +69,35 @@ struct OpenLoopTrajectoryMetrics
   std::vector<double> heading_errors;       // Absolute heading error at each trajectory point [rad]
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
   double history_comfort{0.0};              // Binary comfort subscore for the trajectory
-  double lane_keeping{0.0};                 // Binary lane keeping subscore for the trajectory
+  double extended_comfort{0.0};             // Binary extended comfort subscore
+  bool extended_comfort_available{false};
+  std::string extended_comfort_reason{"unavailable"};
+  double time_to_collision_within_bound{0.0};
+  bool time_to_collision_within_bound_available{false};
+  std::string time_to_collision_within_bound_reason{"unavailable"};
+  double time_to_collision_infraction_time_s{std::numeric_limits<double>::infinity()};
+  double lane_keeping{0.0};  // Binary lane keeping subscore for the trajectory
   bool lane_keeping_available{false};
   std::string lane_keeping_reason{"unavailable"};
+  double ego_progress{0.0};  // Proposal-relative ego progress subscore
+  bool ego_progress_available{false};
+  std::string ego_progress_reason{"unavailable"};
+  double ego_progress_raw_m{0.0};
+  double ego_progress_best_raw_m{0.0};
   double drivable_area_compliance{0.0};  // Binary drivable area compliance subscore
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};
+  double no_at_fault_collision{0.0};
+  bool no_at_fault_collision_available{false};
+  std::string no_at_fault_collision_reason{"unavailable"};
+  double time_to_at_fault_collision_s{std::numeric_limits<double>::infinity()};
+  double driving_direction_compliance{0.0};
+  bool driving_direction_compliance_available{false};
+  std::string driving_direction_compliance_reason{"unavailable"};
+  double max_oncoming_progress_m{0.0};
+  double traffic_light_compliance{0.0};
+  bool traffic_light_compliance_available{false};
+  std::string traffic_light_compliance_reason{"unavailable"};
 
   // Per-horizon metrics in insertion order: "full" first, then "1s", "2s", ...
   std::vector<std::pair<std::string, HorizonMetrics>> horizon_results;
@@ -121,10 +149,12 @@ public:
     double gt_sync_tolerance_ms = 200.0,
     metrics::HistoryComfortParameters history_comfort_params = {},
     metrics::LaneKeepingParameters lane_keeping_params = {},
+    metrics::DrivingDirectionComplianceParameters driving_direction_params = {},
     autoware::vehicle_info_utils::VehicleInfo vehicle_info = {})
   : BaseEvaluator(logger, route_handler),
     history_comfort_params_(std::move(history_comfort_params)),
     lane_keeping_params_(std::move(lane_keeping_params)),
+    driving_direction_params_(std::move(driving_direction_params)),
     vehicle_info_(std::move(vehicle_info)),
     gt_source_mode_(gt_source_mode),
     gt_sync_tolerance_ms_(gt_sync_tolerance_ms)
@@ -153,6 +183,11 @@ public:
   void set_evaluation_horizons(const std::vector<double> & horizons)
   {
     evaluation_horizons_ = horizons;
+  }
+
+  void set_extended_comfort_parameters(const metrics::ExtendedComfortParameters & parameters)
+  {
+    extended_comfort_parameters_ = parameters;
   }
 
   nlohmann::json get_summary_as_json() const override;
@@ -278,7 +313,8 @@ private:
    * stores the compared ground-truth trajectory for the evaluated sample.
    */
   void save_metrics_to_bag(
-    const OpenLoopTrajectoryMetrics & metrics, const EvaluationData & eval_data,
+    const OpenLoopTrajectoryMetrics & metrics,
+    const metrics::SyntheticEpdmsMetrics & synthetic_epdms, const EvaluationData & eval_data,
     rosbag2_cpp::Writer & bag_writer);
 
   /**
@@ -311,8 +347,12 @@ private:
 
   std::vector<OpenLoopTrajectoryMetrics> metrics_list_;
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
+  std::vector<metrics::HumanFilterMetrics> human_filter_metrics_list_;
+  std::vector<metrics::SyntheticEpdmsMetrics> synthetic_epdms_metrics_list_;
   metrics::HistoryComfortParameters history_comfort_params_;
+  metrics::ExtendedComfortParameters extended_comfort_parameters_{};
   metrics::LaneKeepingParameters lane_keeping_params_;
+  metrics::DrivingDirectionComplianceParameters driving_direction_params_;
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   OpenLoopEvaluationSummary summary_;
   std::string metric_variant_;
