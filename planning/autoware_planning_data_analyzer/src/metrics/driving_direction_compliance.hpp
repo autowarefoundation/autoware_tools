@@ -15,8 +15,6 @@
 #ifndef METRICS__DRIVING_DIRECTION_COMPLIANCE_HPP_
 #define METRICS__DRIVING_DIRECTION_COMPLIANCE_HPP_
 
-#include <builtin_interfaces/msg/duration.hpp>
-
 #include <limits>
 #include <string>
 #include <vector>
@@ -33,7 +31,7 @@ struct DrivingDirectionComplianceParameters
 
 struct DrivingDirectionEvaluationPoint
 {
-  builtin_interfaces::msg::Duration time_from_start;
+  double time_from_start_s{0.0};
   double progress_m{0.0};
   bool in_oncoming_traffic{false};
   bool is_intersection{false};

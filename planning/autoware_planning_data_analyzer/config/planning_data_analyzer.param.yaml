@@ -84,7 +84,7 @@
         enabled: false  # Set true to enforce thresholds
         max_ade: 1.0  # Maximum allowed ADE (meters)
         max_fde: 1.5  # Maximum allowed FDE (meters)
-        max_lateral_deviation: 0.5  # Maximum lateral deviation (meters)
+        max_lateral_deviation: 0.5  # Maximum absolute lateral deviation in the vehicle frame (meters)
         min_ttc: 3.0  # Minimum required TTC (seconds)
 
       # Debug visualization

@@ -17,6 +17,7 @@
 #include "drivable_area_compliance.hpp"
 #include "driving_direction_compliance.hpp"
 #include "history_comfort.hpp"
+#include "metric_utils.hpp"
 #include "no_at_fault_collision.hpp"
 #include "traffic_light_compliance.hpp"
 #include "ttc_within_bound.hpp"
@@ -34,7 +35,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -196,70 +196,6 @@ double calculate_time_to_collision(
   return std::min(ttc, max_ttc_value);
 }
 
-void append_unique_lanelet(
-  const lanelet::ConstLanelet & lanelet, lanelet::ConstLanelets & lanelets,
-  std::unordered_set<lanelet::Id> & seen_ids)
-{
-  if (seen_ids.insert(lanelet.id()).second) {
-    lanelets.push_back(lanelet);
-  }
-}
-
-lanelet::ConstLanelets collect_route_relevant_lanelets_for_trajectory(
-  const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
-{
-  lanelet::ConstLanelets drivable_lanelets;
-  if (!route_handler || !route_handler->isHandlerReady()) {
-    return drivable_lanelets;
-  }
-
-  std::unordered_set<lanelet::Id> seen_ids;
-  for (const auto & point : trajectory.points) {
-    for (const auto & lanelet : route_handler->getRoadLaneletsAtPose(point.pose)) {
-      if (!route_handler->isRouteLanelet(lanelet)) {
-        continue;
-      }
-      append_unique_lanelet(lanelet, drivable_lanelets, seen_ids);
-    }
-  }
-
-  return drivable_lanelets;
-}
-
-std::optional<lanelet::ConstLanelet> find_reference_lanelet(
-  const geometry_msgs::msg::Pose & pose,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
-{
-  if (!route_handler || !route_handler->isHandlerReady()) {
-    return std::nullopt;
-  }
-
-  lanelet::ConstLanelet closest_lanelet;
-  if (route_handler->getClosestLaneletWithinRoute(pose, &closest_lanelet)) {
-    return closest_lanelet;
-  }
-
-  return std::nullopt;
-}
-
-bool is_pose_in_intersection(
-  const geometry_msgs::msg::Pose & pose,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
-{
-  if (!route_handler || !route_handler->isHandlerReady()) {
-    return false;
-  }
-
-  for (const auto & lanelet : route_handler->getRoadLaneletsAtPose(pose)) {
-    if (autoware::experimental::lanelet2_utils::is_intersection_lanelet(lanelet)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 bool is_pose_in_route_lane(
   const geometry_msgs::msg::Pose & pose,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
@@ -340,7 +276,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
       const auto & point = trajectory.points.at(i);
       driving_direction_evaluation_points.push_back(
         DrivingDirectionEvaluationPoint{
-          point.time_from_start, progress_m, !is_pose_in_route_lane(point.pose, route_handler),
+          rclcpp::Duration(point.time_from_start).seconds(), progress_m,
+          !is_pose_in_route_lane(point.pose, route_handler),
           is_pose_in_intersection(point.pose, route_handler)});
     }
 
@@ -359,8 +296,7 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     metrics.drivable_area_compliance_reason = "unavailable_route_handler_not_ready";
     metrics.traffic_light_compliance_reason = "unavailable_route_handler_not_ready";
   } else {
-    const auto drivable_lanelets =
-      collect_route_relevant_lanelets_for_trajectory(trajectory, route_handler);
+    const auto drivable_lanelets = collect_route_relevant_lanelets(trajectory, route_handler);
     const auto drivable_area_compliance =
       calculate_drivable_area_compliance(trajectory, drivable_lanelets, vehicle_info);
     metrics.drivable_area_compliance = drivable_area_compliance.score;

@@ -14,8 +14,6 @@
 
 #include "driving_direction_compliance.hpp"
 
-#include <rclcpp/duration.hpp>
-
 #include <algorithm>
 #include <cmath>
 #include <vector>
@@ -39,18 +37,18 @@ DrivingDirectionComplianceResult calculate_driving_direction_compliance(
   result.score = 1.0;
 
   std::vector<double> filtered_progress(evaluation_points.size(), 0.0);
-  for (std::size_t i = 0; i < evaluation_points.size(); ++i) {
+  for (size_t i = 0; i < evaluation_points.size(); ++i) {
     const auto & point = evaluation_points.at(i);
     if (point.in_oncoming_traffic && !point.is_intersection) {
       filtered_progress[i] = std::max(0.0, point.progress_m);
     }
   }
 
-  for (std::size_t i = 0; i < evaluation_points.size(); ++i) {
-    const double t_i = rclcpp::Duration(evaluation_points.at(i).time_from_start).seconds();
+  for (size_t i = 0; i < evaluation_points.size(); ++i) {
+    const double t_i = evaluation_points.at(i).time_from_start_s;
     double horizon_sum = 0.0;
-    for (std::size_t j = 0; j <= i; ++j) {
-      const double t_j = rclcpp::Duration(evaluation_points.at(j).time_from_start).seconds();
+    for (size_t j = 0; j <= i; ++j) {
+      const double t_j = evaluation_points.at(j).time_from_start_s;
       if (t_i - t_j <= params.horizon_s + 1.0e-6) {
         horizon_sum += filtered_progress[j];
       }

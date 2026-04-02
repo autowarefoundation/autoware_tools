@@ -14,6 +14,8 @@
 
 #include "traffic_light_compliance.hpp"
 
+#include "metric_utils.hpp"
+
 #include <autoware/traffic_light_utils/traffic_light_utils.hpp>
 #include <autoware_lanelet2_extension/regulatory_elements/autoware_traffic_light.hpp>
 #include <autoware_utils_geometry/boost_geometry.hpp>
@@ -36,48 +38,7 @@ namespace autoware::planning_data_analyzer::metrics
 namespace
 {
 
-using autoware_utils_geometry::LinearRing2d;
 using autoware_utils_geometry::LineString2d;
-using autoware_utils_geometry::Point2d;
-using autoware_utils_geometry::Polygon2d;
-
-bool is_vehicle_info_valid(const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
-{
-  return vehicle_info.vehicle_length_m > 0.0 && vehicle_info.vehicle_width_m > 0.0;
-}
-
-Polygon2d to_polygon(const LinearRing2d & ring)
-{
-  Polygon2d polygon;
-  polygon.outer() = ring;
-  boost::geometry::correct(polygon);
-  return polygon;
-}
-
-LineString2d to_linestring_2d(const lanelet::ConstLineString3d & stop_line)
-{
-  LineString2d line;
-  for (const auto & point : lanelet::utils::to2D(stop_line)) {
-    line.push_back(Point2d(point.x(), point.y()));
-  }
-  return line;
-}
-
-std::optional<lanelet::ConstLanelet> find_reference_lanelet(
-  const geometry_msgs::msg::Pose & pose,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
-{
-  if (!route_handler || !route_handler->isHandlerReady()) {
-    return std::nullopt;
-  }
-
-  lanelet::ConstLanelet closest_lanelet;
-  if (route_handler->getClosestLaneletWithinRoute(pose, &closest_lanelet)) {
-    return closest_lanelet;
-  }
-
-  return std::nullopt;
-}
 
 const autoware_perception_msgs::msg::TrafficLightGroup * find_signal_group(
   const TrafficLightGroupArray & traffic_signals, const lanelet::Id reg_elem_id)
@@ -95,10 +56,8 @@ bool footprint_intersects_stop_line(
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const lanelet::ConstLineString3d & stop_line)
 {
-  const auto footprint_ring = autoware_utils_geometry::transform_vector(
-    vehicle_info.createFootprint(0.0), autoware_utils_geometry::pose2transform(pose));
-  const auto footprint_polygon = to_polygon(footprint_ring);
-  const auto stop_line_2d = to_linestring_2d(stop_line);
+  const auto footprint_polygon = create_pose_footprint(pose, vehicle_info);
+  const auto stop_line_2d = to_linestring2d(stop_line);
   return boost::geometry::intersects(footprint_polygon, stop_line_2d);
 }
 

@@ -26,10 +26,7 @@ namespace
 DrivingDirectionEvaluationPoint make_point(
   const double t_s, const double progress_m, const bool oncoming, const bool intersection = false)
 {
-  builtin_interfaces::msg::Duration duration{};
-  duration.sec = static_cast<int32_t>(t_s);
-  duration.nanosec = static_cast<uint32_t>((t_s - static_cast<double>(duration.sec)) * 1e9);
-  return DrivingDirectionEvaluationPoint{duration, progress_m, oncoming, intersection};
+  return DrivingDirectionEvaluationPoint{t_s, progress_m, oncoming, intersection};
 }
 
 }  // namespace

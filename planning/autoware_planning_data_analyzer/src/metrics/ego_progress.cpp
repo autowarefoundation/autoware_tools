@@ -14,6 +14,8 @@
 
 #include "ego_progress.hpp"
 
+#include "metric_utils.hpp"
+
 #include <autoware/lanelet2_utils/geometry.hpp>
 
 #include <algorithm>
@@ -29,31 +31,6 @@ namespace autoware::planning_data_analyzer::metrics
 
 namespace
 {
-
-lanelet::ConstLanelets collect_route_relevant_lanelets(
-  const Trajectory & trajectory,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
-{
-  if (!route_handler || !route_handler->isHandlerReady()) {
-    return {};
-  }
-
-  lanelet::ConstLanelets route_lanelets;
-  std::unordered_set<lanelet::Id> seen_ids;
-
-  for (const auto & point : trajectory.points) {
-    for (const auto & lanelet : route_handler->getRoadLaneletsAtPose(point.pose)) {
-      if (!route_handler->isRouteLanelet(lanelet)) {
-        continue;
-      }
-      if (seen_ids.insert(lanelet.id()).second) {
-        route_lanelets.push_back(lanelet);
-      }
-    }
-  }
-
-  return route_lanelets;
-}
 
 std::optional<double> calculate_raw_progress_m(
   const Trajectory & trajectory,
@@ -109,6 +86,8 @@ double calculate_trajectory_similarity(const Trajectory & lhs, const Trajectory 
     total_distance += std::hypot(lp.x - rp.x, lp.y - rp.y);
   }
 
+  // Normalize by the shared prefix length so candidate matching is not biased toward
+  // trajectories with more points in common.
   total_distance /= static_cast<double>(shared_size);
   total_distance += std::abs(static_cast<double>(lhs.points.size()) - rhs.points.size());
   return total_distance;

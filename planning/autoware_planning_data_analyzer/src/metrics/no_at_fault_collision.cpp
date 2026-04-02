@@ -14,6 +14,8 @@
 
 #include "no_at_fault_collision.hpp"
 
+#include "metric_utils.hpp"
+
 #include <autoware/object_recognition_utils/object_classification.hpp>
 #include <autoware_utils_geometry/boost_polygon_utils.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
@@ -21,18 +23,14 @@
 #include <boost/geometry.hpp>
 
 #include <lanelet2_core/geometry/Lanelet.h>
-#include <tf2/utils.h>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <iomanip>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <string>
-#include <unordered_set>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -68,50 +66,9 @@ struct EgoAreaFlags
   bool non_drivable_area{false};
 };
 
-bool is_vehicle_info_valid(const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
-{
-  return vehicle_info.vehicle_length_m > 0.0 && vehicle_info.vehicle_width_m > 0.0;
-}
-
-double get_yaw(const geometry_msgs::msg::Quaternion & orientation)
-{
-  return tf2::getYaw(orientation);
-}
-
-std::string uuid_to_hex_string(const unique_identifier_msgs::msg::UUID & uuid)
-{
-  std::ostringstream oss;
-  oss << std::hex << std::setfill('0');
-  for (const auto byte : uuid.uuid) {
-    oss << std::setw(2) << static_cast<int>(byte);
-  }
-  return oss.str();
-}
-
 double ego_speed(const autoware_planning_msgs::msg::TrajectoryPoint & point)
 {
   return std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps);
-}
-
-Polygon2d create_pose_footprint(
-  const geometry_msgs::msg::Pose & pose,
-  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
-{
-  const auto local_footprint = vehicle_info.createFootprint(0.0);
-  Polygon2d polygon;
-  polygon.outer() = autoware_utils_geometry::transform_vector(
-    local_footprint, autoware_utils_geometry::pose2transform(pose));
-  bg::correct(polygon);
-  return polygon;
-}
-
-const autoware_perception_msgs::msg::PredictedPath * highest_confidence_path(
-  const autoware_perception_msgs::msg::PredictedObject & object)
-{
-  const auto it = std::max_element(
-    object.kinematics.predicted_paths.begin(), object.kinematics.predicted_paths.end(),
-    [](const auto & lhs, const auto & rhs) { return lhs.confidence < rhs.confidence; });
-  return it == object.kinematics.predicted_paths.end() ? nullptr : &(*it);
 }
 
 std::optional<ObjectState> interpolate_object_state(
@@ -154,21 +111,6 @@ std::optional<ObjectState> interpolate_object_state(
   state.speed_mps = std::hypot(p1.x - p0.x, p1.y - p0.y) / dt;
   state.polygon = autoware_utils_geometry::to_polygon2d(state.pose, object.shape);
   return state;
-}
-
-double forward_offset_in_ego_frame(
-  const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
-{
-  const double yaw = get_yaw(ego_pose.orientation);
-  const double dx = object_pose.position.x - ego_pose.position.x;
-  const double dy = object_pose.position.y - ego_pose.position.y;
-  return std::cos(yaw) * dx + std::sin(yaw) * dy;
-}
-
-bool is_agent_behind(
-  const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
-{
-  return forward_offset_in_ego_frame(ego_pose, object_pose) < 0.0;
 }
 
 bool front_bumper_intersects(
@@ -283,17 +225,11 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
     return result;
   }
 
-  std::unordered_set<std::string> collided_object_ids;
   for (const auto & point : trajectory.points) {
     const auto query_time_s = rclcpp::Duration(point.time_from_start).seconds();
     const auto ego_polygon = create_pose_footprint(point.pose, vehicle_info);
 
     for (const auto & object : objects->objects) {
-      const auto object_id = uuid_to_hex_string(object.object_id);
-      if (collided_object_ids.count(object_id) != 0U) {
-        continue;
-      }
-
       const auto object_state = interpolate_object_state(object, query_time_s);
       if (!object_state.has_value()) {
         continue;
@@ -335,8 +271,6 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
           return result;
         }
       }
-
-      collided_object_ids.insert(object_id);
     }
   }
 

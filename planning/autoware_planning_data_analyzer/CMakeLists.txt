@@ -16,6 +16,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/metrics/driving_direction_compliance.cpp
   src/metrics/history_comfort.cpp
   src/metrics/lane_keeping.cpp
+  src/metrics/metric_utils.cpp
   src/metrics/drivable_area_compliance.cpp
   src/metrics/extended_comfort.cpp
   src/metrics/ttc_within_bound.cpp
