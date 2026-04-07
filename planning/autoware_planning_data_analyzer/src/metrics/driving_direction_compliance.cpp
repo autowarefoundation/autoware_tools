@@ -36,12 +36,11 @@ DrivingDirectionComplianceResult calculate_driving_direction_compliance(
   result.reason = "available";
   result.score = 1.0;
 
-  std::vector<double> filtered_progress(evaluation_points.size(), 0.0);
-  for (size_t i = 0; i < evaluation_points.size(); ++i) {
-    const auto & point = evaluation_points.at(i);
-    if (point.in_oncoming_traffic && !point.is_intersection) {
-      filtered_progress[i] = std::max(0.0, point.progress_m);
-    }
+  std::vector<double> filtered_progress;
+  filtered_progress.reserve(evaluation_points.size());
+  for (const auto & point : evaluation_points) {
+    filtered_progress.push_back(
+      point.in_oncoming_traffic && !point.is_intersection ? std::max(0.0, point.progress_m) : 0.0);
   }
 
   for (size_t i = 0; i < evaluation_points.size(); ++i) {
