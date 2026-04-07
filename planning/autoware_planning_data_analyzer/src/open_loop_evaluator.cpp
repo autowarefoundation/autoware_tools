@@ -905,9 +905,8 @@ std::optional<geometry_msgs::msg::Pose> OpenLoopEvaluator::interpolate_ground_tr
 }
 
 void OpenLoopEvaluator::save_metrics_to_bag(
-  const OpenLoopTrajectoryMetrics & metrics,
-  const metrics::SyntheticEpdmsMetrics & synthetic_epdms, const EvaluationData & eval_data,
-  rosbag2_cpp::Writer & bag_writer)
+  const OpenLoopTrajectoryMetrics & metrics, const metrics::SyntheticEpdmsMetrics & synthetic_epdms,
+  const EvaluationData & eval_data, rosbag2_cpp::Writer & bag_writer)
 {
   const auto & ground_truth_trajectory = eval_data.ground_truth_trajectory;
   const auto & trajectory_data = eval_data.synchronized_data;
@@ -967,11 +966,10 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   bag_writer.write(scalar_msg, metric_topic("max_oncoming_progress_m"), message_timestamp);
   scalar_msg.data = metrics.traffic_light_compliance;
   bag_writer.write(scalar_msg, metric_topic("traffic_light_compliance"), message_timestamp);
-  scalar_msg.data = synthetic_epdms.raw_epdms;
+  scalar_msg.data = synthetic_epdms.raw.epdms;
   bag_writer.write(scalar_msg, metric_topic("synthetic_epdms_raw"), message_timestamp);
-  scalar_msg.data = synthetic_epdms.human_filtered_epdms;
-  bag_writer.write(
-    scalar_msg, metric_topic("synthetic_epdms_human_filtered"), message_timestamp);
+  scalar_msg.data = synthetic_epdms.human_filtered.epdms;
+  bag_writer.write(scalar_msg, metric_topic("synthetic_epdms_human_filtered"), message_timestamp);
   std_msgs::msg::Bool availability_msg;
   availability_msg.data = metrics.extended_comfort_available;
   bag_writer.write(availability_msg, metric_topic("extended_comfort_available"), message_timestamp);
@@ -994,10 +992,10 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   availability_msg.data = metrics.traffic_light_compliance_available;
   bag_writer.write(
     availability_msg, metric_topic("traffic_light_compliance_available"), message_timestamp);
-  availability_msg.data = synthetic_epdms.raw_available;
+  availability_msg.data = synthetic_epdms.raw.available;
   bag_writer.write(
     availability_msg, metric_topic("synthetic_epdms_raw_available"), message_timestamp);
-  availability_msg.data = synthetic_epdms.human_filtered_available;
+  availability_msg.data = synthetic_epdms.human_filtered.available;
   bag_writer.write(
     availability_msg, metric_topic("synthetic_epdms_human_filtered_available"), message_timestamp);
   std_msgs::msg::String reason_msg;
@@ -1474,55 +1472,55 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
   std::vector<double> filtered_tlc_values;
   std::size_t tlc_filter_applied_count = 0;
   for (const auto & m : human_filter_metrics_list_) {
-    if (m.human_history_comfort_available) {
-      human_history_comfort_values.push_back(m.human_history_comfort);
-      filtered_history_comfort_values.push_back(m.filtered_history_comfort);
+    if (m.history_comfort.human_reference_available) {
+      human_history_comfort_values.push_back(m.history_comfort.human_reference);
+      filtered_history_comfort_values.push_back(m.history_comfort.filtered);
     }
     history_comfort_filter_applied_count +=
-      static_cast<std::size_t>(m.history_comfort_filter_applied);
-    if (m.human_extended_comfort_available) {
-      human_extended_comfort_values.push_back(m.human_extended_comfort);
-      filtered_extended_comfort_values.push_back(m.filtered_extended_comfort);
+      static_cast<std::size_t>(m.history_comfort.filter_applied);
+    if (m.extended_comfort.human_reference_available) {
+      human_extended_comfort_values.push_back(m.extended_comfort.human_reference);
+      filtered_extended_comfort_values.push_back(m.extended_comfort.filtered);
     }
     extended_comfort_filter_applied_count +=
-      static_cast<std::size_t>(m.extended_comfort_filter_applied);
-    if (m.human_ego_progress_available) {
-      human_ego_progress_values.push_back(m.human_ego_progress);
-      filtered_ego_progress_values.push_back(m.filtered_ego_progress);
+      static_cast<std::size_t>(m.extended_comfort.filter_applied);
+    if (m.ego_progress.human_reference_available) {
+      human_ego_progress_values.push_back(m.ego_progress.human_reference);
+      filtered_ego_progress_values.push_back(m.ego_progress.filtered);
     }
-    ego_progress_filter_applied_count += static_cast<std::size_t>(m.ego_progress_filter_applied);
-    if (m.human_time_to_collision_within_bound_available) {
-      human_ttc_within_bound_values.push_back(m.human_time_to_collision_within_bound);
-      filtered_ttc_within_bound_values.push_back(m.filtered_time_to_collision_within_bound);
+    ego_progress_filter_applied_count += static_cast<std::size_t>(m.ego_progress.filter_applied);
+    if (m.time_to_collision_within_bound.human_reference_available) {
+      human_ttc_within_bound_values.push_back(m.time_to_collision_within_bound.human_reference);
+      filtered_ttc_within_bound_values.push_back(m.time_to_collision_within_bound.filtered);
     }
     ttc_within_bound_filter_applied_count +=
-      static_cast<std::size_t>(m.time_to_collision_within_bound_filter_applied);
-    if (m.human_lane_keeping_available) {
-      human_lane_keeping_values.push_back(m.human_lane_keeping);
-      filtered_lane_keeping_values.push_back(m.filtered_lane_keeping);
+      static_cast<std::size_t>(m.time_to_collision_within_bound.filter_applied);
+    if (m.lane_keeping.human_reference_available) {
+      human_lane_keeping_values.push_back(m.lane_keeping.human_reference);
+      filtered_lane_keeping_values.push_back(m.lane_keeping.filtered);
     }
-    lane_keeping_filter_applied_count += static_cast<std::size_t>(m.lane_keeping_filter_applied);
-    if (m.human_drivable_area_compliance_available) {
-      human_dac_values.push_back(m.human_drivable_area_compliance);
-      filtered_dac_values.push_back(m.filtered_drivable_area_compliance);
+    lane_keeping_filter_applied_count += static_cast<std::size_t>(m.lane_keeping.filter_applied);
+    if (m.drivable_area_compliance.human_reference_available) {
+      human_dac_values.push_back(m.drivable_area_compliance.human_reference);
+      filtered_dac_values.push_back(m.drivable_area_compliance.filtered);
     }
-    dac_filter_applied_count += static_cast<std::size_t>(m.drivable_area_compliance_filter_applied);
-    if (m.human_no_at_fault_collision_available) {
-      human_nc_values.push_back(m.human_no_at_fault_collision);
-      filtered_nc_values.push_back(m.filtered_no_at_fault_collision);
+    dac_filter_applied_count += static_cast<std::size_t>(m.drivable_area_compliance.filter_applied);
+    if (m.no_at_fault_collision.human_reference_available) {
+      human_nc_values.push_back(m.no_at_fault_collision.human_reference);
+      filtered_nc_values.push_back(m.no_at_fault_collision.filtered);
     }
-    nc_filter_applied_count += static_cast<std::size_t>(m.no_at_fault_collision_filter_applied);
-    if (m.human_driving_direction_compliance_available) {
-      human_ddc_values.push_back(m.human_driving_direction_compliance);
-      filtered_ddc_values.push_back(m.filtered_driving_direction_compliance);
+    nc_filter_applied_count += static_cast<std::size_t>(m.no_at_fault_collision.filter_applied);
+    if (m.driving_direction_compliance.human_reference_available) {
+      human_ddc_values.push_back(m.driving_direction_compliance.human_reference);
+      filtered_ddc_values.push_back(m.driving_direction_compliance.filtered);
     }
     ddc_filter_applied_count +=
-      static_cast<std::size_t>(m.driving_direction_compliance_filter_applied);
-    if (m.human_traffic_light_compliance_available) {
-      human_tlc_values.push_back(m.human_traffic_light_compliance);
-      filtered_tlc_values.push_back(m.filtered_traffic_light_compliance);
+      static_cast<std::size_t>(m.driving_direction_compliance.filter_applied);
+    if (m.traffic_light_compliance.human_reference_available) {
+      human_tlc_values.push_back(m.traffic_light_compliance.human_reference);
+      filtered_tlc_values.push_back(m.traffic_light_compliance.filtered);
     }
-    tlc_filter_applied_count += static_cast<std::size_t>(m.traffic_light_compliance_filter_applied);
+    tlc_filter_applied_count += static_cast<std::size_t>(m.traffic_light_compliance.filter_applied);
   }
   emit_human_filter_metric(
     "history_comfort", "history comfort subscore", human_history_comfort_values,
@@ -1561,16 +1559,16 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
   std::vector<double> synthetic_filtered_epdms_values;
   std::size_t synthetic_filtered_available_count = 0;
   for (const auto & m : synthetic_epdms_metrics_list_) {
-    if (m.raw_available) {
-      synthetic_raw_prod_values.push_back(m.raw_multiplicative_metrics_prod);
-      synthetic_raw_weighted_values.push_back(m.raw_weighted_metrics);
-      synthetic_raw_epdms_values.push_back(m.raw_epdms);
+    if (m.raw.available) {
+      synthetic_raw_prod_values.push_back(m.raw.multiplicative_metrics_prod);
+      synthetic_raw_weighted_values.push_back(m.raw.weighted_metrics);
+      synthetic_raw_epdms_values.push_back(m.raw.epdms);
       ++synthetic_raw_available_count;
     }
-    if (m.human_filtered_available) {
-      synthetic_filtered_prod_values.push_back(m.human_filtered_multiplicative_metrics_prod);
-      synthetic_filtered_weighted_values.push_back(m.human_filtered_weighted_metrics);
-      synthetic_filtered_epdms_values.push_back(m.human_filtered_epdms);
+    if (m.human_filtered.available) {
+      synthetic_filtered_prod_values.push_back(m.human_filtered.multiplicative_metrics_prod);
+      synthetic_filtered_weighted_values.push_back(m.human_filtered.weighted_metrics);
+      synthetic_filtered_epdms_values.push_back(m.human_filtered.epdms);
       ++synthetic_filtered_available_count;
     }
   }
@@ -1681,72 +1679,76 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["traffic_light_compliance_reason"] = m.traffic_light_compliance_reason;
     if (i < human_filter_metrics_list_.size()) {
       const auto & hf = human_filter_metrics_list_[i];
-      traj["human_reference"]["history_comfort"] = hf.human_history_comfort;
-      traj["human_reference"]["history_comfort_available"] = hf.human_history_comfort_available;
-      traj["human_reference"]["extended_comfort"] = hf.human_extended_comfort;
-      traj["human_reference"]["extended_comfort_available"] = hf.human_extended_comfort_available;
-      traj["human_reference"]["ego_progress"] = hf.human_ego_progress;
-      traj["human_reference"]["ego_progress_available"] = hf.human_ego_progress_available;
+      traj["human_reference"]["history_comfort"] = hf.history_comfort.human_reference;
+      traj["human_reference"]["history_comfort_available"] =
+        hf.history_comfort.human_reference_available;
+      traj["human_reference"]["extended_comfort"] = hf.extended_comfort.human_reference;
+      traj["human_reference"]["extended_comfort_available"] =
+        hf.extended_comfort.human_reference_available;
+      traj["human_reference"]["ego_progress"] = hf.ego_progress.human_reference;
+      traj["human_reference"]["ego_progress_available"] = hf.ego_progress.human_reference_available;
       traj["human_reference"]["time_to_collision_within_bound"] =
-        hf.human_time_to_collision_within_bound;
+        hf.time_to_collision_within_bound.human_reference;
       traj["human_reference"]["time_to_collision_within_bound_available"] =
-        hf.human_time_to_collision_within_bound_available;
-      traj["human_reference"]["lane_keeping"] = hf.human_lane_keeping;
-      traj["human_reference"]["lane_keeping_available"] = hf.human_lane_keeping_available;
-      traj["human_reference"]["drivable_area_compliance"] = hf.human_drivable_area_compliance;
+        hf.time_to_collision_within_bound.human_reference_available;
+      traj["human_reference"]["lane_keeping"] = hf.lane_keeping.human_reference;
+      traj["human_reference"]["lane_keeping_available"] = hf.lane_keeping.human_reference_available;
+      traj["human_reference"]["drivable_area_compliance"] =
+        hf.drivable_area_compliance.human_reference;
       traj["human_reference"]["drivable_area_compliance_available"] =
-        hf.human_drivable_area_compliance_available;
-      traj["human_reference"]["no_at_fault_collision"] = hf.human_no_at_fault_collision;
+        hf.drivable_area_compliance.human_reference_available;
+      traj["human_reference"]["no_at_fault_collision"] = hf.no_at_fault_collision.human_reference;
       traj["human_reference"]["no_at_fault_collision_available"] =
-        hf.human_no_at_fault_collision_available;
+        hf.no_at_fault_collision.human_reference_available;
       traj["human_reference"]["driving_direction_compliance"] =
-        hf.human_driving_direction_compliance;
+        hf.driving_direction_compliance.human_reference;
       traj["human_reference"]["driving_direction_compliance_available"] =
-        hf.human_driving_direction_compliance_available;
-      traj["human_reference"]["traffic_light_compliance"] = hf.human_traffic_light_compliance;
+        hf.driving_direction_compliance.human_reference_available;
+      traj["human_reference"]["traffic_light_compliance"] =
+        hf.traffic_light_compliance.human_reference;
       traj["human_reference"]["traffic_light_compliance_available"] =
-        hf.human_traffic_light_compliance_available;
+        hf.traffic_light_compliance.human_reference_available;
 
-      traj["human_filtered"]["history_comfort"] = hf.filtered_history_comfort;
-      traj["human_filtered"]["history_comfort_filter_applied"] = hf.history_comfort_filter_applied;
-      traj["human_filtered"]["extended_comfort"] = hf.filtered_extended_comfort;
+      traj["human_filtered"]["history_comfort"] = hf.history_comfort.filtered;
+      traj["human_filtered"]["history_comfort_filter_applied"] = hf.history_comfort.filter_applied;
+      traj["human_filtered"]["extended_comfort"] = hf.extended_comfort.filtered;
       traj["human_filtered"]["extended_comfort_filter_applied"] =
-        hf.extended_comfort_filter_applied;
-      traj["human_filtered"]["ego_progress"] = hf.filtered_ego_progress;
-      traj["human_filtered"]["ego_progress_filter_applied"] = hf.ego_progress_filter_applied;
+        hf.extended_comfort.filter_applied;
+      traj["human_filtered"]["ego_progress"] = hf.ego_progress.filtered;
+      traj["human_filtered"]["ego_progress_filter_applied"] = hf.ego_progress.filter_applied;
       traj["human_filtered"]["time_to_collision_within_bound"] =
-        hf.filtered_time_to_collision_within_bound;
+        hf.time_to_collision_within_bound.filtered;
       traj["human_filtered"]["time_to_collision_within_bound_filter_applied"] =
-        hf.time_to_collision_within_bound_filter_applied;
-      traj["human_filtered"]["lane_keeping"] = hf.filtered_lane_keeping;
-      traj["human_filtered"]["lane_keeping_filter_applied"] = hf.lane_keeping_filter_applied;
-      traj["human_filtered"]["drivable_area_compliance"] = hf.filtered_drivable_area_compliance;
+        hf.time_to_collision_within_bound.filter_applied;
+      traj["human_filtered"]["lane_keeping"] = hf.lane_keeping.filtered;
+      traj["human_filtered"]["lane_keeping_filter_applied"] = hf.lane_keeping.filter_applied;
+      traj["human_filtered"]["drivable_area_compliance"] = hf.drivable_area_compliance.filtered;
       traj["human_filtered"]["drivable_area_compliance_filter_applied"] =
-        hf.drivable_area_compliance_filter_applied;
-      traj["human_filtered"]["no_at_fault_collision"] = hf.filtered_no_at_fault_collision;
+        hf.drivable_area_compliance.filter_applied;
+      traj["human_filtered"]["no_at_fault_collision"] = hf.no_at_fault_collision.filtered;
       traj["human_filtered"]["no_at_fault_collision_filter_applied"] =
-        hf.no_at_fault_collision_filter_applied;
+        hf.no_at_fault_collision.filter_applied;
       traj["human_filtered"]["driving_direction_compliance"] =
-        hf.filtered_driving_direction_compliance;
+        hf.driving_direction_compliance.filtered;
       traj["human_filtered"]["driving_direction_compliance_filter_applied"] =
-        hf.driving_direction_compliance_filter_applied;
-      traj["human_filtered"]["traffic_light_compliance"] = hf.filtered_traffic_light_compliance;
+        hf.driving_direction_compliance.filter_applied;
+      traj["human_filtered"]["traffic_light_compliance"] = hf.traffic_light_compliance.filtered;
       traj["human_filtered"]["traffic_light_compliance_filter_applied"] =
-        hf.traffic_light_compliance_filter_applied;
+        hf.traffic_light_compliance.filter_applied;
     }
     if (i < synthetic_epdms_metrics_list_.size()) {
       const auto & s = synthetic_epdms_metrics_list_[i];
-      traj["synthetic_epdms"]["raw_available"] = s.raw_available;
+      traj["synthetic_epdms"]["raw_available"] = s.raw.available;
       traj["synthetic_epdms"]["raw_multiplicative_metrics_prod"] =
-        s.raw_multiplicative_metrics_prod;
-      traj["synthetic_epdms"]["raw_weighted_metrics"] = s.raw_weighted_metrics;
-      traj["synthetic_epdms"]["raw"] = s.raw_epdms;
-      traj["synthetic_epdms"]["human_filtered_available"] = s.human_filtered_available;
+        s.raw.multiplicative_metrics_prod;
+      traj["synthetic_epdms"]["raw_weighted_metrics"] = s.raw.weighted_metrics;
+      traj["synthetic_epdms"]["raw"] = s.raw.epdms;
+      traj["synthetic_epdms"]["human_filtered_available"] = s.human_filtered.available;
       traj["synthetic_epdms"]["human_filtered_multiplicative_metrics_prod"] =
-        s.human_filtered_multiplicative_metrics_prod;
+        s.human_filtered.multiplicative_metrics_prod;
       traj["synthetic_epdms"]["human_filtered_weighted_metrics"] =
-        s.human_filtered_weighted_metrics;
-      traj["synthetic_epdms"]["human_filtered"] = s.human_filtered_epdms;
+        s.human_filtered.weighted_metrics;
+      traj["synthetic_epdms"]["human_filtered"] = s.human_filtered.epdms;
     }
 
     traj["horizon_results"] = nlohmann::json::object();

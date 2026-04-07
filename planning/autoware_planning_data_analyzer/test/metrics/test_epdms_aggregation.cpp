@@ -30,8 +30,8 @@ TEST(EpdmsAggregationTest, HumanFilterPromotesAgentMetricToOneWhenHumanIsZero)
   human.history_comfort_available = true;
 
   const auto result = calculate_human_filter_metrics(agent, human);
-  EXPECT_TRUE(result.history_comfort_filter_applied);
-  EXPECT_DOUBLE_EQ(result.filtered_history_comfort, 1.0);
+  EXPECT_TRUE(result.history_comfort.filter_applied);
+  EXPECT_DOUBLE_EQ(result.history_comfort.filtered, 1.0);
 }
 
 TEST(EpdmsAggregationTest, SyntheticEpdmsUsesFirstStageMetricGroups)
@@ -57,24 +57,24 @@ TEST(EpdmsAggregationTest, SyntheticEpdmsUsesFirstStageMetricGroups)
   agent.traffic_light_compliance_available = true;
 
   HumanFilterMetrics filter;
-  filter.filtered_extended_comfort = 1.0;
-  filter.filtered_history_comfort = 1.0;
-  filter.filtered_time_to_collision_within_bound = 1.0;
-  filter.filtered_lane_keeping = 1.0;
-  filter.filtered_no_at_fault_collision = 1.0;
-  filter.filtered_drivable_area_compliance = 1.0;
-  filter.filtered_driving_direction_compliance = 1.0;
-  filter.filtered_traffic_light_compliance = 1.0;
+  filter.extended_comfort.filtered = 1.0;
+  filter.history_comfort.filtered = 1.0;
+  filter.time_to_collision_within_bound.filtered = 1.0;
+  filter.lane_keeping.filtered = 1.0;
+  filter.no_at_fault_collision.filtered = 1.0;
+  filter.drivable_area_compliance.filtered = 1.0;
+  filter.driving_direction_compliance.filtered = 1.0;
+  filter.traffic_light_compliance.filtered = 1.0;
 
   const auto result = calculate_synthetic_epdms(agent, filter);
-  EXPECT_TRUE(result.raw_available);
-  EXPECT_DOUBLE_EQ(result.raw_multiplicative_metrics_prod, 0.5);
-  EXPECT_DOUBLE_EQ(result.raw_weighted_metrics, 0.703125);
-  EXPECT_DOUBLE_EQ(result.raw_epdms, 0.3515625);
-  EXPECT_TRUE(result.human_filtered_available);
-  EXPECT_DOUBLE_EQ(result.human_filtered_multiplicative_metrics_prod, 1.0);
-  EXPECT_DOUBLE_EQ(result.human_filtered_weighted_metrics, 1.0);
-  EXPECT_DOUBLE_EQ(result.human_filtered_epdms, 1.0);
+  EXPECT_TRUE(result.raw.available);
+  EXPECT_DOUBLE_EQ(result.raw.multiplicative_metrics_prod, 0.5);
+  EXPECT_DOUBLE_EQ(result.raw.weighted_metrics, 0.703125);
+  EXPECT_DOUBLE_EQ(result.raw.epdms, 0.3515625);
+  EXPECT_TRUE(result.human_filtered.available);
+  EXPECT_DOUBLE_EQ(result.human_filtered.multiplicative_metrics_prod, 1.0);
+  EXPECT_DOUBLE_EQ(result.human_filtered.weighted_metrics, 1.0);
+  EXPECT_DOUBLE_EQ(result.human_filtered.epdms, 1.0);
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics
