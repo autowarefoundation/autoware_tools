@@ -5,6 +5,7 @@
 # https://pre-commit.ci/#configuration
 ci:
   autofix_commit_msg: "style(pre-commit): autofix"
+  # we already have our own daily update mechanism, we set this to quarterly
   autoupdate_schedule: quarterly
   autoupdate_commit_msg: "ci(pre-commit): quarterly autoupdate"
 
