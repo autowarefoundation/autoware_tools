@@ -169,9 +169,11 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
   auto uncomfortable_prediction = make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5});
   const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5}));
 
-  for (size_t i = 0; i < comfortable_prediction.points.size(); ++i) {
-    comfortable_prediction.points[i].longitudinal_velocity_mps = 2.0;
-    uncomfortable_prediction.points[i].longitudinal_velocity_mps = 2.0;
+  for (auto & point : comfortable_prediction.points) {
+    point.longitudinal_velocity_mps = 2.0;
+  }
+  for (auto & point : uncomfortable_prediction.points) {
+    point.longitudinal_velocity_mps = 2.0;
   }
   uncomfortable_prediction.points[1].longitudinal_velocity_mps = 3.0;
   uncomfortable_prediction.points[2].longitudinal_velocity_mps = 5.0;
@@ -219,9 +221,11 @@ TEST_F(OpenLoopGTSourceModeTest, HumanFilterPromotesAgentHistoryComfortWhenHuman
   auto prediction = make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5});
   auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5}));
 
-  for (size_t i = 0; i < prediction.points.size(); ++i) {
-    prediction.points[i].longitudinal_velocity_mps = 2.0;
-    gt->points[i].longitudinal_velocity_mps = 2.0;
+  for (auto & point : prediction.points) {
+    point.longitudinal_velocity_mps = 2.0;
+  }
+  for (auto & point : gt->points) {
+    point.longitudinal_velocity_mps = 2.0;
   }
   prediction.points[1].longitudinal_velocity_mps = 3.0;
   prediction.points[2].longitudinal_velocity_mps = 5.0;
@@ -299,8 +303,10 @@ TEST_F(OpenLoopGTSourceModeTest, ExtendedComfortAvailabilityIsReportedAcrossCons
     make_trajectory(start_time + rclcpp::Duration::from_seconds(0.1), {0.0, 0.5, 1.1, 1.7}));
 
   for (auto * prediction : {&first_prediction, &second_prediction}) {
-    for (size_t i = 0; i < prediction->points.size(); ++i) {
-      prediction->points[i].longitudinal_velocity_mps = 2.0 + 0.1 * static_cast<double>(i);
+    double velocity_mps = 2.0;
+    for (auto & point : prediction->points) {
+      point.longitudinal_velocity_mps = velocity_mps;
+      velocity_mps += 0.1;
     }
   }
 
@@ -328,15 +334,16 @@ TEST_F(
   auto turning_prediction = make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0});
   const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0}));
 
-  for (size_t i = 0; i < turning_prediction.points.size(); ++i) {
-    turning_prediction.points[i].longitudinal_velocity_mps = 10.0;
-    turning_prediction.points[i].lateral_velocity_mps = 0.0;
+  for (auto & point : turning_prediction.points) {
+    point.longitudinal_velocity_mps = 10.0;
+    point.lateral_velocity_mps = 0.0;
   }
 
-  for (size_t i = 0; i < turning_prediction.points.size(); ++i) {
-    const double yaw = 0.05 * static_cast<double>(i);
-    turning_prediction.points[i].pose.orientation.z = std::sin(yaw * 0.5);
-    turning_prediction.points[i].pose.orientation.w = std::cos(yaw * 0.5);
+  double yaw = 0.0;
+  for (auto & point : turning_prediction.points) {
+    point.pose.orientation.z = std::sin(yaw * 0.5);
+    point.pose.orientation.w = std::cos(yaw * 0.5);
+    yaw += 0.05;
   }
 
   std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{
