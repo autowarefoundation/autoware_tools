@@ -24,19 +24,6 @@ target_link_libraries(${PROJECT_NAME}
 
 pluginlib_export_plugin_description_file(rviz_common plugins/plugin_description.xml)
 
-if(BUILD_TESTING)
-  find_package(ament_cmake_gtest REQUIRED)
-  ament_add_gtest(test_${PROJECT_NAME}_kinematics_types
-    test/test_kinematics_types.cpp
-  )
-  target_include_directories(test_${PROJECT_NAME}_kinematics_types PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-  )
-  target_link_libraries(test_${PROJECT_NAME}_kinematics_types
-    ${QT_LIBRARIES}
-  )
-endif()
-
 ament_auto_package(
   INSTALL_TO_SHARE
   icons

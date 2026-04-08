@@ -14,8 +14,6 @@
 //
 // Duplicated from tier4_state_rviz_plugin/src/include/material_colors.hpp for a self-contained
 // dependency graph. Palette matches AutowareStatePanel styling.
-// TODO(tier4): consolidate with tier4_state_rviz_plugin or a shared autoware_rviz theme
-// package when multiple plugins adopt the same palette.
 
 #ifndef MATERIAL_COLORS_HPP_
 #define MATERIAL_COLORS_HPP_
