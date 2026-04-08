@@ -43,6 +43,8 @@
 namespace autoware::planning_data_analyzer
 {
 
+using autoware::route_handler::RouteHandler;
+
 struct HorizonMetrics
 {
   double ade;
@@ -143,8 +145,7 @@ class OpenLoopEvaluator : public BaseEvaluator
 public:
   enum class GTSourceMode { KINEMATIC_STATE, GT_TRAJECTORY };
   explicit OpenLoopEvaluator(
-    rclcpp::Logger logger,
-    std::shared_ptr<autoware::route_handler::RouteHandler> route_handler = nullptr,
+    rclcpp::Logger logger, std::shared_ptr<RouteHandler> route_handler = nullptr,
     GTSourceMode gt_source_mode = GTSourceMode::KINEMATIC_STATE,
     double gt_sync_tolerance_ms = 200.0,
     metrics::HistoryComfortParameters history_comfort_params = {},

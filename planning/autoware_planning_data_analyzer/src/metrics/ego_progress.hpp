@@ -25,6 +25,8 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
+using autoware::route_handler::RouteHandler;
+
 struct EgoProgressResult
 {
   double score{0.0};
@@ -37,7 +39,7 @@ struct EgoProgressResult
 EgoProgressResult calculate_ego_progress(
   const std::shared_ptr<Trajectory> & selected_trajectory,
   const std::shared_ptr<CandidateTrajectories> & candidate_trajectories,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler);
+  const std::shared_ptr<RouteHandler> & route_handler);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

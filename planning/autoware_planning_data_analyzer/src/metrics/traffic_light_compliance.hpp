@@ -26,6 +26,8 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
+using autoware::route_handler::RouteHandler;
+
 struct TrafficLightComplianceResult
 {
   double score{0.0};
@@ -36,7 +38,7 @@ struct TrafficLightComplianceResult
 TrafficLightComplianceResult calculate_traffic_light_compliance(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::shared_ptr<TrafficLightGroupArray> & traffic_signals,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
+  const std::shared_ptr<RouteHandler> & route_handler,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info);
 
 }  // namespace autoware::planning_data_analyzer::metrics

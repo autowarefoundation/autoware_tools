@@ -32,6 +32,8 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
+using autoware::route_handler::RouteHandler;
+
 bool is_vehicle_info_valid(const autoware::vehicle_info_utils::VehicleInfo & vehicle_info);
 
 double get_yaw(const geometry_msgs::msg::Quaternion & orientation);
@@ -41,18 +43,16 @@ autoware_utils_geometry::Polygon2d create_pose_footprint(
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info);
 
 std::optional<lanelet::ConstLanelet> find_reference_lanelet(
-  const geometry_msgs::msg::Pose & pose,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler);
+  const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler);
 
 lanelet::ConstLanelets collect_route_relevant_lanelets(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler);
+  const std::shared_ptr<RouteHandler> & route_handler);
 
 autoware_utils_geometry::LineString2d to_linestring2d(const lanelet::ConstLineString3d & line);
 
 bool is_pose_in_intersection(
-  const geometry_msgs::msg::Pose & pose,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler);
+  const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler);
 
 double forward_offset_in_ego_frame(
   const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose);

@@ -59,6 +59,8 @@
 
 namespace autoware::planning_data_analyzer
 {
+
+using autoware::route_handler::RouteHandler;
 using autoware_utils::create_marker_color;
 using autoware_utils_rclcpp::get_or_declare_parameter;
 
@@ -82,7 +84,7 @@ std::filesystem::path resolve_bag_uri(const std::string & input_bag_path)
 AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   const rclcpp::NodeOptions & node_options)
 : Node("autoware_planning_data_analyzer", node_options),
-  route_handler_{std::make_shared<autoware::route_handler::RouteHandler>()}
+  route_handler_{std::make_shared<RouteHandler>()}
 {
   try {
     vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();

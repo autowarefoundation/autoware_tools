@@ -35,6 +35,8 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
+using autoware::route_handler::RouteHandler;
+
 namespace
 {
 
@@ -161,7 +163,7 @@ bool footprint_intersects_lanelet(
 
 std::optional<EgoAreaFlags> compute_ego_area_flags(
   const geometry_msgs::msg::Pose & pose, const Polygon2d & ego_polygon,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
+  const std::shared_ptr<RouteHandler> & route_handler)
 {
   if (!route_handler) {
     return std::nullopt;
@@ -200,7 +202,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::shared_ptr<PredictedObjects> & objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
+  const std::shared_ptr<RouteHandler> & route_handler)
 {
   NoAtFaultCollisionResult result;
 

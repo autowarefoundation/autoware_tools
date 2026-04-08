@@ -31,6 +31,8 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
+using autoware::route_handler::RouteHandler;
+
 struct HistoryComfortParameters
 {
   double finite_difference_epsilon{1.0e-3};
@@ -88,7 +90,7 @@ struct TrajectoryPointMetrics
  */
 TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const std::shared_ptr<SynchronizedData> & sync_data,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler = nullptr,
+  const std::shared_ptr<RouteHandler> & route_handler = nullptr,
   const HistoryComfortParameters & history_comfort_params = HistoryComfortParameters{},
   const LaneKeepingParameters & lane_keeping_params = LaneKeepingParameters{},
   const DrivingDirectionComplianceParameters & driving_direction_params =

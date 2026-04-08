@@ -45,6 +45,7 @@
 namespace autoware::planning_data_analyzer
 {
 
+using autoware::route_handler::RouteHandler;
 using autoware_planning_msgs::msg::Trajectory;
 
 class AutowarePlanningDataAnalyzerNode : public rclcpp::Node
@@ -67,7 +68,7 @@ private:
   void write_map_and_route_markers_to_bag(const rclcpp::Time & reference_time);
   void create_route_markers(visualization_msgs::msg::MarkerArray & marker_array) const;
 
-  std::shared_ptr<autoware::route_handler::RouteHandler> route_handler_;
+  std::shared_ptr<RouteHandler> route_handler_;
   visualization_msgs::msg::MarkerArray::ConstSharedPtr map_marker_;
 
   mutable std::mutex mutex_;

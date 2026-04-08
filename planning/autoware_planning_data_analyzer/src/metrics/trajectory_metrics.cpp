@@ -40,6 +40,8 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
+using autoware::route_handler::RouteHandler;
+
 namespace
 {
 
@@ -197,8 +199,7 @@ double calculate_time_to_collision(
 }
 
 bool is_pose_in_route_lane(
-  const geometry_msgs::msg::Pose & pose,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
+  const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler)
 {
   if (!route_handler || !route_handler->isHandlerReady()) {
     return false;
@@ -222,7 +223,7 @@ bool is_pose_in_route_lane(
 
 TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const std::shared_ptr<SynchronizedData> & sync_data,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
+  const std::shared_ptr<RouteHandler> & route_handler,
   const HistoryComfortParameters & history_comfort_params,
   const LaneKeepingParameters & lane_keeping_params,
   const DrivingDirectionComplianceParameters & driving_direction_params,

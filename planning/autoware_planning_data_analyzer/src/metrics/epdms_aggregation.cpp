@@ -32,6 +32,16 @@ double apply_human_filter(
   return applied ? 1.0 : agent_value;
 }
 
+void populate_human_filter_metric(
+  HumanFilterMetrics::Metric & metric, const double agent_value, const bool agent_available,
+  const double human_value, const bool human_available)
+{
+  metric.human_reference = human_value;
+  metric.human_reference_available = human_available;
+  metric.filtered = apply_human_filter(
+    agent_value, agent_available, human_value, human_available, metric.filter_applied);
+}
+
 }  // namespace
 
 HumanFilterMetrics calculate_human_filter_metrics(
@@ -39,76 +49,49 @@ HumanFilterMetrics calculate_human_filter_metrics(
 {
   HumanFilterMetrics result;
 
-  result.history_comfort.human_reference = human_metrics.history_comfort;
-  result.history_comfort.human_reference_available = human_metrics.history_comfort_available;
-  result.history_comfort.filtered = apply_human_filter(
-    agent_metrics.history_comfort, agent_metrics.history_comfort_available,
-    human_metrics.history_comfort, human_metrics.history_comfort_available,
-    result.history_comfort.filter_applied);
+  populate_human_filter_metric(
+    result.history_comfort, agent_metrics.history_comfort, agent_metrics.history_comfort_available,
+    human_metrics.history_comfort, human_metrics.history_comfort_available);
 
-  result.extended_comfort.human_reference = human_metrics.extended_comfort;
-  result.extended_comfort.human_reference_available = human_metrics.extended_comfort_available;
-  result.extended_comfort.filtered = apply_human_filter(
-    agent_metrics.extended_comfort, agent_metrics.extended_comfort_available,
-    human_metrics.extended_comfort, human_metrics.extended_comfort_available,
-    result.extended_comfort.filter_applied);
+  populate_human_filter_metric(
+    result.extended_comfort, agent_metrics.extended_comfort,
+    agent_metrics.extended_comfort_available, human_metrics.extended_comfort,
+    human_metrics.extended_comfort_available);
 
-  result.ego_progress.human_reference = human_metrics.ego_progress;
-  result.ego_progress.human_reference_available = human_metrics.ego_progress_available;
-  result.ego_progress.filtered = apply_human_filter(
-    agent_metrics.ego_progress, agent_metrics.ego_progress_available, human_metrics.ego_progress,
-    human_metrics.ego_progress_available, result.ego_progress.filter_applied);
+  populate_human_filter_metric(
+    result.ego_progress, agent_metrics.ego_progress, agent_metrics.ego_progress_available,
+    human_metrics.ego_progress, human_metrics.ego_progress_available);
 
-  result.time_to_collision_within_bound.human_reference =
-    human_metrics.time_to_collision_within_bound;
-  result.time_to_collision_within_bound.human_reference_available =
-    human_metrics.time_to_collision_within_bound_available;
-  result.time_to_collision_within_bound.filtered = apply_human_filter(
-    agent_metrics.time_to_collision_within_bound,
+  populate_human_filter_metric(
+    result.time_to_collision_within_bound, agent_metrics.time_to_collision_within_bound,
     agent_metrics.time_to_collision_within_bound_available,
     human_metrics.time_to_collision_within_bound,
-    human_metrics.time_to_collision_within_bound_available,
-    result.time_to_collision_within_bound.filter_applied);
+    human_metrics.time_to_collision_within_bound_available);
 
-  result.lane_keeping.human_reference = human_metrics.lane_keeping;
-  result.lane_keeping.human_reference_available = human_metrics.lane_keeping_available;
-  result.lane_keeping.filtered = apply_human_filter(
-    agent_metrics.lane_keeping, agent_metrics.lane_keeping_available, human_metrics.lane_keeping,
-    human_metrics.lane_keeping_available, result.lane_keeping.filter_applied);
+  populate_human_filter_metric(
+    result.lane_keeping, agent_metrics.lane_keeping, agent_metrics.lane_keeping_available,
+    human_metrics.lane_keeping, human_metrics.lane_keeping_available);
 
-  result.drivable_area_compliance.human_reference = human_metrics.drivable_area_compliance;
-  result.drivable_area_compliance.human_reference_available =
-    human_metrics.drivable_area_compliance_available;
-  result.drivable_area_compliance.filtered = apply_human_filter(
-    agent_metrics.drivable_area_compliance, agent_metrics.drivable_area_compliance_available,
-    human_metrics.drivable_area_compliance, human_metrics.drivable_area_compliance_available,
-    result.drivable_area_compliance.filter_applied);
+  populate_human_filter_metric(
+    result.drivable_area_compliance, agent_metrics.drivable_area_compliance,
+    agent_metrics.drivable_area_compliance_available, human_metrics.drivable_area_compliance,
+    human_metrics.drivable_area_compliance_available);
 
-  result.no_at_fault_collision.human_reference = human_metrics.no_at_fault_collision;
-  result.no_at_fault_collision.human_reference_available =
-    human_metrics.no_at_fault_collision_available;
-  result.no_at_fault_collision.filtered = apply_human_filter(
-    agent_metrics.no_at_fault_collision, agent_metrics.no_at_fault_collision_available,
-    human_metrics.no_at_fault_collision, human_metrics.no_at_fault_collision_available,
-    result.no_at_fault_collision.filter_applied);
+  populate_human_filter_metric(
+    result.no_at_fault_collision, agent_metrics.no_at_fault_collision,
+    agent_metrics.no_at_fault_collision_available, human_metrics.no_at_fault_collision,
+    human_metrics.no_at_fault_collision_available);
 
-  result.driving_direction_compliance.human_reference = human_metrics.driving_direction_compliance;
-  result.driving_direction_compliance.human_reference_available =
-    human_metrics.driving_direction_compliance_available;
-  result.driving_direction_compliance.filtered = apply_human_filter(
-    agent_metrics.driving_direction_compliance,
+  populate_human_filter_metric(
+    result.driving_direction_compliance, agent_metrics.driving_direction_compliance,
     agent_metrics.driving_direction_compliance_available,
     human_metrics.driving_direction_compliance,
-    human_metrics.driving_direction_compliance_available,
-    result.driving_direction_compliance.filter_applied);
+    human_metrics.driving_direction_compliance_available);
 
-  result.traffic_light_compliance.human_reference = human_metrics.traffic_light_compliance;
-  result.traffic_light_compliance.human_reference_available =
-    human_metrics.traffic_light_compliance_available;
-  result.traffic_light_compliance.filtered = apply_human_filter(
-    agent_metrics.traffic_light_compliance, agent_metrics.traffic_light_compliance_available,
-    human_metrics.traffic_light_compliance, human_metrics.traffic_light_compliance_available,
-    result.traffic_light_compliance.filter_applied);
+  populate_human_filter_metric(
+    result.traffic_light_compliance, agent_metrics.traffic_light_compliance,
+    agent_metrics.traffic_light_compliance_available, human_metrics.traffic_light_compliance,
+    human_metrics.traffic_light_compliance_available);
 
   return result;
 }

@@ -28,6 +28,8 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
+using autoware::route_handler::RouteHandler;
+
 namespace
 {
 
@@ -65,8 +67,7 @@ autoware_utils_geometry::Polygon2d create_pose_footprint(
 }
 
 std::optional<lanelet::ConstLanelet> find_reference_lanelet(
-  const geometry_msgs::msg::Pose & pose,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
+  const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler)
 {
   if (!route_handler || !route_handler->isHandlerReady()) {
     return std::nullopt;
@@ -88,7 +89,7 @@ std::optional<lanelet::ConstLanelet> find_reference_lanelet(
 
 lanelet::ConstLanelets collect_route_relevant_lanelets(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
+  const std::shared_ptr<RouteHandler> & route_handler)
 {
   lanelet::ConstLanelets route_lanelets;
   if (!route_handler || !route_handler->isHandlerReady()) {
@@ -118,8 +119,7 @@ autoware_utils_geometry::LineString2d to_linestring2d(const lanelet::ConstLineSt
 }
 
 bool is_pose_in_intersection(
-  const geometry_msgs::msg::Pose & pose,
-  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
+  const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler)
 {
   const auto lanelet = find_reference_lanelet(pose, route_handler);
   return lanelet.has_value() &&
