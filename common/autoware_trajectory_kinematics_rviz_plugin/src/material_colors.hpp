@@ -102,7 +102,7 @@ struct MaterialColors
 
 inline const MaterialColors default_colors{};
 
-/// Convert a CSS-style `#RRGGBB` string from the palette to `QColor`.
+/// Convert a CSS-style `#RGB` string from the palette to `QColor`.
 inline QColor hexToQColor(const std::string & hex)
 {
   return QColor(QString::fromStdString(hex));

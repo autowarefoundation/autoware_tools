@@ -770,18 +770,18 @@ void TrajectoryKinematicsPanel::load(const rviz_common::Config & config)
   if (config.mapGetInt("plot_lock_y", &plot_lock_y)) {
     fix_y_range_->setChecked(plot_lock_y != 0);
   }
-  QString qplot;
-  if (config.mapGetString("plot_x_min", &qplot)) {
-    plot_x_min_spin_->setValue(qplot.toDouble());
+  QString q_string;
+  if (config.mapGetString("plot_x_min", &q_string)) {
+    plot_x_min_spin_->setValue(q_string.toDouble());
   }
-  if (config.mapGetString("plot_x_max", &qplot)) {
-    plot_x_max_spin_->setValue(qplot.toDouble());
+  if (config.mapGetString("plot_x_max", &q_string)) {
+    plot_x_max_spin_->setValue(q_string.toDouble());
   }
-  if (config.mapGetString("plot_y_min", &qplot)) {
-    plot_y_min_spin_->setValue(qplot.toDouble());
+  if (config.mapGetString("plot_y_min", &q_string)) {
+    plot_y_min_spin_->setValue(q_string.toDouble());
   }
-  if (config.mapGetString("plot_y_max", &qplot)) {
-    plot_y_max_spin_->setValue(qplot.toDouble());
+  if (config.mapGetString("plot_y_max", &q_string)) {
+    plot_y_max_spin_->setValue(q_string.toDouble());
   }
 
   applyTopicConfigsToManager();

@@ -71,8 +71,8 @@ std::uint64_t fingerprintSeriesVector(const std::vector<TrajectorySeriesData> & 
       fnv1aByte(&h, c);
     }
     fnv1aByte(&h, 0);
-    const std::size_t npts = s.points.size();
-    fnv1aBytes(&h, &npts, sizeof(npts));
+    const std::size_t number_points = s.points.size();
+    fnv1aBytes(&h, &number_points, sizeof(number_points));
     for (const auto & pt : s.points) {
       fnv1aDouble(&h, pt.time_from_start_sec);
       fnv1aDouble(&h, pt.arc_length_m);

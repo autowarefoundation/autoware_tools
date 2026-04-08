@@ -32,7 +32,7 @@ double durationToSec(const builtin_interfaces::msg::Duration & d)
   return static_cast<double>(d.sec) + static_cast<double>(d.nanosec) * 1e-9;
 }
 
-/// Menger curvature on three consecutive XY points: magnitude from circumradius, sign from
+/// Menger curvature on three consecutive XY points: magnitude from radius, sign from
 /// triangle orientation.
 double mengerCurvatureSigned2D(
   const geometry_msgs::msg::Point & p0, const geometry_msgs::msg::Point & p1,
