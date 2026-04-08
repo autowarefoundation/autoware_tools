@@ -388,7 +388,12 @@ TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)
   OpenLoopEvaluator evaluator(
     rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
     OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
-  evaluator.set_evaluation_horizons({0.2});
+  {
+    // Avoid initializer list to prevent GCC 13 false-positive -Wstringop-overread
+    std::vector<double> horizons;
+    horizons.push_back(0.2);
+    evaluator.set_evaluation_horizons(horizons);
+  }
 
   evaluator.evaluate(sync_data_list, nullptr);
   const auto metrics = evaluator.get_metrics();

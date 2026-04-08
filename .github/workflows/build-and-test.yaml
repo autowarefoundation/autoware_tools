@@ -9,25 +9,24 @@ on:
 jobs:
   build-and-test:
     if: ${{ github.event_name != 'push' || github.ref_name == github.event.repository.default_branch }}
-    runs-on: [self-hosted, linux, X64]
-    container: ${{ matrix.container }}${{ matrix.container-suffix }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
         rosdistro:
           - humble
-        container-suffix:
-          - ""
-          - -cuda
+          - jazzy
         include:
           - rosdistro: humble
             container: ghcr.io/autowarefoundation/autoware:universe-devel
             build-depends-repos: build_depends.repos
+          - rosdistro: jazzy
+            container: ghcr.io/autowarefoundation/autoware:universe-devel-jazzy
+            build-depends-repos: build_depends.repos
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+        uses: actions/checkout@v6
 
       - name: Remove exec_depend
         uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
@@ -60,4 +59,4 @@ jobs:
           files: ${{ steps.test.outputs.coverage-report-files }}
           fail_ci_if_error: false
           verbose: true
-          flags: total
+          flags: total-${{ matrix.rosdistro }}

@@ -16,6 +16,7 @@
 # cspell:disable
 
 """Add prefixed trajectory topic to MCAP bag (in-place modification)."""
+
 import argparse
 from pathlib import Path
 import shutil

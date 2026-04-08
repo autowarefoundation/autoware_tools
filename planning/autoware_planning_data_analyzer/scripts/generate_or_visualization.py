@@ -16,6 +16,7 @@
 # cspell:disable
 
 """Generate debug visualization for OR scene trajectory comparison."""
+
 import json
 import os
 import sys
