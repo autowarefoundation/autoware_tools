@@ -114,12 +114,10 @@ Located in `scripts/` directory:
 - **Visualization**: `generate_or_visualization.py`
 - **Comparison**: `compare_live_historical.py`
 
-See `scripts/README.md` for detailed documentation.
-
 ---
 
 ## For More Information
 
-- Offline evaluation scripts: [scripts/README.md](scripts/README.md)
-- Configuration: [config/offline_evaluation.param.yaml](config/offline_evaluation.param.yaml)
+- Offline evaluation scripts: [scripts/](scripts/)
+- Configuration: [config/planning_data_analyzer.param.yaml](config/planning_data_analyzer.param.yaml)
 - Launch files: [launch/](launch/)
