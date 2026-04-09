@@ -73,6 +73,18 @@ private:
     auto out_info_msg = std::make_shared<sensor_msgs::msg::CameraInfo>(*info_msg);
     out_info_msg->d.assign(out_info_msg->d.size(), 0.0);
 
+    auto K = model_.intrinsicMatrix();
+    auto R = model_.rotationMatrix();
+    auto P = model_.projectionMatrix();
+
+    for (size_t i = 0; i < 9; ++i) {
+      out_info_msg->k[i] = K(i / 3, i % 3);
+      out_info_msg->r[i] = R(i / 3, i % 3);
+    }
+    for (size_t i = 0; i < 12; ++i) {
+      out_info_msg->p[i] = P(i / 4, i % 4);
+    }
+
     cv::Rect roi = model_.rectifiedRoi();
     if (roi.width > 0 && roi.height > 0) {
       out_info_msg->roi.x_offset = roi.x;
