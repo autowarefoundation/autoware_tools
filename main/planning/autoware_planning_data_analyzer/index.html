@@ -4897,6 +4897,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#open-loop-evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open-Loop Evaluation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Open-Loop Evaluation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trajectory-error-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trajectory Error Metrics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plnnaing-quality-score-epdms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plnnaing Quality Score (EPDMS)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#epdmss-subscores" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EPDMS's Subscores
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-start" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4909,7 +4959,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#open-loop-evaluation" class="md-nav__link">
+  <a href="#open-loop-evaluation_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Open Loop Evaluation
@@ -4963,8 +5013,43 @@
 <li><strong>Open Loop</strong>: Evaluate prediction accuracy against ground truth trajectories</li>
 <li><strong>OR Scene</strong>: Evaluate override regression scenarios (LIVE vs HISTORICAL)</li>
 </ol>
+<h2 id="open-loop-evaluation">Open-Loop Evaluation<a class="headerlink" href="#open-loop-evaluation" title="Permanent link">#</a></h2>
+<p>Open-loop evaluation computes both trajectory error metrics and planning-quality subscores.</p>
+<h3 id="trajectory-error-metrics">Trajectory Error Metrics<a class="headerlink" href="#trajectory-error-metrics" title="Permanent link">#</a></h3>
+<p>For each evaluated trajectory, the following are computed:</p>
+<ul>
+<li>ADE</li>
+<li>FDE</li>
+<li>AHE</li>
+<li>FHE</li>
+<li>lateral deviation</li>
+<li>longitudinal deviation</li>
+<li>TTC trace</li>
+<li>per-horizon metrics (full, and configured horizons such as 1.0s, 2.0s, 4.0s, 8.0s)</li>
+</ul>
+<h3 id="plnnaing-quality-score-epdms">Plnnaing Quality Score (EPDMS)<a class="headerlink" href="#plnnaing-quality-score-epdms" title="Permanent link">#</a></h3>
+<p>To show multi-facet (comfort, progress, safety) quality of generated trajectory, EPDMS (Extended Predictive Driver Model Score) is computed based on the multiple subscores.</p>
+<p>Two variant topics are exported:</p>
+<ul>
+<li>synthetic_epdms_raw</li>
+<li>synthetic_epdms_human_filtered</li>
+</ul>
+<h3 id="epdmss-subscores">EPDMS's Subscores<a class="headerlink" href="#epdmss-subscores" title="Permanent link">#</a></h3>
+<p>EPDMS is obtained from combining the following subscores:</p>
+<ul>
+<li>history_comfort</li>
+<li>extended_comfort</li>
+<li>time_to_collision_within_bound</li>
+<li>lane_keeping</li>
+<li>ego_progress</li>
+<li>drivable_area_compliance</li>
+<li>no_at_fault_collision</li>
+<li>driving_direction_compliance</li>
+<li>traffic_light_compliance</li>
+</ul>
+<p>These subscores are exported both as per-trajectory outputs and as aggregate statistics.</p>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">#</a></h2>
-<h3 id="open-loop-evaluation">Open Loop Evaluation<a class="headerlink" href="#open-loop-evaluation" title="Permanent link">#</a></h3>
+<h3 id="open-loop-evaluation_1">Open Loop Evaluation<a class="headerlink" href="#open-loop-evaluation_1" title="Permanent link">#</a></h3>
 <p><code>sh
 ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --ros-args \
   -p bag_path:=~/my_bag \
@@ -5016,12 +5101,11 @@ ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --
 <li><strong>Visualization</strong>: <code>generate_or_visualization.py</code></li>
 <li><strong>Comparison</strong>: <code>compare_live_historical.py</code></li>
 </ul>
-<p>See <code>scripts/README.md</code> for detailed documentation.</p>
 <hr>
 <h2 id="for-more-information">For More Information<a class="headerlink" href="#for-more-information" title="Permanent link">#</a></h2>
 <ul>
-<li>Offline evaluation scripts: <a href="scripts/README.md">scripts/README.md</a></li>
-<li>Configuration: <a href="config/offline_evaluation.param.yaml">config/offline_evaluation.param.yaml</a></li>
+<li>Offline evaluation scripts: <a href="scripts/">scripts/</a></li>
+<li>Configuration: <a href="config/planning_data_analyzer.param.yaml">config/planning_data_analyzer.param.yaml</a></li>
 <li>Launch files: <a href="launch/">launch/</a></li>
 </ul></div>
 
