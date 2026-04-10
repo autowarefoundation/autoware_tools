@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 project(autoware_planning_data_analyzer)
 
 find_package(autoware_cmake REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 autoware_package()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
@@ -28,6 +29,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/utils/path_utils.cpp
   src/autoware_planning_data_analyzer_node.cpp
 )
+ament_target_dependencies(${PROJECT_NAME} tf2_geometry_msgs)
 
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN "autoware::planning_data_analyzer::AutowarePlanningDataAnalyzerNode"
