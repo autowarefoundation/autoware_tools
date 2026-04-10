@@ -51,7 +51,7 @@ bool is_vehicle_info_valid(const autoware::vehicle_info_utils::VehicleInfo & veh
 
 double get_yaw(const geometry_msgs::msg::Quaternion & orientation)
 {
-  return tf2::getYaw(orientation);
+  return tf2::getYaw(tf2::Quaternion(orientation.x, orientation.y, orientation.z, orientation.w));
 }
 
 autoware_utils_geometry::Polygon2d create_pose_footprint(

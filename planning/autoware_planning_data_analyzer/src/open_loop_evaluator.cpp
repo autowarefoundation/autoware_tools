@@ -15,6 +15,7 @@
 #include "open_loop_evaluator.hpp"
 
 #include "metrics/epdms_aggregation.hpp"
+#include "metrics/metric_utils.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
 #include <autoware/motion_utils/trajectory/conversion.hpp>
@@ -88,6 +89,11 @@ metrics::EpdmsMetricSnapshot build_epdms_snapshot(const OpenLoopTrajectoryMetric
   snapshot.traffic_light_compliance = metrics.traffic_light_compliance;
   snapshot.traffic_light_compliance_available = metrics.traffic_light_compliance_available;
   return snapshot;
+}
+
+double get_yaw_from_msg(const geometry_msgs::msg::Quaternion & orientation)
+{
+  return metrics::get_yaw(orientation);
 }
 
 }  // namespace
@@ -624,8 +630,8 @@ OpenLoopTrajectoryMetrics OpenLoopEvaluator::evaluate_trajectory(const Evaluatio
 
     const auto [longitudinal_error, lateral_error] =
       calculate_errors_in_vehicle_frame(traj_point.pose, gt_pose);
-    const double pred_yaw = tf2::getYaw(traj_point.pose.orientation);
-    const double gt_yaw = tf2::getYaw(gt_pose.orientation);
+    const double pred_yaw = get_yaw_from_msg(traj_point.pose.orientation);
+    const double gt_yaw = get_yaw_from_msg(gt_pose.orientation);
     const double heading_error = std::abs(autoware_utils_math::normalize_radian(pred_yaw - gt_yaw));
 
     metrics.longitudinal_deviations[i] = longitudinal_error;
@@ -736,7 +742,7 @@ std::pair<double, double> OpenLoopEvaluator::calculate_errors_in_vehicle_frame(
   const geometry_msgs::msg::Pose & ground_truth_pose)
 {
   // Get ground truth yaw angle
-  const double gt_yaw = tf2::getYaw(ground_truth_pose.orientation);
+  const double gt_yaw = get_yaw_from_msg(ground_truth_pose.orientation);
 
   // Calculate position difference in global frame
   const double dx_global = trajectory_pose.position.x - ground_truth_pose.position.x;
@@ -806,8 +812,8 @@ std::optional<geometry_msgs::msg::Pose> OpenLoopEvaluator::interpolate_ground_tr
   interpolated_pose.position.z = p1.z + ratio * (p2.z - p1.z);
 
   // For orientation, use slerp (simplified to linear interpolation of yaw for 2D case)
-  const double yaw1 = tf2::getYaw(lower_data->kinematic_state->pose.pose.orientation);
-  const double yaw2 = tf2::getYaw(upper_data->kinematic_state->pose.pose.orientation);
+  const double yaw1 = get_yaw_from_msg(lower_data->kinematic_state->pose.pose.orientation);
+  const double yaw2 = get_yaw_from_msg(upper_data->kinematic_state->pose.pose.orientation);
 
   // Handle angle wrapping
   double yaw_diff = yaw2 - yaw1;
@@ -892,8 +898,8 @@ std::optional<geometry_msgs::msg::Pose> OpenLoopEvaluator::interpolate_ground_tr
   pose.position.y = p1.position.y + ratio * (p2.position.y - p1.position.y);
   pose.position.z = p1.position.z + ratio * (p2.position.z - p1.position.z);
 
-  const double yaw1 = tf2::getYaw(p1.orientation);
-  const double yaw2 = tf2::getYaw(p2.orientation);
+  const double yaw1 = get_yaw_from_msg(p1.orientation);
+  const double yaw2 = get_yaw_from_msg(p2.orientation);
   double yaw_diff = yaw2 - yaw1;
   while (yaw_diff > M_PI) yaw_diff -= 2 * M_PI;
   while (yaw_diff < -M_PI) yaw_diff += 2 * M_PI;

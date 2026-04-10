@@ -55,7 +55,7 @@ tf2::Vector3 get_velocity_in_world_coordinate(
   const autoware_planning_msgs::msg::TrajectoryPoint & point)
 {
   const auto & pose = point.pose;
-  const double yaw = tf2::getYaw(pose.orientation);
+  const double yaw = get_yaw(pose.orientation);
   const double cos_yaw = std::cos(yaw);
   const double sin_yaw = std::sin(yaw);
 
@@ -181,7 +181,7 @@ double calculate_time_to_collision(
     const double v = segment_length / dt;
 
     // Transform velocity from world frame to vehicle frame
-    const double yaw = tf2::getYaw(obj_point.pose.orientation);
+    const double yaw = get_yaw(obj_point.pose.orientation);
     const double c = std::cos(yaw);
     const double s = std::sin(yaw);
     const double vx_w = dir_w.x() * v;
