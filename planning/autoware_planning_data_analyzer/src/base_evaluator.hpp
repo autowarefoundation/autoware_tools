@@ -40,6 +40,8 @@
 namespace autoware::planning_data_analyzer
 {
 
+using autoware::route_handler::RouteHandler;
+
 // Forward declarations
 struct SynchronizedData;
 struct TopicNames;
@@ -54,8 +56,7 @@ class BaseEvaluator
 {
 public:
   explicit BaseEvaluator(
-    rclcpp::Logger logger,
-    std::shared_ptr<autoware::route_handler::RouteHandler> route_handler = nullptr)
+    rclcpp::Logger logger, std::shared_ptr<RouteHandler> route_handler = nullptr)
   : logger_(logger), route_handler_(std::move(route_handler))
   {
   }
@@ -207,7 +208,7 @@ protected:
     const rclcpp::Time & normalized_timestamp) const;
 
   rclcpp::Logger logger_;
-  std::shared_ptr<autoware::route_handler::RouteHandler> route_handler_;
+  std::shared_ptr<RouteHandler> route_handler_;
   std::string json_output_dir_;
 
   // For normalized timestamp calculation

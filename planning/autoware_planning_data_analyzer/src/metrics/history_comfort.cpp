@@ -14,11 +14,9 @@
 
 #include "history_comfort.hpp"
 
+#include "metric_utils.hpp"
+
 #include <autoware_utils_math/normalization.hpp>
-
-#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
-
-#include <tf2/utils.h>
 
 #include <algorithm>
 #include <cmath>
@@ -85,8 +83,8 @@ void calculate_history_comfort_metrics(
       history_comfort_params.finite_difference_epsilon);
 
     const double yaw_delta = autoware_utils_math::normalize_radian(
-      tf2::getYaw(trajectory.points[i + 1].pose.orientation) -
-      tf2::getYaw(trajectory.points[i].pose.orientation));
+      get_yaw(trajectory.points[i + 1].pose.orientation) -
+      get_yaw(trajectory.points[i].pose.orientation));
     metrics.yaw_rates[i] = yaw_delta / time_resolution;
     metrics.longitudinal_accelerations[i] = (trajectory.points[i + 1].longitudinal_velocity_mps -
                                              trajectory.points[i].longitudinal_velocity_mps) /
