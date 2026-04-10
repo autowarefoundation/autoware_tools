@@ -14,6 +14,8 @@
 
 #include "drivable_area_compliance.hpp"
 
+#include "metric_utils.hpp"
+
 #include <autoware_utils_geometry/boost_geometry.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
 
@@ -30,11 +32,6 @@ namespace autoware::planning_data_analyzer::metrics
 
 namespace
 {
-
-bool is_vehicle_info_valid(const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
-{
-  return vehicle_info.vehicle_length_m > 0.0 && vehicle_info.vehicle_width_m > 0.0;
-}
 
 using autoware_utils_geometry::LinearRing2d;
 using autoware_utils_geometry::MultiPolygon2d;
