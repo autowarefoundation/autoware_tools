@@ -2,6 +2,7 @@
 autoware_dependency_checker/** yutaka.kondo@youtalk.jp
 bag2lanelet/** shinnosuke.hirakawa@tier4.jp taiki.tanaka@tier4.jp
 common/autoware_debug_tools/** fumiya.watanabe@tier4.jp kosuke.takeuchi@tier4.jp satoshi.ota@tier4.jp shintaro.sakoda@tier4.jp yhisaki31@gmail.com
+common/autoware_trajectory_kinematics_rviz_plugin/** taiki.tanaka@tier4.jp
 common/mission_planner_rviz_plugin/** isamu.takagi@tier4.jp
 common/rtc_manager_rviz_plugin/** mamoru.sobue@tier4.jp satoshi.ota@tier4.jp taiki.tanaka@tier4.jp tomoya.kimura@tier4.jp
 common/tier4_automatic_goal_rviz_plugin/** dawid.moszynski@robotec.ai kyoichi.sugahara@tier4.jp satoshi.ota@tier4.jp shumpei.wakabayashi@tier4.jp
