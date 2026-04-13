@@ -36,8 +36,6 @@
 namespace autoware::planning_data_analyzer
 {
 
-using autoware::route_handler::RouteHandler;
-
 // Helper for statistics calculation
 template <typename Container>
 struct Statistics
@@ -75,9 +73,9 @@ Statistics<Container> calculate_statistics(const Container & values)
 }
 
 ORSceneEvaluator::ORSceneEvaluator(
-  rclcpp::Logger logger, std::shared_ptr<RouteHandler> route_handler, double time_window_sec,
-  const ORSuccessCriteria & success_criteria, bool enable_debug_visualization,
-  const std::string & debug_output_dir)
+  rclcpp::Logger logger, std::shared_ptr<autoware::route_handler::RouteHandler> route_handler,
+  double time_window_sec, const ORSuccessCriteria & success_criteria,
+  bool enable_debug_visualization, const std::string & debug_output_dir)
 : BaseEvaluator(logger, route_handler),
   time_window_sec_(time_window_sec),
   success_criteria_(success_criteria),

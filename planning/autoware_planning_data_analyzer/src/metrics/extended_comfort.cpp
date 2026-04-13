@@ -14,9 +14,9 @@
 
 #include "extended_comfort.hpp"
 
-#include "metric_utils.hpp"
-
 #include <autoware_utils_math/normalization.hpp>
+
+#include <tf2/utils.h>
 
 #include <algorithm>
 #include <cmath>
@@ -82,8 +82,8 @@ DynamicSignals calculate_dynamic_signals(
       std::hypot(next_point.longitudinal_velocity_mps, next_point.lateral_velocity_mps);
     signals.accelerations.at(i) = (next_speed - speed) / dt;
 
-    const double yaw = get_yaw(point.pose.orientation);
-    const double next_yaw = get_yaw(next_point.pose.orientation);
+    const double yaw = tf2::getYaw(point.pose.orientation);
+    const double next_yaw = tf2::getYaw(next_point.pose.orientation);
     const double delta_yaw = autoware_utils_math::normalize_radian(next_yaw - yaw);
     signals.yaw_rates.at(i) = delta_yaw / dt;
   }

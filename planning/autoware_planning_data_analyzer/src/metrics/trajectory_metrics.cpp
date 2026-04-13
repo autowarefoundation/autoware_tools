@@ -40,8 +40,6 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
-using autoware::route_handler::RouteHandler;
-
 namespace
 {
 
@@ -55,7 +53,7 @@ tf2::Vector3 get_velocity_in_world_coordinate(
   const autoware_planning_msgs::msg::TrajectoryPoint & point)
 {
   const auto & pose = point.pose;
-  const double yaw = get_yaw(pose.orientation);
+  const double yaw = tf2::getYaw(pose.orientation);
   const double cos_yaw = std::cos(yaw);
   const double sin_yaw = std::sin(yaw);
 
@@ -181,7 +179,7 @@ double calculate_time_to_collision(
     const double v = segment_length / dt;
 
     // Transform velocity from world frame to vehicle frame
-    const double yaw = get_yaw(obj_point.pose.orientation);
+    const double yaw = tf2::getYaw(obj_point.pose.orientation);
     const double c = std::cos(yaw);
     const double s = std::sin(yaw);
     const double vx_w = dir_w.x() * v;
@@ -199,7 +197,8 @@ double calculate_time_to_collision(
 }
 
 bool is_pose_in_route_lane(
-  const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler)
+  const geometry_msgs::msg::Pose & pose,
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
 {
   if (!route_handler || !route_handler->isHandlerReady()) {
     return false;
@@ -223,7 +222,7 @@ bool is_pose_in_route_lane(
 
 TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const std::shared_ptr<SynchronizedData> & sync_data,
-  const std::shared_ptr<RouteHandler> & route_handler,
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
   const HistoryComfortParameters & history_comfort_params,
   const LaneKeepingParameters & lane_keeping_params,
   const DrivingDirectionComplianceParameters & driving_direction_params,

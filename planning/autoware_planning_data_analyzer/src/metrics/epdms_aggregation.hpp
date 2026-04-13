@@ -52,37 +52,63 @@ struct EpdmsMetricSnapshot
 
 struct HumanFilterMetrics
 {
-  struct Metric
-  {
-    double human_reference{0.0};
-    bool human_reference_available{false};
-    double filtered{0.0};
-    bool filter_applied{false};
-  };
+  double human_history_comfort{0.0};
+  bool human_history_comfort_available{false};
+  double filtered_history_comfort{0.0};
+  bool history_comfort_filter_applied{false};
 
-  Metric history_comfort;
-  Metric extended_comfort;
-  Metric ego_progress;
-  Metric time_to_collision_within_bound;
-  Metric lane_keeping;
-  Metric drivable_area_compliance;
-  Metric no_at_fault_collision;
-  Metric driving_direction_compliance;
-  Metric traffic_light_compliance;
+  double human_extended_comfort{0.0};
+  bool human_extended_comfort_available{false};
+  double filtered_extended_comfort{0.0};
+  bool extended_comfort_filter_applied{false};
+
+  double human_ego_progress{0.0};
+  bool human_ego_progress_available{false};
+  double filtered_ego_progress{0.0};
+  bool ego_progress_filter_applied{false};
+
+  double human_time_to_collision_within_bound{0.0};
+  bool human_time_to_collision_within_bound_available{false};
+  double filtered_time_to_collision_within_bound{0.0};
+  bool time_to_collision_within_bound_filter_applied{false};
+
+  double human_lane_keeping{0.0};
+  bool human_lane_keeping_available{false};
+  double filtered_lane_keeping{0.0};
+  bool lane_keeping_filter_applied{false};
+
+  double human_drivable_area_compliance{0.0};
+  bool human_drivable_area_compliance_available{false};
+  double filtered_drivable_area_compliance{0.0};
+  bool drivable_area_compliance_filter_applied{false};
+
+  double human_no_at_fault_collision{0.0};
+  bool human_no_at_fault_collision_available{false};
+  double filtered_no_at_fault_collision{0.0};
+  bool no_at_fault_collision_filter_applied{false};
+
+  double human_driving_direction_compliance{0.0};
+  bool human_driving_direction_compliance_available{false};
+  double filtered_driving_direction_compliance{0.0};
+  bool driving_direction_compliance_filter_applied{false};
+
+  double human_traffic_light_compliance{0.0};
+  bool human_traffic_light_compliance_available{false};
+  double filtered_traffic_light_compliance{0.0};
+  bool traffic_light_compliance_filter_applied{false};
 };
 
 struct SyntheticEpdmsMetrics
 {
-  struct Stage
-  {
-    bool available{false};
-    double multiplicative_metrics_prod{0.0};
-    double weighted_metrics{0.0};
-    double epdms{0.0};
-  };
+  bool raw_available{false};
+  double raw_multiplicative_metrics_prod{0.0};
+  double raw_weighted_metrics{0.0};
+  double raw_epdms{0.0};
 
-  Stage raw;
-  Stage human_filtered;
+  bool human_filtered_available{false};
+  double human_filtered_multiplicative_metrics_prod{0.0};
+  double human_filtered_weighted_metrics{0.0};
+  double human_filtered_epdms{0.0};
 };
 
 HumanFilterMetrics calculate_human_filter_metrics(

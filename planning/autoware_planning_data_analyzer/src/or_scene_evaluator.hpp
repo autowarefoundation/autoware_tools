@@ -34,8 +34,6 @@
 namespace autoware::planning_data_analyzer
 {
 
-using autoware::route_handler::RouteHandler;
-
 /**
  * @brief Evaluates trajectory predictions in Override (OR) scenarios
  *
@@ -70,7 +68,7 @@ public:
    * @param debug_output_dir Directory for debug images (default: "~/or_scene_debug_images")
    */
   ORSceneEvaluator(
-    rclcpp::Logger logger, std::shared_ptr<RouteHandler> route_handler,
+    rclcpp::Logger logger, std::shared_ptr<autoware::route_handler::RouteHandler> route_handler,
     double time_window_sec = 0.5, const ORSuccessCriteria & success_criteria = ORSuccessCriteria(),
     bool enable_debug_visualization = false,
     const std::string & debug_output_dir = "~/or_scene_debug_images");

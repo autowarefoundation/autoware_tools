@@ -51,6 +51,8 @@
       # ADE/FDE are reported at these horizons plus "full" (entire trajectory).
       # Trajectories shorter than a horizon are excluded from that horizon with 0.1s tolerance.
       evaluation_horizons: [1.0, 2.0, 4.0, 8.0]
+      # Additional synthetic EPDMS variants computed on truncated trajectories.
+      epdms_horizons: [2.0, 3.0, 4.0]
       extended_comfort:
         max_acceleration_rms: 0.7  # Maximum RMS acceleration discrepancy between consecutive plans [m/s^2]
         max_jerk_rms: 0.5  # Maximum RMS jerk discrepancy between consecutive plans [m/s^3]

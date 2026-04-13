@@ -59,8 +59,6 @@
 
 namespace autoware::planning_data_analyzer
 {
-
-using autoware::route_handler::RouteHandler;
 using autoware_utils::create_marker_color;
 using autoware_utils_rclcpp::get_or_declare_parameter;
 
@@ -84,7 +82,7 @@ std::filesystem::path resolve_bag_uri(const std::string & input_bag_path)
 AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   const rclcpp::NodeOptions & node_options)
 : Node("autoware_planning_data_analyzer", node_options),
-  route_handler_{std::make_shared<RouteHandler>()}
+  route_handler_{std::make_shared<autoware::route_handler::RouteHandler>()}
 {
   try {
     vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
@@ -96,11 +94,10 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
       e.what());
     vehicle_info_ = autoware::vehicle_info_utils::VehicleInfo{};
   }
-  setup_evaluation_bag_writer();
-
   // Open bag file
   bag_path_ =
     resolve_bag_uri(get_or_declare_parameter<std::string>(*this, "input_bag_path")).string();
+  setup_evaluation_bag_writer();
   try {
     bag_reader_.open(bag_path_);
   } catch (const std::exception & e) {
@@ -152,6 +149,8 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_lateral_deviation");
   lane_keeping_params_.max_continuous_violation_time =
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_continuous_violation_time");
+  epdms_horizons_ =
+    get_or_declare_parameter<std::vector<double>>(*this, "open_loop.epdms_horizons");
   objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
   traffic_signals_topic_name_ =
     get_or_declare_parameter<std::string>(*this, "traffic_signals_topic");
@@ -209,7 +208,12 @@ void AutowarePlanningDataAnalyzerNode::setup_evaluation_bag_writer()
     const auto temp_root = std::filesystem::temp_directory_path() / "planning_data_analyzer";
     utils::ensure_directory_writable(temp_root, get_logger());
 
-    evaluation_metrics_bag_path_ = temp_root / "evaluation_metrics_tmp.mcap";
+    std::ostringstream run_dir_name;
+    run_dir_name << "run_" << std::chrono::steady_clock::now().time_since_epoch().count();
+    evaluation_temp_root_ = temp_root / run_dir_name.str();
+    utils::ensure_directory_writable(evaluation_temp_root_, get_logger());
+
+    evaluation_metrics_bag_path_ = evaluation_temp_root_ / "evaluation_merged_tmp.mcap";
     if (std::filesystem::exists(evaluation_metrics_bag_path_)) {
       std::filesystem::remove_all(evaluation_metrics_bag_path_);
     }
@@ -310,7 +314,9 @@ void AutowarePlanningDataAnalyzerNode::replace_input_bag_with_merged_evaluation(
   }
 
   const std::filesystem::path input_bag_path(bag_path_);
-  const std::filesystem::path temp_root = evaluation_metrics_bag_path_.parent_path();
+  const std::filesystem::path temp_root = evaluation_temp_root_.empty()
+                                            ? evaluation_metrics_bag_path_.parent_path()
+                                            : evaluation_temp_root_;
   const std::filesystem::path merged_bag_parent = temp_root / "merged";
   const std::filesystem::path backup_bag_parent = temp_root / "backup";
   const std::filesystem::path merged_bag_path = merged_bag_parent / input_bag_path.filename();
@@ -368,10 +374,11 @@ void AutowarePlanningDataAnalyzerNode::replace_input_bag_with_merged_evaluation(
     if (std::filesystem::exists(backup_bag_parent)) {
       std::filesystem::remove_all(backup_bag_parent);
     }
-    if (std::filesystem::exists(evaluation_metrics_bag_path_)) {
-      std::filesystem::remove_all(evaluation_metrics_bag_path_);
-    }
     throw;
+  }
+
+  if (!temp_root.empty() && std::filesystem::exists(temp_root)) {
+    std::filesystem::remove_all(temp_root);
   }
 }
 
@@ -505,6 +512,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       evaluator.set_json_output_dir(output_dir_path.string());
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_evaluation_horizons(evaluation_horizons);
+      evaluator.set_epdms_horizons(epdms_horizons_);
       evaluator.set_extended_comfort_parameters(extended_comfort_parameters_);
       auto times =
         evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);

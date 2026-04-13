@@ -43,8 +43,6 @@
 namespace autoware::planning_data_analyzer
 {
 
-using autoware::route_handler::RouteHandler;
-
 struct HorizonMetrics
 {
   double ade;
@@ -145,7 +143,8 @@ class OpenLoopEvaluator : public BaseEvaluator
 public:
   enum class GTSourceMode { KINEMATIC_STATE, GT_TRAJECTORY };
   explicit OpenLoopEvaluator(
-    rclcpp::Logger logger, std::shared_ptr<RouteHandler> route_handler = nullptr,
+    rclcpp::Logger logger,
+    std::shared_ptr<autoware::route_handler::RouteHandler> route_handler = nullptr,
     GTSourceMode gt_source_mode = GTSourceMode::KINEMATIC_STATE,
     double gt_sync_tolerance_ms = 200.0,
     metrics::HistoryComfortParameters history_comfort_params = {},
@@ -185,6 +184,8 @@ public:
   {
     evaluation_horizons_ = horizons;
   }
+
+  void set_epdms_horizons(const std::vector<double> & horizons) { epdms_horizons_ = horizons; }
 
   void set_extended_comfort_parameters(const metrics::ExtendedComfortParameters & parameters)
   {
@@ -253,6 +254,10 @@ public:
   generate_ground_truth_trajectory_from_topic(
     const std::shared_ptr<SynchronizedData> & trajectory_data) const;
 
+  bool can_directly_pair_gt_trajectory(
+    const autoware_planning_msgs::msg::Trajectory & predicted,
+    const autoware_planning_msgs::msg::Trajectory & gt_trajectory) const;
+
   /**
    * @brief Evaluate one trajectory against its ground-truth trajectory.
    *
@@ -315,8 +320,9 @@ private:
    */
   void save_metrics_to_bag(
     const OpenLoopTrajectoryMetrics & metrics,
-    const metrics::SyntheticEpdmsMetrics & synthetic_epdms, const EvaluationData & eval_data,
-    rosbag2_cpp::Writer & bag_writer);
+    const metrics::SyntheticEpdmsMetrics & synthetic_epdms,
+    const std::map<std::string, metrics::SyntheticEpdmsMetrics> & synthetic_epdms_by_horizon,
+    const EvaluationData & eval_data, rosbag2_cpp::Writer & bag_writer);
 
   /**
    * @brief Write ADE/FDE results in the driving_log_replayer result format.
@@ -350,6 +356,8 @@ private:
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
   std::vector<metrics::HumanFilterMetrics> human_filter_metrics_list_;
   std::vector<metrics::SyntheticEpdmsMetrics> synthetic_epdms_metrics_list_;
+  std::vector<std::map<std::string, metrics::SyntheticEpdmsMetrics>>
+    synthetic_epdms_horizon_metrics_list_;
   metrics::HistoryComfortParameters history_comfort_params_;
   metrics::ExtendedComfortParameters extended_comfort_parameters_{};
   metrics::LaneKeepingParameters lane_keeping_params_;
@@ -360,6 +368,7 @@ private:
   GTSourceMode gt_source_mode_;
   double gt_sync_tolerance_ms_;
   std::vector<double> evaluation_horizons_;
+  std::vector<double> epdms_horizons_;
 };
 
 }  // namespace autoware::planning_data_analyzer

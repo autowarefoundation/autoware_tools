@@ -98,6 +98,25 @@ TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeSucceedsWithValidGTTopic)
   EXPECT_GT(metrics.front().displacement_errors.front(), 0.0);
 }
 
+TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryFastPathAllowsSmallGridDrift)
+{
+  const rclcpp::Time start_time(12, 0);
+  const auto prediction = make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0});
+  auto gt_exact = make_trajectory(start_time, {0.1, 1.1, 2.1, 3.1});
+  auto gt_within_tolerance = gt_exact;
+  gt_within_tolerance.points.back().time_from_start.nanosec += 500;
+  auto gt_outside_tolerance = gt_exact;
+  gt_outside_tolerance.points.back().time_from_start.nanosec += 2'000;
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  EXPECT_TRUE(evaluator.can_directly_pair_gt_trajectory(prediction, gt_exact));
+  EXPECT_TRUE(evaluator.can_directly_pair_gt_trajectory(prediction, gt_within_tolerance));
+  EXPECT_FALSE(evaluator.can_directly_pair_gt_trajectory(prediction, gt_outside_tolerance));
+}
+
 TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeSkipsWhenGTIsMissing)
 {
   const rclcpp::Time start_time(20, 0);
@@ -139,6 +158,7 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
     OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
 
   evaluator.set_metric_variant("raw");
+  evaluator.set_epdms_horizons({2.0, 3.0, 4.0});
 
   const auto topics = evaluator.get_result_topics();
   const auto has_topic = [&topics](const std::string & topic_name) {
@@ -160,6 +180,18 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_raw_available"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_human_filtered"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_human_filtered_available"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_2s_raw"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_2s_raw_available"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_2s_human_filtered"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_2s_human_filtered_available"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_3s_raw"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_3s_raw_available"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_3s_human_filtered"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_3s_human_filtered_available"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_4s_raw"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_4s_raw_available"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_4s_human_filtered"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_4s_human_filtered_available"));
 }
 
 TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomfortableTrajectories)
@@ -169,11 +201,9 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
   auto uncomfortable_prediction = make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5});
   const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5}));
 
-  for (auto & point : comfortable_prediction.points) {
-    point.longitudinal_velocity_mps = 2.0;
-  }
-  for (auto & point : uncomfortable_prediction.points) {
-    point.longitudinal_velocity_mps = 2.0;
+  for (size_t i = 0; i < comfortable_prediction.points.size(); ++i) {
+    comfortable_prediction.points[i].longitudinal_velocity_mps = 2.0;
+    uncomfortable_prediction.points[i].longitudinal_velocity_mps = 2.0;
   }
   uncomfortable_prediction.points[1].longitudinal_velocity_mps = 3.0;
   uncomfortable_prediction.points[2].longitudinal_velocity_mps = 5.0;
@@ -221,11 +251,9 @@ TEST_F(OpenLoopGTSourceModeTest, HumanFilterPromotesAgentHistoryComfortWhenHuman
   auto prediction = make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5});
   auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5}));
 
-  for (auto & point : prediction.points) {
-    point.longitudinal_velocity_mps = 2.0;
-  }
-  for (auto & point : gt->points) {
-    point.longitudinal_velocity_mps = 2.0;
+  for (size_t i = 0; i < prediction.points.size(); ++i) {
+    prediction.points[i].longitudinal_velocity_mps = 2.0;
+    gt->points[i].longitudinal_velocity_mps = 2.0;
   }
   prediction.points[1].longitudinal_velocity_mps = 3.0;
   prediction.points[2].longitudinal_velocity_mps = 5.0;
@@ -303,10 +331,8 @@ TEST_F(OpenLoopGTSourceModeTest, ExtendedComfortAvailabilityIsReportedAcrossCons
     make_trajectory(start_time + rclcpp::Duration::from_seconds(0.1), {0.0, 0.5, 1.1, 1.7}));
 
   for (auto * prediction : {&first_prediction, &second_prediction}) {
-    double velocity_mps = 2.0;
-    for (auto & point : prediction->points) {
-      point.longitudinal_velocity_mps = velocity_mps;
-      velocity_mps += 0.1;
+    for (size_t i = 0; i < prediction->points.size(); ++i) {
+      prediction->points[i].longitudinal_velocity_mps = 2.0 + 0.1 * static_cast<double>(i);
     }
   }
 
@@ -334,16 +360,15 @@ TEST_F(
   auto turning_prediction = make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0});
   const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0}));
 
-  for (auto & point : turning_prediction.points) {
-    point.longitudinal_velocity_mps = 10.0;
-    point.lateral_velocity_mps = 0.0;
+  for (size_t i = 0; i < turning_prediction.points.size(); ++i) {
+    turning_prediction.points[i].longitudinal_velocity_mps = 10.0;
+    turning_prediction.points[i].lateral_velocity_mps = 0.0;
   }
 
-  double yaw = 0.0;
-  for (auto & point : turning_prediction.points) {
-    point.pose.orientation.z = std::sin(yaw * 0.5);
-    point.pose.orientation.w = std::cos(yaw * 0.5);
-    yaw += 0.05;
+  for (size_t i = 0; i < turning_prediction.points.size(); ++i) {
+    const double yaw = 0.05 * static_cast<double>(i);
+    turning_prediction.points[i].pose.orientation.z = std::sin(yaw * 0.5);
+    turning_prediction.points[i].pose.orientation.w = std::cos(yaw * 0.5);
   }
 
   std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{
@@ -388,12 +413,7 @@ TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)
   OpenLoopEvaluator evaluator(
     rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
     OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
-  {
-    // Avoid initializer list to prevent GCC 13 false-positive -Wstringop-overread
-    std::vector<double> horizons;
-    horizons.push_back(0.2);
-    evaluator.set_evaluation_horizons(horizons);
-  }
+  evaluator.set_evaluation_horizons({0.2});
 
   evaluator.evaluate(sync_data_list, nullptr);
   const auto metrics = evaluator.get_metrics();

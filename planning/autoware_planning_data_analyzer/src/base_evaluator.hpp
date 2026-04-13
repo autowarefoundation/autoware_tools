@@ -40,8 +40,6 @@
 namespace autoware::planning_data_analyzer
 {
 
-using autoware::route_handler::RouteHandler;
-
 // Forward declarations
 struct SynchronizedData;
 struct TopicNames;
@@ -56,7 +54,8 @@ class BaseEvaluator
 {
 public:
   explicit BaseEvaluator(
-    rclcpp::Logger logger, std::shared_ptr<RouteHandler> route_handler = nullptr)
+    rclcpp::Logger logger,
+    std::shared_ptr<autoware::route_handler::RouteHandler> route_handler = nullptr)
   : logger_(logger), route_handler_(std::move(route_handler))
   {
   }
@@ -119,7 +118,11 @@ protected:
       const auto topic_info = rosbag2_storage::TopicMetadata{
         0, topic_name, topic_type, rmw_get_serialization_format(), {}, ""};
 #endif
-      bag_writer.create_topic(topic_info);
+      try {
+        bag_writer.create_topic(topic_info);
+      } catch (const std::exception &) {
+        // Topic may already exist when writing analyzer outputs directly into a copied bag.
+      }
     }
   }
 
@@ -208,7 +211,7 @@ protected:
     const rclcpp::Time & normalized_timestamp) const;
 
   rclcpp::Logger logger_;
-  std::shared_ptr<RouteHandler> route_handler_;
+  std::shared_ptr<autoware::route_handler::RouteHandler> route_handler_;
   std::string json_output_dir_;
 
   // For normalized timestamp calculation

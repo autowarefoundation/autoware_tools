@@ -27,8 +27,6 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
-using autoware::route_handler::RouteHandler;
-
 struct TTCWithinBoundResult
 {
   double score{0.0};
@@ -41,7 +39,7 @@ TTCWithinBoundResult calculate_ttc_within_bound(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::shared_ptr<PredictedObjects> & objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<RouteHandler> & route_handler = nullptr);
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler = nullptr);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

@@ -37,7 +37,6 @@
   <depend>rclcpp</depend>
   <depend>rosbag2_cpp</depend>
   <depend>std_srvs</depend>
-  <depend>tf2_geometry_msgs</depend>
   <depend>tf2_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>visualization_msgs</depend>

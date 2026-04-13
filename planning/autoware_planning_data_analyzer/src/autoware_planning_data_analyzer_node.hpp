@@ -45,7 +45,6 @@
 namespace autoware::planning_data_analyzer
 {
 
-using autoware::route_handler::RouteHandler;
 using autoware_planning_msgs::msg::Trajectory;
 
 class AutowarePlanningDataAnalyzerNode : public rclcpp::Node
@@ -68,7 +67,7 @@ private:
   void write_map_and_route_markers_to_bag(const rclcpp::Time & reference_time);
   void create_route_markers(visualization_msgs::msg::MarkerArray & marker_array) const;
 
-  std::shared_ptr<RouteHandler> route_handler_;
+  std::shared_ptr<autoware::route_handler::RouteHandler> route_handler_;
   visualization_msgs::msg::MarkerArray::ConstSharedPtr map_marker_;
 
   mutable std::mutex mutex_;
@@ -91,6 +90,7 @@ private:
   metrics::HistoryComfortParameters history_comfort_params_;
   metrics::ExtendedComfortParameters extended_comfort_parameters_;
   metrics::LaneKeepingParameters lane_keeping_params_;
+  std::vector<double> epdms_horizons_;
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   std::string objects_topic_name_;
   std::string traffic_signals_topic_name_;
@@ -101,6 +101,7 @@ private:
   EvaluationMode evaluation_mode_;
   std::string bag_path_;
   std::filesystem::path evaluation_metrics_bag_path_;
+  std::filesystem::path evaluation_temp_root_;
 
   rclcpp::TimerBase::SharedPtr map_check_timer_;
 

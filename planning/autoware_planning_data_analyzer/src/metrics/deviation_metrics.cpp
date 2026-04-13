@@ -14,9 +14,9 @@
 
 #include "deviation_metrics.hpp"
 
-#include "metric_utils.hpp"
-
 #include <autoware_utils_geometry/geometry.hpp>
+
+#include <tf2/utils.h>
 
 #include <algorithm>
 #include <cmath>
@@ -66,8 +66,7 @@ std::pair<double, double> calculate_errors_in_vehicle_frame(
   const geometry_msgs::msg::Pose & ground_truth_pose)
 {
   // Get yaw angle from ground truth
-  const double gt_yaw =
-    autoware::planning_data_analyzer::metrics::get_yaw(ground_truth_pose.orientation);
+  const double gt_yaw = tf2::getYaw(ground_truth_pose.orientation);
 
   // Position difference in global coordinate frame
   const double dx_global = trajectory_pose.position.x - ground_truth_pose.position.x;

@@ -29,13 +29,12 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
-using autoware::route_handler::RouteHandler;
-
 namespace
 {
 
 std::optional<double> calculate_raw_progress_m(
-  const Trajectory & trajectory, const std::shared_ptr<RouteHandler> & route_handler)
+  const Trajectory & trajectory,
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
 {
   if (trajectory.points.size() < 2U) {
     return std::nullopt;
@@ -121,7 +120,7 @@ std::optional<size_t> find_selected_candidate_index(
 EgoProgressResult calculate_ego_progress(
   const std::shared_ptr<Trajectory> & selected_trajectory,
   const std::shared_ptr<CandidateTrajectories> & candidate_trajectories,
-  const std::shared_ptr<RouteHandler> & route_handler)
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler)
 {
   EgoProgressResult result;
 
