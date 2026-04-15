@@ -5053,17 +5053,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#evaluation-modes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Evaluation Modes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#open-loop-evaluation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5136,19 +5125,41 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#or-scene-evaluation" class="md-nav__link">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-files" class="md-nav__link">
     <span class="md-ellipsis">
       
-        OR Scene Evaluation
+        Output Files
       
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#for-more-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        For More Information
+      
+    </span>
+  </a>
   
 </li>
       
@@ -5175,11 +5186,6 @@
 <div><h1 id="planning-data-analyzer">Planning Data Analyzer<a class="headerlink" href="#planning-data-analyzer" title="Permanent link">#</a></h1>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">#</a></h2>
 <p>This package provides offline evaluation tools for trajectory planning performance analysis from recorded rosbag data.</p>
-<h2 id="evaluation-modes">Evaluation Modes<a class="headerlink" href="#evaluation-modes" title="Permanent link">#</a></h2>
-<ol>
-<li><strong>Open Loop</strong>: Evaluate prediction accuracy against ground truth trajectories</li>
-<li><strong>OR Scene</strong>: Evaluate override regression scenarios (LIVE vs HISTORICAL)</li>
-</ol>
 <h2 id="open-loop-evaluation">Open-Loop Evaluation<a class="headerlink" href="#open-loop-evaluation" title="Permanent link">#</a></h2>
 <p>Open-loop evaluation computes both trajectory error metrics and planning-quality subscores.</p>
 <h3 id="trajectory-error-metrics">Trajectory Error Metrics<a class="headerlink" href="#trajectory-error-metrics" title="Permanent link">#</a></h3>
@@ -5223,27 +5229,6 @@ ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --
   -p evaluation.mode:=open_loop \
   -p trajectory_topic:=/planning/trajectory \
   -p json_output_path:=~/results.json</code></p>
-<h3 id="or-scene-evaluation">OR Scene Evaluation<a class="headerlink" href="#or-scene-evaluation" title="Permanent link">#</a></h3>
-<p>```sh</p>
-<h1 id="using-the-unified-script">Using the unified script<a class="headerlink" href="#using-the-unified-script" title="Permanent link">#</a></h1>
-<p>./install/autoware_planning_data_analyzer/share/autoware_planning_data_analyzer/scripts/run_evaluation.sh \
-  -b ~/result_bag.mcap \
-  -m or_scene \
-  -t /planning/diffusion_planner/trajectory \
-  -o ~/results \
-  --live \
-  --viz
-```</p>
-<h3 id="multi-model-pipeline">Multi-Model Pipeline<a class="headerlink" href="#multi-model-pipeline" title="Permanent link">#</a></h3>
-<p>```sh</p>
-<h1 id="evaluate-multiple-models-from-dlr-results">Evaluate multiple models from DLR results<a class="headerlink" href="#evaluate-multiple-models-from-dlr-results" title="Permanent link">#</a></h1>
-<p>./install/autoware_planning_data_analyzer/share/autoware_planning_data_analyzer/scripts/multi_model_pipeline.sh \
-  --scenario ~/dataset/scenario.yaml \
-  --trajectory /planning/model_a/trajectory \
-  --trajectory /planning/model_b/trajectory \
-  --output ~/comparison \
-  --viz
-```</p>
 <h2 id="output-files">Output Files<a class="headerlink" href="#output-files" title="Permanent link">#</a></h2>
 <ul>
 <li><strong><code>evaluation_result.json</code></strong> - Detailed metrics (ADE, FDE, TTC, etc.) and summary statistics</li>
@@ -5251,27 +5236,17 @@ ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --
 <li><strong><code>debug_images/*.png</code></strong> - Trajectory visualization (with <code>--viz</code> flag)</li>
 </ul>
 <h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">#</a></h2>
-<p>Key parameters in <code>config/offline_evaluation.param.yaml</code>:</p>
+<p>Key parameters in <code>config/planning_data_analyzer.param.yaml</code>:</p>
 <ul>
-<li><code>evaluation.mode</code>: Evaluation mode (<code>open_loop</code> or <code>or_scene</code>)</li>
+<li><code>evaluation.mode</code>: Evaluation mode (<code>open_loop</code>)</li>
 <li><code>evaluation_interval_ms</code>: Sampling interval (default: 100ms)</li>
 <li><code>sync_tolerance_ms</code>: Time synchronization tolerance (default: 100ms)</li>
 <li><code>trajectory_topic</code>: Trajectory topic to evaluate</li>
-<li><code>or_scene_evaluation.*</code>: OR scene specific settings</li>
-</ul>
-<h3 id="utility-scripts">Utility Scripts<a class="headerlink" href="#utility-scripts" title="Permanent link">#</a></h3>
-<p>Located in <code>scripts/</code> directory:</p>
-<ul>
-<li><strong>Bag Processing</strong>: <code>merge_bags.py</code>, <code>rename_bag_topic.py</code>, <code>add_prefix_to_bag.py</code></li>
-<li><strong>Ground Truth</strong>: <code>add_gt_trajectory_to_bag.py</code></li>
-<li><strong>OR Analysis</strong>: <code>detect_or_and_route.py</code>, <code>evaluate_or_segments.py</code></li>
-<li><strong>Visualization</strong>: <code>generate_or_visualization.py</code></li>
-<li><strong>Comparison</strong>: <code>compare_live_historical.py</code></li>
+<li><code>open_loop.*</code>: Open-loop specific settings</li>
 </ul>
 <hr>
 <h2 id="for-more-information">For More Information<a class="headerlink" href="#for-more-information" title="Permanent link">#</a></h2>
 <ul>
-<li>Offline evaluation scripts: <a href="scripts/">scripts/</a></li>
 <li>Configuration: <a href="config/planning_data_analyzer.param.yaml">config/planning_data_analyzer.param.yaml</a></li>
 <li>Launch files: <a href="launch/">launch/</a></li>
 </ul></div>
