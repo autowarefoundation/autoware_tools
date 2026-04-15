@@ -178,8 +178,7 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   if (mode_str == "open_loop") {
     evaluation_mode_ = EvaluationMode::OPEN_LOOP;
   } else {
-    throw std::runtime_error(
-      "Invalid evaluation mode: " + mode_str + ". Expected 'open_loop'.");
+    throw std::runtime_error("Invalid evaluation mode: " + mode_str + ". Expected 'open_loop'.");
   }
 
   run_evaluation();
