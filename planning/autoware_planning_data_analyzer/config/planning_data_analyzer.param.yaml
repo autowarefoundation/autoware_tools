@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     # Evaluation Mode
-    # Options: "open_loop" or "or_scene"
+    # Options: "open_loop"
     evaluation:
       mode: "open_loop"
 
@@ -60,34 +60,3 @@
       lane_keep:
         max_lateral_deviation: 0.5  # Maximum absolute lateral deviation allowed for LK [m]
         max_continuous_violation_time: 2.0  # Continuous over-threshold duration allowed for LK [s]
-
-    # OR Scene Evaluation Configuration (only used when mode="or_scene")
-    or_scene_evaluation:
-      # Time window configuration (symmetric around OR event)
-      time_window_sec: 0.5  # Time window on each side of OR event [OR - 0.5s, OR + 0.5s]
-
-      # Trajectory source selection
-      evaluate_live_trajectories: true  # true = evaluate result_bag (DLR output with LIVE trajectories)
-                                        # false = evaluate input_bag (HISTORICAL recorded trajectories)
-      input_bag_path: ""  # Path to input bag (only used if evaluate_live_trajectories=false)
-
-      # Topics to monitor
-      control_mode_topic: "/vehicle/status/control_mode"  # Topic for OR detection (ControlModeReport)
-
-      # OR event extraction (Stage 1)
-      skip_or_extraction: false  # Set true if or_events.json already exists
-      or_events_input_path: ""  # Path to pre-extracted or_events.json (optional)
-      or_events_output_path: "~/or_events.json"  # Where to save extracted OR events
-
-      # Success criteria (optional - disabled by default)
-      success_criteria:
-        enabled: false  # Set true to enforce thresholds
-        max_ade: 1.0  # Maximum allowed ADE (meters)
-        max_fde: 1.5  # Maximum allowed FDE (meters)
-        max_lateral_deviation: 0.5  # Maximum absolute lateral deviation in the vehicle frame (meters)
-        min_ttc: 3.0  # Minimum required TTC (seconds)
-
-      # Debug visualization
-      enable_debug_visualization: false  # Generate debug images showing predicted vs GT trajectories
-      debug_output_dir: "~/or_scene_debug_images"  # Directory for debug visualization images
-      map_path: ""  # Optional: path to lanelet2_map.osm for lane visualization

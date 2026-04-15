@@ -56,7 +56,7 @@ public:
   ~AutowarePlanningDataAnalyzerNode() override;
 
 private:
-  enum class EvaluationMode { OPEN_LOOP, OR_SCENE };
+  enum class EvaluationMode { OPEN_LOOP };
 
   void setup_evaluation_bag_writer();
   void close_evaluation_bag_writer();

@@ -17,7 +17,6 @@
 // #include "closed_loop_evaluator.hpp"  // TODO(gosakayori): Closed loop evaluator not yet
 // implemented
 #include "open_loop_evaluator.hpp"
-#include "or_scene_evaluator.hpp"
 #include "utils/path_utils.hpp"
 
 #include <autoware_lanelet2_extension/visualization/visualization.hpp>
@@ -178,11 +177,8 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   const auto mode_str = get_or_declare_parameter<std::string>(*this, "evaluation.mode");
   if (mode_str == "open_loop") {
     evaluation_mode_ = EvaluationMode::OPEN_LOOP;
-  } else if (mode_str == "or_scene") {
-    evaluation_mode_ = EvaluationMode::OR_SCENE;
   } else {
-    RCLCPP_ERROR(get_logger(), "Invalid evaluation mode: %s. Using OPEN_LOOP.", mode_str.c_str());
-    evaluation_mode_ = EvaluationMode::OPEN_LOOP;
+    throw std::runtime_error("Invalid evaluation mode: " + mode_str + ". Expected 'open_loop'.");
   }
 
   run_evaluation();
@@ -446,17 +442,12 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
     }
   }
 
-  // Route is optional for OR scene evaluation (doesn't use lane-based metrics)
-  if (!last_route_msg && evaluation_mode_ != EvaluationMode::OR_SCENE) {
+  if (!last_route_msg) {
     RCLCPP_WARN(get_logger(), "No route message found in bag. Evaluation aborted.");
     return;
   }
 
-  if (last_route_msg) {
-    route_handler_->setRoute(*last_route_msg);
-  } else {
-    RCLCPP_INFO(get_logger(), "No route found in bag (OK for OR scene evaluation)");
-  }
+  route_handler_->setRoute(*last_route_msg);
 
   // Seek back to the beginning of the bag for mode-specific evaluation
   bag_reader_.seek(0);
@@ -506,87 +497,6 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_evaluation_horizons(evaluation_horizons);
       evaluator.set_extended_comfort_parameters(extended_comfort_parameters_);
-      auto times =
-        evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);
-      start_time = times.first;
-      end_time = times.second;
-      break;
-    }
-    case EvaluationMode::OR_SCENE: {
-      // Read OR scene specific parameters
-      const double time_window_sec =
-        get_or_declare_parameter<double>(*this, "or_scene_evaluation.time_window_sec");
-      const bool enable_debug_viz =
-        get_or_declare_parameter<bool>(*this, "or_scene_evaluation.enable_debug_visualization");
-
-      // Read success criteria
-      ORSuccessCriteria success_criteria;
-      success_criteria.enabled =
-        get_or_declare_parameter<bool>(*this, "or_scene_evaluation.success_criteria.enabled");
-      success_criteria.max_ade =
-        get_or_declare_parameter<double>(*this, "or_scene_evaluation.success_criteria.max_ade");
-      success_criteria.max_fde =
-        get_or_declare_parameter<double>(*this, "or_scene_evaluation.success_criteria.max_fde");
-      success_criteria.max_lateral_deviation = get_or_declare_parameter<double>(
-        *this, "or_scene_evaluation.success_criteria.max_lateral_deviation");
-      success_criteria.min_ttc =
-        get_or_declare_parameter<double>(*this, "or_scene_evaluation.success_criteria.min_ttc");
-
-      const auto debug_output_dir =
-        get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.debug_output_dir");
-
-      ORSceneEvaluator evaluator(
-        get_logger(), route_handler_, time_window_sec, success_criteria, enable_debug_viz,
-        debug_output_dir);
-      evaluator.set_json_output_dir(output_dir_path.string());
-
-      // Set OR events JSON paths if provided
-      const auto or_events_input_path =
-        get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.or_events_input_path");
-      const auto or_events_output_path =
-        get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.or_events_output_path");
-      const auto input_bag_path =
-        get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.input_bag_path");
-
-      if (!or_events_input_path.empty()) {
-        evaluator.set_or_events_json_path(or_events_input_path);
-      }
-      if (!or_events_output_path.empty()) {
-        evaluator.set_or_events_output_path(or_events_output_path);
-      }
-      if (!input_bag_path.empty()) {
-        evaluator.set_input_bag_path(input_bag_path);
-      }
-
-      // Set map path for visualization
-      auto map_path = get_or_declare_parameter<std::string>(*this, "or_scene_evaluation.map_path");
-      if (!map_path.empty()) {
-        evaluator.set_map_path(map_path);
-      }
-
-      // Extract metric topic prefix from trajectory topic for multi-run support
-      // Topics like /model_v1/planning/.../trajectory → prefix "model_v1"
-      // Standard topics like /planning/.../trajectory → no prefix
-      std::string trajectory_topic = topic_names.trajectory_topic;
-      if (!trajectory_topic.empty() && trajectory_topic[0] == '/') {
-        // Find second slash (end of first component)
-        size_t second_slash = trajectory_topic.find('/', 1);
-        if (second_slash != std::string::npos) {
-          std::string first_component = trajectory_topic.substr(1, second_slash - 1);
-
-          // Check if first component is NOT a standard Autoware namespace
-          const std::set<std::string> standard_namespaces = {
-            "planning", "control", "localization", "perception",
-            "sensing",  "map",     "system",       "vehicle"};
-
-          if (standard_namespaces.find(first_component) == standard_namespaces.end()) {
-            // This is a custom prefix for multi-run collection
-            evaluator.set_metric_topic_prefix(first_component);
-            RCLCPP_INFO(get_logger(), "Using metric topic prefix: %s", first_component.c_str());
-          }
-        }
-      }
-
       auto times =
         evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);
       start_time = times.first;
