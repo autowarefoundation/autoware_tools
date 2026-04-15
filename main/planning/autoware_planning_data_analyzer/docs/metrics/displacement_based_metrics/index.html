@@ -8,31 +8,31 @@
       
       
       
-        <link rel="canonical" href="https://autowarefoundation.github.io/autoware-tools-documentation/main/common/tier4_string_viewer_rviz_plugin/">
+        <link rel="canonical" href="https://autowarefoundation.github.io/autoware-tools-documentation/main/planning/autoware_planning_data_analyzer/docs/metrics/displacement_based_metrics/">
       
       
-        <link rel="prev" href="../tier4_simulated_clock_rviz_plugin/">
+        <link rel="prev" href="../../../">
       
       
-        <link rel="next" href="../tier4_target_object_type_rviz_plugin/">
+        <link rel="next" href="../../../../autoware_route_client/">
       
       
         
       
       
-      <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
+      <link rel="icon" href="../../../../../docs/assets/images/autoware-foundation.png">
       <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.6">
     
     
       
-        <title>tier4_string_viewer_rviz_plugin - Autoware Tools Documentation</title>
+        <title>Displacement-Based Metrics - Autoware Tools Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,11 +51,11 @@
       
     
     
-      <link rel="stylesheet" href="../../docs/assets/css/extra.css">
+      <link rel="stylesheet" href="../../../../../docs/assets/css/extra.css">
     
       <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#tier4_string_viewer_rviz_plugin" class="md-skip">
+        <a href="#displacement-based-metrics" class="md-skip">
           Skip to content
         </a>
       
@@ -100,7 +100,7 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="Autoware Tools Documentation" class="md-header__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
+    <a href="../../../../.." title="Autoware Tools Documentation" class="md-header__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4m-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-32H96v32c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2M128 304a32 32 0 1 0-64 0 32 32 0 1 0 64 0m288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64"/></svg>
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              tier4_string_viewer_rviz_plugin
+              Displacement-Based Metrics
             
           </span>
         </div>
@@ -227,7 +227,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../autoware_dependency_checker/" class="md-tabs__link">
+        <a href="../../../../../autoware_dependency_checker/" class="md-tabs__link">
           
   
   
@@ -249,7 +249,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../bag2lanelet/" class="md-tabs__link">
+        <a href="../../../../../bag2lanelet/" class="md-tabs__link">
           
   
   
@@ -267,8 +267,6 @@
   
   
   
-    
-  
   
     
     
@@ -276,13 +274,11 @@
   
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="../autoware_debug_tools/" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../../../../common/autoware_debug_tools/" class="md-tabs__link">
           
   
   
@@ -321,7 +317,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../control/control_debug_tools/scripts/" class="md-tabs__link">
+        <a href="../../../../../control/control_debug_tools/scripts/" class="md-tabs__link">
           
   
   
@@ -349,7 +345,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../control_data_collecting_tool/" class="md-tabs__link">
+        <a href="../../../../../control_data_collecting_tool/" class="md-tabs__link">
           
   
   
@@ -371,7 +367,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../driving_environment_analyzer/" class="md-tabs__link">
+        <a href="../../../../../driving_environment_analyzer/" class="md-tabs__link">
           
   
   
@@ -400,7 +396,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
+        <a href="../../../../../evaluation/tier4_metrics_rviz_plugin/" class="md-tabs__link">
           
   
   
@@ -432,7 +428,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../localization/autoware_localization_evaluation_scripts/" class="md-tabs__link">
+        <a href="../../../../../localization/autoware_localization_evaluation_scripts/" class="md-tabs__link">
           
   
   
@@ -464,7 +460,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../map/autoware_lanelet2_map_utils/" class="md-tabs__link">
+        <a href="../../../../../map/autoware_lanelet2_map_utils/" class="md-tabs__link">
           
   
   
@@ -485,6 +481,8 @@
   
   
   
+    
+  
   
     
     
@@ -492,11 +490,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="../../planning/autoware_planning_data_analyzer/" class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../../" class="md-tabs__link">
           
   
   
@@ -528,7 +528,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../simulator/simulator_compatibility_test/" class="md-tabs__link">
+        <a href="../../../../../simulator/simulator_compatibility_test/" class="md-tabs__link">
           
   
   
@@ -560,7 +560,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../system/reaction_analyzer/" class="md-tabs__link">
+        <a href="../../../../../system/reaction_analyzer/" class="md-tabs__link">
           
   
   
@@ -592,7 +592,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../vehicle/calibration_adapter/" class="md-tabs__link">
+        <a href="../../../../../vehicle/calibration_adapter/" class="md-tabs__link">
           
   
   
@@ -637,7 +637,7 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="Autoware Tools Documentation" class="md-nav__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
+    <a href="../../../../.." title="Autoware Tools Documentation" class="md-nav__button md-logo" aria-label="Autoware Tools Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M135.2 117.4 109.1 192h293.8l-26.1-74.6c-4.5-12.8-16.6-21.4-30.2-21.4H165.4c-13.6 0-25.7 8.6-30.2 21.4m-95.6 79.4L74.8 96.3C88.3 57.8 124.6 32 165.4 32h181.2c40.8 0 77.1 25.8 90.6 64.3l35.2 100.5c23.2 9.6 39.6 32.5 39.6 59.2v192c0 17.7-14.3 32-32 32h-32c-17.7 0-32-14.3-32-32v-32H96v32c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32V256c0-26.7 16.4-49.6 39.6-59.2M128 304a32 32 0 1 0-64 0 32 32 0 1 0 64 0m288 32a32 32 0 1 0 0-64 32 32 0 1 0 0 64"/></svg>
@@ -692,7 +692,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../autoware_dependency_checker/" class="md-nav__link ">
+            <a href="../../../../../autoware_dependency_checker/" class="md-nav__link ">
               
   
   
@@ -763,7 +763,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../bag2lanelet/" class="md-nav__link ">
+            <a href="../../../../../bag2lanelet/" class="md-nav__link ">
               
   
   
@@ -806,10 +806,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -843,22 +841,21 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
   
   
@@ -876,7 +873,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -908,13 +905,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -924,7 +918,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../autoware_debug_tools/" class="md-nav__link ">
+            <a href="../../../../../common/autoware_debug_tools/" class="md-nav__link ">
               
   
   
@@ -942,7 +936,7 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="">
+              <label class="md-nav__link " for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
@@ -1084,7 +1078,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../autoware_debug_tools/autoware_debug_tools/topic_connection_checker/readme/" class="md-nav__link">
+      <a href="../../../../../common/autoware_debug_tools/autoware_debug_tools/topic_connection_checker/readme/" class="md-nav__link">
         
   
   
@@ -1148,13 +1142,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1164,7 +1155,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../autoware_trajectory_kinematics_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../common/autoware_trajectory_kinematics_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1223,13 +1214,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1239,7 +1227,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../mission_planner_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../common/mission_planner_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1298,13 +1286,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1314,7 +1299,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../rtc_manager_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../common/rtc_manager_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1373,13 +1358,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1389,7 +1371,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../tier4_automatic_goal_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../common/tier4_automatic_goal_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1448,13 +1430,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1464,7 +1443,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../tier4_control_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../common/tier4_control_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1523,13 +1502,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1539,7 +1515,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../tier4_debug_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../common/tier4_debug_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1598,13 +1574,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1614,7 +1587,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../tier4_debug_tools/" class="md-nav__link ">
+            <a href="../../../../../common/tier4_debug_tools/" class="md-nav__link ">
               
   
   
@@ -1673,13 +1646,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1689,7 +1659,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../tier4_logging_level_configure_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../common/tier4_logging_level_configure_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1748,13 +1718,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1764,7 +1731,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../tier4_screen_capture_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../common/tier4_screen_capture_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1823,13 +1790,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1839,7 +1803,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../tier4_simulated_clock_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../common/tier4_simulated_clock_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1883,8 +1847,6 @@
                 
   
   
-    
-  
   
   
     
@@ -1900,21 +1862,20 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_12" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_12" >
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="./" class="md-nav__link md-nav__link--active">
+            <a href="../../../../../common/tier4_string_viewer_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -1933,7 +1894,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_12_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_12_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_12">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1973,13 +1934,10 @@
       
       
         
-          
-          
-        
       
     
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
@@ -1989,7 +1947,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../tier4_target_object_type_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../common/tier4_target_object_type_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -2186,7 +2144,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../control/control_debug_tools/scripts/" class="md-nav__link ">
+            <a href="../../../../../control/control_debug_tools/scripts/" class="md-nav__link ">
               
   
   
@@ -2266,7 +2224,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../control/vehicle_cmd_analyzer/" class="md-nav__link ">
+            <a href="../../../../../control/vehicle_cmd_analyzer/" class="md-nav__link ">
               
   
   
@@ -2345,7 +2303,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../control_data_collecting_tool/" class="md-nav__link ">
+            <a href="../../../../../control_data_collecting_tool/" class="md-nav__link ">
               
   
   
@@ -2416,7 +2374,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../driving_environment_analyzer/" class="md-nav__link ">
+            <a href="../../../../../driving_environment_analyzer/" class="md-nav__link ">
               
   
   
@@ -2545,7 +2503,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../evaluation/tier4_metrics_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../evaluation/tier4_metrics_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -2686,7 +2644,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../localization/autoware_localization_evaluation_scripts/" class="md-nav__link ">
+            <a href="../../../../../localization/autoware_localization_evaluation_scripts/" class="md-nav__link ">
               
   
   
@@ -2758,7 +2716,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../localization/autoware_position_error_evaluator/" class="md-nav__link ">
+            <a href="../../../../../localization/autoware_position_error_evaluator/" class="md-nav__link ">
               
   
   
@@ -2863,7 +2821,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
+      <a href="../../../../../localization/deviation_estimation_tools/ReadMe/" class="md-nav__link">
         
   
   
@@ -2999,7 +2957,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../map/autoware_lanelet2_map_utils/" class="md-nav__link ">
+            <a href="../../../../../map/autoware_lanelet2_map_utils/" class="md-nav__link ">
               
   
   
@@ -3071,7 +3029,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../map/autoware_pointcloud_divider/" class="md-nav__link ">
+            <a href="../../../../../map/autoware_pointcloud_divider/" class="md-nav__link ">
               
   
   
@@ -3143,7 +3101,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../map/autoware_pointcloud_merger/" class="md-nav__link ">
+            <a href="../../../../../map/autoware_pointcloud_merger/" class="md-nav__link ">
               
   
   
@@ -3215,7 +3173,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../map/autoware_pointcloud_projection_converter/" class="md-nav__link ">
+            <a href="../../../../../map/autoware_pointcloud_projection_converter/" class="md-nav__link ">
               
   
   
@@ -3287,7 +3245,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../map/autoware_pointcloud_saver_rviz_plugin/" class="md-nav__link ">
+            <a href="../../../../../map/autoware_pointcloud_saver_rviz_plugin/" class="md-nav__link ">
               
   
   
@@ -3359,7 +3317,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../map/autoware_tp_manager/" class="md-nav__link ">
+            <a href="../../../../../map/autoware_tp_manager/" class="md-nav__link ">
               
   
   
@@ -3410,8 +3368,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -3431,21 +3391,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
-        
-          
-          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="">
             
   
   
@@ -3463,7 +3424,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_10">
             <span class="md-nav__icon md-icon"></span>
             
@@ -3478,6 +3439,8 @@
                 
   
   
+    
+  
   
   
     
@@ -3495,20 +3458,21 @@
       
       
         
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
+          
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_1" >
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10_1" checked>
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../planning/autoware_planning_data_analyzer/" class="md-nav__link ">
+            <a href="../../../" class="md-nav__link ">
               
   
   
@@ -3526,13 +3490,13 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_10_1" id="__nav_10_1_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_10_1" id="__nav_10_1_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_10_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -3549,8 +3513,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -3565,13 +3531,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_1_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10_1_2" checked>
         
           
           <label class="md-nav__link" for="__nav_10_1_2" id="__nav_10_1_2_label" tabindex="0">
@@ -3592,7 +3556,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_1_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_10_1_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_10_1_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -3607,8 +3571,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -3623,13 +3589,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10_1_2_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10_1_2_1" checked>
         
           
           <label class="md-nav__link" for="__nav_10_1_2_1" id="__nav_10_1_2_1_label" tabindex="0">
@@ -3650,7 +3614,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_10_1_2_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="4" aria-labelledby="__nav_10_1_2_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_10_1_2_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -3665,10 +3629,37 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../planning/autoware_planning_data_analyzer/docs/metrics/displacement_based_metrics/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Displacement-Based Metrics
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -3684,6 +3675,403 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#common-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ade" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ADE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ADE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#official-equation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Official Equation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fde" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FDE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FDE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#official-equation_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Official Equation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ahe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AHE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AHE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#official-equation_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Official Equation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fhe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FHE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FHE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#official-equation_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Official Equation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lateral-deviation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lateral Deviation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lateral Deviation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#longitudinal-deviation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Longitudinal Deviation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Longitudinal Deviation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-bag-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Bag Topics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#horizon-derived-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Horizon-Derived Results
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -3732,10 +4120,13 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -3745,7 +4136,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../planning/autoware_route_client/" class="md-nav__link ">
+            <a href="../../../../autoware_route_client/" class="md-nav__link ">
               
   
   
@@ -3804,10 +4195,13 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -3817,7 +4211,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../planning/autoware_route_history/" class="md-nav__link ">
+            <a href="../../../../autoware_route_history/" class="md-nav__link ">
               
   
   
@@ -3876,10 +4270,13 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -3889,7 +4286,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../planning/autoware_rtc_replayer/" class="md-nav__link ">
+            <a href="../../../../autoware_rtc_replayer/" class="md-nav__link ">
               
   
   
@@ -3948,10 +4345,13 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -3961,7 +4361,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../planning/autoware_static_centerline_generator/" class="md-nav__link ">
+            <a href="../../../../autoware_static_centerline_generator/" class="md-nav__link ">
               
   
   
@@ -4024,10 +4424,13 @@
       
       
         
+          
+          
+        
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
@@ -4037,7 +4440,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../planning/planning_debug_tools/" class="md-nav__link ">
+            <a href="../../../../planning_debug_tools/" class="md-nav__link ">
               
   
   
@@ -4055,7 +4458,7 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_10_6" id="__nav_10_6_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_10_6" id="__nav_10_6_label" tabindex="">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
@@ -4081,7 +4484,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../planning/planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
+      <a href="../../../../planning_debug_tools/doc-stop-reason-visualizer/" class="md-nav__link">
         
   
   
@@ -4192,7 +4595,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../planning/planning_debug_tools/scripts/trajectory_visualizer/" class="md-nav__link ">
+            <a href="../../../../planning_debug_tools/scripts/trajectory_visualizer/" class="md-nav__link ">
               
   
   
@@ -4345,7 +4748,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../simulator/simulator_compatibility_test/" class="md-nav__link ">
+            <a href="../../../../../simulator/simulator_compatibility_test/" class="md-nav__link ">
               
   
   
@@ -4484,7 +4887,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../system/reaction_analyzer/" class="md-nav__link ">
+            <a href="../../../../../system/reaction_analyzer/" class="md-nav__link ">
               
   
   
@@ -4556,7 +4959,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../system/rqt_diagnostic_graph_monitor/" class="md-nav__link ">
+            <a href="../../../../../system/rqt_diagnostic_graph_monitor/" class="md-nav__link ">
               
   
   
@@ -4701,7 +5104,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../vehicle/calibration_adapter/" class="md-nav__link ">
+            <a href="../../../../../vehicle/calibration_adapter/" class="md-nav__link ">
               
   
   
@@ -4773,7 +5176,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../vehicle/learning_based_vehicle_calibration/" class="md-nav__link ">
+            <a href="../../../../../vehicle/learning_based_vehicle_calibration/" class="md-nav__link ">
               
   
   
@@ -4845,7 +5248,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../vehicle/parameter_estimator/" class="md-nav__link ">
+            <a href="../../../../../vehicle/parameter_estimator/" class="md-nav__link ">
               
   
   
@@ -4917,7 +5320,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../vehicle/pitch_checker/" class="md-nav__link ">
+            <a href="../../../../../vehicle/pitch_checker/" class="md-nav__link ">
               
   
   
@@ -4989,7 +5392,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../vehicle/time_delay_estimator/" class="md-nav__link ">
+            <a href="../../../../../vehicle/time_delay_estimator/" class="md-nav__link ">
               
   
   
@@ -5063,10 +5466,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
+  <a href="#common-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Purpose
+        Common Setup
       
     </span>
   </a>
@@ -5074,10 +5477,354 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#assumptions-known-limits" class="md-nav__link">
+  <a href="#ade" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Assumptions / Known limits
+        ADE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ADE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#official-equation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Official Equation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fde" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FDE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FDE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#official-equation_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Official Equation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ahe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AHE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AHE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#official-equation_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Official Equation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fhe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FHE
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="FHE">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#official-equation_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Official Equation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lateral-deviation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lateral Deviation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lateral Deviation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#longitudinal-deviation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Longitudinal Deviation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Longitudinal Deviation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#definition_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implemented-equation-in-this-project_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implemented Equation in This Project
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#implementation-notes_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#output-bag-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Bag Topics
       
     </span>
   </a>
@@ -5085,10 +5832,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage" class="md-nav__link">
+  <a href="#horizon-derived-results" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Usage
+        Horizon-Derived Results
       
     </span>
   </a>
@@ -5115,17 +5862,220 @@
   
 
 
-<div><h1 id="tier4_string_viewer_rviz_plugin">tier4_string_viewer_rviz_plugin<a class="headerlink" href="#tier4_string_viewer_rviz_plugin" title="Permanent link">#</a></h1>
-<h2 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">#</a></h2>
-<p>This plugin displays the ROS message whose topic type is <code>autoware_internal_debug_msgs::msg::StringStamped</code> in rviz.</p>
-<h2 id="assumptions-known-limits">Assumptions / Known limits<a class="headerlink" href="#assumptions-known-limits" title="Permanent link">#</a></h2>
-<p>TBD.</p>
-<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
-<ol>
-<li>Start rviz and select panels/Add new panel.
-   <img alt="select_panel" src="images/select_panels.png"></li>
-<li>Select tier4_string_viewer_rviz_plugin/StringViewerPanel and press OK.</li>
-</ol></div>
+<div><h1 id="displacement-based-metrics">Displacement-Based Metrics<a class="headerlink" href="#displacement-based-metrics" title="Permanent link">#</a></h1>
+<p>This document summarizes the ground-truth-comparison metrics that are written to the output bag by the open-loop evaluator.</p>
+<p>Target metric topics:</p>
+<ul>
+<li><code>ade</code></li>
+<li><code>fde</code></li>
+<li><code>ahe</code></li>
+<li><code>fhe</code></li>
+<li><code>lateral_deviation</code></li>
+<li><code>longitudinal_deviation</code></li>
+</ul>
+<p>These metrics are computed point-wise against ground truth over the predicted trajectory. They are saved as output bag topics for the full predicted trajectory, and they are also used to derive multi-horizon results for <code>full</code>, <code>1s</code>, <code>2s</code>, <code>4s</code>, and <code>8s</code>.</p>
+<h2 id="common-setup">Common Setup<a class="headerlink" href="#common-setup" title="Permanent link">#</a></h2>
+<p>Let the predicted trajectory contain points indexed by <span class="arithmatex">\(i = 0, 1, \ldots, N\)</span>.</p>
+<p>For each point <span class="arithmatex">\(i\)</span>:</p>
+<ul>
+<li><span class="arithmatex">\((x_i^{\mathrm{pred}}, y_i^{\mathrm{pred}})\)</span>: predicted position</li>
+<li><span class="arithmatex">\((x_i^{\mathrm{gt}}, y_i^{\mathrm{gt}})\)</span>: ground-truth position</li>
+<li><span class="arithmatex">\(\psi_i^{\mathrm{pred}}\)</span>: predicted yaw</li>
+<li><span class="arithmatex">\(\psi_i^{\mathrm{gt}}\)</span>: ground-truth yaw</li>
+<li><span class="arithmatex">\(t_i\)</span>: relative timestamp of the predicted point</li>
+</ul>
+<p>In this project, <span class="arithmatex">\(t_i\)</span> means the <code>time_from_start</code> of the <span class="arithmatex">\(i\)</span>-th predicted trajectory point.</p>
+<p>For a requested horizon <code>H</code>, the evaluator chooses:</p>
+<div class="arithmatex">\[
+k = \max \{ i \mid t_i \le H \}
+\]</div>
+<p>and only reports that horizon if:</p>
+<div class="arithmatex">\[
+H - t_k \le 0.1
+\]</div>
+<p>This means horizon metrics are derived from the latest trajectory point whose <code>time_from_start</code> does not exceed the requested horizon, with a tolerance of <code>0.1s</code>.</p>
+<h2 id="ade">ADE<a class="headerlink" href="#ade" title="Permanent link">#</a></h2>
+<h3 id="definition">Definition<a class="headerlink" href="#definition" title="Permanent link">#</a></h3>
+<p>Average Displacement Error (ADE) is the average 2D position error between the predicted and ground-truth trajectories.</p>
+<h3 id="official-equation">Official Equation<a class="headerlink" href="#official-equation" title="Permanent link">#</a></h3>
+<div class="arithmatex">\[
+\mathrm{ADE} = \frac{1}{M} \sum_{i=1}^{M} \sqrt{(x_i^{gt} - x_i^{pred})^2 + (y_i^{gt} - y_i^{pred})^2}
+\]</div>
+<h3 id="implemented-equation-in-this-project">Implemented Equation in This Project<a class="headerlink" href="#implemented-equation-in-this-project" title="Permanent link">#</a></h3>
+<p>First define the point-wise displacement error:</p>
+<div class="arithmatex">\[
+e_i = \sqrt{(x_i^{gt} - x_i^{pred})^2 + (y_i^{gt} - y_i^{pred})^2}
+\]</div>
+<p>The saved <code>ade</code> topic stores the running ADE array:</p>
+<div class="arithmatex">\[
+\mathrm{ADE}_i = \frac{1}{i+1} \sum_{j=0}^{i} e_j
+\]</div>
+<p>For a horizon <code>H</code>, the reported horizon ADE is:</p>
+<div class="arithmatex">\[
+\mathrm{ADE}(H) = \mathrm{ADE}_k = \frac{1}{k+1} \sum_{j=0}^{k} e_j
+\]</div>
+<h3 id="implementation-notes">Implementation Notes<a class="headerlink" href="#implementation-notes" title="Permanent link">#</a></h3>
+<ul>
+<li>The average starts from the first available predicted trajectory point, not from a separate global time origin.</li>
+<li>If the first predicted point has <code>time_from_start = 0.1s</code>, then ADE starts from that point.</li>
+<li>The output bag topic is a <code>Float64MultiArray</code> containing the running ADE over the full trajectory.</li>
+<li>Multi-horizon ADE values are derived from this array using the horizon cutoff.</li>
+</ul>
+<h2 id="fde">FDE<a class="headerlink" href="#fde" title="Permanent link">#</a></h2>
+<h3 id="definition_1">Definition<a class="headerlink" href="#definition_1" title="Permanent link">#</a></h3>
+<p>Final Displacement Error (FDE) is the 2D position error at the final evaluation point.</p>
+<h3 id="official-equation_1">Official Equation<a class="headerlink" href="#official-equation_1" title="Permanent link">#</a></h3>
+<div class="arithmatex">\[
+\mathrm{FDE} = \sqrt{(x_M^{gt} - x_M^{pred})^2 + (y_M^{gt} - y_M^{pred})^2}
+\]</div>
+<h3 id="implemented-equation-in-this-project_1">Implemented Equation in This Project<a class="headerlink" href="#implemented-equation-in-this-project_1" title="Permanent link">#</a></h3>
+<p>Using the same point-wise displacement error:</p>
+<div class="arithmatex">\[
+e_i = \sqrt{(x_i^{gt} - x_i^{pred})^2 + (y_i^{gt} - y_i^{pred})^2}
+\]</div>
+<p>the horizon FDE is:</p>
+<div class="arithmatex">\[
+\mathrm{FDE}(H) = e_k
+\]</div>
+<h3 id="implementation-notes_1">Implementation Notes<a class="headerlink" href="#implementation-notes_1" title="Permanent link">#</a></h3>
+<ul>
+<li>The saved <code>fde</code> topic contains the point-wise displacement error array <code>e_i</code>, not a running FDE.</li>
+<li>The horizon or full-trajectory FDE is obtained by taking the cutoff element from that array.</li>
+<li>This is why the topic name is <code>fde</code> even though the bag message contains one value per trajectory point.</li>
+</ul>
+<h2 id="ahe">AHE<a class="headerlink" href="#ahe" title="Permanent link">#</a></h2>
+<h3 id="definition_2">Definition<a class="headerlink" href="#definition_2" title="Permanent link">#</a></h3>
+<p>Average Heading Error (AHE) is the average absolute heading difference between the predicted and ground-truth trajectories.</p>
+<h3 id="official-equation_2">Official Equation<a class="headerlink" href="#official-equation_2" title="Permanent link">#</a></h3>
+<div class="arithmatex">\[
+\mathrm{AHE} = \frac{1}{M} \sum_{i=1}^{M} \left| \mathrm{normalize}(\psi_i^{pred} - \psi_i^{gt}) \right|
+\]</div>
+<h3 id="implemented-equation-in-this-project_2">Implemented Equation in This Project<a class="headerlink" href="#implemented-equation-in-this-project_2" title="Permanent link">#</a></h3>
+<p>Define the point-wise heading error:</p>
+<div class="arithmatex">\[
+h_i = \left| \mathrm{normalize}(\psi_i^{pred} - \psi_i^{gt}) \right|
+\]</div>
+<p>The saved <code>ahe</code> topic stores the running average heading error array:</p>
+<div class="arithmatex">\[
+\mathrm{AHE}_i = \frac{1}{i+1} \sum_{j=0}^{i} h_j
+\]</div>
+<p>For a horizon <code>H</code>, the reported horizon AHE is:</p>
+<div class="arithmatex">\[
+\mathrm{AHE}(H) = \mathrm{AHE}_k = \frac{1}{k+1} \sum_{j=0}^{k} h_j
+\]</div>
+<h3 id="implementation-notes_2">Implementation Notes<a class="headerlink" href="#implementation-notes_2" title="Permanent link">#</a></h3>
+<ul>
+<li>Heading error is stored in radians.</li>
+<li>The absolute heading difference is normalized before taking the magnitude.</li>
+<li>The output bag topic is a <code>Float64MultiArray</code> containing the running AHE over the full trajectory.</li>
+</ul>
+<h2 id="fhe">FHE<a class="headerlink" href="#fhe" title="Permanent link">#</a></h2>
+<h3 id="definition_3">Definition<a class="headerlink" href="#definition_3" title="Permanent link">#</a></h3>
+<p>Final Heading Error (FHE) is the absolute heading error at the final evaluation point.</p>
+<h3 id="official-equation_3">Official Equation<a class="headerlink" href="#official-equation_3" title="Permanent link">#</a></h3>
+<div class="arithmatex">\[
+\mathrm{FHE} = \left| \mathrm{normalize}(\psi_M^{pred} - \psi_M^{gt}) \right|
+\]</div>
+<h3 id="implemented-equation-in-this-project_3">Implemented Equation in This Project<a class="headerlink" href="#implemented-equation-in-this-project_3" title="Permanent link">#</a></h3>
+<p>Using the point-wise heading error:</p>
+<div class="arithmatex">\[
+h_i = \left| \mathrm{normalize}(\psi_i^{pred} - \psi_i^{gt}) \right|
+\]</div>
+<p>the horizon FHE is:</p>
+<div class="arithmatex">\[
+\mathrm{FHE}(H) = h_k
+\]</div>
+<h3 id="implementation-notes_3">Implementation Notes<a class="headerlink" href="#implementation-notes_3" title="Permanent link">#</a></h3>
+<ul>
+<li>The saved <code>fhe</code> topic contains the point-wise heading error array <code>h_i</code>, not a running FHE.</li>
+<li>The horizon or full-trajectory FHE is obtained by taking the cutoff element from that array.</li>
+<li>This mirrors how <code>fde</code> is handled for position error.</li>
+</ul>
+<h2 id="lateral-deviation">Lateral Deviation<a class="headerlink" href="#lateral-deviation" title="Permanent link">#</a></h2>
+<h3 id="definition_4">Definition<a class="headerlink" href="#definition_4" title="Permanent link">#</a></h3>
+<p>Lateral deviation is the signed lateral position error between prediction and ground truth, measured in the ground-truth vehicle frame.</p>
+<h3 id="implemented-equation-in-this-project_4">Implemented Equation in This Project<a class="headerlink" href="#implemented-equation-in-this-project_4" title="Permanent link">#</a></h3>
+<p>First compute the global position difference:</p>
+<div class="arithmatex">\[
+\Delta x_i = x_i^{pred} - x_i^{gt}, \quad \Delta y_i = y_i^{pred} - y_i^{gt}
+\]</div>
+<p>Then rotate this difference by <span class="arithmatex">\(-\psi_i^{\mathrm{gt}}\)</span> into the ground-truth vehicle frame:</p>
+<div class="arithmatex">\[
+\begin{bmatrix}
+\Delta x_i^{veh} \\
+\Delta y_i^{veh}
+\end{bmatrix}
+=
+\begin{bmatrix}
+\cos(-\psi_i^{gt}) &amp; -\sin(-\psi_i^{gt}) \\
+\sin(-\psi_i^{gt}) &amp; \cos(-\psi_i^{gt})
+\end{bmatrix}
+\begin{bmatrix}
+\Delta x_i \\
+\Delta y_i
+\end{bmatrix}
+\]</div>
+<p>The implemented lateral deviation is:</p>
+<div class="arithmatex">\[
+\mathrm{LatDev}_i = \Delta y_i^{veh}
+\]</div>
+<p>For a horizon <code>H</code>, the evaluator derives:</p>
+<div class="arithmatex">\[
+\mathrm{AverageLateralDeviation}(H) = \frac{1}{k+1} \sum_{j=0}^{k} |\mathrm{LatDev}_j|
+\]</div>
+<div class="arithmatex">\[
+\mathrm{MaxLateralDeviation}(H) = \max_{0 \le j \le k} |\mathrm{LatDev}_j|
+\]</div>
+<h3 id="implementation-notes_4">Implementation Notes<a class="headerlink" href="#implementation-notes_4" title="Permanent link">#</a></h3>
+<ul>
+<li>The saved <code>lateral_deviation</code> topic contains the signed point-wise lateral deviation array.</li>
+<li>The horizon metrics use absolute values when computing average and max aggregates.</li>
+<li>This metric is different from route-centerline lateral deviation used by lane-keeping logic.</li>
+</ul>
+<h2 id="longitudinal-deviation">Longitudinal Deviation<a class="headerlink" href="#longitudinal-deviation" title="Permanent link">#</a></h2>
+<h3 id="definition_5">Definition<a class="headerlink" href="#definition_5" title="Permanent link">#</a></h3>
+<p>Longitudinal deviation is the signed longitudinal position error between prediction and ground truth, measured in the ground-truth vehicle frame.</p>
+<h3 id="implemented-equation-in-this-project_5">Implemented Equation in This Project<a class="headerlink" href="#implemented-equation-in-this-project_5" title="Permanent link">#</a></h3>
+<p>Using the same rotated vehicle-frame offset as above, the implemented longitudinal deviation is:</p>
+<div class="arithmatex">\[
+\mathrm{LonDev}_i = \Delta x_i^{veh}
+\]</div>
+<p>For a horizon <code>H</code>, the evaluator derives:</p>
+<div class="arithmatex">\[
+\mathrm{AverageLongitudinalDeviation}(H) = \frac{1}{k+1} \sum_{j=0}^{k} |\mathrm{LonDev}_j|
+\]</div>
+<div class="arithmatex">\[
+\mathrm{MaxLongitudinalDeviation}(H) = \max_{0 \le j \le k} |\mathrm{LonDev}_j|
+\]</div>
+<h3 id="implementation-notes_5">Implementation Notes<a class="headerlink" href="#implementation-notes_5" title="Permanent link">#</a></h3>
+<ul>
+<li>The saved <code>longitudinal_deviation</code> topic contains the signed point-wise longitudinal deviation array.</li>
+<li>The horizon metrics use absolute values when computing average and max aggregates.</li>
+</ul>
+<h2 id="output-bag-topics">Output Bag Topics<a class="headerlink" href="#output-bag-topics" title="Permanent link">#</a></h2>
+<p>The following ground-truth-comparison metric topics are written to the output bag:</p>
+<ul>
+<li><code>ade</code></li>
+<li><code>fde</code></li>
+<li><code>ahe</code></li>
+<li><code>fhe</code></li>
+<li><code>lateral_deviation</code></li>
+<li><code>longitudinal_deviation</code></li>
+</ul>
+<p>All of the above are written as <code>std_msgs/msg/Float64MultiArray</code>.</p>
+<h2 id="horizon-derived-results">Horizon-Derived Results<a class="headerlink" href="#horizon-derived-results" title="Permanent link">#</a></h2>
+<p>The following multi-horizon results are derived from the arrays above for <code>full</code>, <code>1s</code>, <code>2s</code>, <code>4s</code>, and <code>8s</code>:</p>
+<ul>
+<li><code>ADE</code></li>
+<li><code>FDE</code></li>
+<li><code>AHE</code></li>
+<li><code>FHE</code></li>
+<li><code>average_lateral_deviation</code></li>
+<li><code>max_lateral_deviation</code></li>
+<li><code>average_longitudinal_deviation</code></li>
+<li><code>max_longitudinal_deviation</code></li>
+</ul>
+<p>These horizon results are stored in the structured result JSON written by the evaluator, rather than as separate per-horizon bag topics.</p></div>
 
 
 
@@ -5161,7 +6111,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../tier4_simulated_clock_rviz_plugin/" class="md-footer__link md-footer__link--prev" aria-label="Previous: tier4_simulated_clock_rviz_plugin">
+          <a href="../../../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Planning Data Analyzer">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -5171,20 +6121,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                tier4_simulated_clock_rviz_plugin
+                Planning Data Analyzer
               </div>
             </div>
           </a>
         
         
           
-          <a href="../tier4_target_object_type_rviz_plugin/" class="md-footer__link md-footer__link--next" aria-label="Next: tier4_target_object_type_rviz_plugin">
+          <a href="../../../../autoware_route_client/" class="md-footer__link md-footer__link--next" aria-label="Next: Route Client">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                tier4_target_object_type_rviz_plugin
+                Route Client
               </div>
             </div>
             <div class="md-footer__button md-icon">
@@ -5225,12 +6175,12 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../../../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
-        <script src="../../docs/assets/js/mathjax.js"></script>
+        <script src="../../../../../docs/assets/js/mathjax.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
       
