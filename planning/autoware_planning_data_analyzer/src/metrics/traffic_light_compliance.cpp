@@ -55,10 +55,10 @@ const autoware_perception_msgs::msg::TrafficLightGroup * find_signal_group(
 
 bool footprint_intersects_stop_line(
   const geometry_msgs::msg::Pose & pose,
-  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const autoware_utils_geometry::LinearRing2d & local_footprint,
   const lanelet::ConstLineString3d & stop_line)
 {
-  const auto footprint_polygon = create_pose_footprint(pose, vehicle_info);
+  const auto footprint_polygon = create_pose_footprint(pose, local_footprint);
   const auto stop_line_2d = to_linestring2d(stop_line);
   return boost::geometry::intersects(footprint_polygon, stop_line_2d);
 }
@@ -95,6 +95,7 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
   result.available = true;
   result.reason = "available_no_relevant_traffic_lights";
   result.score = 1.0;
+  const auto local_footprint = vehicle_info.createFootprint(0.0);
 
   for (const auto & point : trajectory.points) {
     const auto reference_lanelet = find_reference_lanelet(point.pose, route_handler);
@@ -128,7 +129,7 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
         continue;
       }
 
-      if (footprint_intersects_stop_line(point.pose, vehicle_info, *stop_line)) {
+      if (footprint_intersects_stop_line(point.pose, local_footprint, *stop_line)) {
         result.reason = "red_light_stop_line_crossed";
         result.score = 0.0;
         return result;
