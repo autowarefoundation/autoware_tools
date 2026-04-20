@@ -82,8 +82,13 @@ void PerceptionReplayerCommon::load_rosbag(
       auto library = rclcpp::get_typesupport_library(topic_meta.type, "rosidl_typesupport_cpp");
       type_support_libs[topic_meta.name] = library;
 
+#ifdef ROS_DISTRO_HUMBLE
+      const rosidl_message_type_support_t * type_support =
+        rclcpp::get_typesupport_handle(topic_meta.type, "rosidl_typesupport_cpp", *library);
+#else
       const rosidl_message_type_support_t * type_support =
         rclcpp::get_message_typesupport_handle(topic_meta.type, "rosidl_typesupport_cpp", *library);
+#endif
 
       if (type_support) {
         type_support_map[topic_meta.name] = std::shared_ptr<const rosidl_message_type_support_t>(
