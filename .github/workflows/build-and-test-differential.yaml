@@ -26,9 +26,9 @@ jobs:
           - jazzy
         include:
           - rosdistro: humble
-            container: ghcr.io/autowarefoundation/autoware:universe-devel
+            container: ghcr.io/autowarefoundation/autoware:universe-dependencies-humble
           - rosdistro: jazzy
-            container: ghcr.io/autowarefoundation/autoware:universe-devel-jazzy
+            container: ghcr.io/autowarefoundation/autoware:universe-dependencies-jazzy
 
     steps:
       - name: Set PR fetch depth

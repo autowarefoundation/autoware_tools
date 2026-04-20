@@ -19,10 +19,10 @@ jobs:
           - jazzy
         include:
           - rosdistro: humble
-            container: ghcr.io/autowarefoundation/autoware:universe-devel
+            container: ghcr.io/autowarefoundation/autoware:universe-dependencies-humble
             build-depends-repos: build_depends.repos
           - rosdistro: jazzy
-            container: ghcr.io/autowarefoundation/autoware:universe-devel-jazzy
+            container: ghcr.io/autowarefoundation/autoware:universe-dependencies-jazzy
             build-depends-repos: build_depends.repos
     steps:
       - name: Check out repository
