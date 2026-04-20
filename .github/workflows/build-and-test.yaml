@@ -10,7 +10,9 @@ jobs:
   build-and-test:
     if: ${{ github.event_name != 'push' || github.ref_name == github.event.repository.default_branch }}
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container:
+      image: ${{ matrix.container }}
+      options: --cap-add=NET_ADMIN
     strategy:
       fail-fast: false
       matrix:
@@ -27,6 +29,9 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+
+      - name: Tune DDS network settings
+        uses: ./.github/actions/tune-dds-network
 
       - name: Remove exec_depend
         uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1

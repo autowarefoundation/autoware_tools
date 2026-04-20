@@ -17,7 +17,9 @@ jobs:
     needs: prevent-no-label-execution
     if: ${{ needs.prevent-no-label-execution.outputs.run == 'true' }}
     runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
+    container:
+      image: ${{ matrix.container }}
+      options: --cap-add=NET_ADMIN
     strategy:
       fail-fast: false
       matrix:
@@ -39,6 +41,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: ${{ env.PR_FETCH_DEPTH }}
+
+      - name: Tune DDS network settings
+        uses: ./.github/actions/tune-dds-network
 
       - name: Show disk space before the tasks
         run: df -h
