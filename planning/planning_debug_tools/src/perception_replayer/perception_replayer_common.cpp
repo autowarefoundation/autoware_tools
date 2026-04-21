@@ -17,9 +17,9 @@
 #include "serialized_bag_message.hpp"
 #include "utils.hpp"
 
+#include <rclcpp/typesupport_helpers.hpp>
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/readers/sequential_reader.hpp>
-#include <rosbag2_cpp/typesupport_helpers.hpp>
 #include <rosbag2_storage/storage_filter.hpp>
 #include <rosbag2_storage/storage_options.hpp>
 
@@ -79,12 +79,16 @@ void PerceptionReplayerCommon::load_rosbag(
   // try to load type support for each topic
   for (const auto & topic_meta : topics) {
     try {
-      auto library =
-        rosbag2_cpp::get_typesupport_library(topic_meta.type, "rosidl_typesupport_cpp");
+      auto library = rclcpp::get_typesupport_library(topic_meta.type, "rosidl_typesupport_cpp");
       type_support_libs[topic_meta.name] = library;
 
+#ifdef ROS_DISTRO_HUMBLE
       const rosidl_message_type_support_t * type_support =
-        rosbag2_cpp::get_typesupport_handle(topic_meta.type, "rosidl_typesupport_cpp", library);
+        rclcpp::get_typesupport_handle(topic_meta.type, "rosidl_typesupport_cpp", *library);
+#else
+      const rosidl_message_type_support_t * type_support =
+        rclcpp::get_message_typesupport_handle(topic_meta.type, "rosidl_typesupport_cpp", *library);
+#endif
 
       if (type_support) {
         type_support_map[topic_meta.name] = std::shared_ptr<const rosidl_message_type_support_t>(
