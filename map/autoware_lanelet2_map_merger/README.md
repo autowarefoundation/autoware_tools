@@ -28,11 +28,11 @@ ros2 launch autoware_lanelet2_map_merger lanelet2_map_merger.launch.xml \
   map_projector_info_path:=<PROJECTOR_YAML>
 ```
 
-| Name                  | Description                                                       |
-| --------------------- | ----------------------------------------------------------------- |
-| INPUT_DIR             | Directory containing the input `.osm` files                       |
-| OUTPUT_OSM            | Path of the output merged `.osm` file                             |
-| PROJECTOR_YAML        | Path to `map_projector_info.yaml`                                 |
+| Name           | Description                                 |
+| -------------- | ------------------------------------------- |
+| INPUT_DIR      | Directory containing the input `.osm` files |
+| OUTPUT_OSM     | Path of the output merged `.osm` file       |
+| PROJECTOR_YAML | Path to `map_projector_info.yaml`           |
 
 `INPUT_DIR`, `OUTPUT_OSM`, and `PROJECTOR_YAML` should be specified as **absolute paths**.
 

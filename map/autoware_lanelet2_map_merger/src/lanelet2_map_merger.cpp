@@ -79,8 +79,7 @@ std::unique_ptr<lanelet::Projector> Lanelet2MapMerger::create_projector(
 
 lanelet::LaneletMapPtr Lanelet2MapMerger::load_and_merge_maps(
   const std::vector<std::string> & osm_files,
-  const autoware_map_msgs::msg::MapProjectorInfo & projector_info,
-  lanelet::Projector & projector)
+  const autoware_map_msgs::msg::MapProjectorInfo & projector_info, lanelet::Projector & projector)
 {
   auto merged = std::make_shared<lanelet::LaneletMap>();
 
@@ -90,8 +89,7 @@ lanelet::LaneletMapPtr Lanelet2MapMerger::load_and_merge_maps(
   for (const auto & path : osm_files) {
     RCLCPP_INFO(logger_, "Loading %s", path.c_str());
     lanelet::ErrorMessages errors;
-    lanelet::LaneletMapPtr map =
-      lanelet::load(path, "autoware_osm_handler", projector, &errors);
+    lanelet::LaneletMapPtr map = lanelet::load(path, "autoware_osm_handler", projector, &errors);
     for (const auto & error : errors) {
       RCLCPP_ERROR(logger_, "Error loading %s: %s", path.c_str(), error.c_str());
     }
@@ -156,8 +154,7 @@ void Lanelet2MapMerger::run()
 
   autoware_map_msgs::msg::MapProjectorInfo projector_info;
   try {
-    projector_info =
-      autoware::map_projection_loader::load_info_from_yaml(map_projector_info_path_);
+    projector_info = autoware::map_projection_loader::load_info_from_yaml(map_projector_info_path_);
   } catch (const std::exception & e) {
     RCLCPP_ERROR(
       logger_, "Failed to load map projector info from %s: %s", map_projector_info_path_.c_str(),
