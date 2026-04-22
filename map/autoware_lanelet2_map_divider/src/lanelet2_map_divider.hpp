@@ -15,8 +15,9 @@
 #ifndef LANELET2_MAP_DIVIDER_HPP_
 #define LANELET2_MAP_DIVIDER_HPP_
 
-#include <autoware_map_msgs/msg/map_projector_info.hpp>
 #include <rclcpp/rclcpp.hpp>
+
+#include <autoware_map_msgs/msg/map_projector_info.hpp>
 
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_io/Projection.h>
@@ -34,7 +35,10 @@ class Lanelet2MapDivider
 public:
   explicit Lanelet2MapDivider(const rclcpp::Logger & logger) : logger_(logger) {}
 
-  void set_input(const std::string & input_lanelet2_map) { input_lanelet2_map_ = input_lanelet2_map; }
+  void set_input(const std::string & input_lanelet2_map)
+  {
+    input_lanelet2_map_ = input_lanelet2_map;
+  }
   void set_output_dir(const std::string & output_dir) { output_dir_ = output_dir; }
   void set_prefix(const std::string & prefix) { prefix_ = prefix; }
   void set_grid_size(double grid_size_x, double grid_size_y)
@@ -50,8 +54,7 @@ private:
   std::unique_ptr<lanelet::Projector> create_projector(
     const autoware_map_msgs::msg::MapProjectorInfo & projector_info) const;
   lanelet::LaneletMapPtr load_map(
-    const std::string & osm_file,
-    const autoware_map_msgs::msg::MapProjectorInfo & projector_info,
+    const std::string & osm_file, const autoware_map_msgs::msg::MapProjectorInfo & projector_info,
     lanelet::Projector & projector) const;
   void prepare_output_directory(const std::string & cell_dir) const;
   std::string make_file_name(int gx, int gy) const;

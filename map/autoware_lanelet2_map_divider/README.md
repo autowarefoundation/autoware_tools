@@ -32,14 +32,14 @@ ros2 launch autoware_lanelet2_map_divider lanelet2_map_divider.launch.xml \
   [grid_size_x:=<GRID_SIZE_X>] [grid_size_y:=<GRID_SIZE_Y>] [prefix:=<PREFIX>]
 ```
 
-| Name                    | Description                                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------------------- |
-| INPUT_OSM               | Path to the input `.osm` file                                                                  |
-| OUTPUT_DIR              | Output directory. Contains `lanelet2_map.osm/<gx>_<gy>.osm` files and the metadata YAML        |
-| PROJECTOR_YAML          | Path to `map_projector_info.yaml` used when loading/saving the Lanelet2 map                    |
-| GRID_SIZE_X             | The X size (m) of each output segment. Default 100.0                                           |
-| GRID_SIZE_Y             | The Y size (m) of each output segment. Default 100.0                                           |
-| PREFIX                  | Optional prefix for output file names (if empty, files are named `<gx>_<gy>.osm`)              |
+| Name           | Description                                                                             |
+| -------------- | --------------------------------------------------------------------------------------- |
+| INPUT_OSM      | Path to the input `.osm` file                                                           |
+| OUTPUT_DIR     | Output directory. Contains `lanelet2_map.osm/<gx>_<gy>.osm` files and the metadata YAML |
+| PROJECTOR_YAML | Path to `map_projector_info.yaml` used when loading/saving the Lanelet2 map             |
+| GRID_SIZE_X    | The X size (m) of each output segment. Default 100.0                                    |
+| GRID_SIZE_Y    | The Y size (m) of each output segment. Default 100.0                                    |
+| PREFIX         | Optional prefix for output file names (if empty, files are named `<gx>_<gy>.osm`)       |
 
 `INPUT_OSM`, `OUTPUT_DIR`, and `PROJECTOR_YAML` should be specified as **absolute paths**.
 
@@ -96,8 +96,8 @@ consumed by `lanelet2_map_loader`:
 ```yaml
 x_resolution: 100.0
 y_resolution: 100.0
-0_0.osm: [0.0, 0.0]        # -> 0 <= x < 100, 0 <= y < 100
-100_0.osm: [100.0, 0.0]    # -> 100 <= x < 200, 0 <= y < 100
+0_0.osm: [0.0, 0.0] # -> 0 <= x < 100, 0 <= y < 100
+100_0.osm: [100.0, 0.0] # -> 100 <= x < 200, 0 <= y < 100
 0_100.osm: [0.0, 100.0]
 100_100.osm: [100.0, 100.0]
 ```
