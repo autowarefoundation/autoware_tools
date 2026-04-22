@@ -24,7 +24,7 @@
 PitchChecker::PitchChecker(const rclcpp::NodeOptions & node_options)
 : Node("pitch_checker", node_options)
 {
-  transform_listener_ = std::make_shared<autoware::universe_utils::TransformListener>(this);
+  transform_listener_ = std::make_shared<autoware_utils_tf::TransformListener>(this);
   using std::placeholders::_1;
   using std::placeholders::_2;
   using std::placeholders::_3;
@@ -80,7 +80,7 @@ bool PitchChecker::getTf()
 {
   geometry_msgs::msg::TransformStamped::ConstSharedPtr transform;
   try {
-    transform = transform_listener_->getTransform(
+    transform = transform_listener_->get_transform(
       "map", "base_link", rclcpp::Time(0), rclcpp::Duration::from_seconds(0.5));
   } catch (tf2::TransformException & ex) {
     auto & clk = *this->get_clock();
