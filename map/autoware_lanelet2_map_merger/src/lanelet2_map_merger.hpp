@@ -15,8 +15,9 @@
 #ifndef LANELET2_MAP_MERGER_HPP_
 #define LANELET2_MAP_MERGER_HPP_
 
-#include <autoware_map_msgs/msg/map_projector_info.hpp>
 #include <rclcpp/rclcpp.hpp>
+
+#include <autoware_map_msgs/msg/map_projector_info.hpp>
 
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_io/Projection.h>

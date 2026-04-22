@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "../src/lanelet2_map_merger.hpp"
-
 #include "../src/local_projector.hpp"
 
 #include <rclcpp/logger.hpp>
