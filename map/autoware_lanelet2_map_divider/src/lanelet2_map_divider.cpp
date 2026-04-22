@@ -63,8 +63,7 @@ std::unique_ptr<lanelet::Projector> Lanelet2MapDivider::create_projector(
 }
 
 lanelet::LaneletMapPtr Lanelet2MapDivider::load_map(
-  const std::string & osm_file,
-  const autoware_map_msgs::msg::MapProjectorInfo & projector_info,
+  const std::string & osm_file, const autoware_map_msgs::msg::MapProjectorInfo & projector_info,
   lanelet::Projector & projector) const
 {
   lanelet::ErrorMessages errors;
@@ -141,14 +140,10 @@ void Lanelet2MapDivider::divide_and_save(
     max_y = std::max(max_y, pt.y());
   }
 
-  const auto gx_start =
-    static_cast<int>(std::floor(min_x / grid_size_x_) * grid_size_x_);
-  const auto gy_start =
-    static_cast<int>(std::floor(min_y / grid_size_y_) * grid_size_y_);
-  const auto gx_end =
-    static_cast<int>(std::floor(max_x / grid_size_x_) * grid_size_x_);
-  const auto gy_end =
-    static_cast<int>(std::floor(max_y / grid_size_y_) * grid_size_y_);
+  const auto gx_start = static_cast<int>(std::floor(min_x / grid_size_x_) * grid_size_x_);
+  const auto gy_start = static_cast<int>(std::floor(min_y / grid_size_y_) * grid_size_y_);
+  const auto gx_end = static_cast<int>(std::floor(max_x / grid_size_x_) * grid_size_x_);
+  const auto gy_end = static_cast<int>(std::floor(max_y / grid_size_y_) * grid_size_y_);
 
   RCLCPP_INFO(
     logger_, "Map bounding box: [%.3f, %.3f] to [%.3f, %.3f]", min_x, min_y, max_x, max_y);
@@ -162,8 +157,7 @@ void Lanelet2MapDivider::divide_and_save(
   for (int gx = gx_start; gx <= gx_end; gx += step_x) {
     for (int gy = gy_start; gy <= gy_end; gy += step_y) {
       const lanelet::BoundingBox2d cell_bbox(
-        lanelet::BasicPoint2d(gx, gy),
-        lanelet::BasicPoint2d(gx + grid_size_x_, gy + grid_size_y_));
+        lanelet::BasicPoint2d(gx, gy), lanelet::BasicPoint2d(gx + grid_size_x_, gy + grid_size_y_));
 
       const auto lanelets = map.laneletLayer.search(cell_bbox);
       const auto areas = map.areaLayer.search(cell_bbox);
@@ -201,8 +195,7 @@ void Lanelet2MapDivider::divide_and_save(
 }
 
 void Lanelet2MapDivider::write_metadata(
-  const std::string & yaml_path,
-  const std::vector<std::tuple<std::string, int, int>> & cells) const
+  const std::string & yaml_path, const std::vector<std::tuple<std::string, int, int>> & cells) const
 {
   std::ofstream file(yaml_path);
   if (!file.is_open()) {
@@ -234,8 +227,7 @@ void Lanelet2MapDivider::run()
 
   autoware_map_msgs::msg::MapProjectorInfo projector_info;
   try {
-    projector_info =
-      autoware::map_projection_loader::load_info_from_yaml(map_projector_info_path_);
+    projector_info = autoware::map_projection_loader::load_info_from_yaml(map_projector_info_path_);
   } catch (const std::exception & e) {
     RCLCPP_ERROR(
       logger_, "Failed to load map projector info from %s: %s", map_projector_info_path_.c_str(),
