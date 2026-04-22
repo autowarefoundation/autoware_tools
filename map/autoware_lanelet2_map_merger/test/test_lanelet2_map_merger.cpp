@@ -180,8 +180,8 @@ TEST_F(Lanelet2MapMergerTest, MergedOutputDeduplicatesSharedPoints)
   merger.run();
 
   const auto counts = count_osm_primitives(output_path);
-  // After dedup, exactly 6 unique points and 3 unique line strings remain; 2 lanelets
-  // produce 2 relations.
+  // After deduplication, exactly 6 unique points and 3 unique line strings remain;
+  // 2 lanelets produce 2 relations.
   EXPECT_EQ(counts.nodes, 6u);
   EXPECT_EQ(counts.ways, 3u);
   EXPECT_EQ(counts.relations, 2u);
