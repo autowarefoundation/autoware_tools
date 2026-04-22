@@ -15,10 +15,10 @@
 #include "driving_environment_analyzer/utils.hpp"
 
 #include "autoware/motion_utils/trajectory/trajectory.hpp"
-#include <autoware_utils_geometry/geometry.hpp>
 
 #include <autoware/lanelet2_utils/conversion.hpp>
 #include <autoware_lanelet2_extension/regulatory_elements/Forward.hpp>
+#include <autoware_utils_geometry/geometry.hpp>
 #include <magic_enum.hpp>
 
 #include <lanelet2_core/geometry/Lanelet.h>
