@@ -1,0 +1,21 @@
+<launch>
+  <arg name="config_file_path" default="$(find-pkg-share autoware_lanelet2_map_divider)/config/lanelet2_map_divider.param.yaml" description="Path to the configuration YAML file"/>
+  <arg name="grid_size_x" default="100.0" description="The X size (m) of each output segment"/>
+  <arg name="grid_size_y" default="100.0" description="The Y size (m) of each output segment"/>
+  <arg name="input_lanelet2_map" description="Path to a single .osm file or a directory containing .osm files"/>
+  <arg name="output_lanelet2_map_dir" description="Path to the output directory"/>
+  <arg name="map_projector_info_path" description="Path to the map_projector_info.yaml file"/>
+  <arg name="prefix" default="" description="Prefix for the name of the output .osm files"/>
+
+  <group>
+    <node pkg="autoware_lanelet2_map_divider" exec="autoware_lanelet2_map_divider_node" name="lanelet2_map_divider" output="screen">
+      <param from="$(var config_file_path)" allow_substs="true"/>
+      <param name="grid_size_x" value="$(var grid_size_x)"/>
+      <param name="grid_size_y" value="$(var grid_size_y)"/>
+      <param name="input_lanelet2_map" value="$(var input_lanelet2_map)"/>
+      <param name="output_lanelet2_map_dir" value="$(var output_lanelet2_map_dir)"/>
+      <param name="map_projector_info_path" value="$(var map_projector_info_path)"/>
+      <param name="prefix" value="$(var prefix)"/>
+    </node>
+  </group>
+</launch>
