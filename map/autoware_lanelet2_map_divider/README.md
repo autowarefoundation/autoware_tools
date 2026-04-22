@@ -63,7 +63,7 @@ ros2 launch autoware_lanelet2_map_divider lanelet2_map_divider.launch.xml \
 
 ## Output directory layout
 
-```
+```text
 <OUTPUT_DIR>
 ├── lanelet2_map.osm
 │   ├── <gx0>_<gy0>.osm
