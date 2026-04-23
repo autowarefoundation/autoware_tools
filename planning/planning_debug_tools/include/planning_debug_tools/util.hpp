@@ -16,8 +16,9 @@
 #define PLANNING_DEBUG_TOOLS__UTIL_HPP_
 
 #include "autoware/motion_utils/trajectory/trajectory.hpp"
-#include "autoware/universe_utils/geometry/geometry.hpp"
 #include "rclcpp/rclcpp.hpp"
+
+#include <autoware_utils_geometry/geometry.hpp>
 
 #include "autoware_internal_planning_msgs/msg/path_with_lane_id.hpp"
 #include "autoware_planning_msgs/msg/path.hpp"
@@ -28,12 +29,12 @@
 namespace planning_debug_tools
 {
 
-using autoware::universe_utils::calcDistance2d;
-using autoware::universe_utils::getPoint;
-using autoware::universe_utils::getRPY;
 using autoware_internal_planning_msgs::msg::PathPointWithLaneId;
 using autoware_planning_msgs::msg::PathPoint;
 using autoware_planning_msgs::msg::TrajectoryPoint;
+using autoware_utils_geometry::calc_distance2d;
+using autoware_utils_geometry::get_point;
+using autoware_utils_geometry::get_rpy;
 
 double getVelocity(const PathPoint & p)
 {
@@ -50,15 +51,15 @@ double getVelocity(const TrajectoryPoint & p)
 
 double getYaw(const PathPoint & p)
 {
-  return getRPY(p.pose.orientation).z;
+  return get_rpy(p.pose.orientation).z;
 }
 double getYaw(const PathPointWithLaneId & p)
 {
-  return getRPY(p.point.pose.orientation).z;
+  return get_rpy(p.point.pose.orientation).z;
 }
 double getYaw(const TrajectoryPoint & p)
 {
-  return getRPY(p.pose.orientation).z;
+  return get_rpy(p.pose.orientation).z;
 }
 
 template <class T>
@@ -88,7 +89,7 @@ inline std::vector<double> getAccelerationArray(const T & points)
     const auto & prev_point = points.at(i);
     const auto & next_point = points.at(i + 1);
 
-    const double delta_s = autoware::universe_utils::calcDistance2d(prev_point, next_point);
+    const double delta_s = autoware_utils_geometry::calc_distance2d(prev_point, next_point);
     if (delta_s == 0.0) {
       segment_wise_a_arr.push_back(0.0);
     } else {
@@ -125,7 +126,7 @@ std::vector<double> calcPathArcLengthArray(const T & points, const double offset
   out.push_back(offset);
   double sum = offset;
   for (size_t i = 1; i < points.size(); ++i) {
-    sum += calcDistance2d(getPoint(points.at(i)), getPoint(points.at(i - 1)));
+    sum += calc_distance2d(get_point(points.at(i)), get_point(points.at(i - 1)));
     out.push_back(sum);
   }
   return out;
