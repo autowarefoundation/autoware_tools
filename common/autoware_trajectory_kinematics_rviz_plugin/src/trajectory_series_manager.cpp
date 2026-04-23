@@ -104,6 +104,22 @@ void TrajectorySeriesManager::setTopicConfigs(
     std::lock_guard<std::mutex> lock(mutex_);
     last_series_by_topic_.clear();
     last_series_fingerprint_by_topic_.clear();
+    // Initialize placeholder series for all configured topics so they appear in the list
+    // immediately, even before any messages are received.
+    for (const auto & entry : configs) {
+      if (entry.first.empty()) {
+        continue;
+      }
+      TrajectorySeriesData placeholder;
+      placeholder.topic = entry.first;
+      placeholder.key =
+        (entry.second == TopicMessageKind::Trajectory) ? "trajectory" : "candidates";
+      placeholder.label =
+        entry.first +
+        (entry.second == TopicMessageKind::Trajectory ? " (Trajectory)" : " (ScoredCandidates)");
+      placeholder.has_received_data = false;
+      last_series_by_topic_[entry.first] = {placeholder};
+    }
   }
 
   if (!node_) {
@@ -170,6 +186,9 @@ void TrajectorySeriesManager::onTrajectory(
   const autoware_planning_msgs::msg::Trajectory::ConstSharedPtr msg, const std::string & topic)
 {
   auto series_vec = trajectoryMsgToSeries(*msg, topic);
+  if (!series_vec.empty()) {
+    series_vec[0].has_received_data = true;
+  }
   const std::uint64_t fp = fingerprintSeriesVector(series_vec);
   {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -190,6 +209,9 @@ void TrajectorySeriesManager::onScoredCandidates(
   const std::string & topic)
 {
   auto series_vec = scoredCandidateTrajectoriesToSeries(*msg, topic);
+  for (auto & series : series_vec) {
+    series.has_received_data = true;
+  }
   const std::uint64_t fp = fingerprintSeriesVector(series_vec);
   {
     std::lock_guard<std::mutex> lock(mutex_);
