@@ -15,7 +15,6 @@
 #ifndef STATIC_CENTERLINE_GENERATOR_NODE_HPP_
 #define STATIC_CENTERLINE_GENERATOR_NODE_HPP_
 
-#include <autoware_utils_rclcpp/parameter.hpp>
 #include "autoware_static_centerline_generator/srv/load_map.hpp"
 #include "autoware_static_centerline_generator/srv/plan_path.hpp"
 #include "autoware_static_centerline_generator/srv/plan_route.hpp"
@@ -23,6 +22,8 @@
 #include "centerline_source/optimization_trajectory_based_centerline.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "type_alias.hpp"
+
+#include <autoware_utils_rclcpp/parameter.hpp>
 
 #include "autoware_map_msgs/msg/map_projector_info.hpp"
 #include "std_msgs/msg/empty.hpp"
