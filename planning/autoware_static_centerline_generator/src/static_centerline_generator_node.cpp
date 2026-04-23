@@ -20,9 +20,9 @@
 #include "autoware/motion_utils/resample/resample.hpp"
 #include "autoware/motion_utils/trajectory/conversion.hpp"
 #include "autoware/motion_utils/trajectory/trajectory.hpp"
-#include "autoware/universe_utils/geometry/geometry.hpp"
-#include "autoware/universe_utils/math/unit_conversion.hpp"
-#include "autoware/universe_utils/ros/parameter.hpp"
+#include <autoware_utils_geometry/geometry.hpp>
+#include <autoware_utils_math/unit_conversion.hpp>
+#include <autoware_utils_rclcpp/parameter.hpp>
 #include "autoware_lanelet2_extension/utility/message_conversion.hpp"
 #include "autoware_lanelet2_extension/utility/query.hpp"
 #include "autoware_lanelet2_extension/utility/utilities.hpp"
@@ -34,7 +34,7 @@
 #include <autoware/geography_utils/lanelet2_projector.hpp>
 #include <autoware/mission_planner_universe/mission_planner_plugin.hpp>
 #include <autoware/qos_utils/qos_compatibility.hpp>
-#include <autoware/universe_utils/ros/marker_helper.hpp>
+#include <autoware_utils_visualization/marker_helper.hpp>
 #include <pluginlib/class_loader.hpp>
 
 #include "std_msgs/msg/empty.hpp"
@@ -92,13 +92,13 @@ LinearRing2d create_vehicle_footprint(
 
   std::vector<geometry_msgs::msg::Point> geom_points;
   geom_points.push_back(
-    autoware::universe_utils::calcOffsetPose(pose, x_front, y_left, 0.0).position);
+    autoware_utils_geometry::calc_offset_pose(pose, x_front, y_left, 0.0).position);
   geom_points.push_back(
-    autoware::universe_utils::calcOffsetPose(pose, x_front, y_right, 0.0).position);
+    autoware_utils_geometry::calc_offset_pose(pose, x_front, y_right, 0.0).position);
   geom_points.push_back(
-    autoware::universe_utils::calcOffsetPose(pose, x_rear, y_right, 0.0).position);
+    autoware_utils_geometry::calc_offset_pose(pose, x_rear, y_right, 0.0).position);
   geom_points.push_back(
-    autoware::universe_utils::calcOffsetPose(pose, x_rear, y_left, 0.0).position);
+    autoware_utils_geometry::calc_offset_pose(pose, x_rear, y_left, 0.0).position);
 
   LinearRing2d footprint;
   for (const auto & geom_point : geom_points) {
@@ -120,7 +120,7 @@ geometry_msgs::msg::Pose get_text_pose(
   const double x_front = i.front_overhang_m + i.wheel_base_m;
   const double y_left = i.wheel_tread_m / 2.0 + i.left_overhang_m + 0.5;
 
-  return autoware::universe_utils::calcOffsetPose(pose, x_front + x_offset, y_left, 0.0);
+  return autoware_utils_geometry::calc_offset_pose(pose, x_front + x_offset, y_left, 0.0);
 }
 
 std::array<double, 3> convert_hex_string_to_decimal(const std::string & hex_str_color)
@@ -434,7 +434,7 @@ void StaticCenterlineGeneratorNode::load_centerline()
 std::vector<lanelet::Id> StaticCenterlineGeneratorNode::get_lanelet_sequence_from_param()
 {
   const auto lanelet_sequence_str =
-    autoware::universe_utils::getOrDeclareParameter<std::string>(*this, "lanelet_sequence");
+    autoware_utils_rclcpp::get_or_declare_parameter<std::string>(*this, "lanelet_sequence");
   std::vector<lanelet::Id> lanelet_sequence;
   if (!lanelet_sequence_str.empty()) {
     std::vector<std::string> tokens;
@@ -619,7 +619,7 @@ LaneletRoute StaticCenterlineGeneratorNode::plan_route_by_lane_ids(
 
   // calculate start pose
   const auto start_pose_param =
-    autoware::universe_utils::getOrDeclareParameter<std::vector<double>>(*this, "start_pose");
+    autoware_utils_rclcpp::get_or_declare_parameter<std::vector<double>>(*this, "start_pose");
   const bool is_start_pose_param_invalid = std::all_of(
     start_pose_param.begin(), start_pose_param.end(), [](double x) { return x == 0.0; });
   const auto start_pose = [&]() {
@@ -633,7 +633,7 @@ LaneletRoute StaticCenterlineGeneratorNode::plan_route_by_lane_ids(
 
   // calculate end pose
   const auto end_pose_param =
-    autoware::universe_utils::getOrDeclareParameter<std::vector<double>>(*this, "end_pose");
+    autoware_utils_rclcpp::get_or_declare_parameter<std::vector<double>>(*this, "end_pose");
   const bool is_end_pose_param_invalid =
     std::all_of(end_pose_param.begin(), end_pose_param.end(), [](double x) { return x == 0.0; });
   const auto end_pose = [&]() {
@@ -895,7 +895,7 @@ JitterDetectionResult StaticCenterlineGeneratorNode::detect_jitter_sections(
 
   std::vector<double> angle_diffs;
   const int64_t jitter_deg_threshold =
-    autoware::universe_utils::getOrDeclareParameter<int64_t>(*this, "jitter_deg_threshold");
+    autoware_utils_rclcpp::get_or_declare_parameter<int64_t>(*this, "jitter_deg_threshold");
   const double jitter_rad_threshold = jitter_deg_threshold * M_PI / 180.0;
 
   // Detect centerline jitter from angle differences
@@ -953,7 +953,7 @@ void StaticCenterlineGeneratorNode::visualize_jitter_sections(
         (jitter_idx > 0 && (jitter_idx - 1) < jitter_result.angle_differences.size())
           ? jitter_result.angle_differences[jitter_idx - 1]
           : 0.0;
-      const double angle_diff_deg = autoware::universe_utils::rad2deg(angle_diff_rad);
+      const double angle_diff_deg = autoware_utils_math::rad2deg(angle_diff_rad);
       const auto jitter_text_marker = utils::create_text_marker(
         "jitter_values", jitter_text_pose, std::round(angle_diff_deg * 10.0) / 10.0, 0.0, 0.4, 1.0,
         0.95, now(), jitter_idx);
@@ -1130,14 +1130,14 @@ void StaticCenterlineGeneratorNode::validate_centerline()
     true;  // always tre for now since the curvature is just estimated and not enough precise.
   if (max_steer_angle < steer_angle_threshold) {
     std::cerr << "  The generated centerline has no high steer angle. (estimated:"
-              << autoware::universe_utils::rad2deg(max_steer_angle)
-              << "[deg] < threshold:" << autoware::universe_utils::rad2deg(steer_angle_threshold)
+              << autoware_utils_math::rad2deg(max_steer_angle)
+              << "[deg] < threshold:" << autoware_utils_math::rad2deg(steer_angle_threshold)
               << "[deg])" << std::endl
               << "  Passed." << std::endl;
   } else {
     std::cerr << YELLOW_TEXT << "  The generated centerline has a too high steer angle. (threshold:"
-              << autoware::universe_utils::rad2deg(steer_angle_threshold)
-              << "[deg] <= estimated:" << autoware::universe_utils::rad2deg(max_steer_angle)
+              << autoware_utils_math::rad2deg(steer_angle_threshold)
+              << "[deg] <= estimated:" << autoware_utils_math::rad2deg(max_steer_angle)
               << "[deg])" << std::endl
               << "  However, the estimated steer angle is not enough precise, so the result is "
                  "conditional pass."
@@ -1147,14 +1147,14 @@ void StaticCenterlineGeneratorNode::validate_centerline()
 
   // 3. jitter / rough sections detection
   const int64_t jitter_deg_threshold =
-    autoware::universe_utils::getOrDeclareParameter<int64_t>(*this, "jitter_deg_threshold");
+    autoware_utils_rclcpp::get_or_declare_parameter<int64_t>(*this, "jitter_deg_threshold");
   const double max_angle_diff =
     jitter_result.angle_differences.empty()
       ? 0.0
       : *std::max_element(
           jitter_result.angle_differences.begin(), jitter_result.angle_differences.end());
   const double max_angle_diff_deg =
-    std::round(autoware::universe_utils::rad2deg(max_angle_diff) * 10.0) / 10.0;
+    std::round(autoware_utils_math::rad2deg(max_angle_diff) * 10.0) / 10.0;
 
   std::string jitter_indices_str;
   for (size_t i = 0; i < jitter_result.jitter_indices.size(); ++i) {
