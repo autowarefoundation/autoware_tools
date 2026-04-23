@@ -16,10 +16,11 @@
 #define PLANNING_DEBUG_TOOLS__TRAJECTORY_ANALYZER_HPP_
 
 #include "autoware/motion_utils/trajectory/trajectory.hpp"
-#include <autoware_utils_geometry/geometry.hpp>
 #include "planning_debug_tools/msg/trajectory_debug_info.hpp"
 #include "planning_debug_tools/util.hpp"
 #include "rclcpp/rclcpp.hpp"
+
+#include <autoware_utils_geometry/geometry.hpp>
 
 #include "autoware_internal_debug_msgs/msg/float64_multi_array_stamped.hpp"
 #include "autoware_internal_planning_msgs/msg/path_with_lane_id.hpp"

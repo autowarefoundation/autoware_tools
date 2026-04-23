@@ -16,8 +16,9 @@
 #define PLANNING_DEBUG_TOOLS__UTIL_HPP_
 
 #include "autoware/motion_utils/trajectory/trajectory.hpp"
-#include <autoware_utils_geometry/geometry.hpp>
 #include "rclcpp/rclcpp.hpp"
+
+#include <autoware_utils_geometry/geometry.hpp>
 
 #include "autoware_internal_planning_msgs/msg/path_with_lane_id.hpp"
 #include "autoware_planning_msgs/msg/path.hpp"
@@ -28,12 +29,12 @@
 namespace planning_debug_tools
 {
 
-using autoware_utils_geometry::calc_distance2d;
-using autoware_utils_geometry::get_point;
-using autoware_utils_geometry::get_rpy;
 using autoware_internal_planning_msgs::msg::PathPointWithLaneId;
 using autoware_planning_msgs::msg::PathPoint;
 using autoware_planning_msgs::msg::TrajectoryPoint;
+using autoware_utils_geometry::calc_distance2d;
+using autoware_utils_geometry::get_point;
+using autoware_utils_geometry::get_rpy;
 
 double getVelocity(const PathPoint & p)
 {
