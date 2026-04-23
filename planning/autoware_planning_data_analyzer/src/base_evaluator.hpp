@@ -40,6 +40,8 @@
 namespace autoware::planning_data_analyzer
 {
 
+using autoware::route_handler::RouteHandler;
+
 // Forward declarations
 struct SynchronizedData;
 struct TopicNames;
@@ -54,8 +56,7 @@ class BaseEvaluator
 {
 public:
   explicit BaseEvaluator(
-    rclcpp::Logger logger,
-    std::shared_ptr<autoware::route_handler::RouteHandler> route_handler = nullptr)
+    rclcpp::Logger logger, std::shared_ptr<RouteHandler> route_handler = nullptr)
   : logger_(logger), route_handler_(std::move(route_handler))
   {
   }
@@ -99,6 +100,8 @@ public:
   virtual std::pair<rclcpp::Time, rclcpp::Time> run_evaluation_from_bag(
     const std::string & bag_path, rosbag2_cpp::Writer * evaluation_bag_writer,
     const TopicNames & topic_names) = 0;
+
+  void set_json_output_dir(const std::string & output_dir) { json_output_dir_ = output_dir; }
 
 protected:
   /**
@@ -145,6 +148,8 @@ protected:
     rclcpp::Time evaluation_start_time;
     rclcpp::Time evaluation_end_time;
     tf2_msgs::msg::TFMessage tf_static_msgs;
+    bool gt_trajectory_topic_seen = false;
+    size_t gt_trajectory_message_count = 0;
   };
 
   BagProcessingResult process_bag_common(
@@ -160,8 +165,17 @@ protected:
    */
   void save_json_results(
     const nlohmann::json & json_output, const std::string & bag_path,
-    const std::string & evaluation_mode,
-    const std::string & output_filename = "evaluation_result") const;
+    const std::string & evaluation_mode, const std::string & output_filename = "evaluation_result",
+    bool add_timestamp = true, bool include_evaluation_info = true) const;
+
+  /**
+   * @brief Save an array of JSON objects as JSONL (one object per line)
+   * @param results_array Array of JSON objects, each with Result, Frame, Stamp
+   * @param output_filename Base filename for output (e.g.
+   * "time_step_based_trajectory_result.jsonl")
+   */
+  void save_jsonl_results(
+    const nlohmann::json & results_array, const std::string & output_filename) const;
 
   /**
    * @brief Write tf_static messages to evaluation bag
@@ -194,7 +208,8 @@ protected:
     const rclcpp::Time & normalized_timestamp) const;
 
   rclcpp::Logger logger_;
-  std::shared_ptr<autoware::route_handler::RouteHandler> route_handler_;
+  std::shared_ptr<RouteHandler> route_handler_;
+  std::string json_output_dir_;
 
   // For normalized timestamp calculation
   rclcpp::Time first_bag_timestamp_;

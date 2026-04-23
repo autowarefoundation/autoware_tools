@@ -16,8 +16,11 @@
 #define AUTOWARE_PLANNING_DATA_ANALYZER_NODE_HPP_
 
 #include "bag_handler.hpp"
+#include "metrics/extended_comfort.hpp"
+#include "metrics/trajectory_metrics.hpp"
 #include "rosbag2_cpp/reader.hpp"
 #include "rosbag2_cpp/writer.hpp"
+#include "serialized_bag_message.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info_utils.hpp>
@@ -30,6 +33,7 @@
 #include <visualization_msgs/msg/detail/marker_array__struct.hpp>
 
 #include <algorithm>
+#include <filesystem>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -41,6 +45,7 @@
 namespace autoware::planning_data_analyzer
 {
 
+using autoware::route_handler::RouteHandler;
 using autoware_planning_msgs::msg::Trajectory;
 
 class AutowarePlanningDataAnalyzerNode : public rclcpp::Node
@@ -51,14 +56,19 @@ public:
   ~AutowarePlanningDataAnalyzerNode() override;
 
 private:
-  enum class EvaluationMode { OPEN_LOOP, OR_SCENE };
+  enum class EvaluationMode { OPEN_LOOP };
 
   void setup_evaluation_bag_writer();
+  void close_evaluation_bag_writer();
+  void merge_bags(
+    const std::vector<std::filesystem::path> & input_bags,
+    const std::filesystem::path & output_bag) const;
+  void replace_input_bag_with_merged_evaluation();
   void run_evaluation();
   void write_map_and_route_markers_to_bag(const rclcpp::Time & reference_time);
   void create_route_markers(visualization_msgs::msg::MarkerArray & marker_array) const;
 
-  std::shared_ptr<autoware::route_handler::RouteHandler> route_handler_;
+  std::shared_ptr<RouteHandler> route_handler_;
   visualization_msgs::msg::MarkerArray::ConstSharedPtr map_marker_;
 
   mutable std::mutex mutex_;
@@ -72,13 +82,25 @@ private:
   std::string route_topic_name_;
   std::string odometry_topic_name_;
   std::string trajectory_topic_name_;
+  std::string candidate_trajectories_topic_name_;
+  double evaluation_interval_ms_ = 100.0;
+  double sync_tolerance_ms_ = 100.0;
+  std::string gt_source_mode_;
+  std::string gt_trajectory_topic_name_;
+  double gt_sync_tolerance_ms_ = 200.0;
+  metrics::HistoryComfortParameters history_comfort_params_;
+  metrics::ExtendedComfortParameters extended_comfort_parameters_;
+  metrics::LaneKeepingParameters lane_keeping_params_;
+  autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   std::string objects_topic_name_;
+  std::string traffic_signals_topic_name_;
   std::string tf_topic_name_;
   std::string acceleration_topic_name_;
   std::string steering_topic_name_;
 
   EvaluationMode evaluation_mode_;
   std::string bag_path_;
+  std::filesystem::path evaluation_metrics_bag_path_;
 
   rclcpp::TimerBase::SharedPtr map_check_timer_;
 

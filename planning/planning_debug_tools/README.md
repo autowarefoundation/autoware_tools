@@ -202,6 +202,8 @@ The following topics are loaded from the rosbag and replayed:
 - `/perception/object_recognition/objects` (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)
 - `/perception/traffic_light_recognition/traffic_signals` (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals
 - `/perception/occupancy_grid_map/map` (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)
+- `/planning/mission_planning/route` (autoware_planning_msgs/msg/LaneletRoute): Route data (with transient_local QoS, when `--replay-route` option is used)
+- `/planning/mission_planning/state` (autoware_planning_msgs/msg/RouteState): Route state data (with transient_local QoS, when `--replay-route` option is used)
 - `<any CompressedImage topic>` (sensor_msgs/msg/CompressedImage): Reference images for visualization (when `--reference-image-topics` is used)
 
 ### Published Topics
@@ -211,6 +213,8 @@ The following topics are published during replay:
 - `/perception/object_recognition/tracking/objects` or `/perception/object_recognition/objects`: Replayed perception objects
 - `/perception/traffic_light_recognition/traffic_signals`: Replayed traffic light signals
 - `/perception/occupancy_grid_map/map`: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)
+- `/planning/mission_planning/route`: Replayed route (published with transient_local QoS, only when the message changes; when `--replay-route` option is used)
+- `/planning/mission_planning/state`: Replayed route state (published with transient_local QoS, only when the message changes; when `--replay-route` option is used)
 - `<any CompressedImage topic>`: Replayed reference images (published to the same topic name as in the rosbag)
 - `/perception_reproducer/rosbag_ego_odom`: Debug topic for recorded ego odometry
 - `/initialpose`: Initial pose (when `-p` option is used)
@@ -234,6 +238,7 @@ This design results in the following behavior:
 - `-r`, `--search-radius`: Set the search radius in meters (default: 1.5m). If set to 0, always publishes the nearest message
 - `-c`, `--reproduce-cool-down`: Set the cool down time in seconds (default: 80.0s)
 - `-p`, `--pub-route`: Initialize localization and publish a route based on poses from the rosbag
+- `--replay-route`: Replay route and route state topics from rosbag data with transient_local QoS (only publishes when the message changes)
 - `-n`, `--noise`: Apply perception noise to objects when publishing repeated messages (default: False)
 - `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
 - `--reference-image-topics`: Comma-separated list of CompressedImage topics to load and publish (e.g., `"/sensing/camera/camera0/image_raw/compressed,/sensing/camera/camera1/image_raw/compressed"`)
@@ -271,6 +276,14 @@ Example usage with route publication:
 ros2 run planning_debug_tools perception_reproducer -b <bag-file> -p
 ```
 
+The `--replay-route` option enables replaying of route and route state topics directly from the rosbag data. These topics use transient_local QoS and are only published when the message content changes (avoiding redundant publishes). This is useful when you want to replay the exact route that was recorded in the rosbag.
+
+Example usage with route replaying:
+
+```bash
+ros2 run planning_debug_tools perception_reproducer -b <bag-file> --replay-route
+```
+
 ## Perception replayer
 
 A part of the feature is under development.
@@ -290,6 +303,8 @@ The following topics are loaded from the rosbag and replayed:
 - `/perception/object_recognition/objects` (autoware_perception_msgs/msg/PredictedObjects): Predicted objects (default)
 - `/perception/traffic_light_recognition/traffic_signals` (autoware_perception_msgs/msg/TrafficLightGroupArray): Traffic light signals
 - `/perception/occupancy_grid_map/map` (nav_msgs/msg/OccupancyGrid): Occupancy grid map (with transient_local QoS)
+- `/planning/mission_planning/route` (autoware_planning_msgs/msg/LaneletRoute): Route data (with transient_local QoS, when `--replay-route` option is used)
+- `/planning/mission_planning/state` (autoware_planning_msgs/msg/RouteState): Route state data (with transient_local QoS, when `--replay-route` option is used)
 - `<any CompressedImage topic>` (sensor_msgs/msg/CompressedImage): Reference images for visualization
 
 ### Published Topics
@@ -299,6 +314,8 @@ The following topics are published during replay:
 - `/perception/object_recognition/tracking/objects` or `/perception/object_recognition/objects`: Replayed perception objects
 - `/perception/traffic_light_recognition/traffic_signals`: Replayed traffic light signals
 - `/perception/occupancy_grid_map/map`: Replayed occupancy grid map (published with transient_local QoS, so late subscribers can receive the latest map)
+- `/planning/mission_planning/route`: Replayed route (published with transient_local QoS, only when the message changes; when `--replay-route` option is used)
+- `/planning/mission_planning/state`: Replayed route state (published with transient_local QoS, only when the message changes; when `--replay-route` option is used)
 - `<any CompressedImage topic>`: Replayed reference images
 - `/perception_reproducer/rosbag_ego_odom`: Debug topic for recorded ego odometry
 
@@ -306,6 +323,7 @@ The following topics are published during replay:
 
 - `-b`, `--bag`: Rosbag file path (required)
 - `-t`, `--tracked-object`: Publish tracked objects
+- `--replay-route`: Replay route and route state topics from rosbag data with transient_local QoS (only publishes when the message changes)
 - `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
 - `-v`, `--verbose`: Output debug data
 - `-h`, `--help`: Show help message

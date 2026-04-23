@@ -23,10 +23,47 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace autoware::planning_data_analyzer
 {
+
+template <typename T, typename = void>
+struct has_header_stamp : std::false_type
+{
+};
+
+template <typename T>
+struct has_header_stamp<T, std::void_t<decltype(std::declval<T>().header.stamp)>> : std::true_type
+{
+};
+
+template <typename T, typename = void>
+struct has_stamp : std::false_type
+{
+};
+
+template <typename T>
+struct has_stamp<T, std::void_t<decltype(std::declval<T>().stamp)>> : std::true_type
+{
+};
+
+template <typename MessageType>
+typename std::enable_if<has_header_stamp<MessageType>::value, rclcpp::Time>::type message_stamp(
+  const MessageType & msg)
+{
+  return rclcpp::Time(msg.header.stamp);
+}
+
+template <typename MessageType>
+typename std::enable_if<
+  !has_header_stamp<MessageType>::value && has_stamp<MessageType>::value, rclcpp::Time>::type
+message_stamp(const MessageType & msg)
+{
+  return rclcpp::Time(msg.stamp);
+}
 
 // Base interface for message buffers
 struct BufferBase
@@ -51,15 +88,14 @@ struct Buffer : BufferBase
       return false;
     }
 
-    return rclcpp::Time(msgs.back().header.stamp).nanoseconds() -
-             rclcpp::Time(msgs.front().header.stamp).nanoseconds() >
+    return message_stamp(msgs.back()).nanoseconds() - message_stamp(msgs.front()).nanoseconds() >
            buffer_time_ns;
   }
 
   void remove_old_data(const rcutils_time_point_value_t now) override
   {
     const auto itr = std::remove_if(msgs.begin(), msgs.end(), [&now](const auto & msg) {
-      return rclcpp::Time(msg.header.stamp).nanoseconds() < now;
+      return message_stamp(msg).nanoseconds() < now;
     });
     msgs.erase(itr, msgs.end());
   }
@@ -77,7 +113,7 @@ struct Buffer : BufferBase
   auto get(const rcutils_time_point_value_t now) const -> typename T::SharedPtr
   {
     const auto itr = std::find_if(msgs.begin(), msgs.end(), [&now](const auto & msg) {
-      return rclcpp::Time(msg.header.stamp).nanoseconds() > now;
+      return message_stamp(msg).nanoseconds() > now;
     });
 
     if (itr == msgs.end()) {
@@ -97,12 +133,12 @@ struct Buffer : BufferBase
     const double tolerance_ns = tolerance_ms * 1e6;
 
     auto closest_itr = msgs.begin();
-    double min_diff = std::abs(
-      static_cast<double>(rclcpp::Time(closest_itr->header.stamp).nanoseconds() - target_time));
+    double min_diff =
+      std::abs(static_cast<double>(message_stamp(*closest_itr).nanoseconds() - target_time));
 
     for (auto itr = msgs.begin(); itr != msgs.end(); ++itr) {
       const double diff =
-        std::abs(static_cast<double>(rclcpp::Time(itr->header.stamp).nanoseconds() - target_time));
+        std::abs(static_cast<double>(message_stamp(*itr).nanoseconds() - target_time));
       if (diff < min_diff) {
         min_diff = diff;
         closest_itr = itr;
@@ -115,6 +151,29 @@ struct Buffer : BufferBase
 
     return std::make_shared<T>(*closest_itr);
   }
+
+  auto get_latest_before_or_equal(const rcutils_time_point_value_t target_time) const ->
+    typename T::SharedPtr
+  {
+    if (msgs.empty()) {
+      return nullptr;
+    }
+
+    typename std::vector<T>::const_iterator latest_itr = msgs.end();
+    for (auto itr = msgs.begin(); itr != msgs.end(); ++itr) {
+      const auto stamp_ns = message_stamp(*itr).nanoseconds();
+      if (stamp_ns <= target_time) {
+        latest_itr = itr;
+      } else {
+        break;
+      }
+    }
+
+    if (latest_itr == msgs.end()) {
+      return nullptr;
+    }
+    return std::make_shared<T>(*latest_itr);
+  }
 };
 
 // Template specializations for messages without standard header.stamp
@@ -125,10 +184,16 @@ template <>
 bool Buffer<TFMessage>::ready() const;
 
 template <>
+bool Buffer<CandidateTrajectories>::ready() const;
+
+template <>
 void Buffer<SteeringReport>::remove_old_data(const rcutils_time_point_value_t now);
 
 template <>
 void Buffer<TFMessage>::remove_old_data(const rcutils_time_point_value_t now);
+
+template <>
+void Buffer<CandidateTrajectories>::remove_old_data(const rcutils_time_point_value_t now);
 
 template <>
 auto Buffer<SteeringReport>::get(const rcutils_time_point_value_t now) const
@@ -136,6 +201,10 @@ auto Buffer<SteeringReport>::get(const rcutils_time_point_value_t now) const
 
 template <>
 auto Buffer<TFMessage>::get(const rcutils_time_point_value_t now) const -> TFMessage::SharedPtr;
+
+template <>
+auto Buffer<CandidateTrajectories>::get(const rcutils_time_point_value_t now) const
+  -> CandidateTrajectories::SharedPtr;
 
 template <>
 auto Buffer<SteeringReport>::get_closest(
@@ -146,6 +215,15 @@ template <>
 auto Buffer<TFMessage>::get_closest(
   const rcutils_time_point_value_t target_time, const double tolerance_ms) const
   -> TFMessage::SharedPtr;
+
+template <>
+auto Buffer<CandidateTrajectories>::get_closest(
+  const rcutils_time_point_value_t target_time, const double tolerance_ms) const
+  -> CandidateTrajectories::SharedPtr;
+
+template <>
+auto Buffer<CandidateTrajectories>::get_latest_before_or_equal(
+  const rcutils_time_point_value_t target_time) const -> CandidateTrajectories::SharedPtr;
 
 }  // namespace autoware::planning_data_analyzer
 

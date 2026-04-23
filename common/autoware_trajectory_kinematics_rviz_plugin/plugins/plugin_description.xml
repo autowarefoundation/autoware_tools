@@ -1,0 +1,8 @@
+<library path="autoware_trajectory_kinematics_rviz_plugin">
+  <class
+    name="autoware_trajectory_kinematics_rviz_plugin/TrajectoryKinematicsPanel"
+    type="autoware::visualization::trajectory_kinematics_rviz_plugin::TrajectoryKinematicsPanel"
+    base_class_type="rviz_common::Panel">
+    <description>Plot kinematics along autoware_planning_msgs/Trajectory or autoware_internal_planning_msgs/ScoredCandidateTrajectories (multi-series comparison).</description>
+  </class>
+</library>
