@@ -21,10 +21,11 @@
 #include "autoware/motion_utils/trajectory/conversion.hpp"
 #include "autoware/path_optimizer/node.hpp"
 #include "autoware/path_smoother/elastic_band_smoother.hpp"
-#include <autoware_utils_rclcpp/parameter.hpp>
 #include "autoware_utils_geometry/pose_deviation.hpp"
 #include "static_centerline_generator_node.hpp"
 #include "utils.hpp"
+
+#include <autoware_utils_rclcpp/parameter.hpp>
 
 #include <algorithm>
 #include <chrono>

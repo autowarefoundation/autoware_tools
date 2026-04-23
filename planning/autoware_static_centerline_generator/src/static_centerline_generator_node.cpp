@@ -20,9 +20,6 @@
 #include "autoware/motion_utils/resample/resample.hpp"
 #include "autoware/motion_utils/trajectory/conversion.hpp"
 #include "autoware/motion_utils/trajectory/trajectory.hpp"
-#include <autoware_utils_geometry/geometry.hpp>
-#include <autoware_utils_math/unit_conversion.hpp>
-#include <autoware_utils_rclcpp/parameter.hpp>
 #include "autoware_lanelet2_extension/utility/message_conversion.hpp"
 #include "autoware_lanelet2_extension/utility/query.hpp"
 #include "autoware_lanelet2_extension/utility/utilities.hpp"
@@ -34,6 +31,9 @@
 #include <autoware/geography_utils/lanelet2_projector.hpp>
 #include <autoware/mission_planner_universe/mission_planner_plugin.hpp>
 #include <autoware/qos_utils/qos_compatibility.hpp>
+#include <autoware_utils_geometry/geometry.hpp>
+#include <autoware_utils_math/unit_conversion.hpp>
+#include <autoware_utils_rclcpp/parameter.hpp>
 #include <autoware_utils_visualization/marker_helper.hpp>
 #include <pluginlib/class_loader.hpp>
 
@@ -1137,8 +1137,8 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   } else {
     std::cerr << YELLOW_TEXT << "  The generated centerline has a too high steer angle. (threshold:"
               << autoware_utils_math::rad2deg(steer_angle_threshold)
-              << "[deg] <= estimated:" << autoware_utils_math::rad2deg(max_steer_angle)
-              << "[deg])" << std::endl
+              << "[deg] <= estimated:" << autoware_utils_math::rad2deg(max_steer_angle) << "[deg])"
+              << std::endl
               << "  However, the estimated steer angle is not enough precise, so the result is "
                  "conditional pass."
               << std::endl

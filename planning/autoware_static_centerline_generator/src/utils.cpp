@@ -16,6 +16,7 @@
 
 #include "autoware/behavior_path_planner_common/data_manager.hpp"
 #include "autoware/behavior_path_planner_common/utils/drivable_area_expansion/static_drivable_area.hpp"
+
 #include <autoware_utils_visualization/marker_helper.hpp>
 
 #include <lanelet2_core/LaneletMap.h>
