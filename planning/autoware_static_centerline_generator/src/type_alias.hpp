@@ -15,7 +15,7 @@
 #define TYPE_ALIAS_HPP_
 
 #include "autoware/route_handler/route_handler.hpp"
-#include "autoware/universe_utils/geometry/geometry.hpp"
+#include <autoware_utils_geometry/geometry.hpp>
 
 #include "autoware_map_msgs/msg/lanelet_map_bin.hpp"
 #include "autoware_perception_msgs/msg/predicted_objects.hpp"
@@ -29,9 +29,9 @@
 namespace autoware::static_centerline_generator
 {
 using autoware::route_handler::RouteHandler;
-using autoware::universe_utils::LinearRing2d;
-using autoware::universe_utils::LineString2d;
-using autoware::universe_utils::Point2d;
+using autoware_utils_geometry::LinearRing2d;
+using autoware_utils_geometry::LineString2d;
+using autoware_utils_geometry::Point2d;
 using autoware_internal_planning_msgs::msg::PathWithLaneId;
 using autoware_map_msgs::msg::LaneletMapBin;
 using autoware_perception_msgs::msg::PredictedObjects;

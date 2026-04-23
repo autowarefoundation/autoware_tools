@@ -15,7 +15,7 @@
 #ifndef STATIC_CENTERLINE_GENERATOR_NODE_HPP_
 #define STATIC_CENTERLINE_GENERATOR_NODE_HPP_
 
-#include "autoware/universe_utils/ros/parameter.hpp"
+#include <autoware_utils_rclcpp/parameter.hpp>
 #include "autoware_static_centerline_generator/srv/load_map.hpp"
 #include "autoware_static_centerline_generator/srv/plan_path.hpp"
 #include "autoware_static_centerline_generator/srv/plan_route.hpp"
@@ -164,7 +164,7 @@ private:
   template <typename T>
   T getRosParameter(const std::string & param_name)
   {
-    return autoware::universe_utils::getOrDeclareParameter<T>(*this, param_name);
+    return autoware_utils_rclcpp::get_or_declare_parameter<T>(*this, param_name);
   }
 
   lanelet::LaneletMapPtr original_map_ptr_{nullptr};
