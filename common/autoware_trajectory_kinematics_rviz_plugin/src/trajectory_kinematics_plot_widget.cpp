@@ -152,17 +152,16 @@ TrajectoryKinematicsPlotWidget::TrajectoryKinematicsPlotWidget(QWidget * parent)
   layout->setContentsMargins(0, 0, 0, 0);
   chart_view_ = new TrajectoryKinematicsChartView(this);
   chart_view_->setRenderHint(QPainter::Antialiasing);
-  chart_view_->setMinimumHeight(220);
+  chart_view_->setMinimumHeight(250);
   chart_view_->setMouseTracking(true);
   layout->addWidget(chart_view_);
   setLayout(layout);
 
   const auto & pal = style::default_colors;
   setFont(makePanelUiFont());
-  setStyleSheet(QStringLiteral(
-                  "QWidget#TkmPlotHost { background-color: %1; border-radius: 8px;"
-                  "  font-family: \"Segoe UI\", \"Ubuntu\", \"Noto Sans\", sans-serif;"
-                  "  font-size: 13px; font-weight: 600; }")
+  setStyleSheet(QStringLiteral("QWidget#TkmPlotHost { background-color: %1; border-radius: 8px;"
+                               "  font-family: \"Segoe UI\", \"Ubuntu\", \"Noto Sans\", sans-serif;"
+                               "  font-size: 13px; font-weight: 600; }")
                   .arg(QString::fromStdString(pal.surface_container)));
 }
 
