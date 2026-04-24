@@ -15,7 +15,7 @@
 #ifndef DEVIATION_ESTIMATOR__DEVIATION_ESTIMATOR_HPP_
 #define DEVIATION_ESTIMATOR__DEVIATION_ESTIMATOR_HPP_
 
-#include "autoware/universe_utils/ros/transform_listener.hpp"
+#include <autoware_utils_tf/transform_listener.hpp>
 #include "deviation_estimator/gyro_bias_module.hpp"
 #include "deviation_estimator/logger.hpp"
 #include "deviation_estimator/utils.hpp"
@@ -103,7 +103,7 @@ private:
   std::unique_ptr<VelocityCoefModule> vel_coef_module_;
   std::unique_ptr<ValidationModule> validation_module_;
 
-  std::shared_ptr<autoware::universe_utils::TransformListener> transform_listener_;
+  std::shared_ptr<autoware_utils_tf::TransformListener> transform_listener_;
 
   void callback_pose_with_covariance(geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
