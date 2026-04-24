@@ -14,8 +14,9 @@
 
 #include "deviation_estimator/utils.hpp"
 
-#include <autoware_utils_geometry/geometry.hpp>
 #include "rclcpp/rclcpp.hpp"
+
+#include <autoware_utils_geometry/geometry.hpp>
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/utils.h>
