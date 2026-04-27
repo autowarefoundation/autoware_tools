@@ -217,7 +217,7 @@ void DeviationEstimator::callback_imu(const sensor_msgs::msg::Imu::ConstSharedPt
 {
   imu_frame_ = imu_msg_ptr->header.frame_id;
   geometry_msgs::msg::TransformStamped::ConstSharedPtr tf_imu2base_ptr =
-    transform_listener_->getLatestTransform(imu_frame_, output_frame_);
+    transform_listener_->get_latest_transform(imu_frame_, output_frame_);
   if (!tf_imu2base_ptr) {
     RCLCPP_ERROR(
       this->get_logger(), "Please publish TF %s to %s", output_frame_.c_str(),
@@ -294,7 +294,7 @@ void DeviationEstimator::timer_callback()
   pub_coef_vx_->publish(coef_vx_msg);
 
   geometry_msgs::msg::TransformStamped::ConstSharedPtr tf_base2imu_ptr =
-    transform_listener_->getLatestTransform(output_frame_, imu_frame_);
+    transform_listener_->get_latest_transform(output_frame_, imu_frame_);
   if (!tf_base2imu_ptr) {
     RCLCPP_ERROR(
       this->get_logger(), "Please publish TF %s to %s", imu_frame_.c_str(), output_frame_.c_str());
