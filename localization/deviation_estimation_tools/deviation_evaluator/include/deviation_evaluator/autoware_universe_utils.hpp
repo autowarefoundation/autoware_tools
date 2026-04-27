@@ -113,7 +113,8 @@ geometry_msgs::msg::Pose calcInterpolatedPose(
       const double yaw = autoware_utils_geometry::calc_azimuth_angle(
         autoware_utils_geometry::get_point(output_pose),
         autoware_utils_geometry::get_point(base_pose));
-      output_pose.orientation = autoware_utils_geometry::create_quaternion_from_rpy(0.0, pitch, yaw);
+      output_pose.orientation =
+        autoware_utils_geometry::create_quaternion_from_rpy(0.0, pitch, yaw);
     }
   } else {
     // Get orientation by spherical linear interpolation
