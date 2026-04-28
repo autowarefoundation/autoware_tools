@@ -42,7 +42,8 @@
         "grid_size_y",
         "input_lanelet2_map",
         "output_lanelet2_map_dir",
-        "map_projector_info_path"
+        "map_projector_info_path",
+        "prefix"
       ],
       "additionalProperties": false
     }
