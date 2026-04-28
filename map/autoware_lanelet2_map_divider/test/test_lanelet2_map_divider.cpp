@@ -25,6 +25,7 @@
 #include <lanelet2_io/Io.h>
 #include <yaml-cpp/yaml.h>
 
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <map>
