@@ -23,7 +23,6 @@
 #include <lanelet2_core/primitives/LineString.h>
 #include <lanelet2_core/primitives/Point.h>
 #include <lanelet2_io/Io.h>
-
 #include <unistd.h>
 
 #include <filesystem>
