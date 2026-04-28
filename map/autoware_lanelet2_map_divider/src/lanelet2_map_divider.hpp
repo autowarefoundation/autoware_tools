@@ -56,7 +56,6 @@ private:
   lanelet::LaneletMapPtr load_map(
     const std::string & osm_file, const autoware_map_msgs::msg::MapProjectorInfo & projector_info,
     lanelet::Projector & projector) const;
-  void prepare_output_directory(const std::string & cell_dir) const;
   std::string make_file_name(int gx, int gy) const;
   void divide_and_save(
     lanelet::LaneletMap & map, lanelet::Projector & projector, const std::string & cell_dir,

@@ -102,14 +102,6 @@ lanelet::LaneletMapPtr Lanelet2MapDivider::load_map(
   return rebuilt;
 }
 
-void Lanelet2MapDivider::prepare_output_directory(const std::string & cell_dir) const
-{
-  if (fs::exists(output_dir_)) {
-    fs::remove_all(output_dir_);
-  }
-  fs::create_directories(cell_dir);
-}
-
 std::string Lanelet2MapDivider::make_file_name(int gx, int gy) const
 {
   std::string name;
@@ -259,7 +251,7 @@ void Lanelet2MapDivider::run()
   }
 
   const std::string cell_dir = output_dir_ + "/lanelet2_map.osm";
-  prepare_output_directory(cell_dir);
+  fs::create_directories(cell_dir);
 
   std::vector<std::tuple<std::string, int, int>> cells;
   divide_and_save(*map, *projector, cell_dir, cells);
