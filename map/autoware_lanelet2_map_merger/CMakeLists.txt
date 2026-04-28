@@ -17,6 +17,7 @@ rclcpp_components_register_node(${PROJECT_NAME}
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
   ament_add_gtest(test_lanelet2_map_merger test/test_lanelet2_map_merger.cpp)
