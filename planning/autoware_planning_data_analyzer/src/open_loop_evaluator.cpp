@@ -286,24 +286,38 @@ void OpenLoopEvaluator::evaluate(
   }
 
   // Prepare evaluation data with ground truth trajectories
-  auto evaluation_data_list = prepare_evaluation_data(synchronized_data_list);
+  const auto evaluation_data_list = prepare_evaluation_data(synchronized_data_list);
 
   if (evaluation_data_list.empty()) {
     RCLCPP_WARN(logger_, "No valid trajectories with ground truth found for evaluation");
     return;
   }
 
-  struct ParallelEvaluationResult
-  {
-    OpenLoopTrajectoryMetrics metrics;
-    metrics::TrajectoryPointMetrics trajectory_metrics;
-    metrics::EpdmsMetricSnapshot human_snapshot;
-    metrics::HumanFilterMetrics human_filter_metrics;
-    metrics::SyntheticEpdmsMetrics synthetic_epdms;
-  };
+  // Prime RouteHandler to build internal caches/indices in a single-threaded context.
+  // This ensures thread-safety for subsequent parallel read-only access.
+  if (route_handler_ && route_handler_->isHandlerReady()) {
+    (void)route_handler_->getLaneletMapPtr();
+    auto it = std::find_if(
+      evaluation_data_list.begin(), evaluation_data_list.end(),
+      [](const auto & ed) { return !ed.synchronized_data->trajectory->points.empty(); });
+    if (it != evaluation_data_list.end()) {
+      (void)route_handler_->getRoadLaneletsAtPose(
+        it->synchronized_data->trajectory->points.front().pose);
+    }
+  }
 
-  std::vector<ParallelEvaluationResult> parallel_results(evaluation_data_list.size());
-  const auto worker_count = resolve_parallel_worker_count(evaluation_data_list.size());
+  // Pre-allocate member vectors to avoid reallocations and copies from temporary results.
+  const auto total_samples = evaluation_data_list.size();
+  metrics_list_.resize(total_samples);
+  trajectory_point_metrics_list_.resize(total_samples);
+  human_filter_metrics_list_.resize(total_samples);
+  synthetic_epdms_metrics_list_.resize(total_samples);
+
+  // Snapshot vector for EPDMS calculation between parallel phases.
+  // This is much smaller than the full trajectory metrics.
+  std::vector<metrics::EpdmsMetricSnapshot> human_snapshots(total_samples);
+
+  const auto worker_count = resolve_parallel_worker_count(total_samples);
   constexpr std::size_t kProgressLogInterval = 1000U;
   const auto log_parallel_progress = [this](
                                        const char * phase_name, const std::size_t processed,
@@ -311,8 +325,8 @@ void OpenLoopEvaluator::evaluate(
     RCLCPP_DEBUG(logger_, "%s progress: %zu/%zu trajectory samples", phase_name, processed, total);
   };
   RCLCPP_INFO(
-    logger_, "Evaluating %zu open-loop trajectories using %zu worker thread(s)",
-    evaluation_data_list.size(), worker_count);
+    logger_, "Evaluating %zu open-loop trajectories using %zu worker thread(s)", total_samples,
+    worker_count);
   RCLCPP_INFO(logger_, "Parallel phase 1 started: base trajectory metrics");
 
   std::atomic<std::size_t> next_index{0U};
@@ -328,12 +342,12 @@ void OpenLoopEvaluator::evaluate(
       }
 
       const auto i = next_index.fetch_add(1U);
-      if (i >= evaluation_data_list.size()) {
+      if (i >= total_samples) {
         return;
       }
 
       try {
-        const auto & eval_data = evaluation_data_list.at(i);
+        const auto & eval_data = evaluation_data_list[i];
         auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
           eval_data.synchronized_data, route_handler_, history_comfort_params_,
           lane_keeping_params_, driving_direction_params_, vehicle_info_);
@@ -385,14 +399,13 @@ void OpenLoopEvaluator::evaluate(
           eval_data, route_handler_, history_comfort_params_, lane_keeping_params_,
           driving_direction_params_, vehicle_info_);
 
-        auto & result = parallel_results.at(i);
-        result.metrics = std::move(metrics);
-        result.trajectory_metrics = std::move(trajectory_metrics);
-        result.human_snapshot = std::move(human_snapshot);
+        metrics_list_[i] = std::move(metrics);
+        trajectory_point_metrics_list_[i] = std::move(trajectory_metrics);
+        human_snapshots[i] = std::move(human_snapshot);
 
         const auto processed = phase1_processed.fetch_add(1U) + 1U;
-        if (processed % kProgressLogInterval == 0U || processed == evaluation_data_list.size()) {
-          log_parallel_progress("Parallel phase 1", processed, evaluation_data_list.size());
+        if (processed % kProgressLogInterval == 0U || processed == total_samples) {
+          log_parallel_progress("Parallel phase 1", processed, total_samples);
         }
       } catch (...) {
         std::lock_guard<std::mutex> lock(worker_exception_mutex);
@@ -436,22 +449,21 @@ void OpenLoopEvaluator::evaluate(
       }
 
       const auto i = finalize_next_index.fetch_add(1U);
-      if (i >= evaluation_data_list.size()) {
+      if (i >= total_samples) {
         return;
       }
 
       try {
-        const auto & eval_data = evaluation_data_list.at(i);
-        auto & result = parallel_results.at(i);
-        auto & metrics = result.metrics;
-        auto human_snapshot = result.human_snapshot;
+        const auto & eval_data = evaluation_data_list[i];
+        auto & metrics = metrics_list_[i];
+        auto & human_snapshot = human_snapshots[i];
 
         if (i == 0U) {
           metrics.extended_comfort = 0.0;
           metrics.extended_comfort_available = false;
           metrics.extended_comfort_reason = "unavailable_no_previous_trajectory";
         } else {
-          const auto & previous_eval_data = evaluation_data_list.at(i - 1U);
+          const auto & previous_eval_data = evaluation_data_list[i - 1U];
           const auto & previous_trajectory = previous_eval_data.synchronized_data->trajectory;
           const auto & current_trajectory = eval_data.synchronized_data->trajectory;
           if (!previous_trajectory || !current_trajectory) {
@@ -472,21 +484,21 @@ void OpenLoopEvaluator::evaluate(
           human_snapshot.extended_comfort_available = false;
         } else {
           const auto human_extended_comfort = metrics::calculate_extended_comfort(
-            evaluation_data_list.at(i - 1U).ground_truth_trajectory,
-            eval_data.ground_truth_trajectory, extended_comfort_parameters_);
+            evaluation_data_list[i - 1U].ground_truth_trajectory, eval_data.ground_truth_trajectory,
+            extended_comfort_parameters_);
           human_snapshot.extended_comfort = human_extended_comfort.score;
           human_snapshot.extended_comfort_available = human_extended_comfort.available;
         }
 
         const auto agent_snapshot = build_epdms_snapshot(metrics);
-        result.human_filter_metrics =
+        human_filter_metrics_list_[i] =
           metrics::calculate_human_filter_metrics(agent_snapshot, human_snapshot);
-        result.synthetic_epdms =
-          metrics::calculate_synthetic_epdms(agent_snapshot, result.human_filter_metrics);
+        synthetic_epdms_metrics_list_[i] =
+          metrics::calculate_synthetic_epdms(agent_snapshot, human_filter_metrics_list_[i]);
 
         const auto processed = phase2_processed.fetch_add(1U) + 1U;
-        if (processed % kProgressLogInterval == 0U || processed == evaluation_data_list.size()) {
-          log_parallel_progress("Parallel phase 2", processed, evaluation_data_list.size());
+        if (processed % kProgressLogInterval == 0U || processed == total_samples) {
+          log_parallel_progress("Parallel phase 2", processed, total_samples);
         }
       } catch (...) {
         std::lock_guard<std::mutex> lock(worker_exception_mutex);
@@ -518,25 +530,13 @@ void OpenLoopEvaluator::evaluate(
     phase2_processed.load());
   RCLCPP_INFO(logger_, "Sequential output phase started: bag writing and summary aggregation");
 
-  for (std::size_t i = 0; i < evaluation_data_list.size(); ++i) {
-    const auto & eval_data = evaluation_data_list.at(i);
-    const auto & result = parallel_results.at(i);
-    const auto & metrics = result.metrics;
-    const auto & trajectory_metrics = result.trajectory_metrics;
-    const auto & human_filter_metrics = result.human_filter_metrics;
-    const auto & synthetic_epdms = result.synthetic_epdms;
-
-    metrics_list_.push_back(metrics);
-    trajectory_point_metrics_list_.push_back(trajectory_metrics);
-    human_filter_metrics_list_.push_back(human_filter_metrics);
-    synthetic_epdms_metrics_list_.push_back(synthetic_epdms);
-
+  for (std::size_t i = 0; i < total_samples; ++i) {
     if (bag_writer) {
-      save_metrics_to_bag(metrics, synthetic_epdms, eval_data, *bag_writer);
+      save_metrics_to_bag(
+        metrics_list_[i], synthetic_epdms_metrics_list_[i], evaluation_data_list[i], *bag_writer);
       save_trajectory_point_metrics_to_bag_with_variant(
-        trajectory_metrics, *bag_writer, eval_data.synchronized_data->bag_timestamp);
-    } else {
-      RCLCPP_WARN(logger_, "No bag writer provided, metrics not saved to bag");
+        trajectory_point_metrics_list_[i], *bag_writer,
+        evaluation_data_list[i].synchronized_data->bag_timestamp);
     }
   }
 
