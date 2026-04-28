@@ -214,6 +214,12 @@ void Lanelet2MapDivider::write_metadata(
 
 void Lanelet2MapDivider::run()
 {
+  if (grid_size_x_ < 1.0 || grid_size_y_ < 1.0) {
+    RCLCPP_ERROR(
+      logger_, "Grid size must be >= 1.0 (got x=%f, y=%f).", grid_size_x_, grid_size_y_);
+    return;
+  }
+
   if (!is_osm_file(input_lanelet2_map_)) {
     RCLCPP_ERROR(
       logger_,
