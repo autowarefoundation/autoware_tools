@@ -24,9 +24,13 @@
 #include <lanelet2_core/primitives/Point.h>
 #include <lanelet2_io/Io.h>
 
+#include <unistd.h>
+
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <random>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -128,12 +132,18 @@ class Lanelet2MapMergerTest : public ::testing::Test
 protected:
   void SetUp() override
   {
-    tmp_dir_ = fs::temp_directory_path() / "test_lanelet2_map_merger";
-    fs::remove_all(tmp_dir_);
+    std::random_device rd;
+    std::ostringstream name;
+    name << "test_lanelet2_map_merger_" << ::getpid() << "_" << std::hex << rd() << rd();
+    tmp_dir_ = fs::temp_directory_path() / name.str();
     fs::create_directories(tmp_dir_);
   }
 
-  void TearDown() override { fs::remove_all(tmp_dir_); }
+  void TearDown() override
+  {
+    std::error_code ec;
+    fs::remove_all(tmp_dir_, ec);
+  }
 
   fs::path tmp_dir_;
 };
