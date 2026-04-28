@@ -98,7 +98,7 @@ lanelet::LaneletMapPtr Lanelet2MapMerger::load_and_merge_maps(
     }
 
     if (is_local) {
-      for (lanelet::Point3d point : map->pointLayer) {
+      for (lanelet::Point3d & point : map->pointLayer) {
         if (point.hasAttribute("local_x")) {
           point.x() = point.attribute("local_x").asDouble().value();
         }
