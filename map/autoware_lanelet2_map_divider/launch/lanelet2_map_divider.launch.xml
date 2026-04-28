@@ -2,7 +2,7 @@
   <arg name="config_file_path" default="$(find-pkg-share autoware_lanelet2_map_divider)/config/lanelet2_map_divider.param.yaml" description="Path to the configuration YAML file"/>
   <arg name="grid_size_x" default="100.0" description="The X size (m) of each output segment"/>
   <arg name="grid_size_y" default="100.0" description="The Y size (m) of each output segment"/>
-  <arg name="input_lanelet2_map" description="Path to a single .osm file or a directory containing .osm files"/>
+  <arg name="input_lanelet2_map" description="Path to a single .osm file"/>
   <arg name="output_lanelet2_map_dir" description="Path to the output directory"/>
   <arg name="map_projector_info_path" description="Path to the map_projector_info.yaml file"/>
   <arg name="prefix" default="" description="Prefix for the name of the output .osm files"/>

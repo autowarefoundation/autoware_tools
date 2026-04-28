@@ -18,7 +18,7 @@
         },
         "input_lanelet2_map": {
           "type": "string",
-          "description": "Path to a single .osm file or a directory containing .osm files",
+          "description": "Path to a single .osm file",
           "default": ""
         },
         "output_lanelet2_map_dir": {
