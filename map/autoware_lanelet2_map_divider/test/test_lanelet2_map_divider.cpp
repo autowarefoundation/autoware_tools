@@ -26,6 +26,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include <cmath>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <map>
@@ -133,9 +134,12 @@ class Lanelet2MapDividerTest : public ::testing::Test
 protected:
   void SetUp() override
   {
-    tmp_dir_ = fs::temp_directory_path() / "test_lanelet2_map_divider";
-    fs::remove_all(tmp_dir_);
-    fs::create_directories(tmp_dir_);
+    // mkdtemp atomically creates a uniquely-named directory so concurrent test
+    // runs (parallel runners, repeated invocations) cannot collide.
+    std::string tmpl = (fs::temp_directory_path() / "test_lanelet2_map_divider_XXXXXX").string();
+    std::vector<char> buf(tmpl.c_str(), tmpl.c_str() + tmpl.size() + 1);
+    ASSERT_NE(mkdtemp(buf.data()), nullptr);
+    tmp_dir_ = fs::path(buf.data());
   }
 
   void TearDown() override { fs::remove_all(tmp_dir_); }
