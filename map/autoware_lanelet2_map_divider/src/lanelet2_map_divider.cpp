@@ -209,8 +209,7 @@ void Lanelet2MapDivider::run()
   // Grid sizes below 1.0 truncate to a step of 0 in divide_and_save's int-cast loop,
   // which would spin forever.
   if (grid_size_x_ < 1.0 || grid_size_y_ < 1.0) {
-    RCLCPP_ERROR(
-      logger_, "Grid size must be >= 1.0 (got x=%f, y=%f).", grid_size_x_, grid_size_y_);
+    RCLCPP_ERROR(logger_, "Grid size must be >= 1.0 (got x=%f, y=%f).", grid_size_x_, grid_size_y_);
     return;
   }
 
