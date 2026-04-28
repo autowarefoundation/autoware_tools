@@ -136,8 +136,10 @@ protected:
   {
     // mkdtemp atomically creates a uniquely-named directory so concurrent test
     // runs (parallel runners, repeated invocations) cannot collide.
-    std::string tmp_dir_template = (fs::temp_directory_path() / "test_lanelet2_map_divider_XXXXXX").string();
-    std::vector<char> buf(tmp_dir_template.c_str(), tmp_dir_template.c_str() + tmp_dir_template.size() + 1);
+    std::string tmp_dir_template =
+      (fs::temp_directory_path() / "test_lanelet2_map_divider_XXXXXX").string();
+    std::vector<char> buf(
+      tmp_dir_template.c_str(), tmp_dir_template.c_str() + tmp_dir_template.size() + 1);
     ASSERT_NE(mkdtemp(buf.data()), nullptr);
     tmp_dir_ = fs::path(buf.data());
   }
