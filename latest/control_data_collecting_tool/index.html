@@ -5222,7 +5222,7 @@
 <li>
 <p>Launch Autoware.</p>
 <p><code>bash
-  ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_map/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit</code></p>
+  ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_data/maps/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit</code></p>
 </li>
 <li>
 <p>Set an initial pose, see <a href="https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#2-set-an-initial-pose-for-the-ego-vehicle">here</a>.</p>
@@ -5233,7 +5233,7 @@
 <li>
 <p>Launch control_data_collecting_tool.</p>
 <p><code>bash
-  ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning accel_brake_map_path:=/path/to/your/accel_brake_map_dir</code></p>
+  ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_data/maps/sample-map-planning accel_brake_map_path:=/path/to/your/accel_brake_map_dir</code></p>
 <p>- If you use the <code>along_road</code> course, please specify the same map for <code>map_path</code> as the one used when launching Autoware. <code>map_path</code> is not necessary when using courses other than <code>along_road</code>.</p>
 <p>- If you set CONTROL_MODE to actuation_cmd or external_actuation_cmd, please specify the directory where the accel/brake maps used by your control system are located.</p>
 <p>- Control data collecting tool automatically records topics included in <code>config/topics.yaml</code> when the above command is executed. Topics will be saved in rosbag2 format in the current directory.</p>
@@ -5521,7 +5521,7 @@ When the car crosses the green boundary line, a similar stopping procedure will 
  colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-w" --symlink-install --continue-on-error --packages-up-to control_data_collecting_tool</code></p>
 <p>and relaunch the control_data_collecting_tool with</p>
 <p><code>bash
- ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning</code></p>
+ ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_data/maps/sample-map-planning</code></p>
 <p>This will allow you to see the selected mask applied.</p>
 <p><img src="resource/original.png" width="480"></p>
 </li>
