@@ -15,7 +15,7 @@ This plugin allows publishing and controlling the simulated ROS time.
 1. Launch [planning simulator](https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#1-launch-autoware) with `use_sim_time:=true`.
 
    ```shell
-   ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_map/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit use_sim_time:=true
+   ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_data/maps/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit use_sim_time:=true
    ```
 
    > <span style="color: orange; font-weight: bold;">Warning</span>

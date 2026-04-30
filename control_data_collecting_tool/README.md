@@ -50,7 +50,7 @@ This package provides tools for automatically collecting data using pure pursuit
 1. Launch Autoware.
 
     ```bash
-    ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_map/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit
+    ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_data/maps/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit
     ```
 
 2. Set an initial pose, see [here](https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#2-set-an-initial-pose-for-the-ego-vehicle).
@@ -60,7 +60,7 @@ This package provides tools for automatically collecting data using pure pursuit
 4. Launch control_data_collecting_tool.
 
     ```bash
-    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning accel_brake_map_path:=/path/to/your/accel_brake_map_dir
+    ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_data/maps/sample-map-planning accel_brake_map_path:=/path/to/your/accel_brake_map_dir
     ```
 
     - If you use the `along_road` course, please specify the same map for `map_path` as the one used when launching Autoware. `map_path` is not necessary when using courses other than `along_road`.
@@ -359,7 +359,7 @@ You can create an original mask to specify the data collection range for the hea
    and relaunch the control_data_collecting_tool with
 
    ```bash
-   ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_map/sample-map-planning
+   ros2 launch control_data_collecting_tool control_data_collecting_tool.launch.py map_path:=$HOME/autoware_data/maps/sample-map-planning
    ```
 
    This will allow you to see the selected mask applied.
