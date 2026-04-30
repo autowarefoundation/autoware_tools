@@ -5140,7 +5140,7 @@
 <li>
 <p>Launch <a href="https://autowarefoundation.github.io/autoware-documentation/main/tutorials/ad-hoc-simulation/planning-simulation/#1-launch-autoware">planning simulator</a> with <code>use_sim_time:=true</code>.</p>
 <p><code>shell
- ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_map/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit use_sim_time:=true</code></p>
+ ros2 launch autoware_launch planning_simulator.launch.xml map_path:=$HOME/autoware_data/maps/sample-map-planning vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit use_sim_time:=true</code></p>
 <blockquote>
 <p><span style="color: orange; font-weight: bold;">Warning</span>
 If you launch the planning simulator without adding the <code>tier4_simulated_clock_rviz_plugin</code>, your simulation will not be running. You'll not even be able to place the initial and the goal poses.</p>
