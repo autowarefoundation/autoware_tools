@@ -2,8 +2,8 @@
 Changelog for package autoware_planning_data_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2026-05-01)
+------------------
 * feat(planning_data_analyzer): remove override scene related source and script (`#400 <https://github.com/autowarefoundation/autoware_tools/issues/400>`_)
   * remove override scene related source and script
   * fix pre-commit

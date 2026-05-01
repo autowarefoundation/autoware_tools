@@ -2,8 +2,8 @@
 Changelog for package simulator_compatibility_test
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2026-05-01)
+------------------
 * chore: sync files (`#311 <https://github.com/autowarefoundation/autoware_tools/issues/311>`_)
   * chore: sync files
   * style(pre-commit): autofix

@@ -2,8 +2,8 @@
 Changelog for package tier4_simulated_clock_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2026-05-01)
+------------------
 * docs: migrate map_path examples to ~/autoware_data/maps (`#417 <https://github.com/autowarefoundation/autoware_tools/issues/417>`_)
   Update the `map_path:=$HOME/autoware_map/<map>` copy-paste examples in
   the `tier4_simulated_clock_rviz_plugin` and `control_data_collecting_tool`

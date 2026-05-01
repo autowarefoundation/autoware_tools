@@ -2,8 +2,8 @@
 Changelog for package autoware_dependency_checker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2026-05-01)
+------------------
 * chore: removed outdated package (`#359 <https://github.com/autowarefoundation/autoware_tools/issues/359>`_)
   refactor(dependency_checker): remove outdated dependency convention check for autoware_auto_common
   Co-authored-by: Ryohsuke Mitsudome <43976834+mitsudome-r@users.noreply.github.com>

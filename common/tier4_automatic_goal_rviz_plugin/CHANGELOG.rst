@@ -2,8 +2,8 @@
 Changelog for package tier4_automatic_goal_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2026-05-01)
+------------------
 * feat(tier4_automatic_goal_rviz_plugin): replace autoware_universe_utils with autoware_utils_visualization (`#407 <https://github.com/autowarefoundation/autoware_tools/issues/407>`_)
 * Contributors: Vishal Chauhan
 

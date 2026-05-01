@@ -2,8 +2,8 @@
 Changelog for package autoware_static_centerline_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2026-05-01)
+------------------
 * fix(staric_centerline_generator): the lanelet_id couldn't be assign the centerline point (`#360 <https://github.com/autowarefoundation/autoware_tools/issues/360>`_)
   * fix(staric_centerline_generator): the lanelet_id couldn't be assign the centerline point
   * pre-commit

@@ -2,8 +2,8 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.7.0 (2026-05-01)
+------------------
 * feat(planning_debug_tools): replace autoware_universe_utils with specific autoware_utils sub-packages (`#413 <https://github.com/autowarefoundation/autoware_tools/issues/413>`_)
 * fix(planning_debug_tools): migrate to rclcpp typesupport helpers (`#403 <https://github.com/autowarefoundation/autoware_tools/issues/403>`_)
 * fix: reprodocuer route bug (`#374 <https://github.com/autowarefoundation/autoware_tools/issues/374>`_)
