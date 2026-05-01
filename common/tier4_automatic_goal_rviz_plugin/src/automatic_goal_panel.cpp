@@ -16,7 +16,7 @@
 
 #include "automatic_goal_panel.hpp"
 
-#include <autoware/universe_utils/ros/marker_helper.hpp>
+#include <autoware_utils_visualization/marker_helper.hpp>
 
 #include <string>
 #include <utility>
@@ -442,26 +442,26 @@ void AutowareAutomaticGoalPanel::updateGoalIcon(const unsigned goal_index, const
 
 void AutowareAutomaticGoalPanel::publishMarkers()
 {
-  using autoware::universe_utils::createDefaultMarker;
-  using autoware::universe_utils::createMarkerColor;
-  using autoware::universe_utils::createMarkerScale;
+  using autoware_utils_visualization::create_default_marker;
+  using autoware_utils_visualization::create_marker_color;
+  using autoware_utils_visualization::create_marker_scale;
 
   MarkerArray text_array;
   MarkerArray arrow_array;
   // Clear existing
   {
-    auto marker = createDefaultMarker(
+    auto marker = create_default_marker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "names", 0L, Marker::CUBE,
-      createMarkerScale(1.0, 1.0, 1.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
+      create_marker_scale(1.0, 1.0, 1.0), create_marker_color(1.0, 1.0, 1.0, 0.999));
     marker.action = visualization_msgs::msg::Marker::DELETEALL;
     text_array.markers.push_back(marker);
     pub_marker_->publish(text_array);
   }
 
   {
-    auto marker = createDefaultMarker(
+    auto marker = create_default_marker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "poses", 0L, Marker::CUBE,
-      createMarkerScale(1.0, 1.0, 1.0), createMarkerColor(1.0, 1.0, 1.0, 0.999));
+      create_marker_scale(1.0, 1.0, 1.0), create_marker_color(1.0, 1.0, 1.0, 0.999));
     arrow_array.markers.push_back(marker);
     pub_marker_->publish(arrow_array);
   }
@@ -470,9 +470,9 @@ void AutowareAutomaticGoalPanel::publishMarkers()
   arrow_array.markers.clear();
 
   const auto push_arrow_marker = [&](const auto & pose, const auto & color, const size_t id) {
-    auto marker = createDefaultMarker(
+    auto marker = create_default_marker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "poses", id, Marker::ARROW,
-      createMarkerScale(1.6, 0.5, 0.5), color);
+      create_marker_scale(1.6, 0.5, 0.5), color);
     marker.action = visualization_msgs::msg::Marker::ADD;
     marker.pose = pose;
     marker.lifetime = rclcpp::Duration(0, 0);
@@ -481,9 +481,9 @@ void AutowareAutomaticGoalPanel::publishMarkers()
   };
 
   const auto push_text_marker = [&](const auto & pose, const auto & text, const size_t id) {
-    auto marker = createDefaultMarker(
+    auto marker = create_default_marker(
       "map", rclcpp::Clock{RCL_ROS_TIME}.now(), "names", id, Marker::TEXT_VIEW_FACING,
-      createMarkerScale(1.6, 1.6, 1.6), createMarkerColor(1.0, 1.0, 1.0, 0.999));
+      create_marker_scale(1.6, 1.6, 1.6), create_marker_color(1.0, 1.0, 1.0, 0.999));
     marker.action = visualization_msgs::msg::Marker::ADD;
     marker.pose = pose;
     marker.lifetime = rclcpp::Duration(0, 0);
@@ -497,13 +497,13 @@ void AutowareAutomaticGoalPanel::publishMarkers()
   for (size_t i = 0; i < goals_list_.size(); ++i) {
     {
       const auto pose = goals_list_.at(i).goal_pose_ptr->pose;
-      push_arrow_marker(pose, createMarkerColor(0.0, 1.0, 0.0, 0.999), id++);
+      push_arrow_marker(pose, create_marker_color(0.0, 1.0, 0.0, 0.999), id++);
       push_text_marker(pose, "Goal:" + std::to_string(i), id++);
     }
 
     for (size_t j = 0; j < goals_list_.at(i).checkpoint_pose_ptrs.size(); ++j) {
       const auto pose = goals_list_.at(i).checkpoint_pose_ptrs.at(j)->pose;
-      push_arrow_marker(pose, createMarkerColor(1.0, 1.0, 0.0, 0.999), id++);
+      push_arrow_marker(pose, create_marker_color(1.0, 1.0, 0.0, 0.999), id++);
       push_text_marker(
         pose, "Checkpoint:" + std::to_string(i) + "[Goal:" + std::to_string(j) + "]", id++);
     }

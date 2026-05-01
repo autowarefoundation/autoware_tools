@@ -2,6 +2,25 @@
 Changelog for package simulator_compatibility_test
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.0 (2026-05-01)
+------------------
+* chore: sync files (`#311 <https://github.com/autowarefoundation/autoware_tools/issues/311>`_)
+  * chore: sync files
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: github-actions <github-actions@github.com>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* fix(simulator_compatibility_test): use pytest runner to fix Jazzy CI failure (`#390 <https://github.com/autowarefoundation/autoware_tools/issues/390>`_)
+  Python 3.12 (Jazzy) changed unittest to return exit code 5 when no
+  tests are collected, while Python 3.10 (Humble) returns 0. The empty
+  tests_require caused colcon to use the unittest runner, which never
+  discovered any tests since the test classes don't inherit
+  unittest.TestCase. The colcon pytest runner handles exit code 5
+  gracefully.
+  Also add norecursedirs to prevent pytest from discovering simulator
+  tests that require a real MORAI connection.
+* Contributors: Mete Fatih Cırıt, awf-autoware-bot[bot]
+
 0.6.0 (2026-02-14)
 ------------------
 
