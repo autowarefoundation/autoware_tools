@@ -2,6 +2,16 @@
 Changelog for package autoware_localization_evaluation_scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* chore: sync files (`#311 <https://github.com/autowarefoundation/autoware_tools/issues/311>`_)
+  * chore: sync files
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: github-actions <github-actions@github.com>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* Contributors: awf-autoware-bot[bot]
+
 0.6.0 (2026-02-14)
 ------------------
 

@@ -2,6 +2,9 @@
 Changelog for package control_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.6.0 (2026-02-14)
 ------------------
 

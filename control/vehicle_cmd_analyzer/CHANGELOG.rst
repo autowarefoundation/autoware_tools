@@ -2,6 +2,9 @@
 Changelog for package vehicle_cmd_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.6.0 (2026-02-14)
 ------------------
 

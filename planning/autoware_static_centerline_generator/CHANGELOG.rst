@@ -2,6 +2,22 @@
 Changelog for package autoware_static_centerline_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix(staric_centerline_generator): the lanelet_id couldn't be assign the centerline point (`#360 <https://github.com/autowarefoundation/autoware_tools/issues/360>`_)
+  * fix(staric_centerline_generator): the lanelet_id couldn't be assign the centerline point
+  * pre-commit
+  * spell-check
+  ---------
+  Co-authored-by: t4-adc <grp-rd-1-adc-admin@tier4.jp>
+* fix(autoware_static_centerline_generator): Commenting out flaky test (`#365 <https://github.com/autowarefoundation/autoware_tools/issues/365>`_)
+  commenting out flaky test
+* fix(static_centerline_generator): update initialization of path_generator (`#345 <https://github.com/autowarefoundation/autoware_tools/issues/345>`_)
+  fix path generator initialization
+  Co-authored-by: Mamoru Sobue <hilo.soblin@gmail.com>
+* chore(static_centerline_generator): remove unnecessary include (`#355 <https://github.com/autowarefoundation/autoware_tools/issues/355>`_)
+* Contributors: Arjun Jagdish Ram, Kazunori-Nakajima, Mamoru Sobue, Mitsuhiro Sakamoto
+
 0.6.0 (2026-02-14)
 ------------------
 * fix: unable to asign lanelet_id to centerpoint near the boundary line (`#350 <https://github.com/autowarefoundation/autoware_tools/issues/350>`_)

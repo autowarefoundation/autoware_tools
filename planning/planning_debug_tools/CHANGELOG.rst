@@ -2,6 +2,21 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(planning_debug_tools): replace autoware_universe_utils with specific autoware_utils sub-packages (`#413 <https://github.com/autowarefoundation/autoware_tools/issues/413>`_)
+* fix(planning_debug_tools): migrate to rclcpp typesupport helpers (`#403 <https://github.com/autowarefoundation/autoware_tools/issues/403>`_)
+* fix: reprodocuer route bug (`#374 <https://github.com/autowarefoundation/autoware_tools/issues/374>`_)
+  * fix: reprodocuer route bug
+  * pre-commit
+  ---------
+* feat(perception_reproducer): publish route from rosbag (`#369 <https://github.com/autowarefoundation/autoware_tools/issues/369>`_)
+  * change pub-route to set-goal and make the new pub-route really publishing route
+  * pre-commit
+  * refactor argment names
+  ---------
+* Contributors: Kem (TiankuiXian), Mete Fatih Cırıt, Vishal Chauhan
+
 0.6.0 (2026-02-14)
 ------------------
 * feat: add Jazzy support for rosbag APIs (`#347 <https://github.com/autowarefoundation/autoware_tools/issues/347>`_)

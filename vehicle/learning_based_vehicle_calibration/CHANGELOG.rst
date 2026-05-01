@@ -2,6 +2,9 @@
 Changelog for package learning_based_vehicle_calibration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.6.0 (2026-02-14)
 ------------------
 

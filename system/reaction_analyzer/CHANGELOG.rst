@@ -2,6 +2,9 @@
 Changelog for package reaction_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.6.0 (2026-02-14)
 ------------------
 * chore: match package versions
