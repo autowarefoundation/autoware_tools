@@ -31,6 +31,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -62,6 +63,14 @@ struct ObjectState
   Polygon2d polygon;
 };
 
+struct PredictedObjectCache
+{
+  const autoware_perception_msgs::msg::PredictedObject * object{};
+  const autoware_perception_msgs::msg::PredictedPath * path{};
+  double dt{0.0};
+  double max_time{0.0};
+};
+
 struct EgoAreaFlags
 {
   bool multiple_lanes{false};
@@ -73,45 +82,62 @@ double ego_speed(const autoware_planning_msgs::msg::TrajectoryPoint & point)
   return std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps);
 }
 
-std::optional<ObjectState> interpolate_object_state(
-  const autoware_perception_msgs::msg::PredictedObject & object, const double query_time_s)
+std::vector<PredictedObjectCache> build_object_caches(const PredictedObjects & objects)
 {
+  std::vector<PredictedObjectCache> caches;
+  caches.reserve(objects.objects.size());
+
+  for (const auto & object : objects.objects) {
+    PredictedObjectCache cache;
+    cache.object = &object;
+    cache.path = highest_confidence_path(object);
+    if (cache.path && cache.path->path.size() >= 2) {
+      cache.dt = rclcpp::Duration(cache.path->time_step).seconds();
+      if (cache.dt > 0.0) {
+        cache.max_time = cache.dt * static_cast<double>(cache.path->path.size() - 1);
+      } else {
+        cache.path = nullptr;
+        cache.dt = 0.0;
+      }
+    } else {
+      cache.path = nullptr;
+    }
+    caches.push_back(cache);
+  }
+
+  return caches;
+}
+
+std::optional<ObjectState> interpolate_object_state(
+  const PredictedObjectCache & cache, const double query_time_s)
+{
+  if (!cache.object) {
+    return std::nullopt;
+  }
   ObjectState state;
 
   if (query_time_s <= 0.0) {
-    state.pose = object.kinematics.initial_pose_with_covariance.pose;
-    const auto & twist = object.kinematics.initial_twist_with_covariance.twist.linear;
+    state.pose = cache.object->kinematics.initial_pose_with_covariance.pose;
+    const auto & twist = cache.object->kinematics.initial_twist_with_covariance.twist.linear;
     state.speed_mps = std::hypot(twist.x, twist.y);
-    state.polygon = autoware_utils_geometry::to_polygon2d(state.pose, object.shape);
+    state.polygon = autoware_utils_geometry::to_polygon2d(state.pose, cache.object->shape);
     return state;
   }
-
-  const auto * path = highest_confidence_path(object);
-  if (!path || path->path.size() < 2) {
-    return std::nullopt;
-  }
-
-  const double dt = rclcpp::Duration(path->time_step).seconds();
-  if (dt <= 0.0) {
-    return std::nullopt;
-  }
-
-  const double max_time = dt * static_cast<double>(path->path.size() - 1);
-  if (query_time_s > max_time) {
+  if (!cache.path || query_time_s > cache.max_time) {
     return std::nullopt;
   }
 
   const std::size_t index =
-    std::min(static_cast<std::size_t>(query_time_s / dt), path->path.size() - 2);
-  const double t_i = static_cast<double>(index) * dt;
-  const double ratio = std::clamp((query_time_s - t_i) / dt, 0.0, 1.0);
+    std::min(static_cast<std::size_t>(query_time_s / cache.dt), cache.path->path.size() - 2);
+  const double t_i = static_cast<double>(index) * cache.dt;
+  const double ratio = std::clamp((query_time_s - t_i) / cache.dt, 0.0, 1.0);
   state.pose = autoware_utils_geometry::calc_interpolated_pose(
-    path->path.at(index), path->path.at(index + 1), ratio);
+    cache.path->path.at(index), cache.path->path.at(index + 1), ratio);
 
-  const auto & p0 = path->path.at(index).position;
-  const auto & p1 = path->path.at(index + 1).position;
-  state.speed_mps = std::hypot(p1.x - p0.x, p1.y - p0.y) / dt;
-  state.polygon = autoware_utils_geometry::to_polygon2d(state.pose, object.shape);
+  const auto & p0 = cache.path->path.at(index).position;
+  const auto & p1 = cache.path->path.at(index + 1).position;
+  state.speed_mps = std::hypot(p1.x - p0.x, p1.y - p0.y) / cache.dt;
+  state.polygon = autoware_utils_geometry::to_polygon2d(state.pose, cache.object->shape);
   return state;
 }
 
@@ -227,12 +253,15 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
     return result;
   }
 
+  const auto local_footprint = vehicle_info.createFootprint(0.0);
+  const auto object_caches = build_object_caches(*objects);
+
   for (const auto & point : trajectory.points) {
     const auto query_time_s = rclcpp::Duration(point.time_from_start).seconds();
-    const auto ego_polygon = create_pose_footprint(point.pose, vehicle_info);
+    const auto ego_polygon = create_pose_footprint(point.pose, local_footprint);
 
-    for (const auto & object : objects->objects) {
-      const auto object_state = interpolate_object_state(object, query_time_s);
+    for (const auto & object_cache : object_caches) {
+      const auto object_state = interpolate_object_state(object_cache, query_time_s);
       if (!object_state.has_value()) {
         continue;
       }
@@ -247,9 +276,9 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
       const bool lateral_collision = collision_type == CollisionType::ActiveLateral;
 
       if (front_or_stopped_track) {
-        result.score = is_agent_type(object) ? 0.0 : 0.5;
-        result.reason = is_agent_type(object) ? "at_fault_collision_with_agent"
-                                              : "at_fault_collision_with_non_agent";
+        result.score = is_agent_type(*object_cache.object) ? 0.0 : 0.5;
+        result.reason = is_agent_type(*object_cache.object) ? "at_fault_collision_with_agent"
+                                                            : "at_fault_collision_with_non_agent";
         result.infraction_time_s = query_time_s;
         return result;
       }
@@ -266,9 +295,10 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
         }
 
         if (ego_area_flags->multiple_lanes || ego_area_flags->non_drivable_area) {
-          result.score = is_agent_type(object) ? 0.0 : 0.5;
-          result.reason = is_agent_type(object) ? "at_fault_lateral_collision_with_agent"
-                                                : "at_fault_lateral_collision_with_non_agent";
+          result.score = is_agent_type(*object_cache.object) ? 0.0 : 0.5;
+          result.reason = is_agent_type(*object_cache.object)
+                            ? "at_fault_lateral_collision_with_agent"
+                            : "at_fault_lateral_collision_with_non_agent";
           result.infraction_time_s = query_time_s;
           return result;
         }

@@ -36,17 +36,22 @@
 #include <tf2/utils.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
+#include <cstdlib>
+#include <exception>
 #include <iomanip>
 #include <limits>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <numeric>
 #include <optional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -94,6 +99,75 @@ metrics::EpdmsMetricSnapshot build_epdms_snapshot(const OpenLoopTrajectoryMetric
 double get_yaw_from_msg(const geometry_msgs::msg::Quaternion & orientation)
 {
   return metrics::get_yaw(orientation);
+}
+
+std::size_t resolve_parallel_worker_count(const std::size_t work_item_count)
+{
+  if (work_item_count <= 1U) {
+    return 1U;
+  }
+
+  constexpr std::size_t kMinWorkPerWorker = 8U;
+  const auto auto_hw_threads = std::max(
+    1U, std::thread::hardware_concurrency() > 1U ? std::thread::hardware_concurrency() - 1U : 1U);
+
+  std::size_t requested_threads = 0U;
+  if (const char * env = std::getenv("AUTOWARE_PLANNING_DATA_ANALYZER_NUM_THREADS")) {
+    try {
+      requested_threads = static_cast<std::size_t>(std::stoul(env));
+    } catch (const std::exception &) {
+      requested_threads = 0U;
+    }
+  }
+
+  const auto capped_for_workload = std::max<std::size_t>(1U, work_item_count / kMinWorkPerWorker);
+  const auto auto_threads = std::min<std::size_t>(auto_hw_threads, capped_for_workload);
+  if (requested_threads == 0U) {
+    return std::max<std::size_t>(1U, auto_threads);
+  }
+  return std::max<std::size_t>(1U, std::min<std::size_t>(requested_threads, work_item_count));
+}
+
+metrics::EpdmsMetricSnapshot calculate_human_reference_snapshot(
+  const OpenLoopEvaluator::EvaluationData & eval_data,
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
+  const metrics::HistoryComfortParameters & history_comfort_params,
+  const metrics::LaneKeepingParameters & lane_keeping_params,
+  const metrics::DrivingDirectionComplianceParameters & driving_direction_params,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
+{
+  const auto human_sync_data =
+    clone_with_trajectory(eval_data.synchronized_data, eval_data.ground_truth_trajectory);
+  const auto human_point_metrics = metrics::calculate_trajectory_point_metrics(
+    human_sync_data, route_handler, history_comfort_params, lane_keeping_params,
+    driving_direction_params, vehicle_info);
+
+  metrics::EpdmsMetricSnapshot human_snapshot;
+  human_snapshot.history_comfort = human_point_metrics.history_comfort;
+  human_snapshot.history_comfort_available = true;
+  human_snapshot.extended_comfort = 0.0;
+  human_snapshot.extended_comfort_available = false;
+  human_snapshot.ego_progress = 1.0;
+  human_snapshot.ego_progress_available = false;
+  human_snapshot.time_to_collision_within_bound =
+    human_point_metrics.time_to_collision_within_bound;
+  human_snapshot.time_to_collision_within_bound_available =
+    human_point_metrics.time_to_collision_within_bound_available;
+  human_snapshot.lane_keeping = human_point_metrics.lane_keeping;
+  human_snapshot.lane_keeping_available = human_point_metrics.lane_keeping_available;
+  human_snapshot.drivable_area_compliance = human_point_metrics.drivable_area_compliance;
+  human_snapshot.drivable_area_compliance_available =
+    human_point_metrics.drivable_area_compliance_available;
+  human_snapshot.no_at_fault_collision = human_point_metrics.no_at_fault_collision;
+  human_snapshot.no_at_fault_collision_available =
+    human_point_metrics.no_at_fault_collision_available;
+  human_snapshot.driving_direction_compliance = human_point_metrics.driving_direction_compliance;
+  human_snapshot.driving_direction_compliance_available =
+    human_point_metrics.driving_direction_compliance_available;
+  human_snapshot.traffic_light_compliance = human_point_metrics.traffic_light_compliance;
+  human_snapshot.traffic_light_compliance_available =
+    human_point_metrics.traffic_light_compliance_available;
+  return human_snapshot;
 }
 
 }  // namespace
@@ -212,142 +286,265 @@ void OpenLoopEvaluator::evaluate(
   }
 
   // Prepare evaluation data with ground truth trajectories
-  auto evaluation_data_list = prepare_evaluation_data(synchronized_data_list);
+  const auto evaluation_data_list = prepare_evaluation_data(synchronized_data_list);
 
   if (evaluation_data_list.empty()) {
     RCLCPP_WARN(logger_, "No valid trajectories with ground truth found for evaluation");
     return;
   }
 
-  // Evaluate each trajectory with its ground truth
-  for (std::size_t i = 0; i < evaluation_data_list.size(); ++i) {
-    const auto & eval_data = evaluation_data_list.at(i);
-    // Calculate trajectory point metrics
-    auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
-      eval_data.synchronized_data, route_handler_, history_comfort_params_, lane_keeping_params_,
-      driving_direction_params_, vehicle_info_);
-    // Evaluate trajectory
-    auto metrics = evaluate_trajectory(eval_data);
-    metrics.history_comfort = trajectory_metrics.history_comfort;
-    if (i == 0U) {
-      metrics.extended_comfort = 0.0;
-      metrics.extended_comfort_available = false;
-      metrics.extended_comfort_reason = "unavailable_no_previous_trajectory";
-    } else {
-      const auto & previous_eval_data = evaluation_data_list.at(i - 1U);
-      const auto & previous_trajectory = previous_eval_data.synchronized_data->trajectory;
-      const auto & current_trajectory = eval_data.synchronized_data->trajectory;
-      if (!previous_trajectory || !current_trajectory) {
-        metrics.extended_comfort = 0.0;
-        metrics.extended_comfort_available = false;
-        metrics.extended_comfort_reason = "unavailable_missing_trajectory";
-      } else {
-        const auto extended_comfort_result = metrics::calculate_extended_comfort(
-          *previous_trajectory, *current_trajectory, extended_comfort_parameters_);
-        metrics.extended_comfort = extended_comfort_result.score;
-        metrics.extended_comfort_available = extended_comfort_result.available;
-        metrics.extended_comfort_reason = extended_comfort_result.reason;
+  // Prime RouteHandler to build internal caches/indices in a single-threaded context.
+  // This ensures thread-safety for subsequent parallel read-only access.
+  if (route_handler_ && route_handler_->isHandlerReady()) {
+    (void)route_handler_->getLaneletMapPtr();
+    auto it = std::find_if(
+      evaluation_data_list.begin(), evaluation_data_list.end(),
+      [](const auto & ed) { return !ed.synchronized_data->trajectory->points.empty(); });
+    if (it != evaluation_data_list.end()) {
+      (void)route_handler_->getRoadLaneletsAtPose(
+        it->synchronized_data->trajectory->points.front().pose);
+    }
+  }
+
+  // Pre-allocate member vectors to avoid reallocations and copies from temporary results.
+  const auto total_samples = evaluation_data_list.size();
+  metrics_list_.resize(total_samples);
+  trajectory_point_metrics_list_.resize(total_samples);
+  human_filter_metrics_list_.resize(total_samples);
+  synthetic_epdms_metrics_list_.resize(total_samples);
+
+  // Snapshot vector for EPDMS calculation between parallel phases.
+  // This is much smaller than the full trajectory metrics.
+  std::vector<metrics::EpdmsMetricSnapshot> human_snapshots(total_samples);
+
+  const auto worker_count = resolve_parallel_worker_count(total_samples);
+  constexpr std::size_t kProgressLogInterval = 1000U;
+  const auto log_parallel_progress = [this](
+                                       const char * phase_name, const std::size_t processed,
+                                       const std::size_t total) {
+    RCLCPP_DEBUG(logger_, "%s progress: %zu/%zu trajectory samples", phase_name, processed, total);
+  };
+  RCLCPP_INFO(
+    logger_, "Evaluating %zu open-loop trajectories using %zu worker thread(s)", total_samples,
+    worker_count);
+  RCLCPP_INFO(logger_, "Parallel phase 1 started: base trajectory metrics");
+
+  std::atomic<std::size_t> next_index{0U};
+  std::atomic<std::size_t> phase1_processed{0U};
+  std::atomic<bool> stop_requested{false};
+  std::exception_ptr worker_exception;
+  std::mutex worker_exception_mutex;
+
+  auto worker = [&]() {
+    while (true) {
+      if (stop_requested.load()) {
+        return;
+      }
+
+      const auto i = next_index.fetch_add(1U);
+      if (i >= total_samples) {
+        return;
+      }
+
+      try {
+        const auto & eval_data = evaluation_data_list[i];
+        auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
+          eval_data.synchronized_data, route_handler_, history_comfort_params_,
+          lane_keeping_params_, driving_direction_params_, vehicle_info_);
+        auto metrics = evaluate_trajectory(eval_data);
+        metrics.history_comfort = trajectory_metrics.history_comfort;
+        metrics.time_to_collision_within_bound = trajectory_metrics.time_to_collision_within_bound;
+        metrics.time_to_collision_within_bound_available =
+          trajectory_metrics.time_to_collision_within_bound_available;
+        metrics.time_to_collision_within_bound_reason =
+          trajectory_metrics.time_to_collision_within_bound_reason;
+        metrics.time_to_collision_infraction_time_s =
+          trajectory_metrics.time_to_collision_infraction_time_s;
+        metrics.lane_keeping = trajectory_metrics.lane_keeping;
+        metrics.lane_keeping_available = trajectory_metrics.lane_keeping_available;
+        metrics.lane_keeping_reason = trajectory_metrics.lane_keeping_reason;
+        const auto ego_progress = metrics::calculate_ego_progress(
+          eval_data.synchronized_data ? eval_data.synchronized_data->trajectory : nullptr,
+          eval_data.synchronized_data ? eval_data.synchronized_data->candidate_trajectories
+                                      : nullptr,
+          route_handler_);
+        metrics.ego_progress = ego_progress.score;
+        metrics.ego_progress_available = ego_progress.available;
+        metrics.ego_progress_reason = ego_progress.reason;
+        metrics.ego_progress_raw_m = ego_progress.raw_progress_m;
+        metrics.ego_progress_best_raw_m = ego_progress.best_raw_progress_m;
+        metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
+        metrics.drivable_area_compliance_available =
+          trajectory_metrics.drivable_area_compliance_available;
+        metrics.drivable_area_compliance_reason =
+          trajectory_metrics.drivable_area_compliance_reason;
+        metrics.no_at_fault_collision = trajectory_metrics.no_at_fault_collision;
+        metrics.no_at_fault_collision_available =
+          trajectory_metrics.no_at_fault_collision_available;
+        metrics.no_at_fault_collision_reason = trajectory_metrics.no_at_fault_collision_reason;
+        metrics.time_to_at_fault_collision_s = trajectory_metrics.time_to_at_fault_collision_s;
+        metrics.driving_direction_compliance = trajectory_metrics.driving_direction_compliance;
+        metrics.driving_direction_compliance_available =
+          trajectory_metrics.driving_direction_compliance_available;
+        metrics.driving_direction_compliance_reason =
+          trajectory_metrics.driving_direction_compliance_reason;
+        metrics.max_oncoming_progress_m = trajectory_metrics.max_oncoming_progress_m;
+        metrics.traffic_light_compliance = trajectory_metrics.traffic_light_compliance;
+        metrics.traffic_light_compliance_available =
+          trajectory_metrics.traffic_light_compliance_available;
+        metrics.traffic_light_compliance_reason =
+          trajectory_metrics.traffic_light_compliance_reason;
+
+        auto human_snapshot = calculate_human_reference_snapshot(
+          eval_data, route_handler_, history_comfort_params_, lane_keeping_params_,
+          driving_direction_params_, vehicle_info_);
+
+        metrics_list_[i] = std::move(metrics);
+        trajectory_point_metrics_list_[i] = std::move(trajectory_metrics);
+        human_snapshots[i] = std::move(human_snapshot);
+
+        const auto processed = phase1_processed.fetch_add(1U) + 1U;
+        if (processed % kProgressLogInterval == 0U || processed == total_samples) {
+          log_parallel_progress("Parallel phase 1", processed, total_samples);
+        }
+      } catch (...) {
+        std::lock_guard<std::mutex> lock(worker_exception_mutex);
+        if (!worker_exception) {
+          worker_exception = std::current_exception();
+          stop_requested.store(true);
+        }
+        return;
       }
     }
-    metrics.time_to_collision_within_bound = trajectory_metrics.time_to_collision_within_bound;
-    metrics.time_to_collision_within_bound_available =
-      trajectory_metrics.time_to_collision_within_bound_available;
-    metrics.time_to_collision_within_bound_reason =
-      trajectory_metrics.time_to_collision_within_bound_reason;
-    metrics.time_to_collision_infraction_time_s =
-      trajectory_metrics.time_to_collision_infraction_time_s;
-    metrics.lane_keeping = trajectory_metrics.lane_keeping;
-    metrics.lane_keeping_available = trajectory_metrics.lane_keeping_available;
-    metrics.lane_keeping_reason = trajectory_metrics.lane_keeping_reason;
-    const auto ego_progress = metrics::calculate_ego_progress(
-      eval_data.synchronized_data ? eval_data.synchronized_data->trajectory : nullptr,
-      eval_data.synchronized_data ? eval_data.synchronized_data->candidate_trajectories : nullptr,
-      route_handler_);
-    metrics.ego_progress = ego_progress.score;
-    metrics.ego_progress_available = ego_progress.available;
-    metrics.ego_progress_reason = ego_progress.reason;
-    metrics.ego_progress_raw_m = ego_progress.raw_progress_m;
-    metrics.ego_progress_best_raw_m = ego_progress.best_raw_progress_m;
-    metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
-    metrics.drivable_area_compliance_available =
-      trajectory_metrics.drivable_area_compliance_available;
-    metrics.drivable_area_compliance_reason = trajectory_metrics.drivable_area_compliance_reason;
-    metrics.no_at_fault_collision = trajectory_metrics.no_at_fault_collision;
-    metrics.no_at_fault_collision_available = trajectory_metrics.no_at_fault_collision_available;
-    metrics.no_at_fault_collision_reason = trajectory_metrics.no_at_fault_collision_reason;
-    metrics.time_to_at_fault_collision_s = trajectory_metrics.time_to_at_fault_collision_s;
-    metrics.driving_direction_compliance = trajectory_metrics.driving_direction_compliance;
-    metrics.driving_direction_compliance_available =
-      trajectory_metrics.driving_direction_compliance_available;
-    metrics.driving_direction_compliance_reason =
-      trajectory_metrics.driving_direction_compliance_reason;
-    metrics.max_oncoming_progress_m = trajectory_metrics.max_oncoming_progress_m;
-    metrics.traffic_light_compliance = trajectory_metrics.traffic_light_compliance;
-    metrics.traffic_light_compliance_available =
-      trajectory_metrics.traffic_light_compliance_available;
-    metrics.traffic_light_compliance_reason = trajectory_metrics.traffic_light_compliance_reason;
-    const auto human_sync_data =
-      clone_with_trajectory(eval_data.synchronized_data, eval_data.ground_truth_trajectory);
-    const auto human_point_metrics = metrics::calculate_trajectory_point_metrics(
-      human_sync_data, route_handler_, history_comfort_params_, lane_keeping_params_,
-      driving_direction_params_, vehicle_info_);
+  };
 
-    metrics::EpdmsMetricSnapshot human_snapshot;
-    human_snapshot.history_comfort = human_point_metrics.history_comfort;
-    human_snapshot.history_comfort_available = true;
-    if (i == 0U) {
-      human_snapshot.extended_comfort = 0.0;
-      human_snapshot.extended_comfort_available = false;
-    } else {
-      const auto human_extended_comfort = metrics::calculate_extended_comfort(
-        evaluation_data_list.at(i - 1U).ground_truth_trajectory, eval_data.ground_truth_trajectory,
-        extended_comfort_parameters_);
-      human_snapshot.extended_comfort = human_extended_comfort.score;
-      human_snapshot.extended_comfort_available = human_extended_comfort.available;
+  std::vector<std::thread> workers;
+  workers.reserve(worker_count > 0U ? worker_count - 1U : 0U);
+  for (std::size_t worker_index = 1U; worker_index < worker_count; ++worker_index) {
+    workers.emplace_back(worker);
+  }
+  worker();
+  for (auto & thread : workers) {
+    thread.join();
+  }
+
+  if (worker_exception) {
+    std::rethrow_exception(worker_exception);
+  }
+
+  RCLCPP_INFO(
+    logger_, "Parallel phase 1 finished: processed %zu trajectory samples",
+    phase1_processed.load());
+
+  std::atomic<std::size_t> finalize_next_index{0U};
+  std::atomic<std::size_t> phase2_processed{0U};
+  stop_requested.store(false);
+  worker_exception = nullptr;
+  RCLCPP_INFO(logger_, "Parallel phase 2 started: extended comfort and synthetic EPDMS");
+
+  auto finalize_worker = [&]() {
+    while (true) {
+      if (stop_requested.load()) {
+        return;
+      }
+
+      const auto i = finalize_next_index.fetch_add(1U);
+      if (i >= total_samples) {
+        return;
+      }
+
+      try {
+        const auto & eval_data = evaluation_data_list[i];
+        auto & metrics = metrics_list_[i];
+        auto & human_snapshot = human_snapshots[i];
+
+        if (i == 0U) {
+          metrics.extended_comfort = 0.0;
+          metrics.extended_comfort_available = false;
+          metrics.extended_comfort_reason = "unavailable_no_previous_trajectory";
+        } else {
+          const auto & previous_eval_data = evaluation_data_list[i - 1U];
+          const auto & previous_trajectory = previous_eval_data.synchronized_data->trajectory;
+          const auto & current_trajectory = eval_data.synchronized_data->trajectory;
+          if (!previous_trajectory || !current_trajectory) {
+            metrics.extended_comfort = 0.0;
+            metrics.extended_comfort_available = false;
+            metrics.extended_comfort_reason = "unavailable_missing_trajectory";
+          } else {
+            const auto extended_comfort_result = metrics::calculate_extended_comfort(
+              *previous_trajectory, *current_trajectory, extended_comfort_parameters_);
+            metrics.extended_comfort = extended_comfort_result.score;
+            metrics.extended_comfort_available = extended_comfort_result.available;
+            metrics.extended_comfort_reason = extended_comfort_result.reason;
+          }
+        }
+
+        if (i == 0U) {
+          human_snapshot.extended_comfort = 0.0;
+          human_snapshot.extended_comfort_available = false;
+        } else {
+          const auto human_extended_comfort = metrics::calculate_extended_comfort(
+            evaluation_data_list[i - 1U].ground_truth_trajectory, eval_data.ground_truth_trajectory,
+            extended_comfort_parameters_);
+          human_snapshot.extended_comfort = human_extended_comfort.score;
+          human_snapshot.extended_comfort_available = human_extended_comfort.available;
+        }
+
+        const auto agent_snapshot = build_epdms_snapshot(metrics);
+        human_filter_metrics_list_[i] =
+          metrics::calculate_human_filter_metrics(agent_snapshot, human_snapshot);
+        synthetic_epdms_metrics_list_[i] =
+          metrics::calculate_synthetic_epdms(agent_snapshot, human_filter_metrics_list_[i]);
+
+        const auto processed = phase2_processed.fetch_add(1U) + 1U;
+        if (processed % kProgressLogInterval == 0U || processed == total_samples) {
+          log_parallel_progress("Parallel phase 2", processed, total_samples);
+        }
+      } catch (...) {
+        std::lock_guard<std::mutex> lock(worker_exception_mutex);
+        if (!worker_exception) {
+          worker_exception = std::current_exception();
+          stop_requested.store(true);
+        }
+        return;
+      }
     }
-    human_snapshot.ego_progress = 1.0;
-    human_snapshot.ego_progress_available = false;
-    human_snapshot.time_to_collision_within_bound =
-      human_point_metrics.time_to_collision_within_bound;
-    human_snapshot.time_to_collision_within_bound_available =
-      human_point_metrics.time_to_collision_within_bound_available;
-    human_snapshot.lane_keeping = human_point_metrics.lane_keeping;
-    human_snapshot.lane_keeping_available = human_point_metrics.lane_keeping_available;
-    human_snapshot.drivable_area_compliance = human_point_metrics.drivable_area_compliance;
-    human_snapshot.drivable_area_compliance_available =
-      human_point_metrics.drivable_area_compliance_available;
-    human_snapshot.no_at_fault_collision = human_point_metrics.no_at_fault_collision;
-    human_snapshot.no_at_fault_collision_available =
-      human_point_metrics.no_at_fault_collision_available;
-    human_snapshot.driving_direction_compliance = human_point_metrics.driving_direction_compliance;
-    human_snapshot.driving_direction_compliance_available =
-      human_point_metrics.driving_direction_compliance_available;
-    human_snapshot.traffic_light_compliance = human_point_metrics.traffic_light_compliance;
-    human_snapshot.traffic_light_compliance_available =
-      human_point_metrics.traffic_light_compliance_available;
+  };
 
-    const auto agent_snapshot = build_epdms_snapshot(metrics);
-    const auto human_filter_metrics =
-      metrics::calculate_human_filter_metrics(agent_snapshot, human_snapshot);
-    const auto synthetic_epdms =
-      metrics::calculate_synthetic_epdms(agent_snapshot, human_filter_metrics);
-    metrics_list_.push_back(metrics);
-    trajectory_point_metrics_list_.push_back(trajectory_metrics);
-    human_filter_metrics_list_.push_back(human_filter_metrics);
-    synthetic_epdms_metrics_list_.push_back(synthetic_epdms);
+  workers.clear();
+  workers.reserve(worker_count > 0U ? worker_count - 1U : 0U);
+  for (std::size_t worker_index = 1U; worker_index < worker_count; ++worker_index) {
+    workers.emplace_back(finalize_worker);
+  }
+  finalize_worker();
+  for (auto & thread : workers) {
+    thread.join();
+  }
 
-    // Save to bag if writer provided
+  if (worker_exception) {
+    std::rethrow_exception(worker_exception);
+  }
+
+  RCLCPP_INFO(
+    logger_, "Parallel phase 2 finished: processed %zu trajectory samples",
+    phase2_processed.load());
+  RCLCPP_INFO(logger_, "Sequential output phase started: bag writing and summary aggregation");
+
+  for (std::size_t i = 0; i < total_samples; ++i) {
     if (bag_writer) {
-      save_metrics_to_bag(metrics, synthetic_epdms, eval_data, *bag_writer);
+      save_metrics_to_bag(
+        metrics_list_[i], synthetic_epdms_metrics_list_[i], evaluation_data_list[i], *bag_writer);
       save_trajectory_point_metrics_to_bag_with_variant(
-        trajectory_metrics, *bag_writer, eval_data.synchronized_data->bag_timestamp);
-    } else {
-      RCLCPP_WARN(logger_, "No bag writer provided, metrics not saved to bag");
+        trajectory_point_metrics_list_[i], *bag_writer,
+        evaluation_data_list[i].synchronized_data->bag_timestamp);
     }
   }
 
   // Calculate summary statistics
   calculate_summary();
+  RCLCPP_INFO(
+    logger_, "Open-loop evaluation finished: processed %zu trajectory samples",
+    evaluation_data_list.size());
 }
 
 std::vector<OpenLoopEvaluator::EvaluationData> OpenLoopEvaluator::prepare_evaluation_data(
