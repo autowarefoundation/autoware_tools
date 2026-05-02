@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../../src/metrics/drivable_area_compliance.hpp"
+#include "../../src/metrics/epdms/subscores/drivable_area_compliance.hpp"
 
 #include <autoware/vehicle_info_utils/vehicle_info.hpp>
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../../src/metrics/ego_progress.hpp"
+#include "../../src/metrics/epdms/subscores/ego_progress.hpp"
 
 #include <gtest/gtest.h>
 

@@ -9,17 +9,17 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/base_evaluator.cpp
   src/open_loop_evaluator.cpp
   src/metrics/deviation_metrics.cpp
-  src/metrics/epdms_aggregation.cpp
-  src/metrics/ego_progress.cpp
-  src/metrics/driving_direction_compliance.cpp
-  src/metrics/history_comfort.cpp
-  src/metrics/lane_keeping.cpp
-  src/metrics/metric_utils.cpp
-  src/metrics/drivable_area_compliance.cpp
-  src/metrics/extended_comfort.cpp
-  src/metrics/ttc_within_bound.cpp
-  src/metrics/no_at_fault_collision.cpp
-  src/metrics/traffic_light_compliance.cpp
+  src/metrics/epdms/aggregation/epdms_aggregation.cpp
+  src/metrics/epdms/subscores/ego_progress.cpp
+  src/metrics/epdms/subscores/driving_direction_compliance.cpp
+  src/metrics/epdms/subscores/history_comfort.cpp
+  src/metrics/epdms/subscores/lane_keeping.cpp
+  src/metrics/geometry/metric_utils.cpp
+  src/metrics/epdms/subscores/drivable_area_compliance.cpp
+  src/metrics/epdms/subscores/extended_comfort.cpp
+  src/metrics/epdms/subscores/ttc_within_bound.cpp
+  src/metrics/epdms/subscores/no_at_fault_collision.cpp
+  src/metrics/epdms/subscores/traffic_light_compliance.cpp
   src/metrics/trajectory_metrics.cpp
   src/utils/bag_utils.cpp
   src/utils/json_utils.cpp

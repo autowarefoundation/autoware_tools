@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__TRAFFIC_LIGHT_COMPLIANCE_HPP_
-#define METRICS__TRAFFIC_LIGHT_COMPLIANCE_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__EGO_PROGRESS_HPP_
+#define METRICS__EPDMS__SUBSCORES__EGO_PROGRESS_HPP_
 
-#include "../data_types.hpp"
+#include "../../../data_types.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
-#include <autoware_vehicle_info_utils/vehicle_info.hpp>
 
 #include <memory>
 #include <string>
@@ -28,19 +27,20 @@ namespace autoware::planning_data_analyzer::metrics
 
 using autoware::route_handler::RouteHandler;
 
-struct TrafficLightComplianceResult
+struct EgoProgressResult
 {
   double score{0.0};
   bool available{false};
   std::string reason{"unavailable"};
+  double raw_progress_m{0.0};
+  double best_raw_progress_m{0.0};
 };
 
-TrafficLightComplianceResult calculate_traffic_light_compliance(
-  const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::shared_ptr<TrafficLightGroupArray> & traffic_signals,
-  const std::shared_ptr<RouteHandler> & route_handler,
-  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info);
+EgoProgressResult calculate_ego_progress(
+  const std::shared_ptr<Trajectory> & selected_trajectory,
+  const std::shared_ptr<CandidateTrajectories> & candidate_trajectories,
+  const std::shared_ptr<RouteHandler> & route_handler);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__TRAFFIC_LIGHT_COMPLIANCE_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__EGO_PROGRESS_HPP_

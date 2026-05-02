@@ -14,13 +14,13 @@
 
 #include "trajectory_metrics.hpp"
 
-#include "drivable_area_compliance.hpp"
-#include "driving_direction_compliance.hpp"
-#include "history_comfort.hpp"
-#include "metric_utils.hpp"
-#include "no_at_fault_collision.hpp"
-#include "traffic_light_compliance.hpp"
-#include "ttc_within_bound.hpp"
+#include "epdms/subscores/drivable_area_compliance.hpp"
+#include "epdms/subscores/driving_direction_compliance.hpp"
+#include "epdms/subscores/history_comfort.hpp"
+#include "epdms/subscores/no_at_fault_collision.hpp"
+#include "epdms/subscores/traffic_light_compliance.hpp"
+#include "epdms/subscores/ttc_within_bound.hpp"
+#include "geometry/metric_utils.hpp"
 
 #include <autoware/lanelet2_utils/geometry.hpp>
 #include <autoware/lanelet2_utils/intersection.hpp>

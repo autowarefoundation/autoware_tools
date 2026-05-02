@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__NO_AT_FAULT_COLLISION_HPP_
-#define METRICS__NO_AT_FAULT_COLLISION_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__TTC_WITHIN_BOUND_HPP_
+#define METRICS__EPDMS__SUBSCORES__TTC_WITHIN_BOUND_HPP_
 
-#include "../data_types.hpp"
+#include "../../../data_types.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
@@ -29,7 +29,7 @@ namespace autoware::planning_data_analyzer::metrics
 
 using autoware::route_handler::RouteHandler;
 
-struct NoAtFaultCollisionResult
+struct TTCWithinBoundResult
 {
   double score{0.0};
   bool available{false};
@@ -37,7 +37,7 @@ struct NoAtFaultCollisionResult
   double infraction_time_s{std::numeric_limits<double>::infinity()};
 };
 
-NoAtFaultCollisionResult calculate_no_at_fault_collision(
+TTCWithinBoundResult calculate_ttc_within_bound(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::shared_ptr<PredictedObjects> & objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
@@ -45,4 +45,4 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__NO_AT_FAULT_COLLISION_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__TTC_WITHIN_BOUND_HPP_

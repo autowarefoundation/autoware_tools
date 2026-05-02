@@ -14,7 +14,7 @@
 
 #include "no_at_fault_collision.hpp"
 
-#include "metric_utils.hpp"
+#include "../../geometry/metric_utils.hpp"
 
 #include <autoware/object_recognition_utils/object_classification.hpp>
 #include <autoware_utils_geometry/boost_polygon_utils.hpp>
