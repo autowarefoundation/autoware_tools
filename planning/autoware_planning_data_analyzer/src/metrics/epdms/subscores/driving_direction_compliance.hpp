@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__DRIVING_DIRECTION_COMPLIANCE_HPP_
-#define METRICS__DRIVING_DIRECTION_COMPLIANCE_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__DRIVING_DIRECTION_COMPLIANCE_HPP_
+#define METRICS__EPDMS__SUBSCORES__DRIVING_DIRECTION_COMPLIANCE_HPP_
 
 #include <limits>
 #include <string>
@@ -51,4 +51,4 @@ DrivingDirectionComplianceResult calculate_driving_direction_compliance(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__DRIVING_DIRECTION_COMPLIANCE_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__DRIVING_DIRECTION_COMPLIANCE_HPP_

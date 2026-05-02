@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__DRIVABLE_AREA_COMPLIANCE_HPP_
-#define METRICS__DRIVABLE_AREA_COMPLIANCE_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__DRIVABLE_AREA_COMPLIANCE_HPP_
+#define METRICS__EPDMS__SUBSCORES__DRIVABLE_AREA_COMPLIANCE_HPP_
 
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
 
@@ -40,4 +40,4 @@ DrivableAreaComplianceResult calculate_drivable_area_compliance(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__DRIVABLE_AREA_COMPLIANCE_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__DRIVABLE_AREA_COMPLIANCE_HPP_
