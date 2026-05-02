@@ -42,6 +42,10 @@ autoware_utils_geometry::Polygon2d create_pose_footprint(
   const geometry_msgs::msg::Pose & pose,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info);
 
+autoware_utils_geometry::Polygon2d create_pose_footprint(
+  const geometry_msgs::msg::Pose & pose,
+  const autoware_utils_geometry::LinearRing2d & local_footprint);
+
 std::optional<lanelet::ConstLanelet> find_reference_lanelet(
   const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler);
 

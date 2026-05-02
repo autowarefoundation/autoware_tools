@@ -26,6 +26,7 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -126,6 +127,42 @@ TEST(TTCWithinBound, BehindCollisionDoesNotFail)
   const auto trajectory = make_straight_trajectory(5.0);
   auto objects = std::make_shared<PredictedObjects>();
   objects->objects.push_back(make_stationary_object(-4.0, 0.0));
+
+  const auto result = calculate_ttc_within_bound(trajectory, objects, make_vehicle_info());
+
+  EXPECT_TRUE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 1.0);
+  EXPECT_EQ(result.reason, "available");
+}
+
+TEST(TTCWithinBound, UsesHighestConfidencePredictedPath)
+{
+  const auto trajectory = make_straight_trajectory(5.0);
+  auto objects = std::make_shared<PredictedObjects>();
+
+  autoware_perception_msgs::msg::PredictedObject object;
+  object.kinematics.initial_pose_with_covariance.pose = make_pose(20.0, 0.0);
+  object.shape.type = autoware_perception_msgs::msg::Shape::BOUNDING_BOX;
+  object.shape.dimensions.x = 2.0;
+  object.shape.dimensions.y = 1.0;
+  object.shape.dimensions.z = 1.5;
+
+  autoware_perception_msgs::msg::PredictedPath colliding_path;
+  colliding_path.time_step = rclcpp::Duration::from_seconds(0.5);
+  colliding_path.confidence = 0.1;
+  colliding_path.path.push_back(make_pose(4.0, 0.0));
+  colliding_path.path.push_back(make_pose(4.0, 0.0));
+  colliding_path.path.push_back(make_pose(4.0, 0.0));
+
+  autoware_perception_msgs::msg::PredictedPath safe_path;
+  safe_path.time_step = rclcpp::Duration::from_seconds(0.5);
+  safe_path.confidence = 0.9;
+  safe_path.path.push_back(make_pose(20.0, 0.0));
+  safe_path.path.push_back(make_pose(20.0, 0.0));
+  safe_path.path.push_back(make_pose(20.0, 0.0));
+
+  object.kinematics.predicted_paths = {colliding_path, safe_path};
+  objects->objects.push_back(object);
 
   const auto result = calculate_ttc_within_bound(trajectory, objects, make_vehicle_info());
 
