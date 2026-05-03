@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__METRIC_UTILS_HPP_
-#define METRICS__METRIC_UTILS_HPP_
+#ifndef METRICS__GEOMETRY__METRIC_UTILS_HPP_
+#define METRICS__GEOMETRY__METRIC_UTILS_HPP_
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware/vehicle_info_utils/vehicle_info.hpp>
@@ -69,4 +69,4 @@ const autoware_perception_msgs::msg::PredictedPath * highest_confidence_path(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__METRIC_UTILS_HPP_
+#endif  // METRICS__GEOMETRY__METRIC_UTILS_HPP_

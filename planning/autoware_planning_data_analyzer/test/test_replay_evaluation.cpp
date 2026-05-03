@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../src/autoware_planning_data_analyzer_node.hpp"
+#include "autoware_planning_data_analyzer_node.hpp"
 
 #include <autoware_test_utils/autoware_test_utils.hpp>
 #include <rclcpp/rclcpp.hpp>

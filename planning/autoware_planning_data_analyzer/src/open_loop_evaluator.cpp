@@ -14,8 +14,8 @@
 
 #include "open_loop_evaluator.hpp"
 
-#include "metrics/epdms_aggregation.hpp"
-#include "metrics/metric_utils.hpp"
+#include "metrics/epdms/aggregation/epdms_aggregation.hpp"
+#include "metrics/geometry/metric_utils.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
 #include <autoware/motion_utils/trajectory/conversion.hpp>
