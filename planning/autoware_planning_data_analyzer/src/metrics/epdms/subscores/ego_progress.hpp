@@ -15,7 +15,7 @@
 #ifndef METRICS__EPDMS__SUBSCORES__EGO_PROGRESS_HPP_
 #define METRICS__EPDMS__SUBSCORES__EGO_PROGRESS_HPP_
 
-#include "../../../data_types.hpp"
+#include "data_types.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 

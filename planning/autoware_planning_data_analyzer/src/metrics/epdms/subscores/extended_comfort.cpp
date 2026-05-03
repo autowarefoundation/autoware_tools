@@ -14,7 +14,7 @@
 
 #include "extended_comfort.hpp"
 
-#include "../../geometry/metric_utils.hpp"
+#include "metrics/geometry/metric_utils.hpp"
 
 #include <autoware_utils_math/normalization.hpp>
 

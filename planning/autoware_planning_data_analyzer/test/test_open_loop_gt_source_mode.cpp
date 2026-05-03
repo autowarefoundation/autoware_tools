@@ -16,7 +16,7 @@
 #include <sstream>
 
 #define private public
-#include "../src/open_loop_evaluator.hpp"
+#include "open_loop_evaluator.hpp"
 #undef private
 
 #include <gtest/gtest.h>

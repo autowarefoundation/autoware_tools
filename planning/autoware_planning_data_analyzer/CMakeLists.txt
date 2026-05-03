@@ -27,6 +27,11 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/autoware_planning_data_analyzer_node.cpp
 )
 
+target_include_directories(${PROJECT_NAME}
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN "autoware::planning_data_analyzer::AutowarePlanningDataAnalyzerNode"
   EXECUTABLE autoware_planning_data_analyzer_node
@@ -48,6 +53,12 @@ if(BUILD_TESTING)
     test/metrics/test_no_at_fault_collision.cpp
     test/metrics/test_traffic_light_compliance.cpp
   )
+
+  target_include_directories(test_metrics
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+  
   target_link_libraries(test_metrics ${PROJECT_NAME})
 
   ament_add_gtest(test_offline_evaluation
@@ -55,6 +66,12 @@ if(BUILD_TESTING)
     test/test_replay_evaluation.cpp
     test/test_open_loop_gt_source_mode.cpp
   )
+
+  target_include_directories(test_offline_evaluation
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+
   target_link_libraries(test_offline_evaluation ${PROJECT_NAME})
   ament_target_dependencies(test_offline_evaluation autoware_test_utils)
 endif()

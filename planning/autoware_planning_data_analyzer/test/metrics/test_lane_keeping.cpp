@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../../src/metrics/epdms/subscores/lane_keeping.hpp"
+#include "metrics/epdms/subscores/lane_keeping.hpp"
 
 #include <gtest/gtest.h>
 

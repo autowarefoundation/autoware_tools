@@ -15,7 +15,7 @@
 #ifndef METRICS__EPDMS__SUBSCORES__TRAFFIC_LIGHT_COMPLIANCE_HPP_
 #define METRICS__EPDMS__SUBSCORES__TRAFFIC_LIGHT_COMPLIANCE_HPP_
 
-#include "../../../data_types.hpp"
+#include "data_types.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>

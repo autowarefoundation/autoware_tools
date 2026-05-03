@@ -15,7 +15,7 @@
 #ifndef METRICS__EPDMS__SUBSCORES__HISTORY_COMFORT_HPP_
 #define METRICS__EPDMS__SUBSCORES__HISTORY_COMFORT_HPP_
 
-#include "../../trajectory_metrics.hpp"
+#include "metrics/trajectory_metrics.hpp"
 
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 
