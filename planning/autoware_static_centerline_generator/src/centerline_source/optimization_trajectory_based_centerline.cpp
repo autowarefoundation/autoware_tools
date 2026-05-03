@@ -21,10 +21,11 @@
 #include "autoware/motion_utils/trajectory/conversion.hpp"
 #include "autoware/path_optimizer/node.hpp"
 #include "autoware/path_smoother/elastic_band_smoother.hpp"
-#include "autoware/universe_utils/ros/parameter.hpp"
 #include "autoware_utils_geometry/pose_deviation.hpp"
 #include "static_centerline_generator_node.hpp"
 #include "utils.hpp"
+
+#include <autoware_utils_rclcpp/parameter.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -102,13 +103,13 @@ OptimizationTrajectoryBasedCenterline::generate_centerline_with_optimization(
 {
   // get ego nearest search parameters and resample interval in behavior_path_planner
   const double ego_nearest_dist_threshold =
-    autoware::universe_utils::getOrDeclareParameter<double>(node, "ego_nearest_dist_threshold");
+    autoware_utils_rclcpp::get_or_declare_parameter<double>(node, "ego_nearest_dist_threshold");
   const double ego_nearest_yaw_threshold =
-    autoware::universe_utils::getOrDeclareParameter<double>(node, "ego_nearest_yaw_threshold");
+    autoware_utils_rclcpp::get_or_declare_parameter<double>(node, "ego_nearest_yaw_threshold");
   const double behavior_path_interval =
-    autoware::universe_utils::getOrDeclareParameter<double>(node, "output_path_interval");
+    autoware_utils_rclcpp::get_or_declare_parameter<double>(node, "output_path_interval");
   const double behavior_vel_interval =
-    autoware::universe_utils::getOrDeclareParameter<double>(node, "behavior_output_path_interval");
+    autoware_utils_rclcpp::get_or_declare_parameter<double>(node, "behavior_output_path_interval");
 
   // update route_handler for the behavior_path_planner
   const auto route_lanelets = utils::get_lanelets_from_route(*route_handler_ptr, route);
@@ -151,7 +152,7 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
   const LaneletRoute & route) const
 {
   const int wait_time_during_planning_iteration =
-    autoware::universe_utils::getOrDeclareParameter<int>(
+    autoware_utils_rclcpp::get_or_declare_parameter<int>(
       node, "debug.wait_time_during_planning_iteration");
 
   // create an instance of elastic band and model predictive trajectory.
@@ -254,7 +255,7 @@ std::vector<TrajectoryPoint> OptimizationTrajectoryBasedCenterline::optimize_tra
 
     // 5. finish if the valid_optimized_traj_point contains the goal.
     const double dist_to_goal =
-      autoware::universe_utils::calcDistance2d(valid_optimized_traj_points.back(), route.goal_pose);
+      autoware_utils_geometry::calc_distance2d(valid_optimized_traj_points.back(), route.goal_pose);
     if (dist_to_goal < 0.1) {
       break;
     }
@@ -303,7 +304,7 @@ OptimizationTrajectoryBasedCenterline::create_behavior_path_planner_data(
 {
   // create planner_data
   const auto refine_goal_search_radius_range =
-    autoware::universe_utils::getOrDeclareParameter<double>(
+    autoware_utils_rclcpp::get_or_declare_parameter<double>(
       node, "refine_goal_search_radius_range");
   auto planner_data_ = std::make_shared<autoware::behavior_path_planner::PlannerData>();
   planner_data_->route_handler = route_handler_ptr;
@@ -332,7 +333,7 @@ PathWithLaneId OptimizationTrajectoryBasedCenterline::modify_goal_connection(
   const LaneletRoute & route, const Pose & current_pose) const
 {
   const auto goal_method =
-    autoware::universe_utils::getOrDeclareParameter<std::string>(node, "goal_method");
+    autoware_utils_rclcpp::get_or_declare_parameter<std::string>(node, "goal_method");
   if (goal_method == "None") {
     // No goal correction
     return raw_path_with_lane_id;
