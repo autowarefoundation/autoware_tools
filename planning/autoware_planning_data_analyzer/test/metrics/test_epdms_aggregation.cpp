@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../../src/metrics/epdms_aggregation.hpp"
+#include "metrics/epdms/aggregation/epdms_aggregation.hpp"
 
 #include <gtest/gtest.h>
 

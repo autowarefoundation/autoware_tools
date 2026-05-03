@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__EPDMS_AGGREGATION_HPP_
-#define METRICS__EPDMS_AGGREGATION_HPP_
+#ifndef METRICS__EPDMS__AGGREGATION__EPDMS_AGGREGATION_HPP_
+#define METRICS__EPDMS__AGGREGATION__EPDMS_AGGREGATION_HPP_
 
 #include <cstddef>
 
@@ -93,4 +93,4 @@ SyntheticEpdmsMetrics calculate_synthetic_epdms(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__EPDMS_AGGREGATION_HPP_
+#endif  // METRICS__EPDMS__AGGREGATION__EPDMS_AGGREGATION_HPP_

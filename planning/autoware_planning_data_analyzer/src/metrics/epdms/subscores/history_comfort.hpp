@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__HISTORY_COMFORT_HPP_
-#define METRICS__HISTORY_COMFORT_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__HISTORY_COMFORT_HPP_
+#define METRICS__EPDMS__SUBSCORES__HISTORY_COMFORT_HPP_
 
-#include "trajectory_metrics.hpp"
+#include "metrics/trajectory_metrics.hpp"
 
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 
@@ -28,4 +28,4 @@ void calculate_history_comfort_metrics(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__HISTORY_COMFORT_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__HISTORY_COMFORT_HPP_

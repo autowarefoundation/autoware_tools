@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../../src/metrics/driving_direction_compliance.hpp"
+#include "metrics/epdms/subscores/driving_direction_compliance.hpp"
 
 #include <gtest/gtest.h>
 
