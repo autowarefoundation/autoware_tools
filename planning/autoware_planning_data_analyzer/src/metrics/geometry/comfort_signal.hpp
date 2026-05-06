@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__COMFORT_SIGNAL_HPP_
-#define METRICS__COMFORT_SIGNAL_HPP_
+#ifndef METRICS__GEOMETRY__COMFORT_SIGNAL_HPP_
+#define METRICS__GEOMETRY__COMFORT_SIGNAL_HPP_
 
 #include <geometry_msgs/msg/pose.hpp>
 
@@ -47,4 +47,4 @@ ComfortSignals compute_comfort_signals(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__COMFORT_SIGNAL_HPP_
+#endif  // METRICS__GEOMETRY__COMFORT_SIGNAL_HPP_
