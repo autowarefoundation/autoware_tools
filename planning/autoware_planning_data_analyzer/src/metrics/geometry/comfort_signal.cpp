@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cmath>
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -130,8 +131,8 @@ std::vector<double> local_polynomial_filter(
     }
     const auto solution = solve_linear_system(std::move(lhs), std::move(rhs));
     if (solution.has_value()) {
-      output.at(i) = solution->at(static_cast<std::size_t>(derivative_order)) *
-                     factorial(derivative_order);
+      output.at(i) =
+        solution->at(static_cast<std::size_t>(derivative_order)) * factorial(derivative_order);
     }
   }
   return output;
@@ -163,13 +164,14 @@ ComfortSignals compute_comfort_signals(
       std::hypot(input.longitudinal_acceleration_mps2, input.lateral_acceleration_mps2));
   }
 
-  signals.longitudinal_accelerations = local_polynomial_filter(
-    longitudinal_accelerations_raw, times, 8, 2, 0);
-  signals.lateral_accelerations = local_polynomial_filter(lateral_accelerations_raw, times, 8, 2, 0);
+  signals.longitudinal_accelerations =
+    local_polynomial_filter(longitudinal_accelerations_raw, times, 8, 2, 0);
+  signals.lateral_accelerations =
+    local_polynomial_filter(lateral_accelerations_raw, times, 8, 2, 0);
   signals.acceleration_magnitudes =
     local_polynomial_filter(acceleration_magnitudes_raw, times, 8, 2, 0);
-  signals.longitudinal_jerks = local_polynomial_filter(
-    signals.longitudinal_accelerations, times, 15, 2, 1);
+  signals.longitudinal_jerks =
+    local_polynomial_filter(signals.longitudinal_accelerations, times, 15, 2, 1);
   signals.lateral_jerks = local_polynomial_filter(signals.lateral_accelerations, times, 15, 2, 1);
   signals.jerk_magnitudes =
     local_polynomial_filter(signals.acceleration_magnitudes, times, 15, 2, 1);
