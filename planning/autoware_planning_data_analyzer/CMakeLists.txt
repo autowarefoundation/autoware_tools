@@ -9,6 +9,9 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/base_evaluator.cpp
   src/open_loop_evaluator.cpp
   src/metrics/deviation_metrics.cpp
+  src/metrics/geometry/comfort_signal.cpp
+  src/metrics/geometry/ego_footprint.cpp
+  src/metrics/geometry/lanelet_queries.cpp
   src/metrics/epdms/aggregation/epdms_aggregation.cpp
   src/metrics/epdms/subscores/ego_progress.cpp
   src/metrics/epdms/subscores/driving_direction_compliance.cpp
