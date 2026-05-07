@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>planning_debug_tools</name>
-  <version>0.6.0</version>
+  <version>0.7.0</version>
   <description>The planning_debug_tools package</description>
   <maintainer email="takamasa.horibe@tier4.jp">Takamasa Horibe</maintainer>
   <maintainer email="taiki.tanaka@tier4.jp">Taiki Tanaka</maintainer>
@@ -27,7 +27,8 @@
   <depend>autoware_motion_utils</depend>
   <depend>autoware_perception_msgs</depend>
   <depend>autoware_planning_msgs</depend>
-  <depend>autoware_universe_utils</depend>
+  <depend>autoware_utils_geometry</depend>
+  <depend>autoware_utils_visualization</depend>
   <depend>geometry_msgs</depend>
   <depend>libqt5-core</depend>
   <depend>libqt5-gui</depend>

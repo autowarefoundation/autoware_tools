@@ -2,6 +2,9 @@
 Changelog for package autoware_route_history
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.0 (2026-05-01)
+------------------
+
 0.6.0 (2026-02-14)
 ------------------
 * chore: match package versions

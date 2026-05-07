@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__LANE_KEEPING_HPP_
-#define METRICS__LANE_KEEPING_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__LANE_KEEPING_HPP_
+#define METRICS__EPDMS__SUBSCORES__LANE_KEEPING_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -47,4 +47,4 @@ double calculate_lane_keeping_score(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__LANE_KEEPING_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__LANE_KEEPING_HPP_

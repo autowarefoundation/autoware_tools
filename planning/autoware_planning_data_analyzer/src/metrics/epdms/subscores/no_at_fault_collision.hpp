@@ -12,43 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__DRIVING_DIRECTION_COMPLIANCE_HPP_
-#define METRICS__DRIVING_DIRECTION_COMPLIANCE_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__NO_AT_FAULT_COLLISION_HPP_
+#define METRICS__EPDMS__SUBSCORES__NO_AT_FAULT_COLLISION_HPP_
+
+#include "data_types.hpp"
+
+#include <autoware/route_handler/route_handler.hpp>
+#include <autoware_vehicle_info_utils/vehicle_info.hpp>
 
 #include <limits>
+#include <memory>
 #include <string>
-#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
 
-struct DrivingDirectionComplianceParameters
-{
-  double horizon_s{1.0};
-  double compliance_threshold_m{2.0};
-  double violation_threshold_m{6.0};
-};
+using autoware::route_handler::RouteHandler;
 
-struct DrivingDirectionEvaluationPoint
-{
-  double time_from_start_s{0.0};
-  double progress_m{0.0};
-  bool in_oncoming_traffic{false};
-  bool is_intersection{false};
-};
-
-struct DrivingDirectionComplianceResult
+struct NoAtFaultCollisionResult
 {
   double score{0.0};
   bool available{false};
   std::string reason{"unavailable"};
-  double max_oncoming_progress_m{0.0};
+  double infraction_time_s{std::numeric_limits<double>::infinity()};
 };
 
-DrivingDirectionComplianceResult calculate_driving_direction_compliance(
-  const std::vector<DrivingDirectionEvaluationPoint> & evaluation_points,
-  const DrivingDirectionComplianceParameters & params = DrivingDirectionComplianceParameters{});
+NoAtFaultCollisionResult calculate_no_at_fault_collision(
+  const autoware_planning_msgs::msg::Trajectory & trajectory,
+  const std::shared_ptr<PredictedObjects> & objects,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<RouteHandler> & route_handler = nullptr);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__DRIVING_DIRECTION_COMPLIANCE_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__NO_AT_FAULT_COLLISION_HPP_

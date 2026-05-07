@@ -2,6 +2,18 @@
 Changelog for package tier4_simulated_clock_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.7.0 (2026-05-01)
+------------------
+* docs: migrate map_path examples to ~/autoware_data/maps (`#417 <https://github.com/autowarefoundation/autoware_tools/issues/417>`_)
+  Update the `map_path:=$HOME/autoware_map/<map>` copy-paste examples in
+  the `tier4_simulated_clock_rviz_plugin` and `control_data_collecting_tool`
+  READMEs to the new asset-typed layout: `map_path:=$HOME/autoware_data/maps/demos/<map>`.
+  Sample maps are placed under `~/autoware_data/maps/demos/` by the
+  `demo_artifacts` ansible role in autowarefoundation/autoware (and by hand
+  on the new layout). The legacy `~/autoware_map/` root is being retired.
+  Refs: https://github.com/autowarefoundation/autoware/issues/7068
+* Contributors: Mete Fatih Cırıt
+
 0.6.0 (2026-02-14)
 ------------------
 

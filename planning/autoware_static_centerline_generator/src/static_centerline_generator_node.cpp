@@ -53,6 +53,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cinttypes>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -154,6 +155,68 @@ std::vector<lanelet::Id> check_lanelet_connection(
   }
 
   return unconnected_lane_ids;
+}
+
+void assign_centerline_points_to_lanelets(
+  const std::vector<TrajectoryPoint> & optimized_traj_points,
+  const lanelet::ConstLanelets & route_lanelets, PlanPath::Response::SharedPtr response,
+  const rclcpp::Logger & logger)
+{
+  std::vector<std::vector<geometry_msgs::msg::Point>> points_per_lanelet(route_lanelets.size());
+  size_t current_lanelet_idx = 0;
+  size_t points_outside_any = 0;
+
+  for (const auto & traj_point : optimized_traj_points) {
+    const auto pt = convert_to_lanelet_point(traj_point.pose.position);
+
+    if (
+      current_lanelet_idx < route_lanelets.size() &&
+      lanelet::geometry::inside(route_lanelets.at(current_lanelet_idx), pt)) {
+      points_per_lanelet.at(current_lanelet_idx).push_back(traj_point.pose.position);
+      continue;
+    }
+
+    bool assigned = false;
+    for (size_t k = 0; k < route_lanelets.size(); ++k) {
+      const size_t idx = (current_lanelet_idx + k) % route_lanelets.size();
+      if (lanelet::geometry::inside(route_lanelets.at(idx), pt)) {
+        points_per_lanelet.at(idx).push_back(traj_point.pose.position);
+        current_lanelet_idx = idx;
+        assigned = true;
+        break;
+      }
+    }
+
+    if (!assigned) {
+      if (current_lanelet_idx < route_lanelets.size()) {
+        points_per_lanelet.at(current_lanelet_idx).push_back(traj_point.pose.position);
+      }
+      points_outside_any++;
+    }
+  }
+
+  if (points_outside_any > 0) {
+    RCLCPP_WARN(
+      logger,
+      "PlanPath: %zu trajectory point(s) were outside all lanelet polygons and assigned to "
+      "nearest segment (e.g. sharp curves or optimization). Consider checking map or route.",
+      points_outside_any);
+  }
+
+  for (size_t i = 0; i < route_lanelets.size(); ++i) {
+    if (!points_per_lanelet.at(i).empty()) {
+      autoware_static_centerline_generator::msg::PointsWithLaneId points_with_lane_id;
+      points_with_lane_id.lane_id = route_lanelets.at(i).id();
+      points_with_lane_id.points = points_per_lanelet.at(i);
+      response->points_with_lane_ids.push_back(points_with_lane_id);
+    } else {
+      RCLCPP_WARN(
+        logger,
+        "PlanPath: lanelet id %" PRId64
+        " has no assigned points (trajectory may skip this segment).",
+        static_cast<int64_t>(route_lanelets.at(i).id()));
+    }
+  }
 }
 
 std_msgs::msg::Header create_header(const rclcpp::Time & now)
@@ -678,12 +741,24 @@ void StaticCenterlineGeneratorNode::on_plan_path(
 
   // get lanelets from route lane ids
   const auto route_lane_ids = request->route;
+  if (route_lane_ids.empty()) {
+    response->message = "InvalidRoute";
+    RCLCPP_ERROR(get_logger(), "PlanPath: route is empty.");
+    return;
+  }
+
   const auto route_lanelets = utils::get_lanelets_from_ids(*route_handler_ptr_, route_lane_ids);
 
   // create route
   LaneletRoute route;
-  route.start_pose = utils::get_center_pose(*route_handler_ptr_, route_lane_ids.front());
-  route.goal_pose = utils::get_center_pose(*route_handler_ptr_, route_lane_ids.back());
+  try {
+    route.start_pose = utils::get_center_pose(*route_handler_ptr_, route_lane_ids.front());
+    route.goal_pose = utils::get_center_pose(*route_handler_ptr_, route_lane_ids.back());
+  } catch (const std::exception & e) {
+    response->message = "InvalidLanelet";
+    RCLCPP_ERROR(get_logger(), "PlanPath: get_center_pose failed: %s", e.what());
+    return;
+  }
   std::vector<lanelet::Id> lane_ids;
   for (const auto route_lane_id : route_lane_ids) {
     LaneletSegment segment;
@@ -708,49 +783,21 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   // check calculation result
   if (optimized_traj_points.empty()) {
     response->message = "PathNotFound";
-    RCLCPP_ERROR(get_logger(), "Path planning failed.");
+    RCLCPP_ERROR(
+      get_logger(),
+      "Path planning failed (optimization returned no points). Check goal_method, route shape, and "
+      "lanelet connectivity.");
     return;
   }
 
   centerline_handler_ = CenterlineHandler(CenterlineWithRoute{optimized_traj_points, route});
+  assign_centerline_points_to_lanelets(
+    optimized_traj_points, route_lanelets, response, get_logger());
 
-  // publish unsafe_footprints
+  // publish unsafe_footprints and run validation (for rviz / logging only)
   connect_centerline_to_lanelet();
   validate_centerline();
 
-  // create output data
-  auto target_traj_point = optimized_traj_points.cbegin();
-  bool is_end_lanelet = false;
-  for (const auto & lanelet : route_lanelets) {
-    std::vector<geometry_msgs::msg::Point> current_lanelet_points;
-
-    // check if target point is inside the lanelet
-    while (lanelet::geometry::inside(
-      lanelet, convert_to_lanelet_point(target_traj_point->pose.position))) {
-      // memorize points inside the lanelet
-      current_lanelet_points.push_back(target_traj_point->pose.position);
-      target_traj_point++;
-
-      if (target_traj_point == optimized_traj_points.cend()) {
-        is_end_lanelet = true;
-        break;
-      }
-    }
-
-    if (!current_lanelet_points.empty()) {
-      // register points with lane_id
-      autoware_static_centerline_generator::msg::PointsWithLaneId points_with_lane_id;
-      points_with_lane_id.lane_id = lanelet.id();
-      points_with_lane_id.points = current_lanelet_points;
-      response->points_with_lane_ids.push_back(points_with_lane_id);
-    }
-
-    if (is_end_lanelet) {
-      break;
-    }
-  }
-
-  // empty string if error did not occur
   response->message = "";
 }
 

@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>deviation_estimator</name>
-  <version>0.6.0</version>
+  <version>0.7.0</version>
   <description>The deviation estimator package</description>
   <maintainer email="masahiro.sakamoto@tier4.jp">Masahiro Sakamoto</maintainer>
   <maintainer email="yamato.ando@tier4.jp">Yamato Ando</maintainer>
@@ -13,7 +13,9 @@
   <build_depend>autoware_cmake</build_depend>
 
   <depend>autoware_internal_debug_msgs</depend>
-  <depend>autoware_universe_utils</depend>
+  <depend>autoware_utils_geometry</depend>
+  <depend>autoware_utils_math</depend>
+  <depend>autoware_utils_tf</depend>
   <depend>autoware_vehicle_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
