@@ -58,7 +58,13 @@ autoware_utils_geometry::Polygon2d create_pose_footprint(
   const geometry_msgs::msg::Pose & pose,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
 {
-  const auto local_footprint = vehicle_info.createFootprint(0.0);
+  return create_pose_footprint(pose, vehicle_info.createFootprint(0.0));
+}
+
+autoware_utils_geometry::Polygon2d create_pose_footprint(
+  const geometry_msgs::msg::Pose & pose,
+  const autoware_utils_geometry::LinearRing2d & local_footprint)
+{
   autoware_utils_geometry::Polygon2d polygon;
   polygon.outer() = autoware_utils_geometry::transform_vector(
     local_footprint, autoware_utils_geometry::pose2transform(pose));

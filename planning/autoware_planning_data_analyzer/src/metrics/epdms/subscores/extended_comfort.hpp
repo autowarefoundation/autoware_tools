@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__EXTENDED_COMFORT_HPP_
-#define METRICS__EXTENDED_COMFORT_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__EXTENDED_COMFORT_HPP_
+#define METRICS__EPDMS__SUBSCORES__EXTENDED_COMFORT_HPP_
 
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 
@@ -51,4 +51,4 @@ ExtendedComfortResult calculate_extended_comfort(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__EXTENDED_COMFORT_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__EXTENDED_COMFORT_HPP_

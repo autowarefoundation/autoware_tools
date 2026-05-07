@@ -14,7 +14,7 @@
 
 #include "deviation_metrics.hpp"
 
-#include "metric_utils.hpp"
+#include "geometry/metric_utils.hpp"
 
 #include <autoware_utils_geometry/geometry.hpp>
 

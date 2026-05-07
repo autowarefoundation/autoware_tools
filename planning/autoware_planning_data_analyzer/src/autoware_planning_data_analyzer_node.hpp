@@ -16,7 +16,7 @@
 #define AUTOWARE_PLANNING_DATA_ANALYZER_NODE_HPP_
 
 #include "bag_handler.hpp"
-#include "metrics/extended_comfort.hpp"
+#include "metrics/epdms/subscores/extended_comfort.hpp"
 #include "metrics/trajectory_metrics.hpp"
 #include "rosbag2_cpp/reader.hpp"
 #include "rosbag2_cpp/writer.hpp"

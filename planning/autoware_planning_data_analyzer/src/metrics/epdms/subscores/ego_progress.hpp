@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__EGO_PROGRESS_HPP_
-#define METRICS__EGO_PROGRESS_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__EGO_PROGRESS_HPP_
+#define METRICS__EPDMS__SUBSCORES__EGO_PROGRESS_HPP_
 
-#include "../data_types.hpp"
+#include "data_types.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 
@@ -43,4 +43,4 @@ EgoProgressResult calculate_ego_progress(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__EGO_PROGRESS_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__EGO_PROGRESS_HPP_

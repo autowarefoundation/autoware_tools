@@ -15,10 +15,10 @@
 #ifndef METRICS__TRAJECTORY_METRICS_HPP_
 #define METRICS__TRAJECTORY_METRICS_HPP_
 
-#include "../data_types.hpp"
-#include "driving_direction_compliance.hpp"
-#include "lane_keeping.hpp"
-#include "traffic_light_compliance.hpp"
+#include "data_types.hpp"
+#include "metrics/epdms/subscores/driving_direction_compliance.hpp"
+#include "metrics/epdms/subscores/lane_keeping.hpp"
+#include "metrics/epdms/subscores/traffic_light_compliance.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>

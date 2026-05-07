@@ -12,32 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__DRIVABLE_AREA_COMPLIANCE_HPP_
-#define METRICS__DRIVABLE_AREA_COMPLIANCE_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__TTC_WITHIN_BOUND_HPP_
+#define METRICS__EPDMS__SUBSCORES__TTC_WITHIN_BOUND_HPP_
 
+#include "data_types.hpp"
+
+#include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
 
-#include <autoware_planning_msgs/msg/trajectory.hpp>
-
-#include <lanelet2_core/primitives/Lanelet.h>
-
+#include <limits>
+#include <memory>
 #include <string>
 
 namespace autoware::planning_data_analyzer::metrics
 {
 
-struct DrivableAreaComplianceResult
+using autoware::route_handler::RouteHandler;
+
+struct TTCWithinBoundResult
 {
   double score{0.0};
   bool available{false};
   std::string reason{"unavailable"};
+  double infraction_time_s{std::numeric_limits<double>::infinity()};
 };
 
-DrivableAreaComplianceResult calculate_drivable_area_compliance(
+TTCWithinBoundResult calculate_ttc_within_bound(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const lanelet::ConstLanelets & drivable_lanelets,
-  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info);
+  const std::shared_ptr<PredictedObjects> & objects,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<RouteHandler> & route_handler = nullptr);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__DRIVABLE_AREA_COMPLIANCE_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__TTC_WITHIN_BOUND_HPP_
