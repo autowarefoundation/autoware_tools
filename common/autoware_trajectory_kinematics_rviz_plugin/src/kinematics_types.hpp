@@ -43,6 +43,9 @@ struct TrajectorySeriesData
   std::string key;
   std::string label;
   std::vector<SeriesPoint> points;
+  /// True once actual trajectory data has been received; false for placeholder entries
+  /// that exist only because the topic was added but no message has arrived yet.
+  bool has_received_data{false};
 };
 
 /// @brief Selects which scalar is read from SeriesPoint for an axis or tooltip.
