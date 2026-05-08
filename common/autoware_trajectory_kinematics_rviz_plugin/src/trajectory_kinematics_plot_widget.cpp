@@ -159,9 +159,10 @@ TrajectoryKinematicsPlotWidget::TrajectoryKinematicsPlotWidget(QWidget * parent)
 
   const auto & pal = style::default_colors;
   setFont(makePanelUiFont());
-  setStyleSheet(QStringLiteral("QWidget#TkmPlotHost { background-color: %1; border-radius: 8px;"
-                               "  font-family: \"Segoe UI\", \"Ubuntu\", \"Noto Sans\", sans-serif;"
-                               "  font-size: 13px; font-weight: 600; }")
+  setStyleSheet(QStringLiteral(
+                  "QWidget#TkmPlotHost { background-color: %1; border-radius: 8px;"
+                  "  font-family: \"Segoe UI\", \"Ubuntu\", \"Noto Sans\", sans-serif;"
+                  "  font-size: 13px; font-weight: 600; }")
                   .arg(QString::fromStdString(pal.surface_container)));
 }
 

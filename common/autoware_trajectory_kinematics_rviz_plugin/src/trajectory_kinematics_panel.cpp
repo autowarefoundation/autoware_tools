@@ -204,9 +204,9 @@ TrajectoryKinematicsPanel::TrajectoryKinematicsPanel(QWidget * parent) : rviz_co
     row->addWidget(refresh_topics_button_);
     add_topic_button_ = new QPushButton(QStringLiteral("Add"));
     remove_topic_button_ = new QPushButton(QStringLiteral("Remove"));
-    remove_topic_button_->setToolTip(
-      QStringLiteral("Select one or more trajectories below, then remove their ROS topic "
-                     "subscription(s)."));
+    remove_topic_button_->setToolTip(QStringLiteral(
+      "Select one or more trajectories below, then remove their ROS topic "
+      "subscription(s)."));
     row->addWidget(add_topic_button_);
     row->addWidget(remove_topic_button_);
     root->addLayout(row);
@@ -219,9 +219,9 @@ TrajectoryKinematicsPanel::TrajectoryKinematicsPanel(QWidget * parent) : rviz_co
     manual_topic_edit_->setObjectName(QStringLiteral("TkmManualTopic"));
     manual_topic_edit_->setPlaceholderText(
       QStringLiteral("Optional: type a full topic name if it is not in the list above"));
-    manual_topic_edit_->setToolTip(
-      QStringLiteral("If set, Add uses this text instead of the dropdown (for topics not yet on "
-                     "the graph)."));
+    manual_topic_edit_->setToolTip(QStringLiteral(
+      "If set, Add uses this text instead of the dropdown (for topics not yet on "
+      "the graph)."));
     row->addWidget(manual_topic_edit_, 1);
     root->addLayout(row);
   }
@@ -232,9 +232,9 @@ TrajectoryKinematicsPanel::TrajectoryKinematicsPanel(QWidget * parent) : rviz_co
     root->addWidget(series_label);
     series_list_ = new QListWidget();
     series_list_->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    series_list_->setToolTip(
-      QStringLiteral("Swatch = plot line color. Check rows to plot. Select row(s) and use Remove "
-                     "to drop that topic subscription."));
+    series_list_->setToolTip(QStringLiteral(
+      "Swatch = plot line color. Check rows to plot. Select row(s) and use Remove "
+      "to drop that topic subscription."));
     series_list_->setIconSize(QSize(20, 20));
     series_list_->setMinimumHeight(60);
     series_list_->setMaximumHeight(90);

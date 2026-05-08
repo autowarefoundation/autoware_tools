@@ -185,7 +185,7 @@ std::string TrajectorySeriesManager::seriesId(const TrajectorySeriesData & s)
 void TrajectorySeriesManager::onTrajectory(
   const autoware_planning_msgs::msg::Trajectory::ConstSharedPtr msg, const std::string & topic)
 {
-  auto series_vec = trajectoryMsgToSeries(*msg, topic);
+  auto series_vec = trajectoryMsgToSeries(*msg, topic);  // Single element vector
   if (!series_vec.empty()) {
     series_vec[0].has_received_data = true;
   }
