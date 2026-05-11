@@ -18,6 +18,7 @@
 #include "ui_font.hpp"
 
 #include <QAbstractItemView>
+#include <QBrush>
 #include <QColor>
 #include <QHBoxLayout>
 #include <QHideEvent>
@@ -55,9 +56,6 @@ constexpr char kScoredType[] = "autoware_internal_planning_msgs/msg/ScoredCandid
 /// Shown when the graph has no matching topics (not a valid subscription target).
 const QString kEmptyTopicPlaceholder = QStringLiteral("(No matching topics — press Refresh)");
 
-/// Interval for refreshing the ROS graph topic list (ms).
-constexpr int kTopicPollIntervalMs = 4000;
-
 /// Debounce window for merging high-rate `dataUpdated` → panel refresh (ms).
 constexpr int kPlotRefreshCoalesceMs = 50;
 
@@ -83,6 +81,33 @@ QIcon makeTrajectoryColorIcon(const QColor & c)
   painter.setBrush(c);
   painter.setPen(QColor(255, 255, 255, 100));
   painter.drawRoundedRect(2, 2, d - 4, d - 4, 4, 4);
+  painter.end();
+  return QIcon(pm);
+}
+
+QIcon makeRefreshIcon()
+{
+  constexpr int d = 20;
+  QPixmap pm(d, d);
+  pm.fill(Qt::transparent);
+  QPainter painter(&pm);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+  painter.setPen(QPen(Qt::white, 2.0, Qt::SolidLine, Qt::RoundCap));
+
+  const QPointF center(d / 2.0, d / 2.0);
+  constexpr double radius = 6.5;
+
+  // Arc: from ~1 o'clock counterclockwise around to ~12 o'clock
+  QPainterPath arc_path;
+  arc_path.moveTo(center + QPointF(0, -radius));
+  arc_path.arcTo(
+    QRectF(center.x() - radius, center.y() - radius, radius * 2, radius * 2), 90.0, -300.0);
+  painter.drawPath(arc_path);
+
+  // Arrowhead at the top of the arc
+  painter.drawLine(QPointF(0, -radius + 1.5), QPointF(2.5, -radius - 2.0));
+  painter.drawLine(QPointF(0, -radius + 1.5), QPointF(-2.5, -radius - 2.0));
+
   painter.end();
   return QIcon(pm);
 }
@@ -125,10 +150,6 @@ QString panelStyleSheet(const style::MaterialColors & c)
            "  background-color: %3; color: %2; border: 1px solid %4; border-radius: 6px;"
            "  padding: 5px 10px; font-weight: 600;"
            "}"
-           "QWidget#TkmPanelRoot QDoubleSpinBox {"
-           "  background-color: %3; color: %2; border: 1px solid %4; border-radius: 6px;"
-           "  padding: 3px 6px; min-height: 22px; font-weight: 600;"
-           "}"
            "QWidget#TkmPanelRoot QCheckBox { color: %2; font-weight: 600; spacing: 6px; }")
     .arg(QString::fromStdString(c.background))
     .arg(QString::fromStdString(c.on_surface))
@@ -161,30 +182,31 @@ TrajectoryKinematicsPanel::TrajectoryKinematicsPanel(QWidget * parent) : rviz_co
     row->addWidget(new QLabel(QStringLiteral("Topic:")));
     topic_combo_ = new QComboBox();
     topic_combo_->setEditable(false);
-    topic_combo_->setMinimumWidth(260);
+    topic_combo_->setMinimumWidth(125);
     topic_combo_->setMaxVisibleItems(18);
     topic_combo_->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
     topic_combo_->setMinimumContentsLength(28);
     topic_combo_->setToolTip(QStringLiteral(
-      "Open the list and click a topic. Use “Other topic” below to type a name not "
+      "Open the list and click a topic. Use \"Other topic\" below to type a name not "
       "listed."));
     row->addWidget(topic_combo_, 1);
     kind_combo_ = new QComboBox();
     kind_combo_->addItem(
       QStringLiteral("Trajectory"), static_cast<int>(TopicMessageKind::Trajectory));
     kind_combo_->addItem(
-      QStringLiteral("ScoredCandidateTrajectories"),
+      QStringLiteral("CandidateTrajectories"),
       static_cast<int>(TopicMessageKind::ScoredCandidateTrajectories));
     row->addWidget(kind_combo_);
-    refresh_topics_button_ = new QPushButton(QStringLiteral("Refresh topics"));
+    refresh_topics_button_ = new QPushButton(makeRefreshIcon(), QString());
+    refresh_topics_button_->setMaximumWidth(36);
     refresh_topics_button_->setToolTip(
       QStringLiteral("Reload topic list from the ROS graph (filtered by message type)"));
     row->addWidget(refresh_topics_button_);
     add_topic_button_ = new QPushButton(QStringLiteral("Add"));
     remove_topic_button_ = new QPushButton(QStringLiteral("Remove"));
-    remove_topic_button_->setToolTip(QStringLiteral(
-      "Select one or more trajectories below, then remove their ROS topic "
-      "subscription(s)."));
+    remove_topic_button_->setToolTip(
+      QStringLiteral("Select one or more trajectories below, then remove their ROS topic "
+                     "subscription(s)."));
     row->addWidget(add_topic_button_);
     row->addWidget(remove_topic_button_);
     root->addLayout(row);
@@ -197,9 +219,9 @@ TrajectoryKinematicsPanel::TrajectoryKinematicsPanel(QWidget * parent) : rviz_co
     manual_topic_edit_->setObjectName(QStringLiteral("TkmManualTopic"));
     manual_topic_edit_->setPlaceholderText(
       QStringLiteral("Optional: type a full topic name if it is not in the list above"));
-    manual_topic_edit_->setToolTip(QStringLiteral(
-      "If set, Add uses this text instead of the dropdown (for topics not yet on "
-      "the graph)."));
+    manual_topic_edit_->setToolTip(
+      QStringLiteral("If set, Add uses this text instead of the dropdown (for topics not yet on "
+                     "the graph)."));
     row->addWidget(manual_topic_edit_, 1);
     root->addLayout(row);
   }
@@ -210,11 +232,12 @@ TrajectoryKinematicsPanel::TrajectoryKinematicsPanel(QWidget * parent) : rviz_co
     root->addWidget(series_label);
     series_list_ = new QListWidget();
     series_list_->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    series_list_->setToolTip(QStringLiteral(
-      "Swatch = plot line color. Check rows to plot. Select row(s) and use Remove "
-      "to drop that topic subscription."));
+    series_list_->setToolTip(
+      QStringLiteral("Swatch = plot line color. Check rows to plot. Select row(s) and use Remove "
+                     "to drop that topic subscription."));
     series_list_->setIconSize(QSize(20, 20));
-    series_list_->setMinimumHeight(160);
+    series_list_->setMinimumHeight(60);
+    series_list_->setMaximumHeight(90);
     root->addWidget(series_list_);
   }
 
@@ -226,52 +249,6 @@ TrajectoryKinematicsPanel::TrajectoryKinematicsPanel(QWidget * parent) : rviz_co
     row->addWidget(new QLabel(QStringLiteral("Y axis:")));
     y_axis_combo_ = new QComboBox();
     row->addWidget(y_axis_combo_);
-    root->addLayout(row);
-  }
-
-  {
-    auto * row = new QHBoxLayout();
-    fix_x_range_ = new QCheckBox(QStringLiteral("Fix X range"));
-    plot_x_min_spin_ = new QDoubleSpinBox();
-    plot_x_max_spin_ = new QDoubleSpinBox();
-    for (auto * sp : {plot_x_min_spin_, plot_x_max_spin_}) {
-      sp->setDecimals(4);
-      sp->setRange(-1e9, 1e9);
-      sp->setMaximumWidth(130);
-    }
-    plot_x_min_spin_->setValue(0.0);
-    plot_x_max_spin_->setValue(20.0);
-    plot_x_min_spin_->setToolTip(QStringLiteral("Used when “Fix X range” is checked"));
-    plot_x_max_spin_->setToolTip(QStringLiteral("Must be greater than min"));
-    row->addWidget(fix_x_range_);
-    row->addWidget(new QLabel(QStringLiteral("min")));
-    row->addWidget(plot_x_min_spin_);
-    row->addWidget(new QLabel(QStringLiteral("max")));
-    row->addWidget(plot_x_max_spin_);
-    row->addStretch();
-    root->addLayout(row);
-  }
-
-  {
-    auto * row = new QHBoxLayout();
-    fix_y_range_ = new QCheckBox(QStringLiteral("Fix Y range"));
-    plot_y_min_spin_ = new QDoubleSpinBox();
-    plot_y_max_spin_ = new QDoubleSpinBox();
-    for (auto * sp : {plot_y_min_spin_, plot_y_max_spin_}) {
-      sp->setDecimals(4);
-      sp->setRange(-1e9, 1e9);
-      sp->setMaximumWidth(130);
-    }
-    plot_y_min_spin_->setValue(-5.0);
-    plot_y_max_spin_->setValue(15.0);
-    plot_y_min_spin_->setToolTip(QStringLiteral("Used when “Fix Y range” is checked"));
-    plot_y_max_spin_->setToolTip(QStringLiteral("Must be greater than min"));
-    row->addWidget(fix_y_range_);
-    row->addWidget(new QLabel(QStringLiteral("min")));
-    row->addWidget(plot_y_min_spin_);
-    row->addWidget(new QLabel(QStringLiteral("max")));
-    row->addWidget(plot_y_max_spin_);
-    row->addStretch();
     root->addLayout(row);
   }
 
@@ -297,9 +274,6 @@ TrajectoryKinematicsPanel::TrajectoryKinematicsPanel(QWidget * parent) : rviz_co
   outer->addWidget(panel_root_);
   setLayout(outer);
 
-  topic_poll_timer_ = new QTimer(this);
-  topic_poll_timer_->setInterval(kTopicPollIntervalMs);
-
   plot_refresh_coalesce_timer_ = new QTimer(this);
   plot_refresh_coalesce_timer_->setSingleShot(true);
   plot_refresh_coalesce_timer_->setInterval(kPlotRefreshCoalesceMs);
@@ -316,7 +290,6 @@ TrajectoryKinematicsPanel::TrajectoryKinematicsPanel(QWidget * parent) : rviz_co
   connect(
     kind_combo_, qOverload<int>(&QComboBox::currentIndexChanged), this,
     &TrajectoryKinematicsPanel::refreshTopicList);
-  connect(topic_poll_timer_, &QTimer::timeout, this, &TrajectoryKinematicsPanel::refreshTopicList);
   connect(
     plot_refresh_coalesce_timer_, &QTimer::timeout, this,
     &TrajectoryKinematicsPanel::processDataUpdated);
@@ -328,20 +301,6 @@ TrajectoryKinematicsPanel::TrajectoryKinematicsPanel(QWidget * parent) : rviz_co
   connect(
     y_axis_combo_, qOverload<int>(&QComboBox::currentIndexChanged), this,
     &TrajectoryKinematicsPanel::onAxisChanged);
-  connect(fix_x_range_, &QCheckBox::toggled, this, &TrajectoryKinematicsPanel::refreshPlot);
-  connect(fix_y_range_, &QCheckBox::toggled, this, &TrajectoryKinematicsPanel::refreshPlot);
-  connect(
-    plot_x_min_spin_, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
-    &TrajectoryKinematicsPanel::refreshPlot);
-  connect(
-    plot_x_max_spin_, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
-    &TrajectoryKinematicsPanel::refreshPlot);
-  connect(
-    plot_y_min_spin_, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
-    &TrajectoryKinematicsPanel::refreshPlot);
-  connect(
-    plot_y_max_spin_, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
-    &TrajectoryKinematicsPanel::refreshPlot);
 }
 
 void TrajectoryKinematicsPanel::applyPanelStyle()
@@ -352,16 +311,10 @@ void TrajectoryKinematicsPanel::applyPanelStyle()
   panel_root_->setStyleSheet(panelStyleSheet(style::default_colors));
 }
 
-PlotAxisRangeOptions TrajectoryKinematicsPanel::readPlotRangeOptions() const
+PlotAxisRangeOptions readPlotRangeOptionsDefault()
 {
-  PlotAxisRangeOptions o;
-  o.lock_x = fix_x_range_->isChecked();
-  o.x_min = plot_x_min_spin_->value();
-  o.x_max = plot_x_max_spin_->value();
-  o.lock_y = fix_y_range_->isChecked();
-  o.y_min = plot_y_min_spin_->value();
-  o.y_max = plot_y_max_spin_->value();
-  return o;
+  // Always use dynamic range; lock flags are off and min/max values are ignored.
+  return PlotAxisRangeOptions{};
 }
 
 void TrajectoryKinematicsPanel::populateAxisCombos()
@@ -568,13 +521,13 @@ void TrajectoryKinematicsPanel::rebuildSeriesListWidget()
     return;
   }
   const auto all = series_manager_->allSeries();
-  std::vector<std::pair<std::string, std::string>> current_sig;
+  std::vector<std::tuple<std::string, std::string, bool>> current_sig;
   current_sig.reserve(all.size());
   for (const auto & s : all) {
-    current_sig.emplace_back(TrajectorySeriesManager::seriesId(s), s.label);
+    current_sig.emplace_back(TrajectorySeriesManager::seriesId(s), s.label, s.has_received_data);
   }
-  // Skip QListWidget rebuild when only point values changed but ids/labels are unchanged (keeps
-  // selection/focus stable).
+  // Skip QListWidget rebuild when only point values changed but ids/labels/data-state are unchanged
+  // (keeps selection/focus stable).
   if (current_sig == last_series_list_signature_) {
     return;
   }
@@ -585,7 +538,14 @@ void TrajectoryKinematicsPanel::rebuildSeriesListWidget()
   for (size_t ai = 0; ai < all.size(); ++ai) {
     const auto & s = all[ai];
     const std::string id = TrajectorySeriesManager::seriesId(s);
-    auto * item = new QListWidgetItem(QString::fromStdString(s.label));
+    QString display_label = QString::fromStdString(s.label);
+    if (!s.has_received_data) {
+      display_label += QStringLiteral(" (waiting...)");
+    }
+    auto * item = new QListWidgetItem(display_label);
+    if (!s.has_received_data) {
+      item->setForeground(QBrush(Qt::gray));
+    }
     item->setData(static_cast<int>(SeriesListItemRole::kSeriesId), QString::fromStdString(id));
     item->setData(static_cast<int>(SeriesListItemRole::kAllSeriesIndex), static_cast<int>(ai));
     item->setData(
@@ -644,7 +604,7 @@ void TrajectoryKinematicsPanel::refreshPlot()
     selected.push_back(all[static_cast<size_t>(ai)]);
     colors.push_back(colorForSeriesListIndex(ai));
   }
-  plot_widget_->updatePlot(selected, colors, x_axis, y_axis, readPlotRangeOptions());
+  plot_widget_->updatePlot(selected, colors, x_axis, y_axis, readPlotRangeOptionsDefault());
   updateSummary(selected);
 }
 
@@ -720,12 +680,6 @@ void TrajectoryKinematicsPanel::save(rviz_common::Config config) const
   }
   checked_ids.sort();
   config.mapSetValue("checked_series", checked_ids.join(QStringLiteral(",")));
-  config.mapSetValue("plot_lock_x", fix_x_range_->isChecked() ? 1 : 0);
-  config.mapSetValue("plot_lock_y", fix_y_range_->isChecked() ? 1 : 0);
-  config.mapSetValue("plot_x_min", QString::number(plot_x_min_spin_->value(), 'g', 12));
-  config.mapSetValue("plot_x_max", QString::number(plot_x_max_spin_->value(), 'g', 12));
-  config.mapSetValue("plot_y_min", QString::number(plot_y_min_spin_->value(), 'g', 12));
-  config.mapSetValue("plot_y_max", QString::number(plot_y_max_spin_->value(), 'g', 12));
 }
 
 void TrajectoryKinematicsPanel::load(const rviz_common::Config & config)
@@ -762,44 +716,16 @@ void TrajectoryKinematicsPanel::load(const rviz_common::Config & config)
     }
   }
 
-  int plot_lock_x = 0;
-  int plot_lock_y = 0;
-  if (config.mapGetInt("plot_lock_x", &plot_lock_x)) {
-    fix_x_range_->setChecked(plot_lock_x != 0);
-  }
-  if (config.mapGetInt("plot_lock_y", &plot_lock_y)) {
-    fix_y_range_->setChecked(plot_lock_y != 0);
-  }
-  QString q_string;
-  if (config.mapGetString("plot_x_min", &q_string)) {
-    plot_x_min_spin_->setValue(q_string.toDouble());
-  }
-  if (config.mapGetString("plot_x_max", &q_string)) {
-    plot_x_max_spin_->setValue(q_string.toDouble());
-  }
-  if (config.mapGetString("plot_y_min", &q_string)) {
-    plot_y_min_spin_->setValue(q_string.toDouble());
-  }
-  if (config.mapGetString("plot_y_max", &q_string)) {
-    plot_y_max_spin_->setValue(q_string.toDouble());
-  }
-
   applyTopicConfigsToManager();
 }
 
 void TrajectoryKinematicsPanel::showEvent(QShowEvent * event)
 {
   rviz_common::Panel::showEvent(event);
-  if (topic_poll_timer_) {
-    topic_poll_timer_->start();
-  }
 }
 
 void TrajectoryKinematicsPanel::hideEvent(QHideEvent * event)
 {
-  if (topic_poll_timer_) {
-    topic_poll_timer_->stop();
-  }
   rviz_common::Panel::hideEvent(event);
 }
 
