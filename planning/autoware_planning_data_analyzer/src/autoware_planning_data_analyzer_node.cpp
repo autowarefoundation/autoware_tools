@@ -158,8 +158,7 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   acceleration_topic_name_ = get_or_declare_parameter<std::string>(*this, "acceleration_topic");
   steering_topic_name_ = get_or_declare_parameter<std::string>(*this, "steering_topic");
   control_mode_topic_name_ = get_or_declare_parameter<std::string>(*this, "control_mode_topic");
-  override_window_sec_ =
-    get_or_declare_parameter<double>(*this, "open_loop.override.window_sec");
+  override_window_sec_ = get_or_declare_parameter<double>(*this, "open_loop.override.window_sec");
 
   if (evaluation_interval_ms_ <= 0.0) {
     throw std::runtime_error(

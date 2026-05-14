@@ -15,6 +15,7 @@
 #include "utils/override_windows.hpp"
 
 #include <autoware_vehicle_msgs/msg/control_mode_report.hpp>
+
 #include <gtest/gtest.h>
 
 #include <cstdint>
@@ -23,10 +24,10 @@
 namespace
 {
 
-using autoware::planning_data_analyzer::utils::ControlModeEvent;
-using autoware::planning_data_analyzer::utils::OverrideWindow;
 using autoware::planning_data_analyzer::utils::compute_override_windows;
+using autoware::planning_data_analyzer::utils::ControlModeEvent;
 using autoware::planning_data_analyzer::utils::is_within_any_window;
+using autoware::planning_data_analyzer::utils::OverrideWindow;
 
 using ControlModeReport = autoware_vehicle_msgs::msg::ControlModeReport;
 
@@ -105,9 +106,7 @@ TEST(OverrideWindowsTest, IsWithinAnyWindowHonoursBothEnds)
   const std::vector<OverrideWindow> windows{
     {rclcpp::Time(static_cast<int64_t>(1.0 * kNs), RCL_ROS_TIME),
      rclcpp::Time(static_cast<int64_t>(2.0 * kNs), RCL_ROS_TIME)}};
-  const auto t = [](double s) {
-    return rclcpp::Time(static_cast<int64_t>(s * kNs), RCL_ROS_TIME);
-  };
+  const auto t = [](double s) { return rclcpp::Time(static_cast<int64_t>(s * kNs), RCL_ROS_TIME); };
   // Inside
   EXPECT_TRUE(is_within_any_window(t(1.5), windows));
   // On boundaries (inclusive)

@@ -1836,14 +1836,10 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
 
     const std::string prefix = "override_only/" + tag;
     j[prefix + "/count"] = ade_vals.size();
-    emit_metric(
-      prefix, "ade", "Override-only ADE within " + tag + " horizon [m]", ade_vals);
-    emit_metric(
-      prefix, "fde", "Override-only FDE at " + tag + " horizon [m]", fde_vals);
-    emit_metric(
-      prefix, "ahe", "Override-only AHE within " + tag + " horizon [rad]", ahe_vals);
-    emit_metric(
-      prefix, "fhe", "Override-only FHE at " + tag + " horizon [rad]", fhe_vals);
+    emit_metric(prefix, "ade", "Override-only ADE within " + tag + " horizon [m]", ade_vals);
+    emit_metric(prefix, "fde", "Override-only FDE at " + tag + " horizon [m]", fde_vals);
+    emit_metric(prefix, "ahe", "Override-only AHE within " + tag + " horizon [rad]", ahe_vals);
+    emit_metric(prefix, "fhe", "Override-only FHE at " + tag + " horizon [rad]", fhe_vals);
     emit_metric(
       prefix, "average_lateral_deviation",
       "Override-only average lateral deviation within " + tag + " horizon [m]", avg_lat_vals);
@@ -1852,14 +1848,12 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
       "Override-only max lateral deviation within " + tag + " horizon [m]", max_lat_vals);
     emit_metric(
       prefix, "average_longitudinal_deviation",
-      "Override-only average longitudinal deviation within " + tag + " horizon [m]",
-      avg_lon_vals);
+      "Override-only average longitudinal deviation within " + tag + " horizon [m]", avg_lon_vals);
     emit_metric(
       prefix, "max_longitudinal_deviation",
       "Override-only max longitudinal deviation within " + tag + " horizon [m]", max_lon_vals);
     emit_metric(
-      prefix, "min_ttc", "Override-only minimum TTC within " + tag + " horizon [s]",
-      min_ttc_vals);
+      prefix, "min_ttc", "Override-only minimum TTC within " + tag + " horizon [s]", min_ttc_vals);
   }
 
   return j;

@@ -52,8 +52,7 @@ std::vector<OverrideWindow> compute_override_windows(
  * Both ends are inclusive so a sample exactly window_sec after the transition
  * still counts as inside the window.
  */
-bool is_within_any_window(
-  const rclcpp::Time & t, const std::vector<OverrideWindow> & windows);
+bool is_within_any_window(const rclcpp::Time & t, const std::vector<OverrideWindow> & windows);
 
 }  // namespace autoware::planning_data_analyzer::utils
 
