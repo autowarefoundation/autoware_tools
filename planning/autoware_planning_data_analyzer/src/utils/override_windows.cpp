@@ -37,7 +37,9 @@ std::vector<OverrideWindow> compute_override_windows(
     if (
       previous_mode == ControlModeReport::AUTONOMOUS &&
       current_mode == ControlModeReport::MANUAL) {
-      const rclcpp::Time start_time(events[i].first);
+      // Use RCL_ROS_TIME so windows can be compared against trajectory timestamps
+      // produced from ROS message stamps (which default to RCL_ROS_TIME).
+      const rclcpp::Time start_time(events[i].first, RCL_ROS_TIME);
       windows.emplace_back(start_time, start_time + window_duration);
     }
     previous_mode = current_mode;

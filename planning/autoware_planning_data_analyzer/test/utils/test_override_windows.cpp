@@ -103,19 +103,34 @@ TEST(OverrideWindowsTest, DetectsMultipleTransitions)
 TEST(OverrideWindowsTest, IsWithinAnyWindowHonoursBothEnds)
 {
   const std::vector<OverrideWindow> windows{
-    {rclcpp::Time(static_cast<int64_t>(1.0 * kNs)),
-     rclcpp::Time(static_cast<int64_t>(2.0 * kNs))}};
+    {rclcpp::Time(static_cast<int64_t>(1.0 * kNs), RCL_ROS_TIME),
+     rclcpp::Time(static_cast<int64_t>(2.0 * kNs), RCL_ROS_TIME)}};
+  const auto t = [](double s) {
+    return rclcpp::Time(static_cast<int64_t>(s * kNs), RCL_ROS_TIME);
+  };
   // Inside
-  EXPECT_TRUE(is_within_any_window(rclcpp::Time(static_cast<int64_t>(1.5 * kNs)), windows));
+  EXPECT_TRUE(is_within_any_window(t(1.5), windows));
   // On boundaries (inclusive)
-  EXPECT_TRUE(is_within_any_window(rclcpp::Time(static_cast<int64_t>(1.0 * kNs)), windows));
-  EXPECT_TRUE(is_within_any_window(rclcpp::Time(static_cast<int64_t>(2.0 * kNs)), windows));
+  EXPECT_TRUE(is_within_any_window(t(1.0), windows));
+  EXPECT_TRUE(is_within_any_window(t(2.0), windows));
   // Outside
-  EXPECT_FALSE(is_within_any_window(rclcpp::Time(static_cast<int64_t>(0.9 * kNs)), windows));
-  EXPECT_FALSE(is_within_any_window(rclcpp::Time(static_cast<int64_t>(2.1 * kNs)), windows));
+  EXPECT_FALSE(is_within_any_window(t(0.9), windows));
+  EXPECT_FALSE(is_within_any_window(t(2.1), windows));
 }
 
 TEST(OverrideWindowsTest, IsWithinAnyWindowReturnsFalseWhenWindowsEmpty)
 {
-  EXPECT_FALSE(is_within_any_window(rclcpp::Time(static_cast<int64_t>(1.0 * kNs)), {}));
+  EXPECT_FALSE(
+    is_within_any_window(rclcpp::Time(static_cast<int64_t>(1.0 * kNs), RCL_ROS_TIME), {}));
+}
+
+TEST(OverrideWindowsTest, ComputedWindowsUseRosTimeClock)
+{
+  const std::vector<ControlModeEvent> events{
+    ev(0.0, ControlModeReport::AUTONOMOUS), ev(1.0, ControlModeReport::MANUAL)};
+  const auto windows = compute_override_windows(events, 0.5);
+  ASSERT_EQ(windows.size(), 1u);
+  // Windows must be comparable to timestamps derived from ROS message stamps.
+  EXPECT_EQ(windows[0].first.get_clock_type(), RCL_ROS_TIME);
+  EXPECT_EQ(windows[0].second.get_clock_type(), RCL_ROS_TIME);
 }
