@@ -17,6 +17,7 @@
 
 #include "bag_handler.hpp"
 #include "metrics/trajectory_metrics.hpp"
+#include "utils/override_windows.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <nlohmann/json.hpp>
@@ -153,7 +154,7 @@ protected:
     // Timeline of /vehicle/status/control_mode samples sorted by stamp,
     // captured as (timestamp_ns, mode) tuples. Used to detect override
     // windows (AUTONOMOUS -> MANUAL transitions).
-    std::vector<std::pair<rcutils_time_point_value_t, uint8_t>> control_mode_events;
+    std::vector<utils::ControlModeEvent> control_mode_events;
   };
 
   BagProcessingResult process_bag_common(

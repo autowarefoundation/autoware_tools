@@ -1390,43 +1390,6 @@ void OpenLoopEvaluator::calculate_summary()
   }
 }
 
-std::vector<std::pair<rclcpp::Time, rclcpp::Time>>
-OpenLoopEvaluator::compute_override_windows() const
-{
-  std::vector<std::pair<rclcpp::Time, rclcpp::Time>> windows;
-  if (override_window_sec_ <= 0.0 || control_mode_events_.size() < 2u) {
-    return windows;
-  }
-
-  const auto window_ns =
-    static_cast<rcutils_duration_value_t>(override_window_sec_ * 1e9);
-
-  auto previous_mode = control_mode_events_.front().second;
-  for (std::size_t i = 1; i < control_mode_events_.size(); ++i) {
-    const auto current_mode = control_mode_events_[i].second;
-    if (
-      previous_mode == ControlModeReport::AUTONOMOUS &&
-      current_mode == ControlModeReport::MANUAL) {
-      const auto start_ns = control_mode_events_[i].first;
-      windows.emplace_back(rclcpp::Time(start_ns), rclcpp::Time(start_ns + window_ns));
-    }
-    previous_mode = current_mode;
-  }
-  return windows;
-}
-
-bool OpenLoopEvaluator::is_within_any_window(
-  const rclcpp::Time & t,
-  const std::vector<std::pair<rclcpp::Time, rclcpp::Time>> & windows)
-{
-  for (const auto & [start, end] : windows) {
-    if (t >= start && t <= end) {
-      return true;
-    }
-  }
-  return false;
-}
-
 nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
 {
   nlohmann::json j;
@@ -1845,7 +1808,8 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
   // Re-aggregate per-horizon ADE/FDE (plus the rest of the horizon metrics for symmetry)
   // using only trajectory samples whose timestamp falls inside an override window derived
   // from AUTONOMOUS->MANUAL transitions in /vehicle/status/control_mode.
-  const auto override_windows = compute_override_windows();
+  const auto override_windows =
+    utils::compute_override_windows(control_mode_events_, override_window_sec_);
   j["override_only/num_windows"] = override_windows.size();
 
   for (const auto & tag : all_keys) {
@@ -1853,7 +1817,7 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
     std::vector<double> avg_lat_vals, max_lat_vals, avg_lon_vals, max_lon_vals;
     std::vector<double> min_ttc_vals;
     for (const auto & m : metrics_list_) {
-      if (!is_within_any_window(m.trajectory_timestamp, override_windows)) continue;
+      if (!utils::is_within_any_window(m.trajectory_timestamp, override_windows)) continue;
       const auto it = std::find_if(
         m.horizon_results.begin(), m.horizon_results.end(),
         [&tag](const auto & p) { return p.first == tag; });

@@ -23,6 +23,7 @@
 #include "metrics/epdms/subscores/extended_comfort.hpp"
 #include "metrics/epdms/subscores/lane_keeping.hpp"
 #include "metrics/trajectory_metrics.hpp"
+#include "utils/override_windows.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
@@ -201,8 +202,7 @@ public:
   /**
    * @brief Provide the timeline of ControlModeReport samples used to derive override windows.
    */
-  void set_control_mode_events(
-    std::vector<std::pair<rcutils_time_point_value_t, uint8_t>> events)
+  void set_control_mode_events(std::vector<utils::ControlModeEvent> events)
   {
     control_mode_events_ = std::move(events);
   }
@@ -362,25 +362,6 @@ private:
    */
   void calculate_summary();
 
-  /**
-   * @brief Derive override windows [start, end) from the ControlModeReport timeline.
-   *
-   * A window starts whenever the mode transitions from AUTONOMOUS to MANUAL and ends
-   * override_window_sec_ later. Returns an empty list when override_window_sec_ <= 0
-   * or no qualifying transition is found.
-   */
-  std::vector<std::pair<rclcpp::Time, rclcpp::Time>> compute_override_windows() const;
-
-  /**
-   * @brief Test whether a trajectory timestamp lies in any of the supplied windows.
-   *
-   * Assumes windows are sorted by start time. End time is inclusive to keep boundary
-   * samples (e.g. exactly window_sec after the transition).
-   */
-  static bool is_within_any_window(
-    const rclcpp::Time & t,
-    const std::vector<std::pair<rclcpp::Time, rclcpp::Time>> & windows);
-
   std::vector<OpenLoopTrajectoryMetrics> metrics_list_;
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
   std::vector<metrics::HumanFilterMetrics> human_filter_metrics_list_;
@@ -396,7 +377,7 @@ private:
   double gt_sync_tolerance_ms_;
   std::vector<double> evaluation_horizons_;
   double override_window_sec_{0.0};
-  std::vector<std::pair<rcutils_time_point_value_t, uint8_t>> control_mode_events_;
+  std::vector<utils::ControlModeEvent> control_mode_events_;
 };
 
 }  // namespace autoware::planning_data_analyzer
