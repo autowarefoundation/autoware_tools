@@ -18,6 +18,8 @@
 
 #include <autoware_vehicle_msgs/msg/control_mode_report.hpp>
 
+#include <vector>
+
 namespace autoware::planning_data_analyzer::utils
 {
 
@@ -35,8 +37,7 @@ std::vector<OverrideWindow> compute_override_windows(
   for (std::size_t i = 1; i < events.size(); ++i) {
     const auto current_mode = events[i].second;
     if (
-      previous_mode == ControlModeReport::AUTONOMOUS &&
-      current_mode == ControlModeReport::MANUAL) {
+      previous_mode == ControlModeReport::AUTONOMOUS && current_mode == ControlModeReport::MANUAL) {
       // Use RCL_ROS_TIME so windows can be compared against trajectory timestamps
       // produced from ROS message stamps (which default to RCL_ROS_TIME).
       const rclcpp::Time start_time(events[i].first, RCL_ROS_TIME);
@@ -47,8 +48,7 @@ std::vector<OverrideWindow> compute_override_windows(
   return windows;
 }
 
-bool is_within_any_window(
-  const rclcpp::Time & t, const std::vector<OverrideWindow> & windows)
+bool is_within_any_window(const rclcpp::Time & t, const std::vector<OverrideWindow> & windows)
 {
   for (const auto & [start, end] : windows) {
     if (t >= start && t <= end) {
