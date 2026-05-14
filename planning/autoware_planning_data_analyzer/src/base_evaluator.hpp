@@ -150,6 +150,10 @@ protected:
     tf2_msgs::msg::TFMessage tf_static_msgs;
     bool gt_trajectory_topic_seen = false;
     size_t gt_trajectory_message_count = 0;
+    // Timeline of /vehicle/status/control_mode samples sorted by stamp,
+    // captured as (timestamp_ns, mode) tuples. Used to detect override
+    // windows (AUTONOMOUS -> MANUAL transitions).
+    std::vector<std::pair<rcutils_time_point_value_t, uint8_t>> control_mode_events;
   };
 
   BagProcessingResult process_bag_common(

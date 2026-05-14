@@ -157,6 +157,9 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   tf_topic_name_ = get_or_declare_parameter<std::string>(*this, "tf_topic");
   acceleration_topic_name_ = get_or_declare_parameter<std::string>(*this, "acceleration_topic");
   steering_topic_name_ = get_or_declare_parameter<std::string>(*this, "steering_topic");
+  control_mode_topic_name_ = get_or_declare_parameter<std::string>(*this, "control_mode_topic");
+  override_window_sec_ =
+    get_or_declare_parameter<double>(*this, "open_loop.override.window_sec");
 
   if (evaluation_interval_ms_ <= 0.0) {
     throw std::runtime_error(
@@ -468,6 +471,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
   topic_names.tf_topic = tf_topic_name_;
   topic_names.acceleration_topic = acceleration_topic_name_;
   topic_names.steering_topic = steering_topic_name_;
+  topic_names.control_mode_topic = control_mode_topic_name_;
   topic_names.evaluation_interval_ms = evaluation_interval_ms_;
   topic_names.sync_tolerance_ms = sync_tolerance_ms_;
   auto output_dir = get_or_declare_parameter<std::string>(*this, "output_dir");
@@ -497,6 +501,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_evaluation_horizons(evaluation_horizons);
       evaluator.set_extended_comfort_parameters(extended_comfort_parameters_);
+      evaluator.set_override_window_sec(override_window_sec_);
       auto times =
         evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);
       start_time = times.first;
