@@ -14,6 +14,8 @@
 
 #include "traffic_light_compliance.hpp"
 
+#include "metrics/geometry/ego_footprint.hpp"
+#include "metrics/geometry/lanelet_queries.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 
 #include <autoware/traffic_light_utils/traffic_light_utils.hpp>

@@ -57,6 +57,9 @@ bool is_pose_in_route_lane_polygon(
   const geometry_msgs::msg::Pose & pose,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler);
 
+// EPDMS-specific local lane/intersection context used by follow-up subscore migration PRs. This
+// intentionally has broader semantics than is_pose_in_intersection(), which preserves the existing
+// closest-reference-lanelet behavior.
 std::optional<DrivingDirectionLocalContext> compute_driving_direction_local_context(
   const geometry_msgs::msg::Pose & pose,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler);

@@ -15,9 +15,6 @@
 #ifndef METRICS__GEOMETRY__METRIC_UTILS_HPP_
 #define METRICS__GEOMETRY__METRIC_UTILS_HPP_
 
-#include "ego_footprint.hpp"
-#include "lanelet_queries.hpp"
-
 #include <autoware/vehicle_info_utils/vehicle_info.hpp>
 
 #include <autoware_perception_msgs/msg/predicted_object.hpp>

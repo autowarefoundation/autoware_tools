@@ -249,8 +249,9 @@ autoware_utils_geometry::LineString2d to_linestring2d(const lanelet::ConstLineSt
 bool is_pose_in_intersection(
   const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler)
 {
-  const auto context = compute_driving_direction_local_context(pose, route_handler);
-  return context.has_value() && context->in_intersection;
+  const auto lanelet = find_reference_lanelet(pose, route_handler);
+  return lanelet.has_value() &&
+         autoware::experimental::lanelet2_utils::is_intersection_lanelet(*lanelet);
 }
 
 bool is_pose_in_route_lane_polygon(

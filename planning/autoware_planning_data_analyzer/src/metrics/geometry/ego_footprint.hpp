@@ -38,11 +38,10 @@ struct EgoAreaFlags
   bool non_drivable_area{false};
   bool in_intersection{false};
   bool intersection_context_available{false};
-  bool inside_road_border_envelope{false};
   bool road_border_fallback_used{false};
 };
 
-struct RoadBorderSideTest
+struct RoadBorderFallbackProbe
 {
   std::size_t corner_index{0};
   autoware_utils_geometry::Point2d corner;
@@ -71,14 +70,13 @@ struct EgoAreaEvaluation
   std::vector<autoware_utils_geometry::Point2d> footprint_points;
   std::vector<bool> corner_drivable;
   std::vector<bool> corner_drivable_by_road_border;
-  std::vector<RoadBorderSideTest> road_border_side_tests;
+  std::vector<RoadBorderFallbackProbe> road_border_side_tests;
   lanelet::ConstLanelets road_lanelets;
   lanelet::ConstLanelets shoulder_lanelets;
   std::vector<lanelet::ConstPolygon3d> intersection_areas;
   std::vector<lanelet::ConstPolygon3d> hatched_road_markings;
   std::vector<lanelet::ConstPolygon3d> parking_lots;
   std::vector<lanelet::ConstLineString3d> road_border_lines;
-  std::optional<autoware_utils_geometry::Polygon2d> road_border_envelope;
   std::size_t designated_lanelet_count{0};
 };
 
@@ -96,12 +94,17 @@ autoware_utils_geometry::Polygon2d create_pose_footprint(
   const geometry_msgs::msg::Pose & pose,
   const autoware_utils_geometry::LinearRing2d & local_footprint);
 
+// Shared EPDMS geometry helper used by follow-up subscore PRs. It is intentionally introduced
+// before its first caller so the larger footprint/map-context implementation can be reviewed
+// independently from subscore semantic changes.
 std::optional<EgoAreaEvaluation> compute_ego_area_evaluation(
   const geometry_msgs::msg::Pose & pose, const autoware_utils_geometry::Polygon2d & ego_polygon,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
   const lanelet::ConstLanelets & designated_lanelets = {},
   bool evaluate_intersection_context = false);
 
+// Shared EPDMS geometry helper used by follow-up subscore PRs. Existing callers are not switched
+// to this API in the preparatory helper PR.
 std::vector<TrajectoryFootprintEvaluation> evaluate_trajectory_footprints(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,

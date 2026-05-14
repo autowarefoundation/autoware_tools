@@ -384,7 +384,7 @@ std::vector<bool> evaluate_road_border_side_fallback(
   const std::vector<lanelet::ConstPolygon3d> & hatched_road_markings,
   const std::vector<lanelet::ConstPolygon3d> & parking_lots,
   const std::vector<lanelet::ConstLineString3d> & road_border_lines,
-  std::vector<RoadBorderSideTest> & side_tests)
+  std::vector<RoadBorderFallbackProbe> & side_tests)
 {
   std::vector<bool> corner_drivable_by_road_border(footprint_points.size(), false);
   for (std::size_t index = 0; index < footprint_points.size(); ++index) {
@@ -398,15 +398,15 @@ std::vector<bool> evaluate_road_border_side_fallback(
       continue;
     }
 
-    std::optional<RoadBorderSideTest> best_rejected_test;
-    std::optional<RoadBorderSideTest> best_accepted_test;
+    std::optional<RoadBorderFallbackProbe> best_rejected_test;
+    std::optional<RoadBorderFallbackProbe> best_accepted_test;
     for (const auto & line_string : road_border_lines) {
       const auto line_2d = lanelet::utils::to2D(line_string);
       if (line_2d.size() < 2U) {
         continue;
       }
       for (std::size_t segment_index = 1; segment_index < line_2d.size(); ++segment_index) {
-        RoadBorderSideTest test;
+        RoadBorderFallbackProbe test;
         test.corner_index = index;
         test.corner = footprint_points.at(index);
         test.semantic_closest_point = semantic_boundary->point;
@@ -661,7 +661,7 @@ std::optional<EgoAreaEvaluation> compute_ego_area_evaluation(
     points, road_lanelets, shoulder_lanelets, intersection_areas, hatched_road_markings,
     parking_lots);
   auto corner_drivable = semantic_corner_drivable;
-  std::vector<RoadBorderSideTest> road_border_side_tests;
+  std::vector<RoadBorderFallbackProbe> road_border_side_tests;
   auto corner_drivable_by_road_border = evaluate_road_border_side_fallback(
     points, semantic_corner_drivable, road_lanelets, shoulder_lanelets, intersection_areas,
     hatched_road_markings, parking_lots, road_border_lines, road_border_side_tests);
@@ -688,8 +688,6 @@ std::optional<EgoAreaEvaluation> compute_ego_area_evaluation(
       break;
     }
   }
-  evaluation.flags.inside_road_border_envelope = std::all_of(
-    corner_drivable.begin(), corner_drivable.end(), [](const bool value) { return value; });
   evaluation.footprint_points = points;
   evaluation.corner_drivable = corner_drivable;
   evaluation.corner_drivable_by_road_border = std::move(corner_drivable_by_road_border);
