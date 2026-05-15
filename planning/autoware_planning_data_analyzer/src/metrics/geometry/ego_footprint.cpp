@@ -269,6 +269,7 @@ struct ClosestSemanticBoundaryPoint
 
 geometry_msgs::msg::Point to_msg_point(const autoware_utils_geometry::Point2d & point)
 {
+  // Some validation underlays still route calc_squared_distance2d through message-style fields.
   geometry_msgs::msg::Point msg;
   msg.x = point.x();
   msg.y = point.y();
