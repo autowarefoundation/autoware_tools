@@ -29,6 +29,7 @@
     tf_topic: "/tf"
     acceleration_topic: "/localization/acceleration"
     steering_topic: "/vehicle/status/steering_status"
+    control_mode_topic: "/vehicle/status/control_mode"
 
     open_loop:
       # "kinematic_state" (default): synthesize GT from odometry topic
@@ -60,3 +61,7 @@
       lane_keep:
         max_lateral_deviation: 0.5  # Maximum absolute lateral deviation allowed for LK [m]
         max_continuous_violation_time: 2.0  # Continuous over-threshold duration allowed for LK [s]
+      override:
+        # Time window [s] after every AUTONOMOUS->MANUAL transition used to compute
+        # the override_only/* aggregate statistics in the summary JSON.
+        window_sec: 0.5

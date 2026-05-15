@@ -21,6 +21,7 @@
 #include <autoware_perception_msgs/msg/predicted_objects.hpp>
 #include <autoware_perception_msgs/msg/traffic_light_group_array.hpp>
 #include <autoware_planning_msgs/msg/trajectory.hpp>
+#include <autoware_vehicle_msgs/msg/control_mode_report.hpp>
 #include <autoware_vehicle_msgs/msg/steering_report.hpp>
 #include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -41,6 +42,7 @@ using PredictedObjects = autoware_perception_msgs::msg::PredictedObjects;
 using TrafficLightGroupArray = autoware_perception_msgs::msg::TrafficLightGroupArray;
 using AccelWithCovarianceStamped = geometry_msgs::msg::AccelWithCovarianceStamped;
 using SteeringReport = autoware_vehicle_msgs::msg::SteeringReport;
+using ControlModeReport = autoware_vehicle_msgs::msg::ControlModeReport;
 
 // Synchronized data from multiple topics at a specific timestamp
 struct SynchronizedData
@@ -70,6 +72,7 @@ struct TopicNames
   std::string tf_topic;
   std::string acceleration_topic;
   std::string steering_topic;
+  std::string control_mode_topic;
   double evaluation_interval_ms = 100.0;
   double sync_tolerance_ms = 100.0;
 };

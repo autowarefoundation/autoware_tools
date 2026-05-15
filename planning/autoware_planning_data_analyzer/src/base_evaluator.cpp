@@ -22,9 +22,11 @@
 
 #include <std_msgs/msg/float64_multi_array.hpp>
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace autoware::planning_data_analyzer
 {
@@ -100,8 +102,28 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
     } else if (topic_name == topic_names.tf_topic) {
       process_and_append_message<TFMessage>(
         serialized_message, bag_data, topic_names.tf_topic, false, logger_);
+    } else if (
+      !topic_names.control_mode_topic.empty() && topic_name == topic_names.control_mode_topic) {
+      try {
+        ControlModeReport mode_msg;
+        rclcpp::Serialization<ControlModeReport> serializer;
+        rclcpp::SerializedMessage serialized_msg(*serialized_message->serialized_data);
+        serializer.deserialize_message(&serialized_msg, &mode_msg);
+        // Prefer the message stamp; fall back to bag timestamp when unset.
+        const rclcpp::Time stamp(mode_msg.stamp);
+        const auto stamp_ns =
+          stamp.nanoseconds() != 0 ? stamp.nanoseconds() : get_timestamp_ns(*serialized_message);
+        result.control_mode_events.emplace_back(stamp_ns, mode_msg.mode);
+      } catch (const std::exception & e) {
+        RCLCPP_WARN(logger_, "Failed to deserialize control_mode message: %s", e.what());
+      }
     }
   }
+
+  // Sort control_mode events by timestamp so override windows can be derived.
+  std::sort(
+    result.control_mode_events.begin(), result.control_mode_events.end(),
+    [](const auto & a, const auto & b) { return a.first < b.first; });
 
   // Get kinematic states at regular intervals
   auto kinematic_states =
