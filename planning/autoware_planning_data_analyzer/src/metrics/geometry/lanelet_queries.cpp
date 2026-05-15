@@ -14,15 +14,17 @@
 
 #include "lanelet_queries.hpp"
 
+#include "lanelet_geometry.hpp"
+
 #include <autoware/lanelet2_utils/intersection.hpp>
 #include <autoware_lanelet2_extension/utility/utilities.hpp>
+#include <autoware_utils_math/normalization.hpp>
 
 #include <boost/geometry.hpp>
 
 #include <lanelet2_core/utility/Utilities.h>
 
 #include <algorithm>
-#include <cmath>
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -40,61 +42,10 @@ constexpr double kLocalLaneSearchRadiusM = 5.0;
 constexpr double kDirectionSimilarityThresholdRad = M_PI_4;
 constexpr double kAdmissibleLaneMarginM = 0.35;
 
-void append_unique_lanelet(
-  const lanelet::ConstLanelet & lanelet, lanelet::ConstLanelets & lanelets,
-  std::unordered_set<lanelet::Id> & seen_ids)
-{
-  if (seen_ids.insert(lanelet.id()).second) {
-    lanelets.push_back(lanelet);
-  }
-}
-
-void append_unique_polygon(
-  const lanelet::ConstPolygon3d & polygon, std::vector<lanelet::ConstPolygon3d> & polygons,
-  std::unordered_set<lanelet::Id> & seen_ids)
-{
-  if (seen_ids.insert(polygon.id()).second) {
-    polygons.push_back(polygon);
-  }
-}
-
-double normalize_angle(const double angle)
-{
-  return std::atan2(std::sin(angle), std::cos(angle));
-}
-
-autoware_utils_geometry::Polygon2d to_polygon_2d(const lanelet::BasicPolygon2d & polygon)
-{
-  namespace bg = boost::geometry;
-
-  autoware_utils_geometry::Polygon2d converted;
-  for (const auto & point : polygon) {
-    converted.outer().push_back({point.x(), point.y()});
-  }
-  bg::correct(converted);
-  return converted;
-}
-
 lanelet::BoundingBox2d point_bounding_box(
   const geometry_msgs::msg::Point & point, const double radius_m = kLocalLaneSearchRadiusM)
 {
-  return lanelet::BoundingBox2d{
-    lanelet::BasicPoint2d{point.x - radius_m, point.y - radius_m},
-    lanelet::BasicPoint2d{point.x + radius_m, point.y + radius_m}};
-}
-
-bool point_in_lanelet(
-  const autoware_utils_geometry::Point2d & point, const lanelet::ConstLanelet & lanelet)
-{
-  namespace bg = boost::geometry;
-  return bg::covered_by(point, to_polygon_2d(lanelet.polygon2d().basicPolygon()));
-}
-
-bool point_in_polygon(
-  const autoware_utils_geometry::Point2d & point, const lanelet::ConstPolygon3d & polygon)
-{
-  namespace bg = boost::geometry;
-  return bg::covered_by(point, to_polygon_2d(lanelet::utils::to2D(polygon).basicPolygon()));
+  return make_bounding_box(point.x, point.y, point.x, point.y, radius_m);
 }
 
 bool point_within_lanelet_margin(
@@ -151,7 +102,8 @@ lanelet::ConstLanelets collect_local_route_consistent_lanelets(
     const bool on_route = route_handler->isRouteLanelet(lanelet);
     const double lanelet_yaw = lanelet::utils::getLaneletAngle(lanelet, pose.position);
     const bool same_direction =
-      std::abs(normalize_angle(lanelet_yaw - reference_yaw)) <= kDirectionSimilarityThresholdRad;
+      std::abs(autoware_utils_math::normalize_radian(lanelet_yaw - reference_yaw)) <=
+      kDirectionSimilarityThresholdRad;
     if (!on_route && !same_direction) {
       continue;
     }
@@ -161,7 +113,8 @@ lanelet::ConstLanelets collect_local_route_consistent_lanelets(
   for (const auto & shoulder_lanelet : nearby_shoulder_lanelets) {
     const double shoulder_yaw = lanelet::utils::getLaneletAngle(shoulder_lanelet, pose.position);
     const bool same_direction =
-      std::abs(normalize_angle(shoulder_yaw - reference_yaw)) <= kDirectionSimilarityThresholdRad;
+      std::abs(autoware_utils_math::normalize_radian(shoulder_yaw - reference_yaw)) <=
+      kDirectionSimilarityThresholdRad;
     if (!same_direction) {
       continue;
     }

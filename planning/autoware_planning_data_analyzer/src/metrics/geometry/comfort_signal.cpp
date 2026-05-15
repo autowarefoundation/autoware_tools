@@ -30,6 +30,15 @@ namespace autoware::planning_data_analyzer::metrics
 namespace
 {
 
+constexpr std::size_t kAccelerationFilterWindow = 8U;
+constexpr std::size_t kJerkFilterWindow = 15U;
+constexpr std::size_t kYawAccelerationFilterWindow = 15U;
+constexpr int kFilterPolynomialOrder = 2;
+constexpr int kYawAccelerationPolynomialOrder = 3;
+constexpr int kSmoothingDerivativeOrder = 0;
+constexpr int kFirstDerivativeOrder = 1;
+constexpr int kSecondDerivativeOrder = 2;
+
 double factorial(const int n)
 {
   double value = 1.0;
@@ -164,21 +173,31 @@ ComfortSignals compute_comfort_signals(
       std::hypot(input.longitudinal_acceleration_mps2, input.lateral_acceleration_mps2));
   }
 
-  signals.longitudinal_accelerations =
-    local_polynomial_filter(longitudinal_accelerations_raw, times, 8, 2, 0);
-  signals.lateral_accelerations =
-    local_polynomial_filter(lateral_accelerations_raw, times, 8, 2, 0);
-  signals.acceleration_magnitudes =
-    local_polynomial_filter(acceleration_magnitudes_raw, times, 8, 2, 0);
-  signals.longitudinal_jerks =
-    local_polynomial_filter(signals.longitudinal_accelerations, times, 15, 2, 1);
-  signals.lateral_jerks = local_polynomial_filter(signals.lateral_accelerations, times, 15, 2, 1);
-  signals.jerk_magnitudes =
-    local_polynomial_filter(signals.acceleration_magnitudes, times, 15, 2, 1);
+  signals.longitudinal_accelerations = local_polynomial_filter(
+    longitudinal_accelerations_raw, times, kAccelerationFilterWindow, kFilterPolynomialOrder,
+    kSmoothingDerivativeOrder);
+  signals.lateral_accelerations = local_polynomial_filter(
+    lateral_accelerations_raw, times, kAccelerationFilterWindow, kFilterPolynomialOrder,
+    kSmoothingDerivativeOrder);
+  signals.acceleration_magnitudes = local_polynomial_filter(
+    acceleration_magnitudes_raw, times, kAccelerationFilterWindow, kFilterPolynomialOrder,
+    kSmoothingDerivativeOrder);
+  signals.longitudinal_jerks = local_polynomial_filter(
+    signals.longitudinal_accelerations, times, kJerkFilterWindow, kFilterPolynomialOrder,
+    kFirstDerivativeOrder);
+  signals.lateral_jerks = local_polynomial_filter(
+    signals.lateral_accelerations, times, kJerkFilterWindow, kFilterPolynomialOrder,
+    kFirstDerivativeOrder);
+  signals.jerk_magnitudes = local_polynomial_filter(
+    signals.acceleration_magnitudes, times, kJerkFilterWindow, kFilterPolynomialOrder,
+    kFirstDerivativeOrder);
 
   const auto unwrapped_yaws = unwrap_angles(yaws);
-  signals.yaw_rates = local_polynomial_filter(unwrapped_yaws, times, 15, 2, 1);
-  signals.yaw_accelerations = local_polynomial_filter(unwrapped_yaws, times, 15, 3, 2);
+  signals.yaw_rates = local_polynomial_filter(
+    unwrapped_yaws, times, kJerkFilterWindow, kFilterPolynomialOrder, kFirstDerivativeOrder);
+  signals.yaw_accelerations = local_polynomial_filter(
+    unwrapped_yaws, times, kYawAccelerationFilterWindow, kYawAccelerationPolynomialOrder,
+    kSecondDerivativeOrder);
   return signals;
 }
 

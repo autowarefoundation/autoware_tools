@@ -14,11 +14,14 @@
 
 #include "ego_footprint.hpp"
 
+#include "lanelet_geometry.hpp"
 #include "lanelet_queries.hpp"
 #include "metric_utils.hpp"
 
 #include <autoware_utils_geometry/boost_polygon_utils.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
+
+#include <geometry_msgs/msg/point.hpp>
 
 #include <boost/geometry.hpp>
 
@@ -52,18 +55,6 @@ constexpr double kMinRoadBorderSegmentLengthM = 1.0e-3;
 constexpr double kRoadBorderSideEpsilon = 1.0e-3;
 constexpr std::array<double, 8> kRoadBorderSideProbeDistancesM{0.3, 0.6, 1.0, 1.5,
                                                                2.0, 2.5, 3.0, 4.0};
-
-autoware_utils_geometry::Polygon2d to_polygon_2d(const lanelet::BasicPolygon2d & polygon)
-{
-  namespace bg = boost::geometry;
-
-  autoware_utils_geometry::Polygon2d converted;
-  for (const auto & point : polygon) {
-    converted.outer().push_back({point.x(), point.y()});
-  }
-  bg::correct(converted);
-  return converted;
-}
 
 bool footprint_intersects_lanelet(
   const autoware_utils_geometry::Polygon2d & footprint, const lanelet::ConstLanelet & lanelet)
@@ -101,9 +92,7 @@ lanelet::BoundingBox2d footprint_bounding_box(
     max_y = std::max(max_y, point.y());
   }
 
-  return lanelet::BoundingBox2d{
-    lanelet::BasicPoint2d{min_x - search_margin_m, min_y - search_margin_m},
-    lanelet::BasicPoint2d{max_x + search_margin_m, max_y + search_margin_m}};
+  return make_bounding_box(min_x, min_y, max_x, max_y, search_margin_m);
 }
 
 lanelet::ConstLanelets collect_candidate_road_lanelets(
@@ -121,9 +110,7 @@ lanelet::ConstLanelets collect_candidate_road_lanelets(
     if (!route_handler->isRoadLanelet(lanelet)) {
       continue;
     }
-    if (seen_ids.insert(lanelet.id()).second) {
-      road_lanelets.push_back(lanelet);
-    }
+    append_unique_lanelet(lanelet, road_lanelets, seen_ids);
   }
 
   const auto map = route_handler->getLaneletMapPtr();
@@ -132,9 +119,7 @@ lanelet::ConstLanelets collect_candidate_road_lanelets(
     if (!route_handler->isRoadLanelet(lanelet)) {
       continue;
     }
-    if (seen_ids.insert(lanelet.id()).second) {
-      road_lanelets.push_back(lanelet);
-    }
+    append_unique_lanelet(lanelet, road_lanelets, seen_ids);
   }
 
   return road_lanelets;
@@ -156,9 +141,7 @@ lanelet::ConstLanelets collect_candidate_shoulder_lanelets(
     if (!route_handler->isShoulderLanelet(lanelet)) {
       continue;
     }
-    if (seen_ids.insert(lanelet.id()).second) {
-      shoulder_lanelets.push_back(lanelet);
-    }
+    append_unique_lanelet(lanelet, shoulder_lanelets, seen_ids);
   }
 
   return shoulder_lanelets;
@@ -182,9 +165,7 @@ std::vector<lanelet::ConstPolygon3d> collect_candidate_map_polygons(
     if (types.count(type) == 0U) {
       continue;
     }
-    if (seen_ids.insert(polygon.id()).second) {
-      polygons.push_back(polygon);
-    }
+    append_unique_polygon(polygon, polygons, seen_ids);
   }
 
   return polygons;
@@ -207,26 +188,10 @@ std::vector<lanelet::ConstLineString3d> collect_candidate_road_border_lines(
     if (type != "road_border") {
       continue;
     }
-    if (seen_ids.insert(line_string.id()).second) {
-      road_border_lines.push_back(line_string);
-    }
+    append_unique_line_string(line_string, road_border_lines, seen_ids);
   }
 
   return road_border_lines;
-}
-
-bool point_in_lanelet(
-  const autoware_utils_geometry::Point2d & point, const lanelet::ConstLanelet & lanelet)
-{
-  namespace bg = boost::geometry;
-  return bg::covered_by(point, to_polygon_2d(lanelet.polygon2d().basicPolygon()));
-}
-
-bool point_in_polygon(
-  const autoware_utils_geometry::Point2d & point, const lanelet::ConstPolygon3d & polygon)
-{
-  namespace bg = boost::geometry;
-  return bg::covered_by(point, to_polygon_2d(lanelet::utils::to2D(polygon).basicPolygon()));
 }
 
 bool point_in_semantic_drivable_area(
@@ -302,12 +267,13 @@ struct ClosestSemanticBoundaryPoint
   double distance_m{std::numeric_limits<double>::infinity()};
 };
 
-double squared_distance(
-  const autoware_utils_geometry::Point2d & a, const autoware_utils_geometry::Point2d & b)
+geometry_msgs::msg::Point to_msg_point(const autoware_utils_geometry::Point2d & point)
 {
-  const double dx = a.x() - b.x();
-  const double dy = a.y() - b.y();
-  return dx * dx + dy * dy;
+  geometry_msgs::msg::Point msg;
+  msg.x = point.x();
+  msg.y = point.y();
+  msg.z = 0.0;
+  return msg;
 }
 
 autoware_utils_geometry::Point2d closest_point_on_segment(
@@ -338,7 +304,8 @@ void update_closest_boundary_from_polygon(
   }
   for (std::size_t index = 1; index < ring.size(); ++index) {
     const auto closest = closest_point_on_segment(point, ring.at(index - 1U), ring.at(index));
-    const double distance = std::sqrt(squared_distance(point, closest));
+    const double distance = std::sqrt(
+      autoware_utils_geometry::calc_squared_distance2d(to_msg_point(point), to_msg_point(closest)));
     if (!best.has_value() || distance < best->distance_m) {
       best = ClosestSemanticBoundaryPoint{closest, distance};
     }
@@ -423,7 +390,9 @@ std::vector<bool> evaluate_road_border_side_fallback(
 
         test.closest_point =
           closest_point_on_segment(test.corner, test.segment_start, test.segment_end);
-        test.distance_m = std::sqrt(squared_distance(test.corner, test.closest_point));
+        test.distance_m = std::sqrt(
+          autoware_utils_geometry::calc_squared_distance2d(
+            to_msg_point(test.corner), to_msg_point(test.closest_point)));
         test.corner_semantic_distance_m = semantic_boundary->distance_m;
 
         const double semantic_to_border_x = test.closest_point.x() - semantic_boundary->point.x();
@@ -440,8 +409,9 @@ std::vector<bool> evaluate_road_border_side_fallback(
           const auto projected_on_semantic_to_border = autoware_utils_geometry::Point2d{
             semantic_boundary->point.x() + test.corner_between_ratio * semantic_to_border_x,
             semantic_boundary->point.y() + test.corner_between_ratio * semantic_to_border_y};
-          test.corner_to_semantic_border_line_m =
-            std::sqrt(squared_distance(test.corner, projected_on_semantic_to_border));
+          test.corner_to_semantic_border_line_m = std::sqrt(
+            autoware_utils_geometry::calc_squared_distance2d(
+              to_msg_point(test.corner), to_msg_point(projected_on_semantic_to_border)));
           const double tangent_x = segment_dx / segment_length;
           const double tangent_y = segment_dy / segment_length;
           test.border_tangent_alignment = std::abs(
