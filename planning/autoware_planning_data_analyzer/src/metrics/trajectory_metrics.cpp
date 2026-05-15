@@ -20,6 +20,7 @@
 #include "metrics/epdms/subscores/no_at_fault_collision.hpp"
 #include "metrics/epdms/subscores/traffic_light_compliance.hpp"
 #include "metrics/epdms/subscores/ttc_within_bound.hpp"
+#include "metrics/geometry/lanelet_queries.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 
 #include <autoware/lanelet2_utils/geometry.hpp>

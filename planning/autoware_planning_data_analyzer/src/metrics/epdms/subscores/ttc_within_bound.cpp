@@ -14,6 +14,8 @@
 
 #include "ttc_within_bound.hpp"
 
+#include "metrics/geometry/ego_footprint.hpp"
+#include "metrics/geometry/lanelet_queries.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 
 #include <autoware_utils_geometry/boost_geometry.hpp>
