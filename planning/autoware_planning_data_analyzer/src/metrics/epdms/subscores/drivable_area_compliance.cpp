@@ -14,7 +14,7 @@
 
 #include "drivable_area_compliance.hpp"
 
-#include "metric_utils.hpp"
+#include "metrics/geometry/metric_utils.hpp"
 
 #include <autoware_utils_geometry/boost_geometry.hpp>
 #include <autoware_utils_geometry/geometry.hpp>

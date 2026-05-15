@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../src/bag_handler.hpp"
+#include "bag_handler.hpp"
 
 #include <autoware_test_utils/autoware_test_utils.hpp>
 

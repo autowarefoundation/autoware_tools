@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../../src/metrics/no_at_fault_collision.hpp"
+#include "metrics/epdms/subscores/no_at_fault_collision.hpp"
 
 #include <autoware_utils_geometry/geometry.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>

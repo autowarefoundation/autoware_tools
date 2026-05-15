@@ -17,11 +17,11 @@
 
 #include "bag_handler.hpp"
 #include "base_evaluator.hpp"
-#include "metrics/driving_direction_compliance.hpp"
-#include "metrics/ego_progress.hpp"
-#include "metrics/epdms_aggregation.hpp"
-#include "metrics/extended_comfort.hpp"
-#include "metrics/lane_keeping.hpp"
+#include "metrics/epdms/aggregation/epdms_aggregation.hpp"
+#include "metrics/epdms/subscores/driving_direction_compliance.hpp"
+#include "metrics/epdms/subscores/ego_progress.hpp"
+#include "metrics/epdms/subscores/extended_comfort.hpp"
+#include "metrics/epdms/subscores/lane_keeping.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>

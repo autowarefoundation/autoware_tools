@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef METRICS__TRAFFIC_LIGHT_COMPLIANCE_HPP_
-#define METRICS__TRAFFIC_LIGHT_COMPLIANCE_HPP_
+#ifndef METRICS__EPDMS__SUBSCORES__TRAFFIC_LIGHT_COMPLIANCE_HPP_
+#define METRICS__EPDMS__SUBSCORES__TRAFFIC_LIGHT_COMPLIANCE_HPP_
 
-#include "../data_types.hpp"
+#include "data_types.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
@@ -43,4 +43,4 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
-#endif  // METRICS__TRAFFIC_LIGHT_COMPLIANCE_HPP_
+#endif  // METRICS__EPDMS__SUBSCORES__TRAFFIC_LIGHT_COMPLIANCE_HPP_
