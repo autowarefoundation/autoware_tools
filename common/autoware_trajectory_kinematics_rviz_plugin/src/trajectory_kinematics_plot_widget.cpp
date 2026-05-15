@@ -152,7 +152,7 @@ TrajectoryKinematicsPlotWidget::TrajectoryKinematicsPlotWidget(QWidget * parent)
   layout->setContentsMargins(0, 0, 0, 0);
   chart_view_ = new TrajectoryKinematicsChartView(this);
   chart_view_->setRenderHint(QPainter::Antialiasing);
-  chart_view_->setMinimumHeight(220);
+  chart_view_->setMinimumHeight(250);
   chart_view_->setMouseTracking(true);
   layout->addWidget(chart_view_);
   setLayout(layout);

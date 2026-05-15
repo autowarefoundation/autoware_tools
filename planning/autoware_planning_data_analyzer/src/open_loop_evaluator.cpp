@@ -1804,6 +1804,58 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
   j["aggregate/synthetic_epdms/human_filtered_unavailable_count"] =
     synthetic_epdms_metrics_list_.size() - synthetic_filtered_available_count;
 
+  // ----- override_only aggregation -----
+  // Re-aggregate per-horizon ADE/FDE (plus the rest of the horizon metrics for symmetry)
+  // using only trajectory samples whose timestamp falls inside an override window derived
+  // from AUTONOMOUS->MANUAL transitions in /vehicle/status/control_mode.
+  const auto override_windows =
+    utils::compute_override_windows(control_mode_events_, override_window_sec_);
+  j["override_only/num_windows"] = override_windows.size();
+
+  for (const auto & tag : all_keys) {
+    std::vector<double> ade_vals, fde_vals, ahe_vals, fhe_vals;
+    std::vector<double> avg_lat_vals, max_lat_vals, avg_lon_vals, max_lon_vals;
+    std::vector<double> min_ttc_vals;
+    for (const auto & m : metrics_list_) {
+      if (!utils::is_within_any_window(m.trajectory_timestamp, override_windows)) continue;
+      const auto it = std::find_if(
+        m.horizon_results.begin(), m.horizon_results.end(),
+        [&tag](const auto & p) { return p.first == tag; });
+      if (it == m.horizon_results.end()) continue;
+      const auto & hm = it->second;
+      ade_vals.push_back(hm.ade);
+      fde_vals.push_back(hm.fde);
+      ahe_vals.push_back(hm.ahe);
+      fhe_vals.push_back(hm.fhe);
+      avg_lat_vals.push_back(hm.average_lateral_deviation);
+      max_lat_vals.push_back(hm.max_lateral_deviation);
+      avg_lon_vals.push_back(hm.average_longitudinal_deviation);
+      max_lon_vals.push_back(hm.max_longitudinal_deviation);
+      min_ttc_vals.push_back(hm.min_ttc);
+    }
+
+    const std::string prefix = "override_only/" + tag;
+    j[prefix + "/count"] = ade_vals.size();
+    emit_metric(prefix, "ade", "Override-only ADE within " + tag + " horizon [m]", ade_vals);
+    emit_metric(prefix, "fde", "Override-only FDE at " + tag + " horizon [m]", fde_vals);
+    emit_metric(prefix, "ahe", "Override-only AHE within " + tag + " horizon [rad]", ahe_vals);
+    emit_metric(prefix, "fhe", "Override-only FHE at " + tag + " horizon [rad]", fhe_vals);
+    emit_metric(
+      prefix, "average_lateral_deviation",
+      "Override-only average lateral deviation within " + tag + " horizon [m]", avg_lat_vals);
+    emit_metric(
+      prefix, "max_lateral_deviation",
+      "Override-only max lateral deviation within " + tag + " horizon [m]", max_lat_vals);
+    emit_metric(
+      prefix, "average_longitudinal_deviation",
+      "Override-only average longitudinal deviation within " + tag + " horizon [m]", avg_lon_vals);
+    emit_metric(
+      prefix, "max_longitudinal_deviation",
+      "Override-only max longitudinal deviation within " + tag + " horizon [m]", max_lon_vals);
+    emit_metric(
+      prefix, "min_ttc", "Override-only minimum TTC within " + tag + " horizon [s]", min_ttc_vals);
+  }
+
   return j;
 }
 
@@ -2105,6 +2157,9 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
 
   // Use base class method to process bag and get synchronized data
   auto bag_result = process_bag_common(bag_path, evaluation_bag_writer, topic_names);
+
+  // Pass the control_mode timeline to enable override-only aggregation in the summary.
+  set_control_mode_events(std::move(bag_result.control_mode_events));
 
   if (gt_source_mode_ == GTSourceMode::GT_TRAJECTORY) {
     if (!bag_result.gt_trajectory_topic_seen || bag_result.gt_trajectory_message_count == 0) {

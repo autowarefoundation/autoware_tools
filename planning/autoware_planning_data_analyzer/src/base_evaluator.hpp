@@ -17,6 +17,7 @@
 
 #include "bag_handler.hpp"
 #include "metrics/trajectory_metrics.hpp"
+#include "utils/override_windows.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <nlohmann/json.hpp>
@@ -150,6 +151,10 @@ protected:
     tf2_msgs::msg::TFMessage tf_static_msgs;
     bool gt_trajectory_topic_seen = false;
     size_t gt_trajectory_message_count = 0;
+    // Timeline of /vehicle/status/control_mode samples sorted by stamp,
+    // captured as (timestamp_ns, mode) tuples. Used to detect override
+    // windows (AUTONOMOUS -> MANUAL transitions).
+    std::vector<utils::ControlModeEvent> control_mode_events;
   };
 
   BagProcessingResult process_bag_common(

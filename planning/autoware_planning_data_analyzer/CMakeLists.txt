@@ -27,6 +27,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/metrics/trajectory_metrics.cpp
   src/utils/bag_utils.cpp
   src/utils/json_utils.cpp
+  src/utils/override_windows.cpp
   src/utils/path_utils.cpp
   src/autoware_planning_data_analyzer_node.cpp
 )
@@ -56,6 +57,7 @@ if(BUILD_TESTING)
     test/metrics/test_ttc_within_bound.cpp
     test/metrics/test_no_at_fault_collision.cpp
     test/metrics/test_traffic_light_compliance.cpp
+    test/utils/test_override_windows.cpp
   )
 
   target_include_directories(test_metrics
