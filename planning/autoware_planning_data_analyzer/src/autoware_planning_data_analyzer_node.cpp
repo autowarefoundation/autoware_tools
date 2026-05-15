@@ -121,6 +121,9 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   gt_trajectory_topic_name_ =
     get_or_declare_parameter<std::string>(*this, "open_loop.gt_trajectory_topic");
   gt_sync_tolerance_ms_ = get_or_declare_parameter<double>(*this, "open_loop.gt_sync_tolerance_ms");
+  enabled_metric_names_ =
+    get_or_declare_parameter<std::vector<std::string>>(*this, "open_loop.enabled_metrics");
+  debug_topics_enabled_ = get_or_declare_parameter<bool>(*this, "open_loop.debug_topics_enabled");
   history_comfort_params_.finite_difference_epsilon =
     get_or_declare_parameter<double>(*this, "open_loop.hc.finite_difference_epsilon");
   history_comfort_params_.max_longitudinal_acceleration =
@@ -498,6 +501,8 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
         lane_keeping_params_, metrics::DrivingDirectionComplianceParameters{}, vehicle_info_);
       evaluator.set_json_output_dir(output_dir_path.string());
       evaluator.set_metric_variant(open_loop_metric_variant);
+      evaluator.set_enabled_metrics(enabled_metric_names_);
+      evaluator.set_debug_topics_enabled(debug_topics_enabled_);
       evaluator.set_evaluation_horizons(evaluation_horizons);
       evaluator.set_extended_comfort_parameters(extended_comfort_parameters_);
       evaluator.set_override_window_sec(override_window_sec_);

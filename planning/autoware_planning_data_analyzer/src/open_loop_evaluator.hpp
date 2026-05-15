@@ -141,6 +141,21 @@ struct OpenLoopEvaluationSummary
   double total_evaluation_duration;
 };
 
+struct EnabledOpenLoopMetrics
+{
+  bool trajectory_errors{true};
+  bool history_comfort{true};
+  bool extended_comfort{true};
+  bool time_to_collision_within_bound{true};
+  bool lane_keeping{true};
+  bool ego_progress{true};
+  bool drivable_area_compliance{true};
+  bool no_at_fault_collision{true};
+  bool driving_direction_compliance{true};
+  bool traffic_light_compliance{true};
+  bool synthetic_epdms{true};
+};
+
 class OpenLoopEvaluator : public BaseEvaluator
 {
 public:
@@ -181,6 +196,10 @@ public:
   std::vector<OpenLoopTrajectoryMetrics> get_metrics() const { return metrics_list_; }
 
   void set_metric_variant(const std::string & metric_variant) { metric_variant_ = metric_variant; }
+
+  void set_enabled_metrics(const std::vector<std::string> & enabled_metric_names);
+
+  void set_debug_topics_enabled(bool enabled) { debug_topics_enabled_ = enabled; }
 
   void set_evaluation_horizons(const std::vector<double> & horizons)
   {
@@ -350,6 +369,7 @@ private:
     const rclcpp::Time & normalized_timestamp) const;
 
   std::string metric_topic(const std::string & metric_name) const;
+  std::string epdms_metric_topic(const std::string & metric_name) const;
   std::string trajectory_metric_topic(const std::string & metric_name) const;
   std::string compared_trajectory_topic() const;
   std::string dlr_result_topic() const;
@@ -370,6 +390,7 @@ private:
   metrics::ExtendedComfortParameters extended_comfort_parameters_{};
   metrics::LaneKeepingParameters lane_keeping_params_;
   metrics::DrivingDirectionComplianceParameters driving_direction_params_;
+  EnabledOpenLoopMetrics enabled_metrics_;
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   OpenLoopEvaluationSummary summary_;
   std::string metric_variant_;
@@ -378,6 +399,7 @@ private:
   std::vector<double> evaluation_horizons_;
   double override_window_sec_{0.0};
   std::vector<utils::ControlModeEvent> control_mode_events_;
+  bool debug_topics_enabled_{false};
 };
 
 }  // namespace autoware::planning_data_analyzer
