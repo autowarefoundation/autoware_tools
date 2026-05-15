@@ -18,6 +18,9 @@
 
 #include <lanelet2_core/utility/Utilities.h>
 
+#include <unordered_set>
+#include <vector>
+
 namespace autoware::planning_data_analyzer::metrics
 {
 
