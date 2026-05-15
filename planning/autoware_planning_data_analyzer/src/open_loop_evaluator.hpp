@@ -23,6 +23,7 @@
 #include "metrics/epdms/subscores/extended_comfort.hpp"
 #include "metrics/epdms/subscores/lane_keeping.hpp"
 #include "metrics/trajectory_metrics.hpp"
+#include "utils/override_windows.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
@@ -189,6 +190,21 @@ public:
   void set_extended_comfort_parameters(const metrics::ExtendedComfortParameters & parameters)
   {
     extended_comfort_parameters_ = parameters;
+  }
+
+  /**
+   * @brief Set the override window duration [s] applied after AUTONOMOUS->MANUAL transitions.
+   *
+   * A non-positive value disables override-only aggregation.
+   */
+  void set_override_window_sec(double window_sec) { override_window_sec_ = window_sec; }
+
+  /**
+   * @brief Provide the timeline of ControlModeReport samples used to derive override windows.
+   */
+  void set_control_mode_events(std::vector<utils::ControlModeEvent> events)
+  {
+    control_mode_events_ = std::move(events);
   }
 
   nlohmann::json get_summary_as_json() const override;
@@ -360,6 +376,8 @@ private:
   GTSourceMode gt_source_mode_;
   double gt_sync_tolerance_ms_;
   std::vector<double> evaluation_horizons_;
+  double override_window_sec_{0.0};
+  std::vector<utils::ControlModeEvent> control_mode_events_;
 };
 
 }  // namespace autoware::planning_data_analyzer
