@@ -14,6 +14,7 @@
 
 #include "no_at_fault_collision.hpp"
 
+#include "metrics/geometry/ego_footprint.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 
 #include <autoware/object_recognition_utils/object_classification.hpp>
