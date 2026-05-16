@@ -18,14 +18,15 @@
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
 
 #include <autoware_perception_msgs/msg/object_classification.hpp>
-#include <autoware_perception_msgs/msg/predicted_object.hpp>
-#include <autoware_perception_msgs/msg/predicted_objects.hpp>
-#include <autoware_perception_msgs/msg/predicted_path.hpp>
 #include <autoware_perception_msgs/msg/shape.hpp>
+#include <autoware_perception_msgs/msg/tracked_object.hpp>
+#include <autoware_perception_msgs/msg/tracked_objects.hpp>
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 
 #include <gtest/gtest.h>
 
+#include <array>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -65,6 +66,7 @@ geometry_msgs::msg::Pose make_pose(const double x, const double y, const double 
 autoware_planning_msgs::msg::Trajectory make_straight_trajectory(const double speed_mps)
 {
   autoware_planning_msgs::msg::Trajectory trajectory;
+  trajectory.header.stamp.sec = 10;
   trajectory.points.resize(2);
   trajectory.points[0].pose = make_pose(0.0, 0.0);
   trajectory.points[0].longitudinal_velocity_mps = speed_mps;
@@ -75,11 +77,12 @@ autoware_planning_msgs::msg::Trajectory make_straight_trajectory(const double sp
   return trajectory;
 }
 
-autoware_perception_msgs::msg::PredictedObject make_object(
-  const double x, const double y, const std::uint8_t label)
+autoware_perception_msgs::msg::TrackedObject make_object(
+  const double x, const double y, const std::uint8_t label, const std::array<uint8_t, 16> & uuid)
 {
-  autoware_perception_msgs::msg::PredictedObject object;
-  object.kinematics.initial_pose_with_covariance.pose = make_pose(x, y);
+  autoware_perception_msgs::msg::TrackedObject object;
+  object.object_id.uuid = uuid;
+  object.kinematics.pose_with_covariance.pose = make_pose(x, y);
   object.shape.type = autoware_perception_msgs::msg::Shape::BOUNDING_BOX;
   object.shape.dimensions.x = 2.0;
   object.shape.dimensions.y = 1.0;
@@ -89,15 +92,23 @@ autoware_perception_msgs::msg::PredictedObject make_object(
   classification.label = label;
   classification.probability = 1.0f;
   object.classification.push_back(classification);
-
-  autoware_perception_msgs::msg::PredictedPath path;
-  path.time_step = rclcpp::Duration::from_seconds(0.5);
-  path.confidence = 1.0;
-  path.path.push_back(make_pose(x, y));
-  path.path.push_back(make_pose(x, y));
-  path.path.push_back(make_pose(x, y));
-  object.kinematics.predicted_paths.push_back(path);
   return object;
+}
+
+TimedTrackedObjects make_timed_objects(
+  const rclcpp::Time & stamp,
+  const std::vector<autoware_perception_msgs::msg::TrackedObject> & objects)
+{
+  auto tracked_objects = std::make_shared<TrackedObjects>();
+  tracked_objects->header.stamp = stamp;
+  tracked_objects->objects = objects;
+  return TimedTrackedObjects{stamp, tracked_objects};
+}
+
+std::vector<TimedTrackedObjects> make_future_objects(
+  const std::vector<autoware_perception_msgs::msg::TrackedObject> & objects)
+{
+  return {make_timed_objects(rclcpp::Time(10, 0, RCL_ROS_TIME), objects)};
 }
 
 }  // namespace
@@ -105,8 +116,10 @@ autoware_perception_msgs::msg::PredictedObject make_object(
 TEST(NoAtFaultCollision, EmptyObjectsPasses)
 {
   const auto trajectory = make_straight_trajectory(5.0);
-  auto objects = std::make_shared<PredictedObjects>();
-  const auto result = calculate_no_at_fault_collision(trajectory, objects, make_vehicle_info());
+  const std::vector<TimedTrackedObjects> future_objects{
+    make_timed_objects(rclcpp::Time(10, 0, RCL_ROS_TIME), {})};
+  const auto result =
+    calculate_no_at_fault_collision(trajectory, future_objects, make_vehicle_info());
 
   EXPECT_TRUE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 1.0);
@@ -116,11 +129,12 @@ TEST(NoAtFaultCollision, EmptyObjectsPasses)
 TEST(NoAtFaultCollision, FrontCollisionWithAgentFails)
 {
   const auto trajectory = make_straight_trajectory(5.0);
-  auto objects = std::make_shared<PredictedObjects>();
-  objects->objects.push_back(
-    make_object(4.0, 0.0, autoware_perception_msgs::msg::ObjectClassification::CAR));
+  const auto future_objects = make_future_objects({make_object(
+    4.0, 0.0, autoware_perception_msgs::msg::ObjectClassification::CAR,
+    std::array<uint8_t, 16>{1})});
 
-  const auto result = calculate_no_at_fault_collision(trajectory, objects, make_vehicle_info());
+  const auto result =
+    calculate_no_at_fault_collision(trajectory, future_objects, make_vehicle_info());
 
   EXPECT_TRUE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 0.0);
@@ -131,11 +145,12 @@ TEST(NoAtFaultCollision, FrontCollisionWithAgentFails)
 TEST(NoAtFaultCollision, FrontCollisionWithNonAgentGetsHalfPenalty)
 {
   const auto trajectory = make_straight_trajectory(5.0);
-  auto objects = std::make_shared<PredictedObjects>();
-  objects->objects.push_back(
-    make_object(4.0, 0.0, autoware_perception_msgs::msg::ObjectClassification::HAZARD));
+  const auto future_objects = make_future_objects({make_object(
+    4.0, 0.0, autoware_perception_msgs::msg::ObjectClassification::HAZARD,
+    std::array<uint8_t, 16>{2})});
 
-  const auto result = calculate_no_at_fault_collision(trajectory, objects, make_vehicle_info());
+  const auto result =
+    calculate_no_at_fault_collision(trajectory, future_objects, make_vehicle_info());
 
   EXPECT_TRUE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 0.5);
@@ -145,52 +160,50 @@ TEST(NoAtFaultCollision, FrontCollisionWithNonAgentGetsHalfPenalty)
 TEST(NoAtFaultCollision, RearCollisionDoesNotFail)
 {
   const auto trajectory = make_straight_trajectory(5.0);
-  auto objects = std::make_shared<PredictedObjects>();
-  objects->objects.push_back(
-    make_object(-3.0, 0.0, autoware_perception_msgs::msg::ObjectClassification::CAR));
+  const auto future_objects = make_future_objects({make_object(
+    -3.0, 0.0, autoware_perception_msgs::msg::ObjectClassification::CAR,
+    std::array<uint8_t, 16>{3})});
 
-  const auto result = calculate_no_at_fault_collision(trajectory, objects, make_vehicle_info());
+  const auto result =
+    calculate_no_at_fault_collision(trajectory, future_objects, make_vehicle_info());
 
   EXPECT_TRUE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 1.0);
   EXPECT_EQ(result.reason, "available");
 }
 
-TEST(NoAtFaultCollision, UsesHighestConfidencePredictedPath)
+TEST(NoAtFaultCollision, UsesLoggedFutureObjectAtMatchingTime)
 {
   const auto trajectory = make_straight_trajectory(5.0);
-  auto objects = std::make_shared<PredictedObjects>();
+  const auto future_objects = std::vector<TimedTrackedObjects>{
+    make_timed_objects(
+      rclcpp::Time(10, 0, RCL_ROS_TIME),
+      {make_object(
+        20.0, 0.0, autoware_perception_msgs::msg::ObjectClassification::CAR,
+        std::array<uint8_t, 16>{4})}),
+    make_timed_objects(
+      rclcpp::Time(11, 0, RCL_ROS_TIME),
+      {make_object(
+        8.8, 0.0, autoware_perception_msgs::msg::ObjectClassification::CAR,
+        std::array<uint8_t, 16>{4})})};
 
-  autoware_perception_msgs::msg::PredictedObject object;
-  object.kinematics.initial_pose_with_covariance.pose = make_pose(20.0, 0.0);
-  object.shape.type = autoware_perception_msgs::msg::Shape::BOUNDING_BOX;
-  object.shape.dimensions.x = 2.0;
-  object.shape.dimensions.y = 1.0;
-  object.shape.dimensions.z = 1.5;
+  const auto result =
+    calculate_no_at_fault_collision(trajectory, future_objects, make_vehicle_info());
 
-  autoware_perception_msgs::msg::ObjectClassification classification;
-  classification.label = autoware_perception_msgs::msg::ObjectClassification::CAR;
-  classification.probability = 1.0f;
-  object.classification.push_back(classification);
+  EXPECT_TRUE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 0.0);
+  EXPECT_EQ(result.reason, "at_fault_collision_with_agent");
+}
 
-  autoware_perception_msgs::msg::PredictedPath colliding_path;
-  colliding_path.time_step = rclcpp::Duration::from_seconds(0.5);
-  colliding_path.confidence = 0.1;
-  colliding_path.path.push_back(make_pose(4.0, 0.0));
-  colliding_path.path.push_back(make_pose(4.0, 0.0));
-  colliding_path.path.push_back(make_pose(4.0, 0.0));
+TEST(NoAtFaultCollision, UnknownObjectsAreIgnored)
+{
+  const auto trajectory = make_straight_trajectory(5.0);
+  const auto future_objects = make_future_objects({make_object(
+    4.0, 0.0, autoware_perception_msgs::msg::ObjectClassification::UNKNOWN,
+    std::array<uint8_t, 16>{5})});
 
-  autoware_perception_msgs::msg::PredictedPath safe_path;
-  safe_path.time_step = rclcpp::Duration::from_seconds(0.5);
-  safe_path.confidence = 0.9;
-  safe_path.path.push_back(make_pose(20.0, 0.0));
-  safe_path.path.push_back(make_pose(20.0, 0.0));
-  safe_path.path.push_back(make_pose(20.0, 0.0));
-
-  object.kinematics.predicted_paths = {colliding_path, safe_path};
-  objects->objects.push_back(object);
-
-  const auto result = calculate_no_at_fault_collision(trajectory, objects, make_vehicle_info());
+  const auto result =
+    calculate_no_at_fault_collision(trajectory, future_objects, make_vehicle_info());
 
   EXPECT_TRUE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 1.0);

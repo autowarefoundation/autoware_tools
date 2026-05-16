@@ -145,6 +145,75 @@ std::shared_ptr<SynchronizedData> clone_with_trajectory(
   return cloned;
 }
 
+double point_time_s(const autoware_planning_msgs::msg::TrajectoryPoint & point)
+{
+  return rclcpp::Duration(point.time_from_start).seconds();
+}
+
+double lerp(const double lhs, const double rhs, const double ratio)
+{
+  return lhs + (rhs - lhs) * ratio;
+}
+
+autoware_planning_msgs::msg::TrajectoryPoint interpolate_trajectory_point(
+  const autoware_planning_msgs::msg::TrajectoryPoint & previous,
+  const autoware_planning_msgs::msg::TrajectoryPoint & next, const double horizon_s)
+{
+  const double previous_t = point_time_s(previous);
+  const double next_t = point_time_s(next);
+  const double ratio = next_t > previous_t
+                         ? std::clamp((horizon_s - previous_t) / (next_t - previous_t), 0.0, 1.0)
+                         : 0.0;
+
+  auto interpolated = previous;
+  interpolated.pose =
+    autoware_utils_geometry::calc_interpolated_pose(previous.pose, next.pose, ratio);
+  interpolated.longitudinal_velocity_mps =
+    lerp(previous.longitudinal_velocity_mps, next.longitudinal_velocity_mps, ratio);
+  interpolated.lateral_velocity_mps =
+    lerp(previous.lateral_velocity_mps, next.lateral_velocity_mps, ratio);
+  interpolated.acceleration_mps2 = lerp(previous.acceleration_mps2, next.acceleration_mps2, ratio);
+  interpolated.heading_rate_rps = lerp(previous.heading_rate_rps, next.heading_rate_rps, ratio);
+  interpolated.front_wheel_angle_rad =
+    lerp(previous.front_wheel_angle_rad, next.front_wheel_angle_rad, ratio);
+  interpolated.rear_wheel_angle_rad =
+    lerp(previous.rear_wheel_angle_rad, next.rear_wheel_angle_rad, ratio);
+  interpolated.time_from_start = rclcpp::Duration::from_seconds(horizon_s);
+  return interpolated;
+}
+
+autoware_planning_msgs::msg::Trajectory truncate_trajectory_by_horizon(
+  const autoware_planning_msgs::msg::Trajectory & trajectory, const double horizon_s)
+{
+  constexpr double kTimeEpsilon = 1.0e-6;
+  if (horizon_s <= 0.0 || trajectory.points.empty()) {
+    return trajectory;
+  }
+
+  autoware_planning_msgs::msg::Trajectory truncated;
+  truncated.header = trajectory.header;
+  truncated.points.reserve(trajectory.points.size());
+
+  for (const auto & point : trajectory.points) {
+    const double t = point_time_s(point);
+    if (t <= horizon_s + kTimeEpsilon) {
+      truncated.points.push_back(point);
+      continue;
+    }
+
+    if (!truncated.points.empty()) {
+      const double previous_t = point_time_s(truncated.points.back());
+      if (previous_t < horizon_s - kTimeEpsilon) {
+        truncated.points.push_back(
+          interpolate_trajectory_point(truncated.points.back(), point, horizon_s));
+      }
+    }
+    return truncated;
+  }
+
+  return truncated;
+}
+
 metrics::EpdmsMetricSnapshot build_epdms_snapshot(const OpenLoopTrajectoryMetrics & metrics)
 {
   metrics::EpdmsMetricSnapshot snapshot;
@@ -668,10 +737,14 @@ std::vector<OpenLoopEvaluator::EvaluationData> OpenLoopEvaluator::prepare_evalua
       continue;
     }
 
-    const size_t num_pts = data->trajectory->points.size();
+    const auto truncated_trajectory =
+      truncate_trajectory_by_horizon(*data->trajectory, trajectory_evaluation_horizon_s_);
+    const auto truncated_data = clone_with_trajectory(data, truncated_trajectory);
+
+    const size_t num_pts = truncated_data->trajectory->points.size();
     if (num_pts <= 1u) {
       // Include frame in output as failure (no metrics); do not skip.
-      result.push_back({data, autoware_planning_msgs::msg::Trajectory{}});
+      result.push_back({truncated_data, autoware_planning_msgs::msg::Trajectory{}});
       continue;
     }
 
@@ -679,15 +752,17 @@ std::vector<OpenLoopEvaluator::EvaluationData> OpenLoopEvaluator::prepare_evalua
     if (gt_source_mode_ == GTSourceMode::GT_TRAJECTORY) {
       // In gt_trajectory mode, tolerate short startup timing gaps by skipping frames
       // where GT topic is missing/empty, instead of aborting the whole evaluation.
-      if (!data->ground_truth_trajectory_msg || data->ground_truth_trajectory_msg->points.empty()) {
+      if (
+        !truncated_data->ground_truth_trajectory_msg ||
+        truncated_data->ground_truth_trajectory_msg->points.empty()) {
         RCLCPP_WARN(
           logger_,
           "Skipping trajectory at time %f in gt_trajectory mode - GT topic message was "
           "missing or empty.",
-          data->timestamp.seconds());
+          truncated_data->timestamp.seconds());
         continue;
       }
-      ground_truth_opt = generate_ground_truth_trajectory_from_topic(data);
+      ground_truth_opt = generate_ground_truth_trajectory_from_topic(truncated_data);
       if (!ground_truth_opt.has_value()) {
         // For per-trajectory prediction issues (e.g., too few predicted points, invalid timing,
         // out-of-tolerance alignment), skip this frame and continue evaluating others.
@@ -695,22 +770,22 @@ std::vector<OpenLoopEvaluator::EvaluationData> OpenLoopEvaluator::prepare_evalua
           logger_,
           "Skipping trajectory at time %f in gt_trajectory mode - predicted trajectory was "
           "invalid for evaluation (GT topic exists).",
-          data->timestamp.seconds());
+          truncated_data->timestamp.seconds());
         continue;
       }
     } else {
-      ground_truth_opt = generate_ground_truth_trajectory(data, synchronized_data_list);
+      ground_truth_opt = generate_ground_truth_trajectory(truncated_data, synchronized_data_list);
     }
 
     if (!ground_truth_opt.has_value()) {
       RCLCPP_WARN(
         logger_, "Skipping trajectory at time %f - ground truth generation failed",
-        data->timestamp.seconds());
+        truncated_data->timestamp.seconds());
       continue;
     }
 
     // Add valid evaluation data
-    result.push_back({data, ground_truth_opt.value()});
+    result.push_back({truncated_data, ground_truth_opt.value()});
   }
 
   return result;
@@ -2344,6 +2419,36 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
 
   // Pass the control_mode timeline to enable override-only aggregation in the summary.
   set_control_mode_events(std::move(bag_result.control_mode_events));
+  for (auto & sync_data : bag_result.synchronized_data_list) {
+    if (!sync_data || !sync_data->trajectory || bag_result.tracked_object_timeline.empty()) {
+      continue;
+    }
+
+    const auto trajectory_start = rclcpp::Time(sync_data->trajectory->header.stamp);
+    auto trajectory_duration =
+      rclcpp::Duration(sync_data->trajectory->points.back().time_from_start);
+    if (topic_names.trajectory_evaluation_horizon_s > 0.0) {
+      trajectory_duration = std::min(
+        trajectory_duration,
+        rclcpp::Duration::from_seconds(topic_names.trajectory_evaluation_horizon_s));
+    }
+    const auto trajectory_end = trajectory_start + trajectory_duration;
+    constexpr int64_t kObjectTimelineMarginNs = 100'000'000;
+    const int64_t start_ns = trajectory_start.nanoseconds() - kObjectTimelineMarginNs;
+    const int64_t end_ns = trajectory_end.nanoseconds() + kObjectTimelineMarginNs;
+
+    sync_data->future_tracked_objects.reserve(bag_result.tracked_object_timeline.size());
+    for (const auto & timed_objects : bag_result.tracked_object_timeline) {
+      const int64_t stamp_ns = timed_objects.stamp.nanoseconds();
+      if (stamp_ns < start_ns) {
+        continue;
+      }
+      if (stamp_ns > end_ns) {
+        break;
+      }
+      sync_data->future_tracked_objects.push_back(timed_objects);
+    }
+  }
 
   if (gt_source_mode_ == GTSourceMode::GT_TRAJECTORY) {
     if (!bag_result.gt_trajectory_topic_seen || bag_result.gt_trajectory_message_count == 0) {

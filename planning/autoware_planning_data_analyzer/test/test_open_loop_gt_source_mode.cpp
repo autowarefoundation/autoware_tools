@@ -322,7 +322,7 @@ TEST_F(OpenLoopGTSourceModeTest, MissingInputsUnavailableReasonsAreReported)
     "unavailable_no_route_handler");
   EXPECT_EQ(
     full_json["trajectories"][0]["no_at_fault_collision_reason"].get<std::string>(),
-    "unavailable_no_objects_message");
+    "unavailable_no_future_objects");
 }
 
 TEST_F(OpenLoopGTSourceModeTest, ExtendedComfortAvailabilityIsReportedAcrossConsecutivePlans)

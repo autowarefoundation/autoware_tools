@@ -26,7 +26,6 @@
 #include <autoware/lanelet2_utils/geometry.hpp>
 #include <autoware/lanelet2_utils/intersection.hpp>
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
-#include <autoware_lanelet2_extension/utility/utilities.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
 #include <tf2/LinearMath/Vector3.hpp>
 
@@ -256,8 +255,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   metrics.time_to_collision_within_bound_available = ttc_within_bound.available;
   metrics.time_to_collision_within_bound_reason = ttc_within_bound.reason;
   metrics.time_to_collision_infraction_time_s = ttc_within_bound.infraction_time_s;
-  const auto no_at_fault_collision =
-    calculate_no_at_fault_collision(trajectory, sync_data->objects, vehicle_info, route_handler);
+  const auto no_at_fault_collision = calculate_no_at_fault_collision(
+    trajectory, sync_data->future_tracked_objects, vehicle_info, route_handler);
   metrics.no_at_fault_collision = no_at_fault_collision.score;
   metrics.no_at_fault_collision_available = no_at_fault_collision.available;
   metrics.no_at_fault_collision_reason = no_at_fault_collision.reason;

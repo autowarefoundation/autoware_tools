@@ -201,6 +201,11 @@ public:
 
   void set_debug_topics_enabled(bool enabled) { debug_topics_enabled_ = enabled; }
 
+  void set_trajectory_evaluation_horizon(double horizon_s)
+  {
+    trajectory_evaluation_horizon_s_ = horizon_s;
+  }
+
   void set_evaluation_horizons(const std::vector<double> & horizons)
   {
     evaluation_horizons_ = horizons;
@@ -398,6 +403,7 @@ private:
   std::string metric_variant_;
   GTSourceMode gt_source_mode_;
   double gt_sync_tolerance_ms_;
+  double trajectory_evaluation_horizon_s_{0.0};
   std::vector<double> evaluation_horizons_;
   double override_window_sec_{0.0};
   std::vector<utils::ControlModeEvent> control_mode_events_;
