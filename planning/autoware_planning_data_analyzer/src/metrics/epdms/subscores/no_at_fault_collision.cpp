@@ -24,6 +24,7 @@
 #include <lanelet2_core/geometry/Lanelet.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <memory>
@@ -54,10 +55,10 @@ enum class CollisionType {
   ActiveLateral,
 };
 
-struct EgoAreaFlags
+struct AtFaultCollision
 {
-  bool multiple_lanes{false};
-  bool non_drivable_area{false};
+  double score{1.0};
+  std::string reason{"available"};
 };
 
 double ego_speed(const autoware_planning_msgs::msg::TrajectoryPoint & point)
@@ -112,49 +113,15 @@ CollisionType classify_collision(
   return CollisionType::ActiveLateral;
 }
 
-bool footprint_intersects_lanelet(
-  const Polygon2d & footprint, const lanelet::ConstLanelet & lanelet)
-{
-  return !bg::disjoint(footprint, lanelet.polygon2d().basicPolygon());
-}
-
-std::optional<EgoAreaFlags> compute_ego_area_flags(
-  const geometry_msgs::msg::Pose & pose, const Polygon2d & ego_polygon,
-  const std::shared_ptr<RouteHandler> & route_handler)
-{
-  if (!route_handler || !route_handler->isHandlerReady()) {
-    return std::nullopt;
-  }
-
-  std::size_t intersecting_route_lanelets = 0;
-  for (const auto & lanelet : route_handler->getRoadLaneletsAtPose(pose)) {
-    if (!route_handler->isRouteLanelet(lanelet)) {
-      continue;
-    }
-    if (footprint_intersects_lanelet(ego_polygon, lanelet)) {
-      ++intersecting_route_lanelets;
-    }
-  }
-
-  EgoAreaFlags flags;
-  flags.non_drivable_area = intersecting_route_lanelets == 0U;
-  flags.multiple_lanes = intersecting_route_lanelets > 1U;
-  return flags;
-}
-
-NoAtFaultCollisionResult make_at_fault_result(
-  const InterpolatedLoggedObject & object, const double time_s, const bool lateral_collision)
+AtFaultCollision make_at_fault_collision(
+  const InterpolatedLoggedObject & object, const bool lateral_collision)
 {
   const bool agent = is_agent_classification(object.classification);
-  NoAtFaultCollisionResult result;
-  result.available = true;
-  result.score = agent ? 0.0 : 0.5;
-  result.infraction_time_s = time_s;
-  result.reason = lateral_collision ? (agent ? "at_fault_lateral_collision_with_agent"
-                                             : "at_fault_lateral_collision_with_non_agent")
-                                    : (agent ? "at_fault_collision_with_agent"
-                                             : "at_fault_collision_with_non_agent");
-  return result;
+  return AtFaultCollision{
+    agent ? 0.0 : 0.5, lateral_collision ? (agent ? "at_fault_lateral_collision_with_agent"
+                                                  : "at_fault_lateral_collision_with_non_agent")
+                                         : (agent ? "at_fault_collision_with_agent"
+                                                  : "at_fault_collision_with_non_agent")};
 }
 
 }  // namespace
@@ -164,6 +131,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const std::vector<TimedTrackedObjects> & future_objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<RouteHandler> & route_handler,
+  const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations,
   const std::vector<LoggedObjectTrack> * object_tracks)
 {
   NoAtFaultCollisionResult result;
@@ -172,7 +140,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
     result.reason = "unavailable_empty_trajectory";
     return result;
   }
-  if (future_objects.empty() && !object_tracks) {
+  if (future_objects.empty()) {
     result.reason = "unavailable_no_future_objects";
     return result;
   }
@@ -192,14 +160,25 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
     return result;
   }
 
-  const auto local_footprint = vehicle_info.createFootprint(0.0);
+  const auto local_evaluations =
+    footprint_evaluations ? std::vector<TrajectoryFootprintEvaluation>{}
+                          : evaluate_trajectory_footprints(trajectory, vehicle_info, route_handler);
+  const auto & evaluations = footprint_evaluations ? *footprint_evaluations : local_evaluations;
+  if (evaluations.size() != trajectory.points.size()) {
+    result.available = false;
+    result.reason = "unavailable_invalid_footprint";
+    result.score = 0.0;
+    return result;
+  }
+
   std::set<std::array<uint8_t, 16>> collided_object_ids;
   const auto trajectory_start_time = rclcpp::Time(trajectory.header.stamp);
 
-  for (const auto & point : trajectory.points) {
+  for (size_t index = 0; index < trajectory.points.size(); ++index) {
+    const auto & point = trajectory.points.at(index);
     const auto query_time = trajectory_start_time + rclcpp::Duration(point.time_from_start);
     const auto query_time_s = rclcpp::Duration(point.time_from_start).seconds();
-    const auto ego_polygon = create_pose_footprint(point.pose, local_footprint);
+    const auto & ego_polygon = evaluations.at(index).ego_polygon;
 
     for (const auto & object_track : tracks) {
       if (
@@ -225,12 +204,18 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
       const bool lateral_collision = collision_type == CollisionType::ActiveLateral;
 
       if (front_or_stopped_track) {
-        return make_at_fault_result(*object_state, query_time_s, false);
+        const auto at_fault_collision = make_at_fault_collision(*object_state, false);
+        if (at_fault_collision.score < result.score) {
+          result.score = at_fault_collision.score;
+          result.reason = at_fault_collision.reason;
+          result.infraction_time_s = query_time_s;
+        }
+        continue;
       }
 
       if (lateral_collision) {
-        const auto ego_area_flags = compute_ego_area_flags(point.pose, ego_polygon, route_handler);
-        if (!ego_area_flags.has_value()) {
+        const auto & ego_area_evaluation = evaluations.at(index).ego_area_evaluation;
+        if (!ego_area_evaluation.has_value()) {
           result.available = false;
           result.score = 0.0;
           result.reason = !route_handler
@@ -239,9 +224,17 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
           return result;
         }
 
-        if (ego_area_flags->multiple_lanes || ego_area_flags->non_drivable_area) {
-          return make_at_fault_result(*object_state, query_time_s, true);
+        if (
+          ego_area_evaluation->flags.multiple_lanes ||
+          ego_area_evaluation->flags.non_drivable_area) {
+          const auto at_fault_collision = make_at_fault_collision(*object_state, true);
+          if (at_fault_collision.score < result.score) {
+            result.score = at_fault_collision.score;
+            result.reason = at_fault_collision.reason;
+            result.infraction_time_s = query_time_s;
+          }
         }
+        continue;
       }
     }
   }

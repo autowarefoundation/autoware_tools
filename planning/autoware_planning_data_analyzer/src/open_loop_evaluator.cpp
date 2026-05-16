@@ -214,6 +214,43 @@ autoware_planning_msgs::msg::Trajectory truncate_trajectory_by_horizon(
   return truncated;
 }
 
+std::vector<TimedTrackedObjects> get_future_objects_for_trajectory(
+  const autoware_planning_msgs::msg::Trajectory & trajectory,
+  const std::vector<TimedTrackedObjects> & object_timeline, const double horizon_s)
+{
+  std::vector<TimedTrackedObjects> future_objects;
+  if (trajectory.points.empty() || object_timeline.empty()) {
+    return future_objects;
+  }
+
+  const auto trajectory_start_ns = rclcpp::Time(trajectory.header.stamp).nanoseconds();
+  auto trajectory_horizon_ns =
+    rclcpp::Duration(trajectory.points.back().time_from_start).nanoseconds();
+  if (horizon_s > 0.0) {
+    trajectory_horizon_ns =
+      std::min(trajectory_horizon_ns, rclcpp::Duration::from_seconds(horizon_s).nanoseconds());
+  }
+
+  constexpr rcutils_time_point_value_t kFutureObjectRangeMarginNs =
+    static_cast<rcutils_time_point_value_t>(200'000'000);
+  const auto range_end_ns =
+    trajectory_start_ns + trajectory_horizon_ns + kFutureObjectRangeMarginNs;
+
+  const auto first = std::lower_bound(
+    object_timeline.begin(), object_timeline.end(), trajectory_start_ns,
+    [](const TimedTrackedObjects & timed_objects, const rcutils_time_point_value_t stamp_ns) {
+      return timed_objects.stamp.nanoseconds() < stamp_ns;
+    });
+
+  for (auto itr = first; itr != object_timeline.end(); ++itr) {
+    if (itr->stamp.nanoseconds() > range_end_ns) {
+      break;
+    }
+    future_objects.push_back(*itr);
+  }
+  return future_objects;
+}
+
 metrics::EpdmsMetricSnapshot build_epdms_snapshot(const OpenLoopTrajectoryMetrics & metrics)
 {
   metrics::EpdmsMetricSnapshot snapshot;
@@ -528,9 +565,15 @@ void OpenLoopEvaluator::evaluate(
 
       try {
         const auto & eval_data = evaluation_data_list[i];
+        const auto future_objects =
+          eval_data.synchronized_data && eval_data.synchronized_data->trajectory
+            ? get_future_objects_for_trajectory(
+                *eval_data.synchronized_data->trajectory, object_timeline_,
+                trajectory_evaluation_horizon_s_)
+            : std::vector<TimedTrackedObjects>{};
         auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
           eval_data.synchronized_data, route_handler_, history_comfort_params_,
-          lane_keeping_params_, driving_direction_params_, vehicle_info_);
+          lane_keeping_params_, driving_direction_params_, vehicle_info_, future_objects);
         auto metrics = evaluate_trajectory(eval_data);
         metrics.history_comfort = trajectory_metrics.history_comfort;
         metrics.time_to_collision_within_bound = trajectory_metrics.time_to_collision_within_bound;
@@ -2416,6 +2459,7 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
 
   // Use base class method to process bag and get synchronized data
   auto bag_result = process_bag_common(bag_path, evaluation_bag_writer, topic_names);
+  object_timeline_ = bag_result.tracked_object_timeline;
 
   // Pass the control_mode timeline to enable override-only aggregation in the summary.
   set_control_mode_events(std::move(bag_result.control_mode_events));
@@ -2433,20 +2477,23 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
         rclcpp::Duration::from_seconds(topic_names.trajectory_evaluation_horizon_s));
     }
     const auto trajectory_end = trajectory_start + trajectory_duration;
-    constexpr int64_t kObjectTimelineMarginNs = 100'000'000;
-    const int64_t start_ns = trajectory_start.nanoseconds() - kObjectTimelineMarginNs;
+    constexpr int64_t kObjectTimelineMarginNs = 200'000'000;
+    const int64_t start_ns = trajectory_start.nanoseconds();
     const int64_t end_ns = trajectory_end.nanoseconds() + kObjectTimelineMarginNs;
 
-    sync_data->future_tracked_objects.reserve(bag_result.tracked_object_timeline.size());
-    for (const auto & timed_objects : bag_result.tracked_object_timeline) {
-      const int64_t stamp_ns = timed_objects.stamp.nanoseconds();
-      if (stamp_ns < start_ns) {
-        continue;
-      }
-      if (stamp_ns > end_ns) {
+    const auto first = std::lower_bound(
+      bag_result.tracked_object_timeline.begin(), bag_result.tracked_object_timeline.end(),
+      start_ns, [](const TimedTrackedObjects & timed_objects, const int64_t stamp_ns) {
+        return timed_objects.stamp.nanoseconds() < stamp_ns;
+      });
+
+    sync_data->future_tracked_objects.reserve(
+      std::distance(first, bag_result.tracked_object_timeline.end()));
+    for (auto itr = first; itr != bag_result.tracked_object_timeline.end(); ++itr) {
+      if (itr->stamp.nanoseconds() > end_ns) {
         break;
       }
-      sync_data->future_tracked_objects.push_back(timed_objects);
+      sync_data->future_tracked_objects.push_back(*itr);
     }
   }
 

@@ -44,7 +44,20 @@ double forward_offset_in_ego_frame(
 bool is_agent_behind(
   const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
 {
-  return forward_offset_in_ego_frame(ego_pose, object_pose) < 0.0;
+  constexpr double kPi = 3.14159265358979323846;
+  constexpr double kBehindAngleThresholdRad = 5.0 * kPi / 6.0;
+
+  const double yaw = get_yaw(ego_pose.orientation);
+  const double dx = object_pose.position.x - ego_pose.position.x;
+  const double dy = object_pose.position.y - ego_pose.position.y;
+  const double distance = std::hypot(dx, dy);
+  if (distance <= 1.0e-6) {
+    return false;
+  }
+
+  const double cos_angle =
+    std::clamp((std::cos(yaw) * dx + std::sin(yaw) * dy) / distance, -1.0, 1.0);
+  return std::acos(cos_angle) > kBehindAngleThresholdRad;
 }
 
 const autoware_perception_msgs::msg::PredictedPath * highest_confidence_path(

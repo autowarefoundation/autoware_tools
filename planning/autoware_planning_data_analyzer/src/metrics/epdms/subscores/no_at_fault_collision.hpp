@@ -16,6 +16,7 @@
 #define METRICS__EPDMS__SUBSCORES__NO_AT_FAULT_COLLISION_HPP_
 
 #include "data_types.hpp"
+#include "metrics/geometry/ego_footprint.hpp"
 #include "metrics/geometry/object_tracks.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
@@ -44,6 +45,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const std::vector<TimedTrackedObjects> & future_objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<RouteHandler> & route_handler = nullptr,
+  const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations = nullptr,
   const std::vector<LoggedObjectTrack> * object_tracks = nullptr);
 
 }  // namespace autoware::planning_data_analyzer::metrics

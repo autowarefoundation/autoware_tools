@@ -408,6 +408,7 @@ private:
   double override_window_sec_{0.0};
   std::vector<utils::ControlModeEvent> control_mode_events_;
   // Reserved for the follow-up debug-topic PR. PR 425 only stores the runtime switch.
+  std::vector<TimedTrackedObjects> object_timeline_;
   bool debug_topics_enabled_{false};
 };
 
