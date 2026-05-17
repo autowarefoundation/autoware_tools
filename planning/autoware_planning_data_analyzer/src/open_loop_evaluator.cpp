@@ -16,6 +16,7 @@
 
 #include "metrics/epdms/aggregation/epdms_aggregation.hpp"
 #include "metrics/geometry/metric_utils.hpp"
+#include "metrics/geometry/object_tracks.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
 #include <autoware/motion_utils/trajectory/conversion.hpp>
@@ -212,43 +213,6 @@ autoware_planning_msgs::msg::Trajectory truncate_trajectory_by_horizon(
   }
 
   return truncated;
-}
-
-std::vector<TimedTrackedObjects> get_future_objects_for_trajectory(
-  const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::vector<TimedTrackedObjects> & object_timeline, const double horizon_s)
-{
-  std::vector<TimedTrackedObjects> future_objects;
-  if (trajectory.points.empty() || object_timeline.empty()) {
-    return future_objects;
-  }
-
-  const auto trajectory_start_ns = rclcpp::Time(trajectory.header.stamp).nanoseconds();
-  auto trajectory_horizon_ns =
-    rclcpp::Duration(trajectory.points.back().time_from_start).nanoseconds();
-  if (horizon_s > 0.0) {
-    trajectory_horizon_ns =
-      std::min(trajectory_horizon_ns, rclcpp::Duration::from_seconds(horizon_s).nanoseconds());
-  }
-
-  constexpr rcutils_time_point_value_t kFutureObjectRangeMarginNs =
-    static_cast<rcutils_time_point_value_t>(200'000'000);
-  const auto range_end_ns =
-    trajectory_start_ns + trajectory_horizon_ns + kFutureObjectRangeMarginNs;
-
-  const auto first = std::lower_bound(
-    object_timeline.begin(), object_timeline.end(), trajectory_start_ns,
-    [](const TimedTrackedObjects & timed_objects, const rcutils_time_point_value_t stamp_ns) {
-      return timed_objects.stamp.nanoseconds() < stamp_ns;
-    });
-
-  for (auto itr = first; itr != object_timeline.end(); ++itr) {
-    if (itr->stamp.nanoseconds() > range_end_ns) {
-      break;
-    }
-    future_objects.push_back(*itr);
-  }
-  return future_objects;
 }
 
 metrics::EpdmsMetricSnapshot build_epdms_snapshot(const OpenLoopTrajectoryMetrics & metrics)
@@ -567,7 +531,7 @@ void OpenLoopEvaluator::evaluate(
         const auto & eval_data = evaluation_data_list[i];
         const auto future_objects =
           eval_data.synchronized_data && eval_data.synchronized_data->trajectory
-            ? get_future_objects_for_trajectory(
+            ? metrics::get_future_objects_for_trajectory(
                 *eval_data.synchronized_data->trajectory, object_timeline_,
                 trajectory_evaluation_horizon_s_)
             : std::vector<TimedTrackedObjects>{};

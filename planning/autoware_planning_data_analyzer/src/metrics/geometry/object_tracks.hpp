@@ -73,6 +73,10 @@ bool is_unknown_classification(
 std::vector<LoggedObjectTrack> build_logged_object_tracks(
   const std::vector<TimedTrackedObjects> & future_objects);
 
+std::vector<TimedTrackedObjects> get_future_objects_for_trajectory(
+  const autoware_planning_msgs::msg::Trajectory & trajectory,
+  const std::vector<TimedTrackedObjects> & object_timeline, double horizon_s);
+
 std::optional<InterpolatedLoggedObject> interpolate_logged_object_state(
   const LoggedObjectTrack & track, const rclcpp::Time & query_time);
 
