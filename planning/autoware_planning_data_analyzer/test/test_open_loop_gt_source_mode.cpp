@@ -179,8 +179,20 @@ TEST_F(OpenLoopGTSourceModeTest, EnabledMetricsNarrowsOpenLoopResultTopics)
 
   EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/no_at_fault_collision"));
   EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/time_to_collision_within_bound"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/ttc"));
+  EXPECT_FALSE(has_topic("/open_loop/metrics/ade"));
   EXPECT_FALSE(has_topic("/open_loop/metrics/epdms/lane_keeping"));
   EXPECT_FALSE(has_topic("/open_loop/metrics/epdms/synthetic_epdms_raw"));
+}
+
+TEST_F(OpenLoopGTSourceModeTest, EnabledMetricsRejectsAllMixedWithSpecificMetrics)
+{
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  EXPECT_THROW(evaluator.set_enabled_metrics({"all", "nc"}), std::invalid_argument);
+  EXPECT_THROW(evaluator.set_enabled_metrics({"all", "bogus"}), std::invalid_argument);
 }
 
 TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomfortableTrajectories)

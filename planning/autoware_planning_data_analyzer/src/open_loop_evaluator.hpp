@@ -382,6 +382,8 @@ private:
    */
   void calculate_summary();
 
+  bool should_write_synthetic_epdms() const;
+
   std::vector<OpenLoopTrajectoryMetrics> metrics_list_;
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
   std::vector<metrics::HumanFilterMetrics> human_filter_metrics_list_;
@@ -399,6 +401,7 @@ private:
   std::vector<double> evaluation_horizons_;
   double override_window_sec_{0.0};
   std::vector<utils::ControlModeEvent> control_mode_events_;
+  // Reserved for the follow-up debug-topic PR. PR 425 only stores the runtime switch.
   bool debug_topics_enabled_{false};
 };
 

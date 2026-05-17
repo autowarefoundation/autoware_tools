@@ -37,10 +37,12 @@
       gt_source_mode: "kinematic_state"
       gt_trajectory_topic: "/planning/ground_truth_trajectory"
       gt_sync_tolerance_ms: 200.0
-      # Metric topics are produced for all metrics by default. Set this to a
-      # subset such as ["nc", "dac", "ttc"] to write only those metric topics.
+      # Metric topics are produced for all metrics by default.
+      # [] and ["all"] both mean all metrics. Do not combine "all" with other names.
+      # Set this to a subset such as ["nc", "dac", "ttc"] to write only those metric topics.
       enabled_metrics: ["all"]
       # Debug visualization topics are expensive and disabled by default.
+      # This switch is reserved for the follow-up debug-topic PR.
       debug_topics_enabled: false
       hc:
         # NAVSIM-aligned default thresholds for the History Comfort (HC) subscore.

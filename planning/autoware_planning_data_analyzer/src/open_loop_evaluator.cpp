@@ -339,16 +339,25 @@ static std::string result_summary(bool has_frame, size_t num_points)
 
 void OpenLoopEvaluator::set_enabled_metrics(const std::vector<std::string> & enabled_metric_names)
 {
+  // Empty keeps the default all-enabled behavior for backward compatibility.
   if (enabled_metric_names.empty()) {
     enabled_metrics_ = EnabledOpenLoopMetrics{};
     return;
   }
 
+  bool has_all = false;
+  auto validation_metrics = make_disabled_metrics();
   for (const auto & name : enabled_metric_names) {
-    if (normalize_metric_name(name) == "all") {
-      enabled_metrics_ = EnabledOpenLoopMetrics{};
-      return;
-    }
+    const auto normalized_name = normalize_metric_name(name);
+    enable_metric_name(validation_metrics, normalized_name);
+    has_all = has_all || normalized_name == "all";
+  }
+  if (has_all && enabled_metric_names.size() > 1U) {
+    throw std::invalid_argument("open_loop.enabled_metrics 'all' cannot be combined with others");
+  }
+  if (has_all) {
+    enabled_metrics_ = EnabledOpenLoopMetrics{};
+    return;
   }
 
   auto enabled_metrics = make_disabled_metrics();
@@ -356,6 +365,11 @@ void OpenLoopEvaluator::set_enabled_metrics(const std::vector<std::string> & ena
     enable_metric_name(enabled_metrics, name);
   }
   enabled_metrics_ = enabled_metrics;
+}
+
+bool OpenLoopEvaluator::should_write_synthetic_epdms() const
+{
+  return enabled_metrics_.synthetic_epdms && all_epdms_inputs_enabled(enabled_metrics_);
 }
 
 void OpenLoopEvaluator::evaluate(
@@ -1231,7 +1245,7 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   write_array(
     enabled_metrics_.trajectory_errors, metrics.longitudinal_deviations,
     metric_topic("longitudinal_deviation"));
-  write_array(enabled_metrics_.trajectory_errors, metrics.ttc, metric_topic("ttc"));
+  write_array(enabled_metrics_.time_to_collision_within_bound, metrics.ttc, metric_topic("ttc"));
 
   std_msgs::msg::Float64 scalar_msg;
   const auto write_scalar =
@@ -1242,8 +1256,7 @@ void OpenLoopEvaluator::save_metrics_to_bag(
       scalar_msg.data = value;
       bag_writer.write(scalar_msg, topic_name, message_timestamp);
     };
-  const bool write_synthetic_epdms =
-    enabled_metrics_.synthetic_epdms && all_epdms_inputs_enabled(enabled_metrics_);
+  const bool write_synthetic_epdms = should_write_synthetic_epdms();
 
   write_scalar(
     enabled_metrics_.history_comfort, metrics.history_comfort,
@@ -2249,9 +2262,11 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     add_topic(metric_topic("fde"), "std_msgs/msg/Float64MultiArray");
     add_topic(metric_topic("ahe"), "std_msgs/msg/Float64MultiArray");
     add_topic(metric_topic("fhe"), "std_msgs/msg/Float64MultiArray");
-    add_topic(metric_topic("ttc"), "std_msgs/msg/Float64MultiArray");
     add_topic(metric_topic("lateral_deviation"), "std_msgs/msg/Float64MultiArray");
     add_topic(metric_topic("longitudinal_deviation"), "std_msgs/msg/Float64MultiArray");
+  }
+  if (enabled_metrics_.time_to_collision_within_bound) {
+    add_topic(metric_topic("ttc"), "std_msgs/msg/Float64MultiArray");
   }
   if (enabled_metrics_.history_comfort) {
     add_topic(epdms_metric_topic("history_comfort"), "std_msgs/msg/Float64");
@@ -2300,8 +2315,7 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
   add_epdms_availability_reason_if(
     enabled_metrics_.traffic_light_compliance, "traffic_light_compliance");
 
-  const bool add_synthetic_epdms =
-    enabled_metrics_.synthetic_epdms && all_epdms_inputs_enabled(enabled_metrics_);
+  const bool add_synthetic_epdms = should_write_synthetic_epdms();
   add_epdms_topic_if(add_synthetic_epdms, "synthetic_epdms_raw", "std_msgs/msg/Float64");
   add_epdms_topic_if(add_synthetic_epdms, "synthetic_epdms_raw_available", "std_msgs/msg/Bool");
   add_epdms_topic_if(add_synthetic_epdms, "synthetic_epdms_human_filtered", "std_msgs/msg/Float64");
