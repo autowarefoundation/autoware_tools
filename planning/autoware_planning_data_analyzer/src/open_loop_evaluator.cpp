@@ -2427,39 +2427,6 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
 
   // Pass the control_mode timeline to enable override-only aggregation in the summary.
   set_control_mode_events(std::move(bag_result.control_mode_events));
-  for (auto & sync_data : bag_result.synchronized_data_list) {
-    if (!sync_data || !sync_data->trajectory || bag_result.tracked_object_timeline.empty()) {
-      continue;
-    }
-
-    const auto trajectory_start = rclcpp::Time(sync_data->trajectory->header.stamp);
-    auto trajectory_duration =
-      rclcpp::Duration(sync_data->trajectory->points.back().time_from_start);
-    if (topic_names.trajectory_evaluation_horizon_s > 0.0) {
-      trajectory_duration = std::min(
-        trajectory_duration,
-        rclcpp::Duration::from_seconds(topic_names.trajectory_evaluation_horizon_s));
-    }
-    const auto trajectory_end = trajectory_start + trajectory_duration;
-    constexpr int64_t kObjectTimelineMarginNs = 200'000'000;
-    const int64_t start_ns = trajectory_start.nanoseconds();
-    const int64_t end_ns = trajectory_end.nanoseconds() + kObjectTimelineMarginNs;
-
-    const auto first = std::lower_bound(
-      bag_result.tracked_object_timeline.begin(), bag_result.tracked_object_timeline.end(),
-      start_ns, [](const TimedTrackedObjects & timed_objects, const int64_t stamp_ns) {
-        return timed_objects.stamp.nanoseconds() < stamp_ns;
-      });
-
-    sync_data->future_tracked_objects.reserve(
-      std::distance(first, bag_result.tracked_object_timeline.end()));
-    for (auto itr = first; itr != bag_result.tracked_object_timeline.end(); ++itr) {
-      if (itr->stamp.nanoseconds() > end_ns) {
-        break;
-      }
-      sync_data->future_tracked_objects.push_back(*itr);
-    }
-  }
 
   if (gt_source_mode_ == GTSourceMode::GT_TRAJECTORY) {
     if (!bag_result.gt_trajectory_topic_seen || bag_result.gt_trajectory_message_count == 0) {
