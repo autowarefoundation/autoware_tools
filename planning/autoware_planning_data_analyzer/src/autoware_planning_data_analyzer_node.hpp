@@ -88,6 +88,8 @@ private:
   std::string gt_source_mode_;
   std::string gt_trajectory_topic_name_;
   double gt_sync_tolerance_ms_ = 200.0;
+  std::vector<std::string> enabled_metric_names_;
+  bool debug_topics_enabled_ = false;
   metrics::HistoryComfortParameters history_comfort_params_;
   metrics::ExtendedComfortParameters extended_comfort_parameters_;
   metrics::LaneKeepingParameters lane_keeping_params_;
