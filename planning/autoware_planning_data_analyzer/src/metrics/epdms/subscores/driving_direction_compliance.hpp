@@ -15,6 +15,7 @@
 #ifndef METRICS__EPDMS__SUBSCORES__DRIVING_DIRECTION_COMPLIANCE_HPP_
 #define METRICS__EPDMS__SUBSCORES__DRIVING_DIRECTION_COMPLIANCE_HPP_
 
+#include <cstddef>
 #include <limits>
 #include <string>
 #include <vector>
@@ -43,6 +44,9 @@ struct DrivingDirectionComplianceResult
   bool available{false};
   std::string reason{"unavailable"};
   double max_oncoming_progress_m{0.0};
+  double worst_window_start_time_s{0.0};
+  double worst_window_end_time_s{0.0};
+  std::size_t worst_window_sample_count{0U};
 };
 
 DrivingDirectionComplianceResult calculate_driving_direction_compliance(
