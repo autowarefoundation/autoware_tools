@@ -345,14 +345,16 @@ void OpenLoopEvaluator::set_enabled_metrics(const std::vector<std::string> & ena
     return;
   }
 
-  bool has_all = false;
-  auto validation_metrics = make_disabled_metrics();
+  std::vector<std::string> normalized_names;
+  normalized_names.reserve(enabled_metric_names.size());
   for (const auto & name : enabled_metric_names) {
     const auto normalized_name = normalize_metric_name(name);
-    enable_metric_name(validation_metrics, normalized_name);
-    has_all = has_all || normalized_name == "all";
+    normalized_names.push_back(normalized_name);
   }
-  if (has_all && enabled_metric_names.size() > 1U) {
+  const bool has_all = std::any_of(
+    normalized_names.begin(), normalized_names.end(),
+    [](const auto & name) { return name == "all"; });
+  if (has_all && normalized_names.size() > 1U) {
     throw std::invalid_argument("open_loop.enabled_metrics 'all' cannot be combined with others");
   }
   if (has_all) {
@@ -361,7 +363,7 @@ void OpenLoopEvaluator::set_enabled_metrics(const std::vector<std::string> & ena
   }
 
   auto enabled_metrics = make_disabled_metrics();
-  for (const auto & name : enabled_metric_names) {
+  for (const auto & name : normalized_names) {
     enable_metric_name(enabled_metrics, name);
   }
   enabled_metrics_ = enabled_metrics;

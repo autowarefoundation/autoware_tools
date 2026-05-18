@@ -191,6 +191,7 @@ TEST_F(OpenLoopGTSourceModeTest, EnabledMetricsRejectsAllMixedWithSpecificMetric
     rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
     OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
 
+  EXPECT_NO_THROW(evaluator.set_enabled_metrics({"all"}));
   EXPECT_THROW(evaluator.set_enabled_metrics({"all", "nc"}), std::invalid_argument);
   EXPECT_THROW(evaluator.set_enabled_metrics({"all", "bogus"}), std::invalid_argument);
 }
