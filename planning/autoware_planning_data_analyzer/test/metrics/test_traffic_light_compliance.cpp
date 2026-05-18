@@ -25,3 +25,25 @@ TEST(TrafficLightComplianceTest, EmptyTrajectoryIsUnavailable)
   EXPECT_FALSE(result.available);
   EXPECT_EQ(result.reason, "unavailable_empty_trajectory");
 }
+
+TEST(TrafficLightComplianceTest, MissingRouteHandlerIsUnavailable)
+{
+  autoware_planning_msgs::msg::Trajectory trajectory;
+  trajectory.points.resize(1);
+  trajectory.points.front().pose.orientation.w = 1.0;
+
+  autoware::vehicle_info_utils::VehicleInfo vehicle_info;
+  vehicle_info.vehicle_length_m = 4.8;
+  vehicle_info.vehicle_width_m = 1.8;
+  vehicle_info.wheel_base_m = 2.8;
+  vehicle_info.front_overhang_m = 1.0;
+  vehicle_info.rear_overhang_m = 1.0;
+  vehicle_info.left_overhang_m = 0.9;
+  vehicle_info.right_overhang_m = 0.9;
+
+  const auto result = autoware::planning_data_analyzer::metrics::calculate_traffic_light_compliance(
+    trajectory, nullptr, nullptr, vehicle_info);
+
+  EXPECT_FALSE(result.available);
+  EXPECT_EQ(result.reason, "unavailable_no_route_handler");
+}
