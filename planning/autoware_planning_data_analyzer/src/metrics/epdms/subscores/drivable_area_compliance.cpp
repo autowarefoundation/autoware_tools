@@ -54,7 +54,7 @@ std::vector<geometry_msgs::msg::Point> lanelet_polygon_to_points(
   const auto polygon = lanelet.polygon2d().basicPolygon();
   points.reserve(polygon.size());
   for (const auto & point : polygon) {
-    points.push_back(autoware::lanelet2_utils::to_ros(point, z));
+    points.push_back(autoware::experimental::lanelet2_utils::to_ros(point, z));
   }
   return points;
 }
@@ -65,7 +65,8 @@ std::vector<geometry_msgs::msg::Point> map_polygon_to_points(
   std::vector<geometry_msgs::msg::Point> points;
   points.reserve(polygon.size());
   for (const auto & point : polygon) {
-    points.push_back(autoware::lanelet2_utils::to_ros(lanelet::utils::to2D(point), z));
+    points.push_back(
+      autoware::experimental::lanelet2_utils::to_ros(lanelet::utils::to2D(point), z));
   }
   return points;
 }
@@ -76,7 +77,8 @@ std::vector<geometry_msgs::msg::Point> line_string_to_points(
   std::vector<geometry_msgs::msg::Point> points;
   points.reserve(line_string.size());
   for (const auto & point : line_string) {
-    points.push_back(autoware::lanelet2_utils::to_ros(lanelet::utils::to2D(point), z));
+    points.push_back(
+      autoware::experimental::lanelet2_utils::to_ros(lanelet::utils::to2D(point), z));
   }
   return points;
 }
