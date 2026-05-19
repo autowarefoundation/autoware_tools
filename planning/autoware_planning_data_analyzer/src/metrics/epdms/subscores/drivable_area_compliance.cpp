@@ -18,6 +18,7 @@
 
 #include <autoware/lanelet2_utils/conversion.hpp>
 #include <autoware_utils_geometry/boost_geometry.hpp>
+#include <autoware_utils_geometry/geometry.hpp>
 #include <rclcpp/duration.hpp>
 
 #include <boost/geometry.hpp>
