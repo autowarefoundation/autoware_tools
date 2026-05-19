@@ -17,21 +17,17 @@
 #include "metrics/geometry/ego_footprint.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 
-#include <autoware/object_recognition_utils/object_classification.hpp>
 #include <autoware_utils_geometry/boost_polygon_utils.hpp>
-#include <autoware_utils_geometry/geometry.hpp>
 
 #include <boost/geometry.hpp>
 
 #include <lanelet2_core/geometry/Lanelet.h>
 
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <cstdint>
 #include <memory>
-#include <optional>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -42,12 +38,13 @@ using autoware::route_handler::RouteHandler;
 namespace
 {
 
-using autoware_utils_geometry::LinearRing2d;
 using autoware_utils_geometry::Point2d;
 using autoware_utils_geometry::Polygon2d;
 namespace bg = boost::geometry;
 
-constexpr double kStoppedSpeedThreshold = 5.0e-2;
+// Strict NAVSIM-style physical-stop threshold for NC classification; this is intentionally
+// tighter than general perception stopped-vehicle thresholds to keep creeping objects active.
+constexpr double kStoppedVelocityThresholdMps = 5.0e-2;
 
 enum class CollisionType {
   StoppedEgo,
@@ -57,89 +54,15 @@ enum class CollisionType {
   ActiveLateral,
 };
 
-struct ObjectState
+struct AtFaultCollision
 {
-  geometry_msgs::msg::Pose pose;
-  double speed_mps{0.0};
-  Polygon2d polygon;
-};
-
-struct PredictedObjectCache
-{
-  const autoware_perception_msgs::msg::PredictedObject * object{};
-  const autoware_perception_msgs::msg::PredictedPath * path{};
-  double dt{0.0};
-  double max_time{0.0};
-};
-
-struct EgoAreaFlags
-{
-  bool multiple_lanes{false};
-  bool non_drivable_area{false};
+  double score{1.0};
+  std::string reason{"available"};
 };
 
 double ego_speed(const autoware_planning_msgs::msg::TrajectoryPoint & point)
 {
   return std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps);
-}
-
-std::vector<PredictedObjectCache> build_object_caches(const PredictedObjects & objects)
-{
-  std::vector<PredictedObjectCache> caches;
-  caches.reserve(objects.objects.size());
-
-  for (const auto & object : objects.objects) {
-    PredictedObjectCache cache;
-    cache.object = &object;
-    cache.path = highest_confidence_path(object);
-    if (cache.path && cache.path->path.size() >= 2) {
-      cache.dt = rclcpp::Duration(cache.path->time_step).seconds();
-      if (cache.dt > 0.0) {
-        cache.max_time = cache.dt * static_cast<double>(cache.path->path.size() - 1);
-      } else {
-        cache.path = nullptr;
-        cache.dt = 0.0;
-      }
-    } else {
-      cache.path = nullptr;
-    }
-    caches.push_back(cache);
-  }
-
-  return caches;
-}
-
-std::optional<ObjectState> interpolate_object_state(
-  const PredictedObjectCache & cache, const double query_time_s)
-{
-  if (!cache.object) {
-    return std::nullopt;
-  }
-  ObjectState state;
-
-  if (query_time_s <= 0.0) {
-    state.pose = cache.object->kinematics.initial_pose_with_covariance.pose;
-    const auto & twist = cache.object->kinematics.initial_twist_with_covariance.twist.linear;
-    state.speed_mps = std::hypot(twist.x, twist.y);
-    state.polygon = autoware_utils_geometry::to_polygon2d(state.pose, cache.object->shape);
-    return state;
-  }
-  if (!cache.path || query_time_s > cache.max_time) {
-    return std::nullopt;
-  }
-
-  const std::size_t index =
-    std::min(static_cast<std::size_t>(query_time_s / cache.dt), cache.path->path.size() - 2);
-  const double t_i = static_cast<double>(index) * cache.dt;
-  const double ratio = std::clamp((query_time_s - t_i) / cache.dt, 0.0, 1.0);
-  state.pose = autoware_utils_geometry::calc_interpolated_pose(
-    cache.path->path.at(index), cache.path->path.at(index + 1), ratio);
-
-  const auto & p0 = cache.path->path.at(index).position;
-  const auto & p1 = cache.path->path.at(index + 1).position;
-  state.speed_mps = std::hypot(p1.x - p0.x, p1.y - p0.y) / cache.dt;
-  state.polygon = autoware_utils_geometry::to_polygon2d(state.pose, cache.object->shape);
-  return state;
 }
 
 bool front_bumper_intersects(
@@ -163,14 +86,21 @@ bool front_bumper_intersects(
   return bg::intersects(front_bumper, object_polygon);
 }
 
+bool is_track_stopped(const InterpolatedLoggedObject & object_state)
+{
+  return !is_agent_classification(object_state.classification) ||
+         object_state.speed_mps <= kStoppedVelocityThresholdMps;
+}
+
 CollisionType classify_collision(
-  const autoware_planning_msgs::msg::TrajectoryPoint & ego_point, const ObjectState & object_state,
+  const autoware_planning_msgs::msg::TrajectoryPoint & ego_point,
+  const InterpolatedLoggedObject & object_state,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
 {
-  if (ego_speed(ego_point) <= kStoppedSpeedThreshold) {
+  if (ego_speed(ego_point) <= kStoppedVelocityThresholdMps) {
     return CollisionType::StoppedEgo;
   }
-  if (object_state.speed_mps <= kStoppedSpeedThreshold) {
+  if (is_track_stopped(object_state)) {
     return CollisionType::StoppedTrack;
   }
   if (is_agent_behind(ego_point.pose, object_state.pose)) {
@@ -182,63 +112,30 @@ CollisionType classify_collision(
   return CollisionType::ActiveLateral;
 }
 
-bool footprint_intersects_lanelet(
-  const Polygon2d & footprint, const lanelet::ConstLanelet & lanelet)
+AtFaultCollision make_at_fault_collision(
+  const InterpolatedLoggedObject & object, const bool lateral_collision)
 {
-  return !bg::disjoint(footprint, lanelet.polygon2d().basicPolygon());
-}
-
-std::optional<EgoAreaFlags> compute_ego_area_flags(
-  const geometry_msgs::msg::Pose & pose, const Polygon2d & ego_polygon,
-  const std::shared_ptr<RouteHandler> & route_handler)
-{
-  if (!route_handler) {
-    return std::nullopt;
-  }
-  if (!route_handler->isHandlerReady()) {
-    return std::nullopt;
-  }
-
-  std::size_t intersecting_route_lanelets = 0;
-  for (const auto & lanelet : route_handler->getRoadLaneletsAtPose(pose)) {
-    if (!route_handler->isRouteLanelet(lanelet)) {
-      continue;
-    }
-    if (footprint_intersects_lanelet(ego_polygon, lanelet)) {
-      ++intersecting_route_lanelets;
-    }
-  }
-
-  EgoAreaFlags flags;
-  flags.non_drivable_area = intersecting_route_lanelets == 0U;
-  flags.multiple_lanes = intersecting_route_lanelets > 1U;
-  return flags;
-}
-
-bool is_agent_type(const autoware_perception_msgs::msg::PredictedObject & object)
-{
-  using autoware_perception_msgs::msg::ObjectClassification;
-  const auto label = autoware::object_recognition_utils::getHighestProbLabel(object.classification);
-  return autoware::object_recognition_utils::isVehicle(label) ||
-         label == ObjectClassification::PEDESTRIAN || label == ObjectClassification::ANIMAL;
+  const bool agent = is_agent_classification(object.classification);
+  const double score = agent ? 0.0 : 0.5;
+  const std::string collision_scope =
+    lateral_collision ? "at_fault_lateral_collision" : "at_fault_collision";
+  const std::string object_kind = agent ? "with_agent" : "with_non_agent";
+  return AtFaultCollision{score, collision_scope + "_" + object_kind};
 }
 
 }  // namespace
 
 NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::shared_ptr<PredictedObjects> & objects,
+  const std::vector<LoggedObjectTrack> & object_tracks,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<RouteHandler> & route_handler)
+  const std::shared_ptr<RouteHandler> & route_handler,
+  const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations)
 {
   NoAtFaultCollisionResult result;
 
   if (trajectory.points.empty()) {
     result.reason = "unavailable_empty_trajectory";
-    return result;
-  }
-  if (!objects) {
-    result.reason = "unavailable_no_objects_message";
     return result;
   }
   if (!is_vehicle_info_valid(vehicle_info)) {
@@ -250,20 +147,49 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   result.score = 1.0;
   result.reason = "available";
 
-  if (objects->objects.empty()) {
+  if (object_tracks.empty()) {
     return result;
   }
 
-  const auto local_footprint = vehicle_info.createFootprint(0.0);
-  const auto object_caches = build_object_caches(*objects);
+  if (footprint_evaluations.size() != trajectory.points.size()) {
+    result.available = false;
+    result.reason = "unavailable_invalid_footprint";
+    result.score = 0.0;
+    return result;
+  }
 
-  for (const auto & point : trajectory.points) {
+  std::unordered_set<unique_identifier_msgs::msg::UUID, UuidHash> collided_object_ids;
+  const auto trajectory_start_time = rclcpp::Time(trajectory.header.stamp);
+
+  auto record_at_fault_collision = [&](
+                                     const InterpolatedLoggedObject & object_state,
+                                     const AtFaultCollision & at_fault_collision,
+                                     const double query_time_s) {
+    if (object_state.has_valid_object_id) {
+      collided_object_ids.insert(object_state.object_id);
+    }
+    if (at_fault_collision.score < result.score) {
+      result.score = at_fault_collision.score;
+      result.reason = at_fault_collision.reason;
+      result.infraction_time_s = query_time_s;
+    }
+  };
+
+  for (size_t index = 0; index < trajectory.points.size(); ++index) {
+    const auto & point = trajectory.points.at(index);
+    const auto query_time = trajectory_start_time + rclcpp::Duration(point.time_from_start);
     const auto query_time_s = rclcpp::Duration(point.time_from_start).seconds();
-    const auto ego_polygon = create_pose_footprint(point.pose, local_footprint);
+    const auto & ego_polygon = footprint_evaluations.at(index).ego_polygon;
 
-    for (const auto & object_cache : object_caches) {
-      const auto object_state = interpolate_object_state(object_cache, query_time_s);
-      if (!object_state.has_value()) {
+    for (const auto & object_track : object_tracks) {
+      if (
+        object_track.has_valid_object_id &&
+        collided_object_ids.count(object_track.object_id) > 0U) {
+        continue;
+      }
+
+      const auto object_state = interpolate_logged_object_state(object_track, query_time);
+      if (!object_state.has_value() || is_unknown_classification(object_state->classification)) {
         continue;
       }
       if (!bg::intersects(ego_polygon, object_state->polygon)) {
@@ -271,22 +197,19 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
       }
 
       const auto collision_type = classify_collision(point, *object_state, vehicle_info);
-
       const bool front_or_stopped_track = collision_type == CollisionType::ActiveFront ||
                                           collision_type == CollisionType::StoppedTrack;
       const bool lateral_collision = collision_type == CollisionType::ActiveLateral;
 
       if (front_or_stopped_track) {
-        result.score = is_agent_type(*object_cache.object) ? 0.0 : 0.5;
-        result.reason = is_agent_type(*object_cache.object) ? "at_fault_collision_with_agent"
-                                                            : "at_fault_collision_with_non_agent";
-        result.infraction_time_s = query_time_s;
-        return result;
+        const auto at_fault_collision = make_at_fault_collision(*object_state, false);
+        record_at_fault_collision(*object_state, at_fault_collision, query_time_s);
+        continue;
       }
 
       if (lateral_collision) {
-        const auto ego_area_flags = compute_ego_area_flags(point.pose, ego_polygon, route_handler);
-        if (!ego_area_flags.has_value()) {
+        const auto & ego_area_evaluation = footprint_evaluations.at(index).ego_area_evaluation;
+        if (!ego_area_evaluation.has_value()) {
           result.available = false;
           result.score = 0.0;
           result.reason = !route_handler
@@ -295,19 +218,36 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
           return result;
         }
 
-        if (ego_area_flags->multiple_lanes || ego_area_flags->non_drivable_area) {
-          result.score = is_agent_type(*object_cache.object) ? 0.0 : 0.5;
-          result.reason = is_agent_type(*object_cache.object)
-                            ? "at_fault_lateral_collision_with_agent"
-                            : "at_fault_lateral_collision_with_non_agent";
-          result.infraction_time_s = query_time_s;
-          return result;
+        if (
+          ego_area_evaluation->flags.multiple_lanes ||
+          ego_area_evaluation->flags.non_drivable_area) {
+          const auto at_fault_collision = make_at_fault_collision(*object_state, true);
+          record_at_fault_collision(*object_state, at_fault_collision, query_time_s);
         }
+        continue;
       }
     }
   }
 
   return result;
+}
+
+NoAtFaultCollisionResult calculate_no_at_fault_collision(
+  const autoware_planning_msgs::msg::Trajectory & trajectory,
+  const std::vector<TimedTrackedObjects> & future_objects,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<RouteHandler> & route_handler)
+{
+  if (future_objects.empty()) {
+    NoAtFaultCollisionResult result;
+    result.reason = "unavailable_no_future_objects";
+    return result;
+  }
+  const auto object_tracks = build_logged_object_tracks(future_objects);
+  const auto footprint_evaluations =
+    evaluate_trajectory_footprints(trajectory, vehicle_info, route_handler);
+  return calculate_no_at_fault_collision(
+    trajectory, object_tracks, vehicle_info, route_handler, footprint_evaluations);
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics

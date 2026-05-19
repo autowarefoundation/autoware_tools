@@ -34,7 +34,9 @@ using autoware::planning_data_analyzer::Trajectory;
 namespace
 {
 
-Trajectory make_trajectory(const rclcpp::Time & start_time, const std::vector<double> & xs)
+Trajectory make_timed_trajectory(
+  const rclcpp::Time & start_time, const std::vector<double> & xs,
+  const std::vector<double> & times_s)
 {
   Trajectory trajectory;
   trajectory.header.frame_id = "map";
@@ -42,13 +44,17 @@ Trajectory make_trajectory(const rclcpp::Time & start_time, const std::vector<do
   trajectory.header.stamp.nanosec =
     static_cast<uint32_t>(start_time.nanoseconds() - trajectory.header.stamp.sec * 1000000000LL);
 
+  if (xs.size() != times_s.size()) {
+    return trajectory;
+  }
+
   for (size_t i = 0; i < xs.size(); ++i) {
     autoware_planning_msgs::msg::TrajectoryPoint point;
     point.pose.position.x = xs[i];
     point.pose.position.y = 0.0;
     point.pose.position.z = 0.0;
     point.pose.orientation.w = 1.0;
-    const double time_from_start_s = 0.1 * static_cast<double>(i);
+    const double time_from_start_s = times_s.at(i);
     const int32_t sec = static_cast<int32_t>(time_from_start_s);
     const uint32_t nanosec = static_cast<uint32_t>((time_from_start_s - sec) * 1e9);
     point.time_from_start.sec = sec;
@@ -58,6 +64,16 @@ Trajectory make_trajectory(const rclcpp::Time & start_time, const std::vector<do
   }
 
   return trajectory;
+}
+
+Trajectory make_trajectory(const rclcpp::Time & start_time, const std::vector<double> & xs)
+{
+  std::vector<double> times_s;
+  times_s.reserve(xs.size());
+  for (size_t i = 0; i < xs.size(); ++i) {
+    times_s.push_back(0.1 * static_cast<double>(i));
+  }
+  return make_timed_trajectory(start_time, xs, times_s);
 }
 
 std::shared_ptr<SynchronizedData> make_sync_data(
@@ -130,6 +146,64 @@ TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeUsesSyncToleranceForBoundaryInt
     OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 120.0);
   EXPECT_NO_THROW(tolerant_evaluator.evaluate(sync_data_list, nullptr));
   EXPECT_EQ(tolerant_evaluator.get_metrics().size(), 1u);
+}
+
+TEST_F(OpenLoopGTSourceModeTest, TrajectoryHorizonTruncationKeepsFirstPointBeyondHorizon)
+{
+  const rclcpp::Time start_time(35, 0);
+  const auto prediction = make_timed_trajectory(start_time, {1.0, 2.0}, {1.0, 1.1});
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{make_sync_data(prediction)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+  evaluator.set_trajectory_evaluation_horizon(0.5);
+
+  const auto evaluation_data = evaluator.prepare_evaluation_data(sync_data_list);
+  ASSERT_EQ(evaluation_data.size(), 1u);
+  ASSERT_EQ(evaluation_data.front().synchronized_data->trajectory->points.size(), 1u);
+  EXPECT_DOUBLE_EQ(
+    rclcpp::Duration(
+      evaluation_data.front().synchronized_data->trajectory->points.front().time_from_start)
+      .seconds(),
+    1.0);
+}
+
+TEST_F(OpenLoopGTSourceModeTest, TrajectoryHorizonTruncationKeepsSinglePointTrajectory)
+{
+  const rclcpp::Time start_time(36, 0);
+  const auto prediction = make_timed_trajectory(start_time, {1.0}, {0.0});
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{make_sync_data(prediction)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+  evaluator.set_trajectory_evaluation_horizon(4.0);
+
+  const auto evaluation_data = evaluator.prepare_evaluation_data(sync_data_list);
+  ASSERT_EQ(evaluation_data.size(), 1u);
+  ASSERT_EQ(evaluation_data.front().synchronized_data->trajectory->points.size(), 1u);
+}
+
+TEST_F(OpenLoopGTSourceModeTest, TrajectoryHorizonTruncationKeepsPointExactlyAtHorizon)
+{
+  const rclcpp::Time start_time(37, 0);
+  const auto prediction =
+    make_timed_trajectory(start_time, {0.0, 1.0, 2.0, 3.0}, {0.0, 0.5, 1.0, 1.5});
+  const auto gt = std::make_shared<Trajectory>(
+    make_timed_trajectory(start_time, {0.0, 1.0, 2.0, 3.0}, {0.0, 0.5, 1.0, 1.5}));
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{make_sync_data(prediction, gt)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+  evaluator.set_trajectory_evaluation_horizon(1.0);
+
+  const auto evaluation_data = evaluator.prepare_evaluation_data(sync_data_list);
+  ASSERT_EQ(evaluation_data.size(), 1u);
+  const auto & points = evaluation_data.front().synchronized_data->trajectory->points;
+  ASSERT_EQ(points.size(), 3u);
+  EXPECT_DOUBLE_EQ(rclcpp::Duration(points.back().time_from_start).seconds(), 1.0);
 }
 
 TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
@@ -322,7 +396,7 @@ TEST_F(OpenLoopGTSourceModeTest, MissingInputsUnavailableReasonsAreReported)
     "unavailable_no_route_handler");
   EXPECT_EQ(
     full_json["trajectories"][0]["no_at_fault_collision_reason"].get<std::string>(),
-    "unavailable_no_objects_message");
+    "unavailable_no_future_objects");
 }
 
 TEST_F(OpenLoopGTSourceModeTest, ExtendedComfortAvailabilityIsReportedAcrossConsecutivePlans)

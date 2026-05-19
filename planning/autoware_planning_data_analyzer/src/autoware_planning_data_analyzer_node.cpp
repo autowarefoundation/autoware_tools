@@ -124,6 +124,8 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   enabled_metric_names_ =
     get_or_declare_parameter<std::vector<std::string>>(*this, "open_loop.enabled_metrics");
   debug_topics_enabled_ = get_or_declare_parameter<bool>(*this, "open_loop.debug_topics_enabled");
+  trajectory_evaluation_horizon_s_ =
+    get_or_declare_parameter<double>(*this, "open_loop.trajectory_evaluation_horizon");
   history_comfort_params_.finite_difference_epsilon =
     get_or_declare_parameter<double>(*this, "open_loop.hc.finite_difference_epsilon");
   history_comfort_params_.max_longitudinal_acceleration =
@@ -155,6 +157,8 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   lane_keeping_params_.max_continuous_violation_time =
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_continuous_violation_time");
   objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
+  tracked_objects_topic_name_ =
+    get_or_declare_parameter<std::string>(*this, "tracked_objects_topic");
   traffic_signals_topic_name_ =
     get_or_declare_parameter<std::string>(*this, "traffic_signals_topic");
   tf_topic_name_ = get_or_declare_parameter<std::string>(*this, "tf_topic");
@@ -176,6 +180,11 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
     throw std::runtime_error(
       "Invalid open_loop.gt_sync_tolerance_ms: " + std::to_string(gt_sync_tolerance_ms_) +
       ". Expected >= 0.");
+  }
+  if (trajectory_evaluation_horizon_s_ < 0.0) {
+    throw std::runtime_error(
+      "Invalid open_loop.trajectory_evaluation_horizon: " +
+      std::to_string(trajectory_evaluation_horizon_s_) + ". Expected >= 0.");
   }
 
   // Read evaluation mode
@@ -469,6 +478,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
   topic_names.candidate_trajectories_topic = candidate_trajectories_topic_name_;
   topic_names.gt_trajectory_topic = gt_trajectory_topic_name_;
   topic_names.objects_topic = objects_topic_name_;
+  topic_names.tracked_objects_topic = tracked_objects_topic_name_;
   topic_names.traffic_signals_topic = traffic_signals_topic_name_;
   topic_names.tf_topic = tf_topic_name_;
   topic_names.acceleration_topic = acceleration_topic_name_;
@@ -476,6 +486,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
   topic_names.control_mode_topic = control_mode_topic_name_;
   topic_names.evaluation_interval_ms = evaluation_interval_ms_;
   topic_names.sync_tolerance_ms = sync_tolerance_ms_;
+  topic_names.trajectory_evaluation_horizon_s = trajectory_evaluation_horizon_s_;
   auto output_dir = get_or_declare_parameter<std::string>(*this, "output_dir");
   const std::filesystem::path output_dir_path(output_dir);
   if (output_dir.empty() || !output_dir_path.is_absolute()) {
@@ -503,6 +514,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_enabled_metrics(enabled_metric_names_);
       evaluator.set_debug_topics_enabled(debug_topics_enabled_);
+      evaluator.set_trajectory_evaluation_horizon(trajectory_evaluation_horizon_s_);
       evaluator.set_evaluation_horizons(evaluation_horizons);
       evaluator.set_extended_comfort_parameters(extended_comfort_parameters_);
       evaluator.set_override_window_sec(override_window_sec_);

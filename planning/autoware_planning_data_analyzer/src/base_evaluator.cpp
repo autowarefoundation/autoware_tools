@@ -94,6 +94,12 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
       process_and_append_message<PredictedObjects>(
         serialized_message, bag_data, topic_names.objects_topic, use_bag_timestamp, logger_);
     } else if (
+      !topic_names.tracked_objects_topic.empty() &&
+      topic_name == topic_names.tracked_objects_topic) {
+      process_and_append_message<TrackedObjects>(
+        serialized_message, bag_data, topic_names.tracked_objects_topic, use_bag_timestamp,
+        logger_);
+    } else if (
       topic_name == topic_names.traffic_signals_topic &&
       !topic_names.traffic_signals_topic.empty()) {
       process_and_append_message<TrafficLightGroupArray>(
@@ -124,6 +130,19 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   std::sort(
     result.control_mode_events.begin(), result.control_mode_events.end(),
     [](const auto & a, const auto & b) { return a.first < b.first; });
+
+  if (const auto object_itr = bag_data->buffers.find(topic_names.tracked_objects_topic);
+      object_itr != bag_data->buffers.end()) {
+    if (
+      const auto object_buffer =
+        std::dynamic_pointer_cast<Buffer<TrackedObjects>>(object_itr->second)) {
+      result.tracked_object_timeline.reserve(object_buffer->msgs.size());
+      for (const auto & objects : object_buffer->msgs) {
+        result.tracked_object_timeline.push_back(
+          TimedTrackedObjects{message_stamp(objects), std::make_shared<TrackedObjects>(objects)});
+      }
+    }
+  }
 
   // Get kinematic states at regular intervals
   auto kinematic_states =
