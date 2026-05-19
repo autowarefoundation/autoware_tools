@@ -85,8 +85,8 @@ lanelet::Lanelet make_shoulder_lanelet(const lanelet::Id id, const double y_min,
   return lanelet;
 }
 
-lanelet::Polygon3d make_hatched_road_marking(
-  const lanelet::Id id, const double y_min, const double y_max)
+lanelet::Polygon3d make_map_polygon(
+  const lanelet::Id id, const double y_min, const double y_max, const char * type)
 {
   lanelet::Polygon3d polygon{
     id,
@@ -94,9 +94,15 @@ lanelet::Polygon3d make_hatched_road_marking(
      lanelet::Point3d{id * 100 + 2, 12.0, y_min, 0.0},
      lanelet::Point3d{id * 100 + 3, 12.0, y_max, 0.0},
      lanelet::Point3d{id * 100 + 4, -5.0, y_max, 0.0}}};
-  polygon.setAttribute(lanelet::AttributeName::Type, "hatched_road_markings");
+  polygon.setAttribute(lanelet::AttributeName::Type, type);
   polygon.setAttribute("area", "yes");
   return polygon;
+}
+
+lanelet::Polygon3d make_hatched_road_marking(
+  const lanelet::Id id, const double y_min, const double y_max)
+{
+  return make_map_polygon(id, y_min, y_max, "hatched_road_markings");
 }
 
 lanelet::LineString3d make_road_border_line(const lanelet::Id id, const double y)
@@ -185,6 +191,32 @@ TEST(DrivableAreaComplianceTest, CountsHatchedRoadMarkingAsDrivableArea)
   EXPECT_EQ(result.reason, "compliant");
 }
 
+TEST(DrivableAreaComplianceTest, CountsIntersectionAreaAsDrivableArea)
+{
+  const auto result = calculate_drivable_area_compliance(
+    make_trajectory(2.2),
+    make_route_handler(
+      {make_road_lanelet(1, -2.0, 2.0)}, {make_map_polygon(2, 2.0, 4.0, "intersection_area")}),
+    make_vehicle_info());
+
+  EXPECT_TRUE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 1.0);
+  EXPECT_EQ(result.reason, "compliant");
+}
+
+TEST(DrivableAreaComplianceTest, CountsParkingLotAsDrivableArea)
+{
+  const auto result = calculate_drivable_area_compliance(
+    make_trajectory(2.2),
+    make_route_handler(
+      {make_road_lanelet(1, -2.0, 2.0)}, {make_map_polygon(2, 2.0, 4.0, "parking_lot")}),
+    make_vehicle_info());
+
+  EXPECT_TRUE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 1.0);
+  EXPECT_EQ(result.reason, "compliant");
+}
+
 TEST(DrivableAreaComplianceTest, CountsRoadBorderSideTestAsFallbackDrivableArea)
 {
   const auto result = calculate_drivable_area_compliance(
@@ -207,7 +239,12 @@ TEST(DrivableAreaComplianceTest, ReturnsZeroWhenAnyCornerLeavesDrivableArea)
   EXPECT_DOUBLE_EQ(result.score, 0.0);
   EXPECT_EQ(result.reason, "non_compliant_corner_outside_drivable_area");
   EXPECT_TRUE(std::isfinite(result.debug_info.first_failure_time_s));
+  EXPECT_DOUBLE_EQ(result.debug_info.first_failure_time_s, 0.0);
   EXPECT_FALSE(result.debug_info.failing_corners.empty());
+  EXPECT_FALSE(result.debug_info.failing_corner_indices.empty());
+  EXPECT_EQ(
+    result.debug_info.failing_corner_indices.front(),
+    result.debug_info.failing_corners.front().corner_index);
   EXPECT_FALSE(result.debug_info.ego_horizon_footprints.empty());
   EXPECT_FALSE(result.debug_info.admissible_road_areas.empty());
 }
@@ -221,6 +258,45 @@ TEST(DrivableAreaComplianceTest, ReturnsUnavailableWhenRequiredInputsAreMissing)
   EXPECT_FALSE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 0.0);
   EXPECT_EQ(result.reason, "unavailable_no_route_handler");
+}
+
+TEST(DrivableAreaComplianceTest, ReturnsUnavailableWhenRouteHandlerMapIsNotReady)
+{
+  const auto result = calculate_drivable_area_compliance(
+    make_trajectory(0.0), std::make_shared<RouteHandler>(), make_vehicle_info());
+
+  EXPECT_FALSE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 0.0);
+  EXPECT_EQ(result.reason, "unavailable_route_handler_map_not_ready");
+}
+
+TEST(DrivableAreaComplianceTest, ReturnsUnavailableWhenFootprintEvaluationSizeMismatches)
+{
+  const auto trajectory = make_trajectory(0.0);
+  const std::vector<TrajectoryFootprintEvaluation> footprint_evaluations(1);
+  const auto result = calculate_drivable_area_compliance(
+    trajectory, make_route_handler({make_road_lanelet(1, -2.0, 2.0)}), make_vehicle_info(),
+    &footprint_evaluations);
+
+  EXPECT_FALSE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 0.0);
+  EXPECT_EQ(result.reason, "unavailable_footprint_evaluation_size_mismatch");
+  EXPECT_TRUE(result.debug_info.ego_horizon_footprints.empty());
+}
+
+TEST(DrivableAreaComplianceTest, ReturnsUnavailableWhenDrivableAreaQueryFails)
+{
+  const auto trajectory = make_trajectory(0.0);
+  const std::vector<TrajectoryFootprintEvaluation> footprint_evaluations(trajectory.points.size());
+  const auto result = calculate_drivable_area_compliance(
+    trajectory, make_route_handler({make_road_lanelet(1, -2.0, 2.0)}), make_vehicle_info(),
+    &footprint_evaluations);
+
+  EXPECT_FALSE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 0.0);
+  EXPECT_EQ(result.reason, "unavailable_drivable_area_query_failed");
+  EXPECT_TRUE(result.debug_info.ego_horizon_footprints.empty());
+  EXPECT_FALSE(std::isfinite(result.debug_info.first_failure_time_s));
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics

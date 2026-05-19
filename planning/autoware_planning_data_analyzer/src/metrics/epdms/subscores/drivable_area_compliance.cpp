@@ -14,9 +14,9 @@
 
 #include "drivable_area_compliance.hpp"
 
-#include "../../geometry/lanelet_geometry.hpp"
-#include "../../geometry/metric_utils.hpp"
+#include "metrics/geometry/metric_utils.hpp"
 
+#include <autoware/lanelet2_utils/conversion.hpp>
 #include <autoware_utils_geometry/boost_geometry.hpp>
 #include <rclcpp/duration.hpp>
 
@@ -35,23 +35,13 @@ namespace autoware::planning_data_analyzer::metrics
 namespace
 {
 
-geometry_msgs::msg::Point to_msg_point(
-  const autoware_utils_geometry::Point2d & point, const double z = 0.0)
-{
-  geometry_msgs::msg::Point msg;
-  msg.x = point.x();
-  msg.y = point.y();
-  msg.z = z;
-  return msg;
-}
-
 std::vector<geometry_msgs::msg::Point> polygon_to_points(
   const autoware_utils_geometry::Polygon2d & polygon, const double z)
 {
   std::vector<geometry_msgs::msg::Point> points;
   points.reserve(polygon.outer().size());
   for (const auto & point : polygon.outer()) {
-    points.push_back(to_msg_point(point, z));
+    points.push_back(autoware_utils_geometry::create_point(point.x(), point.y(), z));
   }
   return points;
 }
@@ -59,21 +49,33 @@ std::vector<geometry_msgs::msg::Point> polygon_to_points(
 std::vector<geometry_msgs::msg::Point> lanelet_polygon_to_points(
   const lanelet::ConstLanelet & lanelet, const double z)
 {
-  return polygon_to_points(to_polygon_2d(lanelet.polygon2d().basicPolygon()), z);
+  std::vector<geometry_msgs::msg::Point> points;
+  const auto polygon = lanelet.polygon2d().basicPolygon();
+  points.reserve(polygon.size());
+  for (const auto & point : polygon) {
+    points.push_back(autoware::lanelet2_utils::to_ros(point, z));
+  }
+  return points;
 }
 
 std::vector<geometry_msgs::msg::Point> map_polygon_to_points(
   const lanelet::ConstPolygon3d & polygon, const double z)
 {
-  return polygon_to_points(to_polygon_2d(lanelet::utils::to2D(polygon).basicPolygon()), z);
+  std::vector<geometry_msgs::msg::Point> points;
+  points.reserve(polygon.size());
+  for (const auto & point : polygon) {
+    points.push_back(autoware::lanelet2_utils::to_ros(lanelet::utils::to2D(point), z));
+  }
+  return points;
 }
 
 std::vector<geometry_msgs::msg::Point> line_string_to_points(
   const lanelet::ConstLineString3d & line_string, const double z)
 {
   std::vector<geometry_msgs::msg::Point> points;
-  for (const auto & point : lanelet::utils::to2D(line_string)) {
-    points.push_back(to_msg_point({point.x(), point.y()}, z));
+  points.reserve(line_string.size());
+  for (const auto & point : line_string) {
+    points.push_back(autoware::lanelet2_utils::to_ros(lanelet::utils::to2D(point), z));
   }
   return points;
 }
@@ -98,20 +100,24 @@ void append_first_failure_debug_info(
   debug_info.corner_count_inside =
     std::count(area.corner_drivable.begin(), area.corner_drivable.end(), true);
   if (!area.footprint_points.empty()) {
-    debug_info.label_anchor = to_msg_point(area.footprint_points.front(), z);
+    const auto & point = area.footprint_points.front();
+    debug_info.label_anchor = autoware_utils_geometry::create_point(point.x(), point.y(), z);
   }
 
   for (std::size_t corner_index = 0; corner_index < area.footprint_points.size(); ++corner_index) {
     if (!area.corner_drivable.at(corner_index)) {
       debug_info.failing_corner_indices.push_back(corner_index);
+      const auto & point = area.footprint_points.at(corner_index);
       debug_info.failing_corners.push_back(
-        {time_s, corner_index, to_msg_point(area.footprint_points.at(corner_index), z)});
+        {time_s, corner_index, autoware_utils_geometry::create_point(point.x(), point.y(), z)});
     }
     if (
       corner_index < area.corner_drivable_by_road_border.size() &&
       area.corner_drivable_by_road_border.at(corner_index)) {
+      const auto & point = area.footprint_points.at(corner_index);
       debug_info.road_border_fallback_corners.push_back(
-        {time_s, corner_index, to_msg_point(area.footprint_points.at(corner_index), z + 0.01)});
+        {time_s, corner_index,
+         autoware_utils_geometry::create_point(point.x(), point.y(), z + 0.01)});
     }
   }
 
@@ -143,16 +149,24 @@ void append_first_failure_debug_info(
   for (const auto & side_test : area.road_border_side_tests) {
     debug_info.road_border_side_test_segments.push_back(
       {time_s,
-       {to_msg_point(side_test.segment_start, z + 0.09),
-        to_msg_point(side_test.segment_end, z + 0.09)}});
+       {autoware_utils_geometry::create_point(
+          side_test.segment_start.x(), side_test.segment_start.y(), z + 0.09),
+        autoware_utils_geometry::create_point(
+          side_test.segment_end.x(), side_test.segment_end.y(), z + 0.09)}});
     debug_info.road_border_gap_segments.push_back(
       {time_s,
-       {to_msg_point(side_test.semantic_closest_point, z + 0.10),
-        to_msg_point(side_test.closest_point, z + 0.10)}});
+       {autoware_utils_geometry::create_point(
+          side_test.semantic_closest_point.x(), side_test.semantic_closest_point.y(), z + 0.10),
+        autoware_utils_geometry::create_point(
+          side_test.closest_point.x(), side_test.closest_point.y(), z + 0.10)}});
     debug_info.semantic_boundary_points.push_back(
-      {time_s, side_test.corner_index, to_msg_point(side_test.semantic_closest_point, z + 0.11)});
+      {time_s, side_test.corner_index,
+       autoware_utils_geometry::create_point(
+         side_test.semantic_closest_point.x(), side_test.semantic_closest_point.y(), z + 0.11)});
     debug_info.road_border_closest_points.push_back(
-      {time_s, side_test.corner_index, to_msg_point(side_test.closest_point, z + 0.12)});
+      {time_s, side_test.corner_index,
+       autoware_utils_geometry::create_point(
+         side_test.closest_point.x(), side_test.closest_point.y(), z + 0.12)});
 
     if (std::isfinite(side_test.corner_between_ratio)) {
       const auto projection_point = autoware_utils_geometry::Point2d{
@@ -163,13 +177,19 @@ void append_first_failure_debug_info(
           side_test.corner_between_ratio *
             (side_test.closest_point.y() - side_test.semantic_closest_point.y())};
       debug_info.corner_projection_points.push_back(
-        {time_s, side_test.corner_index, to_msg_point(projection_point, z + 0.13)});
+        {time_s, side_test.corner_index,
+         autoware_utils_geometry::create_point(
+           projection_point.x(), projection_point.y(), z + 0.13)});
     }
 
     debug_info.road_border_plus_samples.push_back(
-      {time_s, side_test.corner_index, to_msg_point(side_test.plus_sample, z + 0.14)});
+      {time_s, side_test.corner_index,
+       autoware_utils_geometry::create_point(
+         side_test.plus_sample.x(), side_test.plus_sample.y(), z + 0.14)});
     debug_info.road_border_minus_samples.push_back(
-      {time_s, side_test.corner_index, to_msg_point(side_test.minus_sample, z + 0.15)});
+      {time_s, side_test.corner_index,
+       autoware_utils_geometry::create_point(
+         side_test.minus_sample.x(), side_test.minus_sample.y(), z + 0.15)});
   }
 }
 
@@ -235,11 +255,10 @@ DrivableAreaComplianceResult calculate_drivable_area_compliance(
   const auto & evaluations =
     footprint_evaluations != nullptr ? *footprint_evaluations : local_evaluations;
   if (evaluations.size() != trajectory.points.size()) {
-    result.reason = "unavailable_invalid_footprint";
+    result.reason = "unavailable_footprint_evaluation_size_mismatch";
     return result;
   }
 
-  fill_debug_info(result.debug_info, trajectory, evaluations);
   result.available = true;
   result.reason = "compliant";
 
@@ -249,6 +268,11 @@ DrivableAreaComplianceResult calculate_drivable_area_compliance(
       result.reason = "unavailable_drivable_area_query_failed";
       return result;
     }
+  }
+
+  fill_debug_info(result.debug_info, trajectory, evaluations);
+
+  for (const auto & evaluation : evaluations) {
     if (evaluation.ego_area_evaluation->flags.non_drivable_area) {
       result.reason = "non_compliant_corner_outside_drivable_area";
       return result;

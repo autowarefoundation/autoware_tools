@@ -15,7 +15,7 @@
 #ifndef METRICS__EPDMS__SUBSCORES__DRIVABLE_AREA_COMPLIANCE_HPP_
 #define METRICS__EPDMS__SUBSCORES__DRIVABLE_AREA_COMPLIANCE_HPP_
 
-#include "../../geometry/ego_footprint.hpp"
+#include "metrics/geometry/ego_footprint.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
