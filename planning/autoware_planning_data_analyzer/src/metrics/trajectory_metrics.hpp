@@ -96,7 +96,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const DrivingDirectionComplianceParameters & driving_direction_params =
     DrivingDirectionComplianceParameters{},
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info =
-    autoware::vehicle_info_utils::VehicleInfo{});
+    autoware::vehicle_info_utils::VehicleInfo{},
+  const std::vector<TimedTrackedObjects> & future_objects = {});
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

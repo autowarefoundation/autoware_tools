@@ -65,6 +65,8 @@ struct BagData
       candidate_trajectories_topic_key, buffer_duration_sec, max_buffer_msgs);
     create_buffer<PredictedObjects>(
       "/perception/object_recognition/objects", buffer_duration_sec, max_buffer_msgs);
+    create_buffer<TrackedObjects>(
+      "/perception/object_recognition/tracking/objects", buffer_duration_sec, max_buffer_msgs);
     create_buffer<TrafficLightGroupArray>(
       "/perception/traffic_light_recognition/traffic_signals", buffer_duration_sec,
       max_buffer_msgs);
@@ -97,6 +99,10 @@ struct BagData
     }
     create_buffer<PredictedObjects>(
       topic_names.objects_topic, buffer_duration_sec, max_buffer_msgs);
+    if (!topic_names.tracked_objects_topic.empty()) {
+      create_buffer<TrackedObjects>(
+        topic_names.tracked_objects_topic, buffer_duration_sec, max_buffer_msgs);
+    }
     if (!topic_names.traffic_signals_topic.empty()) {
       create_buffer<TrafficLightGroupArray>(
         topic_names.traffic_signals_topic, buffer_duration_sec, max_buffer_msgs);
@@ -243,6 +249,23 @@ struct BagData
       synchronized_data->objects = obj_buffer->get_closest(traj_stamp_ns, tolerance_ms);
     } else if (obj_buffer) {
       synchronized_data->objects = obj_buffer->get_closest(target_time, tolerance_ms);
+    }
+
+    std::shared_ptr<Buffer<TrackedObjects>> tracked_obj_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto ob = std::dynamic_pointer_cast<Buffer<TrackedObjects>>(buffer)) {
+        tracked_obj_buffer = ob;
+        break;
+      }
+    }
+    if (tracked_obj_buffer && synchronized_data->trajectory) {
+      const auto traj_stamp_ns =
+        rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+      synchronized_data->tracked_objects =
+        tracked_obj_buffer->get_closest(traj_stamp_ns, tolerance_ms);
+    } else if (tracked_obj_buffer) {
+      synchronized_data->tracked_objects =
+        tracked_obj_buffer->get_closest(target_time, tolerance_ms);
     }
 
     // Get traffic signals

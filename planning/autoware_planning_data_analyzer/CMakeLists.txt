@@ -13,6 +13,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/metrics/geometry/ego_footprint.cpp
   src/metrics/geometry/lanelet_geometry.cpp
   src/metrics/geometry/lanelet_queries.cpp
+  src/metrics/geometry/object_tracks.cpp
   src/metrics/epdms/aggregation/epdms_aggregation.cpp
   src/metrics/epdms/subscores/ego_progress.cpp
   src/metrics/epdms/subscores/driving_direction_compliance.cpp

@@ -19,6 +19,7 @@
 
 #include <autoware_internal_planning_msgs/msg/candidate_trajectories.hpp>
 #include <autoware_perception_msgs/msg/predicted_objects.hpp>
+#include <autoware_perception_msgs/msg/tracked_objects.hpp>
 #include <autoware_perception_msgs/msg/traffic_light_group_array.hpp>
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 #include <autoware_vehicle_msgs/msg/control_mode_report.hpp>
@@ -29,6 +30,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer
 {
@@ -39,10 +41,17 @@ using CandidateTrajectories = autoware_internal_planning_msgs::msg::CandidateTra
 using TFMessage = tf2_msgs::msg::TFMessage;
 using Odometry = nav_msgs::msg::Odometry;
 using PredictedObjects = autoware_perception_msgs::msg::PredictedObjects;
+using TrackedObjects = autoware_perception_msgs::msg::TrackedObjects;
 using TrafficLightGroupArray = autoware_perception_msgs::msg::TrafficLightGroupArray;
 using AccelWithCovarianceStamped = geometry_msgs::msg::AccelWithCovarianceStamped;
 using SteeringReport = autoware_vehicle_msgs::msg::SteeringReport;
 using ControlModeReport = autoware_vehicle_msgs::msg::ControlModeReport;
+
+struct TimedTrackedObjects
+{
+  rclcpp::Time stamp;
+  std::shared_ptr<const TrackedObjects> objects;
+};
 
 // Synchronized data from multiple topics at a specific timestamp
 struct SynchronizedData
@@ -54,6 +63,8 @@ struct SynchronizedData
   std::shared_ptr<AccelWithCovarianceStamped> acceleration;
   std::shared_ptr<SteeringReport> steering_status;
   std::shared_ptr<PredictedObjects> objects;
+  std::shared_ptr<TrackedObjects> tracked_objects;
+  std::vector<TimedTrackedObjects> future_tracked_objects;
   std::shared_ptr<TrafficLightGroupArray> traffic_signals;
   rclcpp::Time timestamp;
   rclcpp::Time bag_timestamp;
@@ -68,6 +79,7 @@ struct TopicNames
   std::string candidate_trajectories_topic;
   std::string gt_trajectory_topic;
   std::string objects_topic;
+  std::string tracked_objects_topic;
   std::string traffic_signals_topic;
   std::string tf_topic;
   std::string acceleration_topic;
@@ -75,6 +87,7 @@ struct TopicNames
   std::string control_mode_topic;
   double evaluation_interval_ms = 100.0;
   double sync_tolerance_ms = 100.0;
+  double trajectory_evaluation_horizon_s = 4.0;
 };
 
 }  // namespace autoware::planning_data_analyzer

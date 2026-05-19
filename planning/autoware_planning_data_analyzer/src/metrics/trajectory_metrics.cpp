@@ -20,13 +20,13 @@
 #include "metrics/epdms/subscores/no_at_fault_collision.hpp"
 #include "metrics/epdms/subscores/traffic_light_compliance.hpp"
 #include "metrics/epdms/subscores/ttc_within_bound.hpp"
+#include "metrics/geometry/ego_footprint.hpp"
 #include "metrics/geometry/lanelet_queries.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 
 #include <autoware/lanelet2_utils/geometry.hpp>
 #include <autoware/lanelet2_utils/intersection.hpp>
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
-#include <autoware_lanelet2_extension/utility/utilities.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
 #include <tf2/LinearMath/Vector3.hpp>
 
@@ -228,7 +228,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const HistoryComfortParameters & history_comfort_params,
   const LaneKeepingParameters & lane_keeping_params,
   const DrivingDirectionComplianceParameters & driving_direction_params,
-  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::vector<TimedTrackedObjects> & future_objects)
 {
   TrajectoryPointMetrics metrics;
 
@@ -237,6 +238,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   }
 
   const auto & trajectory = *sync_data->trajectory;
+  const auto & logged_future_objects =
+    future_objects.empty() ? sync_data->future_tracked_objects : future_objects;
   const size_t num_points = trajectory.points.size();
 
   // Initialize vectors
@@ -256,8 +259,16 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   metrics.time_to_collision_within_bound_available = ttc_within_bound.available;
   metrics.time_to_collision_within_bound_reason = ttc_within_bound.reason;
   metrics.time_to_collision_infraction_time_s = ttc_within_bound.infraction_time_s;
-  const auto no_at_fault_collision =
-    calculate_no_at_fault_collision(trajectory, sync_data->objects, vehicle_info, route_handler);
+  const auto footprint_evaluations =
+    evaluate_trajectory_footprints(trajectory, vehicle_info, route_handler);
+  NoAtFaultCollisionResult no_at_fault_collision;
+  if (logged_future_objects.empty()) {
+    no_at_fault_collision.reason = "unavailable_no_future_objects";
+  } else {
+    const auto object_tracks = build_logged_object_tracks(logged_future_objects);
+    no_at_fault_collision = calculate_no_at_fault_collision(
+      trajectory, object_tracks, vehicle_info, route_handler, footprint_evaluations);
+  }
   metrics.no_at_fault_collision = no_at_fault_collision.score;
   metrics.no_at_fault_collision_available = no_at_fault_collision.available;
   metrics.no_at_fault_collision_reason = no_at_fault_collision.reason;

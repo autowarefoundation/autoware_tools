@@ -37,6 +37,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -200,6 +201,14 @@ public:
   void set_enabled_metrics(const std::vector<std::string> & enabled_metric_names);
 
   void set_debug_topics_enabled(bool enabled) { debug_topics_enabled_ = enabled; }
+
+  void set_trajectory_evaluation_horizon(double horizon_s)
+  {
+    if (horizon_s < 0.0) {
+      throw std::invalid_argument("trajectory evaluation horizon must be non-negative");
+    }
+    trajectory_evaluation_horizon_s_ = horizon_s;
+  }
 
   void set_evaluation_horizons(const std::vector<double> & horizons)
   {
@@ -398,10 +407,12 @@ private:
   std::string metric_variant_;
   GTSourceMode gt_source_mode_;
   double gt_sync_tolerance_ms_;
+  double trajectory_evaluation_horizon_s_{4.0};
   std::vector<double> evaluation_horizons_;
   double override_window_sec_{0.0};
   std::vector<utils::ControlModeEvent> control_mode_events_;
   // Reserved for the follow-up debug-topic PR. PR 425 only stores the runtime switch.
+  std::vector<TimedTrackedObjects> object_timeline_;
   bool debug_topics_enabled_{false};
 };
 
