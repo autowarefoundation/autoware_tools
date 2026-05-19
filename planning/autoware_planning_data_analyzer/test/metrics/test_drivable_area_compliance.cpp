@@ -126,7 +126,10 @@ std::shared_ptr<RouteHandler> make_route_handler(
   }
 
   autoware_map_msgs::msg::LaneletMapBin map_msg;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
   lanelet::utils::conversion::toBinMsg(map, &map_msg);
+#pragma GCC diagnostic pop
 
   auto route_handler = std::make_shared<RouteHandler>();
   route_handler->setMap(map_msg);
