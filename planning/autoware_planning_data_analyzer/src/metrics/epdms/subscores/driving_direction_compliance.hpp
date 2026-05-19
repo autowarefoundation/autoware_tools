@@ -15,7 +15,6 @@
 #ifndef METRICS__EPDMS__SUBSCORES__DRIVING_DIRECTION_COMPLIANCE_HPP_
 #define METRICS__EPDMS__SUBSCORES__DRIVING_DIRECTION_COMPLIANCE_HPP_
 
-#include <cstddef>
 #include <limits>
 #include <string>
 #include <vector>
