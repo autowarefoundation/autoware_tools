@@ -17,6 +17,7 @@
 
 #include "data_types.hpp"
 
+#include <autoware_utils/ros/uuid_helper.hpp>
 #include <autoware_utils_geometry/boost_geometry.hpp>
 
 #include <autoware_perception_msgs/msg/object_classification.hpp>
@@ -25,13 +26,22 @@
 #include <geometry_msgs/msg/twist.hpp>
 #include <unique_identifier_msgs/msg/uuid.hpp>
 
-#include <array>
-#include <cstdint>
+#include <boost/uuid/uuid_hash.hpp>
+
+#include <cstddef>
 #include <optional>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
+
+struct UuidHash
+{
+  std::size_t operator()(const unique_identifier_msgs::msg::UUID & object_id) const
+  {
+    return boost::hash<boost::uuids::uuid>{}(autoware_utils::to_boost_uuid(object_id));
+  }
+};
 
 struct LoggedObjectState
 {
@@ -44,14 +54,14 @@ struct LoggedObjectState
 
 struct LoggedObjectTrack
 {
-  std::array<uint8_t, 16> object_id{};
+  unique_identifier_msgs::msg::UUID object_id{};
   bool has_valid_object_id{false};
   std::vector<LoggedObjectState> states;
 };
 
 struct InterpolatedLoggedObject
 {
-  std::array<uint8_t, 16> object_id{};
+  unique_identifier_msgs::msg::UUID object_id{};
   bool has_valid_object_id{false};
   geometry_msgs::msg::Pose pose;
   double speed_mps{0.0};
@@ -61,8 +71,6 @@ struct InterpolatedLoggedObject
 };
 
 bool has_valid_object_id(const unique_identifier_msgs::msg::UUID & object_id);
-
-std::array<uint8_t, 16> object_id_key(const unique_identifier_msgs::msg::UUID & object_id);
 
 bool is_agent_classification(
   const std::vector<autoware_perception_msgs::msg::ObjectClassification> & classification);

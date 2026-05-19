@@ -24,12 +24,10 @@
 #include <lanelet2_core/geometry/Lanelet.h>
 
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <cstdint>
 #include <memory>
-#include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -44,7 +42,9 @@ using autoware_utils_geometry::Point2d;
 using autoware_utils_geometry::Polygon2d;
 namespace bg = boost::geometry;
 
-constexpr double kStoppedSpeedThreshold = 5.0e-2;
+// Strict NAVSIM-style physical-stop threshold for NC classification; this is intentionally
+// tighter than general perception stopped-vehicle thresholds to keep creeping objects active.
+constexpr double kStoppedVelocityThresholdMps = 5.0e-2;
 
 enum class CollisionType {
   StoppedEgo,
@@ -89,7 +89,7 @@ bool front_bumper_intersects(
 bool is_track_stopped(const InterpolatedLoggedObject & object_state)
 {
   return !is_agent_classification(object_state.classification) ||
-         object_state.speed_mps <= kStoppedSpeedThreshold;
+         object_state.speed_mps <= kStoppedVelocityThresholdMps;
 }
 
 CollisionType classify_collision(
@@ -97,7 +97,7 @@ CollisionType classify_collision(
   const InterpolatedLoggedObject & object_state,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
 {
-  if (ego_speed(ego_point) <= kStoppedSpeedThreshold) {
+  if (ego_speed(ego_point) <= kStoppedVelocityThresholdMps) {
     return CollisionType::StoppedEgo;
   }
   if (is_track_stopped(object_state)) {
@@ -158,7 +158,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
     return result;
   }
 
-  std::set<std::array<uint8_t, 16>> collided_object_ids;
+  std::unordered_set<unique_identifier_msgs::msg::UUID, UuidHash> collided_object_ids;
   const auto trajectory_start_time = rclcpp::Time(trajectory.header.stamp);
 
   auto record_at_fault_collision = [&](

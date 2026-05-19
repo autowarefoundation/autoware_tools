@@ -19,13 +19,11 @@
 #include <autoware/object_recognition_utils/object_classification.hpp>
 #include <autoware_utils_geometry/boost_polygon_utils.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
+#include <autoware_utils_math/normalization.hpp>
 
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <cstddef>
 #include <cstdlib>
-#include <functional>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -36,23 +34,11 @@ namespace autoware::planning_data_analyzer::metrics
 namespace
 {
 
-struct ObjectIdHash
-{
-  std::size_t operator()(const std::array<uint8_t, 16> & object_id) const
-  {
-    std::size_t seed = 0U;
-    for (const auto byte : object_id) {
-      seed ^= std::hash<uint8_t>{}(byte) + 0x9e3779b9U + (seed << 6U) + (seed >> 2U);
-    }
-    return seed;
-  }
-};
-
 double closest_pi_symmetric_yaw(const double reference_yaw, const double yaw)
 {
   double best_yaw = yaw;
   double best_error = std::abs(yaw - reference_yaw);
-  for (int multiplier = -1; multiplier <= 1; ++multiplier) {
+  for (const int multiplier : {-1, 0, 1}) {
     const double candidate_yaw = yaw + static_cast<double>(multiplier) * M_PI;
     const double candidate_error = std::abs(candidate_yaw - reference_yaw);
     if (candidate_error < best_error) {
@@ -63,20 +49,9 @@ double closest_pi_symmetric_yaw(const double reference_yaw, const double yaw)
   return best_yaw;
 }
 
-double normalize_angle(const double angle)
-{
-  return std::atan2(std::sin(angle), std::cos(angle));
-}
-
 double planar_speed_mps(const geometry_msgs::msg::Twist & twist)
 {
   return std::hypot(twist.linear.x, twist.linear.y);
-}
-
-double planar_displacement_m(
-  const geometry_msgs::msg::Pose & lhs, const geometry_msgs::msg::Pose & rhs)
-{
-  return autoware_utils_geometry::calc_distance2d(lhs.position, rhs.position);
 }
 
 bool should_hold_long_object_yaw(
@@ -102,12 +77,14 @@ bool should_hold_long_object_yaw(
     return false;
   }
 
-  const double displacement = planar_displacement_m(previous_state.pose, current_state.pose);
+  const double displacement = autoware_utils_geometry::calc_distance2d(
+    previous_state.pose.position, current_state.pose.position);
   if (displacement > kSmallDisplacementThresholdM) {
     return false;
   }
 
-  const double yaw_delta = std::abs(normalize_angle(current_yaw - previous_yaw));
+  const double yaw_delta =
+    std::abs(autoware_utils_math::normalize_radian(current_yaw - previous_yaw));
   return yaw_delta > kLargeYawJumpThresholdRad;
 }
 
@@ -150,11 +127,6 @@ bool has_valid_object_id(const unique_identifier_msgs::msg::UUID & object_id)
     object_id.uuid.begin(), object_id.uuid.end(), [](const auto byte) { return byte != 0U; });
 }
 
-std::array<uint8_t, 16> object_id_key(const unique_identifier_msgs::msg::UUID & object_id)
-{
-  return object_id.uuid;
-}
-
 bool is_agent_classification(
   const std::vector<autoware_perception_msgs::msg::ObjectClassification> & classification)
 {
@@ -175,7 +147,7 @@ bool is_unknown_classification(
 std::vector<LoggedObjectTrack> build_logged_object_tracks(
   const std::vector<TimedTrackedObjects> & future_objects)
 {
-  std::unordered_map<std::array<uint8_t, 16>, LoggedObjectTrack, ObjectIdHash> keyed_tracks;
+  std::unordered_map<unique_identifier_msgs::msg::UUID, LoggedObjectTrack, UuidHash> keyed_tracks;
   std::vector<LoggedObjectTrack> invalid_id_tracks;
 
   for (const auto & timed_objects : future_objects) {
@@ -199,9 +171,8 @@ std::vector<LoggedObjectTrack> build_logged_object_tracks(
         continue;
       }
 
-      const auto key = object_id_key(object.object_id);
-      auto & track = keyed_tracks[key];
-      track.object_id = key;
+      auto & track = keyed_tracks[object.object_id];
+      track.object_id = object.object_id;
       track.has_valid_object_id = true;
       track.states.push_back(state);
     }
@@ -217,7 +188,7 @@ std::vector<LoggedObjectTrack> build_logged_object_tracks(
     tracks.push_back(std::move(track));
   }
   std::sort(tracks.begin(), tracks.end(), [](const auto & lhs, const auto & rhs) {
-    return lhs.object_id < rhs.object_id;
+    return lhs.object_id.uuid < rhs.object_id.uuid;
   });
   for (auto & track : invalid_id_tracks) {
     tracks.push_back(std::move(track));
@@ -255,12 +226,12 @@ std::vector<TimedTrackedObjects> get_future_objects_for_trajectory(
       return timed_objects.stamp.nanoseconds() < stamp_ns;
     });
 
-  for (auto itr = first; itr != object_timeline.end(); ++itr) {
-    if (itr->stamp.nanoseconds() > range_end_ns) {
-      break;
-    }
-    future_objects.push_back(*itr);
-  }
+  const auto last = std::upper_bound(
+    first, object_timeline.end(), range_end_ns,
+    [](const rcutils_time_point_value_t stamp_ns, const TimedTrackedObjects & timed_objects) {
+      return stamp_ns < timed_objects.stamp.nanoseconds();
+    });
+  future_objects.assign(first, last);
   return future_objects;
 }
 
