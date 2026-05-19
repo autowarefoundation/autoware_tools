@@ -199,27 +199,6 @@ double calculate_time_to_collision(
   return std::min(ttc, max_ttc_value);
 }
 
-bool is_pose_in_route_lane(
-  const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler)
-{
-  if (!route_handler || !route_handler->isHandlerReady()) {
-    return false;
-  }
-
-  lanelet::ConstLanelet closest_lanelet;
-  if (route_handler->getClosestLaneletWithinRoute(pose, &closest_lanelet)) {
-    return true;
-  }
-
-  for (const auto & lanelet : route_handler->getRoadLaneletsAtPose(pose)) {
-    if (route_handler->isRouteLanelet(lanelet)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 }  // namespace
 
 TrajectoryPointMetrics calculate_trajectory_point_metrics(
@@ -287,11 +266,12 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
           trajectory.points.at(i - 1).pose.position, trajectory.points.at(i).pose.position);
       }
       const auto & point = trajectory.points.at(i);
+      const auto local_context = compute_driving_direction_local_context(point.pose, route_handler)
+                                   .value_or(DrivingDirectionLocalContext{});
       driving_direction_evaluation_points.push_back(
         DrivingDirectionEvaluationPoint{
           rclcpp::Duration(point.time_from_start).seconds(), progress_m,
-          !is_pose_in_route_lane(point.pose, route_handler),
-          is_pose_in_intersection(point.pose, route_handler)});
+          !local_context.in_route_lane_polygon, local_context.in_intersection});
     }
 
     const auto ddc_result = calculate_driving_direction_compliance(
