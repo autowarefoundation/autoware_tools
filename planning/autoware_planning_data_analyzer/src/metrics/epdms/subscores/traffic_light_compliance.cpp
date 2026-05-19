@@ -25,10 +25,8 @@
 #include <boost/geometry/algorithms/intersects.hpp>
 
 #include <algorithm>
-#include <cmath>
 #include <memory>
 #include <optional>
-#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -82,41 +80,6 @@ const autoware_perception_msgs::msg::TrafficLightGroup * find_signal_group(
   return nullptr;
 }
 
-std::vector<geometry_msgs::msg::Point> polygon_to_msg_points(
-  const autoware_utils_geometry::Polygon2d & polygon, const double z)
-{
-  std::vector<geometry_msgs::msg::Point> points;
-  points.reserve(polygon.outer().size() + 1U);
-  for (const auto & point : polygon.outer()) {
-    geometry_msgs::msg::Point msg;
-    msg.x = point.x();
-    msg.y = point.y();
-    msg.z = z;
-    points.push_back(msg);
-  }
-  if (
-    !points.empty() &&
-    (points.front().x != points.back().x || points.front().y != points.back().y)) {
-    points.push_back(points.front());
-  }
-  return points;
-}
-
-std::vector<geometry_msgs::msg::Point> stop_line_to_msg_points(
-  const lanelet::ConstLineString3d & stop_line, const double z)
-{
-  std::vector<geometry_msgs::msg::Point> points;
-  points.reserve(stop_line.size());
-  for (const auto & point : stop_line) {
-    geometry_msgs::msg::Point msg;
-    msg.x = point.x();
-    msg.y = point.y();
-    msg.z = z;
-    points.push_back(msg);
-  }
-  return points;
-}
-
 std::optional<TurnDirection> infer_turn_direction_from_indicator(
   const std::shared_ptr<TurnIndicatorsReport> & turn_indicators_status)
 {
@@ -153,19 +116,6 @@ std::optional<TurnDirection> infer_turn_direction_from_route_lanelets(
     }
   }
   return inferred;
-}
-
-std::string turn_direction_to_string(const TurnDirection turn_direction)
-{
-  switch (turn_direction) {
-    case TurnDirection::Straight:
-      return "straight";
-    case TurnDirection::Left:
-      return "left";
-    case TurnDirection::Right:
-      return "right";
-  }
-  return "unknown";
 }
 
 bool matches_intended_turn_direction(
@@ -259,54 +209,6 @@ bool stop_line_intersects_ego_polygon(
   return boost::geometry::intersects(ego_polygon, to_linestring2d(stop_line));
 }
 
-void record_first_failure_debug_info(
-  TrafficLightComplianceDebugInfo & debug_info, const double time_s,
-  const autoware_utils_geometry::Polygon2d & ego_polygon, const double z,
-  const RelevantTrafficLightGroup & group)
-{
-  if (!std::isinf(debug_info.first_failure_time_s)) {
-    return;
-  }
-
-  debug_info.first_failure_time_s = time_s;
-  debug_info.label_anchor = polygon_to_msg_points(ego_polygon, z + 0.12).front();
-  debug_info.regulatory_element_ids.push_back(group.regulatory_element_id);
-  for (const auto & lanelet : group.selected_lanelets) {
-    debug_info.selected_lane_ids.push_back(lanelet.id());
-  }
-  if (group.stop_line.has_value()) {
-    debug_info.stop_line_ids.push_back(group.stop_line->id());
-    debug_info.stop_lines.push_back(
-      TrafficLightComplianceDebugPolygon{
-        time_s, stop_line_to_msg_points(*group.stop_line, z + 0.10), group.stop_line->id()});
-  }
-  debug_info.selected_stop_line_count = debug_info.stop_lines.size();
-  if (group.intended_turn_direction.has_value()) {
-    debug_info.intended_movement = turn_direction_to_string(group.intended_turn_direction.value());
-  }
-}
-
-void fill_debug_horizon_footprints(
-  TrafficLightComplianceDebugInfo & debug_info,
-  const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::vector<TrajectoryFootprintEvaluation> & evaluations)
-{
-  if (evaluations.size() != trajectory.points.size()) {
-    return;
-  }
-
-  debug_info.ego_horizon_footprints.reserve(trajectory.points.size());
-  for (std::size_t index = 0; index < trajectory.points.size(); ++index) {
-    const auto time_s = rclcpp::Duration(trajectory.points.at(index).time_from_start).seconds();
-    debug_info.ego_horizon_footprints.push_back(
-      TrafficLightComplianceDebugPolygon{
-        time_s,
-        polygon_to_msg_points(
-          evaluations.at(index).ego_polygon, trajectory.points.at(index).pose.position.z + 0.02),
-        static_cast<lanelet::Id>(index)});
-  }
-}
-
 }  // namespace
 
 TrafficLightComplianceResult calculate_traffic_light_compliance(
@@ -362,22 +264,12 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
   const auto local_footprint = vehicle_info.createFootprint(0.0);
   const bool can_reuse_evaluations =
     evaluations != nullptr && evaluations->size() == trajectory.points.size();
-  if (can_reuse_evaluations) {
-    fill_debug_horizon_footprints(result.debug_info, trajectory, *evaluations);
-  }
 
   for (std::size_t point_index = 0; point_index < trajectory.points.size(); ++point_index) {
     const auto & point = trajectory.points.at(point_index);
-    const auto time_s = rclcpp::Duration(point.time_from_start).seconds();
     const auto ego_polygon = can_reuse_evaluations
                                ? evaluations->at(point_index).ego_polygon
                                : create_pose_footprint(point.pose, local_footprint);
-    if (!can_reuse_evaluations) {
-      result.debug_info.ego_horizon_footprints.push_back(
-        TrafficLightComplianceDebugPolygon{
-          time_s, polygon_to_msg_points(ego_polygon, point.pose.position.z + 0.02),
-          static_cast<lanelet::Id>(point_index)});
-    }
 
     for (const auto & group : groups) {
       if (!group.stop_line.has_value()) {
@@ -402,8 +294,6 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
         continue;
       }
 
-      record_first_failure_debug_info(
-        result.debug_info, time_s, ego_polygon, point.pose.position.z, group);
       result.reason = "red_light_stop_line_crossed";
       result.score = 0.0;
       return result;
