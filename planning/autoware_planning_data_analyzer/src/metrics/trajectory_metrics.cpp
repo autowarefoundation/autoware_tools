@@ -261,8 +261,14 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   metrics.time_to_collision_infraction_time_s = ttc_within_bound.infraction_time_s;
   const auto footprint_evaluations =
     evaluate_trajectory_footprints(trajectory, vehicle_info, route_handler);
-  const auto no_at_fault_collision = calculate_no_at_fault_collision(
-    trajectory, logged_future_objects, vehicle_info, route_handler, &footprint_evaluations);
+  NoAtFaultCollisionResult no_at_fault_collision;
+  if (logged_future_objects.empty()) {
+    no_at_fault_collision.reason = "unavailable_no_future_objects";
+  } else {
+    const auto object_tracks = build_logged_object_tracks(logged_future_objects);
+    no_at_fault_collision = calculate_no_at_fault_collision(
+      trajectory, object_tracks, vehicle_info, route_handler, footprint_evaluations);
+  }
   metrics.no_at_fault_collision = no_at_fault_collision.score;
   metrics.no_at_fault_collision_available = no_at_fault_collision.available;
   metrics.no_at_fault_collision_reason = no_at_fault_collision.reason;

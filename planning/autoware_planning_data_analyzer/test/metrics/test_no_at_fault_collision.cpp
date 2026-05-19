@@ -77,12 +77,21 @@ autoware_planning_msgs::msg::Trajectory make_straight_trajectory(const double sp
   return trajectory;
 }
 
+autoware_planning_msgs::msg::Trajectory make_stopped_then_moving_trajectory()
+{
+  auto trajectory = make_straight_trajectory(5.0);
+  trajectory.points[0].longitudinal_velocity_mps = 0.0;
+  return trajectory;
+}
+
 autoware_perception_msgs::msg::TrackedObject make_object(
-  const double x, const double y, const std::uint8_t label, const std::array<uint8_t, 16> & uuid)
+  const double x, const double y, const std::uint8_t label, const std::array<uint8_t, 16> & uuid,
+  const double speed_mps = 1.0)
 {
   autoware_perception_msgs::msg::TrackedObject object;
   object.object_id.uuid = uuid;
   object.kinematics.pose_with_covariance.pose = make_pose(x, y);
+  object.kinematics.twist_with_covariance.twist.linear.x = speed_mps;
   object.shape.type = autoware_perception_msgs::msg::Shape::BOUNDING_BOX;
   object.shape.dimensions.x = 2.0;
   object.shape.dimensions.y = 1.0;
@@ -193,6 +202,27 @@ TEST(NoAtFaultCollision, UsesLoggedFutureObjectAtMatchingTime)
   EXPECT_TRUE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 0.0);
   EXPECT_EQ(result.reason, "at_fault_collision_with_agent");
+}
+
+TEST(NoAtFaultCollision, IgnoredCollisionDoesNotMaskLaterAtFaultCollisionWithSameObject)
+{
+  const auto trajectory = make_stopped_then_moving_trajectory();
+  constexpr std::array<uint8_t, 16> uuid{6};
+  const auto future_objects = std::vector<TimedTrackedObjects>{
+    make_timed_objects(
+      rclcpp::Time(10, 0, RCL_ROS_TIME),
+      {make_object(4.0, 0.0, autoware_perception_msgs::msg::ObjectClassification::CAR, uuid)}),
+    make_timed_objects(
+      rclcpp::Time(11, 0, RCL_ROS_TIME),
+      {make_object(8.8, 0.0, autoware_perception_msgs::msg::ObjectClassification::CAR, uuid)})};
+
+  const auto result =
+    calculate_no_at_fault_collision(trajectory, future_objects, make_vehicle_info());
+
+  EXPECT_TRUE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 0.0);
+  EXPECT_EQ(result.reason, "at_fault_collision_with_agent");
+  EXPECT_DOUBLE_EQ(result.infraction_time_s, 1.0);
 }
 
 TEST(NoAtFaultCollision, UnknownObjectsAreIgnored)

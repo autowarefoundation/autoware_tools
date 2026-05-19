@@ -23,8 +23,10 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <cstdlib>
-#include <map>
+#include <functional>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -34,11 +36,23 @@ namespace autoware::planning_data_analyzer::metrics
 namespace
 {
 
+struct ObjectIdHash
+{
+  std::size_t operator()(const std::array<uint8_t, 16> & object_id) const
+  {
+    std::size_t seed = 0U;
+    for (const auto byte : object_id) {
+      seed ^= std::hash<uint8_t>{}(byte) + 0x9e3779b9U + (seed << 6U) + (seed >> 2U);
+    }
+    return seed;
+  }
+};
+
 double closest_pi_symmetric_yaw(const double reference_yaw, const double yaw)
 {
   double best_yaw = yaw;
   double best_error = std::abs(yaw - reference_yaw);
-  for (int multiplier = -2; multiplier <= 2; ++multiplier) {
+  for (int multiplier = -1; multiplier <= 1; ++multiplier) {
     const double candidate_yaw = yaw + static_cast<double>(multiplier) * M_PI;
     const double candidate_error = std::abs(candidate_yaw - reference_yaw);
     if (candidate_error < best_error) {
@@ -69,6 +83,8 @@ bool should_hold_long_object_yaw(
   const LoggedObjectState & previous_state, const LoggedObjectState & current_state,
   const double previous_yaw, const double current_yaw)
 {
+  // These thresholds suppress tracker yaw flips for long slow/stationary objects, where
+  // a bounding box can jump by about pi without the object physically turning.
   constexpr double kLongObjectLengthThresholdM = 8.0;
   constexpr double kSlowObjectSpeedThresholdMps = 2.0;
   constexpr double kSmallDisplacementThresholdM = 0.75;
@@ -159,7 +175,7 @@ bool is_unknown_classification(
 std::vector<LoggedObjectTrack> build_logged_object_tracks(
   const std::vector<TimedTrackedObjects> & future_objects)
 {
-  std::map<std::array<uint8_t, 16>, LoggedObjectTrack> keyed_tracks;
+  std::unordered_map<std::array<uint8_t, 16>, LoggedObjectTrack, ObjectIdHash> keyed_tracks;
   std::vector<LoggedObjectTrack> invalid_id_tracks;
 
   for (const auto & timed_objects : future_objects) {
@@ -200,6 +216,9 @@ std::vector<LoggedObjectTrack> build_logged_object_tracks(
     canonicalize_bounding_box_yaws(track);
     tracks.push_back(std::move(track));
   }
+  std::sort(tracks.begin(), tracks.end(), [](const auto & lhs, const auto & rhs) {
+    return lhs.object_id < rhs.object_id;
+  });
   for (auto & track : invalid_id_tracks) {
     tracks.push_back(std::move(track));
   }
@@ -223,6 +242,8 @@ std::vector<TimedTrackedObjects> get_future_objects_for_trajectory(
       std::min(trajectory_horizon_ns, rclcpp::Duration::from_seconds(horizon_s).nanoseconds());
   }
 
+  // This is not message sync tolerance. Keep one extra tracker sample beyond the trajectory
+  // horizon so interpolation at the last trajectory point can still use a following object state.
   constexpr rcutils_time_point_value_t kFutureObjectRangeMarginNs =
     static_cast<rcutils_time_point_value_t>(200'000'000);
   const auto range_end_ns =

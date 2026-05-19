@@ -90,7 +90,7 @@ private:
   double gt_sync_tolerance_ms_ = 200.0;
   std::vector<std::string> enabled_metric_names_;
   bool debug_topics_enabled_ = false;
-  double trajectory_evaluation_horizon_s_ = 0.0;
+  double trajectory_evaluation_horizon_s_ = 4.0;
   metrics::HistoryComfortParameters history_comfort_params_;
   metrics::ExtendedComfortParameters extended_comfort_parameters_;
   metrics::LaneKeepingParameters lane_keeping_params_;

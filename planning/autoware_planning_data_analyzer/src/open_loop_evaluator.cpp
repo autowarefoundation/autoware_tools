@@ -209,6 +209,9 @@ autoware_planning_msgs::msg::Trajectory truncate_trajectory_by_horizon(
           interpolate_trajectory_point(truncated.points.back(), point, horizon_s));
       }
     }
+    if (truncated.points.empty()) {
+      truncated.points.push_back(point);
+    }
     return truncated;
   }
 

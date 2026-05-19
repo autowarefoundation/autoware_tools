@@ -42,11 +42,16 @@ struct NoAtFaultCollisionResult
 
 NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
+  const std::vector<LoggedObjectTrack> & object_tracks,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<RouteHandler> & route_handler,
+  const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations);
+
+NoAtFaultCollisionResult calculate_no_at_fault_collision(
+  const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::vector<TimedTrackedObjects> & future_objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<RouteHandler> & route_handler = nullptr,
-  const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations = nullptr,
-  const std::vector<LoggedObjectTrack> * object_tracks = nullptr);
+  const std::shared_ptr<RouteHandler> & route_handler = nullptr);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

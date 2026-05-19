@@ -44,8 +44,9 @@ double forward_offset_in_ego_frame(
 bool is_agent_behind(
   const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
 {
-  constexpr double kPi = 3.14159265358979323846;
-  constexpr double kBehindAngleThresholdRad = 5.0 * kPi / 6.0;
+  // NAVSIM-style rear check: treat an object as behind only when it is more than
+  // 150 degrees away from the ego forward axis.
+  constexpr double kBehindAngleThresholdRad = 5.0 * M_PI / 6.0;
 
   const double yaw = get_yaw(ego_pose.orientation);
   const double dx = object_pose.position.x - ego_pose.position.x;
