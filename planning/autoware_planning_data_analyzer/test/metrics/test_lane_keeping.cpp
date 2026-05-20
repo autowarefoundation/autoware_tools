@@ -144,3 +144,21 @@ TEST(LaneKeepingTest, QueueExemptionAndReleaseGraceBreakViolationRun)
 
   EXPECT_DOUBLE_EQ(score, 1.0);
 }
+
+TEST(LaneKeepingTest, QueueProgressWindowStartsAtEarliestInWindowSample)
+{
+  const std::vector<LaneKeepingEvaluationPoint> evaluation_points{
+    make_evaluation_point(0.0, 0.7, false, 0.0, 0.0),
+    make_evaluation_point(0.5, 0.8, false, 0.0, 0.2),
+    make_evaluation_point(1.5, 0.9, false, 0.0, 0.3)};
+  auto parameters = make_parameters();
+  parameters.max_continuous_violation_time = 1.0;
+  parameters.queue_progress_window_time = 1.0;
+  parameters.queue_progress_threshold = 0.15;
+  parameters.queue_release_grace_time = 0.0;
+
+  const auto score = autoware::planning_data_analyzer::metrics::calculate_lane_keeping_score(
+    evaluation_points, parameters);
+
+  EXPECT_DOUBLE_EQ(score, 1.0);
+}

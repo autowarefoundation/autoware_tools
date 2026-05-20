@@ -156,6 +156,10 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_lateral_deviation");
   lane_keeping_params_.max_continuous_violation_time =
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_continuous_violation_time");
+  lane_keeping_params_.lane_change_pre_grace_time =
+    get_or_declare_parameter<double>(*this, "open_loop.lane_keep.lane_change_pre_grace_time");
+  lane_keeping_params_.lane_change_post_grace_time =
+    get_or_declare_parameter<double>(*this, "open_loop.lane_keep.lane_change_post_grace_time");
   objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
   tracked_objects_topic_name_ =
     get_or_declare_parameter<std::string>(*this, "tracked_objects_topic");

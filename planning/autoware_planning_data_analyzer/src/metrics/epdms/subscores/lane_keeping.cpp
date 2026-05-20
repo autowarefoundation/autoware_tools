@@ -22,22 +22,18 @@
 namespace autoware::planning_data_analyzer::metrics
 {
 
-LaneKeepingResult calculate_lane_keeping_result(
+double calculate_lane_keeping_score(
   const std::vector<LaneKeepingEvaluationPoint> & evaluation_points,
   const LaneKeepingParameters & parameters,
   const std::vector<std::pair<double, double>> & lane_change_windows_s)
 {
-  LaneKeepingResult result;
   if (
     evaluation_points.empty() || parameters.max_lateral_deviation < 0.0 ||
     parameters.max_continuous_violation_time < 0.0) {
-    return result;
+    return 0.0;
   }
 
   std::optional<rclcpp::Duration> violation_start_time;
-  double max_violation_duration = 0.0;
-  double peak_abs_lateral_deviation = 0.0;
-  bool failure_recorded = false;
   std::optional<double> queue_release_until_s;
 
   const auto reset_violation_run = [&]() { violation_start_time.reset(); };
@@ -51,9 +47,6 @@ LaneKeepingResult calculate_lane_keeping_result(
       continue;
     }
 
-    peak_abs_lateral_deviation =
-      std::max(peak_abs_lateral_deviation, std::abs(evaluation_point.lateral_deviation));
-
     const bool over_threshold =
       std::abs(evaluation_point.lateral_deviation) > parameters.max_lateral_deviation;
     const bool lane_change_exempt = std::any_of(
@@ -62,16 +55,15 @@ LaneKeepingResult calculate_lane_keeping_result(
 
     const double progress_window_start =
       std::max(0.0, time_s - parameters.queue_progress_window_time);
-    double progress_window_distance = 0.0;
-    for (std::size_t lookback = index; lookback > 0; --lookback) {
-      const auto & previous = evaluation_points.at(lookback - 1U);
-      const auto & current = evaluation_points.at(lookback);
-      if (current.time_from_start.seconds() < progress_window_start) {
-        break;
-      }
-      progress_window_distance =
-        evaluation_point.cumulative_progress_m - previous.cumulative_progress_m;
+    std::size_t earliest_in_window = index;
+    while (earliest_in_window > 0 &&
+           evaluation_points.at(earliest_in_window - 1U).time_from_start.seconds() >=
+             progress_window_start) {
+      --earliest_in_window;
     }
+    const double progress_window_distance =
+      evaluation_point.cumulative_progress_m -
+      evaluation_points.at(earliest_in_window).cumulative_progress_m;
 
     const bool queue_signal_available = std::isfinite(evaluation_point.speed_mps) &&
                                         std::isfinite(evaluation_point.cumulative_progress_m);
@@ -96,25 +88,12 @@ LaneKeepingResult calculate_lane_keeping_result(
 
     const double violation_duration =
       (evaluation_point.time_from_start - violation_start_time.value()).seconds();
-    max_violation_duration = std::max(max_violation_duration, violation_duration);
-    if (!failure_recorded && violation_duration >= parameters.max_continuous_violation_time) {
-      result.first_failure_time_s = time_s;
-      failure_recorded = true;
+    if (violation_duration >= parameters.max_continuous_violation_time) {
+      return 0.0;
     }
   }
 
-  result.score = failure_recorded ? 0.0 : 1.0;
-  result.max_continuous_violation_time_s = max_violation_duration;
-  result.peak_abs_lateral_deviation_m = peak_abs_lateral_deviation;
-  return result;
-}
-
-double calculate_lane_keeping_score(
-  const std::vector<LaneKeepingEvaluationPoint> & evaluation_points,
-  const LaneKeepingParameters & parameters,
-  const std::vector<std::pair<double, double>> & lane_change_windows_s)
-{
-  return calculate_lane_keeping_result(evaluation_points, parameters, lane_change_windows_s).score;
+  return 1.0;
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics

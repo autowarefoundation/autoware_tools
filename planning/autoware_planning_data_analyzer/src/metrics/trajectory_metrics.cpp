@@ -445,10 +445,13 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
         return msg.report == TurnIndicatorsReport::ENABLE_LEFT ||
                msg.report == TurnIndicatorsReport::ENABLE_RIGHT;
       },
-      1.0, 1.0);
+      lane_keeping_params.lane_change_pre_grace_time,
+      lane_keeping_params.lane_change_post_grace_time);
     auto hazard_windows = collect_signal_active_windows<HazardLightsReport>(
       sync_data->hazard_lights_history, trajectory_start_time,
-      [](const auto & msg) { return msg.report == HazardLightsReport::ENABLE; }, 1.0, 1.0);
+      [](const auto & msg) { return msg.report == HazardLightsReport::ENABLE; },
+      lane_keeping_params.lane_change_pre_grace_time,
+      lane_keeping_params.lane_change_post_grace_time);
     turn_windows.insert(
       turn_windows.end(), std::make_move_iterator(hazard_windows.begin()),
       std::make_move_iterator(hazard_windows.end()));

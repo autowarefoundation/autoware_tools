@@ -74,6 +74,8 @@
       lane_keep:
         max_lateral_deviation: 0.5  # Maximum absolute lateral deviation allowed for LK [m]
         max_continuous_violation_time: 2.0  # Continuous over-threshold duration allowed for LK [s]
+        lane_change_pre_grace_time: 1.0  # Time before turn/hazard activation exempted from LK [s]
+        lane_change_post_grace_time: 1.0  # Time after turn/hazard deactivation exempted from LK [s]
       override:
         # Time window [s] after every AUTONOMOUS->MANUAL transition used to compute
         # the override_only/* aggregate statistics in the summary JSON.
