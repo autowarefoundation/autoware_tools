@@ -36,6 +36,7 @@ struct BagData
   std::string trajectory_topic_key{};
   std::string candidate_trajectories_topic_key{};
   std::string gt_trajectory_topic_key{};
+  double trajectory_evaluation_horizon_s{0.0};
   // Template helper to create and configure buffer
   template <typename MessageType>
   void create_buffer(
@@ -72,6 +73,8 @@ struct BagData
       max_buffer_msgs);
     create_buffer<SteeringReport>(
       "/vehicle/status/steering_status", buffer_duration_sec, max_buffer_msgs);
+    create_buffer<HazardLightsReport>(
+      "/vehicle/status/hazard_lights_status", buffer_duration_sec, max_buffer_msgs);
     create_buffer<TurnIndicatorsReport>(
       "/vehicle/status/turn_indicators_status", buffer_duration_sec, max_buffer_msgs);
   }
@@ -80,7 +83,8 @@ struct BagData
   explicit BagData(
     const rcutils_time_point_value_t timestamp, const TopicNames & topic_names,
     const double buffer_duration_sec = 20.0, const size_t max_buffer_msgs = 10000)
-  : timestamp{timestamp}
+  : trajectory_evaluation_horizon_s{topic_names.trajectory_evaluation_horizon_s},
+    timestamp{timestamp}
   {
     // Create buffers using provided topic names
     create_buffer<TFMessage>(topic_names.tf_topic, buffer_duration_sec, max_buffer_msgs);
@@ -110,6 +114,10 @@ struct BagData
         topic_names.traffic_signals_topic, buffer_duration_sec, max_buffer_msgs);
     }
     create_buffer<SteeringReport>(topic_names.steering_topic, buffer_duration_sec, max_buffer_msgs);
+    if (!topic_names.hazard_lights_topic.empty()) {
+      create_buffer<HazardLightsReport>(
+        topic_names.hazard_lights_topic, buffer_duration_sec, max_buffer_msgs);
+    }
     if (!topic_names.turn_indicators_topic.empty()) {
       create_buffer<TurnIndicatorsReport>(
         topic_names.turn_indicators_topic, buffer_duration_sec, max_buffer_msgs);
@@ -240,6 +248,34 @@ struct BagData
       synchronized_data->steering_status = steer_buffer->get_closest(target_time, tolerance_ms);
     }
 
+    const auto synchronize_signal_status =
+      [&](const auto & signal_buffer, auto & status, auto & history) {
+        if (signal_buffer && synchronized_data->trajectory) {
+          const auto traj_stamp_ns =
+            rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+          status = signal_buffer->get_closest(traj_stamp_ns, tolerance_ms);
+          const auto history_start_ns =
+            traj_stamp_ns - static_cast<rcutils_time_point_value_t>(2.0e9);
+          const auto history_end_ns =
+            traj_stamp_ns + static_cast<rcutils_time_point_value_t>(
+                              (trajectory_evaluation_horizon_s + 2.0) * 1.0e9);
+          history = signal_buffer->get_range(history_start_ns, history_end_ns);
+        } else if (signal_buffer) {
+          status = signal_buffer->get_closest(target_time, tolerance_ms);
+        }
+      };
+
+    std::shared_ptr<Buffer<HazardLightsReport>> hazard_lights_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto hb = std::dynamic_pointer_cast<Buffer<HazardLightsReport>>(buffer)) {
+        hazard_lights_buffer = hb;
+        break;
+      }
+    }
+    synchronize_signal_status(
+      hazard_lights_buffer, synchronized_data->hazard_lights_status,
+      synchronized_data->hazard_lights_history);
+
     std::shared_ptr<Buffer<TurnIndicatorsReport>> turn_indicators_buffer;
     for (const auto & [topic, buffer] : buffers) {
       if (auto tb = std::dynamic_pointer_cast<Buffer<TurnIndicatorsReport>>(buffer)) {
@@ -247,15 +283,9 @@ struct BagData
         break;
       }
     }
-    if (turn_indicators_buffer && synchronized_data->trajectory) {
-      const auto traj_stamp_ns =
-        rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
-      synchronized_data->turn_indicators_status =
-        turn_indicators_buffer->get_closest(traj_stamp_ns, tolerance_ms);
-    } else if (turn_indicators_buffer) {
-      synchronized_data->turn_indicators_status =
-        turn_indicators_buffer->get_closest(target_time, tolerance_ms);
-    }
+    synchronize_signal_status(
+      turn_indicators_buffer, synchronized_data->turn_indicators_status,
+      synchronized_data->turn_indicators_history);
 
     // Get objects
     // Find objects buffer

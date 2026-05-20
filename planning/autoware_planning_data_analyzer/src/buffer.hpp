@@ -174,6 +174,28 @@ struct Buffer : BufferBase
     }
     return std::make_shared<T>(*latest_itr);
   }
+
+  auto get_range(
+    const rcutils_time_point_value_t start_time, const rcutils_time_point_value_t end_time) const
+    -> std::vector<typename T::ConstSharedPtr>
+  {
+    std::vector<typename T::ConstSharedPtr> range;
+    if (msgs.empty() || end_time < start_time) {
+      return range;
+    }
+
+    for (const auto & msg : msgs) {
+      const auto stamp_ns = message_stamp(msg).nanoseconds();
+      if (stamp_ns < start_time) {
+        continue;
+      }
+      if (stamp_ns > end_time) {
+        break;
+      }
+      range.push_back(std::make_shared<const T>(msg));
+    }
+    return range;
+  }
 };
 
 // Template specializations for messages without standard header.stamp

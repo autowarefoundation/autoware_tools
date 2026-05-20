@@ -17,6 +17,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 
+#include <limits>
+#include <utility>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -26,6 +28,12 @@ struct LaneKeepingParameters
 {
   double max_lateral_deviation{0.5};
   double max_continuous_violation_time{2.0};
+  double lane_change_pre_grace_time{0.5};
+  double lane_change_post_grace_time{1.0};
+  double queue_speed_threshold{1.0};
+  double queue_progress_window_time{1.0};
+  double queue_progress_threshold{1.5};
+  double queue_release_grace_time{1.5};
 };
 
 struct LaneKeepingEvaluationPoint
@@ -33,6 +41,16 @@ struct LaneKeepingEvaluationPoint
   rclcpp::Duration time_from_start{0, 0};
   double lateral_deviation{0.0};
   bool is_in_intersection{false};
+  double speed_mps{std::numeric_limits<double>::quiet_NaN()};
+  double cumulative_progress_m{std::numeric_limits<double>::quiet_NaN()};
+};
+
+struct LaneKeepingResult
+{
+  double score{0.0};
+  double first_failure_time_s{std::numeric_limits<double>::infinity()};
+  double max_continuous_violation_time_s{0.0};
+  double peak_abs_lateral_deviation_m{0.0};
 };
 
 /**
@@ -41,9 +59,15 @@ struct LaneKeepingEvaluationPoint
  * Returns `0.0` when the continuous over-threshold duration reaches the configured limit,
  * otherwise returns `1.0`.
  */
+LaneKeepingResult calculate_lane_keeping_result(
+  const std::vector<LaneKeepingEvaluationPoint> & evaluation_points,
+  const LaneKeepingParameters & parameters = LaneKeepingParameters{},
+  const std::vector<std::pair<double, double>> & lane_change_windows_s = {});
+
 double calculate_lane_keeping_score(
   const std::vector<LaneKeepingEvaluationPoint> & evaluation_points,
-  const LaneKeepingParameters & parameters = LaneKeepingParameters{});
+  const LaneKeepingParameters & parameters = LaneKeepingParameters{},
+  const std::vector<std::pair<double, double>> & lane_change_windows_s = {});
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
