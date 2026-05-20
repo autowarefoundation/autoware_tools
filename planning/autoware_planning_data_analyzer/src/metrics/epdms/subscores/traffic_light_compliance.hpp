@@ -16,12 +16,17 @@
 #define METRICS__EPDMS__SUBSCORES__TRAFFIC_LIGHT_COMPLIANCE_HPP_
 
 #include "data_types.hpp"
+#include "metrics/geometry/ego_footprint.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
 
+#include <lanelet2_core/primitives/Lanelet.h>
+
 #include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -39,7 +44,10 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::shared_ptr<TrafficLightGroupArray> & traffic_signals,
   const std::shared_ptr<RouteHandler> & route_handler,
-  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info);
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<TurnIndicatorsReport> & turn_indicators_status = nullptr,
+  const std::vector<TrajectoryFootprintEvaluation> * evaluations = nullptr,
+  const lanelet::ConstLanelets * route_relevant_lanelets = nullptr);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

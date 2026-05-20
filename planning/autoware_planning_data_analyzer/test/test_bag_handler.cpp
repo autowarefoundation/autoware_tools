@@ -42,7 +42,7 @@ TEST_F(BagHandlerTest, BagDataConstruction)
   auto bag_data = std::make_shared<BagData>(timestamp_);
 
   EXPECT_EQ(bag_data->timestamp, timestamp_);
-  EXPECT_EQ(bag_data->buffers.size(), 9u);
+  EXPECT_EQ(bag_data->buffers.size(), 10u);
   // Check default topic names
   EXPECT_TRUE(bag_data->buffers.count("/tf"));
   EXPECT_TRUE(bag_data->buffers.count("/localization/kinematic_state"));

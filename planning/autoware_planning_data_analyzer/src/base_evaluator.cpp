@@ -90,6 +90,11 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
       // SteeringReport doesn't have header, so we don't override timestamp
       process_and_append_message<SteeringReport>(
         serialized_message, bag_data, topic_names.steering_topic, false, logger_);
+    } else if (
+      topic_name == topic_names.turn_indicators_topic &&
+      !topic_names.turn_indicators_topic.empty()) {
+      process_and_append_message<TurnIndicatorsReport>(
+        serialized_message, bag_data, topic_names.turn_indicators_topic, false, logger_);
     } else if (topic_name == topic_names.objects_topic) {
       process_and_append_message<PredictedObjects>(
         serialized_message, bag_data, topic_names.objects_topic, use_bag_timestamp, logger_);
