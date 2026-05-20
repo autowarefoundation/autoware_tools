@@ -37,6 +37,12 @@ using autoware_perception_msgs::msg::TrafficLightElement;
 using autoware_perception_msgs::msg::TrafficLightGroup;
 using autoware_perception_msgs::msg::TrafficLightGroupArray;
 
+struct TrafficLightFixture
+{
+  std::shared_ptr<RouteHandler> route_handler;
+  lanelet::ConstLanelets route_lanelets;
+};
+
 geometry_msgs::msg::Pose make_pose(const double x, const double y)
 {
   geometry_msgs::msg::Pose pose;
@@ -63,7 +69,7 @@ autoware::vehicle_info_utils::VehicleInfo make_vehicle_info()
     0.3, 0.2, 2.5, 1.6, 1.0, 1.0, 0.5, 0.5, 1.8, 0.7);
 }
 
-std::shared_ptr<RouteHandler> make_route_handler_with_traffic_light(const lanelet::Id signal_id)
+TrafficLightFixture make_traffic_light_fixture(const lanelet::Id signal_id)
 {
   lanelet::LineString3d left_bound{
     11, {lanelet::Point3d{101, -5.0, 2.0, 0.0}, lanelet::Point3d{102, 12.0, 2.0, 0.0}}};
@@ -97,7 +103,7 @@ std::shared_ptr<RouteHandler> make_route_handler_with_traffic_light(const lanele
   route.goal_pose = make_pose(11.0, 0.0);
   route.segments = route_handler->createMapSegments({road_lanelet});
   route_handler->setRoute(route);
-  return route_handler;
+  return TrafficLightFixture{route_handler, {road_lanelet}};
 }
 
 std::shared_ptr<TrafficLightGroupArray> make_red_traffic_signals(const lanelet::Id signal_id)
@@ -152,9 +158,10 @@ TEST(TrafficLightComplianceTest, MissingRouteHandlerIsUnavailable)
 TEST(TrafficLightComplianceTest, ReturnsZeroWhenCrossingRedLightStopLine)
 {
   constexpr lanelet::Id signal_id = 1001;
+  const auto fixture = make_traffic_light_fixture(signal_id);
   const auto result = autoware::planning_data_analyzer::metrics::calculate_traffic_light_compliance(
     make_trajectory_crossing_stop_line(), make_red_traffic_signals(signal_id),
-    make_route_handler_with_traffic_light(signal_id), make_vehicle_info());
+    fixture.route_handler, make_vehicle_info(), nullptr, nullptr, &fixture.route_lanelets);
 
   EXPECT_TRUE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 0.0);
