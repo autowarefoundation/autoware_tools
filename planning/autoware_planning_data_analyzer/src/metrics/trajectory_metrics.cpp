@@ -293,7 +293,7 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     return metrics;
   }
 
-  calculate_history_comfort_metrics(trajectory, history_comfort_params, metrics);
+  calculate_history_comfort_metrics(*sync_data, history_comfort_params, metrics);
 
   const auto route_relevant_lanelets =
     route_handler && route_handler->isHandlerReady()
