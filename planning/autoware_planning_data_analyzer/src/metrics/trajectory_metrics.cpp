@@ -289,6 +289,7 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     metrics.drivable_area_compliance_reason = "unavailable_route_handler_not_ready";
     metrics.traffic_light_compliance_reason = "unavailable_route_handler_not_ready";
   } else {
+    const auto route_relevant_lanelets = collect_route_relevant_lanelets(trajectory, route_handler);
     const auto drivable_area_compliance = calculate_drivable_area_compliance(
       trajectory, route_handler, vehicle_info, &footprint_evaluations);
     metrics.drivable_area_compliance = drivable_area_compliance.score;
@@ -297,7 +298,7 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
 
     const auto traffic_light_compliance = calculate_traffic_light_compliance(
       trajectory, sync_data->traffic_signals, route_handler, vehicle_info,
-      sync_data->turn_indicators_status, &footprint_evaluations);
+      sync_data->turn_indicators_status, &footprint_evaluations, &route_relevant_lanelets);
     metrics.traffic_light_compliance = traffic_light_compliance.score;
     metrics.traffic_light_compliance_available = traffic_light_compliance.available;
     metrics.traffic_light_compliance_reason = traffic_light_compliance.reason;

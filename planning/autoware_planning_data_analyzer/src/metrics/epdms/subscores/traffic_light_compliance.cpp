@@ -53,31 +53,12 @@ struct RelevantTrafficLightGroup
 const autoware_perception_msgs::msg::TrafficLightGroup * find_signal_group(
   const TrafficLightGroupArray & traffic_signals, const RelevantTrafficLightGroup & group)
 {
-  std::vector<lanelet::Id> candidate_ids;
-  candidate_ids.reserve(1U + group.selected_lanelets.size() + group.route_lanelets.size());
-  candidate_ids.push_back(group.regulatory_element_id);
-  for (const auto & lanelet : group.selected_lanelets) {
-    candidate_ids.push_back(lanelet.id());
-  }
-  for (const auto & lanelet : group.route_lanelets) {
-    candidate_ids.push_back(lanelet.id());
-  }
-
-  std::unordered_set<lanelet::Id> seen_ids;
-  for (const auto candidate_id : candidate_ids) {
-    if (!seen_ids.insert(candidate_id).second) {
-      continue;
-    }
-    const auto it = std::find_if(
-      traffic_signals.traffic_light_groups.begin(), traffic_signals.traffic_light_groups.end(),
-      [candidate_id](const auto & signal_group) {
-        return static_cast<lanelet::Id>(signal_group.traffic_light_group_id) == candidate_id;
-      });
-    if (it != traffic_signals.traffic_light_groups.end()) {
-      return &(*it);
-    }
-  }
-  return nullptr;
+  const auto it = std::find_if(
+    traffic_signals.traffic_light_groups.begin(), traffic_signals.traffic_light_groups.end(),
+    [regulatory_element_id = group.regulatory_element_id](const auto & signal_group) {
+      return static_cast<lanelet::Id>(signal_group.traffic_light_group_id) == regulatory_element_id;
+    });
+  return it == traffic_signals.traffic_light_groups.end() ? nullptr : &(*it);
 }
 
 std::optional<TurnDirection> infer_turn_direction_from_indicator(
@@ -152,6 +133,7 @@ std::vector<RelevantTrafficLightGroup> build_relevant_traffic_light_groups(
     }
     for (const auto & reg_elem :
          lanelet.regulatoryElementsAs<lanelet::autoware::AutowareTrafficLight>()) {
+      // TrafficLightGroup messages are keyed by regulatory element ID.
       const auto [it, inserted] =
         index_by_reg_elem_id.emplace(reg_elem->id(), index_by_reg_elem_id.size());
       if (inserted) {
@@ -163,7 +145,7 @@ std::vector<RelevantTrafficLightGroup> build_relevant_traffic_light_groups(
         groups.push_back(group);
       }
 
-      auto & group = groups.at(it->second);
+      auto & group = groups[it->second];
       const auto duplicate = std::any_of(
         group.route_lanelets.begin(), group.route_lanelets.end(),
         [&lanelet](const auto & candidate) { return candidate.id() == lanelet.id(); });
@@ -179,6 +161,8 @@ std::vector<RelevantTrafficLightGroup> build_relevant_traffic_light_groups(
   }
 
   for (auto & group : groups) {
+    // Indicator state is sampled once at the trajectory timestamp; per-group intent inference can
+    // be added later for multi-intersection horizons if needed.
     group.intended_turn_direction =
       indicator_turn_direction.has_value()
         ? indicator_turn_direction
