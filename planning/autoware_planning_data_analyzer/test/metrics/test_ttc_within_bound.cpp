@@ -252,6 +252,21 @@ TEST(TTCWithinBound, BadAreaAllowsLateralOverlapToFail)
   EXPECT_EQ(result.reason, "collision_within_bound");
 }
 
+TEST(TTCWithinBound, BadAreaBehindCollisionDoesNotFail)
+{
+  const auto trajectory = make_straight_trajectory(5.0);
+  auto objects = std::make_shared<TrackedObjects>();
+  objects->objects.push_back(make_stationary_object(-4.0, 0.0));
+  const auto evaluations = make_footprint_evaluations(trajectory, make_vehicle_info(), false, true);
+
+  const auto result = calculate_ttc_within_bound(
+    trajectory, make_future_objects(objects->objects), make_vehicle_info(), nullptr, &evaluations);
+
+  EXPECT_TRUE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 1.0);
+  EXPECT_EQ(result.reason, "available");
+}
+
 TEST(TTCWithinBound, PreviouslyCollidedObjectIsIgnored)
 {
   const auto trajectory = make_straight_trajectory(5.0);

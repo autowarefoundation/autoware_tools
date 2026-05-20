@@ -168,6 +168,7 @@ TTCWithinBoundResult calculate_ttc_within_bound(
           evaluations.at(index).ego_area_evaluation->flags.intersection_context_available
         ? evaluations.at(index).ego_area_evaluation->flags.in_intersection
         : is_pose_in_intersection(point.pose, route_handler);
+    // NAVSIM bad-area branch: straddling lanes, outside drivable area, or inside intersection.
     const bool bad_or_intersection = multiple_lanes || non_drivable_area || ego_in_intersection;
     const double time_s = rclcpp::Duration(point.time_from_start).seconds();
 
@@ -175,6 +176,8 @@ TTCWithinBoundResult calculate_ttc_within_bound(
       const double query_time_s = time_s + future_offset_s;
       const auto query_time = trajectory_start_time + rclcpp::Duration::from_seconds(query_time_s);
       const auto projected_pose = project_pose(point.pose, velocity_world, future_offset_s);
+      // Shared footprint evaluations are used only for current-point area flags above; TTC must
+      // rebuild the ego polygon at each projected future pose.
       const auto ego_polygon = create_pose_footprint(projected_pose, local_footprint);
 
       for (const auto & object_track : tracks) {
