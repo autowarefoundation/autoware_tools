@@ -232,19 +232,27 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
 
   calculate_history_comfort_metrics(trajectory, history_comfort_params, metrics);
 
-  const auto ttc_within_bound =
-    calculate_ttc_within_bound(trajectory, sync_data->objects, vehicle_info, route_handler);
+  const auto route_relevant_lanelets =
+    route_handler && route_handler->isHandlerReady()
+      ? collect_route_relevant_lanelets(trajectory, route_handler)
+      : lanelet::ConstLanelets{};
+  const auto footprint_evaluations = evaluate_trajectory_footprints(
+    trajectory, vehicle_info, route_handler,
+    route_relevant_lanelets.empty() ? nullptr : &route_relevant_lanelets, true);
+  const auto object_tracks = logged_future_objects.empty()
+                               ? std::vector<LoggedObjectTrack>{}
+                               : build_logged_object_tracks(logged_future_objects);
+  const auto ttc_within_bound = calculate_ttc_within_bound(
+    trajectory, logged_future_objects, vehicle_info, route_handler, &footprint_evaluations,
+    object_tracks.empty() ? nullptr : &object_tracks);
   metrics.time_to_collision_within_bound = ttc_within_bound.score;
   metrics.time_to_collision_within_bound_available = ttc_within_bound.available;
   metrics.time_to_collision_within_bound_reason = ttc_within_bound.reason;
   metrics.time_to_collision_infraction_time_s = ttc_within_bound.infraction_time_s;
-  const auto footprint_evaluations =
-    evaluate_trajectory_footprints(trajectory, vehicle_info, route_handler);
   NoAtFaultCollisionResult no_at_fault_collision;
   if (logged_future_objects.empty()) {
     no_at_fault_collision.reason = "unavailable_no_future_objects";
   } else {
-    const auto object_tracks = build_logged_object_tracks(logged_future_objects);
     no_at_fault_collision = calculate_no_at_fault_collision(
       trajectory, object_tracks, vehicle_info, route_handler, footprint_evaluations);
   }
@@ -289,7 +297,6 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     metrics.drivable_area_compliance_reason = "unavailable_route_handler_not_ready";
     metrics.traffic_light_compliance_reason = "unavailable_route_handler_not_ready";
   } else {
-    const auto route_relevant_lanelets = collect_route_relevant_lanelets(trajectory, route_handler);
     const auto drivable_area_compliance = calculate_drivable_area_compliance(
       trajectory, route_handler, vehicle_info, &footprint_evaluations);
     metrics.drivable_area_compliance = drivable_area_compliance.score;
