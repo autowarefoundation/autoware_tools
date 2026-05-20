@@ -16,6 +16,8 @@
 #define METRICS__EPDMS__SUBSCORES__TTC_WITHIN_BOUND_HPP_
 
 #include "data_types.hpp"
+#include "metrics/geometry/ego_footprint.hpp"
+#include "metrics/geometry/object_tracks.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
@@ -23,6 +25,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -39,9 +42,11 @@ struct TTCWithinBoundResult
 
 TTCWithinBoundResult calculate_ttc_within_bound(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::shared_ptr<PredictedObjects> & objects,
+  const std::vector<TimedTrackedObjects> & future_objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<RouteHandler> & route_handler = nullptr);
+  const std::shared_ptr<RouteHandler> & route_handler = nullptr,
+  const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations = nullptr,
+  const std::vector<LoggedObjectTrack> * object_tracks = nullptr);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

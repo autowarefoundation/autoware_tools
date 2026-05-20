@@ -17,10 +17,8 @@
 #include "metrics/geometry/ego_footprint.hpp"
 #include "metrics/geometry/lanelet_queries.hpp"
 #include "metrics/geometry/metric_utils.hpp"
+#include "metrics/geometry/object_tracks.hpp"
 
-#include <autoware_utils_geometry/boost_geometry.hpp>
-#include <autoware_utils_geometry/boost_polygon_utils.hpp>
-#include <autoware_utils_geometry/geometry.hpp>
 #include <tf2/LinearMath/Vector3.hpp>
 
 #include <boost/geometry.hpp>
@@ -30,8 +28,8 @@
 #include <cmath>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -42,20 +40,10 @@ using autoware::route_handler::RouteHandler;
 namespace
 {
 
-using autoware_utils_geometry::LinearRing2d;
-using autoware_utils_geometry::Point2d;
-using autoware_utils_geometry::Polygon2d;
-
 constexpr double kStoppedSpeedThreshold = 5.0e-3;
 constexpr std::array<double, 4> kFutureProjectionOffsetsSec{{0.0, 0.3, 0.6, 0.9}};
-
-struct PredictedObjectCache
-{
-  const autoware_perception_msgs::msg::PredictedObject * object{};
-  const autoware_perception_msgs::msg::PredictedPath * path{};
-  double dt{0.0};
-  double max_time{0.0};
-};
+constexpr double kAheadAngleThresholdRad = M_PI / 6.0;
+constexpr double kBehindAngleThresholdRad = 5.0 * M_PI / 6.0;
 
 tf2::Vector3 get_velocity_in_world_coordinate(
   const autoware_planning_msgs::msg::TrajectoryPoint & point)
@@ -77,66 +65,43 @@ geometry_msgs::msg::Pose project_pose(
   return projected;
 }
 
-bool is_agent_ahead(
+double relative_agent_angle(
   const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
 {
-  return forward_offset_in_ego_frame(ego_pose, object_pose) > 0.0;
+  const double yaw = get_yaw(ego_pose.orientation);
+  const double dx = object_pose.position.x - ego_pose.position.x;
+  const double dy = object_pose.position.y - ego_pose.position.y;
+  const double distance = std::hypot(dx, dy);
+  if (distance <= 1.0e-6) {
+    return std::numeric_limits<double>::infinity();
+  }
+
+  const double cos_angle =
+    std::clamp((std::cos(yaw) * dx + std::sin(yaw) * dy) / distance, -1.0, 1.0);
+  return std::acos(cos_angle);
 }
 
-std::vector<PredictedObjectCache> build_object_caches(const PredictedObjects & objects)
+bool is_agent_ahead_nuplan(
+  const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
 {
-  std::vector<PredictedObjectCache> caches;
-  caches.reserve(objects.objects.size());
-
-  for (const auto & object : objects.objects) {
-    PredictedObjectCache cache;
-    cache.object = &object;
-    cache.path = highest_confidence_path(object);
-    if (cache.path && cache.path->path.size() >= 2) {
-      cache.dt = rclcpp::Duration(cache.path->time_step).seconds();
-      if (cache.dt > 0.0) {
-        cache.max_time = cache.dt * static_cast<double>(cache.path->path.size() - 1);
-      } else {
-        cache.path = nullptr;
-        cache.dt = 0.0;
-      }
-    } else {
-      cache.path = nullptr;
-    }
-    caches.push_back(cache);
-  }
-
-  return caches;
+  return relative_agent_angle(ego_pose, object_pose) < kAheadAngleThresholdRad;
 }
 
-std::optional<geometry_msgs::msg::Pose> interpolate_object_pose(
-  const PredictedObjectCache & cache, const double query_time_s)
+bool is_agent_behind_nuplan(
+  const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
 {
-  if (!cache.object) {
-    return std::nullopt;
-  }
-  if (query_time_s <= 0.0) {
-    return cache.object->kinematics.initial_pose_with_covariance.pose;
-  }
-  if (!cache.path || query_time_s > cache.max_time) {
-    return std::nullopt;
-  }
-
-  const std::size_t index =
-    std::min(static_cast<std::size_t>(query_time_s / cache.dt), cache.path->path.size() - 2);
-  const double t_i = static_cast<double>(index) * cache.dt;
-  const double ratio = std::clamp((query_time_s - t_i) / cache.dt, 0.0, 1.0);
-  return autoware_utils_geometry::calc_interpolated_pose(
-    cache.path->path.at(index), cache.path->path.at(index + 1), ratio);
+  return relative_agent_angle(ego_pose, object_pose) > kBehindAngleThresholdRad;
 }
 
 }  // namespace
 
 TTCWithinBoundResult calculate_ttc_within_bound(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::shared_ptr<PredictedObjects> & objects,
+  const std::vector<TimedTrackedObjects> & future_objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<RouteHandler> & route_handler)
+  const std::shared_ptr<RouteHandler> & route_handler,
+  const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations,
+  const std::vector<LoggedObjectTrack> * object_tracks)
 {
   TTCWithinBoundResult result;
 
@@ -144,8 +109,8 @@ TTCWithinBoundResult calculate_ttc_within_bound(
     result.reason = "unavailable_empty_trajectory";
     return result;
   }
-  if (!objects) {
-    result.reason = "unavailable_no_objects_message";
+  if (future_objects.empty()) {
+    result.reason = "unavailable_no_future_objects";
     return result;
   }
   if (!is_vehicle_info_valid(vehicle_info)) {
@@ -157,43 +122,90 @@ TTCWithinBoundResult calculate_ttc_within_bound(
   result.score = 1.0;
   result.reason = "available";
 
-  if (objects->objects.empty()) {
+  const auto local_object_tracks =
+    object_tracks ? std::vector<LoggedObjectTrack>{} : build_logged_object_tracks(future_objects);
+  const auto & tracks = object_tracks ? *object_tracks : local_object_tracks;
+  if (tracks.empty()) {
     return result;
   }
 
   const auto local_footprint = vehicle_info.createFootprint(0.0);
-  const auto object_caches = build_object_caches(*objects);
+  const auto local_evaluations =
+    footprint_evaluations
+      ? std::vector<TrajectoryFootprintEvaluation>{}
+      : evaluate_trajectory_footprints(trajectory, vehicle_info, route_handler, nullptr, true);
+  const auto & evaluations = footprint_evaluations ? *footprint_evaluations : local_evaluations;
+  if (!evaluations.empty() && evaluations.size() != trajectory.points.size()) {
+    result.available = false;
+    result.score = 0.0;
+    result.reason = "unavailable_invalid_footprint";
+    return result;
+  }
 
-  for (const auto & point : trajectory.points) {
+  const auto trajectory_start_time = rclcpp::Time(trajectory.header.stamp);
+  std::unordered_set<unique_identifier_msgs::msg::UUID, UuidHash> collided_object_ids;
+
+  for (std::size_t index = 0; index < trajectory.points.size(); ++index) {
+    const auto & point = trajectory.points.at(index);
     const auto velocity_world = get_velocity_in_world_coordinate(point);
     const double speed = std::hypot(velocity_world.x(), velocity_world.y());
     if (speed < kStoppedSpeedThreshold) {
       continue;
     }
 
-    const bool ego_in_intersection = is_pose_in_intersection(point.pose, route_handler);
+    bool multiple_lanes = false;
+    bool non_drivable_area = false;
+    if (
+      !evaluations.empty() && index < evaluations.size() &&
+      evaluations.at(index).ego_area_evaluation.has_value()) {
+      const auto & flags = evaluations.at(index).ego_area_evaluation->flags;
+      multiple_lanes = flags.multiple_lanes;
+      non_drivable_area = flags.non_drivable_area;
+    }
+    const bool ego_in_intersection =
+      !evaluations.empty() && index < evaluations.size() &&
+          evaluations.at(index).ego_area_evaluation.has_value() &&
+          evaluations.at(index).ego_area_evaluation->flags.intersection_context_available
+        ? evaluations.at(index).ego_area_evaluation->flags.in_intersection
+        : is_pose_in_intersection(point.pose, route_handler);
+    // NAVSIM bad-area branch: straddling lanes, outside drivable area, or inside intersection.
+    const bool bad_or_intersection = multiple_lanes || non_drivable_area || ego_in_intersection;
+    const double time_s = rclcpp::Duration(point.time_from_start).seconds();
 
     for (const double future_offset_s : kFutureProjectionOffsetsSec) {
-      const double query_time_s =
-        rclcpp::Duration(point.time_from_start).seconds() + future_offset_s;
+      const double query_time_s = time_s + future_offset_s;
+      const auto query_time = trajectory_start_time + rclcpp::Duration::from_seconds(query_time_s);
       const auto projected_pose = project_pose(point.pose, velocity_world, future_offset_s);
+      // Shared footprint evaluations are used only for current-point area flags above; TTC must
+      // rebuild the ego polygon at each projected future pose.
       const auto ego_polygon = create_pose_footprint(projected_pose, local_footprint);
 
-      for (const auto & object_cache : object_caches) {
-        const auto object_pose = interpolate_object_pose(object_cache, query_time_s);
-        if (!object_pose.has_value()) {
-          continue;
-        }
-
-        const auto object_polygon =
-          autoware_utils_geometry::to_polygon2d(*object_pose, object_cache.object->shape);
-        if (!boost::geometry::intersects(ego_polygon, object_polygon)) {
-          continue;
-        }
-
+      for (const auto & object_track : tracks) {
         if (
-          is_agent_ahead(point.pose, *object_pose) ||
-          (ego_in_intersection && !is_agent_behind(point.pose, *object_pose))) {
+          object_track.has_valid_object_id &&
+          collided_object_ids.count(object_track.object_id) > 0U) {
+          continue;
+        }
+
+        const auto object_state = interpolate_logged_object_state(object_track, query_time);
+        if (!object_state.has_value()) {
+          continue;
+        }
+        if (is_unknown_classification(object_state->classification)) {
+          continue;
+        }
+
+        if (!boost::geometry::intersects(ego_polygon, object_state->polygon)) {
+          continue;
+        }
+
+        if (object_state->has_valid_object_id) {
+          collided_object_ids.insert(object_state->object_id);
+        }
+
+        const bool ahead = is_agent_ahead_nuplan(projected_pose, object_state->pose);
+        const bool behind = is_agent_behind_nuplan(projected_pose, object_state->pose);
+        if (ahead || (bad_or_intersection && !behind)) {
           result.score = 0.0;
           result.reason = "collision_within_bound";
           result.infraction_time_s = query_time_s;
