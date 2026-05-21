@@ -61,6 +61,7 @@ TEST_F(ReplayEvaluationTest, TopicDefinitions)
   topic_names.trajectory_topic = "/planning/trajectory";
   topic_names.gt_trajectory_topic = "/planning/ground_truth_trajectory";
   topic_names.steering_topic = "/vehicle/status/steering_status";
+  topic_names.hazard_lights_topic = "/vehicle/status/hazard_lights_status";
   topic_names.turn_indicators_topic = "/vehicle/status/turn_indicators_status";
   topic_names.route_topic = "/planning/mission_planning/route";
   topic_names.evaluation_interval_ms = 100.0;
@@ -74,6 +75,7 @@ TEST_F(ReplayEvaluationTest, TopicDefinitions)
   EXPECT_EQ(topic_names.trajectory_topic, "/planning/trajectory");
   EXPECT_EQ(topic_names.gt_trajectory_topic, "/planning/ground_truth_trajectory");
   EXPECT_EQ(topic_names.steering_topic, "/vehicle/status/steering_status");
+  EXPECT_EQ(topic_names.hazard_lights_topic, "/vehicle/status/hazard_lights_status");
   EXPECT_EQ(topic_names.turn_indicators_topic, "/vehicle/status/turn_indicators_status");
   EXPECT_EQ(topic_names.route_topic, "/planning/mission_planning/route");
   EXPECT_EQ(topic_names.evaluation_interval_ms, 100.0);

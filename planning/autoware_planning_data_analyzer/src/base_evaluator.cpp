@@ -91,6 +91,10 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
       process_and_append_message<SteeringReport>(
         serialized_message, bag_data, topic_names.steering_topic, false, logger_);
     } else if (
+      topic_name == topic_names.hazard_lights_topic && !topic_names.hazard_lights_topic.empty()) {
+      process_and_append_message<HazardLightsReport>(
+        serialized_message, bag_data, topic_names.hazard_lights_topic, false, logger_);
+    } else if (
       topic_name == topic_names.turn_indicators_topic &&
       !topic_names.turn_indicators_topic.empty()) {
       process_and_append_message<TurnIndicatorsReport>(

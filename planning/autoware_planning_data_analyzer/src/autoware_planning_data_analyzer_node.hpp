@@ -101,6 +101,7 @@ private:
   std::string tf_topic_name_;
   std::string acceleration_topic_name_;
   std::string steering_topic_name_;
+  std::string hazard_lights_topic_name_;
   std::string turn_indicators_topic_name_;
   std::string control_mode_topic_name_;
   double override_window_sec_ = 0.0;

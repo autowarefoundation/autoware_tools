@@ -156,6 +156,10 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_lateral_deviation");
   lane_keeping_params_.max_continuous_violation_time =
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_continuous_violation_time");
+  lane_keeping_params_.lane_change_pre_grace_time =
+    get_or_declare_parameter<double>(*this, "open_loop.lane_keep.lane_change_pre_grace_time");
+  lane_keeping_params_.lane_change_post_grace_time =
+    get_or_declare_parameter<double>(*this, "open_loop.lane_keep.lane_change_post_grace_time");
   objects_topic_name_ = get_or_declare_parameter<std::string>(*this, "objects_topic");
   tracked_objects_topic_name_ =
     get_or_declare_parameter<std::string>(*this, "tracked_objects_topic");
@@ -164,6 +168,7 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   tf_topic_name_ = get_or_declare_parameter<std::string>(*this, "tf_topic");
   acceleration_topic_name_ = get_or_declare_parameter<std::string>(*this, "acceleration_topic");
   steering_topic_name_ = get_or_declare_parameter<std::string>(*this, "steering_topic");
+  hazard_lights_topic_name_ = get_or_declare_parameter<std::string>(*this, "hazard_lights_topic");
   turn_indicators_topic_name_ =
     get_or_declare_parameter<std::string>(*this, "turn_indicators_topic");
   control_mode_topic_name_ = get_or_declare_parameter<std::string>(*this, "control_mode_topic");
@@ -485,6 +490,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
   topic_names.tf_topic = tf_topic_name_;
   topic_names.acceleration_topic = acceleration_topic_name_;
   topic_names.steering_topic = steering_topic_name_;
+  topic_names.hazard_lights_topic = hazard_lights_topic_name_;
   topic_names.turn_indicators_topic = turn_indicators_topic_name_;
   topic_names.control_mode_topic = control_mode_topic_name_;
   topic_names.evaluation_interval_ms = evaluation_interval_ms_;
