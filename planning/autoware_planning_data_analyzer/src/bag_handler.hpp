@@ -32,6 +32,7 @@ namespace autoware::planning_data_analyzer
 {
 
 constexpr rcutils_time_point_value_t kSignalHistoryPaddingNs = 2'000'000'000;
+constexpr rcutils_time_point_value_t kMotionHistoryPaddingNs = 2'000'000'000;
 
 struct BagData
 {
@@ -183,8 +184,7 @@ struct BagData
         if (odom_buffer) {
           synchronized_data->kinematic_state =
             odom_buffer->get_closest(traj_stamp_ns, tolerance_ms);
-          const auto history_start_ns =
-            traj_stamp_ns - static_cast<rcutils_time_point_value_t>(2.0e9);
+          const auto history_start_ns = traj_stamp_ns - kMotionHistoryPaddingNs;
           synchronized_data->kinematic_state_history =
             odom_buffer->get_range(history_start_ns, traj_stamp_ns);
         }
@@ -233,7 +233,7 @@ struct BagData
       const auto traj_stamp_ns =
         rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
       synchronized_data->acceleration = accel_buffer->get_closest(traj_stamp_ns, tolerance_ms);
-      const auto history_start_ns = traj_stamp_ns - static_cast<rcutils_time_point_value_t>(2.0e9);
+      const auto history_start_ns = traj_stamp_ns - kMotionHistoryPaddingNs;
       synchronized_data->acceleration_history =
         accel_buffer->get_range(history_start_ns, traj_stamp_ns);
     } else if (accel_buffer) {
