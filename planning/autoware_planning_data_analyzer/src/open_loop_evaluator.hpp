@@ -73,7 +73,9 @@ struct OpenLoopTrajectoryMetrics
   std::vector<double> heading_errors;       // Absolute heading error at each trajectory point [rad]
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
   double history_comfort{0.0};              // Binary comfort subscore for the trajectory
-  double extended_comfort{0.0};             // Binary extended comfort subscore
+  bool history_comfort_available{false};
+  std::string history_comfort_reason{"unavailable"};
+  double extended_comfort{0.0};  // Binary extended comfort subscore
   bool extended_comfort_available{false};
   std::string extended_comfort_reason{"unavailable"};
   double time_to_collision_within_bound{0.0};

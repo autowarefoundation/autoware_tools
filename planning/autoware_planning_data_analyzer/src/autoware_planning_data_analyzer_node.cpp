@@ -126,6 +126,12 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   debug_topics_enabled_ = get_or_declare_parameter<bool>(*this, "open_loop.debug_topics_enabled");
   trajectory_evaluation_horizon_s_ =
     get_or_declare_parameter<double>(*this, "open_loop.trajectory_evaluation_horizon");
+  history_comfort_params_.past_horizon_s =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.past_horizon_s");
+  history_comfort_params_.sample_interval_s =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.sample_interval_s");
+  history_comfort_params_.future_horizon_s =
+    get_or_declare_parameter<double>(*this, "open_loop.hc.future_horizon_s");
   history_comfort_params_.finite_difference_epsilon =
     get_or_declare_parameter<double>(*this, "open_loop.hc.finite_difference_epsilon");
   history_comfort_params_.max_longitudinal_acceleration =

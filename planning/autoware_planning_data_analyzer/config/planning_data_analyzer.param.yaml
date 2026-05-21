@@ -52,6 +52,9 @@
       trajectory_evaluation_horizon: 4.0
       hc:
         # NAVSIM-aligned default thresholds for the History Comfort (HC) subscore.
+        past_horizon_s: 1.5
+        sample_interval_s: 0.1
+        future_horizon_s: 4.0
         finite_difference_epsilon: 0.001
         max_longitudinal_acceleration: 2.40
         min_longitudinal_acceleration: -4.05
