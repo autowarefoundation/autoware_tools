@@ -52,7 +52,8 @@ std::vector<ComfortSignalInput> make_overlap_signal_inputs(
 {
   std::vector<ComfortSignalInput> inputs;
   inputs.reserve(count);
-  const double start_time_s = rclcpp::Duration(trajectory.points[start_index].time_from_start).seconds();
+  const double start_time_s =
+    rclcpp::Duration(trajectory.points[start_index].time_from_start).seconds();
   for (std::size_t index = 0; index < count; ++index) {
     const auto & point = trajectory.points[start_index + index];
     const double time_s = rclcpp::Duration(point.time_from_start).seconds() - start_time_s;
