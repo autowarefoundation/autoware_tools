@@ -49,9 +49,8 @@ std::shared_ptr<const MessageT> closest_message(
   }
 
   const auto it = std::lower_bound(
-    history.begin(), history.end(), target, [](const auto & msg, const rclcpp::Time & t) {
-      return rclcpp::Time(msg->header.stamp) < t;
-    });
+    history.begin(), history.end(), target,
+    [](const auto & msg, const rclcpp::Time & t) { return rclcpp::Time(msg->header.stamp) < t; });
 
   std::shared_ptr<const MessageT> best;
   double best_diff_s = std::numeric_limits<double>::max();
@@ -114,8 +113,8 @@ std::vector<ComfortState> build_padded_states(
   const double dt = parameters.sample_interval_s;
   for (double t = -parameters.past_horizon_s; t < -dt / 2.0; t += dt) {
     const auto target = trajectory_start + rclcpp::Duration::from_seconds(t);
-    const auto odom =
-      closest_message(sync_data.kinematic_state_history, target, dt * kClosestSampleToleranceFactor);
+    const auto odom = closest_message(
+      sync_data.kinematic_state_history, target, dt * kClosestSampleToleranceFactor);
     if (!odom) {
       continue;
     }
