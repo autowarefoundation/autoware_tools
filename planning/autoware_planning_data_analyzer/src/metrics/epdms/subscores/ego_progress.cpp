@@ -127,8 +127,8 @@ EgoProgressResult calculate_ego_progress(
   constexpr double kProgressDistanceThresholdM = 5.0;
   if (result.denominator_m > kProgressDistanceThresholdM) {
     // Note: Since we only have a single trajectory candidate in this implementation,
-    // the score simplifies to 1.0 (raw_progress / denominator where denominator = raw_progress * 1.0)
-    // if all multiplicative metrics passed.
+    // the score simplifies to 1.0 (raw_progress / denominator where denominator = raw_progress
+    // * 1.0) if all multiplicative metrics passed.
     result.score = std::clamp(result.raw_progress_m / result.denominator_m, 0.0, 1.0);
     result.reason = "available_single_proposal_navsim_ratio";
   } else {
