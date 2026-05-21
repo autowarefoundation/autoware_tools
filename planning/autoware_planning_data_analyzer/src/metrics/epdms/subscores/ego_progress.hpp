@@ -19,8 +19,11 @@
 
 #include <autoware/route_handler/route_handler.hpp>
 
+#include <lanelet2_core/primitives/Lanelet.h>
+
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -34,12 +37,21 @@ struct EgoProgressResult
   std::string reason{"unavailable"};
   double raw_progress_m{0.0};
   double best_raw_progress_m{0.0};
+  double multiplicative_mask{0.0};
+  double denominator_m{0.0};
+  geometry_msgs::msg::Point start_point;
+  geometry_msgs::msg::Point end_point;
+  std::vector<geometry_msgs::msg::Point> route_reference_points;
 };
 
 EgoProgressResult calculate_ego_progress(
   const std::shared_ptr<Trajectory> & selected_trajectory,
-  const std::shared_ptr<CandidateTrajectories> & candidate_trajectories,
-  const std::shared_ptr<RouteHandler> & route_handler);
+  const std::shared_ptr<RouteHandler> & route_handler, double no_at_fault_collision,
+  bool no_at_fault_collision_available, double drivable_area_compliance,
+  bool drivable_area_compliance_available, double driving_direction_compliance,
+  bool driving_direction_compliance_available, double traffic_light_compliance,
+  bool traffic_light_compliance_available,
+  const lanelet::ConstLanelets * route_relevant_lanelets = nullptr);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

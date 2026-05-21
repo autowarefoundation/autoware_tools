@@ -555,16 +555,13 @@ void OpenLoopEvaluator::evaluate(
         metrics.lane_keeping = trajectory_metrics.lane_keeping;
         metrics.lane_keeping_available = trajectory_metrics.lane_keeping_available;
         metrics.lane_keeping_reason = trajectory_metrics.lane_keeping_reason;
-        const auto ego_progress = metrics::calculate_ego_progress(
-          eval_data.synchronized_data ? eval_data.synchronized_data->trajectory : nullptr,
-          eval_data.synchronized_data ? eval_data.synchronized_data->candidate_trajectories
-                                      : nullptr,
-          route_handler_);
-        metrics.ego_progress = ego_progress.score;
-        metrics.ego_progress_available = ego_progress.available;
-        metrics.ego_progress_reason = ego_progress.reason;
-        metrics.ego_progress_raw_m = ego_progress.raw_progress_m;
-        metrics.ego_progress_best_raw_m = ego_progress.best_raw_progress_m;
+        metrics.ego_progress = trajectory_metrics.ego_progress;
+        metrics.ego_progress_available = trajectory_metrics.ego_progress_available;
+        metrics.ego_progress_reason = trajectory_metrics.ego_progress_reason;
+        metrics.ego_progress_raw_m = trajectory_metrics.ego_progress_raw_m;
+        metrics.ego_progress_best_raw_m = trajectory_metrics.ego_progress_best_raw_m;
+        metrics.ego_progress_mask = trajectory_metrics.ego_progress_mask;
+        metrics.ego_progress_denominator_m = trajectory_metrics.ego_progress_denominator_m;
         metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
         metrics.drivable_area_compliance_available =
           trajectory_metrics.drivable_area_compliance_available;
@@ -2167,6 +2164,8 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["ego_progress_reason"] = m.ego_progress_reason;
     traj["ego_progress_raw_m"] = m.ego_progress_raw_m;
     traj["ego_progress_best_raw_m"] = m.ego_progress_best_raw_m;
+    traj["ego_progress_multiplicative_mask"] = m.ego_progress_mask;
+    traj["ego_progress_denominator_m"] = m.ego_progress_denominator_m;
     traj["drivable_area_compliance"] = m.drivable_area_compliance;
     traj["drivable_area_compliance_available"] = m.drivable_area_compliance_available;
     traj["drivable_area_compliance_reason"] = m.drivable_area_compliance_reason;

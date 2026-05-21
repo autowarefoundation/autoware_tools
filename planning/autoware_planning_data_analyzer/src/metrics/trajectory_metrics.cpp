@@ -16,6 +16,7 @@
 
 #include "metrics/epdms/subscores/drivable_area_compliance.hpp"
 #include "metrics/epdms/subscores/driving_direction_compliance.hpp"
+#include "metrics/epdms/subscores/ego_progress.hpp"
 #include "metrics/epdms/subscores/history_comfort.hpp"
 #include "metrics/epdms/subscores/no_at_fault_collision.hpp"
 #include "metrics/epdms/subscores/traffic_light_compliance.hpp"
@@ -373,6 +374,24 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     metrics.traffic_light_compliance_available = traffic_light_compliance.available;
     metrics.traffic_light_compliance_reason = traffic_light_compliance.reason;
   }
+
+  const auto ego_progress = calculate_ego_progress(
+    sync_data->trajectory, route_handler, metrics.no_at_fault_collision,
+    metrics.no_at_fault_collision_available, metrics.drivable_area_compliance,
+    metrics.drivable_area_compliance_available, metrics.driving_direction_compliance,
+    metrics.driving_direction_compliance_available, metrics.traffic_light_compliance,
+    metrics.traffic_light_compliance_available,
+    route_relevant_lanelets.empty() ? nullptr : &route_relevant_lanelets);
+  metrics.ego_progress = ego_progress.score;
+  metrics.ego_progress_available = ego_progress.available;
+  metrics.ego_progress_reason = ego_progress.reason;
+  metrics.ego_progress_raw_m = ego_progress.raw_progress_m;
+  metrics.ego_progress_best_raw_m = ego_progress.best_raw_progress_m;
+  metrics.ego_progress_mask = ego_progress.multiplicative_mask;
+  metrics.ego_progress_denominator_m = ego_progress.denominator_m;
+  metrics.ego_progress_start_point = ego_progress.start_point;
+  metrics.ego_progress_end_point = ego_progress.end_point;
+  metrics.ego_progress_route_reference_points = ego_progress.route_reference_points;
 
   // Calculate TTC for each point (based on autoware_trajectory_ranker implementation)
   constexpr double max_ttc_value = 10.0;  // Maximum TTC value in seconds
