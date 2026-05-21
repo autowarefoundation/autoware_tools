@@ -16,7 +16,8 @@
 
 #include "metrics/geometry/comfort_signal.hpp"
 
-#include <rclcpp/rclcpp.hpp>
+#include <rclcpp/duration.hpp>
+#include <rclcpp/time.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -30,34 +31,31 @@ namespace
 
 constexpr double kDefaultTrajectoryDt = 0.1;
 
-double get_time_seconds(const builtin_interfaces::msg::Duration & time_from_start)
-{
-  return static_cast<double>(time_from_start.sec) +
-         static_cast<double>(time_from_start.nanosec) * 1e-9;
-}
-
 double trajectory_dt_s(const autoware_planning_msgs::msg::Trajectory & trajectory)
 {
   if (trajectory.points.size() < 2U) {
     return kDefaultTrajectoryDt;
   }
-  const double dt = get_time_seconds(trajectory.points.at(1).time_from_start) -
-                    get_time_seconds(trajectory.points.front().time_from_start);
+  const double dt = rclcpp::Duration(trajectory.points[1].time_from_start).seconds() -
+                    rclcpp::Duration(trajectory.points.front().time_from_start).seconds();
   return dt > 0.0 ? dt : kDefaultTrajectoryDt;
 }
 
+/**
+ * @brief Prepare ComfortSignalInputs for a trajectory segment.
+ * @note Trajectory points do not carry lateral acceleration; EC therefore compares
+ * longitudinal-only acceleration magnitudes for planned horizons.
+ */
 std::vector<ComfortSignalInput> make_overlap_signal_inputs(
   const autoware_planning_msgs::msg::Trajectory & trajectory, const std::size_t start_index,
   const std::size_t count)
 {
   std::vector<ComfortSignalInput> inputs;
   inputs.reserve(count);
-  const double start_time_s = get_time_seconds(trajectory.points.at(start_index).time_from_start);
+  const double start_time_s = rclcpp::Duration(trajectory.points[start_index].time_from_start).seconds();
   for (std::size_t index = 0; index < count; ++index) {
-    const auto & point = trajectory.points.at(start_index + index);
-    const double time_s = get_time_seconds(point.time_from_start) - start_time_s;
-    // Trajectory points do not carry lateral acceleration; EC therefore compares
-    // longitudinal-only acceleration magnitudes for planned horizons.
+    const auto & point = trajectory.points[start_index + index];
+    const double time_s = rclcpp::Duration(point.time_from_start).seconds() - start_time_s;
     inputs.push_back(ComfortSignalInput{time_s, point.pose, point.acceleration_mps2, 0.0});
   }
   return inputs;
@@ -72,7 +70,7 @@ double rms_difference(const std::vector<double> & current, const std::vector<dou
 
   double sum_squared = 0.0;
   for (std::size_t index = 0; index < count; ++index) {
-    const double delta = current.at(index) - previous.at(index);
+    const double delta = current[index] - previous[index];
     sum_squared += delta * delta;
   }
   return std::sqrt(sum_squared / static_cast<double>(count));
