@@ -1894,9 +1894,6 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
   std::vector<double> human_history_comfort_values;
   std::vector<double> filtered_history_comfort_values;
   std::size_t history_comfort_filter_applied_count = 0;
-  std::vector<double> human_extended_comfort_values;
-  std::vector<double> filtered_extended_comfort_values;
-  std::size_t extended_comfort_filter_applied_count = 0;
   std::vector<double> human_ego_progress_values;
   std::vector<double> filtered_ego_progress_values;
   std::size_t ego_progress_filter_applied_count = 0;
@@ -1925,12 +1922,6 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
     }
     history_comfort_filter_applied_count +=
       static_cast<std::size_t>(m.history_comfort.filter_applied);
-    if (m.extended_comfort.human_reference_available) {
-      human_extended_comfort_values.push_back(m.extended_comfort.human_reference);
-      filtered_extended_comfort_values.push_back(m.extended_comfort.filtered);
-    }
-    extended_comfort_filter_applied_count +=
-      static_cast<std::size_t>(m.extended_comfort.filter_applied);
     if (m.ego_progress.human_reference_available) {
       human_ego_progress_values.push_back(m.ego_progress.human_reference);
       filtered_ego_progress_values.push_back(m.ego_progress.filtered);
@@ -1972,9 +1963,6 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
   emit_human_filter_metric(
     "history_comfort", "history comfort subscore", human_history_comfort_values,
     filtered_history_comfort_values, history_comfort_filter_applied_count);
-  emit_human_filter_metric(
-    "extended_comfort", "extended comfort subscore", human_extended_comfort_values,
-    filtered_extended_comfort_values, extended_comfort_filter_applied_count);
   emit_human_filter_metric(
     "ego_progress", "ego progress subscore", human_ego_progress_values,
     filtered_ego_progress_values, ego_progress_filter_applied_count);
@@ -2185,9 +2173,6 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
       traj["human_reference"]["history_comfort"] = hf.history_comfort.human_reference;
       traj["human_reference"]["history_comfort_available"] =
         hf.history_comfort.human_reference_available;
-      traj["human_reference"]["extended_comfort"] = hf.extended_comfort.human_reference;
-      traj["human_reference"]["extended_comfort_available"] =
-        hf.extended_comfort.human_reference_available;
       traj["human_reference"]["ego_progress"] = hf.ego_progress.human_reference;
       traj["human_reference"]["ego_progress_available"] = hf.ego_progress.human_reference_available;
       traj["human_reference"]["time_to_collision_within_bound"] =
@@ -2214,9 +2199,6 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
 
       traj["human_filtered"]["history_comfort"] = hf.history_comfort.filtered;
       traj["human_filtered"]["history_comfort_filter_applied"] = hf.history_comfort.filter_applied;
-      traj["human_filtered"]["extended_comfort"] = hf.extended_comfort.filtered;
-      traj["human_filtered"]["extended_comfort_filter_applied"] =
-        hf.extended_comfort.filter_applied;
       traj["human_filtered"]["ego_progress"] = hf.ego_progress.filtered;
       traj["human_filtered"]["ego_progress_filter_applied"] = hf.ego_progress.filter_applied;
       traj["human_filtered"]["time_to_collision_within_bound"] =
