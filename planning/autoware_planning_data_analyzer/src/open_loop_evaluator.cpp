@@ -860,6 +860,7 @@ OpenLoopEvaluator::generate_ground_truth_trajectory_from_topic(
     gt_point.time_from_start = pred_point.time_from_start;
     gt_point.longitudinal_velocity_mps = pred_point.longitudinal_velocity_mps;
     gt_point.lateral_velocity_mps = pred_point.lateral_velocity_mps;
+    gt_point.acceleration_mps2 = pred_point.acceleration_mps2;
     gt_point.heading_rate_rps = pred_point.heading_rate_rps;
     gt_for_eval.points.push_back(gt_point);
   }
