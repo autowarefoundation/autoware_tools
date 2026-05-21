@@ -29,6 +29,8 @@ namespace autoware::planning_data_analyzer::metrics
 namespace
 {
 
+constexpr double kClosestSampleToleranceFactor = 0.75;
+
 struct ComfortState
 {
   double time_s{0.0};
@@ -37,29 +39,39 @@ struct ComfortState
   double lateral_acceleration_mps2{0.0};
 };
 
-double stamp_to_seconds(const rclcpp::Time & stamp)
-{
-  return static_cast<double>(stamp.nanoseconds()) * 1.0e-9;
-}
-
 template <typename MessageT>
 std::shared_ptr<const MessageT> closest_message(
   const std::vector<std::shared_ptr<const MessageT>> & history, const rclcpp::Time & target,
   const double tolerance_s)
 {
+  if (history.empty()) {
+    return nullptr;
+  }
+
+  const auto it = std::lower_bound(
+    history.begin(), history.end(), target, [](const auto & msg, const rclcpp::Time & t) {
+      return rclcpp::Time(msg->header.stamp) < t;
+    });
+
   std::shared_ptr<const MessageT> best;
   double best_diff_s = std::numeric_limits<double>::max();
-  for (const auto & msg : history) {
-    if (!msg) {
-      continue;
+
+  // Check the element at 'it' and the one before it
+  auto check_best = [&](const auto & iter) {
+    if (iter != history.end() && *iter) {
+      const double diff_s = std::abs((rclcpp::Time((*iter)->header.stamp) - target).seconds());
+      if (diff_s < best_diff_s) {
+        best_diff_s = diff_s;
+        best = *iter;
+      }
     }
-    const double diff_s =
-      std::abs(stamp_to_seconds(rclcpp::Time(msg->header.stamp)) - stamp_to_seconds(target));
-    if (diff_s < best_diff_s) {
-      best_diff_s = diff_s;
-      best = msg;
-    }
+  };
+
+  check_best(it);
+  if (it != history.begin()) {
+    check_best(std::prev(it));
   }
+
   return best_diff_s <= tolerance_s ? best : nullptr;
 }
 
@@ -71,6 +83,7 @@ ComfortState make_state_from_odometry(
   state.time_s = relative_time_s;
   state.pose = odometry.pose.pose;
   if (acceleration) {
+    // Note: This assumes the acceleration is in the vehicle body frame (base_link).
     state.longitudinal_acceleration_mps2 = acceleration->accel.accel.linear.x;
     state.lateral_acceleration_mps2 = acceleration->accel.accel.linear.y;
   }
@@ -84,6 +97,8 @@ ComfortState make_state_from_trajectory_point(
   state.time_s = relative_time_s;
   state.pose = point.pose;
   state.longitudinal_acceleration_mps2 = point.acceleration_mps2;
+  // Trajectory points don't carry lateral acceleration; NAVSIM HC is history-focused, so future
+  // lateral_acceleration_mps2 is left at 0 by design rather than derived from yaw rate.
   return state;
 }
 
@@ -97,13 +112,15 @@ std::vector<ComfortState> build_padded_states(
 
   const auto trajectory_start = rclcpp::Time(sync_data.trajectory->header.stamp);
   const double dt = parameters.sample_interval_s;
-  for (double t = -parameters.past_horizon_s; t < -dt; t += dt) {
+  for (double t = -parameters.past_horizon_s; t < -dt / 2.0; t += dt) {
     const auto target = trajectory_start + rclcpp::Duration::from_seconds(t);
-    const auto odom = closest_message(sync_data.kinematic_state_history, target, dt * 0.75);
+    const auto odom =
+      closest_message(sync_data.kinematic_state_history, target, dt * kClosestSampleToleranceFactor);
     if (!odom) {
       continue;
     }
-    const auto accel = closest_message(sync_data.acceleration_history, target, dt * 0.75);
+    const auto accel =
+      closest_message(sync_data.acceleration_history, target, dt * kClosestSampleToleranceFactor);
     states.push_back(make_state_from_odometry(*odom, accel.get(), t));
   }
 
@@ -142,9 +159,9 @@ void calculate_history_comfort_metrics(
 {
   const auto states = build_padded_states(sync_data, history_comfort_params);
   if (states.empty()) {
-    metrics.history_comfort = 1.0;
-    metrics.history_comfort_available = true;
-    metrics.history_comfort_reason = "available_navsim_default_pass";
+    metrics.history_comfort = 0.0;
+    metrics.history_comfort_available = false;
+    metrics.history_comfort_reason = "unavailable_no_motion_history";
     return;
   }
 
