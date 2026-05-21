@@ -156,8 +156,6 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
     get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.max_yaw_rate_rms");
   extended_comfort_parameters_.max_yaw_acceleration_rms =
     get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.max_yaw_acceleration_rms");
-  extended_comfort_parameters_.finite_difference_epsilon =
-    get_or_declare_parameter<double>(*this, "open_loop.extended_comfort.finite_difference_epsilon");
   lane_keeping_params_.max_lateral_deviation =
     get_or_declare_parameter<double>(*this, "open_loop.lane_keep.max_lateral_deviation");
   lane_keeping_params_.max_continuous_violation_time =

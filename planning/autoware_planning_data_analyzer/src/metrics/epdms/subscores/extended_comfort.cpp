@@ -48,15 +48,17 @@ double trajectory_dt_s(const autoware_planning_msgs::msg::Trajectory & trajector
 
 std::vector<ComfortSignalInput> make_overlap_signal_inputs(
   const autoware_planning_msgs::msg::Trajectory & trajectory, const std::size_t start_index,
-  const std::size_t count, const double dt)
+  const std::size_t count)
 {
   std::vector<ComfortSignalInput> inputs;
   inputs.reserve(count);
+  const double start_time_s = get_time_seconds(trajectory.points.at(start_index).time_from_start);
   for (std::size_t index = 0; index < count; ++index) {
     const auto & point = trajectory.points.at(start_index + index);
-    inputs.push_back(
-      ComfortSignalInput{
-        static_cast<double>(index) * dt, point.pose, point.acceleration_mps2, 0.0});
+    const double time_s = get_time_seconds(point.time_from_start) - start_time_s;
+    // Trajectory points do not carry lateral acceleration; EC therefore compares
+    // longitudinal-only acceleration magnitudes for planned horizons.
+    inputs.push_back(ComfortSignalInput{time_s, point.pose, point.acceleration_mps2, 0.0});
   }
   return inputs;
 }
@@ -79,8 +81,7 @@ double rms_difference(const std::vector<double> & current, const std::vector<dou
 bool are_parameters_valid(const ExtendedComfortParameters & parameters)
 {
   return parameters.max_acceleration_rms >= 0.0 && parameters.max_jerk_rms >= 0.0 &&
-         parameters.max_yaw_rate_rms >= 0.0 && parameters.max_yaw_acceleration_rms >= 0.0 &&
-         parameters.finite_difference_epsilon > 0.0;
+         parameters.max_yaw_rate_rms >= 0.0 && parameters.max_yaw_acceleration_rms >= 0.0;
 }
 
 }  // namespace
@@ -100,10 +101,14 @@ ExtendedComfortResult calculate_extended_comfort(
   const double raw_observation_interval =
     (rclcpp::Time(current_trajectory.header.stamp) - rclcpp::Time(previous_trajectory.header.stamp))
       .seconds();
+  if (raw_observation_interval < 0.0) {
+    result.reason = "unavailable_invalid_time_alignment";
+    return result;
+  }
   const double observation_interval =
     raw_observation_interval > 0.0 ? raw_observation_interval : dt;
   const auto overlap_shift = static_cast<std::size_t>(std::llround(observation_interval / dt));
-  if (dt <= 0.0 || overlap_shift == 0U) {
+  if (overlap_shift == 0U) {
     result.reason = "unavailable_invalid_time_alignment";
     return result;
   }
@@ -121,9 +126,9 @@ ExtendedComfortResult calculate_extended_comfort(
     return result;
   }
 
-  const auto current_inputs = make_overlap_signal_inputs(current_trajectory, 0U, overlap_count, dt);
+  const auto current_inputs = make_overlap_signal_inputs(current_trajectory, 0U, overlap_count);
   const auto previous_inputs =
-    make_overlap_signal_inputs(previous_trajectory, overlap_shift, overlap_count, dt);
+    make_overlap_signal_inputs(previous_trajectory, overlap_shift, overlap_count);
   const auto current_signals = compute_comfort_signals(current_inputs);
   const auto previous_signals = compute_comfort_signals(previous_inputs);
 

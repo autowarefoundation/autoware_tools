@@ -28,7 +28,6 @@ struct ExtendedComfortParameters
   double max_jerk_rms{0.5};
   double max_yaw_rate_rms{0.1};
   double max_yaw_acceleration_rms{0.1};
-  double finite_difference_epsilon{1.0e-3};
 };
 
 struct ExtendedComfortResult
