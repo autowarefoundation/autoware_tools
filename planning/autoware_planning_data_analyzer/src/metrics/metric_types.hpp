@@ -24,6 +24,20 @@
 #include <string>
 #include <vector>
 
+namespace autoware::planning_data_analyzer::metrics
+{
+
+/**
+ * @brief Metric score with availability
+ */
+struct MetricScore
+{
+  double score{0.0};
+  bool available{false};
+};
+
+}  // namespace autoware::planning_data_analyzer::metrics
+
 namespace metrics
 {
 

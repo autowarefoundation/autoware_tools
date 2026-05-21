@@ -16,6 +16,7 @@
 #define METRICS__EPDMS__SUBSCORES__EGO_PROGRESS_HPP_
 
 #include "data_types.hpp"
+#include "metrics/metric_types.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 
@@ -46,11 +47,9 @@ struct EgoProgressResult
 
 EgoProgressResult calculate_ego_progress(
   const std::shared_ptr<Trajectory> & selected_trajectory,
-  const std::shared_ptr<RouteHandler> & route_handler, double no_at_fault_collision,
-  bool no_at_fault_collision_available, double drivable_area_compliance,
-  bool drivable_area_compliance_available, double driving_direction_compliance,
-  bool driving_direction_compliance_available, double traffic_light_compliance,
-  bool traffic_light_compliance_available,
+  const std::shared_ptr<RouteHandler> & route_handler, const MetricScore & no_at_fault_collision,
+  const MetricScore & drivable_area_compliance, const MetricScore & driving_direction_compliance,
+  const MetricScore & traffic_light_compliance,
   const lanelet::ConstLanelets * route_relevant_lanelets = nullptr);
 
 }  // namespace autoware::planning_data_analyzer::metrics

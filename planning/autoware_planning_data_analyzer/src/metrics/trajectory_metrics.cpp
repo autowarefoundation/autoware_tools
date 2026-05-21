@@ -376,11 +376,11 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   }
 
   const auto ego_progress = calculate_ego_progress(
-    sync_data->trajectory, route_handler, metrics.no_at_fault_collision,
-    metrics.no_at_fault_collision_available, metrics.drivable_area_compliance,
-    metrics.drivable_area_compliance_available, metrics.driving_direction_compliance,
-    metrics.driving_direction_compliance_available, metrics.traffic_light_compliance,
-    metrics.traffic_light_compliance_available,
+    sync_data->trajectory, route_handler,
+    {metrics.no_at_fault_collision, metrics.no_at_fault_collision_available},
+    {metrics.drivable_area_compliance, metrics.drivable_area_compliance_available},
+    {metrics.driving_direction_compliance, metrics.driving_direction_compliance_available},
+    {metrics.traffic_light_compliance, metrics.traffic_light_compliance_available},
     route_relevant_lanelets.empty() ? nullptr : &route_relevant_lanelets);
   metrics.ego_progress = ego_progress.score;
   metrics.ego_progress_available = ego_progress.available;

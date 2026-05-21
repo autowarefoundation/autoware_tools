@@ -21,7 +21,7 @@
 TEST(EgoProgressTest, ReturnsUnavailableWhenSelectedTrajectoryIsMissing)
 {
   const auto result = autoware::planning_data_analyzer::metrics::calculate_ego_progress(
-    nullptr, nullptr, 1.0, true, 1.0, true, 1.0, true, 1.0, true);
+    nullptr, nullptr, {1.0, true}, {1.0, true}, {1.0, true}, {1.0, true});
 
   EXPECT_FALSE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 0.0);
@@ -35,7 +35,7 @@ TEST(EgoProgressTest, ReturnsUnavailableWhenRouteHandlerIsMissing)
   trajectory->points.resize(2);
 
   const auto result = autoware::planning_data_analyzer::metrics::calculate_ego_progress(
-    trajectory, nullptr, 1.0, true, 1.0, true, 1.0, true, 1.0, true);
+    trajectory, nullptr, {1.0, true}, {1.0, true}, {1.0, true}, {1.0, true});
 
   EXPECT_FALSE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 0.0);

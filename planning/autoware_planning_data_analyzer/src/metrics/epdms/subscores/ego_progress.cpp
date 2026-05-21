@@ -18,6 +18,7 @@
 #include "metrics/geometry/metric_utils.hpp"
 
 #include <autoware/lanelet2_utils/geometry.hpp>
+#include <autoware_utils/geometry/geometry.hpp>
 
 #include <algorithm>
 #include <memory>
@@ -58,11 +59,8 @@ std::optional<double> calculate_raw_progress_m(
     route_reference_points->clear();
     for (const auto & lanelet : route_lanelets) {
       for (const auto & point : lanelet.centerline()) {
-        geometry_msgs::msg::Point msg_point;
-        msg_point.x = point.x();
-        msg_point.y = point.y();
-        msg_point.z = point.z();
-        route_reference_points->push_back(msg_point);
+        route_reference_points->push_back(
+          autoware_utils::create_point(point.x(), point.y(), point.z()));
       }
     }
   }
@@ -81,11 +79,9 @@ std::optional<double> calculate_raw_progress_m(
 
 EgoProgressResult calculate_ego_progress(
   const std::shared_ptr<Trajectory> & selected_trajectory,
-  const std::shared_ptr<RouteHandler> & route_handler, const double no_at_fault_collision,
-  const bool no_at_fault_collision_available, const double drivable_area_compliance,
-  const bool drivable_area_compliance_available, const double driving_direction_compliance,
-  const bool driving_direction_compliance_available, const double traffic_light_compliance,
-  const bool traffic_light_compliance_available,
+  const std::shared_ptr<RouteHandler> & route_handler, const MetricScore & no_at_fault_collision,
+  const MetricScore & drivable_area_compliance, const MetricScore & driving_direction_compliance,
+  const MetricScore & traffic_light_compliance,
   const lanelet::ConstLanelets * route_relevant_lanelets)
 {
   EgoProgressResult result;
@@ -107,8 +103,8 @@ EgoProgressResult calculate_ego_progress(
     return result;
   }
   if (
-    !no_at_fault_collision_available || !drivable_area_compliance_available ||
-    !driving_direction_compliance_available || !traffic_light_compliance_available) {
+    !no_at_fault_collision.available || !drivable_area_compliance.available ||
+    !driving_direction_compliance.available || !traffic_light_compliance.available) {
     result.reason = "unavailable_missing_multiplicative_metric";
     return result;
   }
@@ -122,14 +118,17 @@ EgoProgressResult calculate_ego_progress(
     return result;
   }
   result.raw_progress_m = selected_raw_progress.value();
-  result.multiplicative_mask = no_at_fault_collision * drivable_area_compliance *
-                               driving_direction_compliance * traffic_light_compliance;
+  result.best_raw_progress_m = result.raw_progress_m;
+  result.multiplicative_mask = no_at_fault_collision.score * drivable_area_compliance.score *
+                               driving_direction_compliance.score * traffic_light_compliance.score;
   result.denominator_m = result.raw_progress_m * result.multiplicative_mask;
-  result.best_raw_progress_m = result.denominator_m;
   result.available = true;
 
   constexpr double kProgressDistanceThresholdM = 5.0;
   if (result.denominator_m > kProgressDistanceThresholdM) {
+    // Note: Since we only have a single trajectory candidate in this implementation,
+    // the score simplifies to 1.0 (raw_progress / denominator where denominator = raw_progress * 1.0)
+    // if all multiplicative metrics passed.
     result.score = std::clamp(result.raw_progress_m / result.denominator_m, 0.0, 1.0);
     result.reason = "available_single_proposal_navsim_ratio";
   } else {
