@@ -72,11 +72,6 @@ HumanFilterMetrics calculate_human_filter_metrics(
     human_metrics.history_comfort, human_metrics.history_comfort_available);
 
   populate_human_filter_metric(
-    result.extended_comfort, agent_metrics.extended_comfort,
-    agent_metrics.extended_comfort_available, human_metrics.extended_comfort,
-    human_metrics.extended_comfort_available);
-
-  populate_human_filter_metric(
     result.ego_progress, agent_metrics.ego_progress, agent_metrics.ego_progress_available,
     human_metrics.ego_progress, human_metrics.ego_progress_available);
 

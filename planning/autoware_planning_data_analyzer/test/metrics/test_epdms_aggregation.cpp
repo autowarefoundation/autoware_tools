@@ -34,6 +34,23 @@ TEST(EpdmsAggregationTest, HumanFilterPromotesAgentMetricToOneWhenHumanIsZero)
   EXPECT_DOUBLE_EQ(result.history_comfort.filtered, 1.0);
 }
 
+TEST(EpdmsAggregationTest, HumanFilterDoesNotPopulateExtendedComfort)
+{
+  EpdmsMetricSnapshot agent;
+  agent.extended_comfort = 0.25;
+  agent.extended_comfort_available = true;
+
+  EpdmsMetricSnapshot human;
+  human.extended_comfort = 0.0;
+  human.extended_comfort_available = true;
+
+  const auto result = calculate_human_filter_metrics(agent, human);
+  EXPECT_DOUBLE_EQ(result.extended_comfort.human_reference, 0.0);
+  EXPECT_FALSE(result.extended_comfort.human_reference_available);
+  EXPECT_DOUBLE_EQ(result.extended_comfort.filtered, 0.0);
+  EXPECT_FALSE(result.extended_comfort.filter_applied);
+}
+
 TEST(EpdmsAggregationTest, SyntheticEpdmsUsesFirstStageMetricGroups)
 {
   EpdmsMetricSnapshot agent;
@@ -57,7 +74,6 @@ TEST(EpdmsAggregationTest, SyntheticEpdmsUsesFirstStageMetricGroups)
   agent.traffic_light_compliance_available = true;
 
   HumanFilterMetrics filter;
-  filter.extended_comfort.filtered = 1.0;
   filter.ego_progress.filtered = 1.0;
   filter.history_comfort.filtered = 1.0;
   filter.time_to_collision_within_bound.filtered = 1.0;
@@ -106,8 +122,6 @@ TEST(EpdmsAggregationTest, HumanFilteredAggregationFiltersProgressButNotExtended
   filter.ego_progress.filter_applied = true;
   filter.time_to_collision_within_bound.filtered = 1.0;
   filter.lane_keeping.filtered = 1.0;
-  filter.extended_comfort.filtered = 1.0;
-  filter.extended_comfort.filter_applied = true;
   filter.no_at_fault_collision.filtered = 1.0;
   filter.drivable_area_compliance.filtered = 1.0;
   filter.driving_direction_compliance.filtered = 1.0;
