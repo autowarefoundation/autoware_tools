@@ -39,10 +39,9 @@ double calculate_lane_keeping_score(
   const auto reset_violation_run = [&]() { violation_start_time.reset(); };
 
   for (std::size_t index = 0; index < evaluation_points.size(); ++index) {
-    const auto & evaluation_point = evaluation_points.at(index);
+    const auto & evaluation_point = evaluation_points[index];
     const double time_s = evaluation_point.time_from_start.seconds();
-    const bool finite = std::isfinite(evaluation_point.lateral_deviation);
-    if (!finite) {
+    if (!std::isfinite(evaluation_point.lateral_deviation)) {
       reset_violation_run();
       continue;
     }
@@ -76,6 +75,8 @@ double calculate_lane_keeping_score(
     const bool queue_release_exempt =
       !queue_exempt && queue_release_until_s.has_value() && time_s <= *queue_release_until_s;
 
+    // Reset the violation run on any exemption: intersection samples, signalled lane-change
+    // windows, queue, queue-release grace, or sub-threshold deviation.
     if (
       evaluation_point.is_in_intersection || lane_change_exempt || queue_exempt ||
       queue_release_exempt || !over_threshold) {
@@ -87,7 +88,7 @@ double calculate_lane_keeping_score(
     }
 
     const double violation_duration =
-      (evaluation_point.time_from_start - violation_start_time.value()).seconds();
+      (evaluation_point.time_from_start - *violation_start_time).seconds();
     if (violation_duration >= parameters.max_continuous_violation_time) {
       return 0.0;
     }

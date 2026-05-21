@@ -31,6 +31,8 @@
 namespace autoware::planning_data_analyzer
 {
 
+constexpr rcutils_time_point_value_t kSignalHistoryPaddingNs = 2'000'000'000;
+
 struct BagData
 {
   std::string trajectory_topic_key{};
@@ -254,11 +256,11 @@ struct BagData
           const auto traj_stamp_ns =
             rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
           status = signal_buffer->get_closest(traj_stamp_ns, tolerance_ms);
-          const auto history_start_ns =
-            traj_stamp_ns - static_cast<rcutils_time_point_value_t>(2.0e9);
+          const auto history_start_ns = traj_stamp_ns - kSignalHistoryPaddingNs;
           const auto history_end_ns =
-            traj_stamp_ns + static_cast<rcutils_time_point_value_t>(
-                              (trajectory_evaluation_horizon_s + 2.0) * 1.0e9);
+            traj_stamp_ns +
+            static_cast<rcutils_time_point_value_t>(trajectory_evaluation_horizon_s * 1.0e9) +
+            kSignalHistoryPaddingNs;
           history = signal_buffer->get_range(history_start_ns, history_end_ns);
         } else if (signal_buffer) {
           status = signal_buffer->get_closest(target_time, tolerance_ms);

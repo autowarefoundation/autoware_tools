@@ -99,10 +99,11 @@ std::vector<std::pair<double, double>> merge_windows(std::vector<std::pair<doubl
   merged.push_back(windows.front());
   for (std::size_t index = 1; index < windows.size(); ++index) {
     auto & current = merged.back();
-    if (windows.at(index).first <= current.second) {
-      current.second = std::max(current.second, windows.at(index).second);
+    const auto & next_window = windows.at(index);
+    if (next_window.first <= current.second) {
+      current.second = std::max(current.second, next_window.second);
     } else {
-      merged.push_back(windows.at(index));
+      merged.push_back(next_window);
     }
   }
   return merged;
