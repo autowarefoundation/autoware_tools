@@ -152,6 +152,7 @@ SyntheticEpdmsMetrics calculate_synthetic_epdms(
       human_filter_metrics.drivable_area_compliance.filtered,
       human_filter_metrics.driving_direction_compliance.filtered,
       human_filter_metrics.traffic_light_compliance.filtered);
+    // EC bypasses the human filter by design in the NAVSIM-faithful synthetic score.
     result.human_filtered.weighted_metrics = calculate_weighted_metrics(
       human_filter_metrics.ego_progress.filtered,
       human_filter_metrics.time_to_collision_within_bound.filtered,

@@ -34,23 +34,6 @@ TEST(EpdmsAggregationTest, HumanFilterPromotesAgentMetricToOneWhenHumanIsZero)
   EXPECT_DOUBLE_EQ(result.history_comfort.filtered, 1.0);
 }
 
-TEST(EpdmsAggregationTest, HumanFilterDoesNotPopulateExtendedComfort)
-{
-  EpdmsMetricSnapshot agent;
-  agent.extended_comfort = 0.25;
-  agent.extended_comfort_available = true;
-
-  EpdmsMetricSnapshot human;
-  human.extended_comfort = 0.0;
-  human.extended_comfort_available = true;
-
-  const auto result = calculate_human_filter_metrics(agent, human);
-  EXPECT_DOUBLE_EQ(result.extended_comfort.human_reference, 0.0);
-  EXPECT_FALSE(result.extended_comfort.human_reference_available);
-  EXPECT_DOUBLE_EQ(result.extended_comfort.filtered, 0.0);
-  EXPECT_FALSE(result.extended_comfort.filter_applied);
-}
-
 TEST(EpdmsAggregationTest, SyntheticEpdmsUsesFirstStageMetricGroups)
 {
   EpdmsMetricSnapshot agent;
@@ -94,7 +77,7 @@ TEST(EpdmsAggregationTest, SyntheticEpdmsUsesFirstStageMetricGroups)
   EXPECT_DOUBLE_EQ(result.human_filtered.epdms, 0.90625);
 }
 
-TEST(EpdmsAggregationTest, HumanFilteredAggregationFiltersProgressButNotExtendedComfort)
+TEST(EpdmsAggregationTest, HumanFilteredAggregationUsesRawExtendedComfort)
 {
   EpdmsMetricSnapshot agent;
   agent.history_comfort = 0.5;
@@ -105,7 +88,7 @@ TEST(EpdmsAggregationTest, HumanFilteredAggregationFiltersProgressButNotExtended
   agent.time_to_collision_within_bound_available = true;
   agent.lane_keeping = 1.0;
   agent.lane_keeping_available = true;
-  agent.extended_comfort = 0.0;
+  agent.extended_comfort = 0.5;
   agent.extended_comfort_available = true;
   agent.no_at_fault_collision = 1.0;
   agent.no_at_fault_collision_available = true;
@@ -130,8 +113,8 @@ TEST(EpdmsAggregationTest, HumanFilteredAggregationFiltersProgressButNotExtended
   const auto result = calculate_synthetic_epdms(agent, filter);
   EXPECT_TRUE(result.human_filtered.available);
   EXPECT_DOUBLE_EQ(result.human_filtered.multiplicative_metrics_prod, 1.0);
-  EXPECT_DOUBLE_EQ(result.human_filtered.weighted_metrics, 0.8125);
-  EXPECT_DOUBLE_EQ(result.human_filtered.epdms, 0.8125);
+  EXPECT_DOUBLE_EQ(result.human_filtered.weighted_metrics, 0.875);
+  EXPECT_DOUBLE_EQ(result.human_filtered.epdms, 0.875);
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics
