@@ -8,11 +8,6 @@ EPDMS definition in
 It describes the semantic score first, then the migrated Autoware subscore
 equations used by this package.
 
-EPDMS means extended PDM score. NAVSIM EPDMS extends PDMS by adding lane keeping
-and extended comfort as weighted metrics, driving-direction compliance and
-traffic-light compliance as multiplicative metrics, and false-positive penalty
-filtering by human-reference behavior.
-
 This Autoware-compatible migration keeps the final single-trajectory EPDMS
 composition, but adapts the inputs to Autoware ROS topics, Autoware lanelet
 maps, and one selected planner trajectory. The score is local to each
@@ -58,157 +53,121 @@ This section lists the main constants used by the implemented EPDMS equations.
 
 | Symbol / value | Default | Used by | Meaning |
 | --- | ---: | --- | --- |
-| $w_{EP}$ | `5` | EPDMS | Ego-progress weight |
-| $w_{TTC}$ | `5` | EPDMS | Time-to-collision within bound weight |
-| $w_{LK}$ | `2` | EPDMS | Lane-keeping weight |
-| $w_{HC}$ | `2` | EPDMS | History-comfort weight |
-| $w_{EC}$ | `2` | EPDMS | Extended-comfort weight |
-| $\epsilon_H$ | `1.0e-9` | Human filter | Human-reference zero threshold |
-| $\tau_{stop}$ | `0.05 m/s` | NC | Stopped ego / stopped track threshold |
-| $\theta_{behind}$ | `150 deg` | NC, TTC | Object-behind angle threshold |
-| $r_{semantic}$ | `15 m` | DAC, shared area context | Expanded search range for semantic drivable-area polygons |
-| $r_{border}$ | `5 m` | DAC, shared area context | Expanded search range for `road_border` line strings |
-| $\rho$ | `{0.3, 0.6, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0} m` | DAC | Road-border side-probe distances |
-| $d_{corner,border}^{max}$ | `3.0 m` | DAC | Maximum corner-to-road-border distance for fallback acceptance |
-| $d_{semantic,border}^{max}$ | `4.0 m` | DAC | Maximum semantic-boundary-to-road-border distance for fallback acceptance |
-| $T_{DDC}$ | `1.0 s` | DDC | Rolling window for oncoming-progress accumulation |
-| $C_{minor}$ | `2.0 m` | DDC | Lower threshold for partial DDC penalty |
-| $C_{major}$ | `6.0 m` | DDC | Threshold for full DDC penalty |
-| $\tau_{ttc,stop}$ | `0.005 m/s` | TTC | Stopped ego threshold for skipping TTC projection |
-| $\delta$ | `{0.0, 0.3, 0.6, 0.9} s` | TTC | Future projection offsets |
-| $\theta_{ahead}$ | `30 deg` | TTC | Object-ahead angle threshold |
-| $D_{max}$ | `0.5 m` | LK | Maximum accepted lateral deviation from route centerline |
-| $T_{LK}$ | `2.0 s` | LK | Maximum continuous lane-keeping violation duration |
-| $T_{LC}^{pre}$ | `1.0 s` | LK | Lane-change pre-grace duration |
-| $T_{LC}^{post}$ | `1.0 s` | LK | Lane-change post-grace duration |
-| $v_{queue}$ | `1.0 m/s` | LK | Queue low-speed threshold |
-| $T_{queue}$ | `1.0 s` | LK | Queue progress-check window |
-| $d_{queue}$ | `1.5 m` | LK | Maximum progress for queue exemption |
-| $T_{release}$ | `1.5 s` | LK | Queue-release grace duration |
-| $T_{past}$ | `1.5 s` | HC | Past motion-history horizon |
-| $\Delta T_{HC}$ | `0.1 s` | HC | History-comfort sample interval |
-| $T_{future}$ | `4.0 s` | HC | Future trajectory horizon used for HC |
-| $a_x^{min}$ | `-4.05 m/s^2` | HC | Minimum longitudinal acceleration |
-| $a_x^{max}$ | `2.40 m/s^2` | HC | Maximum longitudinal acceleration |
-| $|a_y|^{max}$ | `4.89 m/s^2` | HC | Maximum lateral acceleration magnitude |
-| $|j|^{max}$ | `8.37 m/s^3` | HC | Maximum jerk magnitude |
-| $|j_x|^{max}$ | `4.13 m/s^3` | HC | Maximum longitudinal jerk magnitude |
-| $|\dot{\psi}|^{max}$ | `0.95 rad/s` | HC | Maximum yaw-rate magnitude |
-| $|\ddot{\psi}|^{max}$ | `1.93 rad/s^2` | HC | Maximum yaw-acceleration magnitude |
-| $\tau_a$ | `0.7` | EC | Maximum acceleration RMS discrepancy |
-| $\tau_j$ | `0.5` | EC | Maximum jerk RMS discrepancy |
-| $\tau_{\dot{\psi}}$ | `0.1` | EC | Maximum yaw-rate RMS discrepancy |
-| $\tau_{\ddot{\psi}}$ | `0.1` | EC | Maximum yaw-acceleration RMS discrepancy |
-| $\tau_G$ | `5.0 m` | EP | Progress denominator threshold for fallback |
+| `w_EP` | `5` | EPDMS | Ego-progress weight |
+| `w_TTC` | `5` | EPDMS | Time-to-collision within bound weight |
+| `w_LK` | `2` | EPDMS | Lane-keeping weight |
+| `w_HC` | `2` | EPDMS | History-comfort weight |
+| `w_EC` | `2` | EPDMS | Extended-comfort weight |
+| `epsilon_H` | `1.0e-9` | Human filter | Human-reference zero threshold |
+| `tau_stop` | `0.05 m/s` | NC | Stopped ego / stopped track threshold |
+| `theta_behind` | `150 deg` | NC, TTC | Object-behind angle threshold |
+| `r_semantic` | `15 m` | DAC, shared area context | Expanded search range for semantic drivable-area polygons |
+| `r_border` | `5 m` | DAC, shared area context | Expanded search range for `road_border` line strings |
+| `rho` | `{0.3, 0.6, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0} m` | DAC | Road-border side-probe distances |
+| `d_corner_border_max` | `3.0 m` | DAC | Maximum corner-to-road-border distance for fallback acceptance |
+| `d_semantic_border_max` | `4.0 m` | DAC | Maximum semantic-boundary-to-road-border distance for fallback acceptance |
+| `T_DDC` | `1.0 s` | DDC | Rolling window for oncoming-progress accumulation |
+| `C_minor` | `2.0 m` | DDC | Lower threshold for partial DDC penalty |
+| `C_major` | `6.0 m` | DDC | Threshold for full DDC penalty |
+| `tau_ttc_stop` | `0.005 m/s` | TTC | Stopped ego threshold for skipping TTC projection |
+| `delta` | `{0.0, 0.3, 0.6, 0.9} s` | TTC | Future projection offsets |
+| `theta_ahead` | `30 deg` | TTC | Object-ahead angle threshold |
+| `D_max` | `0.5 m` | LK | Maximum accepted lateral deviation from route centerline |
+| `T_LK` | `2.0 s` | LK | Maximum continuous lane-keeping violation duration |
+| `T_LC_pre` | `1.0 s` | LK | Lane-change pre-grace duration |
+| `T_LC_post` | `1.0 s` | LK | Lane-change post-grace duration |
+| `v_queue` | `1.0 m/s` | LK | Queue low-speed threshold |
+| `T_queue` | `1.0 s` | LK | Queue progress-check window |
+| `d_queue` | `1.5 m` | LK | Maximum progress for queue exemption |
+| `T_release` | `1.5 s` | LK | Queue-release grace duration |
+| `T_past` | `1.5 s` | HC | Past motion-history horizon |
+| `Delta_T_HC` | `0.1 s` | HC | History-comfort sample interval |
+| `T_future` | `4.0 s` | HC | Future trajectory horizon used for HC |
+| `a_x_min` | `-4.05 m/s^2` | HC | Minimum longitudinal acceleration |
+| `a_x_max` | `2.40 m/s^2` | HC | Maximum longitudinal acceleration |
+| `abs_a_y_max` | `4.89 m/s^2` | HC | Maximum lateral acceleration magnitude |
+| `abs_jerk_max` | `8.37 m/s^3` | HC | Maximum jerk magnitude |
+| `abs_j_x_max` | `4.13 m/s^3` | HC | Maximum longitudinal jerk magnitude |
+| `abs_yaw_rate_max` | `0.95 rad/s` | HC | Maximum yaw-rate magnitude |
+| `abs_yaw_accel_max` | `1.93 rad/s^2` | HC | Maximum yaw-acceleration magnitude |
+| `tau_accel_rms` | `0.7` | EC | Maximum acceleration RMS discrepancy |
+| `tau_jerk_rms` | `0.5` | EC | Maximum jerk RMS discrepancy |
+| `tau_yaw_rate_rms` | `0.1` | EC | Maximum yaw-rate RMS discrepancy |
+| `tau_yaw_accel_rms` | `0.1` | EC | Maximum yaw-acceleration RMS discrepancy |
+| `tau_G` | `5.0 m` | EP | Progress denominator threshold for fallback |
 
 ## EPDMS Definition
 
-EPDMS is a synthetic open-loop planning score for one selected trajectory. It
-combines multiplicative penalty checks with weighted progress, risk,
-lane-keeping, and comfort quality terms.
+The Extended Predictive Driver Model Score (EPDMS) is a comprehensive, rule-based evaluation metric used to benchmark the performance and safety of autonomous driving systems and trajectory planners
 
-Let:
+EPDMS scores one selected trajectory by multiplying safety and rule-compliance
+subscores with a weighted quality term. The human filter is applied inside the
+aggregation so that failures also observed in the human reference are suppressed.
+
+| Metric | Weight | Range |
+| --- | --- | --- |
+| No at-fault collision (`NC`) | multiplier | `{0, 0.5, 1}` |
+| Drivable area compliance (`DAC`) | multiplier | `{0, 1}` |
+| Driving direction compliance (`DDC`) | multiplier | `{0, 0.5, 1}` |
+| Traffic light compliance (`TLC`) | multiplier | `{0, 1}` |
+| Ego progress (`EP`) | `5` | `[0, 1]` |
+| Time-to-collision within bound (`TTC`) | `5` | `{0, 1}` |
+| Lane keeping (`LK`) | `2` | `{0, 1}` |
+| History comfort (`HC`) | `2` | `{0, 1}` |
+| Extended comfort (`EC`) | `2` | `{0, 1}` |
+
+The full EPDMS is defined as:
 
 $$
-\mathcal{M}=\{NC, DAC, DDC, TLC\}
-$$
-
-and:
-
-$$
-\mathcal{W}=\{EP, TTC, LK, HC, EC\}
-$$
-
-For weighted metric $m$, let $w_m$ be its configured weight. The raw score is:
-
-$$
-EPDMS_{raw} =
+EPDMS =
 \left(
-\prod_{m \in \mathcal{M}} m
+\prod_{m \in \{NC, DAC, DDC, TLC\}}
+filter_m(agent, human)
 \right)
 \cdot
 \left(
 \frac{
-\sum_{m \in \mathcal{W}} w_m m
+\sum_{m \in \{EP, TTC, LK, HC, EC\}}
+w_m \cdot filter_m(agent, human)
 }{
-\sum_{m \in \mathcal{W}} w_m
+\sum_{m \in \{EP, TTC, LK, HC, EC\}}
+w_m
 }
 \right)
 $$
 
-With the migrated Autoware weights:
+where:
 
 $$
-w_{EP}=5,\quad
-w_{TTC}=5,\quad
-w_{LK}=2,\quad
-w_{HC}=2,\quad
-w_{EC}=2
+filter_m(agent, human) =
+\begin{cases}
+1, & \text{if } m \ne EC,\ A_m \text{ and } H_m \text{ are available, and } \left\lvert H_m \right\rvert \le 10^{-9} \\
+A_m, & \text{otherwise}
+\end{cases}
 $$
 
-the implemented raw score is:
+Here:
 
-$$
-EPDMS_{raw} =
-(NC \cdot DAC \cdot DDC \cdot TLC)
-\cdot
-\frac{
-5EP + 5TTC + 2LK + 2HC + 2EC
-}{16}
-$$
+Here:
 
-For the human-filtered score, let $A_m$ be the agent score, $H_m$ be the
-human-reference score, and $F_m$ be the filtered score:
+- **Multiplicative penalty gate**:  
+  The left product term combines `NC`, `DAC`, `DDC`, and `TLC`. These are safety
+  and rule-compliance checks. A score of `0` collapses EPDMS to `0`, while `0.5`
+  partially penalizes it. Therefore, this term controls whether the weighted
+  quality score should pass through fully, partially, or not at all.
 
-$$
-F_m =
-1
-\quad \text{if the agent and human scores are available and}
-\quad |H_m| \le 10^{-9}
-$$
+- **Weighted quality term**:  
+  The right fraction combines `EP`, `TTC`, `LK`, `HC`, and `EC` using their
+  configured weights. It is normalized by the total weight, so it remains in
+  `[0, 1]`. Larger weights make `EP` and `TTC` more influential than lane
+  keeping and comfort.
 
-Otherwise:
-
-$$
-F_m = A_m
-$$
-
-The filterable metrics are $NC$, $DAC$, $DDC$, $TLC$, $EP$, $TTC$, $LK$, and
-$HC$. EC intentionally bypasses the human filter in the migrated synthetic
-score:
-
-$$
-EPDMS_{HF} =
-\left(
-\prod_{m \in \{NC, DAC, DDC, TLC\}} F_m
-\right)
-\cdot
-\left(
-\frac{
-\sum_{m \in \{EP, TTC, LK, HC\}} w_m F_m + w_{EC} EC
-}{16}
-\right)
-$$
-
-Equivalently:
-
-$$
-EPDMS_{HF} =
-(F_{NC} \cdot F_{DAC} \cdot F_{DDC} \cdot F_{TLC})
-\cdot
-\frac{
-5F_{EP} + 5F_{TTC} + 2F_{LK} + 2F_{HC} + 2EC
-}{16}
-$$
-
-Here, $M=\prod_{m \in \mathcal{M}}m$ is the multiplicative penalty gate. Any zero
-in `NC`, `DAC`, `DDC`, or `TLC` collapses the final score. Note that $NC$ and
-$DDC$ are not strictly binary and may return $0.5$ (partial penalty) in certain
-scenarios. $W$ is the normalized weighted quality term over `EP`, `TTC`, `LK`,
-`HC`, and `EC`. The human filter is a false-positive suppression rule: $F_m=1$
-suppresses the agent penalty when the human reference also failed metric $m$,
-while $F_m=A_m$ keeps the agent score unchanged.
-
+- **Human filter**:  
+  `filter_m(agent, human)` returns `1` when the human reference also failed the
+  same metric, suppressing shared human-reference failures. Otherwise, it keeps
+  the agent score. `EC` bypasses this filter because it measures consistency
+  between consecutive agent trajectories.
+  
 ## Shared Map and Area Sources
 
 Several subscores reuse the same Autoware footprint and lanelet-map helper
