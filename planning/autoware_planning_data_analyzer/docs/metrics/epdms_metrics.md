@@ -41,15 +41,15 @@ is available only when every required raw subscore is available.
 
 The EPDMS subscores are:
 
-- `nc`: no at-fault collision
-- `dac`: drivable area compliance
-- `ddc`: driving direction compliance
-- `tlc`: traffic light compliance
-- `ttc`: time-to-collision within bound
-- `lk`: lane keeping
-- `hc`: history comfort
-- `ec`: extended comfort
-- `ep`: ego progress
+- [`NC`](#nc-no-at-fault-collision): no at-fault collision
+- [`DAC`](#dac-drivable-area-compliance): drivable area compliance
+- [`DDC`](#ddc-driving-direction-compliance): driving direction compliance
+- [`TLC`](#tlc-traffic-light-compliance): traffic light compliance
+- [`TTC`](#ttc-time-to-collision-within-bound): time-to-collision within bound
+- [`LK`](#lk-lane-keeping): lane keeping
+- [`HC`](#hc-history-comfort): history comfort
+- [`EC`](#ec-extended-comfort): extended comfort
+- [`EP`](#ep-ego-progress): ego progress
 
 ## EPDMS Definition
 
@@ -202,10 +202,11 @@ drivable-area search.
 NC checks whether the ego trajectory overlaps a recorded tracked object in an
 ego-responsible way.
 
-NC uses the ego footprint $P_t$ from the shared footprint evaluation. Its
-lateral-fault bad-area term reuses the shared `MultipleLanes_t` and
-`NonDrivableArea_t` flags from the semantic drivable-area evaluation described
-above. Therefore, lateral at-fault classification depends on the 15 m semantic
+NC uses the ego footprint $P_t$ from the
+[shared map and area sources](#shared-map-and-area-sources). Its lateral-fault
+bad-area term reuses the shared `MultipleLanes_t` and `NonDrivableArea_t` flags
+from the [semantic drivable-area evaluation](#shared-map-and-area-sources).
+Therefore, lateral at-fault classification depends on the 15 m semantic
 drivable-area search and the 5 m road-border fallback, while front and stopped
 track collisions do not depend on map-area polygons.
 
@@ -252,33 +253,18 @@ $$
 
 where $F_t$ is the front-bumper line segment of the ego footprint.
 
-Collision type is evaluated in priority order:
+Collision type is evaluated in this priority order:
 
-$$
-StoppedEgo_t
-\Rightarrow
-CollisionType_{t,o}=STOPPED\_EGO
-$$
+1. If $StoppedEgo_t$ is true, then
+   $CollisionType_{t,o}=STOPPED\_EGO$.
+2. Else if $StoppedTrack_{t,o}$ is true, then
+   $CollisionType_{t,o}=STOPPED\_TRACK$.
+3. Else if $Behind_{t,o}$ is true, then
+   $CollisionType_{t,o}=ACTIVE\_REAR$.
+4. Else if $FrontHit_{t,o}$ is true, then
+   $CollisionType_{t,o}=ACTIVE\_FRONT$.
+5. Otherwise, $CollisionType_{t,o}=ACTIVE\_LATERAL$.
 
-$$
-\neg StoppedEgo_t \land StoppedTrack_{t,o}
-\Rightarrow
-CollisionType_{t,o}=STOPPED\_TRACK
-$$
-
-$$
-\neg StoppedEgo_t \land \neg StoppedTrack_{t,o} \land Behind_{t,o}
-\Rightarrow
-CollisionType_{t,o}=ACTIVE\_REAR
-$$
-
-$$
-\neg StoppedEgo_t \land \neg StoppedTrack_{t,o} \land \neg Behind_{t,o} \land FrontHit_{t,o}
-\Rightarrow
-CollisionType_{t,o}=ACTIVE\_FRONT
-$$
-
-All remaining active contacts are `ACTIVE_LATERAL`.
 
 The bad-area flag used for lateral fault judgement is:
 
@@ -327,7 +313,8 @@ When there is no at-fault contact, $NC=1.0$.
 DAC checks whether all ego footprint corners remain inside the semantic
 drivable area, with a conservative road-border fallback.
 
-DAC is the direct consumer of the shared semantic drivable-area evaluation. It
+DAC is the direct consumer of the
+[shared semantic drivable-area evaluation](#shared-map-and-area-sources). It
 uses the full ego footprint, not only the ego center. At each trajectory sample,
 all four ego corners must be accepted by either a semantic drivable polygon or
 the conservative road-border fallback.
@@ -440,11 +427,12 @@ $$
 
 DDC measures wrong-way or oncoming progress over a rolling horizon.
 
-DDC uses the driving-direction local context, not the DAC semantic drivable
-union. The context is computed from the ego center point with a `5m` local
-lanelet and intersection search. A sample is treated as not on the route
-direction when the center point is outside local route-consistent road/shoulder
-lanelets, including the `0.35m` lane margin.
+DDC uses the
+[driving-direction local context](#shared-map-and-area-sources), not the DAC
+semantic drivable union. The context is computed from the ego center point with
+a `5m` local lanelet and intersection search. A sample is treated as not on the
+route direction when the center point is outside local route-consistent
+road/shoulder lanelets, including the `0.35m` lane margin.
 
 For sample $t$, let:
 
@@ -590,13 +578,14 @@ TTC projects the current ego state to short future offsets and checks overlap
 with recorded tracked objects at matching future query times.
 
 TTC uses two different geometry sources. For map context at the current
-trajectory sample, it reuses shared footprint evaluation flags:
+trajectory sample, it reuses
+[shared footprint evaluation flags](#shared-map-and-area-sources):
 `MultipleLanes_t`, `NonDrivableArea_t`, and `Intersection_t`. These flags come
 from the same 15 m semantic drivable-area search and 5 m road-border fallback
-used by DAC, with intersection context enabled. For collision geometry, TTC
-builds a separate projected ego footprint at each offset $\delta$ and compares
-it against recorded tracked-object polygons; the projected footprint is not
-reclassified against map polygons at $t+\delta$.
+used by [DAC](#dac-drivable-area-compliance), with intersection context enabled.
+For collision geometry, TTC builds a separate projected ego footprint at each
+offset $\delta$ and compares it against recorded tracked-object polygons; the
+projected footprint is not reclassified against map polygons at $t+\delta$.
 
 The checked offsets are:
 
@@ -695,8 +684,9 @@ and explicit lane-change intent windows.
 LK uses route centerline geometry, not the DAC drivable-area polygon union. For
 each trajectory sample, the reference lanelet is the closest lanelet within the
 route when available; otherwise, a route lanelet at the pose is used. The
-intersection exemption uses the same 5 m center-point driving-direction local
-context as DDC.
+intersection exemption uses the same
+[5 m center-point driving-direction local context](#shared-map-and-area-sources)
+as [DDC](#ddc-driving-direction-compliance).
 
 For each sample:
 
