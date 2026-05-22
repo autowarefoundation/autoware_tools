@@ -31,7 +31,7 @@ For trajectory sample $q_t$:
 
 - $T_t$ is the relative time from `time_from_start`.
 - $p_t$ is the ego pose.
-- $v_t$ is the ego speed.
+- $\vec{v}_t$ is the 2D world-frame velocity vector.
 - $P_t$ is the ego footprint polygon generated from `VehicleInfo` at $p_t$.
 - $X_{t,k}$ is an ego footprint corner, with $k$ ranging over the four corners.
 - $R_t$ is the route/lanelet context available from `RouteHandler`.
@@ -54,8 +54,8 @@ The EPDMS subscores are:
 ## EPDMS Definition
 
 EPDMS is a synthetic open-loop planning score for one selected trajectory. It
-combines hard admissibility checks with weighted progress, risk, lane-keeping,
-and comfort quality terms.
+combines multiplicative penalty checks with weighted progress, risk,
+lane-keeping, and comfort quality terms.
 
 Let:
 
@@ -151,12 +151,13 @@ EPDMS_{HF} =
 }{16}
 $$
 
-Here, $M=\prod_{m \in \mathcal{M}}m$ is the hard admissibility gate. Any zero in
-`NC`, `DAC`, `DDC`, or `TLC` collapses the final score. $W$ is the normalized
-weighted quality term over `EP`, `TTC`, `LK`, `HC`, and `EC`. The human filter
-is a false-positive suppression rule: $F_m=1$ suppresses the agent penalty when
-the human reference also failed metric $m$, while $F_m=A_m$ keeps the agent
-score unchanged.
+Here, $M=\prod_{m \in \mathcal{M}}m$ is the multiplicative penalty gate. Any zero
+in `NC`, `DAC`, `DDC`, or `TLC` collapses the final score. Note that $NC$ and
+$DDC$ are not strictly binary and may return $0.5$ (partial penalty) in certain
+scenarios. $W$ is the normalized weighted quality term over `EP`, `TTC`, `LK`,
+`HC`, and `EC`. The human filter is a false-positive suppression rule: $F_m=1$
+suppresses the agent penalty when the human reference also failed metric $m$,
+while $F_m=A_m$ keeps the agent score unchanged.
 
 ## Shared Map and Area Sources
 
@@ -607,7 +608,7 @@ For sample $t$ and offset $\delta$, ego pose is projected with the current
 velocity:
 
 $$
-p_{t,\delta}^{proj} = p_t + v_t \delta
+p_{t,\delta}^{proj} = p_t + \vec{v}_t \delta
 $$
 
 The projected ego footprint is:
@@ -965,9 +966,8 @@ EP = 1.0
 $$
 
 Because this implementation currently has only one selected trajectory proposal,
-EP is expected to be `1.0` whenever the multiplicative mask passes and the
-metric is available. Multi-candidate proposal-batch progress remains a future
-faithfulness improvement.
+EP is effectively always `1.0` when available. Multi-candidate proposal-batch
+progress remains a future faithfulness improvement.
 
 ## Output Topics
 
