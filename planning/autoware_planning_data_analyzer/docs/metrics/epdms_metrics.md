@@ -56,50 +56,50 @@ links to the corresponding subscore logic section:
 
 This section lists the main constants used by the implemented EPDMS equations.
 
-| Symbol / value | Default | Used by | Meaning |
-| --- | ---: | --- | --- |
-| $w_{EP}$ | `5` | EPDMS | Ego-progress weight |
-| $w_{TTC}$ | `5` | EPDMS | Time-to-collision within bound weight |
-| $w_{LK}$ | `2` | EPDMS | Lane-keeping weight |
-| $w_{HC}$ | `2` | EPDMS | History-comfort weight |
-| $w_{EC}$ | `2` | EPDMS | Extended-comfort weight |
-| $\epsilon_H$ | `1.0e-9` | Human filter | Human-reference zero threshold |
-| $\tau_{stop}$ | `0.05 m/s` | NC | Stopped ego / stopped track threshold |
-| $\theta_{behind}$ | `150 deg` | NC, TTC | Object-behind angle threshold |
-| $r_{semantic}$ | `15 m` | DAC, shared area context | Expanded search range for semantic drivable-area polygons |
-| $r_{border}$ | `5 m` | DAC, shared area context | Expanded search range for `road_border` line strings |
-| $\rho$ | `{0.3, 0.6, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0} m` | DAC | Road-border side-probe distances |
-| $d_{corner,border}^{max}$ | `3.0 m` | DAC | Maximum corner-to-road-border distance for fallback acceptance |
-| $d_{semantic,border}^{max}$ | `4.0 m` | DAC | Maximum semantic-boundary-to-road-border distance for fallback acceptance |
-| $T_{DDC}$ | `1.0 s` | DDC | Rolling window for oncoming-progress accumulation |
-| $C_{minor}$ | `2.0 m` | DDC | Lower threshold for partial DDC penalty |
-| $C_{major}$ | `6.0 m` | DDC | Threshold for full DDC penalty |
-| $\tau_{ttc,stop}$ | `0.005 m/s` | TTC | Stopped ego threshold for skipping TTC projection |
-| $\delta$ | `{0.0, 0.3, 0.6, 0.9} s` | TTC | Future projection offsets |
-| $\theta_{ahead}$ | `30 deg` | TTC | Object-ahead angle threshold |
-| $D_{max}$ | `0.5 m` | LK | Maximum accepted lateral deviation from route centerline |
-| $T_{LK}$ | `2.0 s` | LK | Maximum continuous lane-keeping violation duration |
-| $T_{LC}^{pre}$ | `1.0 s` | LK | Lane-change pre-grace duration |
-| $T_{LC}^{post}$ | `1.0 s` | LK | Lane-change post-grace duration |
-| $v_{queue}$ | `1.0 m/s` | LK | Queue low-speed threshold |
-| $T_{queue}$ | `1.0 s` | LK | Queue progress-check window |
-| $d_{queue}$ | `1.5 m` | LK | Maximum progress for queue exemption |
-| $T_{release}$ | `1.5 s` | LK | Queue-release grace duration |
-| $T_{past}$ | `1.5 s` | HC | Past motion-history horizon |
-| $\Delta T_{HC}$ | `0.1 s` | HC | History-comfort sample interval |
-| $T_{future}$ | `4.0 s` | HC | Future trajectory horizon used for HC |
-| $a_x^{min}$ | `-4.05 m/s^2` | HC | Minimum longitudinal acceleration |
-| $a_x^{max}$ | `2.40 m/s^2` | HC | Maximum longitudinal acceleration |
-| $|a_y|^{max}$ | `4.89 m/s^2` | HC | Maximum lateral acceleration magnitude |
-| $|j|^{max}$ | `8.37 m/s^3` | HC | Maximum jerk magnitude |
-| $|j_x|^{max}$ | `4.13 m/s^3` | HC | Maximum longitudinal jerk magnitude |
-| $|\dot{\psi}|^{max}$ | `0.95 rad/s` | HC | Maximum yaw-rate magnitude |
-| $|\ddot{\psi}|^{max}$ | `1.93 rad/s^2` | HC | Maximum yaw-acceleration magnitude |
-| $\tau_a$ | `0.7` | EC | Maximum acceleration RMS discrepancy |
-| $\tau_j$ | `0.5` | EC | Maximum jerk RMS discrepancy |
-| $\tau_{\dot{\psi}}$ | `0.1` | EC | Maximum yaw-rate RMS discrepancy |
-| $\tau_{\ddot{\psi}}$ | `0.1` | EC | Maximum yaw-acceleration RMS discrepancy |
-| $\tau_G$ | `5.0 m` | EP | Progress denominator threshold for fallback |
+| Symbol / value              |                                      Default | Used by                  | Meaning                                                                   |
+| --------------------------- | -------------------------------------------: | ------------------------ | ------------------------------------------------------------------------- | --- | -------------------------------------- |
+| $w_{EP}$                    |                                          `5` | EPDMS                    | Ego-progress weight                                                       |
+| $w_{TTC}$                   |                                          `5` | EPDMS                    | Time-to-collision within bound weight                                     |
+| $w_{LK}$                    |                                          `2` | EPDMS                    | Lane-keeping weight                                                       |
+| $w_{HC}$                    |                                          `2` | EPDMS                    | History-comfort weight                                                    |
+| $w_{EC}$                    |                                          `2` | EPDMS                    | Extended-comfort weight                                                   |
+| $\epsilon_H$                |                                     `1.0e-9` | Human filter             | Human-reference zero threshold                                            |
+| $\tau_{stop}$               |                                   `0.05 m/s` | NC                       | Stopped ego / stopped track threshold                                     |
+| $\theta_{behind}$           |                                    `150 deg` | NC, TTC                  | Object-behind angle threshold                                             |
+| $r_{semantic}$              |                                       `15 m` | DAC, shared area context | Expanded search range for semantic drivable-area polygons                 |
+| $r_{border}$                |                                        `5 m` | DAC, shared area context | Expanded search range for `road_border` line strings                      |
+| $\rho$                      | `{0.3, 0.6, 1.0, 1.5, 2.0, 2.5, 3.0, 4.0} m` | DAC                      | Road-border side-probe distances                                          |
+| $d_{corner,border}^{max}$   |                                      `3.0 m` | DAC                      | Maximum corner-to-road-border distance for fallback acceptance            |
+| $d_{semantic,border}^{max}$ |                                      `4.0 m` | DAC                      | Maximum semantic-boundary-to-road-border distance for fallback acceptance |
+| $T_{DDC}$                   |                                      `1.0 s` | DDC                      | Rolling window for oncoming-progress accumulation                         |
+| $C_{minor}$                 |                                      `2.0 m` | DDC                      | Lower threshold for partial DDC penalty                                   |
+| $C_{major}$                 |                                      `6.0 m` | DDC                      | Threshold for full DDC penalty                                            |
+| $\tau_{ttc,stop}$           |                                  `0.005 m/s` | TTC                      | Stopped ego threshold for skipping TTC projection                         |
+| $\delta$                    |                     `{0.0, 0.3, 0.6, 0.9} s` | TTC                      | Future projection offsets                                                 |
+| $\theta_{ahead}$            |                                     `30 deg` | TTC                      | Object-ahead angle threshold                                              |
+| $D_{max}$                   |                                      `0.5 m` | LK                       | Maximum accepted lateral deviation from route centerline                  |
+| $T_{LK}$                    |                                      `2.0 s` | LK                       | Maximum continuous lane-keeping violation duration                        |
+| $T_{LC}^{pre}$              |                                      `1.0 s` | LK                       | Lane-change pre-grace duration                                            |
+| $T_{LC}^{post}$             |                                      `1.0 s` | LK                       | Lane-change post-grace duration                                           |
+| $v_{queue}$                 |                                    `1.0 m/s` | LK                       | Queue low-speed threshold                                                 |
+| $T_{queue}$                 |                                      `1.0 s` | LK                       | Queue progress-check window                                               |
+| $d_{queue}$                 |                                      `1.5 m` | LK                       | Maximum progress for queue exemption                                      |
+| $T_{release}$               |                                      `1.5 s` | LK                       | Queue-release grace duration                                              |
+| $T_{past}$                  |                                      `1.5 s` | HC                       | Past motion-history horizon                                               |
+| $\Delta T_{HC}$             |                                      `0.1 s` | HC                       | History-comfort sample interval                                           |
+| $T_{future}$                |                                      `4.0 s` | HC                       | Future trajectory horizon used for HC                                     |
+| $a_x^{min}$                 |                                `-4.05 m/s^2` | HC                       | Minimum longitudinal acceleration                                         |
+| $a_x^{max}$                 |                                 `2.40 m/s^2` | HC                       | Maximum longitudinal acceleration                                         |
+| $                           |                                          a_y | ^{max}$                  | `4.89 m/s^2`                                                              | HC  | Maximum lateral acceleration magnitude |
+| $                           |                                            j | ^{max}$                  | `8.37 m/s^3`                                                              | HC  | Maximum jerk magnitude                 |
+| $                           |                                          j_x | ^{max}$                  | `4.13 m/s^3`                                                              | HC  | Maximum longitudinal jerk magnitude    |
+| $                           |                                   \dot{\psi} | ^{max}$                  | `0.95 rad/s`                                                              | HC  | Maximum yaw-rate magnitude             |
+| $                           |                                  \ddot{\psi} | ^{max}$                  | `1.93 rad/s^2`                                                            | HC  | Maximum yaw-acceleration magnitude     |
+| $\tau_a$                    |                                        `0.7` | EC                       | Maximum acceleration RMS discrepancy                                      |
+| $\tau_j$                    |                                        `0.5` | EC                       | Maximum jerk RMS discrepancy                                              |
+| $\tau_{\dot{\psi}}$         |                                        `0.1` | EC                       | Maximum yaw-rate RMS discrepancy                                          |
+| $\tau_{\ddot{\psi}}$        |                                        `0.1` | EC                       | Maximum yaw-acceleration RMS discrepancy                                  |
+| $\tau_G$                    |                                      `5.0 m` | EP                       | Progress denominator threshold for fallback                               |
 
 ## EPDMS Definition
 
