@@ -265,7 +265,6 @@ Collision type is evaluated in this priority order:
    $CollisionType_{t,o}=ACTIVE\_FRONT$.
 5. Otherwise, $CollisionType_{t,o}=ACTIVE\_LATERAL$.
 
-
 The bad-area flag used for lateral fault judgement is:
 
 $$
