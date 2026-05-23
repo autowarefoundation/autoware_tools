@@ -231,7 +231,7 @@ def process_include_tag(
     if included_file:
         context["__tree__"].add_child(
             context["__current_launch_name_"],
-            os.path.basename(included_file),
+            f"{group_base_namespace}/{os.path.basename(included_file)}",
             path=included_file,
         )
         if included_file.startswith("/opt/ros/humble") and (not FLAG_CHECKING_SYSTEM_PROJECTS):
@@ -289,12 +289,12 @@ def parse_group_tag(
     if parent_file_space is None:
         parent_file_space = base_namespace
     # find the push-ros-namespace tag inside the children
-    group_base_namespace = deepcopy(base_namespace)
+    group_base_namespace = deepcopy(parent_file_space)
     for child in group_tag:
         if child.tag == "push-ros-namespace":
             if child.get("namespace").strip() == "/":
                 continue
-            group_base_namespace = f"{base_namespace}/{child.get('namespace').strip('/')}"
+            group_base_namespace = f"{group_base_namespace}/{child.get('namespace').strip('/')}"
             # print(f"Setting ROS namespace to {group_base_namespace} inside group")
 
     # find all other children
@@ -329,7 +329,7 @@ def process_tag(
     elif tag.tag == "let":
         context = parse_let_tag(tag, base_namespace, context, local_context)
     elif tag.tag == "group":
-        context = parse_group_tag(tag, base_namespace, context, local_context)
+        context = parse_group_tag(tag, base_namespace, context, local_context, group_base_namespace)
     elif tag.tag == "include":
         context = process_include_tag(
             tag, context, local_context, base_namespace, group_base_namespace
@@ -347,7 +347,7 @@ def parse_xml(file_path: str, namespace: str = "", context: dict = {}):
     """Recursively parse XML files, handling <include> tags. For each file, the namespace should be the same."""
     full_path = os.path.join(file_path)
     context["__current_launch_file__"] = full_path
-    context["__current_launch_name_"] = os.path.basename(full_path)
+    context["__current_launch_name_"] = f"{namespace}/{os.path.basename(full_path)}"
     if "__tree__" not in context:
         context["__tree__"] = LaunchTree()
     if context["__tree__"].root is None:
