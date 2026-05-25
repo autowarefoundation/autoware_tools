@@ -18,6 +18,7 @@
 
 #include <autoware/lanelet2_utils/geometry.hpp>
 #include <autoware/lanelet2_utils/intersection.hpp>
+#include <autoware_utils_geometry/boost_geometry.hpp>
 #include <autoware_utils_math/normalization.hpp>
 
 #include <boost/geometry.hpp>
@@ -26,6 +27,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -152,6 +154,30 @@ std::vector<lanelet::ConstPolygon3d> collect_local_intersection_areas(
   return intersection_areas;
 }
 
+std::optional<autoware_utils_geometry::Polygon2d> get_intersection_area_polygon(
+  const lanelet::ConstLanelet & lanelet, const lanelet::LaneletMapConstPtr & map)
+{
+  const std::string area_id_str = lanelet.attributeOr("intersection_area", "else");
+  if (area_id_str == "else") {
+    return std::nullopt;
+  }
+
+  const auto area_id = static_cast<lanelet::Id>(std::stoll(area_id_str));
+  if (!map->polygonLayer.exists(area_id)) {
+    return std::nullopt;
+  }
+
+  const auto poly_3d = map->polygonLayer.get(area_id);
+  autoware_utils_geometry::Polygon2d poly;
+  for (const auto & point : poly_3d) {
+    poly.outer().emplace_back(point.x(), point.y());
+  }
+  if (poly.outer().size() >= 3) {
+    poly.outer().push_back(poly.outer().front());
+  }
+  return poly;
+}
+
 }  // namespace
 
 std::optional<lanelet::ConstLanelet> find_reference_lanelet(
@@ -214,6 +240,28 @@ bool is_pose_in_intersection(
          autoware::experimental::lanelet2_utils::is_intersection_lanelet(*lanelet);
 }
 
+bool is_pose_in_intersection_area(
+  const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler)
+{
+  if (!route_handler || !route_handler->isMapMsgReady()) {
+    return false;
+  }
+
+  const auto lanelet = find_reference_lanelet(pose, route_handler);
+  if (!lanelet.has_value()) {
+    return false;
+  }
+
+  const auto intersection_area =
+    get_intersection_area_polygon(*lanelet, route_handler->getLaneletMapPtr());
+  if (!intersection_area.has_value()) {
+    return false;
+  }
+
+  const autoware_utils_geometry::Point2d ego_point{pose.position.x, pose.position.y};
+  return boost::geometry::within(ego_point, *intersection_area);
+}
+
 bool is_pose_in_route_lane_polygon(
   const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler)
 {
@@ -246,17 +294,6 @@ std::optional<DrivingDirectionLocalContext> compute_driving_direction_local_cont
   context.in_intersection = std::any_of(
     context.intersection_areas.begin(), context.intersection_areas.end(),
     [&search_point](const auto & polygon) { return point_in_polygon(search_point, polygon); });
-
-  if (!context.in_intersection) {
-    for (const auto & lanelet : context.route_lanelets) {
-      if (
-        autoware::experimental::lanelet2_utils::is_intersection_lanelet(lanelet) &&
-        point_in_lanelet(search_point, lanelet)) {
-        context.in_intersection = true;
-        break;
-      }
-    }
-  }
   return context;
 }
 

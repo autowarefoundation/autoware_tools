@@ -1,0 +1,9 @@
+# Evaluator metric for open_loop analysis (control_evaluator, planning_evaluator, etc.).
+evaluator_config:
+  - name: lateral_deviation_centerline
+    topics:
+      - /control/control_evaluator/metrics/lateral_deviation_centerline
+      - /control/control_evaluator/metrics/lateral_deviation_centerline_abs
+    exclusion:
+      rules:
+        - intersection_area

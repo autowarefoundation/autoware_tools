@@ -1,6 +1,7 @@
 <launch>
   <arg name="bag_path" description="Path to rosbag file or directory"/>
   <arg name="config_file" default="$(find-pkg-share autoware_planning_data_analyzer)/config/planning_data_analyzer.param.yaml" description="Path to parameter file"/>
+  <arg name="evaluator_config_file" default="$(find-pkg-share autoware_planning_data_analyzer)/config/evaluator_config.yaml" description="Path to control evaluator metric groups YAML"/>
   <arg name="vehicle_model" default="" description="Vehicle model name"/>
   <arg name="output_dir" description="Output directory for evaluation results (overrides config file if specified)"/>
   <arg name="trajectory_topic" default="/planning/trajectory" description="Trajectory topic to evaluate"/>
@@ -20,6 +21,7 @@
       <param name="open_loop.gt_source_mode" value="$(var gt_source_mode)"/>
       <param name="open_loop.gt_trajectory_topic" value="$(var gt_trajectory_topic)"/>
       <param name="open_loop.gt_sync_tolerance_ms" value="$(var gt_sync_tolerance_ms)"/>
+      <param name="open_loop.evaluator_config_path" value="$(var evaluator_config_file)"/>
     </node>
   </group>
 
@@ -33,6 +35,7 @@
       <param name="open_loop.gt_source_mode" value="$(var gt_source_mode)"/>
       <param name="open_loop.gt_trajectory_topic" value="$(var gt_trajectory_topic)"/>
       <param name="open_loop.gt_sync_tolerance_ms" value="$(var gt_sync_tolerance_ms)"/>
+      <param name="open_loop.evaluator_config_path" value="$(var evaluator_config_file)"/>
     </node>
   </group>
 </launch>

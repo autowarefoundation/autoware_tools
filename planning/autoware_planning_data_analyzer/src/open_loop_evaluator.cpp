@@ -17,6 +17,7 @@
 #include "metrics/epdms/aggregation/epdms_aggregation.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 #include "metrics/geometry/object_tracks.hpp"
+#include "metrics/metric_types.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
 #include <autoware/motion_utils/trajectory/conversion.hpp>
@@ -365,17 +366,6 @@ static double compute_std_dev(const std::vector<double> & v)
   double var = 0.0;
   for (const double x : v) var += (x - m) * (x - m);
   return std::sqrt(var / v.size());
-}
-
-static double compute_percentile(const std::vector<double> & sorted, double p)
-{
-  if (sorted.empty()) return 0.0;
-  if (sorted.size() == 1) return sorted[0];
-  const double idx = p * static_cast<double>(sorted.size() - 1);
-  const size_t lo = static_cast<size_t>(std::floor(idx));
-  const size_t hi = std::min(lo + 1, sorted.size() - 1);
-  const double frac = idx - static_cast<double>(lo);
-  return sorted[lo] * (1.0 - frac) + sorted[hi] * frac;
 }
 
 static void fill_horizon_json(
@@ -1639,8 +1629,8 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
     j[prefix + "/min"] = sorted.empty() ? 0.0 : sorted.front();
     j[prefix + "/max"] = sorted.empty() ? 0.0 : sorted.back();
     j[prefix + "/std"] = compute_std_dev(vals);
-    j[prefix + "/percentile_95"] = compute_percentile(sorted, 0.95);
-    j[prefix + "/percentile_99"] = compute_percentile(sorted, 0.99);
+    j[prefix + "/percentile_95"] = ::metrics::compute_percentile(sorted, 0.95);
+    j[prefix + "/percentile_99"] = ::metrics::compute_percentile(sorted, 0.99);
   };
 
   std::set<std::string> all_keys;
@@ -2430,7 +2420,8 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
   RCLCPP_INFO(logger_, "Running open-loop evaluation for trajectory analysis");
 
   // Use base class method to process bag and get synchronized data
-  auto bag_result = process_bag_common(bag_path, evaluation_bag_writer, topic_names);
+  auto bag_result =
+    process_bag_common(bag_path, evaluation_bag_writer, topic_names, evaluator_configs_);
   object_timeline_ = bag_result.tracked_object_timeline;
 
   // Pass the control_mode timeline to enable override-only aggregation in the summary.
@@ -2469,6 +2460,32 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
     save_json_results(
       full_json, bag_path, "open_loop", "time_step_based_trajectory_detailed_result.json", false,
       true);
+  }
+
+  // Save evaluator metric results
+  if (!bag_result.evaluator_metric_groups.empty()) {
+    const auto build_group_json =
+      [](const metrics::evaluator::EvaluatorMetricGroup & metric_group) {
+        std::vector<metrics::evaluator::EvaluatorMetricAggregationResult> metric_results;
+        metric_results.reserve(metric_group.measurements_by_metric_key.size());
+        for (const auto & [metric_key, measurements] : metric_group.measurements_by_metric_key) {
+          metric_results.push_back(
+            metrics::evaluator::aggregate_metric_measurements(
+              measurements, metric_group.exclusion_rules, metric_key));
+        }
+        return metrics::evaluator::evaluator_group_aggregations_to_json(metric_results);
+      };
+
+    nlohmann::json evaluator_json;
+    if (bag_result.evaluator_metric_groups.size() == 1) {
+      evaluator_json = build_group_json(bag_result.evaluator_metric_groups.front());
+    } else {
+      for (const auto & metric_group : bag_result.evaluator_metric_groups) {
+        evaluator_json[metric_group.group_name] = build_group_json(metric_group);
+      }
+    }
+
+    save_json_results(evaluator_json, bag_path, "open_loop", "evaluator_metric.json", false, false);
   }
 
   RCLCPP_INFO(logger_, "Open-loop evaluation complete");
