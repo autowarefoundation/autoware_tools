@@ -25,6 +25,8 @@ For each evaluated trajectory, the following are computed:
 
 To show multi-facet (comfort, progress, safety) quality of generated trajectory, EPDMS (Extended Predictive Driver Model Score) is computed based on the multiple subscores.
 
+Detailed definitions and equations for each subscore can be found in the [EPDMS Metrics Document](docs/metrics/epdms_metrics.md).
+
 Two variant topics are exported:
 
 - synthetic_epdms_raw
