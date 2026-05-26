@@ -45,11 +45,11 @@ struct LaneKeepingEvaluationPoint
   rclcpp::Duration time_from_start{0, 0};
   double lateral_deviation{0.0};
   bool is_in_intersection{false};
+  double speed_mps{std::numeric_limits<double>::quiet_NaN()};
+  double cumulative_progress_m{std::numeric_limits<double>::quiet_NaN()};
   geometry_msgs::msg::Point ego_center{};
   std::vector<geometry_msgs::msg::Point> reference_centerline;
   std::int64_t reference_lanelet_id{-1};
-  double speed_mps{std::numeric_limits<double>::quiet_NaN()};
-  double cumulative_progress_m{std::numeric_limits<double>::quiet_NaN()};
 };
 
 struct LaneKeepingDebugSample

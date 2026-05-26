@@ -536,11 +536,11 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
             point.time_from_start,
             metrics.lateral_deviations[i],
             false,
+            std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps),
+            metrics.travel_distances[i],
             to_msg_point(point.pose.position, 0.35),
             {},
-            -1,
-            std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps),
-            metrics.travel_distances[i]});
+            -1});
       } else {
         metrics.lateral_deviations[i] =
           autoware::experimental::lanelet2_utils::get_lateral_distance_to_centerline(
@@ -551,11 +551,10 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
           LaneKeepingEvaluationPoint{
             point.time_from_start, metrics.lateral_deviations[i],
             local_context.has_value() && local_context->in_intersection,
-            to_msg_point(point.pose.position, 0.35),
-            centerline_points(reference_lanelet.value(), point.pose.position.z),
-            reference_lanelet->id(),
             std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps),
-            metrics.travel_distances[i]});
+            metrics.travel_distances[i], to_msg_point(point.pose.position, 0.35),
+            centerline_points(reference_lanelet.value(), point.pose.position.z),
+            reference_lanelet->id()});
       }
     }
 

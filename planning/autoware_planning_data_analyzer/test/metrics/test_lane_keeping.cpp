@@ -31,8 +31,14 @@ LaneKeepingEvaluationPoint make_evaluation_point(
   const double speed_mps = 5.0, const double cumulative_progress_m = 0.0)
 {
   return LaneKeepingEvaluationPoint{
-    rclcpp::Duration::from_seconds(seconds), lateral_deviation, is_in_intersection, speed_mps,
-    cumulative_progress_m};
+    rclcpp::Duration::from_seconds(seconds),
+    lateral_deviation,
+    is_in_intersection,
+    speed_mps,
+    cumulative_progress_m,
+    geometry_msgs::msg::Point{},
+    {},
+    -1};
 }
 
 LaneKeepingParameters make_parameters()
