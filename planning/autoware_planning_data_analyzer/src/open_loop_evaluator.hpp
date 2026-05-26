@@ -79,6 +79,12 @@ struct OpenLoopTrajectoryMetrics
   double extended_comfort{0.0};  // Binary extended comfort subscore
   bool extended_comfort_available{false};
   std::string extended_comfort_reason{"unavailable"};
+  std::string extended_comfort_debug_summary;
+  std::vector<double> extended_comfort_sample_times;
+  std::vector<double> extended_comfort_delta_acceleration;
+  std::vector<double> extended_comfort_delta_jerk;
+  std::vector<double> extended_comfort_delta_yaw_rate;
+  std::vector<double> extended_comfort_delta_yaw_accel;
   double time_to_collision_within_bound{0.0};
   bool time_to_collision_within_bound_available{false};
   std::string time_to_collision_within_bound_reason{"unavailable"};

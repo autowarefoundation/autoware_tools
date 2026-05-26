@@ -46,13 +46,22 @@ DrivingDirectionComplianceResult calculate_driving_direction_compliance(
   for (size_t i = 0; i < evaluation_points.size(); ++i) {
     const double t_i = evaluation_points.at(i).time_from_start_s;
     double horizon_sum = 0.0;
+    std::size_t horizon_count = 0U;
+    double horizon_start_time_s = t_i;
     for (size_t j = 0; j <= i; ++j) {
       const double t_j = evaluation_points.at(j).time_from_start_s;
       if (t_i - t_j <= params.horizon_s + 1.0e-6) {
         horizon_sum += filtered_progress[j];
+        ++horizon_count;
+        horizon_start_time_s = std::min(horizon_start_time_s, t_j);
       }
     }
-    result.max_oncoming_progress_m = std::max(result.max_oncoming_progress_m, horizon_sum);
+    if (horizon_sum > result.max_oncoming_progress_m) {
+      result.max_oncoming_progress_m = horizon_sum;
+      result.worst_window_start_time_s = horizon_start_time_s;
+      result.worst_window_end_time_s = t_i;
+      result.worst_window_sample_count = horizon_count;
+    }
   }
 
   if (result.max_oncoming_progress_m < params.compliance_threshold_m) {

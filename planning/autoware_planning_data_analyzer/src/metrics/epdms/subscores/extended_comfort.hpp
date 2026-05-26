@@ -18,6 +18,7 @@
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 
 #include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -35,6 +36,12 @@ struct ExtendedComfortResult
   double score{0.0};
   bool available{false};
   std::string reason{"unavailable"};
+  std::string debug_summary;
+  std::vector<double> sample_times;
+  std::vector<double> delta_acceleration;
+  std::vector<double> delta_jerk;
+  std::vector<double> delta_yaw_rate;
+  std::vector<double> delta_yaw_accel;
 };
 
 /**

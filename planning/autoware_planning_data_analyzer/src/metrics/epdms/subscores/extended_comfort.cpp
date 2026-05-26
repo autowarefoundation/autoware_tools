@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <sstream>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -62,19 +63,28 @@ std::vector<ComfortSignalInput> make_overlap_signal_inputs(
   return inputs;
 }
 
-double rms_difference(const std::vector<double> & current, const std::vector<double> & previous)
+std::vector<double> subtract_signals(
+  const std::vector<double> & current, const std::vector<double> & previous)
 {
   const auto count = std::min(current.size(), previous.size());
-  if (count == 0U) {
+  std::vector<double> delta;
+  delta.reserve(count);
+  for (std::size_t index = 0; index < count; ++index) {
+    delta.push_back(current.at(index) - previous.at(index));
+  }
+  return delta;
+}
+
+double rms(const std::vector<double> & values)
+{
+  if (values.empty()) {
     return 0.0;
   }
-
   double sum_squared = 0.0;
-  for (std::size_t index = 0; index < count; ++index) {
-    const double delta = current[index] - previous[index];
-    sum_squared += delta * delta;
+  for (const auto value : values) {
+    sum_squared += value * value;
   }
-  return std::sqrt(sum_squared / static_cast<double>(count));
+  return std::sqrt(sum_squared / static_cast<double>(values.size()));
 }
 
 bool are_parameters_valid(const ExtendedComfortParameters & parameters)
@@ -124,6 +134,10 @@ ExtendedComfortResult calculate_extended_comfort(
     result.reason = "unavailable_short_overlap";
     return result;
   }
+  result.sample_times.reserve(overlap_count);
+  for (std::size_t index = 0; index < overlap_count; ++index) {
+    result.sample_times.push_back(static_cast<double>(index) * dt);
+  }
 
   const auto current_inputs = make_overlap_signal_inputs(current_trajectory, 0U, overlap_count);
   const auto previous_inputs =
@@ -131,13 +145,18 @@ ExtendedComfortResult calculate_extended_comfort(
   const auto current_signals = compute_comfort_signals(current_inputs);
   const auto previous_signals = compute_comfort_signals(previous_inputs);
 
-  const double acceleration_rms = rms_difference(
+  result.delta_acceleration = subtract_signals(
     current_signals.acceleration_magnitudes, previous_signals.acceleration_magnitudes);
-  const double jerk_rms =
-    rms_difference(current_signals.jerk_magnitudes, previous_signals.jerk_magnitudes);
-  const double yaw_rate_rms = rms_difference(current_signals.yaw_rates, previous_signals.yaw_rates);
-  const double yaw_acceleration_rms =
-    rms_difference(current_signals.yaw_accelerations, previous_signals.yaw_accelerations);
+  result.delta_jerk =
+    subtract_signals(current_signals.jerk_magnitudes, previous_signals.jerk_magnitudes);
+  result.delta_yaw_rate = subtract_signals(current_signals.yaw_rates, previous_signals.yaw_rates);
+  result.delta_yaw_accel =
+    subtract_signals(current_signals.yaw_accelerations, previous_signals.yaw_accelerations);
+
+  const double acceleration_rms = rms(result.delta_acceleration);
+  const double jerk_rms = rms(result.delta_jerk);
+  const double yaw_rate_rms = rms(result.delta_yaw_rate);
+  const double yaw_acceleration_rms = rms(result.delta_yaw_accel);
 
   const bool acceleration_ok = acceleration_rms <= parameters.max_acceleration_rms;
   const bool jerk_ok = jerk_rms <= parameters.max_jerk_rms;
@@ -147,6 +166,12 @@ ExtendedComfortResult calculate_extended_comfort(
   result.available = true;
   result.reason = "available";
   result.score = acceleration_ok && jerk_ok && yaw_rate_ok && yaw_acceleration_ok ? 1.0 : 0.0;
+  std::ostringstream summary;
+  summary << "{\"score\":" << result.score << ",\"reason\":\"" << result.reason
+          << "\",\"rms_acceleration\":" << acceleration_rms << ",\"rms_jerk\":" << jerk_rms
+          << ",\"rms_yaw_rate\":" << yaw_rate_rms << ",\"rms_yaw_accel\":" << yaw_acceleration_rms
+          << "}";
+  result.debug_summary = summary.str();
   return result;
 }
 

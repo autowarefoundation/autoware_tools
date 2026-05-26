@@ -21,6 +21,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <sstream>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -37,6 +38,7 @@ struct ComfortState
   geometry_msgs::msg::Pose pose;
   double longitudinal_acceleration_mps2{0.0};
   double lateral_acceleration_mps2{0.0};
+  double segment_id{2.0};
 };
 
 template <typename MessageT>
@@ -81,6 +83,7 @@ ComfortState make_state_from_odometry(
   ComfortState state;
   state.time_s = relative_time_s;
   state.pose = odometry.pose.pose;
+  state.segment_id = 0.0;
   if (acceleration) {
     // Note: This assumes the acceleration is in the vehicle body frame (base_link).
     state.longitudinal_acceleration_mps2 = acceleration->accel.accel.linear.x;
@@ -166,7 +169,13 @@ void calculate_history_comfort_metrics(
 
   std::vector<ComfortSignalInput> signal_inputs;
   signal_inputs.reserve(states.size());
+  metrics.history_comfort_sample_times.reserve(states.size());
+  metrics.history_comfort_segment_ids.reserve(states.size());
+  metrics.history_comfort_sample_poses.reserve(states.size());
   for (const auto & state : states) {
+    metrics.history_comfort_sample_times.push_back(state.time_s);
+    metrics.history_comfort_segment_ids.push_back(state.segment_id);
+    metrics.history_comfort_sample_poses.push_back(state.pose);
     signal_inputs.push_back(
       ComfortSignalInput{
         state.time_s, state.pose, state.longitudinal_acceleration_mps2,
@@ -203,6 +212,19 @@ void calculate_history_comfort_metrics(
                               : 0.0;
   metrics.history_comfort_available = true;
   metrics.history_comfort_reason = "available";
+
+  std::ostringstream summary;
+  summary << "{\"score\":" << metrics.history_comfort << ",\"sample_count\":" << states.size()
+          << ",\"past_horizon_s\":" << history_comfort_params.past_horizon_s
+          << ",\"future_horizon_s\":" << history_comfort_params.future_horizon_s
+          << ",\"longitudinal_acceleration_ok\":"
+          << (longitudinal_acceleration_ok ? "true" : "false")
+          << ",\"lateral_acceleration_ok\":" << (lateral_acceleration_ok ? "true" : "false")
+          << ",\"jerk_magnitude_ok\":" << (jerk_magnitude_ok ? "true" : "false")
+          << ",\"longitudinal_jerk_ok\":" << (longitudinal_jerk_ok ? "true" : "false")
+          << ",\"yaw_rate_ok\":" << (yaw_rate_ok ? "true" : "false")
+          << ",\"yaw_acceleration_ok\":" << (yaw_acceleration_ok ? "true" : "false") << "}";
+  metrics.history_comfort_debug_summary = summary.str();
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics

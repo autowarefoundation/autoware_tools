@@ -22,6 +22,8 @@
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
 
+#include <geometry_msgs/msg/point.hpp>
+
 #include <limits>
 #include <memory>
 #include <string>
@@ -32,12 +34,63 @@ namespace autoware::planning_data_analyzer::metrics
 
 using autoware::route_handler::RouteHandler;
 
+struct NoAtFaultCollisionDebugEvent
+{
+  double time_s{0.0};
+  std::string object_id{"invalid"};
+  std::string object_label{"UNKNOWN"};
+  std::string collision_type{"NONE"};
+  std::string reason{"available"};
+  double event_score{1.0};
+  bool agent{false};
+  bool at_fault{false};
+  bool ego_stopped{false};
+  bool track_stopped{false};
+  bool behind{false};
+  bool front_hit{false};
+  bool multiple_lanes{false};
+  bool non_drivable_area{false};
+  geometry_msgs::msg::Point ego_center;
+  geometry_msgs::msg::Point object_center;
+  std::vector<geometry_msgs::msg::Point> ego_footprint;
+  std::vector<geometry_msgs::msg::Point> object_footprint;
+  std::vector<geometry_msgs::msg::Point> front_bumper;
+};
+
+struct NoAtFaultCollisionHorizonFootprint
+{
+  double time_s{0.0};
+  std::string object_id{"ego"};
+  std::string object_label{"EGO"};
+  bool collision{false};
+  bool at_fault{false};
+  std::vector<geometry_msgs::msg::Point> footprint;
+};
+
+struct NoAtFaultCollisionOverlapArea
+{
+  double time_s{0.0};
+  std::string object_id{"invalid"};
+  std::string object_label{"UNKNOWN"};
+  bool at_fault{false};
+  std::vector<geometry_msgs::msg::Point> polygon;
+};
+
+struct NoAtFaultCollisionDebugInfo
+{
+  std::vector<NoAtFaultCollisionDebugEvent> events;
+  std::vector<NoAtFaultCollisionHorizonFootprint> ego_horizon_footprints;
+  std::vector<NoAtFaultCollisionHorizonFootprint> object_horizon_footprints;
+  std::vector<NoAtFaultCollisionOverlapArea> overlap_areas;
+};
+
 struct NoAtFaultCollisionResult
 {
   double score{0.0};
   bool available{false};
   std::string reason{"unavailable"};
   double infraction_time_s{std::numeric_limits<double>::infinity()};
+  NoAtFaultCollisionDebugInfo debug_info;
 };
 
 NoAtFaultCollisionResult calculate_no_at_fault_collision(

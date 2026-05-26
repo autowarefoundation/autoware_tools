@@ -15,6 +15,7 @@
 #include "open_loop_evaluator.hpp"
 
 #include "metrics/epdms/aggregation/epdms_aggregation.hpp"
+#include "metrics/epdms/debug/epdms_debug_writer.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 #include "metrics/geometry/object_tracks.hpp"
 #include "metrics/metric_types.hpp"
@@ -316,6 +317,22 @@ metrics::EpdmsMetricSnapshot calculate_human_reference_snapshot(
   human_snapshot.traffic_light_compliance_available =
     human_point_metrics.traffic_light_compliance_available;
   return human_snapshot;
+}
+
+metrics::EpdmsDebugEnabledMetrics make_epdms_debug_enabled_metrics(
+  const EnabledOpenLoopMetrics & enabled_metrics)
+{
+  metrics::EpdmsDebugEnabledMetrics enabled;
+  enabled.history_comfort = enabled_metrics.history_comfort;
+  enabled.extended_comfort = enabled_metrics.extended_comfort;
+  enabled.time_to_collision_within_bound = enabled_metrics.time_to_collision_within_bound;
+  enabled.lane_keeping = enabled_metrics.lane_keeping;
+  enabled.ego_progress = enabled_metrics.ego_progress;
+  enabled.drivable_area_compliance = enabled_metrics.drivable_area_compliance;
+  enabled.no_at_fault_collision = enabled_metrics.no_at_fault_collision;
+  enabled.driving_direction_compliance = enabled_metrics.driving_direction_compliance;
+  enabled.traffic_light_compliance = enabled_metrics.traffic_light_compliance;
+  return enabled;
 }
 
 }  // namespace
@@ -655,6 +672,13 @@ void OpenLoopEvaluator::evaluate(
             metrics.extended_comfort = extended_comfort_result.score;
             metrics.extended_comfort_available = extended_comfort_result.available;
             metrics.extended_comfort_reason = extended_comfort_result.reason;
+            metrics.extended_comfort_debug_summary = extended_comfort_result.debug_summary;
+            metrics.extended_comfort_sample_times = extended_comfort_result.sample_times;
+            metrics.extended_comfort_delta_acceleration =
+              extended_comfort_result.delta_acceleration;
+            metrics.extended_comfort_delta_jerk = extended_comfort_result.delta_jerk;
+            metrics.extended_comfort_delta_yaw_rate = extended_comfort_result.delta_yaw_rate;
+            metrics.extended_comfort_delta_yaw_accel = extended_comfort_result.delta_yaw_accel;
           }
         }
 
@@ -1464,6 +1488,18 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   if (!gt_traj_msg.points.empty()) {
     bag_writer.write(gt_traj_msg, compared_trajectory_topic(), message_timestamp);
   }
+
+  if (debug_topics_enabled_) {
+    metrics::write_epdms_trajectory_horizon_debug_topics_to_bag(
+      *trajectory_data->trajectory, ground_truth_trajectory, bag_writer, message_timestamp);
+    if (enabled_metrics_.extended_comfort) {
+      metrics::write_epdms_extended_comfort_debug_topics_to_bag(
+        metrics.extended_comfort_debug_summary, metrics.extended_comfort_sample_times,
+        metrics.extended_comfort_delta_acceleration, metrics.extended_comfort_delta_jerk,
+        metrics.extended_comfort_delta_yaw_rate, metrics.extended_comfort_delta_yaw_accel,
+        bag_writer, message_timestamp);
+    }
+  }
 }
 
 void OpenLoopEvaluator::save_trajectory_point_metrics_to_bag_with_variant(
@@ -1509,6 +1545,12 @@ void OpenLoopEvaluator::save_trajectory_point_metrics_to_bag_with_variant(
   write_array(
     enabled_metrics_.ego_progress, metrics.travel_distances,
     trajectory_metric_topic("travel_distances"));
+
+  if (debug_topics_enabled_) {
+    metrics::write_epdms_point_debug_topics_to_bag(
+      metrics, make_epdms_debug_enabled_metrics(enabled_metrics_), bag_writer,
+      normalized_timestamp);
+  }
 }
 
 std::string OpenLoopEvaluator::metric_topic(const std::string & metric_name) const
@@ -2410,6 +2452,10 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     "/perception/object_recognition/objects", "autoware_perception_msgs/msg/PredictedObjects");
   add_topic("/tf", "tf2_msgs/msg/TFMessage");
   add_topic("/tf_static", "tf2_msgs/msg/TFMessage");
+  if (debug_topics_enabled_) {
+    metrics::add_epdms_debug_result_topics(
+      topics, make_epdms_debug_enabled_metrics(enabled_metrics_));
+  }
   return topics;
 }
 

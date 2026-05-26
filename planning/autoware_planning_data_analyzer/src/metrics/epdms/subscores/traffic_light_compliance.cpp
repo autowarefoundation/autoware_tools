@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <memory>
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -40,6 +41,57 @@ namespace
 {
 
 using TurnDirection = autoware::experimental::lanelet2_utils::TurnDirection;
+
+geometry_msgs::msg::Point to_msg_point(const lanelet::ConstPoint3d & point, const double z)
+{
+  geometry_msgs::msg::Point msg;
+  msg.x = point.x();
+  msg.y = point.y();
+  msg.z = z;
+  return msg;
+}
+
+std::vector<geometry_msgs::msg::Point> polygon_points(
+  const autoware_utils_geometry::Polygon2d & polygon, const double z)
+{
+  std::vector<geometry_msgs::msg::Point> points;
+  points.reserve(polygon.outer().size());
+  for (const auto & point : polygon.outer()) {
+    geometry_msgs::msg::Point msg;
+    msg.x = point.x();
+    msg.y = point.y();
+    msg.z = z;
+    points.push_back(msg);
+  }
+  return points;
+}
+
+std::vector<geometry_msgs::msg::Point> line_points(
+  const lanelet::ConstLineString3d & line, const double z)
+{
+  std::vector<geometry_msgs::msg::Point> points;
+  points.reserve(line.size());
+  for (const auto & point : line) {
+    points.push_back(to_msg_point(point, z));
+  }
+  return points;
+}
+
+std::string turn_direction_to_string(const std::optional<TurnDirection> & turn_direction)
+{
+  if (!turn_direction.has_value()) {
+    return "unknown";
+  }
+  switch (*turn_direction) {
+    case TurnDirection::Straight:
+      return "straight";
+    case TurnDirection::Left:
+      return "left";
+    case TurnDirection::Right:
+      return "right";
+  }
+  return "unknown";
+}
 
 struct RelevantTrafficLightGroup
 {
@@ -230,6 +282,21 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
     route_relevant_lanelets ? *route_relevant_lanelets : local_route_lanelets;
   const auto groups =
     build_relevant_traffic_light_groups(route_lanelets, route_handler, turn_indicators_status);
+  for (const auto & group : groups) {
+    result.debug_info.regulatory_element_ids.push_back(group.regulatory_element_id);
+    result.debug_info.intended_movement = turn_direction_to_string(group.intended_turn_direction);
+    for (const auto & lanelet : group.selected_lanelets) {
+      result.debug_info.selected_lane_ids.push_back(lanelet.id());
+    }
+    if (group.stop_line.has_value()) {
+      result.debug_info.stop_line_ids.push_back(group.stop_line->id());
+      result.debug_info.stop_lines.push_back(
+        TrafficLightComplianceDebugPolygon{
+          0.0, line_points(*group.stop_line, trajectory.points.front().pose.position.z),
+          group.stop_line->id()});
+    }
+  }
+  result.debug_info.selected_stop_line_count = result.debug_info.stop_lines.size();
   result.available = true;
   result.reason = groups.empty() ? "available_no_relevant_traffic_lights" : "available";
   result.score = 1.0;
@@ -254,6 +321,10 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
     const auto ego_polygon = can_reuse_evaluations
                                ? evaluations->at(point_index).ego_polygon
                                : create_pose_footprint(point.pose, local_footprint);
+    result.debug_info.ego_horizon_footprints.push_back(
+      TrafficLightComplianceDebugPolygon{
+        rclcpp::Duration(point.time_from_start).seconds(),
+        polygon_points(ego_polygon, point.pose.position.z), 0});
 
     for (const auto & group : groups) {
       if (!group.stop_line.has_value()) {
@@ -280,6 +351,8 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
 
       result.reason = "red_light_stop_line_crossed";
       result.score = 0.0;
+      result.debug_info.first_failure_time_s = rclcpp::Duration(point.time_from_start).seconds();
+      result.debug_info.label_anchor = point.pose.position;
       return result;
     }
   }
