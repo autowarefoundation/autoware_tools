@@ -17,6 +17,7 @@
 
 #include "metrics/trajectory_metrics.hpp"
 
+#include <autoware_vehicle_info_utils/vehicle_info.hpp>
 #include <rclcpp/time.hpp>
 #include <rosbag2_cpp/writer.hpp>
 
@@ -48,7 +49,9 @@ void add_epdms_debug_result_topics(
 
 void write_epdms_point_debug_topics_to_bag(
   const TrajectoryPointMetrics & metrics, const EpdmsDebugEnabledMetrics & enabled,
-  rosbag2_cpp::Writer & bag_writer, const rclcpp::Time & timestamp);
+  const HistoryComfortParameters & history_comfort_params,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info, rosbag2_cpp::Writer & bag_writer,
+  const rclcpp::Time & timestamp);
 
 void write_epdms_extended_comfort_debug_topics_to_bag(
   const std::string & summary, const std::vector<double> & sample_times,
@@ -59,7 +62,8 @@ void write_epdms_extended_comfort_debug_topics_to_bag(
 void write_epdms_trajectory_horizon_debug_topics_to_bag(
   const autoware_planning_msgs::msg::Trajectory & planned_trajectory,
   const autoware_planning_msgs::msg::Trajectory & ground_truth_trajectory,
-  rosbag2_cpp::Writer & bag_writer, const rclcpp::Time & timestamp);
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info, rosbag2_cpp::Writer & bag_writer,
+  const rclcpp::Time & timestamp);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

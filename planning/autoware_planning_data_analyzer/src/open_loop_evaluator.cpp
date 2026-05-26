@@ -1491,7 +1491,8 @@ void OpenLoopEvaluator::save_metrics_to_bag(
 
   if (debug_topics_enabled_) {
     metrics::write_epdms_trajectory_horizon_debug_topics_to_bag(
-      *trajectory_data->trajectory, ground_truth_trajectory, bag_writer, message_timestamp);
+      *trajectory_data->trajectory, ground_truth_trajectory, vehicle_info_, bag_writer,
+      message_timestamp);
     if (enabled_metrics_.extended_comfort) {
       metrics::write_epdms_extended_comfort_debug_topics_to_bag(
         metrics.extended_comfort_debug_summary, metrics.extended_comfort_sample_times,
@@ -1548,8 +1549,8 @@ void OpenLoopEvaluator::save_trajectory_point_metrics_to_bag_with_variant(
 
   if (debug_topics_enabled_) {
     metrics::write_epdms_point_debug_topics_to_bag(
-      metrics, make_epdms_debug_enabled_metrics(enabled_metrics_), bag_writer,
-      normalized_timestamp);
+      metrics, make_epdms_debug_enabled_metrics(enabled_metrics_), history_comfort_params_,
+      vehicle_info_, bag_writer, normalized_timestamp);
   }
 }
 
