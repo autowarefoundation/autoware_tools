@@ -17,6 +17,8 @@
 #include "metrics/geometry/ego_footprint.hpp"
 #include "metrics/geometry/trajectory_utils.hpp"
 
+#include <autoware_utils_geometry/boost_geometry.hpp>
+#include <autoware_utils_visualization/marker_helper.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/duration.hpp>
 
@@ -57,37 +59,40 @@ std::string trajectory_debug_topic(const std::string & name)
 std_msgs::msg::ColorRGBA make_color(
   const float red, const float green, const float blue, const float alpha = 1.0F)
 {
-  std_msgs::msg::ColorRGBA color;
-  color.r = red;
-  color.g = green;
-  color.b = blue;
-  color.a = alpha;
-  return color;
+  return autoware_utils_visualization::create_marker_color(red, green, blue, alpha);
 }
 
 Marker make_delete_all_marker(const rclcpp::Time & stamp)
 {
-  Marker marker;
-  marker.header.frame_id = "map";
-  marker.header.stamp = stamp;
+  auto marker = autoware_utils_visualization::create_default_marker(
+    "map", stamp, "", 0, Marker::CUBE,
+    autoware_utils_visualization::create_marker_scale(0.0, 0.0, 0.0),
+    autoware_utils_visualization::create_marker_color(0.0F, 0.0F, 0.0F, 0.0F));
   marker.action = Marker::DELETEALL;
   return marker;
 }
 
 Marker make_marker_base(
-  const rclcpp::Time & stamp, const std::string & ns, const int id,
-  const std_msgs::msg::ColorRGBA & marker_color, const double lifetime_s)
+  const rclcpp::Time & stamp, const std::string & ns, const int id, const int type,
+  const geometry_msgs::msg::Vector3 & scale, const std_msgs::msg::ColorRGBA & marker_color,
+  const double lifetime_s)
 {
-  Marker marker;
-  marker.header.frame_id = "map";
-  marker.header.stamp = stamp;
-  marker.ns = ns;
-  marker.id = id;
-  marker.action = Marker::ADD;
-  marker.pose.orientation.w = 1.0;
-  marker.color = marker_color;
+  auto marker = autoware_utils_visualization::create_default_marker(
+    "map", stamp, ns, id, type, scale, marker_color);
   marker.lifetime = rclcpp::Duration::from_seconds(lifetime_s);
   return marker;
+}
+
+std::string join_strings(const std::vector<std::string> & values, const std::string & separator)
+{
+  std::string joined;
+  for (const auto & value : values) {
+    if (!joined.empty()) {
+      joined += separator;
+    }
+    joined += value;
+  }
+  return joined;
 }
 
 std::vector<geometry_msgs::msg::Point> closed_line_strip_points(
@@ -137,11 +142,7 @@ std::vector<geometry_msgs::msg::Point> polygon_to_msg_points(
   std::vector<geometry_msgs::msg::Point> points;
   points.reserve(polygon.outer().size() + 1U);
   for (const auto & point : polygon.outer()) {
-    geometry_msgs::msg::Point msg;
-    msg.x = point.x();
-    msg.y = point.y();
-    msg.z = z;
-    points.push_back(msg);
+    points.push_back(autoware_utils_geometry::to_msg(point.to_3d(z)));
   }
   if (
     !points.empty() &&
@@ -156,9 +157,9 @@ Marker make_line_strip_marker(
   std::vector<geometry_msgs::msg::Point> points, const std_msgs::msg::ColorRGBA & marker_color,
   const double width, const bool close_line, const double lifetime_s, const double z_offset = 0.0)
 {
-  auto marker = make_marker_base(stamp, ns, id, marker_color, lifetime_s);
-  marker.type = Marker::LINE_STRIP;
-  marker.scale.x = width;
+  auto marker = make_marker_base(
+    stamp, ns, id, Marker::LINE_STRIP,
+    autoware_utils_visualization::create_marker_scale(width, 0.0, 0.0), marker_color, lifetime_s);
   marker.points = close_line ? closed_line_strip_points(std::move(points)) : std::move(points);
   marker.points = lift_points(std::move(marker.points), z_offset);
   return marker;
@@ -170,11 +171,9 @@ Marker make_filled_polygon_marker(
   const std_msgs::msg::ColorRGBA & marker_color, const double lifetime_s,
   const double z_offset = 0.0)
 {
-  auto marker = make_marker_base(stamp, ns, id, marker_color, lifetime_s);
-  marker.type = Marker::TRIANGLE_LIST;
-  marker.scale.x = 1.0;
-  marker.scale.y = 1.0;
-  marker.scale.z = 1.0;
+  auto marker = make_marker_base(
+    stamp, ns, id, Marker::TRIANGLE_LIST,
+    autoware_utils_visualization::create_marker_scale(1.0, 1.0, 1.0), marker_color, lifetime_s);
   if (polygon_points.size() >= 2U) {
     const auto & first = polygon_points.front();
     const auto & last = polygon_points.back();
@@ -383,12 +382,7 @@ std::string ttc_area_condition_string(const TTCWithinBoundDebugEvent & event)
   if (conditions.empty()) {
     return event.bad_or_intersection ? "bad_or_intersection" : "other";
   }
-  std::ostringstream oss;
-  for (std::size_t index = 0; index < conditions.size(); ++index) {
-    if (index > 0U) oss << "+";
-    oss << conditions.at(index);
-  }
-  return oss.str();
+  return join_strings(conditions, "+");
 }
 
 nlohmann::json ttc_debug_summary_to_json(

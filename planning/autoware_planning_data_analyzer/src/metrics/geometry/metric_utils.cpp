@@ -93,11 +93,7 @@ std::string object_id_to_string(
 geometry_msgs::msg::Point to_msg_point(
   const autoware_utils_geometry::Point2d & point, const double z)
 {
-  geometry_msgs::msg::Point msg;
-  msg.x = point.x();
-  msg.y = point.y();
-  msg.z = z;
-  return msg;
+  return autoware_utils_geometry::to_msg(point.to_3d(z));
 }
 
 geometry_msgs::msg::Point to_msg_point(const geometry_msgs::msg::Pose & pose)
