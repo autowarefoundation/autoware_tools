@@ -60,27 +60,29 @@ These subscores are exported both as per-trajectory outputs and as aggregate sta
 ### Open Loop Evaluation
 
 ```sh
-ros2 launch autoware_planning_data_analyzer planning_data_analyzer.launch.xml \
-  bag_path:=$HOME/test_bag.mcap \
-  output_dir:=$HOME/planning_analyzer_output
+ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --ros-args \
+  -p bag_path:=~/my_bag \
+  -p evaluation.mode:=open_loop \
+  -p trajectory_topic:=/planning/trajectory \
+  -p json_output_path:=~/results.json
 ```
 
 ## Output Files
 
-- `time_step_based_trajectory_metric.json` — open-loop trajectory aggregate metrics
-- `time_step_based_trajectory_result.jsonl` — per-trajectory DLR-style results
-- `time_step_based_trajectory_detailed_result.json` — full per-trajectory dump
-- `evaluator_metric.json` — evaluator metric aggregates per `evaluator_config` (if bag contains configured topics)
+- **`evaluation_result.json`** - Detailed metrics (ADE, FDE, TTC, etc.) and summary statistics
+- **`evaluation_output.bag/`** - Evaluation metrics as rosbag for visualization
+- **`debug_images/*.png`** - Trajectory visualization (with `--viz` flag)
+- **evaluator_metric.json** — evaluator metric aggregates per `evaluator_config` (if bag contains configured topics)
 
 ## Parameters
 
 Key parameters in `config/planning_data_analyzer.param.yaml`:
 
-- `evaluation.mode`: `open_loop`
-- `evaluation_interval_ms`: odometry sampling interval (default 100 ms)
-- `sync_tolerance_ms`: evaluator/trajectory topic sync tolerance (default 100 ms)
-- `open_loop.evaluator_config_path`: path to evaluator metric groups YAML (`name`, `topics`,
-  `exclusion.rules`); launch arg `evaluator_config_file` sets this (package default if omitted)
+- `evaluation.mode`: Evaluation mode (`open_loop`)
+- `evaluation_interval_ms`: Sampling interval (default: 100ms)
+- `sync_tolerance_ms`: Time synchronization tolerance (default: 100ms)
+- `trajectory_topic`: Trajectory topic to evaluate
+- `open_loop.*`: Open-loop specific settings
 
 ---
 
