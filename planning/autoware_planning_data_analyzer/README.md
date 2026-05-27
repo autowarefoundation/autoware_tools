@@ -46,30 +46,14 @@ EPDMS is obtained from combining the following subscores:
 - driving_direction_compliance
 - traffic_light_compliance
 
+These subscores are exported both as per-trajectory outputs and as aggregate statistics.
+
 ### Evaluator Metrics (bag-recorded scalars)
 
-The analyzer reads scalar metric topics from the input rosbag according to **[config/evaluator_config.yaml](config/evaluator_config.yaml)** (e.g. `control_evaluator`, `planning_evaluator`).
-Output is written to **`evaluator_metric.json`** (separate from trajectory metrics).
-If no configured topic has valid measurements, the file is not written.
+`config/evaluator_config.yaml`で指定された topic を excepsion rule に従ってフィルターした結果を集計します。
 
-The package default `config/evaluator_config.yaml` is used automatically.
-Override only when needed: launch arg `evaluator_config_file`, or `-p open_loop.evaluator_config_path:=/path/to.yaml`.
-
-When a single `evaluator_config` entry is configured, keys are flat at the top level (e.g. `all/<metric_key>/mean`).
-Multiple entries are nested under each YAML `name`.
-
-Aggregation views (per metric key):
-
-- `all/<metric_key>/` — all odometry-synced measurements from the rosbag
-- `included/<metric_key>/` — measurements not matching **any** exclusion rule
-- `excluded/<rule_name>/<metric_key>/` — measurements matching that rule
-
-Each view exports `count`, `mean`, `min`, `max`, `percentile_95`, `percentile_99`, and per-metric
-`description` (aggregates of evaluator values recorded in the evaluation rosbag).
-
-Supported exclusion rules: `intersection_area` (ego pose inside vector-map `intersection_area` polygon)
-
-Odometry samples within 2 m of the first pose (pre-departure waiting) are excluded from aggregation.
+- lateral_deviation_centerline
+  - for excluded `intersection_area`
 
 ## Quick Start
 

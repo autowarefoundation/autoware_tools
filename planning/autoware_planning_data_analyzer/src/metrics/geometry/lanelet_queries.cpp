@@ -294,6 +294,17 @@ std::optional<DrivingDirectionLocalContext> compute_driving_direction_local_cont
   context.in_intersection = std::any_of(
     context.intersection_areas.begin(), context.intersection_areas.end(),
     [&search_point](const auto & polygon) { return point_in_polygon(search_point, polygon); });
+
+  if (!context.in_intersection) {
+    for (const auto & lanelet : context.route_lanelets) {
+      if (
+        autoware::experimental::lanelet2_utils::is_intersection_lanelet(lanelet) &&
+        point_in_lanelet(search_point, lanelet)) {
+        context.in_intersection = true;
+        break;
+      }
+    }
+  }
   return context;
 }
 
