@@ -926,7 +926,7 @@ void write_epdms_point_debug_topics_to_bag(
     stop_line_markers.markers.push_back(make_delete_all_marker(timestamp));
     int marker_id = 0;
     for (const auto & footprint : debug.ego_horizon_footprints) {
-      const bool failed = std::abs(footprint.time_s - debug.first_failure_time_s) < 1.0e-3;
+      const bool failed = footprint.time_s + 1.0e-3 >= debug.first_failure_time_s;
       ego_markers.markers.push_back(make_line_strip_marker(
         timestamp, "tlc_ego_footprints", marker_id++, footprint.polygon,
         failed ? make_color(1.0F, 0.05F, 0.05F, 1.0F) : make_color(1.0F, 0.55F, 0.0F, 0.60F),
@@ -984,7 +984,7 @@ void write_epdms_point_debug_topics_to_bag(
     for (const auto & overlap : debug.overlap_areas) {
       overlap_markers.markers.push_back(make_line_strip_marker(
         timestamp, "ttc_overlap_areas", marker_id++, overlap.polygon,
-        make_color(1.0F, 0.05F, 0.05F, 1.0F), 0.40, true, kDebugMarkerLifetimeS, 0.24));
+        make_color(1.0F, 0.0F, 0.8F, 1.0F), 0.40, true, kDebugMarkerLifetimeS, 0.24));
     }
     bag_writer.write(ego_markers, debug_topic("ttc", "ego_footprints"), timestamp);
     bag_writer.write(object_markers, debug_topic("ttc", "object_footprints"), timestamp);

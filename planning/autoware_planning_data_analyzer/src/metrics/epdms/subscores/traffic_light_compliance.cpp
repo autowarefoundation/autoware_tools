@@ -315,6 +315,7 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
   const auto local_footprint = vehicle_info.createFootprint(0.0);
   const bool can_reuse_evaluations =
     evaluations != nullptr && evaluations->size() == trajectory.points.size();
+  bool violation_found = false;
 
   for (std::size_t point_index = 0; point_index < trajectory.points.size(); ++point_index) {
     const auto & point = trajectory.points.at(point_index);
@@ -349,12 +350,18 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
         continue;
       }
 
-      result.reason = "red_light_stop_line_crossed";
-      result.score = 0.0;
-      result.debug_info.first_failure_time_s = rclcpp::Duration(point.time_from_start).seconds();
-      result.debug_info.label_anchor = point.pose.position;
-      return result;
+      if (!violation_found) {
+        violation_found = true;
+        result.reason = "red_light_stop_line_crossed";
+        result.score = 0.0;
+        result.debug_info.first_failure_time_s = rclcpp::Duration(point.time_from_start).seconds();
+        result.debug_info.label_anchor = point.pose.position;
+      }
     }
+  }
+
+  if (violation_found) {
+    return result;
   }
 
   if (!missing_signal_ids_at_relevant_stop_line.empty()) {
