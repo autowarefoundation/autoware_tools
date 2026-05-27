@@ -27,9 +27,7 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iomanip>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -90,63 +88,6 @@ std::string collision_type_to_string(const CollisionType type)
       return "ACTIVE_LATERAL";
   }
   return "NONE";
-}
-
-std::string object_id_to_string(
-  const unique_identifier_msgs::msg::UUID & object_id, const bool valid)
-{
-  if (!valid) {
-    return "invalid";
-  }
-  std::ostringstream oss;
-  oss << std::hex << std::setfill('0');
-  for (const auto byte : object_id.uuid) {
-    oss << std::setw(2) << static_cast<int>(byte);
-  }
-  return oss.str();
-}
-
-geometry_msgs::msg::Point to_msg_point(const Point2d & point, const double z = 0.0)
-{
-  geometry_msgs::msg::Point msg;
-  msg.x = point.x();
-  msg.y = point.y();
-  msg.z = z;
-  return msg;
-}
-
-geometry_msgs::msg::Point to_msg_point(const geometry_msgs::msg::Pose & pose)
-{
-  geometry_msgs::msg::Point msg;
-  msg.x = pose.position.x;
-  msg.y = pose.position.y;
-  msg.z = pose.position.z;
-  return msg;
-}
-
-std::vector<geometry_msgs::msg::Point> polygon_to_points(const Polygon2d & polygon, const double z)
-{
-  std::vector<geometry_msgs::msg::Point> points;
-  points.reserve(polygon.outer().size());
-  for (const auto & point : polygon.outer()) {
-    points.push_back(to_msg_point(point, z));
-  }
-  return points;
-}
-
-std::vector<std::vector<geometry_msgs::msg::Point>> overlap_polygons_to_points(
-  const Polygon2d & ego_polygon, const Polygon2d & object_polygon, const double z)
-{
-  std::vector<Polygon2d> intersections;
-  bg::intersection(ego_polygon, object_polygon, intersections);
-  std::vector<std::vector<geometry_msgs::msg::Point>> polygons;
-  polygons.reserve(intersections.size());
-  for (const auto & intersection : intersections) {
-    if (intersection.outer().size() >= 4U && bg::area(intersection) > 1.0e-6) {
-      polygons.push_back(polygon_to_points(intersection, z));
-    }
-  }
-  return polygons;
 }
 
 double ego_speed(const autoware_planning_msgs::msg::TrajectoryPoint & point)

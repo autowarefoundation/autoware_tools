@@ -16,10 +16,16 @@
 #define METRICS__GEOMETRY__METRIC_UTILS_HPP_
 
 #include <autoware/vehicle_info_utils/vehicle_info.hpp>
+#include <autoware_utils_geometry/boost_geometry.hpp>
 
 #include <autoware_perception_msgs/msg/predicted_object.hpp>
+#include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/quaternion.hpp>
+#include <unique_identifier_msgs/msg/uuid.hpp>
+
+#include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -36,6 +42,20 @@ bool is_agent_behind(
 
 const autoware_perception_msgs::msg::PredictedPath * highest_confidence_path(
   const autoware_perception_msgs::msg::PredictedObject & object);
+
+std::string object_id_to_string(const unique_identifier_msgs::msg::UUID & object_id, bool valid);
+
+geometry_msgs::msg::Point to_msg_point(
+  const autoware_utils_geometry::Point2d & point, double z = 0.0);
+
+geometry_msgs::msg::Point to_msg_point(const geometry_msgs::msg::Pose & pose);
+
+std::vector<geometry_msgs::msg::Point> polygon_to_points(
+  const autoware_utils_geometry::Polygon2d & polygon, double z);
+
+std::vector<std::vector<geometry_msgs::msg::Point>> overlap_polygons_to_points(
+  const autoware_utils_geometry::Polygon2d & ego_polygon,
+  const autoware_utils_geometry::Polygon2d & object_polygon, double z);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
