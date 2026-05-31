@@ -99,22 +99,13 @@ std::vector<geometry_msgs::msg::Point> front_bumper_points(
   const geometry_msgs::msg::Pose & ego_pose,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
 {
-  const double yaw = get_yaw(ego_pose.orientation);
-  const double c = std::cos(yaw);
-  const double s = std::sin(yaw);
-  const auto transform = [&](const double x_local, const double y_local) {
-    return Point2d{
-      ego_pose.position.x + c * x_local - s * y_local,
-      ego_pose.position.y + s * x_local + c * y_local};
-  };
-
   return {
-    to_msg_point(
-      transform(vehicle_info.max_longitudinal_offset_m, vehicle_info.min_lateral_offset_m),
-      ego_pose.position.z),
-    to_msg_point(
-      transform(vehicle_info.max_longitudinal_offset_m, vehicle_info.max_lateral_offset_m),
-      ego_pose.position.z)};
+    autoware_utils_geometry::calc_offset_pose(
+      ego_pose, vehicle_info.max_longitudinal_offset_m, vehicle_info.min_lateral_offset_m, 0.0, 0.0)
+      .position,
+    autoware_utils_geometry::calc_offset_pose(
+      ego_pose, vehicle_info.max_longitudinal_offset_m, vehicle_info.max_lateral_offset_m, 0.0, 0.0)
+      .position};
 }
 
 bool front_bumper_intersects(

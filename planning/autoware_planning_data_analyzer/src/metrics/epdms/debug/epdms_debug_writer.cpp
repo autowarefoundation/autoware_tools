@@ -15,6 +15,7 @@
 #include "epdms_debug_writer.hpp"
 
 #include "metrics/geometry/ego_footprint.hpp"
+#include "metrics/geometry/metric_utils.hpp"
 #include "metrics/geometry/trajectory_utils.hpp"
 
 #include <autoware_utils_geometry/boost_geometry.hpp>
@@ -62,16 +63,6 @@ std_msgs::msg::ColorRGBA make_color(
   return autoware_utils_visualization::create_marker_color(red, green, blue, alpha);
 }
 
-Marker make_delete_all_marker(const rclcpp::Time & stamp)
-{
-  auto marker = autoware_utils_visualization::create_default_marker(
-    "map", stamp, "", 0, Marker::CUBE,
-    autoware_utils_visualization::create_marker_scale(0.0, 0.0, 0.0),
-    autoware_utils_visualization::create_marker_color(0.0F, 0.0F, 0.0F, 0.0F));
-  marker.action = Marker::DELETEALL;
-  return marker;
-}
-
 Marker make_marker_base(
   const rclcpp::Time & stamp, const std::string & ns, const int id, const int type,
   const geometry_msgs::msg::Vector3 & scale, const std_msgs::msg::ColorRGBA & marker_color,
@@ -80,6 +71,14 @@ Marker make_marker_base(
   auto marker = autoware_utils_visualization::create_default_marker(
     "map", stamp, ns, id, type, scale, marker_color);
   marker.lifetime = rclcpp::Duration::from_seconds(lifetime_s);
+  return marker;
+}
+
+Marker make_delete_all_marker(const rclcpp::Time & stamp)
+{
+  auto marker = autoware_utils_visualization::create_deleted_default_marker(stamp, "", 0);
+  marker.header.frame_id = "map";
+  marker.action = Marker::DELETEALL;
   return marker;
 }
 
@@ -134,22 +133,6 @@ std::vector<geometry_msgs::msg::Point> square_marker_points(
   p3.x -= half_extent;
   p3.y += half_extent;
   return {p0, p1, p2, p3, p0};
-}
-
-std::vector<geometry_msgs::msg::Point> polygon_to_msg_points(
-  const autoware_utils_geometry::Polygon2d & polygon, const double z)
-{
-  std::vector<geometry_msgs::msg::Point> points;
-  points.reserve(polygon.outer().size() + 1U);
-  for (const auto & point : polygon.outer()) {
-    points.push_back(autoware_utils_geometry::to_msg(point.to_3d(z)));
-  }
-  if (
-    !points.empty() &&
-    (points.front().x != points.back().x || points.front().y != points.back().y)) {
-    points.push_back(points.front());
-  }
-  return points;
 }
 
 Marker make_line_strip_marker(
@@ -990,8 +973,8 @@ void write_epdms_point_debug_topics_to_bag(
       const double z_offset = peak ? 0.24 : (failed ? 0.16 : 0.08);
       markers.markers.push_back(make_line_strip_marker(
         timestamp, "hc_horizon_footprints", marker_id++,
-        polygon_to_msg_points(footprint, pose.position.z), hc_component_color(status.name, peak),
-        width, true, kDebugMarkerLifetimeS, z_offset));
+        polygon_to_points(footprint, pose.position.z), hc_component_color(status.name, peak), width,
+        true, kDebugMarkerLifetimeS, z_offset));
     }
     bag_writer.write(markers, debug_topic("hc", "horizon_footprints"), timestamp);
   }
@@ -1066,7 +1049,7 @@ void write_epdms_trajectory_horizon_debug_topics_to_bag(
     const auto footprint = create_pose_footprint(point.pose, local_footprint);
     planned_markers.markers.push_back(make_filled_polygon_marker(
       timestamp, "trajectory_planned_horizon_4s", marker_id++,
-      polygon_to_msg_points(footprint, point.pose.position.z + 0.04),
+      polygon_to_points(footprint, point.pose.position.z + 0.04),
       make_color(1.0F, 0.55F, 0.0F, 0.35F), kDebugMarkerLifetimeS, 0.0));
   }
 
@@ -1075,7 +1058,7 @@ void write_epdms_trajectory_horizon_debug_topics_to_bag(
     const auto footprint = create_pose_footprint(point.pose, local_footprint);
     gt_markers.markers.push_back(make_filled_polygon_marker(
       timestamp, "trajectory_gt_horizon_4s", marker_id++,
-      polygon_to_msg_points(footprint, point.pose.position.z + 0.08),
+      polygon_to_points(footprint, point.pose.position.z + 0.08),
       make_color(0.2F, 1.0F, 0.4F, 0.35F), kDebugMarkerLifetimeS, 0.0));
   }
 

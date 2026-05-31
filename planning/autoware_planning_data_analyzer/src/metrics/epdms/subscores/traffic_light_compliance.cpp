@@ -42,37 +42,14 @@ namespace
 
 using TurnDirection = autoware::experimental::lanelet2_utils::TurnDirection;
 
-geometry_msgs::msg::Point to_msg_point(const lanelet::ConstPoint3d & point, const double z)
-{
-  geometry_msgs::msg::Point msg;
-  msg.x = point.x();
-  msg.y = point.y();
-  msg.z = z;
-  return msg;
-}
-
-std::vector<geometry_msgs::msg::Point> polygon_points(
-  const autoware_utils_geometry::Polygon2d & polygon, const double z)
-{
-  std::vector<geometry_msgs::msg::Point> points;
-  points.reserve(polygon.outer().size());
-  for (const auto & point : polygon.outer()) {
-    geometry_msgs::msg::Point msg;
-    msg.x = point.x();
-    msg.y = point.y();
-    msg.z = z;
-    points.push_back(msg);
-  }
-  return points;
-}
-
 std::vector<geometry_msgs::msg::Point> line_points(
   const lanelet::ConstLineString3d & line, const double z)
 {
   std::vector<geometry_msgs::msg::Point> points;
   points.reserve(line.size());
   for (const auto & point : line) {
-    points.push_back(to_msg_point(point, z));
+    points.push_back(
+      autoware_utils_geometry::to_msg(autoware_utils_geometry::Point3d{point.x(), point.y(), z}));
   }
   return points;
 }
@@ -325,7 +302,7 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
     result.debug_info.ego_horizon_footprints.push_back(
       TrafficLightComplianceDebugPolygon{
         rclcpp::Duration(point.time_from_start).seconds(),
-        polygon_points(ego_polygon, point.pose.position.z), 0});
+        polygon_to_points(ego_polygon, point.pose.position.z), 0});
 
     for (const auto & group : groups) {
       if (!group.stop_line.has_value()) {

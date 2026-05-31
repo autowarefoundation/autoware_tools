@@ -58,44 +58,34 @@ geometry_msgs::msg::Point to_msg_point(
   return msg;
 }
 
-geometry_msgs::msg::Point to_msg_point(
-  const autoware_utils_geometry::Point2d & point, const double z = 0.0)
+template <typename PointRange>
+std::vector<geometry_msgs::msg::Point> lanelet_points_to_msg(
+  const PointRange & lanelet_points, const double z)
 {
-  geometry_msgs::msg::Point msg;
-  msg.x = point.x();
-  msg.y = point.y();
-  msg.z = z;
-  return msg;
+  std::vector<geometry_msgs::msg::Point> points;
+  for (const auto & point : lanelet_points) {
+    points.push_back(
+      autoware_utils_geometry::to_msg(autoware_utils_geometry::Point3d{point.x(), point.y(), z}));
+  }
+  return points;
 }
 
 std::vector<geometry_msgs::msg::Point> lanelet_polygon_points(
   const lanelet::ConstLanelet & lanelet, const double z)
 {
-  std::vector<geometry_msgs::msg::Point> points;
-  for (const auto & point : lanelet.polygon3d()) {
-    points.push_back(to_msg_point(autoware_utils_geometry::Point2d{point.x(), point.y()}, z));
-  }
-  return points;
+  return lanelet_points_to_msg(lanelet.polygon3d(), z);
 }
 
 std::vector<geometry_msgs::msg::Point> polygon_points(
   const lanelet::ConstPolygon3d & polygon, const double z)
 {
-  std::vector<geometry_msgs::msg::Point> points;
-  for (const auto & point : polygon) {
-    points.push_back(to_msg_point(autoware_utils_geometry::Point2d{point.x(), point.y()}, z));
-  }
-  return points;
+  return lanelet_points_to_msg(polygon, z);
 }
 
 std::vector<geometry_msgs::msg::Point> centerline_points(
   const lanelet::ConstLanelet & lanelet, const double z)
 {
-  std::vector<geometry_msgs::msg::Point> points;
-  for (const auto & point : lanelet.centerline3d()) {
-    points.push_back(to_msg_point(autoware_utils_geometry::Point2d{point.x(), point.y()}, z));
-  }
-  return points;
+  return lanelet_points_to_msg(lanelet.centerline3d(), z);
 }
 
 template <typename MessageT, typename ActivePredicate>

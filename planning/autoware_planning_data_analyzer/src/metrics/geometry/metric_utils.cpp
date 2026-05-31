@@ -14,14 +14,14 @@
 
 #include "metric_utils.hpp"
 
+#include <autoware_utils_uuid/uuid_helper.hpp>
+
 #include <boost/geometry.hpp>
 
 #include <tf2/utils.h>
 
 #include <algorithm>
 #include <cmath>
-#include <iomanip>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -82,12 +82,7 @@ std::string object_id_to_string(
   if (!valid) {
     return "invalid";
   }
-  std::ostringstream oss;
-  oss << std::hex << std::setfill('0');
-  for (const auto byte : object_id.uuid) {
-    oss << std::setw(2) << static_cast<int>(byte);
-  }
-  return oss.str();
+  return autoware_utils_uuid::to_hex_string(object_id);
 }
 
 geometry_msgs::msg::Point to_msg_point(
