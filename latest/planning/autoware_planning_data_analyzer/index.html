@@ -5106,10 +5106,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#plnnaing-quality-score-epdms" class="md-nav__link">
+  <a href="#planning-quality-score-epdms" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Plnnaing Quality Score (EPDMS)
+        Planning Quality Score (EPDMS)
       
     </span>
   </a>
@@ -5121,6 +5121,17 @@
     <span class="md-ellipsis">
       
         EPDMS's Subscores
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evaluator-metrics-bag-recorded-scalars" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluator Metrics (bag-recorded scalars)
       
     </span>
   </a>
@@ -5230,7 +5241,7 @@
 <li>TTC trace</li>
 <li>per-horizon metrics (full, and configured horizons such as 1.0s, 2.0s, 4.0s, 8.0s)</li>
 </ul>
-<h3 id="plnnaing-quality-score-epdms">Plnnaing Quality Score (EPDMS)<a class="headerlink" href="#plnnaing-quality-score-epdms" title="Permanent link">#</a></h3>
+<h3 id="planning-quality-score-epdms">Planning Quality Score (EPDMS)<a class="headerlink" href="#planning-quality-score-epdms" title="Permanent link">#</a></h3>
 <p>To show multi-facet (comfort, progress, safety) quality of generated trajectory, EPDMS (Extended Predictive Driver Model Score) is computed based on the multiple subscores.</p>
 <p>Detailed definitions and equations for each subscore can be found in the <a href="docs/metrics/epdms_metrics/">EPDMS Metrics Document</a>.</p>
 <p>Two variant topics are exported:</p>
@@ -5252,6 +5263,14 @@
 <li>traffic_light_compliance</li>
 </ul>
 <p>These subscores are exported both as per-trajectory outputs and as aggregate statistics.</p>
+<h3 id="evaluator-metrics-bag-recorded-scalars">Evaluator Metrics (bag-recorded scalars)<a class="headerlink" href="#evaluator-metrics-bag-recorded-scalars" title="Permanent link">#</a></h3>
+<p>It aggregates the results of filtering the topics specified in <code>config/evaluator_config.yaml</code> according to the exception rules.</p>
+<ul>
+<li>lateral_deviation_centerline<ul>
+<li>for excluded <code>intersection_area</code></li>
+</ul>
+</li>
+</ul>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">#</a></h2>
 <h3 id="open-loop-evaluation_1">Open Loop Evaluation<a class="headerlink" href="#open-loop-evaluation_1" title="Permanent link">#</a></h3>
 <p><code>sh
@@ -5265,6 +5284,7 @@ ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --
 <li><strong><code>evaluation_result.json</code></strong> - Detailed metrics (ADE, FDE, TTC, etc.) and summary statistics</li>
 <li><strong><code>evaluation_output.bag/</code></strong> - Evaluation metrics as rosbag for visualization</li>
 <li><strong><code>debug_images/*.png</code></strong> - Trajectory visualization (with <code>--viz</code> flag)</li>
+<li><strong>evaluator_metric.json</strong> — evaluator metric aggregates per <code>evaluator_config</code> (if bag contains configured topics)</li>
 </ul>
 <h2 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">#</a></h2>
 <p>Key parameters in <code>config/planning_data_analyzer.param.yaml</code>:</p>
@@ -5278,7 +5298,7 @@ ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --
 <hr>
 <h2 id="for-more-information">For More Information<a class="headerlink" href="#for-more-information" title="Permanent link">#</a></h2>
 <ul>
-<li>Configuration: <a href="config/planning_data_analyzer.param.yaml">config/planning_data_analyzer.param.yaml</a></li>
+<li>Configuration: <a href="config/planning_data_analyzer.param.yaml">config/planning_data_analyzer.param.yaml</a>, <a href="config/evaluator_config.yaml">config/evaluator_config.yaml</a></li>
 <li>Launch files: <a href="launch/">launch/</a></li>
 </ul></div>
 
