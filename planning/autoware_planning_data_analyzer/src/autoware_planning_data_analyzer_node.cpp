@@ -531,6 +531,10 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       evaluator.set_evaluation_horizons(evaluation_horizons);
       evaluator.set_extended_comfort_parameters(extended_comfort_parameters_);
       evaluator.set_override_window_sec(override_window_sec_);
+
+      const auto evaluator_configs = metrics::evaluator::load_evaluator_configs(*this);
+      evaluator.set_evaluator_configs(evaluator_configs);
+
       auto times =
         evaluator.run_evaluation_from_bag(bag_path_, evaluation_bag_writer_.get(), topic_names);
       start_time = times.first;

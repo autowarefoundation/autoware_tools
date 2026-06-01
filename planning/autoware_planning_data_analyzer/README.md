@@ -21,7 +21,7 @@ For each evaluated trajectory, the following are computed:
 - TTC trace
 - per-horizon metrics (full, and configured horizons such as 1.0s, 2.0s, 4.0s, 8.0s)
 
-### Plnnaing Quality Score (EPDMS)
+### Planning Quality Score (EPDMS)
 
 To show multi-facet (comfort, progress, safety) quality of generated trajectory, EPDMS (Extended Predictive Driver Model Score) is computed based on the multiple subscores.
 
@@ -48,6 +48,13 @@ EPDMS is obtained from combining the following subscores:
 
 These subscores are exported both as per-trajectory outputs and as aggregate statistics.
 
+### Evaluator Metrics (bag-recorded scalars)
+
+It aggregates the results of filtering the topics specified in `config/evaluator_config.yaml` according to the exception rules.
+
+- lateral_deviation_centerline
+  - for excluded `intersection_area`
+
 ## Quick Start
 
 ### Open Loop Evaluation
@@ -65,6 +72,7 @@ ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --
 - **`evaluation_result.json`** - Detailed metrics (ADE, FDE, TTC, etc.) and summary statistics
 - **`evaluation_output.bag/`** - Evaluation metrics as rosbag for visualization
 - **`debug_images/*.png`** - Trajectory visualization (with `--viz` flag)
+- **evaluator_metric.json** — evaluator metric aggregates per `evaluator_config` (if bag contains configured topics)
 
 ## Parameters
 
@@ -80,5 +88,5 @@ Key parameters in `config/planning_data_analyzer.param.yaml`:
 
 ## For More Information
 
-- Configuration: [config/planning_data_analyzer.param.yaml](config/planning_data_analyzer.param.yaml)
+- Configuration: [config/planning_data_analyzer.param.yaml](config/planning_data_analyzer.param.yaml), [config/evaluator_config.yaml](config/evaluator_config.yaml)
 - Launch files: [launch/](launch/)

@@ -49,7 +49,13 @@ lanelet::ConstLanelets collect_route_relevant_lanelets(
 
 autoware_utils_geometry::LineString2d to_linestring2d(const lanelet::ConstLineString3d & line);
 
+// Check if the pose is on a lanelet whose `turn_direction` attribute is set.
 bool is_pose_in_intersection(
+  const geometry_msgs::msg::Pose & pose,
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler);
+
+// Check if the pose is inside the `intersection_area` polygon attached to the reference lanelet.
+bool is_pose_in_intersection_area(
   const geometry_msgs::msg::Pose & pose,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler);
 

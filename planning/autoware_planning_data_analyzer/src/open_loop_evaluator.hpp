@@ -22,6 +22,7 @@
 #include "metrics/epdms/subscores/ego_progress.hpp"
 #include "metrics/epdms/subscores/extended_comfort.hpp"
 #include "metrics/epdms/subscores/lane_keeping.hpp"
+#include "metrics/evaluator/evaluator.hpp"
 #include "metrics/trajectory_metrics.hpp"
 #include "utils/override_windows.hpp"
 
@@ -239,6 +240,11 @@ public:
     control_mode_events_ = std::move(events);
   }
 
+  void set_evaluator_configs(const std::vector<metrics::evaluator::EvaluatorConfig> & configs)
+  {
+    evaluator_configs_ = configs;
+  }
+
   nlohmann::json get_summary_as_json() const override;
 
   nlohmann::json get_detailed_results_as_json() const override;
@@ -418,6 +424,7 @@ private:
   // Reserved for the follow-up debug-topic PR. PR 425 only stores the runtime switch.
   std::vector<TimedTrackedObjects> object_timeline_;
   bool debug_topics_enabled_{false};
+  std::vector<metrics::evaluator::EvaluatorConfig> evaluator_configs_;
 };
 
 }  // namespace autoware::planning_data_analyzer

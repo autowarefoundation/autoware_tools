@@ -14,6 +14,7 @@
 
 #include "base_evaluator.hpp"
 
+#include "metrics/evaluator/evaluator.hpp"
 #include "metrics/trajectory_metrics.hpp"
 #include "serialized_bag_message.hpp"
 
@@ -27,13 +28,15 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace autoware::planning_data_analyzer
 {
 
 BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   const std::string & bag_path, rosbag2_cpp::Writer * /*evaluation_bag_writer*/,
-  const TopicNames & topic_names)
+  const TopicNames & topic_names,
+  const std::vector<metrics::evaluator::EvaluatorConfig> & evaluator_configs)
 {
   // Open bag reader
   rosbag2_cpp::Reader bag_reader;
@@ -47,6 +50,7 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
 
   // Result to return
   BagProcessingResult result;
+  const auto evaluator_topics = metrics::evaluator::collect_evaluator_topics(evaluator_configs);
 
   // Find the time range of the bag
   rclcpp::Time bag_start_time = rclcpp::Time(std::numeric_limits<int64_t>::max());
@@ -132,6 +136,12 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
       } catch (const std::exception & e) {
         RCLCPP_WARN(logger_, "Failed to deserialize control_mode message: %s", e.what());
       }
+    } else if (
+      // evaluator metric topics
+      !evaluator_topics.empty() && metrics::evaluator::try_append_evaluator_metric_message(
+                                     topic_name, serialized_message, evaluator_topics,
+                                     result.evaluator_metric_values_by_topic, logger_)) {
+      continue;
     }
   }
 
@@ -187,6 +197,13 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   } else {
     result.evaluation_start_time = bag_start_time;
     result.evaluation_end_time = bag_end_time;
+  }
+
+  // Build evaluator metric groups
+  if (!evaluator_configs.empty()) {
+    result.evaluator_metric_groups = metrics::evaluator::build_evaluator_metric_groups(
+      evaluator_configs, result.evaluator_metric_values_by_topic, kinematic_states, route_handler_,
+      topic_names.sync_tolerance_ms, logger_);
   }
 
   return result;

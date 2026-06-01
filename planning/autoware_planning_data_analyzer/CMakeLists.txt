@@ -2,12 +2,14 @@ cmake_minimum_required(VERSION 3.14)
 project(autoware_planning_data_analyzer)
 
 find_package(autoware_cmake REQUIRED)
+find_package(yaml-cpp REQUIRED)
 autoware_package()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
   src/buffer.cpp
   src/base_evaluator.cpp
   src/open_loop_evaluator.cpp
+  src/metrics/evaluator/evaluator.cpp
   src/metrics/deviation_metrics.cpp
   src/metrics/geometry/comfort_signal.cpp
   src/metrics/geometry/ego_footprint.cpp
@@ -38,6 +40,8 @@ target_include_directories(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+target_link_libraries(${PROJECT_NAME} yaml-cpp)
+
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN "autoware::planning_data_analyzer::AutowarePlanningDataAnalyzerNode"
   EXECUTABLE autoware_planning_data_analyzer_node
@@ -58,6 +62,7 @@ if(BUILD_TESTING)
     test/metrics/test_ttc_within_bound.cpp
     test/metrics/test_no_at_fault_collision.cpp
     test/metrics/test_traffic_light_compliance.cpp
+    test/metrics/test_evaluator_metrics.cpp
     test/utils/test_override_windows.cpp
   )
 
