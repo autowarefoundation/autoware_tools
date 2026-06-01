@@ -1208,6 +1208,14 @@ void StaticCenterlineGeneratorNode::save_map()
     return;
   }
 
+  // Recompute the centerline lane ids for the current selection. The cached lane ids are produced
+  // by connect_centerline_to_lanelet() against whatever selection existed when `validate` ran, but
+  // get_selected_centerline() is sliced dynamically by start/end index. If the selection changed
+  // after validate (e.g. the GUI index updates were applied after the validate request), the cache
+  // goes stale and the size check below aborts the save. Refreshing here keeps the centerline and
+  // its lane ids consistent for the selection actually being saved.
+  connect_centerline_to_lanelet();
+
   const auto centerline = centerline_handler_.get_selected_centerline();
   const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
 
