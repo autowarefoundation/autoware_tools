@@ -2477,12 +2477,8 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
       };
 
     nlohmann::json evaluator_json;
-    if (bag_result.evaluator_metric_groups.size() == 1) {
-      evaluator_json = build_group_json(bag_result.evaluator_metric_groups.front());
-    } else {
-      for (const auto & metric_group : bag_result.evaluator_metric_groups) {
-        evaluator_json[metric_group.group_name] = build_group_json(metric_group);
-      }
+    for (const auto & metric_group : bag_result.evaluator_metric_groups) {
+      evaluator_json[metric_group.group_name] = build_group_json(metric_group);
     }
 
     save_json_results(evaluator_json, bag_path, "open_loop", "evaluator_metric.json", false, false);

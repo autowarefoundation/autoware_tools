@@ -162,22 +162,26 @@ std::optional<double> find_closest_value(
   }
 
   const double tolerance_ns = tolerance_ms * 1e6;
-  auto closest = timestamped_values.begin();
-  double min_diff = std::abs(static_cast<double>(closest->timestamp_ns - target_time_ns));
+  const auto itr = std::lower_bound(
+    timestamped_values.begin(), timestamped_values.end(), target_time_ns,
+    [](const TimestampedDouble & value, int64_t target) { return value.timestamp_ns < target; });
 
-  for (auto itr = timestamped_values.begin(); itr != timestamped_values.end(); ++itr) {
-    const double diff = std::abs(static_cast<double>(itr->timestamp_ns - target_time_ns));
-    if (diff < min_diff) {
-      min_diff = diff;
-      closest = itr;
+  auto closest_itr = itr;
+  if (itr == timestamped_values.end()) {
+    closest_itr = std::prev(itr);
+  } else if (itr != timestamped_values.begin()) {
+    const auto prev_itr = std::prev(itr);
+    const double diff_prev = std::abs(static_cast<double>(prev_itr->timestamp_ns - target_time_ns));
+    const double diff_curr = std::abs(static_cast<double>(itr->timestamp_ns - target_time_ns));
+    if (diff_prev < diff_curr) {
+      closest_itr = prev_itr;
     }
   }
-
+  const double min_diff = std::abs(static_cast<double>(closest_itr->timestamp_ns - target_time_ns));
   if (min_diff > tolerance_ns) {
     return std::nullopt;
   }
-
-  return closest->value;
+  return closest_itr->value;
 }
 
 /** @brief Evaluate exclusion rules filtering. */

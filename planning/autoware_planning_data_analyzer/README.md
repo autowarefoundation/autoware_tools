@@ -50,7 +50,7 @@ These subscores are exported both as per-trajectory outputs and as aggregate sta
 
 ### Evaluator Metrics (bag-recorded scalars)
 
-`config/evaluator_config.yaml`で指定された topic を excepsion rule に従ってフィルターした結果を集計します。
+It aggregates the results of filtering the topics specified in `config/evaluator_config.yaml` according to the exception rules.
 
 - lateral_deviation_centerline
   - for excluded `intersection_area`
