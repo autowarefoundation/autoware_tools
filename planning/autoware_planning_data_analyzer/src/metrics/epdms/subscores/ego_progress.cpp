@@ -124,8 +124,7 @@ EgoProgressResult calculate_ego_progress(
   result.denominator_m = result.raw_progress_m * result.multiplicative_mask;
   result.available = true;
 
-  constexpr double kProgressDistanceThresholdM = 5.0;
-  if (result.denominator_m > kProgressDistanceThresholdM) {
+  if (result.denominator_m > kEgoProgressDistanceThresholdM) {
     // Note: Since we only have a single trajectory candidate in this implementation,
     // the score simplifies to 1.0 (raw_progress / denominator where denominator = raw_progress
     // * 1.0) if all multiplicative metrics passed.

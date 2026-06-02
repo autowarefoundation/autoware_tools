@@ -31,6 +31,8 @@ namespace autoware::planning_data_analyzer::metrics
 
 using autoware::route_handler::RouteHandler;
 
+inline constexpr double kEgoProgressDistanceThresholdM = 5.0;
+
 struct EgoProgressResult
 {
   double score{0.0};
