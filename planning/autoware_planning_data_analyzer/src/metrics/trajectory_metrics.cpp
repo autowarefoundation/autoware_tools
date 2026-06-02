@@ -358,7 +358,7 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     no_at_fault_collision.reason = "unavailable_no_future_objects";
   } else {
     no_at_fault_collision = calculate_no_at_fault_collision(
-      trajectory, object_tracks, vehicle_info, route_handler, footprint_evaluations);
+      trajectory, object_tracks, vehicle_info, route_handler, footprint_evaluations, collect_debug);
   }
   metrics.no_at_fault_collision = no_at_fault_collision.score;
   metrics.no_at_fault_collision_available = no_at_fault_collision.available;

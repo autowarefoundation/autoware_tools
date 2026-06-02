@@ -274,7 +274,8 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const std::vector<LoggedObjectTrack> & object_tracks,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<RouteHandler> & route_handler,
-  const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations)
+  const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations,
+  const bool collect_debug)
 {
   NoAtFaultCollisionResult result;
 
@@ -391,8 +392,10 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
     }
   }
 
-  fill_horizon_debug_footprints(
-    result.debug_info, trajectory, object_tracks, footprint_evaluations);
+  if (collect_debug) {
+    fill_horizon_debug_footprints(
+      result.debug_info, trajectory, object_tracks, footprint_evaluations);
+  }
   return result;
 }
 
@@ -400,7 +403,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::vector<TimedTrackedObjects> & future_objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<RouteHandler> & route_handler)
+  const std::shared_ptr<RouteHandler> & route_handler, const bool collect_debug)
 {
   if (future_objects.empty()) {
     NoAtFaultCollisionResult result;
@@ -411,7 +414,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const auto footprint_evaluations =
     evaluate_trajectory_footprints(trajectory, vehicle_info, route_handler);
   return calculate_no_at_fault_collision(
-    trajectory, object_tracks, vehicle_info, route_handler, footprint_evaluations);
+    trajectory, object_tracks, vehicle_info, route_handler, footprint_evaluations, collect_debug);
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics

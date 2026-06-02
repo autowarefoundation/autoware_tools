@@ -98,13 +98,14 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const std::vector<LoggedObjectTrack> & object_tracks,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<RouteHandler> & route_handler,
-  const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations);
+  const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations,
+  bool collect_debug = false);
 
 NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::vector<TimedTrackedObjects> & future_objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<RouteHandler> & route_handler = nullptr);
+  const std::shared_ptr<RouteHandler> & route_handler = nullptr, bool collect_debug = false);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
