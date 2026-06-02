@@ -52,6 +52,13 @@ struct HistoryComfortParameters
   double max_yaw_acceleration{1.93};
 };
 
+struct TrajectoryMetricDebugEnabledMetrics
+{
+  bool no_at_fault_collision{false};
+  bool lane_keeping{false};
+  bool driving_direction_compliance{false};
+};
+
 // Structure for trajectory point-wise metrics
 struct TrajectoryPointMetrics
 {
@@ -126,7 +133,9 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     DrivingDirectionComplianceParameters{},
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info =
     autoware::vehicle_info_utils::VehicleInfo{},
-  const std::vector<TimedTrackedObjects> & future_objects = {}, bool collect_debug = false);
+  const std::vector<TimedTrackedObjects> & future_objects = {},
+  const TrajectoryMetricDebugEnabledMetrics & debug_enabled_metrics =
+    TrajectoryMetricDebugEnabledMetrics{});
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

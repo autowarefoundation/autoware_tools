@@ -93,7 +93,8 @@ struct LaneKeepingResult
 LaneKeepingResult calculate_lane_keeping_result(
   const std::vector<LaneKeepingEvaluationPoint> & evaluation_points,
   const LaneKeepingParameters & parameters = LaneKeepingParameters{},
-  const std::vector<std::pair<double, double>> & lane_change_windows_s = {});
+  const std::vector<std::pair<double, double>> & lane_change_windows_s = {},
+  bool collect_debug = false);
 
 double calculate_lane_keeping_score(
   const std::vector<LaneKeepingEvaluationPoint> & evaluation_points,

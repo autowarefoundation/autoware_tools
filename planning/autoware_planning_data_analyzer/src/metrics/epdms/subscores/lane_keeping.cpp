@@ -25,7 +25,7 @@ namespace autoware::planning_data_analyzer::metrics
 LaneKeepingResult calculate_lane_keeping_result(
   const std::vector<LaneKeepingEvaluationPoint> & evaluation_points,
   const LaneKeepingParameters & parameters,
-  const std::vector<std::pair<double, double>> & lane_change_windows_s)
+  const std::vector<std::pair<double, double>> & lane_change_windows_s, const bool collect_debug)
 {
   LaneKeepingResult result;
   if (
@@ -41,7 +41,9 @@ LaneKeepingResult calculate_lane_keeping_result(
   bool failure_recorded = false;
   std::optional<double> queue_release_until_s;
 
-  result.debug.samples.reserve(evaluation_points.size());
+  if (collect_debug) {
+    result.debug.samples.reserve(evaluation_points.size());
+  }
 
   const auto reset_violation_run = [&]() {
     violation_start_time.reset();
@@ -81,12 +83,14 @@ LaneKeepingResult calculate_lane_keeping_result(
     }
     const bool queue_release_exempt =
       !queue_exempt && queue_release_until_s.has_value() && time_s <= *queue_release_until_s;
-    result.debug.samples.push_back(
-      LaneKeepingDebugSample{
-        time_s, evaluation_point.ego_center, evaluation_point.lateral_deviation,
-        evaluation_point.is_in_intersection, over_threshold, false, lane_change_exempt,
-        queue_exempt, queue_release_exempt, evaluation_point.reference_centerline,
-        evaluation_point.reference_lanelet_id});
+    if (collect_debug) {
+      result.debug.samples.push_back(
+        LaneKeepingDebugSample{
+          time_s, evaluation_point.ego_center, evaluation_point.lateral_deviation,
+          evaluation_point.is_in_intersection, over_threshold, false, lane_change_exempt,
+          queue_exempt, queue_release_exempt, evaluation_point.reference_centerline,
+          evaluation_point.reference_lanelet_id});
+    }
 
     if (!finite) {
       reset_violation_run();
@@ -117,7 +121,7 @@ LaneKeepingResult calculate_lane_keeping_result(
       result.debug.first_failure_time_s = time_s;
       result.debug.failure_run_start_time_s = violation_start_time->seconds();
       result.debug.failure_run_end_time_s = time_s;
-      if (violation_start_index.has_value()) {
+      if (collect_debug && violation_start_index.has_value()) {
         for (std::size_t run_index = *violation_start_index; run_index <= index; ++run_index) {
           result.debug.samples.at(run_index).in_failure_run = true;
         }
@@ -130,7 +134,7 @@ LaneKeepingResult calculate_lane_keeping_result(
   result.score = failure_recorded ? 0.0 : 1.0;
   result.debug.max_continuous_violation_time_s = max_violation_duration;
   result.debug.peak_abs_lateral_deviation_m = peak_abs_lateral_deviation;
-  if (!failure_recorded && !result.debug.samples.empty()) {
+  if (collect_debug && !failure_recorded && !result.debug.samples.empty()) {
     result.debug.label_anchor = result.debug.samples.front().ego_center;
   }
   return result;
@@ -141,7 +145,8 @@ double calculate_lane_keeping_score(
   const LaneKeepingParameters & parameters,
   const std::vector<std::pair<double, double>> & lane_change_windows_s)
 {
-  return calculate_lane_keeping_result(evaluation_points, parameters, lane_change_windows_s).score;
+  return calculate_lane_keeping_result(evaluation_points, parameters, lane_change_windows_s, false)
+    .score;
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics
