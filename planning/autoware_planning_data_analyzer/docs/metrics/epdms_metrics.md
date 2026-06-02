@@ -969,27 +969,151 @@ progress remains a future faithfulness improvement.
 
 ## Output Topics
 
-EPDMS metric topics are written under:
+EPDMS metric topics are written under the EPDMS metric namespace:
 
 ```text
 /open_loop/metrics/epdms/*
 ```
 
-The main score topics are:
+They are produced for enabled EPDMS metrics. By default, all EPDMS metrics are
+enabled unless `open_loop.enabled_metrics` selects a subset.
 
-- `/open_loop/metrics/epdms/no_at_fault_collision`
-- `/open_loop/metrics/epdms/drivable_area_compliance`
-- `/open_loop/metrics/epdms/driving_direction_compliance`
-- `/open_loop/metrics/epdms/traffic_light_compliance`
-- `/open_loop/metrics/epdms/time_to_collision_within_bound`
-- `/open_loop/metrics/epdms/lane_keeping`
-- `/open_loop/metrics/epdms/history_comfort`
-- `/open_loop/metrics/epdms/extended_comfort`
-- `/open_loop/metrics/epdms/ego_progress`
-- `/open_loop/metrics/epdms/synthetic_epdms_raw`
-- `/open_loop/metrics/epdms/synthetic_epdms_human_filtered`
+### Score topics
 
-Availability and reason topics are published with matching metric-specific
-suffixes. Diagnostic raw arrays such as acceleration, jerk, TTC values, lateral
-deviation, and travel distance intentionally remain outside the EPDMS metric
-namespace.
+The main score topics are scalar `std_msgs/msg/Float64` values:
+
+| Topic                                                     | Meaning                                                                                                                     | Example                                                               |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `/open_loop/metrics/epdms/no_at_fault_collision`          | `NC` score. Checks whether the ego trajectory has an ego-responsible collision with a recorded object.                      | `0.0` means an at-fault collision happened.                           |
+| `/open_loop/metrics/epdms/drivable_area_compliance`       | `DAC` score. Checks whether all ego footprint corners stay in semantic drivable area or accepted road-border fallback area. | `1.0` means no non-drivable-area violation.                           |
+| `/open_loop/metrics/epdms/driving_direction_compliance`   | `DDC` score. Checks extended progress on oncoming or wrong-direction route area.                                            | `0.5` means minor oncoming progress.                                  |
+| `/open_loop/metrics/epdms/traffic_light_compliance`       | `TLC` score. Checks whether the ego violates relevant red traffic-light stop lines.                                         | `0.0` means a red-light violation.                                    |
+| `/open_loop/metrics/epdms/time_to_collision_within_bound` | `TTC` score. Checks short-horizon projected ego collision against recorded objects.                                         | `0.0` means a collision within the TTC bound.                         |
+| `/open_loop/metrics/epdms/lane_keeping`                   | `LK` score. Checks prolonged centerline deviation outside exempted lane-change, queue, and intersection conditions.         | `0.0` means a continuous LK violation reached the duration threshold. |
+| `/open_loop/metrics/epdms/history_comfort`                | `HC` score. Checks acceleration, jerk, yaw-rate, and yaw-acceleration comfort bounds over past-plus-planned motion.         | `1.0` means all comfort components are inside bounds.                 |
+| `/open_loop/metrics/epdms/extended_comfort`               | `EC` score. Checks consistency between consecutive planned trajectories using dynamic-signal RMS differences.               | `0.0` means at least one RMS component exceeds its threshold.         |
+| `/open_loop/metrics/epdms/ego_progress`                   | `EP` score. Checks route progress. With the current single selected trajectory, it is effectively `1.0` when available.     | `1.0` means available single-proposal progress passes.                |
+| `/open_loop/metrics/epdms/synthetic_epdms_raw`            | Aggregated raw EPDMS from planner subscores.                                                                                | `0.0` means at least one multiplicative gate collapsed the score.     |
+| `/open_loop/metrics/epdms/synthetic_epdms_human_filtered` | Aggregated EPDMS after suppressing failures also observed in the human reference, except `EC`.                              | `1.0` means the filtered aggregate fully passes.                      |
+
+### Availability and reason topics
+
+Each main subscore publishes matching availability and reason topics:
+
+```text
+/open_loop/metrics/epdms/<subscore>_available
+/open_loop/metrics/epdms/<subscore>_reason
+```
+
+The availability topic is `std_msgs/msg/Bool`. The reason topic is
+`std_msgs/msg/String`.
+
+For example:
+
+```text
+/open_loop/metrics/epdms/time_to_collision_within_bound_available = true
+/open_loop/metrics/epdms/time_to_collision_within_bound_reason = "collision_within_bound"
+```
+
+The published reason strings are implementation diagnostics. Common examples
+include:
+
+- `available`
+- `collision_within_bound`
+- `non_compliant_corner_outside_drivable_area`
+- `major_oncoming_progress`
+- `minor_oncoming_progress`
+- `at_fault_collision_with_agent`
+- `at_fault_lateral_collision_with_agent`
+- `available_no_relevant_traffic_lights`
+- `unavailable_no_previous_trajectory`
+
+The synthetic aggregate topics publish availability flags:
+
+- `/open_loop/metrics/epdms/synthetic_epdms_raw_available`
+- `/open_loop/metrics/epdms/synthetic_epdms_human_filtered_available`
+
+Synthetic aggregate topics do not publish reason strings because their state is
+derived from the component subscore availability and reason topics.
+
+### EPDMS diagnostic scalar topics
+
+The following scalar topics are not subscores, but explain subscore behavior:
+
+| Topic                                                   | Type                   | Meaning                                                    | Example                                                    |
+| ------------------------------------------------------- | ---------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
+| `/open_loop/metrics/epdms/time_to_at_fault_collision_s` | `std_msgs/msg/Float64` | Earliest at-fault collision time in the selected horizon.  | `2.3` means the first at-fault collision is 2.3 s ahead.   |
+| `/open_loop/metrics/epdms/max_oncoming_progress_m`      | `std_msgs/msg/Float64` | Maximum rolling oncoming-direction progress used by `DDC`. | `6.4` means major oncoming progress threshold is exceeded. |
+
+### Debug topics
+
+EPDMS debug topics are written only when `open_loop.debug_topics_enabled` is
+`true`. They are intended for Lichtblick validation and use this namespace:
+
+```text
+/debug/epdms/*
+```
+
+The shared trajectory debug topics are `visualization_msgs/msg/MarkerArray`:
+
+- `/debug/epdms/trajectory/planned_horizon_4s`
+- `/debug/epdms/trajectory/gt_horizon_4s`
+
+The subscore debug topics are:
+
+| Subscore | Topic                                               | Type                                 | Meaning                                                        |
+| -------- | --------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------- |
+| `NC`     | `/debug/epdms/nc/collision_summary`                 | `std_msgs/msg/String`                | JSON summary of collision events.                              |
+| `NC`     | `/debug/epdms/nc/ego_footprints`                    | `visualization_msgs/msg/MarkerArray` | Ego footprint horizon used for collision checking.             |
+| `NC`     | `/debug/epdms/nc/object_footprints`                 | `visualization_msgs/msg/MarkerArray` | Recorded object polygons used for collision checking.          |
+| `NC`     | `/debug/epdms/nc/overlap_areas`                     | `visualization_msgs/msg/MarkerArray` | Ego-object overlap polygons.                                   |
+| `DAC`    | `/debug/epdms/dac/violation_summary`                | `std_msgs/msg/String`                | JSON summary of non-drivable-area violations.                  |
+| `DAC`    | `/debug/epdms/dac/ego_footprints`                   | `visualization_msgs/msg/MarkerArray` | Ego footprints, with violating footprints highlighted.         |
+| `DAC`    | `/debug/epdms/dac/admissible_road_areas`            | `visualization_msgs/msg/MarkerArray` | Road lanelet polygons accepted by DAC.                         |
+| `DAC`    | `/debug/epdms/dac/admissible_shoulder_areas`        | `visualization_msgs/msg/MarkerArray` | Road-shoulder polygons accepted by DAC.                        |
+| `DAC`    | `/debug/epdms/dac/admissible_intersection_areas`    | `visualization_msgs/msg/MarkerArray` | `intersection_area` polygons accepted by DAC.                  |
+| `DAC`    | `/debug/epdms/dac/admissible_hatched_road_markings` | `visualization_msgs/msg/MarkerArray` | Hatched road-marking polygons accepted by DAC.                 |
+| `DAC`    | `/debug/epdms/dac/admissible_parking_areas`         | `visualization_msgs/msg/MarkerArray` | Parking-lot polygons accepted by DAC.                          |
+| `DAC`    | `/debug/epdms/dac/road_border_lines`                | `visualization_msgs/msg/MarkerArray` | Candidate `road_border` line strings.                          |
+| `DAC`    | `/debug/epdms/dac/road_border_side_test_segments`   | `visualization_msgs/msg/MarkerArray` | Side-test segments used to infer the road side of a border.    |
+| `DAC`    | `/debug/epdms/dac/road_border_gap_segments`         | `visualization_msgs/msg/MarkerArray` | Semantic-boundary-to-border gap segments.                      |
+| `DAC`    | `/debug/epdms/dac/semantic_boundary_points`         | `visualization_msgs/msg/MarkerArray` | Closest semantic drivable-area boundary points.                |
+| `DAC`    | `/debug/epdms/dac/road_border_closest_points`       | `visualization_msgs/msg/MarkerArray` | Closest points on candidate road-border segments.              |
+| `DAC`    | `/debug/epdms/dac/corner_projection_points`         | `visualization_msgs/msg/MarkerArray` | Failed-corner projections used by the border fallback.         |
+| `DAC`    | `/debug/epdms/dac/road_border_plus_samples`         | `visualization_msgs/msg/MarkerArray` | Positive-normal border side-probe samples.                     |
+| `DAC`    | `/debug/epdms/dac/road_border_minus_samples`        | `visualization_msgs/msg/MarkerArray` | Negative-normal border side-probe samples.                     |
+| `DAC`    | `/debug/epdms/dac/road_border_fallback_corners`     | `visualization_msgs/msg/MarkerArray` | Corners accepted by the road-border fallback.                  |
+| `DAC`    | `/debug/epdms/dac/failing_corners`                  | `visualization_msgs/msg/MarkerArray` | Corners still classified as non-drivable.                      |
+| `DDC`    | `/debug/epdms/ddc/violation_summary`                | `std_msgs/msg/String`                | JSON summary of oncoming-direction violations.                 |
+| `DDC`    | `/debug/epdms/ddc/ego_centers`                      | `visualization_msgs/msg/MarkerArray` | Ego center path used for direction compliance.                 |
+| `DDC`    | `/debug/epdms/ddc/oncoming_segments`                | `visualization_msgs/msg/MarkerArray` | Oncoming-progress segments.                                    |
+| `DDC`    | `/debug/epdms/ddc/route_lane_polygons`              | `visualization_msgs/msg/MarkerArray` | Route-consistent lane polygons.                                |
+| `DDC`    | `/debug/epdms/ddc/intersection_lane_polygons`       | `visualization_msgs/msg/MarkerArray` | Intersection lane polygons that relax oncoming classification. |
+| `TLC`    | `/debug/epdms/tlc/violation_summary`                | `std_msgs/msg/String`                | JSON summary of red-light stop-line violations.                |
+| `TLC`    | `/debug/epdms/tlc/ego_footprints`                   | `visualization_msgs/msg/MarkerArray` | Ego footprints near stop-line evaluation.                      |
+| `TLC`    | `/debug/epdms/tlc/stop_lines`                       | `visualization_msgs/msg/MarkerArray` | Relevant traffic-light stop lines.                             |
+| `TTC`    | `/debug/epdms/ttc/violation_summary`                | `std_msgs/msg/String`                | JSON summary of TTC collisions.                                |
+| `TTC`    | `/debug/epdms/ttc/ego_footprints`                   | `visualization_msgs/msg/MarkerArray` | Projected ego footprints for TTC offsets.                      |
+| `TTC`    | `/debug/epdms/ttc/object_footprints`                | `visualization_msgs/msg/MarkerArray` | Recorded object footprints at TTC query times.                 |
+| `TTC`    | `/debug/epdms/ttc/overlap_areas`                    | `visualization_msgs/msg/MarkerArray` | TTC ego-object overlap polygons.                               |
+| `LK`     | `/debug/epdms/lk/violation_summary`                 | `std_msgs/msg/String`                | JSON summary of lane-keeping violation runs.                   |
+| `LK`     | `/debug/epdms/lk/ego_center_path`                   | `visualization_msgs/msg/MarkerArray` | Ego centerline samples colored by LK state.                    |
+| `LK`     | `/debug/epdms/lk/reference_centerlines`             | `visualization_msgs/msg/MarkerArray` | Reference lane centerlines used for lateral deviation.         |
+| `HC`     | `/debug/epdms/hc/component_status`                  | `std_msgs/msg/String`                | JSON status of comfort components.                             |
+| `HC`     | `/debug/epdms/hc/sample_times`                      | `std_msgs/msg/Float64MultiArray`     | Sample times used by HC.                                       |
+| `HC`     | `/debug/epdms/hc/segments`                          | `std_msgs/msg/Float64MultiArray`     | Numeric HC segment/component data for panels.                  |
+| `HC`     | `/debug/epdms/hc/horizon_footprints`                | `visualization_msgs/msg/MarkerArray` | Ego footprints colored by comfort status.                      |
+| `EC`     | `/debug/epdms/ec/comparison_summary`                | `std_msgs/msg/String`                | JSON summary of consecutive-trajectory comfort comparison.     |
+| `EC`     | `/debug/epdms/ec/sample_times`                      | `std_msgs/msg/Float64MultiArray`     | Paired sample times used by EC.                                |
+| `EC`     | `/debug/epdms/ec/delta_acceleration`                | `std_msgs/msg/Float64MultiArray`     | Per-sample acceleration differences.                           |
+| `EC`     | `/debug/epdms/ec/delta_jerk`                        | `std_msgs/msg/Float64MultiArray`     | Per-sample jerk differences.                                   |
+| `EC`     | `/debug/epdms/ec/delta_yaw_rate`                    | `std_msgs/msg/Float64MultiArray`     | Per-sample yaw-rate differences.                               |
+| `EC`     | `/debug/epdms/ec/delta_yaw_accel`                   | `std_msgs/msg/Float64MultiArray`     | Per-sample yaw-acceleration differences.                       |
+| `EP`     | `/debug/epdms/ep/progress_summary`                  | `std_msgs/msg/String`                | JSON summary of route-progress evaluation.                     |
+| `EP`     | `/debug/epdms/ep/route_progress_points`             | `visualization_msgs/msg/MarkerArray` | Progress sample points along the route.                        |
+| `EP`     | `/debug/epdms/ep/route_reference`                   | `visualization_msgs/msg/MarkerArray` | Route reference geometry used by EP.                           |
+
+For example, when `NC` is `0.0`, inspect
+`/debug/epdms/nc/collision_summary`, then visualize
+`/debug/epdms/nc/ego_footprints`, `/debug/epdms/nc/object_footprints`, and
+`/debug/epdms/nc/overlap_areas` to identify the at-fault collision geometry.
