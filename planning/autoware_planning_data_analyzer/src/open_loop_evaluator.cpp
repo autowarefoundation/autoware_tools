@@ -476,7 +476,8 @@ void OpenLoopEvaluator::evaluate(
             : std::vector<TimedTrackedObjects>{};
         auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
           eval_data.synchronized_data, route_handler_, history_comfort_params_,
-          lane_keeping_params_, driving_direction_params_, vehicle_info_, future_objects);
+          lane_keeping_params_, driving_direction_params_, vehicle_info_, future_objects,
+          debug_topics_enabled_ && enabled_metrics_.driving_direction_compliance);
         auto metrics = evaluate_trajectory(eval_data);
         metrics.history_comfort = trajectory_metrics.history_comfort;
         metrics.history_comfort_available = trajectory_metrics.history_comfort_available;

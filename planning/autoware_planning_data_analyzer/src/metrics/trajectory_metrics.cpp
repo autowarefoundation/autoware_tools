@@ -311,7 +311,7 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const LaneKeepingParameters & lane_keeping_params,
   const DrivingDirectionComplianceParameters & driving_direction_params,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::vector<TimedTrackedObjects> & future_objects)
+  const std::vector<TimedTrackedObjects> & future_objects, const bool collect_debug)
 {
   TrajectoryPointMetrics metrics;
 
@@ -401,36 +401,38 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
       ddc_result.worst_window_sample_count;
     metrics.driving_direction_compliance_debug.window_progress_m =
       ddc_result.max_oncoming_progress_m;
-    for (size_t i = 0; i < driving_direction_evaluation_points.size(); ++i) {
-      const auto & evaluation_point = driving_direction_evaluation_points.at(i);
-      const auto & trajectory_point = trajectory.points.at(i);
-      const auto local_context =
-        compute_driving_direction_local_context(trajectory_point.pose, route_handler)
-          .value_or(DrivingDirectionLocalContext{});
-      const double counted_progress_m =
-        evaluation_point.in_oncoming_traffic && !evaluation_point.is_intersection
-          ? std::max(0.0, evaluation_point.progress_m)
-          : 0.0;
-      metrics.driving_direction_compliance_debug.samples.push_back(
-        DrivingDirectionDebugSample{
-          evaluation_point.time_from_start_s, evaluation_point.progress_m, counted_progress_m,
-          evaluation_point.in_oncoming_traffic, local_context.in_lane_margin_only,
-          evaluation_point.is_intersection, to_msg_point(trajectory_point.pose.position, 0.35)});
-      if (i == 0U) {
-        metrics.driving_direction_compliance_debug.label_anchor =
-          to_msg_point(trajectory_point.pose.position, 0.35);
-      }
-      for (const auto & lanelet : local_context.route_lanelets) {
-        metrics.driving_direction_compliance_debug.route_lane_polygons.push_back(
-          DrivingDirectionDebugPolygon{
-            evaluation_point.time_from_start_s,
-            lanelet_polygon_points(lanelet, trajectory_point.pose.position.z)});
-      }
-      for (const auto & polygon : local_context.intersection_areas) {
-        metrics.driving_direction_compliance_debug.intersection_lane_polygons.push_back(
-          DrivingDirectionDebugPolygon{
-            evaluation_point.time_from_start_s,
-            polygon_points(polygon, trajectory_point.pose.position.z)});
+    if (collect_debug) {
+      for (size_t i = 0; i < driving_direction_evaluation_points.size(); ++i) {
+        const auto & evaluation_point = driving_direction_evaluation_points.at(i);
+        const auto & trajectory_point = trajectory.points.at(i);
+        const auto local_context =
+          compute_driving_direction_local_context(trajectory_point.pose, route_handler)
+            .value_or(DrivingDirectionLocalContext{});
+        const double counted_progress_m =
+          evaluation_point.in_oncoming_traffic && !evaluation_point.is_intersection
+            ? std::max(0.0, evaluation_point.progress_m)
+            : 0.0;
+        metrics.driving_direction_compliance_debug.samples.push_back(
+          DrivingDirectionDebugSample{
+            evaluation_point.time_from_start_s, evaluation_point.progress_m, counted_progress_m,
+            evaluation_point.in_oncoming_traffic, local_context.in_lane_margin_only,
+            evaluation_point.is_intersection, to_msg_point(trajectory_point.pose.position, 0.35)});
+        if (i == 0U) {
+          metrics.driving_direction_compliance_debug.label_anchor =
+            to_msg_point(trajectory_point.pose.position, 0.35);
+        }
+        for (const auto & lanelet : local_context.route_lanelets) {
+          metrics.driving_direction_compliance_debug.route_lane_polygons.push_back(
+            DrivingDirectionDebugPolygon{
+              evaluation_point.time_from_start_s,
+              lanelet_polygon_points(lanelet, trajectory_point.pose.position.z)});
+        }
+        for (const auto & polygon : local_context.intersection_areas) {
+          metrics.driving_direction_compliance_debug.intersection_lane_polygons.push_back(
+            DrivingDirectionDebugPolygon{
+              evaluation_point.time_from_start_s,
+              polygon_points(polygon, trajectory_point.pose.position.z)});
+        }
       }
     }
   }
