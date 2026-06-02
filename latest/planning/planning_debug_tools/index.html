@@ -5508,6 +5508,7 @@ PlotYawOverArclength('yaw_occlusion', occlusion_spot, tracker_time)</p>
 <li><code>/planning/mission_planning/goal</code>: Goal pose (when <code>-p</code> option is used)</li>
 </ul>
 <h3 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">#</a></h3>
+<p>The node subscribes to <code>/localization/kinematic_state</code> for the simulator ego pose and <code>/initialpose3d</code> to align the rosbag replay timeline when localization is reset (e.g. DLR DirectInitialPose).</p>
 <p>Whenever the ego's position changes, a chronological <code>reproduce_sequence</code> queue is generated based on its position with a search radius (default to 2 m).
 If the queue is empty, the nearest odom message in the rosbag is added to the queue.
 When publishing perception messages, the first element in the <code>reproduce_sequence</code> is popped and published.</p>
