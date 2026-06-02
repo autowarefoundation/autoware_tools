@@ -17,6 +17,7 @@
 #include "metrics/epdms/aggregation/epdms_aggregation.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 #include "metrics/geometry/object_tracks.hpp"
+#include "metrics/metric_types.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
 #include <autoware/motion_utils/trajectory/conversion.hpp>
@@ -222,7 +223,7 @@ metrics::EpdmsMetricSnapshot build_epdms_snapshot(const OpenLoopTrajectoryMetric
 {
   metrics::EpdmsMetricSnapshot snapshot;
   snapshot.history_comfort = metrics.history_comfort;
-  snapshot.history_comfort_available = true;
+  snapshot.history_comfort_available = metrics.history_comfort_available;
   snapshot.extended_comfort = metrics.extended_comfort;
   snapshot.extended_comfort_available = metrics.extended_comfort_available;
   snapshot.ego_progress = metrics.ego_progress;
@@ -291,7 +292,7 @@ metrics::EpdmsMetricSnapshot calculate_human_reference_snapshot(
 
   metrics::EpdmsMetricSnapshot human_snapshot;
   human_snapshot.history_comfort = human_point_metrics.history_comfort;
-  human_snapshot.history_comfort_available = true;
+  human_snapshot.history_comfort_available = human_point_metrics.history_comfort_available;
   human_snapshot.extended_comfort = 0.0;
   human_snapshot.extended_comfort_available = false;
   human_snapshot.ego_progress = 1.0;
@@ -365,17 +366,6 @@ static double compute_std_dev(const std::vector<double> & v)
   double var = 0.0;
   for (const double x : v) var += (x - m) * (x - m);
   return std::sqrt(var / v.size());
-}
-
-static double compute_percentile(const std::vector<double> & sorted, double p)
-{
-  if (sorted.empty()) return 0.0;
-  if (sorted.size() == 1) return sorted[0];
-  const double idx = p * static_cast<double>(sorted.size() - 1);
-  const size_t lo = static_cast<size_t>(std::floor(idx));
-  const size_t hi = std::min(lo + 1, sorted.size() - 1);
-  const double frac = idx - static_cast<double>(lo);
-  return sorted[lo] * (1.0 - frac) + sorted[hi] * frac;
 }
 
 static void fill_horizon_json(
@@ -543,6 +533,8 @@ void OpenLoopEvaluator::evaluate(
           lane_keeping_params_, driving_direction_params_, vehicle_info_, future_objects);
         auto metrics = evaluate_trajectory(eval_data);
         metrics.history_comfort = trajectory_metrics.history_comfort;
+        metrics.history_comfort_available = trajectory_metrics.history_comfort_available;
+        metrics.history_comfort_reason = trajectory_metrics.history_comfort_reason;
         metrics.time_to_collision_within_bound = trajectory_metrics.time_to_collision_within_bound;
         metrics.time_to_collision_within_bound_available =
           trajectory_metrics.time_to_collision_within_bound_available;
@@ -553,16 +545,13 @@ void OpenLoopEvaluator::evaluate(
         metrics.lane_keeping = trajectory_metrics.lane_keeping;
         metrics.lane_keeping_available = trajectory_metrics.lane_keeping_available;
         metrics.lane_keeping_reason = trajectory_metrics.lane_keeping_reason;
-        const auto ego_progress = metrics::calculate_ego_progress(
-          eval_data.synchronized_data ? eval_data.synchronized_data->trajectory : nullptr,
-          eval_data.synchronized_data ? eval_data.synchronized_data->candidate_trajectories
-                                      : nullptr,
-          route_handler_);
-        metrics.ego_progress = ego_progress.score;
-        metrics.ego_progress_available = ego_progress.available;
-        metrics.ego_progress_reason = ego_progress.reason;
-        metrics.ego_progress_raw_m = ego_progress.raw_progress_m;
-        metrics.ego_progress_best_raw_m = ego_progress.best_raw_progress_m;
+        metrics.ego_progress = trajectory_metrics.ego_progress;
+        metrics.ego_progress_available = trajectory_metrics.ego_progress_available;
+        metrics.ego_progress_reason = trajectory_metrics.ego_progress_reason;
+        metrics.ego_progress_raw_m = trajectory_metrics.ego_progress_raw_m;
+        metrics.ego_progress_best_raw_m = trajectory_metrics.ego_progress_best_raw_m;
+        metrics.ego_progress_mask = trajectory_metrics.ego_progress_mask;
+        metrics.ego_progress_denominator_m = trajectory_metrics.ego_progress_denominator_m;
         metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
         metrics.drivable_area_compliance_available =
           trajectory_metrics.drivable_area_compliance_available;
@@ -858,6 +847,7 @@ OpenLoopEvaluator::generate_ground_truth_trajectory_from_topic(
     gt_point.time_from_start = pred_point.time_from_start;
     gt_point.longitudinal_velocity_mps = pred_point.longitudinal_velocity_mps;
     gt_point.lateral_velocity_mps = pred_point.lateral_velocity_mps;
+    gt_point.acceleration_mps2 = pred_point.acceleration_mps2;
     gt_point.heading_rate_rps = pred_point.heading_rate_rps;
     gt_for_eval.points.push_back(gt_point);
   }
@@ -1393,6 +1383,9 @@ void OpenLoopEvaluator::save_metrics_to_bag(
     };
 
   write_availability(
+    enabled_metrics_.history_comfort, metrics.history_comfort_available,
+    epdms_metric_topic("history_comfort_available"));
+  write_availability(
     enabled_metrics_.extended_comfort, metrics.extended_comfort_available,
     epdms_metric_topic("extended_comfort_available"));
   write_availability(
@@ -1434,6 +1427,9 @@ void OpenLoopEvaluator::save_metrics_to_bag(
       bag_writer.write(reason_msg, topic_name, message_timestamp);
     };
 
+  write_reason(
+    enabled_metrics_.history_comfort, metrics.history_comfort_reason,
+    epdms_metric_topic("history_comfort_reason"));
   write_reason(
     enabled_metrics_.extended_comfort, metrics.extended_comfort_reason,
     epdms_metric_topic("extended_comfort_reason"));
@@ -1633,8 +1629,8 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
     j[prefix + "/min"] = sorted.empty() ? 0.0 : sorted.front();
     j[prefix + "/max"] = sorted.empty() ? 0.0 : sorted.back();
     j[prefix + "/std"] = compute_std_dev(vals);
-    j[prefix + "/percentile_95"] = compute_percentile(sorted, 0.95);
-    j[prefix + "/percentile_99"] = compute_percentile(sorted, 0.99);
+    j[prefix + "/percentile_95"] = ::metrics::compute_percentile(sorted, 0.95);
+    j[prefix + "/percentile_99"] = ::metrics::compute_percentile(sorted, 0.99);
   };
 
   std::set<std::string> all_keys;
@@ -1686,12 +1682,22 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
 
   std::vector<double> history_comfort_values;
   history_comfort_values.reserve(metrics_list_.size());
+  std::size_t history_comfort_available_count = 0;
+  std::map<std::string, std::size_t> history_comfort_reason_counts;
   for (const auto & m : metrics_list_) {
-    history_comfort_values.push_back(m.history_comfort);
+    ++history_comfort_reason_counts[m.history_comfort_reason];
+    if (m.history_comfort_available) {
+      history_comfort_values.push_back(m.history_comfort);
+      ++history_comfort_available_count;
+    }
   }
   emit_metric(
     "aggregate", "history_comfort", "Binary history comfort subscore across trajectories [-]",
     history_comfort_values);
+  j["aggregate/history_comfort_available_count"] = history_comfort_available_count;
+  j["aggregate/history_comfort_unavailable_count"] =
+    metrics_list_.size() - history_comfort_available_count;
+  j["aggregate/history_comfort_reason_counts"] = history_comfort_reason_counts;
   std::vector<double> extended_comfort_values;
   extended_comfort_values.reserve(metrics_list_.size());
   std::size_t extended_comfort_available_count = 0;
@@ -1878,9 +1884,6 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
   std::vector<double> human_history_comfort_values;
   std::vector<double> filtered_history_comfort_values;
   std::size_t history_comfort_filter_applied_count = 0;
-  std::vector<double> human_extended_comfort_values;
-  std::vector<double> filtered_extended_comfort_values;
-  std::size_t extended_comfort_filter_applied_count = 0;
   std::vector<double> human_ego_progress_values;
   std::vector<double> filtered_ego_progress_values;
   std::size_t ego_progress_filter_applied_count = 0;
@@ -1909,12 +1912,6 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
     }
     history_comfort_filter_applied_count +=
       static_cast<std::size_t>(m.history_comfort.filter_applied);
-    if (m.extended_comfort.human_reference_available) {
-      human_extended_comfort_values.push_back(m.extended_comfort.human_reference);
-      filtered_extended_comfort_values.push_back(m.extended_comfort.filtered);
-    }
-    extended_comfort_filter_applied_count +=
-      static_cast<std::size_t>(m.extended_comfort.filter_applied);
     if (m.ego_progress.human_reference_available) {
       human_ego_progress_values.push_back(m.ego_progress.human_reference);
       filtered_ego_progress_values.push_back(m.ego_progress.filtered);
@@ -1956,9 +1953,6 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
   emit_human_filter_metric(
     "history_comfort", "history comfort subscore", human_history_comfort_values,
     filtered_history_comfort_values, history_comfort_filter_applied_count);
-  emit_human_filter_metric(
-    "extended_comfort", "extended comfort subscore", human_extended_comfort_values,
-    filtered_extended_comfort_values, extended_comfort_filter_applied_count);
   emit_human_filter_metric(
     "ego_progress", "ego progress subscore", human_ego_progress_values,
     filtered_ego_progress_values, ego_progress_filter_applied_count);
@@ -2131,6 +2125,8 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["longitudinal_deviations"] = m.longitudinal_deviations;
     traj["ttc"] = m.ttc;
     traj["history_comfort"] = m.history_comfort;
+    traj["history_comfort_available"] = m.history_comfort_available;
+    traj["history_comfort_reason"] = m.history_comfort_reason;
     traj["extended_comfort"] = m.extended_comfort;
     traj["extended_comfort_available"] = m.extended_comfort_available;
     traj["extended_comfort_reason"] = m.extended_comfort_reason;
@@ -2146,6 +2142,8 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["ego_progress_reason"] = m.ego_progress_reason;
     traj["ego_progress_raw_m"] = m.ego_progress_raw_m;
     traj["ego_progress_best_raw_m"] = m.ego_progress_best_raw_m;
+    traj["ego_progress_multiplicative_mask"] = m.ego_progress_mask;
+    traj["ego_progress_denominator_m"] = m.ego_progress_denominator_m;
     traj["drivable_area_compliance"] = m.drivable_area_compliance;
     traj["drivable_area_compliance_available"] = m.drivable_area_compliance_available;
     traj["drivable_area_compliance_reason"] = m.drivable_area_compliance_reason;
@@ -2165,9 +2163,6 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
       traj["human_reference"]["history_comfort"] = hf.history_comfort.human_reference;
       traj["human_reference"]["history_comfort_available"] =
         hf.history_comfort.human_reference_available;
-      traj["human_reference"]["extended_comfort"] = hf.extended_comfort.human_reference;
-      traj["human_reference"]["extended_comfort_available"] =
-        hf.extended_comfort.human_reference_available;
       traj["human_reference"]["ego_progress"] = hf.ego_progress.human_reference;
       traj["human_reference"]["ego_progress_available"] = hf.ego_progress.human_reference_available;
       traj["human_reference"]["time_to_collision_within_bound"] =
@@ -2194,9 +2189,6 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
 
       traj["human_filtered"]["history_comfort"] = hf.history_comfort.filtered;
       traj["human_filtered"]["history_comfort_filter_applied"] = hf.history_comfort.filter_applied;
-      traj["human_filtered"]["extended_comfort"] = hf.extended_comfort.filtered;
-      traj["human_filtered"]["extended_comfort_filter_applied"] =
-        hf.extended_comfort.filter_applied;
       traj["human_filtered"]["ego_progress"] = hf.ego_progress.filtered;
       traj["human_filtered"]["ego_progress_filter_applied"] = hf.ego_progress.filter_applied;
       traj["human_filtered"]["time_to_collision_within_bound"] =
@@ -2251,6 +2243,8 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
       traj["trajectory_point_metrics"]["lateral_deviations"] = pm.lateral_deviations;
       traj["trajectory_point_metrics"]["travel_distances"] = pm.travel_distances;
       traj["trajectory_point_metrics"]["history_comfort"] = pm.history_comfort;
+      traj["trajectory_point_metrics"]["history_comfort_available"] = pm.history_comfort_available;
+      traj["trajectory_point_metrics"]["history_comfort_reason"] = pm.history_comfort_reason;
       traj["trajectory_point_metrics"]["time_to_collision_within_bound"] =
         pm.time_to_collision_within_bound;
       traj["trajectory_point_metrics"]["time_to_collision_within_bound_available"] =
@@ -2358,6 +2352,7 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
   if (enabled_metrics_.history_comfort) {
     add_topic(epdms_metric_topic("history_comfort"), "std_msgs/msg/Float64");
   }
+  add_epdms_availability_reason_if(enabled_metrics_.history_comfort, "history_comfort");
   add_trajectory_array_if(enabled_metrics_.history_comfort, "longitudinal_accelerations");
   add_trajectory_array_if(enabled_metrics_.history_comfort, "lateral_accelerations");
   add_trajectory_array_if(enabled_metrics_.history_comfort, "lateral_jerks");
@@ -2425,7 +2420,8 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
   RCLCPP_INFO(logger_, "Running open-loop evaluation for trajectory analysis");
 
   // Use base class method to process bag and get synchronized data
-  auto bag_result = process_bag_common(bag_path, evaluation_bag_writer, topic_names);
+  auto bag_result =
+    process_bag_common(bag_path, evaluation_bag_writer, topic_names, evaluator_configs_);
   object_timeline_ = bag_result.tracked_object_timeline;
 
   // Pass the control_mode timeline to enable override-only aggregation in the summary.
@@ -2464,6 +2460,28 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
     save_json_results(
       full_json, bag_path, "open_loop", "time_step_based_trajectory_detailed_result.json", false,
       true);
+  }
+
+  // Save evaluator metric results
+  if (!bag_result.evaluator_metric_groups.empty()) {
+    const auto build_group_json =
+      [](const metrics::evaluator::EvaluatorMetricGroup & metric_group) {
+        std::vector<metrics::evaluator::EvaluatorMetricAggregationResult> metric_results;
+        metric_results.reserve(metric_group.measurements_by_metric_key.size());
+        for (const auto & [metric_key, measurements] : metric_group.measurements_by_metric_key) {
+          metric_results.push_back(
+            metrics::evaluator::aggregate_metric_measurements(
+              measurements, metric_group.exclusion_rules, metric_key));
+        }
+        return metrics::evaluator::evaluator_group_aggregations_to_json(metric_results);
+      };
+
+    nlohmann::json evaluator_json;
+    for (const auto & metric_group : bag_result.evaluator_metric_groups) {
+      evaluator_json[metric_group.group_name] = build_group_json(metric_group);
+    }
+
+    save_json_results(evaluator_json, bag_path, "open_loop", "evaluator_metric.json", false, false);
   }
 
   RCLCPP_INFO(logger_, "Open-loop evaluation complete");

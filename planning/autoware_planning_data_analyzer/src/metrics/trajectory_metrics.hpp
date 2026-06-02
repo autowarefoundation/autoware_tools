@@ -17,6 +17,7 @@
 
 #include "data_types.hpp"
 #include "metrics/epdms/subscores/driving_direction_compliance.hpp"
+#include "metrics/epdms/subscores/ego_progress.hpp"
 #include "metrics/epdms/subscores/lane_keeping.hpp"
 #include "metrics/epdms/subscores/traffic_light_compliance.hpp"
 
@@ -35,6 +36,9 @@ using autoware::route_handler::RouteHandler;
 
 struct HistoryComfortParameters
 {
+  double past_horizon_s{1.5};
+  double sample_interval_s{0.1};
+  double future_horizon_s{4.0};
   double finite_difference_epsilon{1.0e-3};
   double max_longitudinal_acceleration{2.40};
   double min_longitudinal_acceleration{-4.05};
@@ -59,6 +63,8 @@ struct TrajectoryPointMetrics
   std::vector<double> lateral_deviations;
   std::vector<double> travel_distances;
   double history_comfort{0.0};
+  bool history_comfort_available{false};
+  std::string history_comfort_reason{"unavailable"};
   double time_to_collision_within_bound{0.0};
   bool time_to_collision_within_bound_available{false};
   std::string time_to_collision_within_bound_reason{"unavailable"};
@@ -66,6 +72,16 @@ struct TrajectoryPointMetrics
   double lane_keeping{0.0};
   bool lane_keeping_available{false};
   std::string lane_keeping_reason{"unavailable"};
+  double ego_progress{0.0};
+  bool ego_progress_available{false};
+  std::string ego_progress_reason{"unavailable"};
+  double ego_progress_raw_m{0.0};
+  double ego_progress_best_raw_m{0.0};
+  double ego_progress_mask{0.0};
+  double ego_progress_denominator_m{0.0};
+  geometry_msgs::msg::Point ego_progress_start_point;
+  geometry_msgs::msg::Point ego_progress_end_point;
+  std::vector<geometry_msgs::msg::Point> ego_progress_route_reference_points;
   double drivable_area_compliance{0.0};
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};

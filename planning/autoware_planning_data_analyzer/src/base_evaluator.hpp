@@ -16,6 +16,7 @@
 #define BASE_EVALUATOR_HPP_
 
 #include "bag_handler.hpp"
+#include "metrics/evaluator/evaluator.hpp"
 #include "metrics/trajectory_metrics.hpp"
 #include "utils/override_windows.hpp"
 
@@ -24,6 +25,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writer.hpp>
+#include <rosbag2_storage/serialized_bag_message.hpp>
 #include <rosbag2_storage/topic_metadata.hpp>
 
 #include <tf2_msgs/msg/tf_message.hpp>
@@ -32,6 +34,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -156,11 +159,15 @@ protected:
     // captured as (timestamp_ns, mode) tuples. Used to detect override
     // windows (AUTONOMOUS -> MANUAL transitions).
     std::vector<utils::ControlModeEvent> control_mode_events;
+    std::map<std::string, std::vector<metrics::evaluator::TimestampedDouble>>
+      evaluator_metric_values_by_topic;
+    std::vector<metrics::evaluator::EvaluatorMetricGroup> evaluator_metric_groups;
   };
 
   BagProcessingResult process_bag_common(
     const std::string & bag_path, rosbag2_cpp::Writer * evaluation_bag_writer,
-    const TopicNames & topic_names);
+    const TopicNames & topic_names,
+    const std::vector<metrics::evaluator::EvaluatorConfig> & evaluator_configs = {});
 
   /**
    * @brief Save evaluation results to JSON file

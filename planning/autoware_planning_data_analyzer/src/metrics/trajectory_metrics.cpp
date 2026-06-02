@@ -16,6 +16,7 @@
 
 #include "metrics/epdms/subscores/drivable_area_compliance.hpp"
 #include "metrics/epdms/subscores/driving_direction_compliance.hpp"
+#include "metrics/epdms/subscores/ego_progress.hpp"
 #include "metrics/epdms/subscores/history_comfort.hpp"
 #include "metrics/epdms/subscores/no_at_fault_collision.hpp"
 #include "metrics/epdms/subscores/traffic_light_compliance.hpp"
@@ -32,10 +33,12 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iterator>
 #include <limits>
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -45,6 +48,67 @@ using autoware::route_handler::RouteHandler;
 
 namespace
 {
+
+template <typename MessageT, typename ActivePredicate>
+std::vector<std::pair<double, double>> collect_signal_active_windows(
+  const std::vector<std::shared_ptr<const MessageT>> & history,
+  const rclcpp::Time & trajectory_start, const ActivePredicate & is_active,
+  const double pre_grace_s, const double post_grace_s)
+{
+  std::vector<std::pair<double, double>> windows;
+  if (history.empty()) {
+    return windows;
+  }
+
+  bool has_active_start = false;
+  double active_start_s = 0.0;
+  bool previous_active = false;
+  for (const auto & msg : history) {
+    if (!msg) {
+      continue;
+    }
+    const auto sample_time_s = (rclcpp::Time(msg->stamp) - trajectory_start).seconds();
+    const bool active = is_active(*msg);
+    if (active && !previous_active) {
+      active_start_s = sample_time_s;
+      has_active_start = true;
+    } else if (!active && previous_active && has_active_start) {
+      windows.emplace_back(active_start_s - pre_grace_s, sample_time_s + post_grace_s);
+      has_active_start = false;
+    }
+    previous_active = active;
+  }
+
+  if (previous_active && has_active_start) {
+    const auto last_time_s = (rclcpp::Time(history.back()->stamp) - trajectory_start).seconds();
+    windows.emplace_back(active_start_s - pre_grace_s, last_time_s + post_grace_s);
+  }
+
+  return windows;
+}
+
+std::vector<std::pair<double, double>> merge_windows(std::vector<std::pair<double, double>> windows)
+{
+  if (windows.empty()) {
+    return windows;
+  }
+  std::sort(windows.begin(), windows.end(), [](const auto & lhs, const auto & rhs) {
+    return lhs.first < rhs.first;
+  });
+
+  std::vector<std::pair<double, double>> merged;
+  merged.push_back(windows.front());
+  for (std::size_t index = 1; index < windows.size(); ++index) {
+    auto & current = merged.back();
+    const auto & next_window = windows.at(index);
+    if (next_window.first <= current.second) {
+      current.second = std::max(current.second, next_window.second);
+    } else {
+      merged.push_back(next_window);
+    }
+  }
+  return merged;
+}
 
 /**
  * @brief Get velocity in world coordinate frame from trajectory point
@@ -230,7 +294,7 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     return metrics;
   }
 
-  calculate_history_comfort_metrics(trajectory, history_comfort_params, metrics);
+  calculate_history_comfort_metrics(*sync_data, history_comfort_params, metrics);
 
   const auto route_relevant_lanelets =
     route_handler && route_handler->isHandlerReady()
@@ -311,6 +375,24 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     metrics.traffic_light_compliance_reason = traffic_light_compliance.reason;
   }
 
+  const auto ego_progress = calculate_ego_progress(
+    sync_data->trajectory, route_handler,
+    {metrics.no_at_fault_collision, metrics.no_at_fault_collision_available},
+    {metrics.drivable_area_compliance, metrics.drivable_area_compliance_available},
+    {metrics.driving_direction_compliance, metrics.driving_direction_compliance_available},
+    {metrics.traffic_light_compliance, metrics.traffic_light_compliance_available},
+    route_relevant_lanelets.empty() ? nullptr : &route_relevant_lanelets);
+  metrics.ego_progress = ego_progress.score;
+  metrics.ego_progress_available = ego_progress.available;
+  metrics.ego_progress_reason = ego_progress.reason;
+  metrics.ego_progress_raw_m = ego_progress.raw_progress_m;
+  metrics.ego_progress_best_raw_m = ego_progress.best_raw_progress_m;
+  metrics.ego_progress_mask = ego_progress.multiplicative_mask;
+  metrics.ego_progress_denominator_m = ego_progress.denominator_m;
+  metrics.ego_progress_start_point = ego_progress.start_point;
+  metrics.ego_progress_end_point = ego_progress.end_point;
+  metrics.ego_progress_route_reference_points = ego_progress.route_reference_points;
+
   // Calculate TTC for each point (based on autoware_trajectory_ranker implementation)
   constexpr double max_ttc_value = 10.0;  // Maximum TTC value in seconds
   if (sync_data->objects) {
@@ -337,6 +419,13 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
 
   std::vector<LaneKeepingEvaluationPoint> lane_keeping_evaluation_points;
   lane_keeping_evaluation_points.reserve(num_points);
+  std::vector<std::pair<double, double>> lane_change_windows_s;
+
+  // Calculate travel distances once and reuse them in LK queue/creep logic.
+  for (size_t i = 0; i < num_points; ++i) {
+    metrics.travel_distances[i] =
+      autoware::motion_utils::calcSignedArcLength(trajectory.points, 0, i);
+  }
 
   // Calculate lateral deviation from the local route lane at each pose.
   if (!route_handler) {
@@ -350,18 +439,43 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
       if (!reference_lanelet.has_value()) {
         metrics.lateral_deviations[i] = std::numeric_limits<double>::quiet_NaN();
         lane_keeping_evaluation_points.push_back(
-          LaneKeepingEvaluationPoint{point.time_from_start, metrics.lateral_deviations[i], false});
+          LaneKeepingEvaluationPoint{
+            point.time_from_start, metrics.lateral_deviations[i], false,
+            std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps),
+            metrics.travel_distances[i]});
       } else {
         metrics.lateral_deviations[i] =
           autoware::experimental::lanelet2_utils::get_lateral_distance_to_centerline(
             reference_lanelet.value(), point.pose);
+        const auto local_context =
+          compute_driving_direction_local_context(point.pose, route_handler);
         lane_keeping_evaluation_points.push_back(
           LaneKeepingEvaluationPoint{
             point.time_from_start, metrics.lateral_deviations[i],
-            autoware::experimental::lanelet2_utils::is_intersection_lanelet(
-              reference_lanelet.value())});
+            local_context.has_value() && local_context->in_intersection,
+            std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps),
+            metrics.travel_distances[i]});
       }
     }
+
+    const auto trajectory_start_time = rclcpp::Time(sync_data->trajectory->header.stamp);
+    auto turn_windows = collect_signal_active_windows<TurnIndicatorsReport>(
+      sync_data->turn_indicators_history, trajectory_start_time,
+      [](const auto & msg) {
+        return msg.report == TurnIndicatorsReport::ENABLE_LEFT ||
+               msg.report == TurnIndicatorsReport::ENABLE_RIGHT;
+      },
+      lane_keeping_params.lane_change_pre_grace_time,
+      lane_keeping_params.lane_change_post_grace_time);
+    auto hazard_windows = collect_signal_active_windows<HazardLightsReport>(
+      sync_data->hazard_lights_history, trajectory_start_time,
+      [](const auto & msg) { return msg.report == HazardLightsReport::ENABLE; },
+      lane_keeping_params.lane_change_pre_grace_time,
+      lane_keeping_params.lane_change_post_grace_time);
+    turn_windows.insert(
+      turn_windows.end(), std::make_move_iterator(hazard_windows.begin()),
+      std::make_move_iterator(hazard_windows.end()));
+    lane_change_windows_s = merge_windows(std::move(turn_windows));
   }
   const auto has_finite_lane_keeping_sample = std::any_of(
     lane_keeping_evaluation_points.begin(), lane_keeping_evaluation_points.end(),
@@ -369,18 +483,12 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
       return std::isfinite(evaluation_point.lateral_deviation);
     });
   if (has_finite_lane_keeping_sample) {
-    metrics.lane_keeping =
-      calculate_lane_keeping_score(lane_keeping_evaluation_points, lane_keeping_params);
+    metrics.lane_keeping = calculate_lane_keeping_score(
+      lane_keeping_evaluation_points, lane_keeping_params, lane_change_windows_s);
     metrics.lane_keeping_available = true;
     metrics.lane_keeping_reason = "available";
   } else if (metrics.lane_keeping_reason == "unavailable") {
     metrics.lane_keeping_reason = "unavailable_no_reference_lanelet";
-  }
-
-  // Calculate travel distances using motion_utils
-  for (size_t i = 0; i < num_points; ++i) {
-    metrics.travel_distances[i] =
-      autoware::motion_utils::calcSignedArcLength(trajectory.points, 0, i);
   }
 
   return metrics;

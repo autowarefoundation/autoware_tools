@@ -23,6 +23,7 @@
 #include <autoware_perception_msgs/msg/traffic_light_group_array.hpp>
 #include <autoware_planning_msgs/msg/trajectory.hpp>
 #include <autoware_vehicle_msgs/msg/control_mode_report.hpp>
+#include <autoware_vehicle_msgs/msg/hazard_lights_report.hpp>
 #include <autoware_vehicle_msgs/msg/steering_report.hpp>
 #include <autoware_vehicle_msgs/msg/turn_indicators_report.hpp>
 #include <geometry_msgs/msg/accel_with_covariance_stamped.hpp>
@@ -47,6 +48,7 @@ using TrafficLightGroupArray = autoware_perception_msgs::msg::TrafficLightGroupA
 using AccelWithCovarianceStamped = geometry_msgs::msg::AccelWithCovarianceStamped;
 using SteeringReport = autoware_vehicle_msgs::msg::SteeringReport;
 using ControlModeReport = autoware_vehicle_msgs::msg::ControlModeReport;
+using HazardLightsReport = autoware_vehicle_msgs::msg::HazardLightsReport;
 using TurnIndicatorsReport = autoware_vehicle_msgs::msg::TurnIndicatorsReport;
 
 struct TimedTrackedObjects
@@ -66,9 +68,14 @@ struct SynchronizedData
   std::shared_ptr<SteeringReport> steering_status;
   std::shared_ptr<PredictedObjects> objects;
   std::shared_ptr<TrackedObjects> tracked_objects;
+  std::vector<std::shared_ptr<const Odometry>> kinematic_state_history;
+  std::vector<std::shared_ptr<const AccelWithCovarianceStamped>> acceleration_history;
   std::vector<TimedTrackedObjects> future_tracked_objects;
   std::shared_ptr<TrafficLightGroupArray> traffic_signals;
+  std::shared_ptr<HazardLightsReport> hazard_lights_status;
   std::shared_ptr<TurnIndicatorsReport> turn_indicators_status;
+  std::vector<std::shared_ptr<const HazardLightsReport>> hazard_lights_history;
+  std::vector<std::shared_ptr<const TurnIndicatorsReport>> turn_indicators_history;
   rclcpp::Time timestamp;
   rclcpp::Time bag_timestamp;
 };
@@ -87,6 +94,7 @@ struct TopicNames
   std::string tf_topic;
   std::string acceleration_topic;
   std::string steering_topic;
+  std::string hazard_lights_topic;
   std::string turn_indicators_topic;
   std::string control_mode_topic;
   double evaluation_interval_ms = 100.0;

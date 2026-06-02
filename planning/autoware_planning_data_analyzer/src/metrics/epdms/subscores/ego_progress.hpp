@@ -16,11 +16,15 @@
 #define METRICS__EPDMS__SUBSCORES__EGO_PROGRESS_HPP_
 
 #include "data_types.hpp"
+#include "metrics/metric_types.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 
+#include <lanelet2_core/primitives/Lanelet.h>
+
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -34,12 +38,19 @@ struct EgoProgressResult
   std::string reason{"unavailable"};
   double raw_progress_m{0.0};
   double best_raw_progress_m{0.0};
+  double multiplicative_mask{0.0};
+  double denominator_m{0.0};
+  geometry_msgs::msg::Point start_point;
+  geometry_msgs::msg::Point end_point;
+  std::vector<geometry_msgs::msg::Point> route_reference_points;
 };
 
 EgoProgressResult calculate_ego_progress(
   const std::shared_ptr<Trajectory> & selected_trajectory,
-  const std::shared_ptr<CandidateTrajectories> & candidate_trajectories,
-  const std::shared_ptr<RouteHandler> & route_handler);
+  const std::shared_ptr<RouteHandler> & route_handler, const MetricScore & no_at_fault_collision,
+  const MetricScore & drivable_area_compliance, const MetricScore & driving_direction_compliance,
+  const MetricScore & traffic_light_compliance,
+  const lanelet::ConstLanelets * route_relevant_lanelets = nullptr);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

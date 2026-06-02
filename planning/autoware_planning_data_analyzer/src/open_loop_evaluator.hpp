@@ -22,6 +22,7 @@
 #include "metrics/epdms/subscores/ego_progress.hpp"
 #include "metrics/epdms/subscores/extended_comfort.hpp"
 #include "metrics/epdms/subscores/lane_keeping.hpp"
+#include "metrics/evaluator/evaluator.hpp"
 #include "metrics/trajectory_metrics.hpp"
 #include "utils/override_windows.hpp"
 
@@ -73,7 +74,9 @@ struct OpenLoopTrajectoryMetrics
   std::vector<double> heading_errors;       // Absolute heading error at each trajectory point [rad]
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
   double history_comfort{0.0};              // Binary comfort subscore for the trajectory
-  double extended_comfort{0.0};             // Binary extended comfort subscore
+  bool history_comfort_available{false};
+  std::string history_comfort_reason{"unavailable"};
+  double extended_comfort{0.0};  // Binary extended comfort subscore
   bool extended_comfort_available{false};
   std::string extended_comfort_reason{"unavailable"};
   double time_to_collision_within_bound{0.0};
@@ -88,6 +91,8 @@ struct OpenLoopTrajectoryMetrics
   std::string ego_progress_reason{"unavailable"};
   double ego_progress_raw_m{0.0};
   double ego_progress_best_raw_m{0.0};
+  double ego_progress_mask{0.0};
+  double ego_progress_denominator_m{0.0};
   double drivable_area_compliance{0.0};  // Binary drivable area compliance subscore
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};
@@ -233,6 +238,11 @@ public:
   void set_control_mode_events(std::vector<utils::ControlModeEvent> events)
   {
     control_mode_events_ = std::move(events);
+  }
+
+  void set_evaluator_configs(const std::vector<metrics::evaluator::EvaluatorConfig> & configs)
+  {
+    evaluator_configs_ = configs;
   }
 
   nlohmann::json get_summary_as_json() const override;
@@ -414,6 +424,7 @@ private:
   // Reserved for the follow-up debug-topic PR. PR 425 only stores the runtime switch.
   std::vector<TimedTrackedObjects> object_timeline_;
   bool debug_topics_enabled_{false};
+  std::vector<metrics::evaluator::EvaluatorConfig> evaluator_configs_;
 };
 
 }  // namespace autoware::planning_data_analyzer
