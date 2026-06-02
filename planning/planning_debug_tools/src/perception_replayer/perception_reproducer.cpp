@@ -37,10 +37,10 @@ PerceptionReproducer::PerceptionReproducer(
 
   ego_odom_search_radius_ = param_.search_radius;
 
-  // subscription for /initialpose to refresh cool down
+  // subscription for /initialpose3d to refresh cool down and sync bag anchor
   sub_init_pos_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-    "/initialpose", 1,
-    std::bind(&PerceptionReproducer::on_initialpose, this, std::placeholders::_1));
+    "/initialpose3d", 1,
+    std::bind(&PerceptionReproducer::on_pose_reset, this, std::placeholders::_1));
 
   // calculate average ego odom interval
   RCLCPP_INFO(get_logger(), "Calculating average ego odom interval");
@@ -72,10 +72,9 @@ PerceptionReproducer::PerceptionReproducer(
   RCLCPP_INFO(get_logger(), "PerceptionReproducer initialization completed");
 }
 
-void PerceptionReproducer::on_initialpose(
+void PerceptionReproducer::on_pose_reset(
   const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg)
 {
-  (void)msg;
   cool_down_indices_.clear();
 
   last_sequenced_ego_pose_.reset();
@@ -85,7 +84,7 @@ void PerceptionReproducer::on_initialpose(
     last_published_timestamp_ = rosbag_ego_odom_data_[nearest_ego_odom_idx].first;
   }
 
-  RCLCPP_INFO(get_logger(), "Cool down indices and last sequenced pose cleared by /initialpose");
+  RCLCPP_INFO(get_logger(), "Cool down indices and last sequenced pose cleared by /initialpose3d");
 }
 
 void PerceptionReproducer::on_timer()
@@ -198,6 +197,14 @@ void PerceptionReproducer::on_timer()
       cool_down_indices_.push_back(ego_odom_idx);
 
       return pose_timestamp;
+    }
+
+    if (!last_published_timestamp_.has_value()) {
+      const auto idx = find_nearest_ego_odom_index(ego_pose);
+      last_published_timestamp_ = rosbag_ego_odom_data_[idx].first;
+      RCLCPP_INFO(
+        get_logger(), "Seeded bag timestamp from ego pose (idx=%zu, t=%.3f)", idx,
+        last_published_timestamp_->seconds());
     }
 
     return last_published_timestamp_;
