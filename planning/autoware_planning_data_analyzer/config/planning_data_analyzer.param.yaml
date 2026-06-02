@@ -44,6 +44,8 @@
       # [] and ["all"] both mean all metrics. Do not combine "all" with other names.
       # Set this to a subset such as ["nc", "dac", "ttc"] to write only those metric topics.
       enabled_metrics: ["all"]
+      # Set false to skip all EPDMS subscore/aggregation calculation and related topic generation.
+      calculate_epdms: true
       # Debug visualization topics are expensive and disabled by default.
       # This switch is reserved for the follow-up debug-topic PR.
       debug_topics_enabled: false

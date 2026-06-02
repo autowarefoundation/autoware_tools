@@ -434,7 +434,8 @@ void OpenLoopEvaluator::set_enabled_metrics(const std::vector<std::string> & ena
 
 bool OpenLoopEvaluator::should_write_synthetic_epdms() const
 {
-  return enabled_metrics_.synthetic_epdms && all_epdms_inputs_enabled(enabled_metrics_);
+  return calculate_epdms_ && enabled_metrics_.synthetic_epdms &&
+         all_epdms_inputs_enabled(enabled_metrics_);
 }
 
 void OpenLoopEvaluator::evaluate(
@@ -483,13 +484,15 @@ void OpenLoopEvaluator::evaluate(
   // Pre-allocate member vectors to avoid reallocations and copies from temporary results.
   const auto total_samples = evaluation_data_list.size();
   metrics_list_.resize(total_samples);
-  trajectory_point_metrics_list_.resize(total_samples);
-  human_filter_metrics_list_.resize(total_samples);
-  synthetic_epdms_metrics_list_.resize(total_samples);
+  if (calculate_epdms_) {
+    trajectory_point_metrics_list_.resize(total_samples);
+    human_filter_metrics_list_.resize(total_samples);
+    synthetic_epdms_metrics_list_.resize(total_samples);
+  }
 
   // Snapshot vector for EPDMS calculation between parallel phases.
   // This is much smaller than the full trajectory metrics.
-  std::vector<metrics::EpdmsMetricSnapshot> human_snapshots(total_samples);
+  std::vector<metrics::EpdmsMetricSnapshot> human_snapshots(calculate_epdms_ ? total_samples : 0U);
 
   const auto worker_count = resolve_parallel_worker_count(total_samples);
   constexpr std::size_t kProgressLogInterval = 1000U;
@@ -522,65 +525,67 @@ void OpenLoopEvaluator::evaluate(
 
       try {
         const auto & eval_data = evaluation_data_list[i];
-        const auto future_objects =
-          eval_data.synchronized_data && eval_data.synchronized_data->trajectory
-            ? metrics::get_future_objects_for_trajectory(
-                *eval_data.synchronized_data->trajectory, object_timeline_,
-                trajectory_evaluation_horizon_s_)
-            : std::vector<TimedTrackedObjects>{};
-        auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
-          eval_data.synchronized_data, route_handler_, history_comfort_params_,
-          lane_keeping_params_, driving_direction_params_, vehicle_info_, future_objects);
         auto metrics = evaluate_trajectory(eval_data);
-        metrics.history_comfort = trajectory_metrics.history_comfort;
-        metrics.history_comfort_available = trajectory_metrics.history_comfort_available;
-        metrics.history_comfort_reason = trajectory_metrics.history_comfort_reason;
-        metrics.time_to_collision_within_bound = trajectory_metrics.time_to_collision_within_bound;
-        metrics.time_to_collision_within_bound_available =
-          trajectory_metrics.time_to_collision_within_bound_available;
-        metrics.time_to_collision_within_bound_reason =
-          trajectory_metrics.time_to_collision_within_bound_reason;
-        metrics.time_to_collision_infraction_time_s =
-          trajectory_metrics.time_to_collision_infraction_time_s;
-        metrics.lane_keeping = trajectory_metrics.lane_keeping;
-        metrics.lane_keeping_available = trajectory_metrics.lane_keeping_available;
-        metrics.lane_keeping_reason = trajectory_metrics.lane_keeping_reason;
-        metrics.ego_progress = trajectory_metrics.ego_progress;
-        metrics.ego_progress_available = trajectory_metrics.ego_progress_available;
-        metrics.ego_progress_reason = trajectory_metrics.ego_progress_reason;
-        metrics.ego_progress_raw_m = trajectory_metrics.ego_progress_raw_m;
-        metrics.ego_progress_best_raw_m = trajectory_metrics.ego_progress_best_raw_m;
-        metrics.ego_progress_mask = trajectory_metrics.ego_progress_mask;
-        metrics.ego_progress_denominator_m = trajectory_metrics.ego_progress_denominator_m;
-        metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
-        metrics.drivable_area_compliance_available =
-          trajectory_metrics.drivable_area_compliance_available;
-        metrics.drivable_area_compliance_reason =
-          trajectory_metrics.drivable_area_compliance_reason;
-        metrics.no_at_fault_collision = trajectory_metrics.no_at_fault_collision;
-        metrics.no_at_fault_collision_available =
-          trajectory_metrics.no_at_fault_collision_available;
-        metrics.no_at_fault_collision_reason = trajectory_metrics.no_at_fault_collision_reason;
-        metrics.time_to_at_fault_collision_s = trajectory_metrics.time_to_at_fault_collision_s;
-        metrics.driving_direction_compliance = trajectory_metrics.driving_direction_compliance;
-        metrics.driving_direction_compliance_available =
-          trajectory_metrics.driving_direction_compliance_available;
-        metrics.driving_direction_compliance_reason =
-          trajectory_metrics.driving_direction_compliance_reason;
-        metrics.max_oncoming_progress_m = trajectory_metrics.max_oncoming_progress_m;
-        metrics.traffic_light_compliance = trajectory_metrics.traffic_light_compliance;
-        metrics.traffic_light_compliance_available =
-          trajectory_metrics.traffic_light_compliance_available;
-        metrics.traffic_light_compliance_reason =
-          trajectory_metrics.traffic_light_compliance_reason;
+        if (calculate_epdms_) {
+          const auto future_objects =
+            eval_data.synchronized_data && eval_data.synchronized_data->trajectory
+              ? metrics::get_future_objects_for_trajectory(
+                  *eval_data.synchronized_data->trajectory, object_timeline_,
+                  trajectory_evaluation_horizon_s_)
+              : std::vector<TimedTrackedObjects>{};
+          auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
+            eval_data.synchronized_data, route_handler_, history_comfort_params_,
+            lane_keeping_params_, driving_direction_params_, vehicle_info_, future_objects);
+          metrics.history_comfort = trajectory_metrics.history_comfort;
+          metrics.history_comfort_available = trajectory_metrics.history_comfort_available;
+          metrics.history_comfort_reason = trajectory_metrics.history_comfort_reason;
+          metrics.time_to_collision_within_bound =
+            trajectory_metrics.time_to_collision_within_bound;
+          metrics.time_to_collision_within_bound_available =
+            trajectory_metrics.time_to_collision_within_bound_available;
+          metrics.time_to_collision_within_bound_reason =
+            trajectory_metrics.time_to_collision_within_bound_reason;
+          metrics.time_to_collision_infraction_time_s =
+            trajectory_metrics.time_to_collision_infraction_time_s;
+          metrics.lane_keeping = trajectory_metrics.lane_keeping;
+          metrics.lane_keeping_available = trajectory_metrics.lane_keeping_available;
+          metrics.lane_keeping_reason = trajectory_metrics.lane_keeping_reason;
+          metrics.ego_progress = trajectory_metrics.ego_progress;
+          metrics.ego_progress_available = trajectory_metrics.ego_progress_available;
+          metrics.ego_progress_reason = trajectory_metrics.ego_progress_reason;
+          metrics.ego_progress_raw_m = trajectory_metrics.ego_progress_raw_m;
+          metrics.ego_progress_best_raw_m = trajectory_metrics.ego_progress_best_raw_m;
+          metrics.ego_progress_mask = trajectory_metrics.ego_progress_mask;
+          metrics.ego_progress_denominator_m = trajectory_metrics.ego_progress_denominator_m;
+          metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
+          metrics.drivable_area_compliance_available =
+            trajectory_metrics.drivable_area_compliance_available;
+          metrics.drivable_area_compliance_reason =
+            trajectory_metrics.drivable_area_compliance_reason;
+          metrics.no_at_fault_collision = trajectory_metrics.no_at_fault_collision;
+          metrics.no_at_fault_collision_available =
+            trajectory_metrics.no_at_fault_collision_available;
+          metrics.no_at_fault_collision_reason = trajectory_metrics.no_at_fault_collision_reason;
+          metrics.time_to_at_fault_collision_s = trajectory_metrics.time_to_at_fault_collision_s;
+          metrics.driving_direction_compliance = trajectory_metrics.driving_direction_compliance;
+          metrics.driving_direction_compliance_available =
+            trajectory_metrics.driving_direction_compliance_available;
+          metrics.driving_direction_compliance_reason =
+            trajectory_metrics.driving_direction_compliance_reason;
+          metrics.max_oncoming_progress_m = trajectory_metrics.max_oncoming_progress_m;
+          metrics.traffic_light_compliance = trajectory_metrics.traffic_light_compliance;
+          metrics.traffic_light_compliance_available =
+            trajectory_metrics.traffic_light_compliance_available;
+          metrics.traffic_light_compliance_reason =
+            trajectory_metrics.traffic_light_compliance_reason;
 
-        auto human_snapshot = calculate_human_reference_snapshot(
-          eval_data, route_handler_, history_comfort_params_, lane_keeping_params_,
-          driving_direction_params_, vehicle_info_);
+          trajectory_point_metrics_list_[i] = std::move(trajectory_metrics);
+          human_snapshots[i] = calculate_human_reference_snapshot(
+            eval_data, route_handler_, history_comfort_params_, lane_keeping_params_,
+            driving_direction_params_, vehicle_info_);
+        }
 
         metrics_list_[i] = std::move(metrics);
-        trajectory_point_metrics_list_[i] = std::move(trajectory_metrics);
-        human_snapshots[i] = std::move(human_snapshot);
 
         const auto processed = phase1_processed.fetch_add(1U) + 1U;
         if (processed % kProgressLogInterval == 0U || processed == total_samples) {
@@ -614,6 +619,22 @@ void OpenLoopEvaluator::evaluate(
   RCLCPP_INFO(
     logger_, "Parallel phase 1 finished: processed %zu trajectory samples",
     phase1_processed.load());
+
+  if (!calculate_epdms_) {
+    RCLCPP_INFO(logger_, "Skipping EPDMS phase: open_loop.calculate_epdms is false");
+    RCLCPP_INFO(logger_, "Sequential output phase started: bag writing and summary aggregation");
+    for (std::size_t i = 0; i < total_samples; ++i) {
+      if (bag_writer) {
+        save_metrics_to_bag(
+          metrics_list_[i], metrics::SyntheticEpdmsMetrics{}, evaluation_data_list[i], *bag_writer);
+      }
+    }
+    calculate_summary();
+    RCLCPP_INFO(
+      logger_, "Open-loop evaluation finished: processed %zu trajectory samples",
+      evaluation_data_list.size());
+    return;
+  }
 
   std::atomic<std::size_t> finalize_next_index{0U};
   std::atomic<std::size_t> phase2_processed{0U};
@@ -1322,138 +1343,143 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   write_array(
     enabled_metrics_.trajectory_errors, metrics.longitudinal_deviations,
     metric_topic("longitudinal_deviation"));
-  write_array(enabled_metrics_.time_to_collision_within_bound, metrics.ttc, metric_topic("ttc"));
+  write_array(
+    calculate_epdms_ && enabled_metrics_.time_to_collision_within_bound, metrics.ttc,
+    metric_topic("ttc"));
 
-  std_msgs::msg::Float64 scalar_msg;
-  const auto write_scalar =
-    [&](const bool enabled, const double value, const std::string & topic_name) {
-      if (!enabled) {
-        return;
-      }
-      scalar_msg.data = value;
-      bag_writer.write(scalar_msg, topic_name, message_timestamp);
-    };
-  const bool write_synthetic_epdms = should_write_synthetic_epdms();
+  if (calculate_epdms_) {
+    std_msgs::msg::Float64 scalar_msg;
+    const auto write_scalar =
+      [&](const bool enabled, const double value, const std::string & topic_name) {
+        if (!enabled) {
+          return;
+        }
+        scalar_msg.data = value;
+        bag_writer.write(scalar_msg, topic_name, message_timestamp);
+      };
+    const bool write_synthetic_epdms = should_write_synthetic_epdms();
 
-  write_scalar(
-    enabled_metrics_.history_comfort, metrics.history_comfort,
-    epdms_metric_topic("history_comfort"));
-  write_scalar(
-    enabled_metrics_.extended_comfort, metrics.extended_comfort,
-    epdms_metric_topic("extended_comfort"));
-  write_scalar(
-    enabled_metrics_.time_to_collision_within_bound, metrics.time_to_collision_within_bound,
-    epdms_metric_topic("time_to_collision_within_bound"));
-  write_scalar(
-    enabled_metrics_.lane_keeping, metrics.lane_keeping, epdms_metric_topic("lane_keeping"));
-  write_scalar(
-    enabled_metrics_.ego_progress, metrics.ego_progress, epdms_metric_topic("ego_progress"));
-  write_scalar(
-    enabled_metrics_.drivable_area_compliance, metrics.drivable_area_compliance,
-    epdms_metric_topic("drivable_area_compliance"));
-  write_scalar(
-    enabled_metrics_.no_at_fault_collision, metrics.no_at_fault_collision,
-    epdms_metric_topic("no_at_fault_collision"));
-  write_scalar(
-    enabled_metrics_.no_at_fault_collision, metrics.time_to_at_fault_collision_s,
-    epdms_metric_topic("time_to_at_fault_collision_s"));
-  write_scalar(
-    enabled_metrics_.driving_direction_compliance, metrics.driving_direction_compliance,
-    epdms_metric_topic("driving_direction_compliance"));
-  write_scalar(
-    enabled_metrics_.driving_direction_compliance, metrics.max_oncoming_progress_m,
-    epdms_metric_topic("max_oncoming_progress_m"));
-  write_scalar(
-    enabled_metrics_.traffic_light_compliance, metrics.traffic_light_compliance,
-    epdms_metric_topic("traffic_light_compliance"));
-  write_scalar(
-    write_synthetic_epdms, synthetic_epdms.raw.epdms, epdms_metric_topic("synthetic_epdms_raw"));
-  write_scalar(
-    write_synthetic_epdms, synthetic_epdms.human_filtered.epdms,
-    epdms_metric_topic("synthetic_epdms_human_filtered"));
+    write_scalar(
+      enabled_metrics_.history_comfort, metrics.history_comfort,
+      epdms_metric_topic("history_comfort"));
+    write_scalar(
+      enabled_metrics_.extended_comfort, metrics.extended_comfort,
+      epdms_metric_topic("extended_comfort"));
+    write_scalar(
+      enabled_metrics_.time_to_collision_within_bound, metrics.time_to_collision_within_bound,
+      epdms_metric_topic("time_to_collision_within_bound"));
+    write_scalar(
+      enabled_metrics_.lane_keeping, metrics.lane_keeping, epdms_metric_topic("lane_keeping"));
+    write_scalar(
+      enabled_metrics_.ego_progress, metrics.ego_progress, epdms_metric_topic("ego_progress"));
+    write_scalar(
+      enabled_metrics_.drivable_area_compliance, metrics.drivable_area_compliance,
+      epdms_metric_topic("drivable_area_compliance"));
+    write_scalar(
+      enabled_metrics_.no_at_fault_collision, metrics.no_at_fault_collision,
+      epdms_metric_topic("no_at_fault_collision"));
+    write_scalar(
+      enabled_metrics_.no_at_fault_collision, metrics.time_to_at_fault_collision_s,
+      epdms_metric_topic("time_to_at_fault_collision_s"));
+    write_scalar(
+      enabled_metrics_.driving_direction_compliance, metrics.driving_direction_compliance,
+      epdms_metric_topic("driving_direction_compliance"));
+    write_scalar(
+      enabled_metrics_.driving_direction_compliance, metrics.max_oncoming_progress_m,
+      epdms_metric_topic("max_oncoming_progress_m"));
+    write_scalar(
+      enabled_metrics_.traffic_light_compliance, metrics.traffic_light_compliance,
+      epdms_metric_topic("traffic_light_compliance"));
+    write_scalar(
+      write_synthetic_epdms, synthetic_epdms.raw.epdms, epdms_metric_topic("synthetic_epdms_raw"));
+    write_scalar(
+      write_synthetic_epdms, synthetic_epdms.human_filtered.epdms,
+      epdms_metric_topic("synthetic_epdms_human_filtered"));
 
-  std_msgs::msg::Bool availability_msg;
-  const auto write_availability =
-    [&](const bool enabled, const bool value, const std::string & topic_name) {
-      if (!enabled) {
-        return;
-      }
-      availability_msg.data = value;
-      bag_writer.write(availability_msg, topic_name, message_timestamp);
-    };
+    std_msgs::msg::Bool availability_msg;
+    const auto write_availability =
+      [&](const bool enabled, const bool value, const std::string & topic_name) {
+        if (!enabled) {
+          return;
+        }
+        availability_msg.data = value;
+        bag_writer.write(availability_msg, topic_name, message_timestamp);
+      };
 
-  write_availability(
-    enabled_metrics_.history_comfort, metrics.history_comfort_available,
-    epdms_metric_topic("history_comfort_available"));
-  write_availability(
-    enabled_metrics_.extended_comfort, metrics.extended_comfort_available,
-    epdms_metric_topic("extended_comfort_available"));
-  write_availability(
-    enabled_metrics_.lane_keeping, metrics.lane_keeping_available,
-    epdms_metric_topic("lane_keeping_available"));
-  write_availability(
-    enabled_metrics_.time_to_collision_within_bound,
-    metrics.time_to_collision_within_bound_available,
-    epdms_metric_topic("time_to_collision_within_bound_available"));
-  write_availability(
-    enabled_metrics_.ego_progress, metrics.ego_progress_available,
-    epdms_metric_topic("ego_progress_available"));
-  write_availability(
-    enabled_metrics_.drivable_area_compliance, metrics.drivable_area_compliance_available,
-    epdms_metric_topic("drivable_area_compliance_available"));
-  write_availability(
-    enabled_metrics_.no_at_fault_collision, metrics.no_at_fault_collision_available,
-    epdms_metric_topic("no_at_fault_collision_available"));
-  write_availability(
-    enabled_metrics_.driving_direction_compliance, metrics.driving_direction_compliance_available,
-    epdms_metric_topic("driving_direction_compliance_available"));
-  write_availability(
-    enabled_metrics_.traffic_light_compliance, metrics.traffic_light_compliance_available,
-    epdms_metric_topic("traffic_light_compliance_available"));
-  write_availability(
-    write_synthetic_epdms, synthetic_epdms.raw.available,
-    epdms_metric_topic("synthetic_epdms_raw_available"));
-  write_availability(
-    write_synthetic_epdms, synthetic_epdms.human_filtered.available,
-    epdms_metric_topic("synthetic_epdms_human_filtered_available"));
+    write_availability(
+      enabled_metrics_.history_comfort, metrics.history_comfort_available,
+      epdms_metric_topic("history_comfort_available"));
+    write_availability(
+      enabled_metrics_.extended_comfort, metrics.extended_comfort_available,
+      epdms_metric_topic("extended_comfort_available"));
+    write_availability(
+      enabled_metrics_.lane_keeping, metrics.lane_keeping_available,
+      epdms_metric_topic("lane_keeping_available"));
+    write_availability(
+      enabled_metrics_.time_to_collision_within_bound,
+      metrics.time_to_collision_within_bound_available,
+      epdms_metric_topic("time_to_collision_within_bound_available"));
+    write_availability(
+      enabled_metrics_.ego_progress, metrics.ego_progress_available,
+      epdms_metric_topic("ego_progress_available"));
+    write_availability(
+      enabled_metrics_.drivable_area_compliance, metrics.drivable_area_compliance_available,
+      epdms_metric_topic("drivable_area_compliance_available"));
+    write_availability(
+      enabled_metrics_.no_at_fault_collision, metrics.no_at_fault_collision_available,
+      epdms_metric_topic("no_at_fault_collision_available"));
+    write_availability(
+      enabled_metrics_.driving_direction_compliance, metrics.driving_direction_compliance_available,
+      epdms_metric_topic("driving_direction_compliance_available"));
+    write_availability(
+      enabled_metrics_.traffic_light_compliance, metrics.traffic_light_compliance_available,
+      epdms_metric_topic("traffic_light_compliance_available"));
+    write_availability(
+      write_synthetic_epdms, synthetic_epdms.raw.available,
+      epdms_metric_topic("synthetic_epdms_raw_available"));
+    write_availability(
+      write_synthetic_epdms, synthetic_epdms.human_filtered.available,
+      epdms_metric_topic("synthetic_epdms_human_filtered_available"));
 
-  std_msgs::msg::String reason_msg;
-  const auto write_reason =
-    [&](const bool enabled, const std::string & value, const std::string & topic_name) {
-      if (!enabled) {
-        return;
-      }
-      reason_msg.data = value;
-      bag_writer.write(reason_msg, topic_name, message_timestamp);
-    };
+    std_msgs::msg::String reason_msg;
+    const auto write_reason =
+      [&](const bool enabled, const std::string & value, const std::string & topic_name) {
+        if (!enabled) {
+          return;
+        }
+        reason_msg.data = value;
+        bag_writer.write(reason_msg, topic_name, message_timestamp);
+      };
 
-  write_reason(
-    enabled_metrics_.history_comfort, metrics.history_comfort_reason,
-    epdms_metric_topic("history_comfort_reason"));
-  write_reason(
-    enabled_metrics_.extended_comfort, metrics.extended_comfort_reason,
-    epdms_metric_topic("extended_comfort_reason"));
-  write_reason(
-    enabled_metrics_.time_to_collision_within_bound, metrics.time_to_collision_within_bound_reason,
-    epdms_metric_topic("time_to_collision_within_bound_reason"));
-  write_reason(
-    enabled_metrics_.ego_progress, metrics.ego_progress_reason,
-    epdms_metric_topic("ego_progress_reason"));
-  write_reason(
-    enabled_metrics_.lane_keeping, metrics.lane_keeping_reason,
-    epdms_metric_topic("lane_keeping_reason"));
-  write_reason(
-    enabled_metrics_.drivable_area_compliance, metrics.drivable_area_compliance_reason,
-    epdms_metric_topic("drivable_area_compliance_reason"));
-  write_reason(
-    enabled_metrics_.no_at_fault_collision, metrics.no_at_fault_collision_reason,
-    epdms_metric_topic("no_at_fault_collision_reason"));
-  write_reason(
-    enabled_metrics_.driving_direction_compliance, metrics.driving_direction_compliance_reason,
-    epdms_metric_topic("driving_direction_compliance_reason"));
-  write_reason(
-    enabled_metrics_.traffic_light_compliance, metrics.traffic_light_compliance_reason,
-    epdms_metric_topic("traffic_light_compliance_reason"));
+    write_reason(
+      enabled_metrics_.history_comfort, metrics.history_comfort_reason,
+      epdms_metric_topic("history_comfort_reason"));
+    write_reason(
+      enabled_metrics_.extended_comfort, metrics.extended_comfort_reason,
+      epdms_metric_topic("extended_comfort_reason"));
+    write_reason(
+      enabled_metrics_.time_to_collision_within_bound,
+      metrics.time_to_collision_within_bound_reason,
+      epdms_metric_topic("time_to_collision_within_bound_reason"));
+    write_reason(
+      enabled_metrics_.ego_progress, metrics.ego_progress_reason,
+      epdms_metric_topic("ego_progress_reason"));
+    write_reason(
+      enabled_metrics_.lane_keeping, metrics.lane_keeping_reason,
+      epdms_metric_topic("lane_keeping_reason"));
+    write_reason(
+      enabled_metrics_.drivable_area_compliance, metrics.drivable_area_compliance_reason,
+      epdms_metric_topic("drivable_area_compliance_reason"));
+    write_reason(
+      enabled_metrics_.no_at_fault_collision, metrics.no_at_fault_collision_reason,
+      epdms_metric_topic("no_at_fault_collision_reason"));
+    write_reason(
+      enabled_metrics_.driving_direction_compliance, metrics.driving_direction_compliance_reason,
+      epdms_metric_topic("driving_direction_compliance_reason"));
+    write_reason(
+      enabled_metrics_.traffic_light_compliance, metrics.traffic_light_compliance_reason,
+      epdms_metric_topic("traffic_light_compliance_reason"));
+  }
 
   save_dlr_style_result_to_bag(metrics, eval_data, bag_writer);
 
@@ -1470,6 +1496,10 @@ void OpenLoopEvaluator::save_trajectory_point_metrics_to_bag_with_variant(
   const metrics::TrajectoryPointMetrics & metrics, rosbag2_cpp::Writer & bag_writer,
   const rclcpp::Time & normalized_timestamp) const
 {
+  if (!calculate_epdms_) {
+    return;
+  }
+
   const auto write_array =
     [&](const bool enabled, const std::vector<double> & data, const std::string & topic_name) {
       if (!enabled) {
@@ -1680,351 +1710,356 @@ nlohmann::json OpenLoopEvaluator::get_summary_as_json() const
       tag, "min_ttc", "Minimum Time To Collision within " + tag + " horizon [s]", min_ttc_vals);
   }
 
-  std::vector<double> history_comfort_values;
-  history_comfort_values.reserve(metrics_list_.size());
-  std::size_t history_comfort_available_count = 0;
-  std::map<std::string, std::size_t> history_comfort_reason_counts;
-  for (const auto & m : metrics_list_) {
-    ++history_comfort_reason_counts[m.history_comfort_reason];
-    if (m.history_comfort_available) {
-      history_comfort_values.push_back(m.history_comfort);
-      ++history_comfort_available_count;
-    }
-  }
-  emit_metric(
-    "aggregate", "history_comfort", "Binary history comfort subscore across trajectories [-]",
-    history_comfort_values);
-  j["aggregate/history_comfort_available_count"] = history_comfort_available_count;
-  j["aggregate/history_comfort_unavailable_count"] =
-    metrics_list_.size() - history_comfort_available_count;
-  j["aggregate/history_comfort_reason_counts"] = history_comfort_reason_counts;
-  std::vector<double> extended_comfort_values;
-  extended_comfort_values.reserve(metrics_list_.size());
-  std::size_t extended_comfort_available_count = 0;
-  std::map<std::string, std::size_t> extended_comfort_reason_counts;
-  for (const auto & m : metrics_list_) {
-    ++extended_comfort_reason_counts[m.extended_comfort_reason];
-    if (m.extended_comfort_available) {
-      extended_comfort_values.push_back(m.extended_comfort);
-      ++extended_comfort_available_count;
-    }
-  }
-  emit_metric(
-    "aggregate", "extended_comfort",
-    "Binary extended comfort subscore across consecutive trajectories [-]",
-    extended_comfort_values);
-  j["aggregate/extended_comfort_available_count"] = extended_comfort_available_count;
-  j["aggregate/extended_comfort_unavailable_count"] =
-    metrics_list_.size() - extended_comfort_available_count;
-  j["aggregate/extended_comfort_reason_counts"] = extended_comfort_reason_counts;
-  std::vector<double> time_to_collision_within_bound_values;
-  time_to_collision_within_bound_values.reserve(metrics_list_.size());
-  std::size_t time_to_collision_within_bound_available_count = 0;
-  std::map<std::string, std::size_t> time_to_collision_within_bound_reason_counts;
-  for (const auto & m : metrics_list_) {
-    ++time_to_collision_within_bound_reason_counts[m.time_to_collision_within_bound_reason];
-    if (m.time_to_collision_within_bound_available) {
-      time_to_collision_within_bound_values.push_back(m.time_to_collision_within_bound);
-      ++time_to_collision_within_bound_available_count;
-    }
-  }
-  emit_metric(
-    "aggregate", "time_to_collision_within_bound",
-    "Binary TTC-within-bound subscore across trajectories [-]",
-    time_to_collision_within_bound_values);
-  j["aggregate/time_to_collision_within_bound_available_count"] =
-    time_to_collision_within_bound_available_count;
-  j["aggregate/time_to_collision_within_bound_unavailable_count"] =
-    metrics_list_.size() - time_to_collision_within_bound_available_count;
-  j["aggregate/time_to_collision_within_bound_reason_counts"] =
-    time_to_collision_within_bound_reason_counts;
-  std::vector<double> lane_keeping_values;
-  lane_keeping_values.reserve(metrics_list_.size());
-  std::size_t lane_keeping_available_count = 0;
-  std::map<std::string, std::size_t> lane_keeping_reason_counts;
-  for (const auto & m : metrics_list_) {
-    ++lane_keeping_reason_counts[m.lane_keeping_reason];
-    if (m.lane_keeping_available) {
-      lane_keeping_values.push_back(m.lane_keeping);
-      ++lane_keeping_available_count;
-    }
-  }
-  emit_metric(
-    "aggregate", "lane_keeping", "Binary lane keeping subscore across trajectories [-]",
-    lane_keeping_values);
-  j["aggregate/lane_keeping_available_count"] = lane_keeping_available_count;
-  j["aggregate/lane_keeping_unavailable_count"] =
-    metrics_list_.size() - lane_keeping_available_count;
-  j["aggregate/lane_keeping_reason_counts"] = lane_keeping_reason_counts;
-  std::vector<double> ego_progress_values;
-  ego_progress_values.reserve(metrics_list_.size());
-  std::size_t ego_progress_available_count = 0;
-  std::map<std::string, std::size_t> ego_progress_reason_counts;
-  for (const auto & m : metrics_list_) {
-    ++ego_progress_reason_counts[m.ego_progress_reason];
-    if (m.ego_progress_available) {
-      ego_progress_values.push_back(m.ego_progress);
-      ++ego_progress_available_count;
-    }
-  }
-  emit_metric(
-    "aggregate", "ego_progress", "Proposal-relative ego progress subscore across trajectories [-]",
-    ego_progress_values);
-  j["aggregate/ego_progress_available_count"] = ego_progress_available_count;
-  j["aggregate/ego_progress_unavailable_count"] =
-    metrics_list_.size() - ego_progress_available_count;
-  j["aggregate/ego_progress_reason_counts"] = ego_progress_reason_counts;
-  std::vector<double> drivable_area_compliance_values;
-  drivable_area_compliance_values.reserve(metrics_list_.size());
-  std::size_t drivable_area_compliance_available_count = 0;
-  std::map<std::string, std::size_t> drivable_area_compliance_reason_counts;
-  for (const auto & m : metrics_list_) {
-    ++drivable_area_compliance_reason_counts[m.drivable_area_compliance_reason];
-    if (m.drivable_area_compliance_available) {
-      drivable_area_compliance_values.push_back(m.drivable_area_compliance);
-      ++drivable_area_compliance_available_count;
-    }
-  }
-  emit_metric(
-    "aggregate", "drivable_area_compliance",
-    "Binary drivable area compliance subscore across trajectories [-]",
-    drivable_area_compliance_values);
-  j["aggregate/drivable_area_compliance_available_count"] =
-    drivable_area_compliance_available_count;
-  j["aggregate/drivable_area_compliance_unavailable_count"] =
-    metrics_list_.size() - drivable_area_compliance_available_count;
-  j["aggregate/drivable_area_compliance_reason_counts"] = drivable_area_compliance_reason_counts;
-  std::vector<double> no_at_fault_collision_values;
-  std::vector<double> time_to_at_fault_collision_values;
-  no_at_fault_collision_values.reserve(metrics_list_.size());
-  time_to_at_fault_collision_values.reserve(metrics_list_.size());
-  std::size_t no_at_fault_collision_available_count = 0;
-  std::map<std::string, std::size_t> no_at_fault_collision_reason_counts;
-  for (const auto & m : metrics_list_) {
-    ++no_at_fault_collision_reason_counts[m.no_at_fault_collision_reason];
-    if (m.no_at_fault_collision_available) {
-      no_at_fault_collision_values.push_back(m.no_at_fault_collision);
-      ++no_at_fault_collision_available_count;
-      if (std::isfinite(m.time_to_at_fault_collision_s)) {
-        time_to_at_fault_collision_values.push_back(m.time_to_at_fault_collision_s);
+  if (calculate_epdms_) {
+    std::vector<double> history_comfort_values;
+    history_comfort_values.reserve(metrics_list_.size());
+    std::size_t history_comfort_available_count = 0;
+    std::map<std::string, std::size_t> history_comfort_reason_counts;
+    for (const auto & m : metrics_list_) {
+      ++history_comfort_reason_counts[m.history_comfort_reason];
+      if (m.history_comfort_available) {
+        history_comfort_values.push_back(m.history_comfort);
+        ++history_comfort_available_count;
       }
     }
-  }
-  emit_metric(
-    "aggregate", "no_at_fault_collision",
-    "NAVSIM-style no-at-fault-collision subscore across trajectories [-]",
-    no_at_fault_collision_values);
-  emit_metric(
-    "aggregate", "time_to_at_fault_collision_s",
-    "Time to first at-fault collision across trajectories [s]", time_to_at_fault_collision_values);
-  j["aggregate/no_at_fault_collision_available_count"] = no_at_fault_collision_available_count;
-  j["aggregate/no_at_fault_collision_unavailable_count"] =
-    metrics_list_.size() - no_at_fault_collision_available_count;
-  j["aggregate/no_at_fault_collision_reason_counts"] = no_at_fault_collision_reason_counts;
-  std::vector<double> driving_direction_compliance_values;
-  std::vector<double> max_oncoming_progress_values;
-  driving_direction_compliance_values.reserve(metrics_list_.size());
-  max_oncoming_progress_values.reserve(metrics_list_.size());
-  std::size_t driving_direction_compliance_available_count = 0;
-  std::map<std::string, std::size_t> driving_direction_compliance_reason_counts;
-  for (const auto & m : metrics_list_) {
-    ++driving_direction_compliance_reason_counts[m.driving_direction_compliance_reason];
-    if (m.driving_direction_compliance_available) {
-      driving_direction_compliance_values.push_back(m.driving_direction_compliance);
-      max_oncoming_progress_values.push_back(m.max_oncoming_progress_m);
-      ++driving_direction_compliance_available_count;
-    }
-  }
-  emit_metric(
-    "aggregate", "driving_direction_compliance",
-    "NAVSIM-style driving direction compliance subscore across trajectories [-]",
-    driving_direction_compliance_values);
-  emit_metric(
-    "aggregate", "max_oncoming_progress_m",
-    "Maximum rolling 1s oncoming progress across trajectories [m]", max_oncoming_progress_values);
-  j["aggregate/driving_direction_compliance_available_count"] =
-    driving_direction_compliance_available_count;
-  j["aggregate/driving_direction_compliance_unavailable_count"] =
-    metrics_list_.size() - driving_direction_compliance_available_count;
-  j["aggregate/driving_direction_compliance_reason_counts"] =
-    driving_direction_compliance_reason_counts;
-  std::vector<double> traffic_light_compliance_values;
-  traffic_light_compliance_values.reserve(metrics_list_.size());
-  std::size_t traffic_light_compliance_available_count = 0;
-  std::map<std::string, std::size_t> traffic_light_compliance_reason_counts;
-  for (const auto & m : metrics_list_) {
-    ++traffic_light_compliance_reason_counts[m.traffic_light_compliance_reason];
-    if (m.traffic_light_compliance_available) {
-      traffic_light_compliance_values.push_back(m.traffic_light_compliance);
-      ++traffic_light_compliance_available_count;
-    }
-  }
-  emit_metric(
-    "aggregate", "traffic_light_compliance",
-    "Binary traffic light compliance subscore across trajectories [-]",
-    traffic_light_compliance_values);
-  j["aggregate/traffic_light_compliance_available_count"] =
-    traffic_light_compliance_available_count;
-  j["aggregate/traffic_light_compliance_unavailable_count"] =
-    metrics_list_.size() - traffic_light_compliance_available_count;
-  j["aggregate/traffic_light_compliance_reason_counts"] = traffic_light_compliance_reason_counts;
-
-  auto emit_human_filter_metric = [&](
-                                    const std::string & metric_name, const std::string & desc,
-                                    const std::vector<double> & human_vals,
-                                    const std::vector<double> & filtered_vals,
-                                    const std::size_t applied_count) {
     emit_metric(
-      "aggregate/human_reference", metric_name, "Human reference " + desc + " [-]", human_vals);
+      "aggregate", "history_comfort", "Binary history comfort subscore across trajectories [-]",
+      history_comfort_values);
+    j["aggregate/history_comfort_available_count"] = history_comfort_available_count;
+    j["aggregate/history_comfort_unavailable_count"] =
+      metrics_list_.size() - history_comfort_available_count;
+    j["aggregate/history_comfort_reason_counts"] = history_comfort_reason_counts;
+    std::vector<double> extended_comfort_values;
+    extended_comfort_values.reserve(metrics_list_.size());
+    std::size_t extended_comfort_available_count = 0;
+    std::map<std::string, std::size_t> extended_comfort_reason_counts;
+    for (const auto & m : metrics_list_) {
+      ++extended_comfort_reason_counts[m.extended_comfort_reason];
+      if (m.extended_comfort_available) {
+        extended_comfort_values.push_back(m.extended_comfort);
+        ++extended_comfort_available_count;
+      }
+    }
     emit_metric(
-      "aggregate/human_filtered", metric_name, "Human-filtered " + desc + " [-]", filtered_vals);
-    j["aggregate/human_filter_applied_counts/" + metric_name] = applied_count;
-  };
+      "aggregate", "extended_comfort",
+      "Binary extended comfort subscore across consecutive trajectories [-]",
+      extended_comfort_values);
+    j["aggregate/extended_comfort_available_count"] = extended_comfort_available_count;
+    j["aggregate/extended_comfort_unavailable_count"] =
+      metrics_list_.size() - extended_comfort_available_count;
+    j["aggregate/extended_comfort_reason_counts"] = extended_comfort_reason_counts;
+    std::vector<double> time_to_collision_within_bound_values;
+    time_to_collision_within_bound_values.reserve(metrics_list_.size());
+    std::size_t time_to_collision_within_bound_available_count = 0;
+    std::map<std::string, std::size_t> time_to_collision_within_bound_reason_counts;
+    for (const auto & m : metrics_list_) {
+      ++time_to_collision_within_bound_reason_counts[m.time_to_collision_within_bound_reason];
+      if (m.time_to_collision_within_bound_available) {
+        time_to_collision_within_bound_values.push_back(m.time_to_collision_within_bound);
+        ++time_to_collision_within_bound_available_count;
+      }
+    }
+    emit_metric(
+      "aggregate", "time_to_collision_within_bound",
+      "Binary TTC-within-bound subscore across trajectories [-]",
+      time_to_collision_within_bound_values);
+    j["aggregate/time_to_collision_within_bound_available_count"] =
+      time_to_collision_within_bound_available_count;
+    j["aggregate/time_to_collision_within_bound_unavailable_count"] =
+      metrics_list_.size() - time_to_collision_within_bound_available_count;
+    j["aggregate/time_to_collision_within_bound_reason_counts"] =
+      time_to_collision_within_bound_reason_counts;
+    std::vector<double> lane_keeping_values;
+    lane_keeping_values.reserve(metrics_list_.size());
+    std::size_t lane_keeping_available_count = 0;
+    std::map<std::string, std::size_t> lane_keeping_reason_counts;
+    for (const auto & m : metrics_list_) {
+      ++lane_keeping_reason_counts[m.lane_keeping_reason];
+      if (m.lane_keeping_available) {
+        lane_keeping_values.push_back(m.lane_keeping);
+        ++lane_keeping_available_count;
+      }
+    }
+    emit_metric(
+      "aggregate", "lane_keeping", "Binary lane keeping subscore across trajectories [-]",
+      lane_keeping_values);
+    j["aggregate/lane_keeping_available_count"] = lane_keeping_available_count;
+    j["aggregate/lane_keeping_unavailable_count"] =
+      metrics_list_.size() - lane_keeping_available_count;
+    j["aggregate/lane_keeping_reason_counts"] = lane_keeping_reason_counts;
+    std::vector<double> ego_progress_values;
+    ego_progress_values.reserve(metrics_list_.size());
+    std::size_t ego_progress_available_count = 0;
+    std::map<std::string, std::size_t> ego_progress_reason_counts;
+    for (const auto & m : metrics_list_) {
+      ++ego_progress_reason_counts[m.ego_progress_reason];
+      if (m.ego_progress_available) {
+        ego_progress_values.push_back(m.ego_progress);
+        ++ego_progress_available_count;
+      }
+    }
+    emit_metric(
+      "aggregate", "ego_progress",
+      "Proposal-relative ego progress subscore across trajectories [-]", ego_progress_values);
+    j["aggregate/ego_progress_available_count"] = ego_progress_available_count;
+    j["aggregate/ego_progress_unavailable_count"] =
+      metrics_list_.size() - ego_progress_available_count;
+    j["aggregate/ego_progress_reason_counts"] = ego_progress_reason_counts;
+    std::vector<double> drivable_area_compliance_values;
+    drivable_area_compliance_values.reserve(metrics_list_.size());
+    std::size_t drivable_area_compliance_available_count = 0;
+    std::map<std::string, std::size_t> drivable_area_compliance_reason_counts;
+    for (const auto & m : metrics_list_) {
+      ++drivable_area_compliance_reason_counts[m.drivable_area_compliance_reason];
+      if (m.drivable_area_compliance_available) {
+        drivable_area_compliance_values.push_back(m.drivable_area_compliance);
+        ++drivable_area_compliance_available_count;
+      }
+    }
+    emit_metric(
+      "aggregate", "drivable_area_compliance",
+      "Binary drivable area compliance subscore across trajectories [-]",
+      drivable_area_compliance_values);
+    j["aggregate/drivable_area_compliance_available_count"] =
+      drivable_area_compliance_available_count;
+    j["aggregate/drivable_area_compliance_unavailable_count"] =
+      metrics_list_.size() - drivable_area_compliance_available_count;
+    j["aggregate/drivable_area_compliance_reason_counts"] = drivable_area_compliance_reason_counts;
+    std::vector<double> no_at_fault_collision_values;
+    std::vector<double> time_to_at_fault_collision_values;
+    no_at_fault_collision_values.reserve(metrics_list_.size());
+    time_to_at_fault_collision_values.reserve(metrics_list_.size());
+    std::size_t no_at_fault_collision_available_count = 0;
+    std::map<std::string, std::size_t> no_at_fault_collision_reason_counts;
+    for (const auto & m : metrics_list_) {
+      ++no_at_fault_collision_reason_counts[m.no_at_fault_collision_reason];
+      if (m.no_at_fault_collision_available) {
+        no_at_fault_collision_values.push_back(m.no_at_fault_collision);
+        ++no_at_fault_collision_available_count;
+        if (std::isfinite(m.time_to_at_fault_collision_s)) {
+          time_to_at_fault_collision_values.push_back(m.time_to_at_fault_collision_s);
+        }
+      }
+    }
+    emit_metric(
+      "aggregate", "no_at_fault_collision",
+      "NAVSIM-style no-at-fault-collision subscore across trajectories [-]",
+      no_at_fault_collision_values);
+    emit_metric(
+      "aggregate", "time_to_at_fault_collision_s",
+      "Time to first at-fault collision across trajectories [s]",
+      time_to_at_fault_collision_values);
+    j["aggregate/no_at_fault_collision_available_count"] = no_at_fault_collision_available_count;
+    j["aggregate/no_at_fault_collision_unavailable_count"] =
+      metrics_list_.size() - no_at_fault_collision_available_count;
+    j["aggregate/no_at_fault_collision_reason_counts"] = no_at_fault_collision_reason_counts;
+    std::vector<double> driving_direction_compliance_values;
+    std::vector<double> max_oncoming_progress_values;
+    driving_direction_compliance_values.reserve(metrics_list_.size());
+    max_oncoming_progress_values.reserve(metrics_list_.size());
+    std::size_t driving_direction_compliance_available_count = 0;
+    std::map<std::string, std::size_t> driving_direction_compliance_reason_counts;
+    for (const auto & m : metrics_list_) {
+      ++driving_direction_compliance_reason_counts[m.driving_direction_compliance_reason];
+      if (m.driving_direction_compliance_available) {
+        driving_direction_compliance_values.push_back(m.driving_direction_compliance);
+        max_oncoming_progress_values.push_back(m.max_oncoming_progress_m);
+        ++driving_direction_compliance_available_count;
+      }
+    }
+    emit_metric(
+      "aggregate", "driving_direction_compliance",
+      "NAVSIM-style driving direction compliance subscore across trajectories [-]",
+      driving_direction_compliance_values);
+    emit_metric(
+      "aggregate", "max_oncoming_progress_m",
+      "Maximum rolling 1s oncoming progress across trajectories [m]", max_oncoming_progress_values);
+    j["aggregate/driving_direction_compliance_available_count"] =
+      driving_direction_compliance_available_count;
+    j["aggregate/driving_direction_compliance_unavailable_count"] =
+      metrics_list_.size() - driving_direction_compliance_available_count;
+    j["aggregate/driving_direction_compliance_reason_counts"] =
+      driving_direction_compliance_reason_counts;
+    std::vector<double> traffic_light_compliance_values;
+    traffic_light_compliance_values.reserve(metrics_list_.size());
+    std::size_t traffic_light_compliance_available_count = 0;
+    std::map<std::string, std::size_t> traffic_light_compliance_reason_counts;
+    for (const auto & m : metrics_list_) {
+      ++traffic_light_compliance_reason_counts[m.traffic_light_compliance_reason];
+      if (m.traffic_light_compliance_available) {
+        traffic_light_compliance_values.push_back(m.traffic_light_compliance);
+        ++traffic_light_compliance_available_count;
+      }
+    }
+    emit_metric(
+      "aggregate", "traffic_light_compliance",
+      "Binary traffic light compliance subscore across trajectories [-]",
+      traffic_light_compliance_values);
+    j["aggregate/traffic_light_compliance_available_count"] =
+      traffic_light_compliance_available_count;
+    j["aggregate/traffic_light_compliance_unavailable_count"] =
+      metrics_list_.size() - traffic_light_compliance_available_count;
+    j["aggregate/traffic_light_compliance_reason_counts"] = traffic_light_compliance_reason_counts;
 
-  std::vector<double> human_history_comfort_values;
-  std::vector<double> filtered_history_comfort_values;
-  std::size_t history_comfort_filter_applied_count = 0;
-  std::vector<double> human_ego_progress_values;
-  std::vector<double> filtered_ego_progress_values;
-  std::size_t ego_progress_filter_applied_count = 0;
-  std::vector<double> human_ttc_within_bound_values;
-  std::vector<double> filtered_ttc_within_bound_values;
-  std::size_t ttc_within_bound_filter_applied_count = 0;
-  std::vector<double> human_lane_keeping_values;
-  std::vector<double> filtered_lane_keeping_values;
-  std::size_t lane_keeping_filter_applied_count = 0;
-  std::vector<double> human_dac_values;
-  std::vector<double> filtered_dac_values;
-  std::size_t dac_filter_applied_count = 0;
-  std::vector<double> human_nc_values;
-  std::vector<double> filtered_nc_values;
-  std::size_t nc_filter_applied_count = 0;
-  std::vector<double> human_ddc_values;
-  std::vector<double> filtered_ddc_values;
-  std::size_t ddc_filter_applied_count = 0;
-  std::vector<double> human_tlc_values;
-  std::vector<double> filtered_tlc_values;
-  std::size_t tlc_filter_applied_count = 0;
-  for (const auto & m : human_filter_metrics_list_) {
-    if (m.history_comfort.human_reference_available) {
-      human_history_comfort_values.push_back(m.history_comfort.human_reference);
-      filtered_history_comfort_values.push_back(m.history_comfort.filtered);
-    }
-    history_comfort_filter_applied_count +=
-      static_cast<std::size_t>(m.history_comfort.filter_applied);
-    if (m.ego_progress.human_reference_available) {
-      human_ego_progress_values.push_back(m.ego_progress.human_reference);
-      filtered_ego_progress_values.push_back(m.ego_progress.filtered);
-    }
-    ego_progress_filter_applied_count += static_cast<std::size_t>(m.ego_progress.filter_applied);
-    if (m.time_to_collision_within_bound.human_reference_available) {
-      human_ttc_within_bound_values.push_back(m.time_to_collision_within_bound.human_reference);
-      filtered_ttc_within_bound_values.push_back(m.time_to_collision_within_bound.filtered);
-    }
-    ttc_within_bound_filter_applied_count +=
-      static_cast<std::size_t>(m.time_to_collision_within_bound.filter_applied);
-    if (m.lane_keeping.human_reference_available) {
-      human_lane_keeping_values.push_back(m.lane_keeping.human_reference);
-      filtered_lane_keeping_values.push_back(m.lane_keeping.filtered);
-    }
-    lane_keeping_filter_applied_count += static_cast<std::size_t>(m.lane_keeping.filter_applied);
-    if (m.drivable_area_compliance.human_reference_available) {
-      human_dac_values.push_back(m.drivable_area_compliance.human_reference);
-      filtered_dac_values.push_back(m.drivable_area_compliance.filtered);
-    }
-    dac_filter_applied_count += static_cast<std::size_t>(m.drivable_area_compliance.filter_applied);
-    if (m.no_at_fault_collision.human_reference_available) {
-      human_nc_values.push_back(m.no_at_fault_collision.human_reference);
-      filtered_nc_values.push_back(m.no_at_fault_collision.filtered);
-    }
-    nc_filter_applied_count += static_cast<std::size_t>(m.no_at_fault_collision.filter_applied);
-    if (m.driving_direction_compliance.human_reference_available) {
-      human_ddc_values.push_back(m.driving_direction_compliance.human_reference);
-      filtered_ddc_values.push_back(m.driving_direction_compliance.filtered);
-    }
-    ddc_filter_applied_count +=
-      static_cast<std::size_t>(m.driving_direction_compliance.filter_applied);
-    if (m.traffic_light_compliance.human_reference_available) {
-      human_tlc_values.push_back(m.traffic_light_compliance.human_reference);
-      filtered_tlc_values.push_back(m.traffic_light_compliance.filtered);
-    }
-    tlc_filter_applied_count += static_cast<std::size_t>(m.traffic_light_compliance.filter_applied);
-  }
-  emit_human_filter_metric(
-    "history_comfort", "history comfort subscore", human_history_comfort_values,
-    filtered_history_comfort_values, history_comfort_filter_applied_count);
-  emit_human_filter_metric(
-    "ego_progress", "ego progress subscore", human_ego_progress_values,
-    filtered_ego_progress_values, ego_progress_filter_applied_count);
-  emit_human_filter_metric(
-    "time_to_collision_within_bound", "TTC-within-bound subscore", human_ttc_within_bound_values,
-    filtered_ttc_within_bound_values, ttc_within_bound_filter_applied_count);
-  emit_human_filter_metric(
-    "lane_keeping", "lane keeping subscore", human_lane_keeping_values,
-    filtered_lane_keeping_values, lane_keeping_filter_applied_count);
-  emit_human_filter_metric(
-    "drivable_area_compliance", "drivable area compliance subscore", human_dac_values,
-    filtered_dac_values, dac_filter_applied_count);
-  emit_human_filter_metric(
-    "no_at_fault_collision", "no-at-fault collision subscore", human_nc_values, filtered_nc_values,
-    nc_filter_applied_count);
-  emit_human_filter_metric(
-    "driving_direction_compliance", "driving direction compliance subscore", human_ddc_values,
-    filtered_ddc_values, ddc_filter_applied_count);
-  emit_human_filter_metric(
-    "traffic_light_compliance", "traffic light compliance subscore", human_tlc_values,
-    filtered_tlc_values, tlc_filter_applied_count);
+    auto emit_human_filter_metric = [&](
+                                      const std::string & metric_name, const std::string & desc,
+                                      const std::vector<double> & human_vals,
+                                      const std::vector<double> & filtered_vals,
+                                      const std::size_t applied_count) {
+      emit_metric(
+        "aggregate/human_reference", metric_name, "Human reference " + desc + " [-]", human_vals);
+      emit_metric(
+        "aggregate/human_filtered", metric_name, "Human-filtered " + desc + " [-]", filtered_vals);
+      j["aggregate/human_filter_applied_counts/" + metric_name] = applied_count;
+    };
 
-  std::vector<double> synthetic_raw_prod_values;
-  std::vector<double> synthetic_raw_weighted_values;
-  std::vector<double> synthetic_raw_epdms_values;
-  std::size_t synthetic_raw_available_count = 0;
-  std::vector<double> synthetic_filtered_prod_values;
-  std::vector<double> synthetic_filtered_weighted_values;
-  std::vector<double> synthetic_filtered_epdms_values;
-  std::size_t synthetic_filtered_available_count = 0;
-  for (const auto & m : synthetic_epdms_metrics_list_) {
-    if (m.raw.available) {
-      synthetic_raw_prod_values.push_back(m.raw.multiplicative_metrics_prod);
-      synthetic_raw_weighted_values.push_back(m.raw.weighted_metrics);
-      synthetic_raw_epdms_values.push_back(m.raw.epdms);
-      ++synthetic_raw_available_count;
+    std::vector<double> human_history_comfort_values;
+    std::vector<double> filtered_history_comfort_values;
+    std::size_t history_comfort_filter_applied_count = 0;
+    std::vector<double> human_ego_progress_values;
+    std::vector<double> filtered_ego_progress_values;
+    std::size_t ego_progress_filter_applied_count = 0;
+    std::vector<double> human_ttc_within_bound_values;
+    std::vector<double> filtered_ttc_within_bound_values;
+    std::size_t ttc_within_bound_filter_applied_count = 0;
+    std::vector<double> human_lane_keeping_values;
+    std::vector<double> filtered_lane_keeping_values;
+    std::size_t lane_keeping_filter_applied_count = 0;
+    std::vector<double> human_dac_values;
+    std::vector<double> filtered_dac_values;
+    std::size_t dac_filter_applied_count = 0;
+    std::vector<double> human_nc_values;
+    std::vector<double> filtered_nc_values;
+    std::size_t nc_filter_applied_count = 0;
+    std::vector<double> human_ddc_values;
+    std::vector<double> filtered_ddc_values;
+    std::size_t ddc_filter_applied_count = 0;
+    std::vector<double> human_tlc_values;
+    std::vector<double> filtered_tlc_values;
+    std::size_t tlc_filter_applied_count = 0;
+    for (const auto & m : human_filter_metrics_list_) {
+      if (m.history_comfort.human_reference_available) {
+        human_history_comfort_values.push_back(m.history_comfort.human_reference);
+        filtered_history_comfort_values.push_back(m.history_comfort.filtered);
+      }
+      history_comfort_filter_applied_count +=
+        static_cast<std::size_t>(m.history_comfort.filter_applied);
+      if (m.ego_progress.human_reference_available) {
+        human_ego_progress_values.push_back(m.ego_progress.human_reference);
+        filtered_ego_progress_values.push_back(m.ego_progress.filtered);
+      }
+      ego_progress_filter_applied_count += static_cast<std::size_t>(m.ego_progress.filter_applied);
+      if (m.time_to_collision_within_bound.human_reference_available) {
+        human_ttc_within_bound_values.push_back(m.time_to_collision_within_bound.human_reference);
+        filtered_ttc_within_bound_values.push_back(m.time_to_collision_within_bound.filtered);
+      }
+      ttc_within_bound_filter_applied_count +=
+        static_cast<std::size_t>(m.time_to_collision_within_bound.filter_applied);
+      if (m.lane_keeping.human_reference_available) {
+        human_lane_keeping_values.push_back(m.lane_keeping.human_reference);
+        filtered_lane_keeping_values.push_back(m.lane_keeping.filtered);
+      }
+      lane_keeping_filter_applied_count += static_cast<std::size_t>(m.lane_keeping.filter_applied);
+      if (m.drivable_area_compliance.human_reference_available) {
+        human_dac_values.push_back(m.drivable_area_compliance.human_reference);
+        filtered_dac_values.push_back(m.drivable_area_compliance.filtered);
+      }
+      dac_filter_applied_count +=
+        static_cast<std::size_t>(m.drivable_area_compliance.filter_applied);
+      if (m.no_at_fault_collision.human_reference_available) {
+        human_nc_values.push_back(m.no_at_fault_collision.human_reference);
+        filtered_nc_values.push_back(m.no_at_fault_collision.filtered);
+      }
+      nc_filter_applied_count += static_cast<std::size_t>(m.no_at_fault_collision.filter_applied);
+      if (m.driving_direction_compliance.human_reference_available) {
+        human_ddc_values.push_back(m.driving_direction_compliance.human_reference);
+        filtered_ddc_values.push_back(m.driving_direction_compliance.filtered);
+      }
+      ddc_filter_applied_count +=
+        static_cast<std::size_t>(m.driving_direction_compliance.filter_applied);
+      if (m.traffic_light_compliance.human_reference_available) {
+        human_tlc_values.push_back(m.traffic_light_compliance.human_reference);
+        filtered_tlc_values.push_back(m.traffic_light_compliance.filtered);
+      }
+      tlc_filter_applied_count +=
+        static_cast<std::size_t>(m.traffic_light_compliance.filter_applied);
     }
-    if (m.human_filtered.available) {
-      synthetic_filtered_prod_values.push_back(m.human_filtered.multiplicative_metrics_prod);
-      synthetic_filtered_weighted_values.push_back(m.human_filtered.weighted_metrics);
-      synthetic_filtered_epdms_values.push_back(m.human_filtered.epdms);
-      ++synthetic_filtered_available_count;
+    emit_human_filter_metric(
+      "history_comfort", "history comfort subscore", human_history_comfort_values,
+      filtered_history_comfort_values, history_comfort_filter_applied_count);
+    emit_human_filter_metric(
+      "ego_progress", "ego progress subscore", human_ego_progress_values,
+      filtered_ego_progress_values, ego_progress_filter_applied_count);
+    emit_human_filter_metric(
+      "time_to_collision_within_bound", "TTC-within-bound subscore", human_ttc_within_bound_values,
+      filtered_ttc_within_bound_values, ttc_within_bound_filter_applied_count);
+    emit_human_filter_metric(
+      "lane_keeping", "lane keeping subscore", human_lane_keeping_values,
+      filtered_lane_keeping_values, lane_keeping_filter_applied_count);
+    emit_human_filter_metric(
+      "drivable_area_compliance", "drivable area compliance subscore", human_dac_values,
+      filtered_dac_values, dac_filter_applied_count);
+    emit_human_filter_metric(
+      "no_at_fault_collision", "no-at-fault collision subscore", human_nc_values,
+      filtered_nc_values, nc_filter_applied_count);
+    emit_human_filter_metric(
+      "driving_direction_compliance", "driving direction compliance subscore", human_ddc_values,
+      filtered_ddc_values, ddc_filter_applied_count);
+    emit_human_filter_metric(
+      "traffic_light_compliance", "traffic light compliance subscore", human_tlc_values,
+      filtered_tlc_values, tlc_filter_applied_count);
+
+    std::vector<double> synthetic_raw_prod_values;
+    std::vector<double> synthetic_raw_weighted_values;
+    std::vector<double> synthetic_raw_epdms_values;
+    std::size_t synthetic_raw_available_count = 0;
+    std::vector<double> synthetic_filtered_prod_values;
+    std::vector<double> synthetic_filtered_weighted_values;
+    std::vector<double> synthetic_filtered_epdms_values;
+    std::size_t synthetic_filtered_available_count = 0;
+    for (const auto & m : synthetic_epdms_metrics_list_) {
+      if (m.raw.available) {
+        synthetic_raw_prod_values.push_back(m.raw.multiplicative_metrics_prod);
+        synthetic_raw_weighted_values.push_back(m.raw.weighted_metrics);
+        synthetic_raw_epdms_values.push_back(m.raw.epdms);
+        ++synthetic_raw_available_count;
+      }
+      if (m.human_filtered.available) {
+        synthetic_filtered_prod_values.push_back(m.human_filtered.multiplicative_metrics_prod);
+        synthetic_filtered_weighted_values.push_back(m.human_filtered.weighted_metrics);
+        synthetic_filtered_epdms_values.push_back(m.human_filtered.epdms);
+        ++synthetic_filtered_available_count;
+      }
     }
+    emit_metric(
+      "aggregate/synthetic_epdms", "raw_multiplicative_metrics_prod",
+      "Synthetic EPDMS multiplicative product across trajectories [-]", synthetic_raw_prod_values);
+    emit_metric(
+      "aggregate/synthetic_epdms", "raw_weighted_metrics",
+      "Synthetic EPDMS weighted score across trajectories [-]", synthetic_raw_weighted_values);
+    emit_metric(
+      "aggregate/synthetic_epdms", "raw", "Synthetic EPDMS score across trajectories [-]",
+      synthetic_raw_epdms_values);
+    emit_metric(
+      "aggregate/synthetic_epdms", "human_filtered_multiplicative_metrics_prod",
+      "Human-filtered synthetic EPDMS multiplicative product across trajectories [-]",
+      synthetic_filtered_prod_values);
+    emit_metric(
+      "aggregate/synthetic_epdms", "human_filtered_weighted_metrics",
+      "Human-filtered synthetic EPDMS weighted score across trajectories [-]",
+      synthetic_filtered_weighted_values);
+    emit_metric(
+      "aggregate/synthetic_epdms", "human_filtered",
+      "Human-filtered synthetic EPDMS score across trajectories [-]",
+      synthetic_filtered_epdms_values);
+    j["aggregate/synthetic_epdms/raw_available_count"] = synthetic_raw_available_count;
+    j["aggregate/synthetic_epdms/raw_unavailable_count"] =
+      synthetic_epdms_metrics_list_.size() - synthetic_raw_available_count;
+    j["aggregate/synthetic_epdms/human_filtered_available_count"] =
+      synthetic_filtered_available_count;
+    j["aggregate/synthetic_epdms/human_filtered_unavailable_count"] =
+      synthetic_epdms_metrics_list_.size() - synthetic_filtered_available_count;
   }
-  emit_metric(
-    "aggregate/synthetic_epdms", "raw_multiplicative_metrics_prod",
-    "Synthetic EPDMS multiplicative product across trajectories [-]", synthetic_raw_prod_values);
-  emit_metric(
-    "aggregate/synthetic_epdms", "raw_weighted_metrics",
-    "Synthetic EPDMS weighted score across trajectories [-]", synthetic_raw_weighted_values);
-  emit_metric(
-    "aggregate/synthetic_epdms", "raw", "Synthetic EPDMS score across trajectories [-]",
-    synthetic_raw_epdms_values);
-  emit_metric(
-    "aggregate/synthetic_epdms", "human_filtered_multiplicative_metrics_prod",
-    "Human-filtered synthetic EPDMS multiplicative product across trajectories [-]",
-    synthetic_filtered_prod_values);
-  emit_metric(
-    "aggregate/synthetic_epdms", "human_filtered_weighted_metrics",
-    "Human-filtered synthetic EPDMS weighted score across trajectories [-]",
-    synthetic_filtered_weighted_values);
-  emit_metric(
-    "aggregate/synthetic_epdms", "human_filtered",
-    "Human-filtered synthetic EPDMS score across trajectories [-]",
-    synthetic_filtered_epdms_values);
-  j["aggregate/synthetic_epdms/raw_available_count"] = synthetic_raw_available_count;
-  j["aggregate/synthetic_epdms/raw_unavailable_count"] =
-    synthetic_epdms_metrics_list_.size() - synthetic_raw_available_count;
-  j["aggregate/synthetic_epdms/human_filtered_available_count"] =
-    synthetic_filtered_available_count;
-  j["aggregate/synthetic_epdms/human_filtered_unavailable_count"] =
-    synthetic_epdms_metrics_list_.size() - synthetic_filtered_available_count;
 
   // ----- override_only aggregation -----
   // Re-aggregate per-horizon ADE/FDE (plus the rest of the horizon metrics for symmetry)
@@ -2123,163 +2158,170 @@ nlohmann::json OpenLoopEvaluator::get_full_results_as_json() const
     traj["heading_errors"] = m.heading_errors;
     traj["lateral_deviations"] = m.lateral_deviations;
     traj["longitudinal_deviations"] = m.longitudinal_deviations;
-    traj["ttc"] = m.ttc;
-    traj["history_comfort"] = m.history_comfort;
-    traj["history_comfort_available"] = m.history_comfort_available;
-    traj["history_comfort_reason"] = m.history_comfort_reason;
-    traj["extended_comfort"] = m.extended_comfort;
-    traj["extended_comfort_available"] = m.extended_comfort_available;
-    traj["extended_comfort_reason"] = m.extended_comfort_reason;
-    traj["time_to_collision_within_bound"] = m.time_to_collision_within_bound;
-    traj["time_to_collision_within_bound_available"] = m.time_to_collision_within_bound_available;
-    traj["time_to_collision_within_bound_reason"] = m.time_to_collision_within_bound_reason;
-    traj["time_to_collision_infraction_time_s"] = m.time_to_collision_infraction_time_s;
-    traj["lane_keeping"] = m.lane_keeping;
-    traj["lane_keeping_available"] = m.lane_keeping_available;
-    traj["lane_keeping_reason"] = m.lane_keeping_reason;
-    traj["ego_progress"] = m.ego_progress;
-    traj["ego_progress_available"] = m.ego_progress_available;
-    traj["ego_progress_reason"] = m.ego_progress_reason;
-    traj["ego_progress_raw_m"] = m.ego_progress_raw_m;
-    traj["ego_progress_best_raw_m"] = m.ego_progress_best_raw_m;
-    traj["ego_progress_multiplicative_mask"] = m.ego_progress_mask;
-    traj["ego_progress_denominator_m"] = m.ego_progress_denominator_m;
-    traj["drivable_area_compliance"] = m.drivable_area_compliance;
-    traj["drivable_area_compliance_available"] = m.drivable_area_compliance_available;
-    traj["drivable_area_compliance_reason"] = m.drivable_area_compliance_reason;
-    traj["no_at_fault_collision"] = m.no_at_fault_collision;
-    traj["no_at_fault_collision_available"] = m.no_at_fault_collision_available;
-    traj["no_at_fault_collision_reason"] = m.no_at_fault_collision_reason;
-    traj["time_to_at_fault_collision_s"] = m.time_to_at_fault_collision_s;
-    traj["driving_direction_compliance"] = m.driving_direction_compliance;
-    traj["driving_direction_compliance_available"] = m.driving_direction_compliance_available;
-    traj["driving_direction_compliance_reason"] = m.driving_direction_compliance_reason;
-    traj["max_oncoming_progress_m"] = m.max_oncoming_progress_m;
-    traj["traffic_light_compliance"] = m.traffic_light_compliance;
-    traj["traffic_light_compliance_available"] = m.traffic_light_compliance_available;
-    traj["traffic_light_compliance_reason"] = m.traffic_light_compliance_reason;
-    if (i < human_filter_metrics_list_.size()) {
-      const auto & hf = human_filter_metrics_list_[i];
-      traj["human_reference"]["history_comfort"] = hf.history_comfort.human_reference;
-      traj["human_reference"]["history_comfort_available"] =
-        hf.history_comfort.human_reference_available;
-      traj["human_reference"]["ego_progress"] = hf.ego_progress.human_reference;
-      traj["human_reference"]["ego_progress_available"] = hf.ego_progress.human_reference_available;
-      traj["human_reference"]["time_to_collision_within_bound"] =
-        hf.time_to_collision_within_bound.human_reference;
-      traj["human_reference"]["time_to_collision_within_bound_available"] =
-        hf.time_to_collision_within_bound.human_reference_available;
-      traj["human_reference"]["lane_keeping"] = hf.lane_keeping.human_reference;
-      traj["human_reference"]["lane_keeping_available"] = hf.lane_keeping.human_reference_available;
-      traj["human_reference"]["drivable_area_compliance"] =
-        hf.drivable_area_compliance.human_reference;
-      traj["human_reference"]["drivable_area_compliance_available"] =
-        hf.drivable_area_compliance.human_reference_available;
-      traj["human_reference"]["no_at_fault_collision"] = hf.no_at_fault_collision.human_reference;
-      traj["human_reference"]["no_at_fault_collision_available"] =
-        hf.no_at_fault_collision.human_reference_available;
-      traj["human_reference"]["driving_direction_compliance"] =
-        hf.driving_direction_compliance.human_reference;
-      traj["human_reference"]["driving_direction_compliance_available"] =
-        hf.driving_direction_compliance.human_reference_available;
-      traj["human_reference"]["traffic_light_compliance"] =
-        hf.traffic_light_compliance.human_reference;
-      traj["human_reference"]["traffic_light_compliance_available"] =
-        hf.traffic_light_compliance.human_reference_available;
-
-      traj["human_filtered"]["history_comfort"] = hf.history_comfort.filtered;
-      traj["human_filtered"]["history_comfort_filter_applied"] = hf.history_comfort.filter_applied;
-      traj["human_filtered"]["ego_progress"] = hf.ego_progress.filtered;
-      traj["human_filtered"]["ego_progress_filter_applied"] = hf.ego_progress.filter_applied;
-      traj["human_filtered"]["time_to_collision_within_bound"] =
-        hf.time_to_collision_within_bound.filtered;
-      traj["human_filtered"]["time_to_collision_within_bound_filter_applied"] =
-        hf.time_to_collision_within_bound.filter_applied;
-      traj["human_filtered"]["lane_keeping"] = hf.lane_keeping.filtered;
-      traj["human_filtered"]["lane_keeping_filter_applied"] = hf.lane_keeping.filter_applied;
-      traj["human_filtered"]["drivable_area_compliance"] = hf.drivable_area_compliance.filtered;
-      traj["human_filtered"]["drivable_area_compliance_filter_applied"] =
-        hf.drivable_area_compliance.filter_applied;
-      traj["human_filtered"]["no_at_fault_collision"] = hf.no_at_fault_collision.filtered;
-      traj["human_filtered"]["no_at_fault_collision_filter_applied"] =
-        hf.no_at_fault_collision.filter_applied;
-      traj["human_filtered"]["driving_direction_compliance"] =
-        hf.driving_direction_compliance.filtered;
-      traj["human_filtered"]["driving_direction_compliance_filter_applied"] =
-        hf.driving_direction_compliance.filter_applied;
-      traj["human_filtered"]["traffic_light_compliance"] = hf.traffic_light_compliance.filtered;
-      traj["human_filtered"]["traffic_light_compliance_filter_applied"] =
-        hf.traffic_light_compliance.filter_applied;
-    }
-    if (i < synthetic_epdms_metrics_list_.size()) {
-      const auto & s = synthetic_epdms_metrics_list_[i];
-      traj["synthetic_epdms"]["raw_available"] = s.raw.available;
-      traj["synthetic_epdms"]["raw_multiplicative_metrics_prod"] =
-        s.raw.multiplicative_metrics_prod;
-      traj["synthetic_epdms"]["raw_weighted_metrics"] = s.raw.weighted_metrics;
-      traj["synthetic_epdms"]["raw"] = s.raw.epdms;
-      traj["synthetic_epdms"]["human_filtered_available"] = s.human_filtered.available;
-      traj["synthetic_epdms"]["human_filtered_multiplicative_metrics_prod"] =
-        s.human_filtered.multiplicative_metrics_prod;
-      traj["synthetic_epdms"]["human_filtered_weighted_metrics"] =
-        s.human_filtered.weighted_metrics;
-      traj["synthetic_epdms"]["human_filtered"] = s.human_filtered.epdms;
-    }
 
     traj["horizon_results"] = nlohmann::json::object();
     fill_horizon_json(traj["horizon_results"], m.horizon_results, m.num_points);
 
-    if (i < trajectory_point_metrics_list_.size()) {
-      const auto & pm = trajectory_point_metrics_list_[i];
-      traj["trajectory_point_metrics"]["longitudinal_accelerations"] =
-        pm.longitudinal_accelerations;
-      traj["trajectory_point_metrics"]["lateral_accelerations"] = pm.lateral_accelerations;
-      traj["trajectory_point_metrics"]["lateral_jerks"] = pm.lateral_jerks;
-      traj["trajectory_point_metrics"]["jerk_magnitudes"] = pm.jerk_magnitudes;
-      traj["trajectory_point_metrics"]["longitudinal_jerks"] = pm.longitudinal_jerks;
-      traj["trajectory_point_metrics"]["yaw_rates"] = pm.yaw_rates;
-      traj["trajectory_point_metrics"]["yaw_accelerations"] = pm.yaw_accelerations;
-      traj["trajectory_point_metrics"]["ttc_values"] = pm.ttc_values;
-      traj["trajectory_point_metrics"]["lateral_deviations"] = pm.lateral_deviations;
-      traj["trajectory_point_metrics"]["travel_distances"] = pm.travel_distances;
-      traj["trajectory_point_metrics"]["history_comfort"] = pm.history_comfort;
-      traj["trajectory_point_metrics"]["history_comfort_available"] = pm.history_comfort_available;
-      traj["trajectory_point_metrics"]["history_comfort_reason"] = pm.history_comfort_reason;
-      traj["trajectory_point_metrics"]["time_to_collision_within_bound"] =
-        pm.time_to_collision_within_bound;
-      traj["trajectory_point_metrics"]["time_to_collision_within_bound_available"] =
-        pm.time_to_collision_within_bound_available;
-      traj["trajectory_point_metrics"]["time_to_collision_within_bound_reason"] =
-        pm.time_to_collision_within_bound_reason;
-      traj["trajectory_point_metrics"]["time_to_collision_infraction_time_s"] =
-        pm.time_to_collision_infraction_time_s;
-      traj["trajectory_point_metrics"]["lane_keeping"] = pm.lane_keeping;
-      traj["trajectory_point_metrics"]["lane_keeping_available"] = pm.lane_keeping_available;
-      traj["trajectory_point_metrics"]["lane_keeping_reason"] = pm.lane_keeping_reason;
-      traj["trajectory_point_metrics"]["drivable_area_compliance"] = pm.drivable_area_compliance;
-      traj["trajectory_point_metrics"]["drivable_area_compliance_available"] =
-        pm.drivable_area_compliance_available;
-      traj["trajectory_point_metrics"]["drivable_area_compliance_reason"] =
-        pm.drivable_area_compliance_reason;
-      traj["trajectory_point_metrics"]["no_at_fault_collision"] = pm.no_at_fault_collision;
-      traj["trajectory_point_metrics"]["no_at_fault_collision_available"] =
-        pm.no_at_fault_collision_available;
-      traj["trajectory_point_metrics"]["no_at_fault_collision_reason"] =
-        pm.no_at_fault_collision_reason;
-      traj["trajectory_point_metrics"]["time_to_at_fault_collision_s"] =
-        pm.time_to_at_fault_collision_s;
-      traj["trajectory_point_metrics"]["driving_direction_compliance"] =
-        pm.driving_direction_compliance;
-      traj["trajectory_point_metrics"]["driving_direction_compliance_available"] =
-        pm.driving_direction_compliance_available;
-      traj["trajectory_point_metrics"]["driving_direction_compliance_reason"] =
-        pm.driving_direction_compliance_reason;
-      traj["trajectory_point_metrics"]["max_oncoming_progress_m"] = pm.max_oncoming_progress_m;
-      traj["trajectory_point_metrics"]["traffic_light_compliance"] = pm.traffic_light_compliance;
-      traj["trajectory_point_metrics"]["traffic_light_compliance_available"] =
-        pm.traffic_light_compliance_available;
-      traj["trajectory_point_metrics"]["traffic_light_compliance_reason"] =
-        pm.traffic_light_compliance_reason;
+    if (calculate_epdms_) {
+      traj["ttc"] = m.ttc;
+      traj["history_comfort"] = m.history_comfort;
+      traj["history_comfort_available"] = m.history_comfort_available;
+      traj["history_comfort_reason"] = m.history_comfort_reason;
+      traj["extended_comfort"] = m.extended_comfort;
+      traj["extended_comfort_available"] = m.extended_comfort_available;
+      traj["extended_comfort_reason"] = m.extended_comfort_reason;
+      traj["time_to_collision_within_bound"] = m.time_to_collision_within_bound;
+      traj["time_to_collision_within_bound_available"] = m.time_to_collision_within_bound_available;
+      traj["time_to_collision_within_bound_reason"] = m.time_to_collision_within_bound_reason;
+      traj["time_to_collision_infraction_time_s"] = m.time_to_collision_infraction_time_s;
+      traj["lane_keeping"] = m.lane_keeping;
+      traj["lane_keeping_available"] = m.lane_keeping_available;
+      traj["lane_keeping_reason"] = m.lane_keeping_reason;
+      traj["ego_progress"] = m.ego_progress;
+      traj["ego_progress_available"] = m.ego_progress_available;
+      traj["ego_progress_reason"] = m.ego_progress_reason;
+      traj["ego_progress_raw_m"] = m.ego_progress_raw_m;
+      traj["ego_progress_best_raw_m"] = m.ego_progress_best_raw_m;
+      traj["ego_progress_multiplicative_mask"] = m.ego_progress_mask;
+      traj["ego_progress_denominator_m"] = m.ego_progress_denominator_m;
+      traj["drivable_area_compliance"] = m.drivable_area_compliance;
+      traj["drivable_area_compliance_available"] = m.drivable_area_compliance_available;
+      traj["drivable_area_compliance_reason"] = m.drivable_area_compliance_reason;
+      traj["no_at_fault_collision"] = m.no_at_fault_collision;
+      traj["no_at_fault_collision_available"] = m.no_at_fault_collision_available;
+      traj["no_at_fault_collision_reason"] = m.no_at_fault_collision_reason;
+      traj["time_to_at_fault_collision_s"] = m.time_to_at_fault_collision_s;
+      traj["driving_direction_compliance"] = m.driving_direction_compliance;
+      traj["driving_direction_compliance_available"] = m.driving_direction_compliance_available;
+      traj["driving_direction_compliance_reason"] = m.driving_direction_compliance_reason;
+      traj["max_oncoming_progress_m"] = m.max_oncoming_progress_m;
+      traj["traffic_light_compliance"] = m.traffic_light_compliance;
+      traj["traffic_light_compliance_available"] = m.traffic_light_compliance_available;
+      traj["traffic_light_compliance_reason"] = m.traffic_light_compliance_reason;
+      if (i < human_filter_metrics_list_.size()) {
+        const auto & hf = human_filter_metrics_list_[i];
+        traj["human_reference"]["history_comfort"] = hf.history_comfort.human_reference;
+        traj["human_reference"]["history_comfort_available"] =
+          hf.history_comfort.human_reference_available;
+        traj["human_reference"]["ego_progress"] = hf.ego_progress.human_reference;
+        traj["human_reference"]["ego_progress_available"] =
+          hf.ego_progress.human_reference_available;
+        traj["human_reference"]["time_to_collision_within_bound"] =
+          hf.time_to_collision_within_bound.human_reference;
+        traj["human_reference"]["time_to_collision_within_bound_available"] =
+          hf.time_to_collision_within_bound.human_reference_available;
+        traj["human_reference"]["lane_keeping"] = hf.lane_keeping.human_reference;
+        traj["human_reference"]["lane_keeping_available"] =
+          hf.lane_keeping.human_reference_available;
+        traj["human_reference"]["drivable_area_compliance"] =
+          hf.drivable_area_compliance.human_reference;
+        traj["human_reference"]["drivable_area_compliance_available"] =
+          hf.drivable_area_compliance.human_reference_available;
+        traj["human_reference"]["no_at_fault_collision"] = hf.no_at_fault_collision.human_reference;
+        traj["human_reference"]["no_at_fault_collision_available"] =
+          hf.no_at_fault_collision.human_reference_available;
+        traj["human_reference"]["driving_direction_compliance"] =
+          hf.driving_direction_compliance.human_reference;
+        traj["human_reference"]["driving_direction_compliance_available"] =
+          hf.driving_direction_compliance.human_reference_available;
+        traj["human_reference"]["traffic_light_compliance"] =
+          hf.traffic_light_compliance.human_reference;
+        traj["human_reference"]["traffic_light_compliance_available"] =
+          hf.traffic_light_compliance.human_reference_available;
+
+        traj["human_filtered"]["history_comfort"] = hf.history_comfort.filtered;
+        traj["human_filtered"]["history_comfort_filter_applied"] =
+          hf.history_comfort.filter_applied;
+        traj["human_filtered"]["ego_progress"] = hf.ego_progress.filtered;
+        traj["human_filtered"]["ego_progress_filter_applied"] = hf.ego_progress.filter_applied;
+        traj["human_filtered"]["time_to_collision_within_bound"] =
+          hf.time_to_collision_within_bound.filtered;
+        traj["human_filtered"]["time_to_collision_within_bound_filter_applied"] =
+          hf.time_to_collision_within_bound.filter_applied;
+        traj["human_filtered"]["lane_keeping"] = hf.lane_keeping.filtered;
+        traj["human_filtered"]["lane_keeping_filter_applied"] = hf.lane_keeping.filter_applied;
+        traj["human_filtered"]["drivable_area_compliance"] = hf.drivable_area_compliance.filtered;
+        traj["human_filtered"]["drivable_area_compliance_filter_applied"] =
+          hf.drivable_area_compliance.filter_applied;
+        traj["human_filtered"]["no_at_fault_collision"] = hf.no_at_fault_collision.filtered;
+        traj["human_filtered"]["no_at_fault_collision_filter_applied"] =
+          hf.no_at_fault_collision.filter_applied;
+        traj["human_filtered"]["driving_direction_compliance"] =
+          hf.driving_direction_compliance.filtered;
+        traj["human_filtered"]["driving_direction_compliance_filter_applied"] =
+          hf.driving_direction_compliance.filter_applied;
+        traj["human_filtered"]["traffic_light_compliance"] = hf.traffic_light_compliance.filtered;
+        traj["human_filtered"]["traffic_light_compliance_filter_applied"] =
+          hf.traffic_light_compliance.filter_applied;
+      }
+      if (i < synthetic_epdms_metrics_list_.size()) {
+        const auto & s = synthetic_epdms_metrics_list_[i];
+        traj["synthetic_epdms"]["raw_available"] = s.raw.available;
+        traj["synthetic_epdms"]["raw_multiplicative_metrics_prod"] =
+          s.raw.multiplicative_metrics_prod;
+        traj["synthetic_epdms"]["raw_weighted_metrics"] = s.raw.weighted_metrics;
+        traj["synthetic_epdms"]["raw"] = s.raw.epdms;
+        traj["synthetic_epdms"]["human_filtered_available"] = s.human_filtered.available;
+        traj["synthetic_epdms"]["human_filtered_multiplicative_metrics_prod"] =
+          s.human_filtered.multiplicative_metrics_prod;
+        traj["synthetic_epdms"]["human_filtered_weighted_metrics"] =
+          s.human_filtered.weighted_metrics;
+        traj["synthetic_epdms"]["human_filtered"] = s.human_filtered.epdms;
+      }
+
+      if (i < trajectory_point_metrics_list_.size()) {
+        const auto & pm = trajectory_point_metrics_list_[i];
+        traj["trajectory_point_metrics"]["longitudinal_accelerations"] =
+          pm.longitudinal_accelerations;
+        traj["trajectory_point_metrics"]["lateral_accelerations"] = pm.lateral_accelerations;
+        traj["trajectory_point_metrics"]["lateral_jerks"] = pm.lateral_jerks;
+        traj["trajectory_point_metrics"]["jerk_magnitudes"] = pm.jerk_magnitudes;
+        traj["trajectory_point_metrics"]["longitudinal_jerks"] = pm.longitudinal_jerks;
+        traj["trajectory_point_metrics"]["yaw_rates"] = pm.yaw_rates;
+        traj["trajectory_point_metrics"]["yaw_accelerations"] = pm.yaw_accelerations;
+        traj["trajectory_point_metrics"]["ttc_values"] = pm.ttc_values;
+        traj["trajectory_point_metrics"]["lateral_deviations"] = pm.lateral_deviations;
+        traj["trajectory_point_metrics"]["travel_distances"] = pm.travel_distances;
+        traj["trajectory_point_metrics"]["history_comfort"] = pm.history_comfort;
+        traj["trajectory_point_metrics"]["history_comfort_available"] =
+          pm.history_comfort_available;
+        traj["trajectory_point_metrics"]["history_comfort_reason"] = pm.history_comfort_reason;
+        traj["trajectory_point_metrics"]["time_to_collision_within_bound"] =
+          pm.time_to_collision_within_bound;
+        traj["trajectory_point_metrics"]["time_to_collision_within_bound_available"] =
+          pm.time_to_collision_within_bound_available;
+        traj["trajectory_point_metrics"]["time_to_collision_within_bound_reason"] =
+          pm.time_to_collision_within_bound_reason;
+        traj["trajectory_point_metrics"]["time_to_collision_infraction_time_s"] =
+          pm.time_to_collision_infraction_time_s;
+        traj["trajectory_point_metrics"]["lane_keeping"] = pm.lane_keeping;
+        traj["trajectory_point_metrics"]["lane_keeping_available"] = pm.lane_keeping_available;
+        traj["trajectory_point_metrics"]["lane_keeping_reason"] = pm.lane_keeping_reason;
+        traj["trajectory_point_metrics"]["drivable_area_compliance"] = pm.drivable_area_compliance;
+        traj["trajectory_point_metrics"]["drivable_area_compliance_available"] =
+          pm.drivable_area_compliance_available;
+        traj["trajectory_point_metrics"]["drivable_area_compliance_reason"] =
+          pm.drivable_area_compliance_reason;
+        traj["trajectory_point_metrics"]["no_at_fault_collision"] = pm.no_at_fault_collision;
+        traj["trajectory_point_metrics"]["no_at_fault_collision_available"] =
+          pm.no_at_fault_collision_available;
+        traj["trajectory_point_metrics"]["no_at_fault_collision_reason"] =
+          pm.no_at_fault_collision_reason;
+        traj["trajectory_point_metrics"]["time_to_at_fault_collision_s"] =
+          pm.time_to_at_fault_collision_s;
+        traj["trajectory_point_metrics"]["driving_direction_compliance"] =
+          pm.driving_direction_compliance;
+        traj["trajectory_point_metrics"]["driving_direction_compliance_available"] =
+          pm.driving_direction_compliance_available;
+        traj["trajectory_point_metrics"]["driving_direction_compliance_reason"] =
+          pm.driving_direction_compliance_reason;
+        traj["trajectory_point_metrics"]["max_oncoming_progress_m"] = pm.max_oncoming_progress_m;
+        traj["trajectory_point_metrics"]["traffic_light_compliance"] = pm.traffic_light_compliance;
+        traj["trajectory_point_metrics"]["traffic_light_compliance_available"] =
+          pm.traffic_light_compliance_available;
+        traj["trajectory_point_metrics"]["traffic_light_compliance_reason"] =
+          pm.traffic_light_compliance_reason;
+      }
     }
 
     trajectories.push_back(traj);
@@ -2346,63 +2388,71 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     add_topic(metric_topic("lateral_deviation"), "std_msgs/msg/Float64MultiArray");
     add_topic(metric_topic("longitudinal_deviation"), "std_msgs/msg/Float64MultiArray");
   }
-  if (enabled_metrics_.time_to_collision_within_bound) {
-    add_topic(metric_topic("ttc"), "std_msgs/msg/Float64MultiArray");
-  }
-  if (enabled_metrics_.history_comfort) {
-    add_topic(epdms_metric_topic("history_comfort"), "std_msgs/msg/Float64");
-  }
-  add_epdms_availability_reason_if(enabled_metrics_.history_comfort, "history_comfort");
-  add_trajectory_array_if(enabled_metrics_.history_comfort, "longitudinal_accelerations");
-  add_trajectory_array_if(enabled_metrics_.history_comfort, "lateral_accelerations");
-  add_trajectory_array_if(enabled_metrics_.history_comfort, "lateral_jerks");
-  add_trajectory_array_if(enabled_metrics_.history_comfort, "jerk_magnitudes");
-  add_trajectory_array_if(enabled_metrics_.history_comfort, "longitudinal_jerks");
-  add_trajectory_array_if(enabled_metrics_.history_comfort, "yaw_rates");
-  add_trajectory_array_if(enabled_metrics_.history_comfort, "yaw_accelerations");
+  if (calculate_epdms_) {
+    if (enabled_metrics_.time_to_collision_within_bound) {
+      add_topic(metric_topic("ttc"), "std_msgs/msg/Float64MultiArray");
+    }
+    if (enabled_metrics_.history_comfort) {
+      add_topic(epdms_metric_topic("history_comfort"), "std_msgs/msg/Float64");
+    }
+    add_epdms_availability_reason_if(enabled_metrics_.history_comfort, "history_comfort");
+    add_trajectory_array_if(enabled_metrics_.history_comfort, "longitudinal_accelerations");
+    add_trajectory_array_if(enabled_metrics_.history_comfort, "lateral_accelerations");
+    add_trajectory_array_if(enabled_metrics_.history_comfort, "lateral_jerks");
+    add_trajectory_array_if(enabled_metrics_.history_comfort, "jerk_magnitudes");
+    add_trajectory_array_if(enabled_metrics_.history_comfort, "longitudinal_jerks");
+    add_trajectory_array_if(enabled_metrics_.history_comfort, "yaw_rates");
+    add_trajectory_array_if(enabled_metrics_.history_comfort, "yaw_accelerations");
 
-  add_epdms_topic_if(enabled_metrics_.extended_comfort, "extended_comfort", "std_msgs/msg/Float64");
-  add_epdms_availability_reason_if(enabled_metrics_.extended_comfort, "extended_comfort");
-  add_epdms_topic_if(
-    enabled_metrics_.time_to_collision_within_bound, "time_to_collision_within_bound",
-    "std_msgs/msg/Float64");
-  add_epdms_availability_reason_if(
-    enabled_metrics_.time_to_collision_within_bound, "time_to_collision_within_bound");
-  add_trajectory_array_if(enabled_metrics_.time_to_collision_within_bound, "ttc_values");
-  add_epdms_topic_if(enabled_metrics_.lane_keeping, "lane_keeping", "std_msgs/msg/Float64");
-  add_epdms_availability_reason_if(enabled_metrics_.lane_keeping, "lane_keeping");
-  add_trajectory_array_if(enabled_metrics_.lane_keeping, "lateral_deviations");
-  add_epdms_topic_if(enabled_metrics_.ego_progress, "ego_progress", "std_msgs/msg/Float64");
-  add_epdms_availability_reason_if(enabled_metrics_.ego_progress, "ego_progress");
-  add_trajectory_array_if(enabled_metrics_.ego_progress, "travel_distances");
-  add_epdms_topic_if(
-    enabled_metrics_.drivable_area_compliance, "drivable_area_compliance", "std_msgs/msg/Float64");
-  add_epdms_availability_reason_if(
-    enabled_metrics_.drivable_area_compliance, "drivable_area_compliance");
-  add_epdms_topic_if(
-    enabled_metrics_.no_at_fault_collision, "no_at_fault_collision", "std_msgs/msg/Float64");
-  add_epdms_topic_if(
-    enabled_metrics_.no_at_fault_collision, "time_to_at_fault_collision_s", "std_msgs/msg/Float64");
-  add_epdms_availability_reason_if(enabled_metrics_.no_at_fault_collision, "no_at_fault_collision");
-  add_epdms_topic_if(
-    enabled_metrics_.driving_direction_compliance, "driving_direction_compliance",
-    "std_msgs/msg/Float64");
-  add_epdms_topic_if(
-    enabled_metrics_.driving_direction_compliance, "max_oncoming_progress_m",
-    "std_msgs/msg/Float64");
-  add_epdms_availability_reason_if(
-    enabled_metrics_.driving_direction_compliance, "driving_direction_compliance");
-  add_epdms_topic_if(
-    enabled_metrics_.traffic_light_compliance, "traffic_light_compliance", "std_msgs/msg/Float64");
-  add_epdms_availability_reason_if(
-    enabled_metrics_.traffic_light_compliance, "traffic_light_compliance");
+    add_epdms_topic_if(
+      enabled_metrics_.extended_comfort, "extended_comfort", "std_msgs/msg/Float64");
+    add_epdms_availability_reason_if(enabled_metrics_.extended_comfort, "extended_comfort");
+    add_epdms_topic_if(
+      enabled_metrics_.time_to_collision_within_bound, "time_to_collision_within_bound",
+      "std_msgs/msg/Float64");
+    add_epdms_availability_reason_if(
+      enabled_metrics_.time_to_collision_within_bound, "time_to_collision_within_bound");
+    add_trajectory_array_if(enabled_metrics_.time_to_collision_within_bound, "ttc_values");
+    add_epdms_topic_if(enabled_metrics_.lane_keeping, "lane_keeping", "std_msgs/msg/Float64");
+    add_epdms_availability_reason_if(enabled_metrics_.lane_keeping, "lane_keeping");
+    add_trajectory_array_if(enabled_metrics_.lane_keeping, "lateral_deviations");
+    add_epdms_topic_if(enabled_metrics_.ego_progress, "ego_progress", "std_msgs/msg/Float64");
+    add_epdms_availability_reason_if(enabled_metrics_.ego_progress, "ego_progress");
+    add_trajectory_array_if(enabled_metrics_.ego_progress, "travel_distances");
+    add_epdms_topic_if(
+      enabled_metrics_.drivable_area_compliance, "drivable_area_compliance",
+      "std_msgs/msg/Float64");
+    add_epdms_availability_reason_if(
+      enabled_metrics_.drivable_area_compliance, "drivable_area_compliance");
+    add_epdms_topic_if(
+      enabled_metrics_.no_at_fault_collision, "no_at_fault_collision", "std_msgs/msg/Float64");
+    add_epdms_topic_if(
+      enabled_metrics_.no_at_fault_collision, "time_to_at_fault_collision_s",
+      "std_msgs/msg/Float64");
+    add_epdms_availability_reason_if(
+      enabled_metrics_.no_at_fault_collision, "no_at_fault_collision");
+    add_epdms_topic_if(
+      enabled_metrics_.driving_direction_compliance, "driving_direction_compliance",
+      "std_msgs/msg/Float64");
+    add_epdms_topic_if(
+      enabled_metrics_.driving_direction_compliance, "max_oncoming_progress_m",
+      "std_msgs/msg/Float64");
+    add_epdms_availability_reason_if(
+      enabled_metrics_.driving_direction_compliance, "driving_direction_compliance");
+    add_epdms_topic_if(
+      enabled_metrics_.traffic_light_compliance, "traffic_light_compliance",
+      "std_msgs/msg/Float64");
+    add_epdms_availability_reason_if(
+      enabled_metrics_.traffic_light_compliance, "traffic_light_compliance");
 
-  const bool add_synthetic_epdms = should_write_synthetic_epdms();
-  add_epdms_topic_if(add_synthetic_epdms, "synthetic_epdms_raw", "std_msgs/msg/Float64");
-  add_epdms_topic_if(add_synthetic_epdms, "synthetic_epdms_raw_available", "std_msgs/msg/Bool");
-  add_epdms_topic_if(add_synthetic_epdms, "synthetic_epdms_human_filtered", "std_msgs/msg/Float64");
-  add_epdms_topic_if(
-    add_synthetic_epdms, "synthetic_epdms_human_filtered_available", "std_msgs/msg/Bool");
+    const bool add_synthetic_epdms = should_write_synthetic_epdms();
+    add_epdms_topic_if(add_synthetic_epdms, "synthetic_epdms_raw", "std_msgs/msg/Float64");
+    add_epdms_topic_if(add_synthetic_epdms, "synthetic_epdms_raw_available", "std_msgs/msg/Bool");
+    add_epdms_topic_if(
+      add_synthetic_epdms, "synthetic_epdms_human_filtered", "std_msgs/msg/Float64");
+    add_epdms_topic_if(
+      add_synthetic_epdms, "synthetic_epdms_human_filtered_available", "std_msgs/msg/Bool");
+  }
 
   add_topic("/planning/trajectory", "autoware_planning_msgs/msg/Trajectory");
   add_topic(compared_trajectory_topic(), "autoware_planning_msgs/msg/Trajectory");

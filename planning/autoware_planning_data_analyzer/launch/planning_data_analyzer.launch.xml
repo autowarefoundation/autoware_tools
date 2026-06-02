@@ -6,6 +6,7 @@
   <arg name="output_dir" description="Output directory for evaluation results (overrides config file if specified)"/>
   <arg name="trajectory_topic" default="/planning/trajectory" description="Trajectory topic to evaluate"/>
   <arg name="open_loop_metric_variant" default="" description="Variant label for open-loop metric topics"/>
+  <arg name="calculate_epdms" default="true" description="Whether to calculate EPDMS metrics and topics"/>
   <arg name="gt_source_mode" default="kinematic_state" description="GT source mode: kinematic_state or gt_trajectory"/>
   <arg name="gt_trajectory_topic" default="/planning/ground_truth_trajectory" description="GT trajectory topic for gt_trajectory mode"/>
   <arg name="gt_sync_tolerance_ms" default="200.0" description="Sync tolerance (ms) for GT trajectory alignment"/>
@@ -18,6 +19,7 @@
       <param name="output_dir" value="$(var output_dir)"/>
       <param name="trajectory_topic" value="$(var trajectory_topic)"/>
       <param name="open_loop.metric_variant" value="$(var open_loop_metric_variant)"/>
+      <param name="open_loop.calculate_epdms" value="$(var calculate_epdms)"/>
       <param name="open_loop.gt_source_mode" value="$(var gt_source_mode)"/>
       <param name="open_loop.gt_trajectory_topic" value="$(var gt_trajectory_topic)"/>
       <param name="open_loop.gt_sync_tolerance_ms" value="$(var gt_sync_tolerance_ms)"/>
@@ -32,6 +34,7 @@
       <param name="output_dir" value="$(var output_dir)"/>
       <param name="trajectory_topic" value="$(var trajectory_topic)"/>
       <param name="open_loop.metric_variant" value="$(var open_loop_metric_variant)"/>
+      <param name="open_loop.calculate_epdms" value="$(var calculate_epdms)"/>
       <param name="open_loop.gt_source_mode" value="$(var gt_source_mode)"/>
       <param name="open_loop.gt_trajectory_topic" value="$(var gt_trajectory_topic)"/>
       <param name="open_loop.gt_sync_tolerance_ms" value="$(var gt_sync_tolerance_ms)"/>

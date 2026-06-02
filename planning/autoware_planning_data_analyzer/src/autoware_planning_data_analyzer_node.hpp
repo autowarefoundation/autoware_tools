@@ -89,6 +89,7 @@ private:
   std::string gt_trajectory_topic_name_;
   double gt_sync_tolerance_ms_ = 200.0;
   std::vector<std::string> enabled_metric_names_;
+  bool calculate_epdms_ = true;
   bool debug_topics_enabled_ = false;
   double trajectory_evaluation_horizon_s_ = 4.0;
   metrics::HistoryComfortParameters history_comfort_params_;

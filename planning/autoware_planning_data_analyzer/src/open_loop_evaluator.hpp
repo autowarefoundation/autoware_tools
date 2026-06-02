@@ -205,6 +205,8 @@ public:
 
   void set_enabled_metrics(const std::vector<std::string> & enabled_metric_names);
 
+  void set_calculate_epdms(bool enabled) { calculate_epdms_ = enabled; }
+
   void set_debug_topics_enabled(bool enabled) { debug_topics_enabled_ = enabled; }
 
   void set_trajectory_evaluation_horizon(double horizon_s)
@@ -423,6 +425,7 @@ private:
   std::vector<utils::ControlModeEvent> control_mode_events_;
   // Reserved for the follow-up debug-topic PR. PR 425 only stores the runtime switch.
   std::vector<TimedTrackedObjects> object_timeline_;
+  bool calculate_epdms_{true};
   bool debug_topics_enabled_{false};
   std::vector<metrics::evaluator::EvaluatorConfig> evaluator_configs_;
 };

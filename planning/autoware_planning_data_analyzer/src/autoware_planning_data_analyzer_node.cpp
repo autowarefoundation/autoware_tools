@@ -123,6 +123,7 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   gt_sync_tolerance_ms_ = get_or_declare_parameter<double>(*this, "open_loop.gt_sync_tolerance_ms");
   enabled_metric_names_ =
     get_or_declare_parameter<std::vector<std::string>>(*this, "open_loop.enabled_metrics");
+  calculate_epdms_ = get_or_declare_parameter<bool>(*this, "open_loop.calculate_epdms");
   debug_topics_enabled_ = get_or_declare_parameter<bool>(*this, "open_loop.debug_topics_enabled");
   trajectory_evaluation_horizon_s_ =
     get_or_declare_parameter<double>(*this, "open_loop.trajectory_evaluation_horizon");
@@ -526,6 +527,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       evaluator.set_json_output_dir(output_dir_path.string());
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_enabled_metrics(enabled_metric_names_);
+      evaluator.set_calculate_epdms(calculate_epdms_);
       evaluator.set_debug_topics_enabled(debug_topics_enabled_);
       evaluator.set_trajectory_evaluation_horizon(trajectory_evaluation_horizon_s_);
       evaluator.set_evaluation_horizons(evaluation_horizons);
