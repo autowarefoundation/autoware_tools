@@ -3873,6 +3873,56 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Output Topics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#score-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Score topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#availability-and-reason-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Availability and reason topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#epdms-diagnostic-scalar-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EPDMS diagnostic scalar topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debug-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Debug topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -5424,6 +5474,56 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Output Topics">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#score-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Score topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#availability-and-reason-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Availability and reason topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#epdms-diagnostic-scalar-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EPDMS diagnostic scalar topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#debug-topics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Debug topics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -6485,27 +6585,457 @@ EP = 1.0
 EP is effectively always <code>1.0</code> when available. Multi-candidate proposal-batch
 progress remains a future faithfulness improvement.</p>
 <h2 id="output-topics">Output Topics<a class="headerlink" href="#output-topics" title="Permanent link">#</a></h2>
-<p>EPDMS metric topics are written under:</p>
+<p>EPDMS metric topics are written under the EPDMS metric namespace:</p>
 <p><code>text
 /open_loop/metrics/epdms/*</code></p>
-<p>The main score topics are:</p>
+<p>They are produced for enabled EPDMS metrics. By default, all EPDMS metrics are
+enabled unless <code>open_loop.enabled_metrics</code> selects a subset.</p>
+<h3 id="score-topics">Score topics<a class="headerlink" href="#score-topics" title="Permanent link">#</a></h3>
+<p>The main score topics are scalar <code>std_msgs/msg/Float64</code> values:</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Meaning</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/open_loop/metrics/epdms/no_at_fault_collision</code></td>
+<td><code>NC</code> score. Checks whether the ego trajectory has an ego-responsible collision with a recorded object.</td>
+<td><code>0.0</code> means an at-fault collision happened.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/drivable_area_compliance</code></td>
+<td><code>DAC</code> score. Checks whether all ego footprint corners stay in semantic drivable area or accepted road-border fallback area.</td>
+<td><code>1.0</code> means no non-drivable-area violation.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/driving_direction_compliance</code></td>
+<td><code>DDC</code> score. Checks extended progress on oncoming or wrong-direction route area.</td>
+<td><code>0.5</code> means minor oncoming progress.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/traffic_light_compliance</code></td>
+<td><code>TLC</code> score. Checks whether the ego violates relevant red traffic-light stop lines.</td>
+<td><code>0.0</code> means a red-light violation.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/time_to_collision_within_bound</code></td>
+<td><code>TTC</code> score. Checks short-horizon projected ego collision against recorded objects.</td>
+<td><code>0.0</code> means a collision within the TTC bound.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/lane_keeping</code></td>
+<td><code>LK</code> score. Checks prolonged centerline deviation outside exempted lane-change, queue, and intersection conditions.</td>
+<td><code>0.0</code> means a continuous LK violation reached the duration threshold.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/history_comfort</code></td>
+<td><code>HC</code> score. Checks acceleration, jerk, yaw-rate, and yaw-acceleration comfort bounds over past-plus-planned motion.</td>
+<td><code>1.0</code> means all comfort components are inside bounds.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/extended_comfort</code></td>
+<td><code>EC</code> score. Checks consistency between consecutive planned trajectories using dynamic-signal RMS differences.</td>
+<td><code>0.0</code> means at least one RMS component exceeds its threshold.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/ego_progress</code></td>
+<td><code>EP</code> score. Checks route progress. With the current single selected trajectory, it is effectively <code>1.0</code> when available.</td>
+<td><code>1.0</code> means available single-proposal progress passes.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/synthetic_epdms_raw</code></td>
+<td>Aggregated raw EPDMS from planner subscores.</td>
+<td><code>0.0</code> means at least one multiplicative gate collapsed the score.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/synthetic_epdms_human_filtered</code></td>
+<td>Aggregated EPDMS after suppressing failures also observed in the human reference, except <code>EC</code>.</td>
+<td><code>1.0</code> means the filtered aggregate fully passes.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="availability-and-reason-topics">Availability and reason topics<a class="headerlink" href="#availability-and-reason-topics" title="Permanent link">#</a></h3>
+<p>Each main subscore publishes matching availability and reason topics:</p>
+<p><code>text
+/open_loop/metrics/epdms/&lt;subscore&gt;_available
+/open_loop/metrics/epdms/&lt;subscore&gt;_reason</code></p>
+<p>The availability topic is <code>std_msgs/msg/Bool</code>. The reason topic is
+<code>std_msgs/msg/String</code>.</p>
+<p>For example:</p>
+<p><code>text
+/open_loop/metrics/epdms/time_to_collision_within_bound_available = true
+/open_loop/metrics/epdms/time_to_collision_within_bound_reason = "collision_within_bound"</code></p>
+<p>The published reason strings are implementation diagnostics. Common examples
+include:</p>
 <ul>
-<li><code>/open_loop/metrics/epdms/no_at_fault_collision</code></li>
-<li><code>/open_loop/metrics/epdms/drivable_area_compliance</code></li>
-<li><code>/open_loop/metrics/epdms/driving_direction_compliance</code></li>
-<li><code>/open_loop/metrics/epdms/traffic_light_compliance</code></li>
-<li><code>/open_loop/metrics/epdms/time_to_collision_within_bound</code></li>
-<li><code>/open_loop/metrics/epdms/lane_keeping</code></li>
-<li><code>/open_loop/metrics/epdms/history_comfort</code></li>
-<li><code>/open_loop/metrics/epdms/extended_comfort</code></li>
-<li><code>/open_loop/metrics/epdms/ego_progress</code></li>
-<li><code>/open_loop/metrics/epdms/synthetic_epdms_raw</code></li>
-<li><code>/open_loop/metrics/epdms/synthetic_epdms_human_filtered</code></li>
+<li><code>available</code></li>
+<li><code>collision_within_bound</code></li>
+<li><code>non_compliant_corner_outside_drivable_area</code></li>
+<li><code>major_oncoming_progress</code></li>
+<li><code>minor_oncoming_progress</code></li>
+<li><code>at_fault_collision_with_agent</code></li>
+<li><code>at_fault_lateral_collision_with_agent</code></li>
+<li><code>available_no_relevant_traffic_lights</code></li>
+<li><code>unavailable_no_previous_trajectory</code></li>
 </ul>
-<p>Availability and reason topics are published with matching metric-specific
-suffixes. Diagnostic raw arrays such as acceleration, jerk, TTC values, lateral
-deviation, and travel distance intentionally remain outside the EPDMS metric
-namespace.</p></div>
+<p>The synthetic aggregate topics publish availability flags:</p>
+<ul>
+<li><code>/open_loop/metrics/epdms/synthetic_epdms_raw_available</code></li>
+<li><code>/open_loop/metrics/epdms/synthetic_epdms_human_filtered_available</code></li>
+</ul>
+<p>Synthetic aggregate topics do not publish reason strings because their state is
+derived from the component subscore availability and reason topics.</p>
+<h3 id="epdms-diagnostic-scalar-topics">EPDMS diagnostic scalar topics<a class="headerlink" href="#epdms-diagnostic-scalar-topics" title="Permanent link">#</a></h3>
+<p>The following scalar topics are not subscores, but explain subscore behavior:</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Type</th>
+<th>Meaning</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/open_loop/metrics/epdms/time_to_at_fault_collision_s</code></td>
+<td><code>std_msgs/msg/Float64</code></td>
+<td>Earliest at-fault collision time in the selected horizon.</td>
+<td><code>2.3</code> means the first at-fault collision is 2.3 s ahead.</td>
+</tr>
+<tr>
+<td><code>/open_loop/metrics/epdms/max_oncoming_progress_m</code></td>
+<td><code>std_msgs/msg/Float64</code></td>
+<td>Maximum rolling oncoming-direction progress used by <code>DDC</code>.</td>
+<td><code>6.4</code> means major oncoming progress threshold is exceeded.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="debug-topics">Debug topics<a class="headerlink" href="#debug-topics" title="Permanent link">#</a></h3>
+<p>EPDMS debug topics are written only when <code>open_loop.debug_topics_enabled</code> is
+<code>true</code>. They are intended for Lichtblick validation and use this namespace:</p>
+<p><code>text
+/debug/epdms/*</code></p>
+<p>The shared trajectory debug topics are <code>visualization_msgs/msg/MarkerArray</code>:</p>
+<ul>
+<li><code>/debug/epdms/trajectory/planned_horizon_4s</code></li>
+<li><code>/debug/epdms/trajectory/gt_horizon_4s</code></li>
+</ul>
+<p>The subscore debug topics are:</p>
+<table>
+<thead>
+<tr>
+<th>Subscore</th>
+<th>Topic</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NC</code></td>
+<td><code>/debug/epdms/nc/collision_summary</code></td>
+<td><code>std_msgs/msg/String</code></td>
+<td>JSON summary of collision events.</td>
+</tr>
+<tr>
+<td><code>NC</code></td>
+<td><code>/debug/epdms/nc/ego_footprints</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Ego footprint horizon used for collision checking.</td>
+</tr>
+<tr>
+<td><code>NC</code></td>
+<td><code>/debug/epdms/nc/object_footprints</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Recorded object polygons used for collision checking.</td>
+</tr>
+<tr>
+<td><code>NC</code></td>
+<td><code>/debug/epdms/nc/overlap_areas</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Ego-object overlap polygons.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/violation_summary</code></td>
+<td><code>std_msgs/msg/String</code></td>
+<td>JSON summary of non-drivable-area violations.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/ego_footprints</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Ego footprints, with violating footprints highlighted.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/admissible_road_areas</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Road lanelet polygons accepted by DAC.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/admissible_shoulder_areas</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Road-shoulder polygons accepted by DAC.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/admissible_intersection_areas</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td><code>intersection_area</code> polygons accepted by DAC.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/admissible_hatched_road_markings</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Hatched road-marking polygons accepted by DAC.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/admissible_parking_areas</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Parking-lot polygons accepted by DAC.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/road_border_lines</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Candidate <code>road_border</code> line strings.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/road_border_side_test_segments</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Side-test segments used to infer the road side of a border.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/road_border_gap_segments</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Semantic-boundary-to-border gap segments.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/semantic_boundary_points</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Closest semantic drivable-area boundary points.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/road_border_closest_points</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Closest points on candidate road-border segments.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/corner_projection_points</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Failed-corner projections used by the border fallback.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/road_border_plus_samples</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Positive-normal border side-probe samples.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/road_border_minus_samples</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Negative-normal border side-probe samples.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/road_border_fallback_corners</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Corners accepted by the road-border fallback.</td>
+</tr>
+<tr>
+<td><code>DAC</code></td>
+<td><code>/debug/epdms/dac/failing_corners</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Corners still classified as non-drivable.</td>
+</tr>
+<tr>
+<td><code>DDC</code></td>
+<td><code>/debug/epdms/ddc/violation_summary</code></td>
+<td><code>std_msgs/msg/String</code></td>
+<td>JSON summary of oncoming-direction violations.</td>
+</tr>
+<tr>
+<td><code>DDC</code></td>
+<td><code>/debug/epdms/ddc/ego_centers</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Ego center path used for direction compliance.</td>
+</tr>
+<tr>
+<td><code>DDC</code></td>
+<td><code>/debug/epdms/ddc/oncoming_segments</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Oncoming-progress segments.</td>
+</tr>
+<tr>
+<td><code>DDC</code></td>
+<td><code>/debug/epdms/ddc/route_lane_polygons</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Route-consistent lane polygons.</td>
+</tr>
+<tr>
+<td><code>DDC</code></td>
+<td><code>/debug/epdms/ddc/intersection_lane_polygons</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Intersection lane polygons that relax oncoming classification.</td>
+</tr>
+<tr>
+<td><code>TLC</code></td>
+<td><code>/debug/epdms/tlc/violation_summary</code></td>
+<td><code>std_msgs/msg/String</code></td>
+<td>JSON summary of red-light stop-line violations.</td>
+</tr>
+<tr>
+<td><code>TLC</code></td>
+<td><code>/debug/epdms/tlc/ego_footprints</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Ego footprints near stop-line evaluation.</td>
+</tr>
+<tr>
+<td><code>TLC</code></td>
+<td><code>/debug/epdms/tlc/stop_lines</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Relevant traffic-light stop lines.</td>
+</tr>
+<tr>
+<td><code>TTC</code></td>
+<td><code>/debug/epdms/ttc/violation_summary</code></td>
+<td><code>std_msgs/msg/String</code></td>
+<td>JSON summary of TTC collisions.</td>
+</tr>
+<tr>
+<td><code>TTC</code></td>
+<td><code>/debug/epdms/ttc/ego_footprints</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Projected ego footprints for TTC offsets.</td>
+</tr>
+<tr>
+<td><code>TTC</code></td>
+<td><code>/debug/epdms/ttc/object_footprints</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Recorded object footprints at TTC query times.</td>
+</tr>
+<tr>
+<td><code>TTC</code></td>
+<td><code>/debug/epdms/ttc/overlap_areas</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>TTC ego-object overlap polygons.</td>
+</tr>
+<tr>
+<td><code>LK</code></td>
+<td><code>/debug/epdms/lk/violation_summary</code></td>
+<td><code>std_msgs/msg/String</code></td>
+<td>JSON summary of lane-keeping violation runs.</td>
+</tr>
+<tr>
+<td><code>LK</code></td>
+<td><code>/debug/epdms/lk/ego_center_path</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Ego centerline samples colored by LK state.</td>
+</tr>
+<tr>
+<td><code>LK</code></td>
+<td><code>/debug/epdms/lk/reference_centerlines</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Reference lane centerlines used for lateral deviation.</td>
+</tr>
+<tr>
+<td><code>HC</code></td>
+<td><code>/debug/epdms/hc/component_status</code></td>
+<td><code>std_msgs/msg/String</code></td>
+<td>JSON status of comfort components.</td>
+</tr>
+<tr>
+<td><code>HC</code></td>
+<td><code>/debug/epdms/hc/sample_times</code></td>
+<td><code>std_msgs/msg/Float64MultiArray</code></td>
+<td>Sample times used by HC.</td>
+</tr>
+<tr>
+<td><code>HC</code></td>
+<td><code>/debug/epdms/hc/segments</code></td>
+<td><code>std_msgs/msg/Float64MultiArray</code></td>
+<td>Numeric HC segment/component data for panels.</td>
+</tr>
+<tr>
+<td><code>HC</code></td>
+<td><code>/debug/epdms/hc/horizon_footprints</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Ego footprints colored by comfort status.</td>
+</tr>
+<tr>
+<td><code>EC</code></td>
+<td><code>/debug/epdms/ec/comparison_summary</code></td>
+<td><code>std_msgs/msg/String</code></td>
+<td>JSON summary of consecutive-trajectory comfort comparison.</td>
+</tr>
+<tr>
+<td><code>EC</code></td>
+<td><code>/debug/epdms/ec/sample_times</code></td>
+<td><code>std_msgs/msg/Float64MultiArray</code></td>
+<td>Paired sample times used by EC.</td>
+</tr>
+<tr>
+<td><code>EC</code></td>
+<td><code>/debug/epdms/ec/delta_acceleration</code></td>
+<td><code>std_msgs/msg/Float64MultiArray</code></td>
+<td>Per-sample acceleration differences.</td>
+</tr>
+<tr>
+<td><code>EC</code></td>
+<td><code>/debug/epdms/ec/delta_jerk</code></td>
+<td><code>std_msgs/msg/Float64MultiArray</code></td>
+<td>Per-sample jerk differences.</td>
+</tr>
+<tr>
+<td><code>EC</code></td>
+<td><code>/debug/epdms/ec/delta_yaw_rate</code></td>
+<td><code>std_msgs/msg/Float64MultiArray</code></td>
+<td>Per-sample yaw-rate differences.</td>
+</tr>
+<tr>
+<td><code>EC</code></td>
+<td><code>/debug/epdms/ec/delta_yaw_accel</code></td>
+<td><code>std_msgs/msg/Float64MultiArray</code></td>
+<td>Per-sample yaw-acceleration differences.</td>
+</tr>
+<tr>
+<td><code>EP</code></td>
+<td><code>/debug/epdms/ep/progress_summary</code></td>
+<td><code>std_msgs/msg/String</code></td>
+<td>JSON summary of route-progress evaluation.</td>
+</tr>
+<tr>
+<td><code>EP</code></td>
+<td><code>/debug/epdms/ep/route_progress_points</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Progress sample points along the route.</td>
+</tr>
+<tr>
+<td><code>EP</code></td>
+<td><code>/debug/epdms/ep/route_reference</code></td>
+<td><code>visualization_msgs/msg/MarkerArray</code></td>
+<td>Route reference geometry used by EP.</td>
+</tr>
+</tbody>
+</table>
+<p>For example, when <code>NC</code> is <code>0.0</code>, inspect
+<code>/debug/epdms/nc/collision_summary</code>, then visualize
+<code>/debug/epdms/nc/ego_footprints</code>, <code>/debug/epdms/nc/object_footprints</code>, and
+<code>/debug/epdms/nc/overlap_areas</code> to identify the at-fault collision geometry.</p></div>
 
 
 
