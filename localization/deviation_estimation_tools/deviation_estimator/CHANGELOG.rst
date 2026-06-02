@@ -2,8 +2,8 @@
 Changelog for package deviation_estimator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2026-06-02)
+------------------
 * feat(deviation_estimator): replace autoware_universe_utils with specific autoware_utils sub-packages (`#414 <https://github.com/autowarefoundation/autoware_tools/issues/414>`_)
 * Contributors: Vishal Chauhan
 

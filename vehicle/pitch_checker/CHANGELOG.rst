@@ -2,8 +2,8 @@
 Changelog for package pitch_checker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2026-06-02)
+------------------
 * feat(pitch_checker): replace autoware_universe_utils with autoware_utils_tf (`#404 <https://github.com/autowarefoundation/autoware_tools/issues/404>`_)
 * Contributors: Vishal Chauhan
 

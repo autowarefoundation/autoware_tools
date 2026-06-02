@@ -2,8 +2,8 @@
 Changelog for package autoware_static_centerline_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2026-06-02)
+------------------
 * fix(autoware_static_centerline_generator): refresh centerline lane ids before saving (`#444 <https://github.com/autowarefoundation/autoware_tools/issues/444>`_)
   `save_map()` compared `get_selected_centerline()` (sliced dynamically by the
   current start/end index) against the cached `centerline_lane_ids`, which are

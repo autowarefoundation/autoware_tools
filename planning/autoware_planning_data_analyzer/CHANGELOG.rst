@@ -2,8 +2,8 @@
 Changelog for package autoware_planning_data_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2026-06-02)
+------------------
 * feat(planning_data_analyzer): filtering the `lateral_deviation_centerline` by `intersection_area` (`#440 <https://github.com/autowarefoundation/autoware_tools/issues/440>`_)
   * tmp
   * fix
