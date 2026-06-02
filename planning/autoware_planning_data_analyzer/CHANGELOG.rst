@@ -2,6 +2,176 @@
 Changelog for package autoware_planning_data_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(planning_data_analyzer): filtering the `lateral_deviation_centerline` by `intersection_area` (`#440 <https://github.com/autowarefoundation/autoware_tools/issues/440>`_)
+  * tmp
+  * fix
+  * fix readme
+  * addressed comments
+  ---------
+  Co-authored-by: t4-adc <grp-rd-1-adc-admin@tier4.jp>
+* docs(planning_data_analyzer): add EPDMS metric equations (`#438 <https://github.com/autowarefoundation/autoware_tools/issues/438>`_)
+  * docs(planning_data_analyzer): add EPDMS metric equations
+  * docs(planning_data_analyzer): address sakayori's review for EPDMS doc
+  - Link epdms_metrics.md in README
+  - Refine velocity notation to vector (v_t -> \vec{v}_t)
+  - Rename 'hard admissibility gate' to 'multiplicative penalty gate'
+  - Clarify tiered penalties (0.5) for NC and DDC
+  - Correct explanation of single-proposal EP simplification
+  * refactor(planning_data_analyzer): added clickable functions on the epdms metric md file
+  * style(pre-commit): autofix
+  * refactor: Added parameter table
+  * style(pre-commit): autofix
+  * refactor: refined explanation
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* feat(planning_data_analyzer): migrate EP metric (`#436 <https://github.com/autowarefoundation/autoware_tools/issues/436>`_)
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+* feat(planning_data_analyzer): update EPDMS aggregation filter (`#437 <https://github.com/autowarefoundation/autoware_tools/issues/437>`_)
+  * feat(planning_data_analyzer): update EPDMS aggregation filter
+  * feat(planning_data_analyzer): exclude EC from human filter
+  * fix(planning_data_analyzer): drop dead human-filter EC state
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+* feat(planning_data_analyzer): migrate EC metric (`#435 <https://github.com/autowarefoundation/autoware_tools/issues/435>`_)
+  * feat(planning_data_analyzer): migrate EC metric
+  * fix(planning_data_analyzer): address EC review comments
+  * fix(extended_comfort): address follow-up style and library nits
+  - Narrow rclcpp includes to time and duration
+  - Drop redundant get_time_seconds helper in favor of rclcpp::Duration::seconds()
+  - Use [] instead of .at() for indexing in bounded loops
+  - Move lateral acceleration design note to function-level comment
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* feat(planning_data_analyzer): migrate HC metric (`#434 <https://github.com/autowarefoundation/autoware_tools/issues/434>`_)
+  * feat(planning_data_analyzer): migrate HC metric
+  * refactor(planning_data_analyzer): name HC motion history padding
+  * test(planning_data_analyzer): align HC tests with acceleration signals
+  * fix(planning_data_analyzer): preserve GT acceleration for HC
+  * fix(history_comfort): address sakayori's PR comments
+  - Update availability and score when motion history is missing
+  - Fix past-horizon loop boundary to include t=-dt sample
+  - Add comments for frame assumption and lateral acceleration handling
+  - Optimize message lookup with std::lower_bound
+  - Use named constant for closest sample tolerance factor
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* feat(planning_data_analyzer): migrate LK metric (`#432 <https://github.com/autowarefoundation/autoware_tools/issues/432>`_)
+  * feat(planning_data_analyzer): migrate LK metric
+  * fix(planning_data_analyzer): address LK review comments
+  * fix(planning_data_analyzer): address LK CI and review nits
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+* feat(planning_data_analyzer): migrate TTC metric (`#431 <https://github.com/autowarefoundation/autoware_tools/issues/431>`_)
+  * feat(planning_data_analyzer): migrate TTC metric
+  * test(planning_data_analyzer): cover TTC bad-area behind guard
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+* feat(planning_data_analyzer): migrate TLC metric (`#429 <https://github.com/autowarefoundation/autoware_tools/issues/429>`_)
+  * feat(planning_data_analyzer): migrate TLC metric
+  * refactor(planning_data_analyzer): remove unused TLC debug payload
+  * fix(planning_data_analyzer): address TLC review comments
+  * test(planning_data_analyzer): fix TLC stop-line fixture
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+* feat(planning_data_analyzer): migrate DDC metric (`#428 <https://github.com/autowarefoundation/autoware_tools/issues/428>`_)
+  * feat(planning_data_analyzer): use local context for DDC
+  * fix(planning_data_analyzer): remove unused DDC window fields
+  * fix(planning_data_analyzer): drop unused DDC include
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+* feat(planning_data_analyzer): add NAVSIM-style DAC metric (`#427 <https://github.com/autowarefoundation/autoware_tools/issues/427>`_)
+  * feat(planning_data_analyzer): migrate DAC to semantic drivable area
+  * test(planning_data_analyzer): suppress DAC map conversion deprecation
+  * fix(planning_data_analyzer): address DAC review comments
+  * fix(planning_data_analyzer): include geometry point helper
+  * fix(planning_data_analyzer): use lanelet conversion namespace
+  * fix(planning_data_analyzer): avoid lanelet conversion helper
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+* feat(planning_data_analyzer): migrate NC metric (`#426 <https://github.com/autowarefoundation/autoware_tools/issues/426>`_)
+  * feat(planning_data_analyzer): use tracked objects for NC
+  * feat(planning_data_analyzer): migrate NC to tracked objects
+  * refactor(planning_data_analyzer): move future object slicing helper
+  * refactor(planning_data_analyzer): avoid duplicate object slicing
+  * fix(planning_data_analyzer): address NC review comments
+  * refactor(planning_data_analyzer): address NC helper review
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+* feat(planning_data_analyzer): add EPDMS runtime topic controls (`#425 <https://github.com/autowarefoundation/autoware_tools/issues/425>`_)
+  * feat(planning_data_analyzer): add EPDMS runtime topic controls
+  * fix(planning_data_analyzer): address EPDMS runtime review
+  * fix(planning_data_analyzer): handle all enabled metrics selector
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+* refactor(planning_data_analyzer): split EPDMS geometry helpers (`#423 <https://github.com/autowarefoundation/autoware_tools/issues/423>`_)
+  * refactor(planning_data_analyzer): split EPDMS geometry helpers
+  (cherry picked from commit 5b45980cbc9967370ab72c1ae37081908a0296dc)
+  * fix(planning_data_analyzer): align EPDMS helper include guards
+  * fix(planning_data_analyzer): satisfy helper split pre-commit hooks
+  * refactor(planning_data_analyzer): address EPDMS helper review comments
+  * refactor(planning_data_analyzer): deduplicate EPDMS geometry helpers
+  * fix(planning_data_analyzer): satisfy geometry helper pre-commit
+  * docs(planning_data_analyzer): explain Point2d distance adapter
+  * fix(planning_data_analyzer): use non-deprecated lanelet angle API
+  * fix(planning_data_analyzer): call experimental lanelet angle API
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+* feat(planning_data_analyzer): aggregate ADE/FDE only for override scenes (`#424 <https://github.com/autowarefoundation/autoware_tools/issues/424>`_)
+  * feat(planning_data_analyzer): aggregate ADE/FDE only for override scenes
+  Detect AUTONOMOUS->MANUAL transitions from /vehicle/status/control_mode
+  and emit per-horizon ADE/FDE/etc. statistics under override_only/* in the
+  summary JSON, using only trajectory samples whose timestamp falls inside
+  the configurable window after each transition.
+  * refactor(planning_data_analyzer): extract override window helpers and add unit tests
+  Move compute_override_windows and is_within_any_window out of OpenLoopEvaluator
+  into a free-function module under utils/ so the pure logic can be exercised
+  without instantiating the evaluator. Add gtest coverage for empty/single-event
+  inputs, AUTONOMOUS->MANUAL filtering, multiple transitions, and window boundary
+  inclusivity.
+  * fix(planning_data_analyzer): use RCL_ROS_TIME for override window endpoints
+  Trajectory timestamps are constructed from ROS message stamps (RCL_ROS_TIME),
+  but rclcpp::Time(int64_t) defaults to RCL_SYSTEM_TIME. Comparing the two raises
+  "can't compare times with different time sources" at runtime once any
+  AUTONOMOUS->MANUAL transition is detected. Explicitly pin override window
+  endpoints to RCL_ROS_TIME and add a regression test that asserts the clock
+  type, plus refresh the boundary-inclusivity test to mirror the production
+  clock.
+  * fix year
+  * fix pre-commit
+  * style: apply clang-format
+  ---------
+* refactor(planning_data_analyzer): organize EPDMS metric files (`#421 <https://github.com/autowarefoundation/autoware_tools/issues/421>`_)
+  * refactor(planning_data_analyzer): organize EPDMS metric files
+  * style(pre-commit): autofix
+  * refactor(planning_data_analyzer): use source-root-relative includes
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: beomseok-kimm <beomseok.kim.2@tier4.jp>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* feat(planning_data_analyzer): parallelize open-loop evaluation and reduce metric-path overhead (`#401 <https://github.com/autowarefoundation/autoware_tools/issues/401>`_)
+  * feat(planning_data_analyzer): parallelize open-loop evaluation
+  Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+  (cherry picked from commit b41036676913d2873a845338d3d48407bd7befd7)
+  * perf(planning_data_analyzer): reduce repeated metric path work
+  Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+  (cherry picked from commit e338d6dff4a4cb918152d2cdacd3f2661de4d455)
+  * perf(autoware_planning_data_analyzer): optimize memory and ensure thread-safety in parallel evaluation
+  - Pre-allocate member vectors and write directly using indexed access to avoid large temporary results.
+  - Prime RouteHandler to build internal caches/indices single-threaded before parallel access.
+  - Address reviewer feedback regarding memory overhead and concurrency safety.
+  ---------
+  Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+  Co-authored-by: Go Sakayori <go-sakayori@users.noreply.github.com>
+* Contributors: Beomseok Kim, Go Sakayori, Kazunori-Nakajima, beomseok-kimm
+
 0.7.0 (2026-05-01)
 ------------------
 * feat(planning_data_analyzer): remove override scene related source and script (`#400 <https://github.com/autowarefoundation/autoware_tools/issues/400>`_)

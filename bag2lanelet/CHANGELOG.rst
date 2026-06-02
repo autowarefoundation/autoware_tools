@@ -2,6 +2,9 @@
 Changelog for package bag2lanelet
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.7.0 (2026-05-01)
 ------------------
 * chore: sync files (`#311 <https://github.com/autowarefoundation/autoware_tools/issues/311>`_)
