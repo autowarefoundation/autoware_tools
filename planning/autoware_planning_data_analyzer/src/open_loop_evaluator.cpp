@@ -15,15 +15,17 @@
 #include "open_loop_evaluator.hpp"
 
 #include "metrics/epdms/aggregation/epdms_aggregation.hpp"
+#include "metrics/epdms/debug/epdms_debug_writer.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 #include "metrics/geometry/object_tracks.hpp"
+#include "metrics/geometry/trajectory_utils.hpp"
 #include "metrics/metric_types.hpp"
 #include "metrics/trajectory_metrics.hpp"
 
 #include <autoware/motion_utils/trajectory/conversion.hpp>
 #include <autoware/motion_utils/trajectory/trajectory.hpp>
-#include <autoware_utils_geometry/geometry.hpp>
 #include <autoware_utils_math/normalization.hpp>
+#include <rclcpp/duration.hpp>
 #include <rclcpp/serialization.hpp>
 #include <rosbag2_cpp/reader.hpp>
 
@@ -147,78 +149,6 @@ std::shared_ptr<SynchronizedData> clone_with_trajectory(
   return cloned;
 }
 
-double point_time_s(const autoware_planning_msgs::msg::TrajectoryPoint & point)
-{
-  return rclcpp::Duration(point.time_from_start).seconds();
-}
-
-double lerp(const double lhs, const double rhs, const double ratio)
-{
-  return lhs + (rhs - lhs) * ratio;
-}
-
-autoware_planning_msgs::msg::TrajectoryPoint interpolate_trajectory_point(
-  const autoware_planning_msgs::msg::TrajectoryPoint & previous,
-  const autoware_planning_msgs::msg::TrajectoryPoint & next, const double horizon_s)
-{
-  const double previous_t = point_time_s(previous);
-  const double next_t = point_time_s(next);
-  const double ratio = next_t > previous_t
-                         ? std::clamp((horizon_s - previous_t) / (next_t - previous_t), 0.0, 1.0)
-                         : 0.0;
-
-  auto interpolated = previous;
-  interpolated.pose =
-    autoware_utils_geometry::calc_interpolated_pose(previous.pose, next.pose, ratio);
-  interpolated.longitudinal_velocity_mps =
-    lerp(previous.longitudinal_velocity_mps, next.longitudinal_velocity_mps, ratio);
-  interpolated.lateral_velocity_mps =
-    lerp(previous.lateral_velocity_mps, next.lateral_velocity_mps, ratio);
-  interpolated.acceleration_mps2 = lerp(previous.acceleration_mps2, next.acceleration_mps2, ratio);
-  interpolated.heading_rate_rps = lerp(previous.heading_rate_rps, next.heading_rate_rps, ratio);
-  interpolated.front_wheel_angle_rad =
-    lerp(previous.front_wheel_angle_rad, next.front_wheel_angle_rad, ratio);
-  interpolated.rear_wheel_angle_rad =
-    lerp(previous.rear_wheel_angle_rad, next.rear_wheel_angle_rad, ratio);
-  interpolated.time_from_start = rclcpp::Duration::from_seconds(horizon_s);
-  return interpolated;
-}
-
-autoware_planning_msgs::msg::Trajectory truncate_trajectory_by_horizon(
-  const autoware_planning_msgs::msg::Trajectory & trajectory, const double horizon_s)
-{
-  constexpr double kTimeEpsilon = 1.0e-6;
-  if (horizon_s <= 0.0 || trajectory.points.empty()) {
-    return trajectory;
-  }
-
-  autoware_planning_msgs::msg::Trajectory truncated;
-  truncated.header = trajectory.header;
-  truncated.points.reserve(trajectory.points.size());
-
-  for (const auto & point : trajectory.points) {
-    const double t = point_time_s(point);
-    if (t <= horizon_s + kTimeEpsilon) {
-      truncated.points.push_back(point);
-      continue;
-    }
-
-    if (!truncated.points.empty()) {
-      const double previous_t = point_time_s(truncated.points.back());
-      if (previous_t < horizon_s - kTimeEpsilon) {
-        truncated.points.push_back(
-          interpolate_trajectory_point(truncated.points.back(), point, horizon_s));
-      }
-    }
-    if (truncated.points.empty()) {
-      truncated.points.push_back(point);
-    }
-    return truncated;
-  }
-
-  return truncated;
-}
-
 metrics::EpdmsMetricSnapshot build_epdms_snapshot(const OpenLoopTrajectoryMetrics & metrics)
 {
   metrics::EpdmsMetricSnapshot snapshot;
@@ -316,6 +246,22 @@ metrics::EpdmsMetricSnapshot calculate_human_reference_snapshot(
   human_snapshot.traffic_light_compliance_available =
     human_point_metrics.traffic_light_compliance_available;
   return human_snapshot;
+}
+
+metrics::EpdmsDebugEnabledMetrics make_epdms_debug_enabled_metrics(
+  const EnabledOpenLoopMetrics & enabled_metrics)
+{
+  metrics::EpdmsDebugEnabledMetrics enabled;
+  enabled.history_comfort = enabled_metrics.history_comfort;
+  enabled.extended_comfort = enabled_metrics.extended_comfort;
+  enabled.time_to_collision_within_bound = enabled_metrics.time_to_collision_within_bound;
+  enabled.lane_keeping = enabled_metrics.lane_keeping;
+  enabled.ego_progress = enabled_metrics.ego_progress;
+  enabled.drivable_area_compliance = enabled_metrics.drivable_area_compliance;
+  enabled.no_at_fault_collision = enabled_metrics.no_at_fault_collision;
+  enabled.driving_direction_compliance = enabled_metrics.driving_direction_compliance;
+  enabled.traffic_light_compliance = enabled_metrics.traffic_light_compliance;
+  return enabled;
 }
 
 }  // namespace
@@ -528,9 +474,17 @@ void OpenLoopEvaluator::evaluate(
                 *eval_data.synchronized_data->trajectory, object_timeline_,
                 trajectory_evaluation_horizon_s_)
             : std::vector<TimedTrackedObjects>{};
+        const metrics::TrajectoryMetricDebugEnabledMetrics debug_enabled_metrics{
+          debug_topics_enabled_ && enabled_metrics_.time_to_collision_within_bound,
+          debug_topics_enabled_ && enabled_metrics_.no_at_fault_collision,
+          debug_topics_enabled_ && enabled_metrics_.drivable_area_compliance,
+          debug_topics_enabled_ && enabled_metrics_.lane_keeping,
+          debug_topics_enabled_ && enabled_metrics_.driving_direction_compliance,
+          debug_topics_enabled_ && enabled_metrics_.traffic_light_compliance};
         auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
           eval_data.synchronized_data, route_handler_, history_comfort_params_,
-          lane_keeping_params_, driving_direction_params_, vehicle_info_, future_objects);
+          lane_keeping_params_, driving_direction_params_, vehicle_info_, future_objects,
+          debug_enabled_metrics);
         auto metrics = evaluate_trajectory(eval_data);
         metrics.history_comfort = trajectory_metrics.history_comfort;
         metrics.history_comfort_available = trajectory_metrics.history_comfort_available;
@@ -655,6 +609,13 @@ void OpenLoopEvaluator::evaluate(
             metrics.extended_comfort = extended_comfort_result.score;
             metrics.extended_comfort_available = extended_comfort_result.available;
             metrics.extended_comfort_reason = extended_comfort_result.reason;
+            metrics.extended_comfort_debug_summary = extended_comfort_result.debug_summary;
+            metrics.extended_comfort_sample_times = extended_comfort_result.sample_times;
+            metrics.extended_comfort_delta_acceleration =
+              extended_comfort_result.delta_acceleration;
+            metrics.extended_comfort_delta_jerk = extended_comfort_result.delta_jerk;
+            metrics.extended_comfort_delta_yaw_rate = extended_comfort_result.delta_yaw_rate;
+            metrics.extended_comfort_delta_yaw_accel = extended_comfort_result.delta_yaw_accel;
           }
         }
 
@@ -737,7 +698,7 @@ std::vector<OpenLoopEvaluator::EvaluationData> OpenLoopEvaluator::prepare_evalua
     }
 
     const auto truncated_trajectory =
-      truncate_trajectory_by_horizon(*data->trajectory, trajectory_evaluation_horizon_s_);
+      metrics::truncate_trajectory_by_horizon(*data->trajectory, trajectory_evaluation_horizon_s_);
     const auto truncated_data = clone_with_trajectory(data, truncated_trajectory);
 
     const size_t num_pts = truncated_data->trajectory->points.size();
@@ -1464,6 +1425,19 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   if (!gt_traj_msg.points.empty()) {
     bag_writer.write(gt_traj_msg, compared_trajectory_topic(), message_timestamp);
   }
+
+  if (debug_topics_enabled_) {
+    metrics::write_epdms_trajectory_horizon_debug_topics_to_bag(
+      *trajectory_data->trajectory, ground_truth_trajectory, vehicle_info_, bag_writer,
+      message_timestamp);
+    if (enabled_metrics_.extended_comfort) {
+      metrics::write_epdms_extended_comfort_debug_topics_to_bag(
+        metrics.extended_comfort_debug_summary, metrics.extended_comfort_sample_times,
+        metrics.extended_comfort_delta_acceleration, metrics.extended_comfort_delta_jerk,
+        metrics.extended_comfort_delta_yaw_rate, metrics.extended_comfort_delta_yaw_accel,
+        bag_writer, message_timestamp);
+    }
+  }
 }
 
 void OpenLoopEvaluator::save_trajectory_point_metrics_to_bag_with_variant(
@@ -1509,6 +1483,12 @@ void OpenLoopEvaluator::save_trajectory_point_metrics_to_bag_with_variant(
   write_array(
     enabled_metrics_.ego_progress, metrics.travel_distances,
     trajectory_metric_topic("travel_distances"));
+
+  if (debug_topics_enabled_) {
+    metrics::write_epdms_point_debug_topics_to_bag(
+      metrics, make_epdms_debug_enabled_metrics(enabled_metrics_), history_comfort_params_,
+      vehicle_info_, bag_writer, normalized_timestamp);
+  }
 }
 
 std::string OpenLoopEvaluator::metric_topic(const std::string & metric_name) const
@@ -2410,6 +2390,10 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     "/perception/object_recognition/objects", "autoware_perception_msgs/msg/PredictedObjects");
   add_topic("/tf", "tf2_msgs/msg/TFMessage");
   add_topic("/tf_static", "tf2_msgs/msg/TFMessage");
+  if (debug_topics_enabled_) {
+    metrics::add_epdms_debug_result_topics(
+      topics, make_epdms_debug_enabled_metrics(enabled_metrics_));
+  }
   return topics;
 }
 

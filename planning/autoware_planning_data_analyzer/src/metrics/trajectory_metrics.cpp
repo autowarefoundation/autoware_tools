@@ -22,6 +22,7 @@
 #include "metrics/epdms/subscores/traffic_light_compliance.hpp"
 #include "metrics/epdms/subscores/ttc_within_bound.hpp"
 #include "metrics/geometry/ego_footprint.hpp"
+#include "metrics/geometry/lanelet_geometry.hpp"
 #include "metrics/geometry/lanelet_queries.hpp"
 #include "metrics/geometry/metric_utils.hpp"
 
@@ -48,6 +49,44 @@ using autoware::route_handler::RouteHandler;
 
 namespace
 {
+
+geometry_msgs::msg::Point to_msg_point(
+  const geometry_msgs::msg::Point & point, const double z_offset = 0.0)
+{
+  geometry_msgs::msg::Point msg = point;
+  msg.z += z_offset;
+  return msg;
+}
+
+template <typename PointRange>
+std::vector<geometry_msgs::msg::Point> lanelet_points_to_msg(
+  const PointRange & lanelet_points, const double z)
+{
+  std::vector<geometry_msgs::msg::Point> points;
+  for (const auto & point : lanelet_points) {
+    points.push_back(
+      autoware_utils_geometry::to_msg(autoware_utils_geometry::Point3d{point.x(), point.y(), z}));
+  }
+  return points;
+}
+
+std::vector<geometry_msgs::msg::Point> lanelet_polygon_points(
+  const lanelet::ConstLanelet & lanelet, const double z)
+{
+  return lanelet_points_to_msg(lanelet.polygon3d(), z);
+}
+
+std::vector<geometry_msgs::msg::Point> polygon_points(
+  const lanelet::ConstPolygon3d & polygon, const double z)
+{
+  return lanelet_points_to_msg(polygon, z);
+}
+
+std::vector<geometry_msgs::msg::Point> centerline_points(
+  const lanelet::ConstLanelet & lanelet, const double z)
+{
+  return lanelet_points_to_msg(lanelet.centerline3d(), z);
+}
 
 template <typename MessageT, typename ActivePredicate>
 std::vector<std::pair<double, double>> collect_signal_active_windows(
@@ -272,7 +311,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
   const LaneKeepingParameters & lane_keeping_params,
   const DrivingDirectionComplianceParameters & driving_direction_params,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::vector<TimedTrackedObjects> & future_objects)
+  const std::vector<TimedTrackedObjects> & future_objects,
+  const TrajectoryMetricDebugEnabledMetrics & debug_enabled_metrics)
 {
   TrajectoryPointMetrics metrics;
 
@@ -308,22 +348,26 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
                                : build_logged_object_tracks(logged_future_objects);
   const auto ttc_within_bound = calculate_ttc_within_bound(
     trajectory, logged_future_objects, vehicle_info, route_handler, &footprint_evaluations,
-    object_tracks.empty() ? nullptr : &object_tracks);
+    object_tracks.empty() ? nullptr : &object_tracks,
+    debug_enabled_metrics.time_to_collision_within_bound);
   metrics.time_to_collision_within_bound = ttc_within_bound.score;
   metrics.time_to_collision_within_bound_available = ttc_within_bound.available;
   metrics.time_to_collision_within_bound_reason = ttc_within_bound.reason;
   metrics.time_to_collision_infraction_time_s = ttc_within_bound.infraction_time_s;
+  metrics.time_to_collision_within_bound_debug = ttc_within_bound.debug_info;
   NoAtFaultCollisionResult no_at_fault_collision;
   if (logged_future_objects.empty()) {
     no_at_fault_collision.reason = "unavailable_no_future_objects";
   } else {
     no_at_fault_collision = calculate_no_at_fault_collision(
-      trajectory, object_tracks, vehicle_info, route_handler, footprint_evaluations);
+      trajectory, object_tracks, vehicle_info, route_handler, footprint_evaluations,
+      debug_enabled_metrics.no_at_fault_collision);
   }
   metrics.no_at_fault_collision = no_at_fault_collision.score;
   metrics.no_at_fault_collision_available = no_at_fault_collision.available;
   metrics.no_at_fault_collision_reason = no_at_fault_collision.reason;
   metrics.time_to_at_fault_collision_s = no_at_fault_collision.infraction_time_s;
+  metrics.no_at_fault_collision_debug = no_at_fault_collision.debug_info;
   if (!route_handler) {
     metrics.driving_direction_compliance_reason = "unavailable_no_route_handler";
   } else if (!route_handler->isHandlerReady()) {
@@ -352,6 +396,48 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     metrics.driving_direction_compliance_available = ddc_result.available;
     metrics.driving_direction_compliance_reason = ddc_result.reason;
     metrics.max_oncoming_progress_m = ddc_result.max_oncoming_progress_m;
+    metrics.driving_direction_compliance_debug.worst_window_start_time_s =
+      ddc_result.worst_window_start_time_s;
+    metrics.driving_direction_compliance_debug.worst_window_end_time_s =
+      ddc_result.worst_window_end_time_s;
+    metrics.driving_direction_compliance_debug.worst_window_sample_count =
+      ddc_result.worst_window_sample_count;
+    metrics.driving_direction_compliance_debug.window_progress_m =
+      ddc_result.max_oncoming_progress_m;
+    if (debug_enabled_metrics.driving_direction_compliance) {
+      for (size_t i = 0; i < driving_direction_evaluation_points.size(); ++i) {
+        const auto & evaluation_point = driving_direction_evaluation_points.at(i);
+        const auto & trajectory_point = trajectory.points.at(i);
+        const auto local_context =
+          compute_driving_direction_local_context(trajectory_point.pose, route_handler)
+            .value_or(DrivingDirectionLocalContext{});
+        const double counted_progress_m =
+          evaluation_point.in_oncoming_traffic && !evaluation_point.is_intersection
+            ? std::max(0.0, evaluation_point.progress_m)
+            : 0.0;
+        metrics.driving_direction_compliance_debug.samples.push_back(
+          DrivingDirectionDebugSample{
+            evaluation_point.time_from_start_s, evaluation_point.progress_m, counted_progress_m,
+            evaluation_point.in_oncoming_traffic, local_context.in_lane_margin_only,
+            evaluation_point.is_intersection, to_msg_point(trajectory_point.pose.position, 0.35)});
+        if (i == 0U) {
+          metrics.driving_direction_compliance_debug.label_anchor =
+            to_msg_point(trajectory_point.pose.position, 0.35);
+        }
+        for (const auto & lanelet : local_context.route_lanelets) {
+          metrics.driving_direction_compliance_debug.route_lane_polygons.push_back(
+            DrivingDirectionDebugPolygon{
+              evaluation_point.time_from_start_s,
+              lanelet_polygon_points(lanelet, trajectory_point.pose.position.z)});
+        }
+        for (const auto & polygon : local_context.intersection_areas) {
+          metrics.driving_direction_compliance_debug.intersection_lane_polygons.push_back(
+            DrivingDirectionDebugPolygon{
+              evaluation_point.time_from_start_s,
+              polygon_points(polygon, trajectory_point.pose.position.z)});
+        }
+      }
+    }
   }
 
   if (!route_handler) {
@@ -362,17 +448,21 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     metrics.traffic_light_compliance_reason = "unavailable_route_handler_not_ready";
   } else {
     const auto drivable_area_compliance = calculate_drivable_area_compliance(
-      trajectory, route_handler, vehicle_info, &footprint_evaluations);
+      trajectory, route_handler, vehicle_info, &footprint_evaluations,
+      debug_enabled_metrics.drivable_area_compliance);
     metrics.drivable_area_compliance = drivable_area_compliance.score;
     metrics.drivable_area_compliance_available = drivable_area_compliance.available;
     metrics.drivable_area_compliance_reason = drivable_area_compliance.reason;
+    metrics.drivable_area_compliance_debug = drivable_area_compliance.debug_info;
 
     const auto traffic_light_compliance = calculate_traffic_light_compliance(
       trajectory, sync_data->traffic_signals, route_handler, vehicle_info,
-      sync_data->turn_indicators_status, &footprint_evaluations, &route_relevant_lanelets);
+      sync_data->turn_indicators_status, &footprint_evaluations, &route_relevant_lanelets,
+      debug_enabled_metrics.traffic_light_compliance);
     metrics.traffic_light_compliance = traffic_light_compliance.score;
     metrics.traffic_light_compliance_available = traffic_light_compliance.available;
     metrics.traffic_light_compliance_reason = traffic_light_compliance.reason;
+    metrics.traffic_light_compliance_debug = traffic_light_compliance.debug_info;
   }
 
   const auto ego_progress = calculate_ego_progress(
@@ -440,9 +530,15 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
         metrics.lateral_deviations[i] = std::numeric_limits<double>::quiet_NaN();
         lane_keeping_evaluation_points.push_back(
           LaneKeepingEvaluationPoint{
-            point.time_from_start, metrics.lateral_deviations[i], false,
+            point.time_from_start,
+            metrics.lateral_deviations[i],
+            false,
             std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps),
-            metrics.travel_distances[i]});
+            metrics.travel_distances[i],
+            debug_enabled_metrics.lane_keeping ? to_msg_point(point.pose.position, 0.35)
+                                               : geometry_msgs::msg::Point{},
+            {},
+            -1});
       } else {
         metrics.lateral_deviations[i] =
           autoware::experimental::lanelet2_utils::get_lateral_distance_to_centerline(
@@ -454,7 +550,13 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
             point.time_from_start, metrics.lateral_deviations[i],
             local_context.has_value() && local_context->in_intersection,
             std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps),
-            metrics.travel_distances[i]});
+            metrics.travel_distances[i],
+            debug_enabled_metrics.lane_keeping ? to_msg_point(point.pose.position, 0.35)
+                                               : geometry_msgs::msg::Point{},
+            debug_enabled_metrics.lane_keeping
+              ? centerline_points(reference_lanelet.value(), point.pose.position.z)
+              : std::vector<geometry_msgs::msg::Point>{},
+            reference_lanelet->id()});
       }
     }
 
@@ -483,8 +585,11 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
       return std::isfinite(evaluation_point.lateral_deviation);
     });
   if (has_finite_lane_keeping_sample) {
-    metrics.lane_keeping = calculate_lane_keeping_score(
-      lane_keeping_evaluation_points, lane_keeping_params, lane_change_windows_s);
+    const auto lane_keeping_result = calculate_lane_keeping_result(
+      lane_keeping_evaluation_points, lane_keeping_params, lane_change_windows_s,
+      debug_enabled_metrics.lane_keeping);
+    metrics.lane_keeping = lane_keeping_result.score;
+    metrics.lane_keeping_debug = lane_keeping_result.debug;
     metrics.lane_keeping_available = true;
     metrics.lane_keeping_reason = "available";
   } else if (metrics.lane_keeping_reason == "unavailable") {

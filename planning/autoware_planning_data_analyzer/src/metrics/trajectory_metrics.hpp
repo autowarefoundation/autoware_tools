@@ -16,10 +16,13 @@
 #define METRICS__TRAJECTORY_METRICS_HPP_
 
 #include "data_types.hpp"
+#include "metrics/epdms/subscores/drivable_area_compliance.hpp"
 #include "metrics/epdms/subscores/driving_direction_compliance.hpp"
 #include "metrics/epdms/subscores/ego_progress.hpp"
 #include "metrics/epdms/subscores/lane_keeping.hpp"
+#include "metrics/epdms/subscores/no_at_fault_collision.hpp"
 #include "metrics/epdms/subscores/traffic_light_compliance.hpp"
+#include "metrics/epdms/subscores/ttc_within_bound.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
@@ -49,6 +52,16 @@ struct HistoryComfortParameters
   double max_yaw_acceleration{1.93};
 };
 
+struct TrajectoryMetricDebugEnabledMetrics
+{
+  bool time_to_collision_within_bound{false};
+  bool no_at_fault_collision{false};
+  bool drivable_area_compliance{false};
+  bool lane_keeping{false};
+  bool driving_direction_compliance{false};
+  bool traffic_light_compliance{false};
+};
+
 // Structure for trajectory point-wise metrics
 struct TrajectoryPointMetrics
 {
@@ -59,19 +72,25 @@ struct TrajectoryPointMetrics
   std::vector<double> longitudinal_jerks;
   std::vector<double> yaw_rates;
   std::vector<double> yaw_accelerations;
+  std::vector<double> history_comfort_sample_times;
+  std::vector<double> history_comfort_segment_ids;
+  std::vector<geometry_msgs::msg::Pose> history_comfort_sample_poses;
   std::vector<double> ttc_values;
   std::vector<double> lateral_deviations;
   std::vector<double> travel_distances;
   double history_comfort{0.0};
   bool history_comfort_available{false};
   std::string history_comfort_reason{"unavailable"};
+  std::string history_comfort_debug_summary;
   double time_to_collision_within_bound{0.0};
   bool time_to_collision_within_bound_available{false};
   std::string time_to_collision_within_bound_reason{"unavailable"};
   double time_to_collision_infraction_time_s{std::numeric_limits<double>::infinity()};
+  TTCWithinBoundDebugInfo time_to_collision_within_bound_debug;
   double lane_keeping{0.0};
   bool lane_keeping_available{false};
   std::string lane_keeping_reason{"unavailable"};
+  LaneKeepingDebugInfo lane_keeping_debug;
   double ego_progress{0.0};
   bool ego_progress_available{false};
   std::string ego_progress_reason{"unavailable"};
@@ -85,17 +104,21 @@ struct TrajectoryPointMetrics
   double drivable_area_compliance{0.0};
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};
+  DrivableAreaComplianceDebugInfo drivable_area_compliance_debug;
   double no_at_fault_collision{0.0};
   bool no_at_fault_collision_available{false};
   std::string no_at_fault_collision_reason{"unavailable"};
   double time_to_at_fault_collision_s{std::numeric_limits<double>::infinity()};
+  NoAtFaultCollisionDebugInfo no_at_fault_collision_debug;
   double driving_direction_compliance{0.0};
   bool driving_direction_compliance_available{false};
   std::string driving_direction_compliance_reason{"unavailable"};
   double max_oncoming_progress_m{0.0};
+  DrivingDirectionComplianceDebugInfo driving_direction_compliance_debug;
   double traffic_light_compliance{0.0};
   bool traffic_light_compliance_available{false};
   std::string traffic_light_compliance_reason{"unavailable"};
+  TrafficLightComplianceDebugInfo traffic_light_compliance_debug;
 };
 
 /**
@@ -113,7 +136,9 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     DrivingDirectionComplianceParameters{},
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info =
     autoware::vehicle_info_utils::VehicleInfo{},
-  const std::vector<TimedTrackedObjects> & future_objects = {});
+  const std::vector<TimedTrackedObjects> & future_objects = {},
+  const TrajectoryMetricDebugEnabledMetrics & debug_enabled_metrics =
+    TrajectoryMetricDebugEnabledMetrics{});
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

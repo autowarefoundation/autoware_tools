@@ -14,10 +14,16 @@
 
 #include "metric_utils.hpp"
 
+#include <autoware_utils_uuid/uuid_helper.hpp>
+
+#include <boost/geometry.hpp>
+
 #include <tf2/utils.h>
 
 #include <algorithm>
 #include <cmath>
+#include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
@@ -68,6 +74,57 @@ const autoware_perception_msgs::msg::PredictedPath * highest_confidence_path(
     object.kinematics.predicted_paths.begin(), object.kinematics.predicted_paths.end(),
     [](const auto & lhs, const auto & rhs) { return lhs.confidence < rhs.confidence; });
   return it == object.kinematics.predicted_paths.end() ? nullptr : &(*it);
+}
+
+std::string object_id_to_string(
+  const unique_identifier_msgs::msg::UUID & object_id, const bool valid)
+{
+  if (!valid) {
+    return "invalid";
+  }
+  return autoware_utils_uuid::to_hex_string(object_id);
+}
+
+geometry_msgs::msg::Point to_msg_point(
+  const autoware_utils_geometry::Point2d & point, const double z)
+{
+  return autoware_utils_geometry::to_msg(point.to_3d(z));
+}
+
+geometry_msgs::msg::Point to_msg_point(const geometry_msgs::msg::Pose & pose)
+{
+  geometry_msgs::msg::Point msg;
+  msg.x = pose.position.x;
+  msg.y = pose.position.y;
+  msg.z = pose.position.z;
+  return msg;
+}
+
+std::vector<geometry_msgs::msg::Point> polygon_to_points(
+  const autoware_utils_geometry::Polygon2d & polygon, const double z)
+{
+  std::vector<geometry_msgs::msg::Point> points;
+  points.reserve(polygon.outer().size());
+  for (const auto & point : polygon.outer()) {
+    points.push_back(to_msg_point(point, z));
+  }
+  return points;
+}
+
+std::vector<std::vector<geometry_msgs::msg::Point>> overlap_polygons_to_points(
+  const autoware_utils_geometry::Polygon2d & ego_polygon,
+  const autoware_utils_geometry::Polygon2d & object_polygon, const double z)
+{
+  std::vector<autoware_utils_geometry::Polygon2d> intersections;
+  boost::geometry::intersection(ego_polygon, object_polygon, intersections);
+  std::vector<std::vector<geometry_msgs::msg::Point>> polygons;
+  polygons.reserve(intersections.size());
+  for (const auto & intersection : intersections) {
+    if (intersection.outer().size() >= 4U && boost::geometry::area(intersection) > 1.0e-6) {
+      polygons.push_back(polygon_to_points(intersection, z));
+    }
+  }
+  return polygons;
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics

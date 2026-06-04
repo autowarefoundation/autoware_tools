@@ -29,8 +29,11 @@
   <depend>autoware_route_handler</depend>
   <depend>autoware_traffic_light_utils</depend>
   <depend>autoware_utils</depend>
+  <depend>autoware_utils_geometry</depend>
   <depend>autoware_utils_math</depend>
   <depend>autoware_utils_rclcpp</depend>
+  <depend>autoware_utils_uuid</depend>
+  <depend>autoware_utils_visualization</depend>
   <depend>autoware_vehicle_info_utils</depend>
   <depend>autoware_vehicle_msgs</depend>
   <depend>nlohmann-json-dev</depend>

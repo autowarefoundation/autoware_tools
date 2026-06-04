@@ -23,6 +23,7 @@
 
 #include <lanelet2_core/primitives/Lanelet.h>
 
+#include <limits>
 #include <memory>
 #include <optional>
 #include <string>
@@ -33,11 +34,32 @@ namespace autoware::planning_data_analyzer::metrics
 
 using autoware::route_handler::RouteHandler;
 
+struct TrafficLightComplianceDebugPolygon
+{
+  double time_s{0.0};
+  std::vector<geometry_msgs::msg::Point> polygon;
+  lanelet::Id source_id{0};
+};
+
+struct TrafficLightComplianceDebugInfo
+{
+  double first_failure_time_s{std::numeric_limits<double>::infinity()};
+  geometry_msgs::msg::Point label_anchor;
+  std::vector<TrafficLightComplianceDebugPolygon> ego_horizon_footprints;
+  std::vector<TrafficLightComplianceDebugPolygon> stop_lines;
+  std::vector<lanelet::Id> regulatory_element_ids;
+  std::vector<lanelet::Id> selected_lane_ids;
+  std::vector<lanelet::Id> stop_line_ids;
+  std::size_t selected_stop_line_count{0};
+  std::optional<std::string> intended_movement;
+};
+
 struct TrafficLightComplianceResult
 {
   double score{0.0};
   bool available{false};
   std::string reason{"unavailable"};
+  TrafficLightComplianceDebugInfo debug_info;
 };
 
 TrafficLightComplianceResult calculate_traffic_light_compliance(
@@ -47,7 +69,7 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<TurnIndicatorsReport> & turn_indicators_status = nullptr,
   const std::vector<TrajectoryFootprintEvaluation> * evaluations = nullptr,
-  const lanelet::ConstLanelets * route_relevant_lanelets = nullptr);
+  const lanelet::ConstLanelets * route_relevant_lanelets = nullptr, bool collect_debug = false);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 
