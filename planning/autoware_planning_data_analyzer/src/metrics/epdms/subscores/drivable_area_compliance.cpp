@@ -224,7 +224,8 @@ DrivableAreaComplianceResult calculate_drivable_area_compliance(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations)
+  const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations,
+  const bool collect_debug)
 {
   DrivableAreaComplianceResult result;
   if (trajectory.points.empty()) {
@@ -270,7 +271,9 @@ DrivableAreaComplianceResult calculate_drivable_area_compliance(
     }
   }
 
-  fill_debug_info(result.debug_info, trajectory, evaluations);
+  if (collect_debug) {
+    fill_debug_info(result.debug_info, trajectory, evaluations);
+  }
 
   for (const auto & evaluation : evaluations) {
     if (evaluation.ego_area_evaluation->flags.non_drivable_area) {

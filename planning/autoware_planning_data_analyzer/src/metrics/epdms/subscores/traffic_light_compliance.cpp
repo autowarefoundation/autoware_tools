@@ -231,7 +231,7 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<TurnIndicatorsReport> & turn_indicators_status,
   const std::vector<TrajectoryFootprintEvaluation> * evaluations,
-  const lanelet::ConstLanelets * route_relevant_lanelets)
+  const lanelet::ConstLanelets * route_relevant_lanelets, const bool collect_debug)
 {
   TrafficLightComplianceResult result;
 
@@ -260,20 +260,23 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
   const auto groups =
     build_relevant_traffic_light_groups(route_lanelets, route_handler, turn_indicators_status);
   for (const auto & group : groups) {
-    result.debug_info.regulatory_element_ids.push_back(group.regulatory_element_id);
-    result.debug_info.intended_movement = turn_direction_to_string(group.intended_turn_direction);
-    for (const auto & lanelet : group.selected_lanelets) {
-      result.debug_info.selected_lane_ids.push_back(lanelet.id());
-    }
-    if (group.stop_line.has_value()) {
-      result.debug_info.stop_line_ids.push_back(group.stop_line->id());
-      result.debug_info.stop_lines.push_back(
-        TrafficLightComplianceDebugPolygon{
-          0.0, line_points(*group.stop_line, trajectory.points.front().pose.position.z),
-          group.stop_line->id()});
+    if (collect_debug) {
+      result.debug_info.regulatory_element_ids.push_back(group.regulatory_element_id);
+      result.debug_info.intended_movement = turn_direction_to_string(group.intended_turn_direction);
+      for (const auto & lanelet : group.selected_lanelets) {
+        result.debug_info.selected_lane_ids.push_back(lanelet.id());
+      }
+      if (group.stop_line.has_value()) {
+        result.debug_info.stop_line_ids.push_back(group.stop_line->id());
+        result.debug_info.stop_lines.push_back(
+          TrafficLightComplianceDebugPolygon{
+            0.0, line_points(*group.stop_line, trajectory.points.front().pose.position.z),
+            group.stop_line->id()});
+      }
     }
   }
-  result.debug_info.selected_stop_line_count = result.debug_info.stop_lines.size();
+  result.debug_info.selected_stop_line_count =
+    collect_debug ? result.debug_info.stop_lines.size() : 0U;
   result.available = true;
   result.reason = groups.empty() ? "available_no_relevant_traffic_lights" : "available";
   result.score = 1.0;
@@ -299,10 +302,12 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
     const auto ego_polygon = can_reuse_evaluations
                                ? evaluations->at(point_index).ego_polygon
                                : create_pose_footprint(point.pose, local_footprint);
-    result.debug_info.ego_horizon_footprints.push_back(
-      TrafficLightComplianceDebugPolygon{
-        rclcpp::Duration(point.time_from_start).seconds(),
-        polygon_to_points(ego_polygon, point.pose.position.z), 0});
+    if (collect_debug) {
+      result.debug_info.ego_horizon_footprints.push_back(
+        TrafficLightComplianceDebugPolygon{
+          rclcpp::Duration(point.time_from_start).seconds(),
+          polygon_to_points(ego_polygon, point.pose.position.z), 0});
+    }
 
     for (const auto & group : groups) {
       if (!group.stop_line.has_value()) {
@@ -331,8 +336,11 @@ TrafficLightComplianceResult calculate_traffic_light_compliance(
         violation_found = true;
         result.reason = "red_light_stop_line_crossed";
         result.score = 0.0;
-        result.debug_info.first_failure_time_s = rclcpp::Duration(point.time_from_start).seconds();
-        result.debug_info.label_anchor = point.pose.position;
+        if (collect_debug) {
+          result.debug_info.first_failure_time_s =
+            rclcpp::Duration(point.time_from_start).seconds();
+          result.debug_info.label_anchor = point.pose.position;
+        }
       }
     }
   }

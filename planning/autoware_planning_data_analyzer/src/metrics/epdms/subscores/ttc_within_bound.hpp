@@ -99,7 +99,7 @@ TTCWithinBoundResult calculate_ttc_within_bound(
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<RouteHandler> & route_handler = nullptr,
   const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations = nullptr,
-  const std::vector<LoggedObjectTrack> * object_tracks = nullptr);
+  const std::vector<LoggedObjectTrack> * object_tracks = nullptr, bool collect_debug = false);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

@@ -221,7 +221,7 @@ TTCWithinBoundResult calculate_ttc_within_bound(
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<RouteHandler> & route_handler,
   const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations,
-  const std::vector<LoggedObjectTrack> * object_tracks)
+  const std::vector<LoggedObjectTrack> * object_tracks, const bool collect_debug)
 {
   TTCWithinBoundResult result;
 
@@ -326,15 +326,17 @@ TTCWithinBoundResult calculate_ttc_within_bound(
         const bool ahead = is_agent_ahead_nuplan(projected_pose, object_state->pose);
         const bool behind = is_agent_behind_nuplan(projected_pose, object_state->pose);
         if (ahead || (bad_or_intersection && !behind)) {
-          auto debug_event = make_debug_event(
-            time_s, future_offset_s, query_time_s, bad_or_intersection, multiple_lanes,
-            non_drivable_area, ego_in_intersection, ahead, behind, projected_pose, ego_polygon,
-            *object_state);
-          result.debug_info.events.push_back(debug_event);
-          populate_ttc_debug_horizon(
-            result.debug_info, trajectory, index, point, velocity_world, local_footprint,
-            object_track, trajectory_start_time, time_s, future_offset_s, debug_event.object_id,
-            debug_event.object_label);
+          if (collect_debug) {
+            auto debug_event = make_debug_event(
+              time_s, future_offset_s, query_time_s, bad_or_intersection, multiple_lanes,
+              non_drivable_area, ego_in_intersection, ahead, behind, projected_pose, ego_polygon,
+              *object_state);
+            result.debug_info.events.push_back(debug_event);
+            populate_ttc_debug_horizon(
+              result.debug_info, trajectory, index, point, velocity_world, local_footprint,
+              object_track, trajectory_start_time, time_s, future_offset_s, debug_event.object_id,
+              debug_event.object_label);
+          }
           result.score = 0.0;
           result.reason = "collision_within_bound";
           result.infraction_time_s = query_time_s;

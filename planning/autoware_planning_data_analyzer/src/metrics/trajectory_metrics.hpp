@@ -54,9 +54,12 @@ struct HistoryComfortParameters
 
 struct TrajectoryMetricDebugEnabledMetrics
 {
+  bool time_to_collision_within_bound{false};
   bool no_at_fault_collision{false};
+  bool drivable_area_compliance{false};
   bool lane_keeping{false};
   bool driving_direction_compliance{false};
+  bool traffic_light_compliance{false};
 };
 
 // Structure for trajectory point-wise metrics

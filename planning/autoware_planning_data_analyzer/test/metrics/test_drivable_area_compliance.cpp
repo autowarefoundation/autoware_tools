@@ -233,7 +233,7 @@ TEST(DrivableAreaComplianceTest, ReturnsZeroWhenAnyCornerLeavesDrivableArea)
 {
   const auto result = calculate_drivable_area_compliance(
     make_trajectory(1.5), make_route_handler({make_road_lanelet(1, -2.0, 2.0)}),
-    make_vehicle_info());
+    make_vehicle_info(), nullptr, true);
 
   EXPECT_TRUE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 0.0);

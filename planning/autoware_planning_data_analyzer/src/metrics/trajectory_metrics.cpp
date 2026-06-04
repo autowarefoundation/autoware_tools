@@ -348,7 +348,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
                                : build_logged_object_tracks(logged_future_objects);
   const auto ttc_within_bound = calculate_ttc_within_bound(
     trajectory, logged_future_objects, vehicle_info, route_handler, &footprint_evaluations,
-    object_tracks.empty() ? nullptr : &object_tracks);
+    object_tracks.empty() ? nullptr : &object_tracks,
+    debug_enabled_metrics.time_to_collision_within_bound);
   metrics.time_to_collision_within_bound = ttc_within_bound.score;
   metrics.time_to_collision_within_bound_available = ttc_within_bound.available;
   metrics.time_to_collision_within_bound_reason = ttc_within_bound.reason;
@@ -447,7 +448,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
     metrics.traffic_light_compliance_reason = "unavailable_route_handler_not_ready";
   } else {
     const auto drivable_area_compliance = calculate_drivable_area_compliance(
-      trajectory, route_handler, vehicle_info, &footprint_evaluations);
+      trajectory, route_handler, vehicle_info, &footprint_evaluations,
+      debug_enabled_metrics.drivable_area_compliance);
     metrics.drivable_area_compliance = drivable_area_compliance.score;
     metrics.drivable_area_compliance_available = drivable_area_compliance.available;
     metrics.drivable_area_compliance_reason = drivable_area_compliance.reason;
@@ -455,7 +457,8 @@ TrajectoryPointMetrics calculate_trajectory_point_metrics(
 
     const auto traffic_light_compliance = calculate_traffic_light_compliance(
       trajectory, sync_data->traffic_signals, route_handler, vehicle_info,
-      sync_data->turn_indicators_status, &footprint_evaluations, &route_relevant_lanelets);
+      sync_data->turn_indicators_status, &footprint_evaluations, &route_relevant_lanelets,
+      debug_enabled_metrics.traffic_light_compliance);
     metrics.traffic_light_compliance = traffic_light_compliance.score;
     metrics.traffic_light_compliance_available = traffic_light_compliance.available;
     metrics.traffic_light_compliance_reason = traffic_light_compliance.reason;

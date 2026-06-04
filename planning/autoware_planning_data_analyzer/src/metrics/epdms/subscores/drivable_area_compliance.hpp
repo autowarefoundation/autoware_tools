@@ -98,7 +98,8 @@ DrivableAreaComplianceResult calculate_drivable_area_compliance(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations = nullptr);
+  const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations = nullptr,
+  bool collect_debug = false);
 
 }  // namespace autoware::planning_data_analyzer::metrics
 

@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -342,18 +343,22 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
       }
 
       const auto collision = classify_collision(point, *object_state, vehicle_info);
-      auto debug_event =
-        make_debug_event(query_time_s, point, ego_polygon, *object_state, collision);
+      auto make_optional_debug_event = [&]() {
+        return make_debug_event(query_time_s, point, ego_polygon, *object_state, collision);
+      };
       const bool front_or_stopped_track = collision.type == CollisionType::ActiveFront ||
                                           collision.type == CollisionType::StoppedTrack;
       const bool lateral_collision = collision.type == CollisionType::ActiveLateral;
 
       if (front_or_stopped_track) {
         const auto at_fault_collision = make_at_fault_collision(*object_state, false);
-        debug_event.at_fault = true;
-        debug_event.event_score = at_fault_collision.score;
-        debug_event.reason = at_fault_collision.reason;
-        result.debug_info.events.push_back(debug_event);
+        if (collect_debug) {
+          auto debug_event = make_optional_debug_event();
+          debug_event.at_fault = true;
+          debug_event.event_score = at_fault_collision.score;
+          debug_event.reason = at_fault_collision.reason;
+          result.debug_info.events.push_back(std::move(debug_event));
+        }
         record_at_fault_collision(*object_state, at_fault_collision, query_time_s);
         continue;
       }
@@ -361,10 +366,13 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
       if (lateral_collision) {
         const auto & ego_area_evaluation = footprint_evaluations.at(index).ego_area_evaluation;
         if (!ego_area_evaluation.has_value()) {
-          debug_event.reason = !route_handler
-                                 ? "unavailable_no_route_handler_for_lateral_assessment"
-                                 : "unavailable_route_handler_not_ready_for_lateral_assessment";
-          result.debug_info.events.push_back(debug_event);
+          if (collect_debug) {
+            auto debug_event = make_optional_debug_event();
+            debug_event.reason = !route_handler
+                                   ? "unavailable_no_route_handler_for_lateral_assessment"
+                                   : "unavailable_route_handler_not_ready_for_lateral_assessment";
+            result.debug_info.events.push_back(std::move(debug_event));
+          }
           result.available = false;
           result.score = 0.0;
           result.reason = !route_handler
@@ -373,22 +381,32 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
           return result;
         }
 
-        debug_event.multiple_lanes = ego_area_evaluation->flags.multiple_lanes;
-        debug_event.non_drivable_area = ego_area_evaluation->flags.non_drivable_area;
+        std::optional<NoAtFaultCollisionDebugEvent> debug_event;
+        if (collect_debug) {
+          debug_event = make_optional_debug_event();
+          debug_event->multiple_lanes = ego_area_evaluation->flags.multiple_lanes;
+          debug_event->non_drivable_area = ego_area_evaluation->flags.non_drivable_area;
+        }
         if (
           ego_area_evaluation->flags.multiple_lanes ||
           ego_area_evaluation->flags.non_drivable_area) {
           const auto at_fault_collision = make_at_fault_collision(*object_state, true);
-          debug_event.at_fault = true;
-          debug_event.event_score = at_fault_collision.score;
-          debug_event.reason = at_fault_collision.reason;
+          if (debug_event.has_value()) {
+            debug_event->at_fault = true;
+            debug_event->event_score = at_fault_collision.score;
+            debug_event->reason = at_fault_collision.reason;
+          }
           record_at_fault_collision(*object_state, at_fault_collision, query_time_s);
         }
-        result.debug_info.events.push_back(debug_event);
+        if (debug_event.has_value()) {
+          result.debug_info.events.push_back(std::move(*debug_event));
+        }
         continue;
       }
 
-      result.debug_info.events.push_back(debug_event);
+      if (collect_debug) {
+        result.debug_info.events.push_back(make_optional_debug_event());
+      }
     }
   }
 
