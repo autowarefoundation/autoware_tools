@@ -56,8 +56,8 @@ struct EvaluatorMetricMeasurement
 
 struct EvaluatorMetricStats
 {
-  ::metrics::Statistics value;
-  std::size_t count{0};
+  ::metrics::Statistics value;  // max, mean, min
+  std::size_t count{0};         // number of measurements
   double percentile_95{0.0};
   double percentile_99{0.0};
 };
