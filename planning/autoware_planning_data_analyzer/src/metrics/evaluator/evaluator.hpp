@@ -56,18 +56,17 @@ struct EvaluatorMetricMeasurement
 
 struct EvaluatorMetricStats
 {
-  ::metrics::Statistics value;  // max, mean, min
-  std::size_t count{0};         // number of measurements
+  ::metrics::Statistics value;
+  std::size_t count{0};
   double percentile_95{0.0};
   double percentile_99{0.0};
 };
 
-struct EvaluatorMetricAggregationResult
+struct EvaluatorMetricResult
 {
   std::string metric_key;
-  EvaluatorMetricStats all_stats;
-  EvaluatorMetricStats included_stats;
-  std::map<std::string, EvaluatorMetricStats> excluded_stats_by_rule;
+  std::string rule;  // "all", "in_<region>", or "outside_<region>"
+  EvaluatorMetricStats stats;
 };
 
 /** @brief One evaluator_config.yaml entry: topics sharing the same exclusion rules. */
@@ -104,12 +103,12 @@ std::vector<EvaluatorMetricGroup> build_evaluator_metric_groups(
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler,
   double sync_tolerance_ms, const rclcpp::Logger & logger);
 
-EvaluatorMetricAggregationResult aggregate_metric_measurements(
+std::vector<EvaluatorMetricResult> aggregate_metric_measurements(
   const std::vector<EvaluatorMetricMeasurement> & measurements,
   const std::vector<std::string> & exclusion_rule_names, const std::string & metric_key);
 
-nlohmann::json evaluator_group_aggregations_to_json(
-  const std::vector<EvaluatorMetricAggregationResult> & metric_results);
+nlohmann::json evaluator_metric_results_to_json(
+  const std::vector<EvaluatorMetricResult> & metric_results);
 
 }  // namespace autoware::planning_data_analyzer::metrics::evaluator
 
