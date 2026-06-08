@@ -57,53 +57,57 @@ EvaluatorMetricStats compute_stats(const std::vector<double> & values)
   return stats;
 }
 
-std::string make_description_format(const std::string & view_prefix)
+std::string make_in_rule_name(const std::string & region_name)
 {
-  if (view_prefix == "all") {
+  return "in_" + region_name;
+}
+
+std::string make_outside_rule_name(const std::string & region_name)
+{
+  return "outside_" + region_name;
+}
+
+std::string make_description_format(const std::string & rule)
+{
+  if (rule == "all") {
     return "Aggregate of all values in the recorded rosbag and synchronized to odometry.";
   }
-  if (view_prefix == "included") {
-    return "Aggregate of odometry-synced values in the recorded rosbag outside excluded map "
-           "regions.";
-  }
 
-  const std::string excluded_prefix = "excluded/";
-  if (view_prefix.rfind(excluded_prefix, 0) == 0) {
-    const auto rule_name = view_prefix.substr(excluded_prefix.size());
-    return "Aggregate of odometry-synced values in the recorded rosbag where map exclusion rule '" +
-           rule_name + "' applies.";
+  const std::string in_prefix = "in_";
+  const std::string outside_prefix = "outside_";
+  if (rule.rfind(in_prefix, 0) == 0) {
+    const auto region_name = rule.substr(in_prefix.size());
+    return "Aggregate of odometry-synced values in the recorded rosbag inside map region '" +
+           region_name + "'.";
+  }
+  if (rule.rfind(outside_prefix, 0) == 0) {
+    const auto region_name = rule.substr(outside_prefix.size());
+    return "Aggregate of odometry-synced values in the recorded rosbag outside map region '" +
+           region_name + "'.";
   }
 
   return "";
 }
 
-std::string make_view_metric_description(
-  const std::string & view_prefix, const std::string & metric_key)
+std::string make_view_metric_description(const std::string & rule, const std::string & metric_key)
 {
-  const auto view_desc = make_description_format(view_prefix);
-  if (view_desc.empty()) {
-    return metric_key;
-  }
-  return metric_key + ": " + view_desc;
+  return metric_key + ": " + make_description_format(rule);
 }
 
-void emit_view_stats(
-  nlohmann::json & json_output, const std::string & view_prefix, const std::string & metric_key,
-  const EvaluatorMetricStats & stats)
+void emit_metric_result(nlohmann::json & json_output, const EvaluatorMetricResult & result)
 {
-  if (stats.count == 0) {
+  if (result.stats.count == 0) {
     return;
   }
 
-  // JSON output format per topic
-  const std::string base = view_prefix + "/" + metric_key;
-  json_output[base + "/description"] = make_view_metric_description(view_prefix, metric_key);
-  json_output[base + "/count"] = stats.count;
-  json_output[base + "/mean"] = stats.value.mean;
-  json_output[base + "/min"] = stats.value.min_val;
-  json_output[base + "/max"] = stats.value.max_val;
-  json_output[base + "/percentile_95"] = stats.percentile_95;
-  json_output[base + "/percentile_99"] = stats.percentile_99;
+  const std::string base = result.rule + "/" + result.metric_key;
+  json_output[base + "/description"] = make_view_metric_description(result.rule, result.metric_key);
+  json_output[base + "/count"] = result.stats.count;
+  json_output[base + "/mean"] = result.stats.value.mean;
+  json_output[base + "/min"] = result.stats.value.min_val;
+  json_output[base + "/max"] = result.stats.value.max_val;
+  json_output[base + "/percentile_95"] = result.stats.percentile_95;
+  json_output[base + "/percentile_99"] = result.stats.percentile_99;
 }
 
 std::vector<std::string> read_string_sequence(const YAML::Node & node)
@@ -431,62 +435,48 @@ std::vector<EvaluatorMetricGroup> build_evaluator_metric_groups(
   return evaluator_metric_groups;
 }
 
-EvaluatorMetricAggregationResult aggregate_metric_measurements(
+std::vector<EvaluatorMetricResult> aggregate_metric_measurements(
   const std::vector<EvaluatorMetricMeasurement> & measurements,
   const std::vector<std::string> & exclusion_rule_names, const std::string & metric_key)
 {
-  EvaluatorMetricAggregationResult result;
-  result.metric_key = metric_key;
-  for (const auto & rule_name : exclusion_rule_names) {
-    result.excluded_stats_by_rule.emplace(rule_name, EvaluatorMetricStats{});
-  }
-
   std::vector<double> all_values;
-  std::vector<double> included_values;
-  std::map<std::string, std::vector<double>> excluded_values_by_rule;
-
   all_values.reserve(measurements.size());
-  included_values.reserve(measurements.size());
-
   for (const auto & measurement : measurements) {
     all_values.push_back(measurement.value);
-
-    if (measurement.matched_exclusion_rules.empty()) {
-      included_values.push_back(measurement.value);
-      continue;
-    }
-
-    for (const auto & rule_name : measurement.matched_exclusion_rules) {
-      excluded_values_by_rule[rule_name].push_back(measurement.value);
-    }
   }
 
-  // Aggregate all values, included values, and excluded values per exclusion rule.
-  // Metrics count: all = each_excluded_topic + included_topic
-  // (There may be some discrepancies due to synchronization issues.)
-  result.all_stats = compute_stats(all_values);
-  result.included_stats = compute_stats(included_values);
-  for (const auto & rule_name : exclusion_rule_names) {
-    const auto itr = excluded_values_by_rule.find(rule_name);
-    if (itr == excluded_values_by_rule.end()) {
-      continue;
+  std::vector<EvaluatorMetricResult> results;
+  results.push_back({metric_key, "all", compute_stats(all_values)});
+  for (const auto & region_name : exclusion_rule_names) {
+    std::vector<double> in_region_values;
+    std::vector<double> outside_region_values;
+    in_region_values.reserve(measurements.size());
+    outside_region_values.reserve(measurements.size());
+    for (const auto & measurement : measurements) {
+      const bool in_region =
+        std::find(
+          measurement.matched_exclusion_rules.begin(), measurement.matched_exclusion_rules.end(),
+          region_name) != measurement.matched_exclusion_rules.end();
+      if (in_region) {
+        in_region_values.push_back(measurement.value);
+      } else {
+        outside_region_values.push_back(measurement.value);
+      }
     }
-    result.excluded_stats_by_rule[rule_name] = compute_stats(itr->second);
+    results.push_back(
+      {metric_key, make_in_rule_name(region_name), compute_stats(in_region_values)});
+    results.push_back(
+      {metric_key, make_outside_rule_name(region_name), compute_stats(outside_region_values)});
   }
-
-  return result;
+  return results;
 }
 
-nlohmann::json evaluator_group_aggregations_to_json(
-  const std::vector<EvaluatorMetricAggregationResult> & metric_results)
+nlohmann::json evaluator_metric_results_to_json(
+  const std::vector<EvaluatorMetricResult> & metric_results)
 {
   nlohmann::json json_output;
   for (const auto & result : metric_results) {
-    emit_view_stats(json_output, "all", result.metric_key, result.all_stats);
-    emit_view_stats(json_output, "included", result.metric_key, result.included_stats);
-    for (const auto & [rule_name, stats] : result.excluded_stats_by_rule) {
-      emit_view_stats(json_output, "excluded/" + rule_name, result.metric_key, stats);
-    }
+    emit_metric_result(json_output, result);
   }
   return json_output;
 }

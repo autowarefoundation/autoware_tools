@@ -18,6 +18,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -43,6 +44,18 @@ std::shared_ptr<Odometry> make_odometry(const double x, const double y)
   return odometry;
 }
 
+const EvaluatorMetricStats & find_metric_stats(
+  const std::vector<EvaluatorMetricResult> & results, const std::string & metric_key,
+  const std::string & rule)
+{
+  for (const auto & result : results) {
+    if (result.metric_key == metric_key && result.rule == rule) {
+      return result.stats;
+    }
+  }
+  throw std::runtime_error("metric result not found: " + metric_key + ", rule=" + rule);
+}
+
 TEST(EvaluatorMetrics, FilterOdometryOutsideInitialPose)
 {
   const std::vector<std::shared_ptr<Odometry>> kinematic_states = {
@@ -55,18 +68,21 @@ TEST(EvaluatorMetrics, FilterOdometryOutsideInitialPose)
   EXPECT_DOUBLE_EQ(filtered.front()->pose.pose.position.y, 20.0);
 }
 
-TEST(EvaluatorMetrics, IncludedWhenIntersectionExcluded)
+TEST(EvaluatorMetrics, InsideOutsideIntersectionArea)
 {
   const std::vector<EvaluatorMetricMeasurement> measurements = {
     make_measurement(0.1, {}), make_measurement(2.0, {"intersection_area"}),
     make_measurement(-0.2, {})};
 
-  const auto result = aggregate_metric_measurements(
+  const auto results = aggregate_metric_measurements(
     measurements, {"intersection_area"}, "lateral_deviation_centerline");
 
-  EXPECT_EQ(result.all_stats.count, 3U);
-  EXPECT_EQ(result.included_stats.count, 2U);
-  EXPECT_EQ(result.excluded_stats_by_rule.at("intersection_area").count, 1U);
+  EXPECT_EQ(find_metric_stats(results, "lateral_deviation_centerline", "all").count, 3U);
+  EXPECT_EQ(
+    find_metric_stats(results, "lateral_deviation_centerline", "outside_intersection_area").count,
+    2U);
+  EXPECT_EQ(
+    find_metric_stats(results, "lateral_deviation_centerline", "in_intersection_area").count, 1U);
 }
 
 TEST(EvaluatorConfig, LoadFromYamlFixture)
@@ -82,14 +98,15 @@ TEST(EvaluatorConfig, LoadFromYamlFixture)
 
 TEST(EvaluatorMetrics, GroupJsonUsesExpectedPaths)
 {
-  const auto result = aggregate_metric_measurements(
+  const auto results = aggregate_metric_measurements(
     {make_measurement(0.1, {}), make_measurement(1.0, {"intersection_area"})},
     {"intersection_area"}, "lateral_deviation_centerline");
-  const auto json = evaluator_group_aggregations_to_json({result});
+  const auto json = evaluator_metric_results_to_json(results);
 
-  EXPECT_TRUE(json.contains("included/lateral_deviation_centerline/mean"));
-  EXPECT_TRUE(json.contains("included/lateral_deviation_centerline/percentile_95"));
-  EXPECT_TRUE(json.contains("excluded/intersection_area/lateral_deviation_centerline/count"));
+  EXPECT_TRUE(json.contains("outside_intersection_area/lateral_deviation_centerline/mean"));
+  EXPECT_TRUE(
+    json.contains("outside_intersection_area/lateral_deviation_centerline/percentile_95"));
+  EXPECT_TRUE(json.contains("in_intersection_area/lateral_deviation_centerline/count"));
   EXPECT_FALSE(json.contains("all/description"));
 }
 

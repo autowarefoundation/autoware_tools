@@ -2450,19 +2450,18 @@ std::pair<rclcpp::Time, rclcpp::Time> OpenLoopEvaluator::run_evaluation_from_bag
   if (!bag_result.evaluator_metric_groups.empty()) {
     const auto build_group_json =
       [](const metrics::evaluator::EvaluatorMetricGroup & metric_group) {
-        std::vector<metrics::evaluator::EvaluatorMetricAggregationResult> metric_results;
-        metric_results.reserve(metric_group.measurements_by_metric_key.size());
+        std::vector<metrics::evaluator::EvaluatorMetricResult> metric_results;
         for (const auto & [metric_key, measurements] : metric_group.measurements_by_metric_key) {
-          metric_results.push_back(
-            metrics::evaluator::aggregate_metric_measurements(
-              measurements, metric_group.exclusion_rules, metric_key));
+          const auto aggregated = metrics::evaluator::aggregate_metric_measurements(
+            measurements, metric_group.exclusion_rules, metric_key);
+          metric_results.insert(metric_results.end(), aggregated.begin(), aggregated.end());
         }
-        return metrics::evaluator::evaluator_group_aggregations_to_json(metric_results);
+        return metrics::evaluator::evaluator_metric_results_to_json(metric_results);
       };
 
-    nlohmann::json evaluator_json;
+    nlohmann::json evaluator_json = nlohmann::json::object();
     for (const auto & metric_group : bag_result.evaluator_metric_groups) {
-      evaluator_json[metric_group.group_name] = build_group_json(metric_group);
+      evaluator_json.update(build_group_json(metric_group));
     }
 
     save_json_results(evaluator_json, bag_path, "open_loop", "evaluator_metric.json", false, false);
