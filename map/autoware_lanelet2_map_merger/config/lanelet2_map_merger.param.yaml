@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    input_lanelet2_map_dir: "$(var input_lanelet2_map_dir)"
+    output_lanelet2_map: "$(var output_lanelet2_map)"
+    map_projector_info_path: "$(var map_projector_info_path)"
