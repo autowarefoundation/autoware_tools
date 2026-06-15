@@ -56,7 +56,7 @@ def parse_diagnostics_msgs(rosbag_dir: str, target_list: list) -> dict:
     data_dict: dict = {key: [] for key in target_list}
 
     while reader.has_next():
-        (topic, data, timestamp_rosbag) = reader.read_next()
+        topic, data, timestamp_rosbag = reader.read_next()
         msg_type = get_message(type_map[topic])
         msg = deserialize_message(data, msg_type)
         timestamp_header = parse_stamp(msg.header.stamp)

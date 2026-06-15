@@ -24,6 +24,20 @@
 #include <string>
 #include <vector>
 
+namespace autoware::planning_data_analyzer::metrics
+{
+
+/**
+ * @brief Metric score with availability
+ */
+struct MetricScore
+{
+  double score{0.0};
+  bool available{false};
+};
+
+}  // namespace autoware::planning_data_analyzer::metrics
+
 namespace metrics
 {
 
@@ -77,6 +91,17 @@ Statistics calculate_statistics(const Container & values)
   stats.std_dev = std::sqrt(variance / values.size());
 
   return stats;
+}
+
+inline double compute_percentile(const std::vector<double> & sorted, double p)
+{
+  if (sorted.empty()) return 0.0;
+  if (sorted.size() == 1) return sorted[0];
+  const double idx = p * static_cast<double>(sorted.size() - 1);
+  const size_t lo = static_cast<size_t>(std::floor(idx));
+  const size_t hi = std::min(lo + 1, sorted.size() - 1);
+  const double frac = idx - static_cast<double>(lo);
+  return sorted[lo] * (1.0 - frac) + sorted[hi] * frac;
 }
 
 }  // namespace metrics
