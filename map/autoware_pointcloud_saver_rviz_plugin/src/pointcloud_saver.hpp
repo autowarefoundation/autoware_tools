@@ -40,8 +40,6 @@
 
 #include <sensor_msgs/msg/point_cloud2.hpp>
 
-#include <lanelet2_core/LaneletMap.h>
-
 namespace rviz_rendering
 {
 class Line;
