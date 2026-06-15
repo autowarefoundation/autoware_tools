@@ -12,6 +12,7 @@ add_definitions(-DQT_NO_KEYWORDS)
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
   add_compile_options(-Wno-unused-parameter)
+  add_compile_options(-Wno-deprecated-declarations)
 endif()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED

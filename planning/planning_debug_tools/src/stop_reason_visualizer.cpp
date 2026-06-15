@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <autoware/universe_utils/ros/marker_helper.hpp>
+#include <autoware_utils_visualization/marker_helper.hpp>
 #include <rclcpp/rclcpp.hpp>
 
 #include <std_msgs/msg/header.hpp>
@@ -49,10 +49,10 @@ public:
 private:
   void onStopReasonArray(const StopReasonArray::ConstSharedPtr msg)
   {
-    using autoware::universe_utils::appendMarkerArray;
-    using autoware::universe_utils::createDefaultMarker;
-    using autoware::universe_utils::createMarkerColor;
-    using autoware::universe_utils::createMarkerScale;
+    using autoware_utils_visualization::append_marker_array;
+    using autoware_utils_visualization::create_default_marker;
+    using autoware_utils_visualization::create_marker_color;
+    using autoware_utils_visualization::create_marker_scale;
 
     MarkerArray all_marker_array;
     const auto header = msg->header;
@@ -69,18 +69,18 @@ private:
         const auto stop_factor_point = stop_factor.stop_factor_points.front();
         // base stop pose marker
         {
-          auto stop_point_marker = createDefaultMarker(
+          auto stop_point_marker = create_default_marker(
             "map", current_time, prefix + ":stop_factor_point", id, Marker::SPHERE,
-            createMarkerScale(0.25, 0.25, 0.25), createMarkerColor(1.0, 0.0, 0.0, 0.999));
+            create_marker_scale(0.25, 0.25, 0.25), create_marker_color(1.0, 0.0, 0.0, 0.999));
           stop_point_marker.pose.position = stop_factor_point;
           marker_array.markers.emplace_back(stop_point_marker);
         }
         // attention ! marker
         {
-          auto attention_text_marker = createDefaultMarker(
+          auto attention_text_marker = create_default_marker(
             "map", current_time, prefix + ":attention text", id,
-            visualization_msgs::msg::Marker::TEXT_VIEW_FACING, createMarkerScale(0.0, 0.0, 1.0),
-            createMarkerColor(1.0, 1.0, 1.0, 0.999));
+            visualization_msgs::msg::Marker::TEXT_VIEW_FACING, create_marker_scale(0.0, 0.0, 1.0),
+            create_marker_color(1.0, 1.0, 1.0, 0.999));
           attention_text_marker.pose.position = stop_factor_point;
           attention_text_marker.pose.position.z += offset_z;
           attention_text_marker.text = "!";
@@ -88,26 +88,26 @@ private:
         }
         // point to pose
         {
-          auto stop_to_pose_marker = createDefaultMarker(
+          auto stop_to_pose_marker = create_default_marker(
             "map", current_time, prefix + ":stop_to_pose", id, Marker::LINE_STRIP,
-            createMarkerScale(0.02, 0.0, 0.0), createMarkerColor(0.0, 1.0, 1.0, 0.999));
+            create_marker_scale(0.02, 0.0, 0.0), create_marker_color(0.0, 1.0, 1.0, 0.999));
           stop_to_pose_marker.points.emplace_back(stop_factor.stop_factor_points.front());
           stop_to_pose_marker.points.emplace_back(stop_factor.stop_pose.position);
           marker_array.markers.emplace_back(stop_to_pose_marker);
         }
         // point to pose
         {
-          auto stop_pose_marker = createDefaultMarker(
+          auto stop_pose_marker = create_default_marker(
             "map", current_time, prefix + ":stop_pose", id, Marker::ARROW,
-            createMarkerScale(0.4, 0.2, 0.2), createMarkerColor(1.0, 0.0, 0.0, 0.999));
+            create_marker_scale(0.4, 0.2, 0.2), create_marker_color(1.0, 0.0, 0.0, 0.999));
           stop_pose_marker.pose = stop_factor.stop_pose;
           marker_array.markers.emplace_back(stop_pose_marker);
         }
         // add view distance text
         {
-          auto reason_text_marker = createDefaultMarker(
+          auto reason_text_marker = create_default_marker(
             "map", current_time, prefix + ":reason", id, Marker::TEXT_VIEW_FACING,
-            createMarkerScale(0.0, 0.0, 0.2), createMarkerColor(1.0, 1.0, 1.0, 0.999));
+            create_marker_scale(0.0, 0.0, 0.2), create_marker_color(1.0, 1.0, 1.0, 0.999));
           reason_text_marker.pose = stop_factor.stop_pose;
           reason_text_marker.text = prefix;
           marker_array.markers.emplace_back(reason_text_marker);
@@ -115,7 +115,7 @@ private:
         id++;
       }
       if (!marker_array.markers.empty())
-        appendMarkerArray(marker_array, &all_marker_array, current_time);
+        append_marker_array(marker_array, &all_marker_array, current_time);
     }
     pub_stop_reasons_marker_->publish(all_marker_array);
   }

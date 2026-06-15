@@ -65,12 +65,6 @@ int main(int argc, char * argv[])
       "rosbag", "BAG");
     options << bag_option;
 
-    QCommandLineOption detected_object_option(
-      QStringList() << "d"
-                    << "detected-object",
-      "publish detected object");
-    options << detected_object_option;
-
     QCommandLineOption tracked_object_option(
       QStringList() << "t"
                     << "tracked-object",
@@ -82,6 +76,12 @@ int main(int argc, char * argv[])
                     << "rosbag-format",
       "rosbag data format", "{sqlite3,mcap}", "sqlite3");
     options << rosbag_format_option;
+
+    QCommandLineOption replay_route_option(
+      QStringList() << "replay-route",
+      "replay route and route state topics from rosbag data with transient_local QoS. "
+      "Only publishes when the message changes (i.e., not redundantly).");
+    options << replay_route_option;
 
     for (const auto & option : options) {
       parser.addOption(option);
@@ -114,14 +114,16 @@ int main(int argc, char * argv[])
       return 1;
     }
 
-    perception_replayer_param.detected_object = parser.isSet(detected_object_option);
     perception_replayer_param.tracked_object = parser.isSet(tracked_object_option);
+    perception_replayer_param.replay_route = parser.isSet(replay_route_option);
 
     rclcpp::NodeOptions node_options;
     auto node = std::make_shared<PerceptionReplayer>(perception_replayer_param, node_options);
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
 
     while (rclcpp::ok()) {
-      rclcpp::spin_some(node);
+      executor.spin_some();
       app.processEvents();
     }
     rclcpp::shutdown();

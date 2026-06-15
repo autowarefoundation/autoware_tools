@@ -68,8 +68,8 @@ void RTCStatusTableWidget::update_statuses(const CooperateStatusArray::ConstShar
   // Sort statuses: non-negative start_distance first, then by distance ascending
   auto sorted_statuses = msg->statuses;
   std::sort(sorted_statuses.begin(), sorted_statuses.end(), [](const auto & a, const auto & b) {
-    const bool a_non_negative = a.start_distance >= 0;
-    const bool b_non_negative = b.start_distance >= 0;
+    const bool a_non_negative = a.start_distance >= RTC_MIN_START_DISTANCE;
+    const bool b_non_negative = b.start_distance >= RTC_MIN_START_DISTANCE;
     if (a_non_negative && b_non_negative) {
       return a.start_distance < b.start_distance;
     }
@@ -87,7 +87,7 @@ void RTCStatusTableWidget::update_statuses(const CooperateStatusArray::ConstShar
 void RTCStatusTableWidget::populate_row(int row, const CooperateStatus & status)
 {
   // Determine if this row should be dimmed (negative start_distance means already passed)
-  const bool is_dimmed = status.start_distance < 0;
+  const bool is_dimmed = status.start_distance < RTC_MIN_START_DISTANCE;
   const auto set_cell = [this, row, is_dimmed](Column column, const std::string & text) {
     auto * label = create_centered_label(text);
     if (is_dimmed) {

@@ -103,10 +103,10 @@ void ManualController::update()
 {
   if (!raw_node_) return;
 
-  const auto velocity = sub_velocity_->takeData();
+  const auto velocity = sub_velocity_->take_data();
   const double current_velocity = velocity ? velocity->longitudinal_velocity : 0.0;
 
-  const auto accel = sub_accel_->takeData();
+  const auto accel = sub_accel_->take_data();
   const double current_acceleration = accel ? accel->accel.accel.linear.x : 0.0;
 
   Control control_cmd;
@@ -166,10 +166,10 @@ void ManualController::onInitialize()
     "/control/current_gate_mode", 10, std::bind(&ManualController::onGateMode, this, _1));
 
   sub_velocity_ =
-    autoware::universe_utils::InterProcessPollingSubscriber<VelocityReport>::create_subscription(
+    autoware_utils_rclcpp::InterProcessPollingSubscriber<VelocityReport>::create_subscription(
       raw_node_.get(), "/vehicle/status/velocity_status", 1);
 
-  sub_accel_ = autoware::universe_utils::InterProcessPollingSubscriber<AccelWithCovarianceStamped>::
+  sub_accel_ = autoware_utils_rclcpp::InterProcessPollingSubscriber<AccelWithCovarianceStamped>::
     create_subscription(raw_node_.get(), "/localization/acceleration", 1);
 
   sub_engage_ = raw_node_->create_subscription<Engage>(

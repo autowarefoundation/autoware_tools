@@ -16,31 +16,34 @@ jobs:
   build-and-test-differential:
     needs: prevent-no-label-execution
     if: ${{ needs.prevent-no-label-execution.outputs.run == 'true' }}
-    runs-on: ${{ matrix.runner }}
-    container: ghcr.io/autowarefoundation/autoware:universe-devel${{ matrix.container-suffix }}
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.container }}
+      options: --cap-add=NET_ADMIN
     strategy:
       fail-fast: false
       matrix:
         rosdistro:
           - humble
-        container-suffix:
-          - ""
-          - -cuda
+          - jazzy
         include:
-          - container-suffix: ""
-            runner: ubuntu-22.04
-          - container-suffix: -cuda
-            runner: [self-hosted, Linux, X64]
+          - rosdistro: humble
+            container: ghcr.io/autowarefoundation/autoware:universe-dependencies-humble
+          - rosdistro: jazzy
+            container: ghcr.io/autowarefoundation/autoware:universe-dependencies-jazzy
 
     steps:
       - name: Set PR fetch depth
         run: echo "PR_FETCH_DEPTH=$(( ${{ github.event.pull_request.commits }} + 1 ))" >> "${GITHUB_ENV}"
 
       - name: Checkout PR branch and all PR commits
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: ${{ env.PR_FETCH_DEPTH }}
+
+      - name: Tune DDS network settings
+        uses: ./.github/actions/tune-dds-network
 
       - name: Show disk space before the tasks
         run: df -h
@@ -76,7 +79,7 @@ jobs:
           files: ${{ steps.test.outputs.coverage-report-files }}
           fail_ci_if_error: false
           verbose: true
-          flags: differential
+          flags: differential-${{ matrix.rosdistro }}
 
       - name: Show disk space after the tasks
         run: df -h

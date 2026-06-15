@@ -19,7 +19,7 @@ publishers_moraisim = "simulator_compatibility_test/publishers/moraisim/"
 
 setup(
     name=package_name,
-    version="0.5.0",
+    version="0.7.0",
     packages=[
         package_name,
         clients,
@@ -38,7 +38,7 @@ setup(
     maintainer_email="shpark@morai.ai",
     description="TODO: Package description",
     license="TODO: License declaration",
-    tests_require=[],
+    tests_require=["pytest"],
     entry_points={
         "console_scripts": [
             # Client

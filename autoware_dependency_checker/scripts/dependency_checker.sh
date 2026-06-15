@@ -101,8 +101,6 @@ for pkg in $pkgs; do
         [[ $dep == "osqp_vendor" ]] && header_regex="osqp/.*"
         [[ $dep == "magic_enum" ]] && header_regex="magic_enum.hpp"
         [[ $dep == "geographiclib" ]] && header_regex="GeographicLib/.*"
-        # Some autoware packages don't follow the convention either...
-        [[ $dep == "autoware_auto_common" ]] && header_regex="(common|helper_functions)/.*"
         # cspell: ignore multigrid
         [[ $dep == "ndt_omp" ]] && header_regex="(pclomp|multigrid_pclomp)/.*"
         [[ $dep == "planning_test_utils" ]] && header_regex="planning_interface_test_manager/.*"
