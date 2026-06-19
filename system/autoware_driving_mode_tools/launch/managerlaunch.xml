@@ -1,0 +1,47 @@
+<launch>
+  <arg name="sim" default="false"/>
+  <arg name="gui" default="true"/>
+
+  <arg name="vehicle_model" default="sample_vehicle"/>
+  <arg name="use_sim_time" default="false"/>
+
+  <!-- debug_panel -->
+  <group if="$(var gui)">
+    <node pkg="autoware_driving_mode_tools" exec="debug_panel">
+      <param name="vehicle_control" value="$(not $(var sim))"/>
+    </node>
+  </group>
+
+  <!-- driving mode manager -->
+  <group>
+    <push-ros-namespace namespace="system"/>
+    <include file="$(find-pkg-share autoware_driving_mode_manager)/launch/driving_mode_manager.launch.xml"/>
+  </group>
+
+  <!-- trajectory gate -->
+  <group>
+    <push-ros-namespace namespace="planning"/>
+    <include file="$(find-pkg-share autoware_trajectory_gate)/launch/trajectory_gate.launch.xml"/>
+  </group>
+
+  <!-- control gate -->
+  <group unless="$(var sim)">
+    <include file="$(find-pkg-share autoware_global_parameter_loader)/launch/global_params.launch.py">
+      <arg name="use_sim_time" value="$(var use_sim_time)"/>
+      <arg name="vehicle_model" value="$(var vehicle_model)"/>
+    </include>
+    <push-ros-namespace namespace="control"/>
+    <include file="$(find-pkg-share autoware_control_command_gate)/launch/control_command_gate.launch.xml"/>
+  </group>
+
+  <!-- command source (stop mode) -->
+  <group unless="$(var sim)">
+    <push-ros-namespace namespace="control"/>
+    <include file="$(find-pkg-share autoware_stop_mode_operator)/launch/stop_mode_operator.launch.xml"/>
+  </group>
+
+  <!-- command source (auto mode) -->
+  <group unless="$(var sim)">
+    <executable cmd="ros2 topic pub -r 2.0 /control/trajectory_follower/control_cmd autoware_control_msgs/msg/Control"/>
+  </group>
+</launch>
