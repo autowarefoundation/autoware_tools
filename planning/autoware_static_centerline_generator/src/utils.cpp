@@ -16,7 +16,8 @@
 
 #include "autoware/behavior_path_planner_common/data_manager.hpp"
 #include "autoware/behavior_path_planner_common/utils/drivable_area_expansion/static_drivable_area.hpp"
-#include "autoware/universe_utils/ros/marker_helper.hpp"
+
+#include <autoware_utils_visualization/marker_helper.hpp>
 
 #include <lanelet2_core/LaneletMap.h>
 #include <lanelet2_core/geometry/Lanelet.h>
@@ -130,8 +131,8 @@ geometry_msgs::msg::Pose get_center_pose(
   // calculate middle pose
   geometry_msgs::msg::Pose middle_pose;
   middle_pose.position = middle_pos;
-  const double yaw = autoware::universe_utils::calcAzimuthAngle(middle_pos, next_middle_pos);
-  middle_pose.orientation = autoware::universe_utils::createQuaternionFromYaw(yaw);
+  const double yaw = autoware_utils_geometry::calc_azimuth_angle(middle_pos, next_middle_pos);
+  middle_pose.orientation = autoware_utils_geometry::create_quaternion_from_yaw(yaw);
 
   return middle_pose;
 }
@@ -219,10 +220,10 @@ Marker create_footprint_marker(
   const std::string & ns, const LinearRing2d & footprint_poly, const double width, const double r,
   const double g, const double b, const double a, const rclcpp::Time & now, const size_t idx)
 {
-  auto marker = autoware::universe_utils::createDefaultMarker(
+  auto marker = autoware_utils_visualization::create_default_marker(
     "map", rclcpp::Clock().now(), ns, idx, visualization_msgs::msg::Marker::LINE_STRIP,
-    autoware::universe_utils::createMarkerScale(width, 0.0, 0.0),
-    autoware::universe_utils::createMarkerColor(r, g, b, a));
+    autoware_utils_visualization::create_marker_scale(width, 0.0, 0.0),
+    autoware_utils_visualization::create_marker_color(r, g, b, a));
   marker.header.stamp = now;
   // TODO(murooka) Ideally, the following is unnecessary for the topic of transient local.
   marker.lifetime = rclcpp::Duration(0, 0);
@@ -243,10 +244,10 @@ Marker create_text_marker(
   const std::string & ns, const geometry_msgs::msg::Pose & pose, const double value, const double r,
   const double g, const double b, const double a, const rclcpp::Time & now, const size_t idx)
 {
-  auto marker = autoware::universe_utils::createDefaultMarker(
+  auto marker = autoware_utils_visualization::create_default_marker(
     "map", rclcpp::Clock().now(), ns, idx, visualization_msgs::msg::Marker::TEXT_VIEW_FACING,
-    autoware::universe_utils::createMarkerScale(0.5, 0.5, 0.5),
-    autoware::universe_utils::createMarkerColor(r, g, b, a));
+    autoware_utils_visualization::create_marker_scale(0.5, 0.5, 0.5),
+    autoware_utils_visualization::create_marker_color(r, g, b, a));
   marker.pose = pose;
   marker.header.stamp = now;
   marker.lifetime = rclcpp::Duration(0, 0);
@@ -265,11 +266,11 @@ void create_points_marker(
 {
   for (size_t i = 0; i < points_vec.size(); ++i) {
     const auto color = (i % 2 == 0)
-                         ? autoware::universe_utils::createMarkerColor(0.8, 0.5, 1.0, 0.8)
-                         : autoware::universe_utils::createMarkerColor(1.0, 0.3, 0.5, 0.8);
-    auto marker = autoware::universe_utils::createDefaultMarker(
+                         ? autoware_utils_visualization::create_marker_color(0.8, 0.5, 1.0, 0.8)
+                         : autoware_utils_visualization::create_marker_color(1.0, 0.3, 0.5, 0.8);
+    auto marker = autoware_utils_visualization::create_default_marker(
       "map", now, ns, i, Marker::LINE_STRIP,
-      autoware::universe_utils::createMarkerScale(width, 0.0, 0.0), color);
+      autoware_utils_visualization::create_marker_scale(width, 0.0, 0.0), color);
     marker.lifetime = rclcpp::Duration(0, 0);
     marker.points = points_vec.at(i);
     marker_array.markers.push_back(marker);
