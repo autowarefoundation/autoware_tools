@@ -55,6 +55,7 @@ class DrivingModeControl(QtWidgets.QWidget):
         self.clock = node.get_clock()
         self.status = {pair: FlagStatus() for pair in product(self.modes, FlagType)}
         self.button = {pair: FlagButton() for pair in product(self.modes, FlagType)}
+        self.groups = {flag: FlagButton() for flag in FlagType}
         self.flags = {}
         self.timer = node.create_timer(0.5, self.on_timer)
 
@@ -111,18 +112,24 @@ class DrivingModeControl(QtWidgets.QWidget):
         self.status[(mode, flag)].data = data
         self.publish(flag)
 
-    def set_flag_send_all(self, flag, send):
+    def set_flag_send_group(self, flag, send):
         for mode in self.modes:
             self.button[(mode, flag)].send.setChecked(send)
             self.status[(mode, flag)].send = send
         self.publish(flag)
 
-    def set_flag_data_all(self, flag, data):
-        print(flag, data)
+    def set_flag_data_group(self, flag, data):
         for mode in self.modes:
             self.button[(mode, flag)].data.setChecked(data)
             self.status[(mode, flag)].data = data
         self.publish(flag)
+
+    def set_flag_all(self, data):
+        for flag in FlagType:
+            self.groups[flag].send.setChecked(data)
+            self.groups[flag].data.setChecked(data)
+            self.set_flag_send_group(flag, data)
+            self.set_flag_data_group(flag, data)
 
     def create_button(self, flag, mode, layout, row, col):
         button = self.button[(mode, flag)]
@@ -134,15 +141,21 @@ class DrivingModeControl(QtWidgets.QWidget):
             button.setCheckable(True)
             layout.addWidget(button, row, col + index)
 
-    def create_all_buttons(self, flag, layout, row, col):
-        button = FlagButton()
+    def create_group_buttons(self, flag, layout, row, col):
+        button = self.groups[flag]
         button.send = QtWidgets.QPushButton("Send")
         button.data = QtWidgets.QPushButton("Data")
-        button.send.clicked.connect(lambda clicked: self.set_flag_send_all(flag, clicked))
-        button.data.clicked.connect(lambda clicked: self.set_flag_data_all(flag, clicked))
+        button.send.clicked.connect(lambda clicked: self.set_flag_send_group(flag, clicked))
+        button.data.clicked.connect(lambda clicked: self.set_flag_data_group(flag, clicked))
         for index, button in enumerate((button.send, button.data)):
             button.setCheckable(True)
             layout.addWidget(button, row, col + index)
+
+    def create_all_button(self, layout, row, col):
+        button = QtWidgets.QPushButton("All")
+        button.clicked.connect(lambda clicked: self.set_flag_all(clicked))
+        button.setCheckable(True)
+        layout.addWidget(button, row, col)
 
     def create_widget(self, modes):
         layout = QtWidgets.QGridLayout()
@@ -154,10 +167,11 @@ class DrivingModeControl(QtWidgets.QWidget):
         layout.addWidget(centered_label("Stable"), 1, 6, 1, 2)
         layout.addWidget(centered_label("Continuable"), 1, 8, 1, 2)
         self.setLayout(layout)
-        self.create_all_buttons(FlagType.Available, layout, 0, 2)
-        self.create_all_buttons(FlagType.Active, layout, 0, 4)
-        self.create_all_buttons(FlagType.Stable, layout, 0, 6)
-        self.create_all_buttons(FlagType.Continuable, layout, 0, 8)
+        self.create_all_button(layout, 0, 0)
+        self.create_group_buttons(FlagType.Available, layout, 0, 2)
+        self.create_group_buttons(FlagType.Active, layout, 0, 4)
+        self.create_group_buttons(FlagType.Stable, layout, 0, 6)
+        self.create_group_buttons(FlagType.Continuable, layout, 0, 8)
         for row, (mode, name) in enumerate(modes, start=2):
             layout.addWidget(QtWidgets.QLabel(f"{name} ({mode})"), row, 0)
             self.create_button(FlagType.Available, mode, layout, row, 2)
