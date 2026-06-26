@@ -62,6 +62,7 @@ jobs:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
           build-depends-repos: build_depends.repos
+          underlay-workspace: /opt/autoware
 
       - name: Test
         id: test
@@ -71,7 +72,7 @@ jobs:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-modified-packages.outputs.modified-packages }}
           build-depends-repos: build_depends.repos
-
+          underlay-workspace: /opt/autoware
       - name: Upload coverage to CodeCov
         if: ${{ steps.test.outputs.coverage-report-files != '' }}
         uses: codecov/codecov-action@v3
