@@ -7,12 +7,13 @@
 
   <!-- debug_panel -->
   <group if="$(var gui)">
+    <let name="ns" value="/debug"/>
     <node pkg="autoware_driving_mode_tools" exec="debug_panel">
       <param name="vehicle_control" value="$(not $(var sim))"/>
-      <remap from="/system/driving_mode/available" to="/debug/driving_mode/available"/>
-      <remap from="/system/driving_mode/active" to="/debug/driving_mode/active"/>
-      <remap from="/system/driving_mode/stable" to="/debug/driving_mode/stable"/>
-      <remap from="/system/driving_mode/continuable" to="/debug/driving_mode/continuable"/>
+      <remap from="/system/driving_mode/available" to="$(var ns)/driving_mode/available"/>
+      <remap from="/system/driving_mode/active" to="$(var ns)/driving_mode/active"/>
+      <remap from="/system/driving_mode/stable" to="$(var ns)/driving_mode/stable"/>
+      <remap from="/system/driving_mode/continuable" to="$(var ns)/driving_mode/continuable"/>
     </node>
   </group>
 
