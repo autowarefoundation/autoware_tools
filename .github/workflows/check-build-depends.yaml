@@ -7,17 +7,16 @@ on:
 
 jobs:
   check-build-depends:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
         rosdistro:
-          - humble
+          - jazzy
         include:
-          - rosdistro: humble
-            container: ros:humble
-            build-depends-repos: build_depends.repos
+          - rosdistro: jazzy
+            container: ghcr.io/autowarefoundation/autoware:universe-dependencies-jazzy
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -34,6 +33,5 @@ jobs:
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
-          underlay-workspace: /opt/autoware
-          
+          build-depends-repos: build_depends.repos
+          underlay-workspace: /opt/autoware          
