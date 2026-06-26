@@ -34,4 +34,4 @@ jobs:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
           build-depends-repos: build_depends.repos
-          underlay-workspace: /opt/autoware          
+          underlay-workspace: /opt/autoware
