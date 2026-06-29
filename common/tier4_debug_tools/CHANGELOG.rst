@@ -2,6 +2,9 @@
 Changelog for package tier4_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-06-02)
+------------------
+
 0.7.0 (2026-05-01)
 ------------------
 * feat(tier4_debug_tools): remove unused autoware_universe_utils dependency (`#406 <https://github.com/autowarefoundation/autoware_tools/issues/406>`_)

@@ -2,6 +2,29 @@
 Changelog for package autoware_static_centerline_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-06-02)
+------------------
+* fix(autoware_static_centerline_generator): refresh centerline lane ids before saving (`#444 <https://github.com/autowarefoundation/autoware_tools/issues/444>`_)
+  `save_map()` compared `get_selected_centerline()` (sliced dynamically by the
+  current start/end index) against the cached `centerline_lane_ids`, which are
+  produced by `connect_centerline_to_lanelet()` for whatever selection existed
+  when `validate` ran. When the selection changes after `validate` (e.g. the GUI
+  start/end index updates are applied after the validate request), the cache goes
+  stale and the size check aborts the save with
+  "Cannot save map: size mismatch. centerline: N, lane_ids: M".
+  Recompute the lane ids for the current selection at the start of `save_map()`
+  so the centerline and its lane ids are always consistent for the selection
+  being saved.
+* fix(autoware_static_centerline_generator): suppress GUI window in launch tests (`#443 <https://github.com/autowarefoundation/autoware_tools/issues/443>`_)
+  Set QT_QPA_PLATFORM=offscreen in the launch-test description so the PyQt5
+  GUI helper (centerline_updater_helper.py) runs without a visible window.
+  This lets the GUI launch test pass on headless CI (no display / no Qt
+  platform plugin could be initialized) and avoids popping up a window during
+  local `colcon test`. Scoped to the test launch only; runtime usage is
+  unaffected.
+  Refs: `autowarefoundation/autoware_tools#391 <https://github.com/autowarefoundation/autoware_tools/issues/391>`_
+* Contributors: Yutaka Kondo
+
 0.7.0 (2026-05-01)
 ------------------
 * fix(staric_centerline_generator): the lanelet_id couldn't be assign the centerline point (`#360 <https://github.com/autowarefoundation/autoware_tools/issues/360>`_)
