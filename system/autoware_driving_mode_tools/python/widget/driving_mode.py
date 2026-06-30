@@ -15,7 +15,7 @@
 from enum import Enum
 from itertools import product
 
-from autoware_driving_mode_manager.msg import DebugModeFlag
+from autoware_driving_mode_manager.msg import DebugModeFlags
 from autoware_driving_mode_tools.utils import default_qos
 from python_qt_binding import QtCore
 from python_qt_binding import QtWidgets
@@ -73,8 +73,8 @@ class DrivingModeControl(QtWidgets.QWidget):
             DrivingModeFlag, "/system/driving_mode/continuable", default_qos(1)
         )
         self.subscription = node.create_subscription(
-            DebugModeFlag,
-            "/system/driving_mode_manager/debug/status",
+            DebugModeFlags,
+            "/system/driving_mode_manager/debug/flags",
             self.on_msg,
             default_qos(1),
         )
