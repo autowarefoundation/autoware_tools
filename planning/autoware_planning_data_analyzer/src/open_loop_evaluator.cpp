@@ -380,7 +380,8 @@ void OpenLoopEvaluator::set_enabled_metrics(const std::vector<std::string> & ena
 
 bool OpenLoopEvaluator::should_write_synthetic_epdms() const
 {
-  return enabled_metrics_.synthetic_epdms && all_epdms_inputs_enabled(enabled_metrics_);
+  return enabled_metrics_.synthetic_epdms && enabled_metrics_.enable_epdms_calculation &&
+         all_epdms_inputs_enabled(enabled_metrics_);
 }
 
 void OpenLoopEvaluator::evaluate(
@@ -468,69 +469,76 @@ void OpenLoopEvaluator::evaluate(
 
       try {
         const auto & eval_data = evaluation_data_list[i];
-        const auto future_objects =
-          eval_data.synchronized_data && eval_data.synchronized_data->trajectory
-            ? metrics::get_future_objects_for_trajectory(
-                *eval_data.synchronized_data->trajectory, object_timeline_,
-                trajectory_evaluation_horizon_s_)
-            : std::vector<TimedTrackedObjects>{};
-        const metrics::TrajectoryMetricDebugEnabledMetrics debug_enabled_metrics{
-          debug_topics_enabled_ && enabled_metrics_.time_to_collision_within_bound,
-          debug_topics_enabled_ && enabled_metrics_.no_at_fault_collision,
-          debug_topics_enabled_ && enabled_metrics_.drivable_area_compliance,
-          debug_topics_enabled_ && enabled_metrics_.lane_keeping,
-          debug_topics_enabled_ && enabled_metrics_.driving_direction_compliance,
-          debug_topics_enabled_ && enabled_metrics_.traffic_light_compliance};
-        auto trajectory_metrics = metrics::calculate_trajectory_point_metrics(
-          eval_data.synchronized_data, route_handler_, history_comfort_params_,
-          lane_keeping_params_, driving_direction_params_, vehicle_info_, future_objects,
-          debug_enabled_metrics);
-        auto metrics = evaluate_trajectory(eval_data);
-        metrics.history_comfort = trajectory_metrics.history_comfort;
-        metrics.history_comfort_available = trajectory_metrics.history_comfort_available;
-        metrics.history_comfort_reason = trajectory_metrics.history_comfort_reason;
-        metrics.time_to_collision_within_bound = trajectory_metrics.time_to_collision_within_bound;
-        metrics.time_to_collision_within_bound_available =
-          trajectory_metrics.time_to_collision_within_bound_available;
-        metrics.time_to_collision_within_bound_reason =
-          trajectory_metrics.time_to_collision_within_bound_reason;
-        metrics.time_to_collision_infraction_time_s =
-          trajectory_metrics.time_to_collision_infraction_time_s;
-        metrics.lane_keeping = trajectory_metrics.lane_keeping;
-        metrics.lane_keeping_available = trajectory_metrics.lane_keeping_available;
-        metrics.lane_keeping_reason = trajectory_metrics.lane_keeping_reason;
-        metrics.ego_progress = trajectory_metrics.ego_progress;
-        metrics.ego_progress_available = trajectory_metrics.ego_progress_available;
-        metrics.ego_progress_reason = trajectory_metrics.ego_progress_reason;
-        metrics.ego_progress_raw_m = trajectory_metrics.ego_progress_raw_m;
-        metrics.ego_progress_best_raw_m = trajectory_metrics.ego_progress_best_raw_m;
-        metrics.ego_progress_mask = trajectory_metrics.ego_progress_mask;
-        metrics.ego_progress_denominator_m = trajectory_metrics.ego_progress_denominator_m;
-        metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
-        metrics.drivable_area_compliance_available =
-          trajectory_metrics.drivable_area_compliance_available;
-        metrics.drivable_area_compliance_reason =
-          trajectory_metrics.drivable_area_compliance_reason;
-        metrics.no_at_fault_collision = trajectory_metrics.no_at_fault_collision;
-        metrics.no_at_fault_collision_available =
-          trajectory_metrics.no_at_fault_collision_available;
-        metrics.no_at_fault_collision_reason = trajectory_metrics.no_at_fault_collision_reason;
-        metrics.time_to_at_fault_collision_s = trajectory_metrics.time_to_at_fault_collision_s;
-        metrics.driving_direction_compliance = trajectory_metrics.driving_direction_compliance;
-        metrics.driving_direction_compliance_available =
-          trajectory_metrics.driving_direction_compliance_available;
-        metrics.driving_direction_compliance_reason =
-          trajectory_metrics.driving_direction_compliance_reason;
-        metrics.max_oncoming_progress_m = trajectory_metrics.max_oncoming_progress_m;
-        metrics.traffic_light_compliance = trajectory_metrics.traffic_light_compliance;
-        metrics.traffic_light_compliance_available =
-          trajectory_metrics.traffic_light_compliance_available;
-        metrics.traffic_light_compliance_reason =
-          trajectory_metrics.traffic_light_compliance_reason;
+        metrics::TrajectoryPointMetrics trajectory_metrics;
+        metrics::EpdmsMetricSnapshot human_snapshot;
+        if (enabled_metrics_.enable_epdms_calculation) {
+          const auto future_objects =
+            eval_data.synchronized_data && eval_data.synchronized_data->trajectory
+              ? metrics::get_future_objects_for_trajectory(
+                  *eval_data.synchronized_data->trajectory, object_timeline_,
+                  trajectory_evaluation_horizon_s_)
+              : std::vector<TimedTrackedObjects>{};
+          const metrics::TrajectoryMetricDebugEnabledMetrics debug_enabled_metrics{
+            debug_topics_enabled_ && enabled_metrics_.time_to_collision_within_bound,
+            debug_topics_enabled_ && enabled_metrics_.no_at_fault_collision,
+            debug_topics_enabled_ && enabled_metrics_.drivable_area_compliance,
+            debug_topics_enabled_ && enabled_metrics_.lane_keeping,
+            debug_topics_enabled_ && enabled_metrics_.driving_direction_compliance,
+            debug_topics_enabled_ && enabled_metrics_.traffic_light_compliance};
+          trajectory_metrics = metrics::calculate_trajectory_point_metrics(
+            eval_data.synchronized_data, route_handler_, history_comfort_params_,
+            lane_keeping_params_, driving_direction_params_, vehicle_info_, future_objects,
+            debug_enabled_metrics);
+          human_snapshot = calculate_human_reference_snapshot(
+            eval_data, route_handler_, history_comfort_params_, lane_keeping_params_,
+            driving_direction_params_, vehicle_info_);
+        }
 
-        auto human_snapshot = calculate_human_reference_snapshot(
-          eval_data, route_handler_, history_comfort_params_, lane_keeping_params_,
-          driving_direction_params_, vehicle_info_);
+        auto metrics = evaluate_trajectory(eval_data);
+        if (enabled_metrics_.enable_epdms_calculation) {
+          metrics.history_comfort = trajectory_metrics.history_comfort;
+          metrics.history_comfort_available = trajectory_metrics.history_comfort_available;
+          metrics.history_comfort_reason = trajectory_metrics.history_comfort_reason;
+          metrics.time_to_collision_within_bound =
+            trajectory_metrics.time_to_collision_within_bound;
+          metrics.time_to_collision_within_bound_available =
+            trajectory_metrics.time_to_collision_within_bound_available;
+          metrics.time_to_collision_within_bound_reason =
+            trajectory_metrics.time_to_collision_within_bound_reason;
+          metrics.time_to_collision_infraction_time_s =
+            trajectory_metrics.time_to_collision_infraction_time_s;
+          metrics.lane_keeping = trajectory_metrics.lane_keeping;
+          metrics.lane_keeping_available = trajectory_metrics.lane_keeping_available;
+          metrics.lane_keeping_reason = trajectory_metrics.lane_keeping_reason;
+          metrics.ego_progress = trajectory_metrics.ego_progress;
+          metrics.ego_progress_available = trajectory_metrics.ego_progress_available;
+          metrics.ego_progress_reason = trajectory_metrics.ego_progress_reason;
+          metrics.ego_progress_raw_m = trajectory_metrics.ego_progress_raw_m;
+          metrics.ego_progress_best_raw_m = trajectory_metrics.ego_progress_best_raw_m;
+          metrics.ego_progress_mask = trajectory_metrics.ego_progress_mask;
+          metrics.ego_progress_denominator_m = trajectory_metrics.ego_progress_denominator_m;
+          metrics.drivable_area_compliance = trajectory_metrics.drivable_area_compliance;
+          metrics.drivable_area_compliance_available =
+            trajectory_metrics.drivable_area_compliance_available;
+          metrics.drivable_area_compliance_reason =
+            trajectory_metrics.drivable_area_compliance_reason;
+          metrics.no_at_fault_collision = trajectory_metrics.no_at_fault_collision;
+          metrics.no_at_fault_collision_available =
+            trajectory_metrics.no_at_fault_collision_available;
+          metrics.no_at_fault_collision_reason = trajectory_metrics.no_at_fault_collision_reason;
+          metrics.time_to_at_fault_collision_s = trajectory_metrics.time_to_at_fault_collision_s;
+          metrics.driving_direction_compliance = trajectory_metrics.driving_direction_compliance;
+          metrics.driving_direction_compliance_available =
+            trajectory_metrics.driving_direction_compliance_available;
+          metrics.driving_direction_compliance_reason =
+            trajectory_metrics.driving_direction_compliance_reason;
+          metrics.max_oncoming_progress_m = trajectory_metrics.max_oncoming_progress_m;
+          metrics.traffic_light_compliance = trajectory_metrics.traffic_light_compliance;
+          metrics.traffic_light_compliance_available =
+            trajectory_metrics.traffic_light_compliance_available;
+          metrics.traffic_light_compliance_reason =
+            trajectory_metrics.traffic_light_compliance_reason;
+        }
 
         metrics_list_[i] = std::move(metrics);
         trajectory_point_metrics_list_[i] = std::move(trajectory_metrics);
@@ -591,6 +599,14 @@ void OpenLoopEvaluator::evaluate(
         auto & metrics = metrics_list_[i];
         auto & human_snapshot = human_snapshots[i];
 
+        if (!enabled_metrics_.enable_epdms_calculation) {
+          const auto processed = phase2_processed.fetch_add(1U) + 1U;
+          if (processed % kProgressLogInterval == 0U || processed == total_samples) {
+            log_parallel_progress("Parallel phase 2", processed, total_samples);
+          }
+          continue;
+        }
+
         if (i == 0U) {
           metrics.extended_comfort = 0.0;
           metrics.extended_comfort_available = false;
@@ -633,8 +649,12 @@ void OpenLoopEvaluator::evaluate(
         const auto agent_snapshot = build_epdms_snapshot(metrics);
         human_filter_metrics_list_[i] =
           metrics::calculate_human_filter_metrics(agent_snapshot, human_snapshot);
-        synthetic_epdms_metrics_list_[i] =
-          metrics::calculate_synthetic_epdms(agent_snapshot, human_filter_metrics_list_[i]);
+        if (enabled_metrics_.enable_epdms_calculation) {
+          synthetic_epdms_metrics_list_[i] =
+            metrics::calculate_synthetic_epdms(agent_snapshot, human_filter_metrics_list_[i]);
+        } else {
+          synthetic_epdms_metrics_list_[i] = metrics::SyntheticEpdmsMetrics{};
+        }
 
         const auto processed = phase2_processed.fetch_add(1U) + 1U;
         if (processed % kProgressLogInterval == 0U || processed == total_samples) {
@@ -1288,7 +1308,7 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   std_msgs::msg::Float64 scalar_msg;
   const auto write_scalar =
     [&](const bool enabled, const double value, const std::string & topic_name) {
-      if (!enabled) {
+      if (!enabled_metrics_.enable_epdms_calculation || !enabled) {
         return;
       }
       scalar_msg.data = value;
@@ -1336,7 +1356,7 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   std_msgs::msg::Bool availability_msg;
   const auto write_availability =
     [&](const bool enabled, const bool value, const std::string & topic_name) {
-      if (!enabled) {
+      if (!enabled_metrics_.enable_epdms_calculation || !enabled) {
         return;
       }
       availability_msg.data = value;
@@ -1381,7 +1401,7 @@ void OpenLoopEvaluator::save_metrics_to_bag(
   std_msgs::msg::String reason_msg;
   const auto write_reason =
     [&](const bool enabled, const std::string & value, const std::string & topic_name) {
-      if (!enabled) {
+      if (!enabled_metrics_.enable_epdms_calculation || !enabled) {
         return;
       }
       reason_msg.data = value;
@@ -1426,7 +1446,7 @@ void OpenLoopEvaluator::save_metrics_to_bag(
     bag_writer.write(gt_traj_msg, compared_trajectory_topic(), message_timestamp);
   }
 
-  if (debug_topics_enabled_) {
+  if (enabled_metrics_.enable_epdms_calculation && debug_topics_enabled_) {
     metrics::write_epdms_trajectory_horizon_debug_topics_to_bag(
       *trajectory_data->trajectory, ground_truth_trajectory, vehicle_info_, bag_writer,
       message_timestamp);
@@ -1444,6 +1464,10 @@ void OpenLoopEvaluator::save_trajectory_point_metrics_to_bag_with_variant(
   const metrics::TrajectoryPointMetrics & metrics, rosbag2_cpp::Writer & bag_writer,
   const rclcpp::Time & normalized_timestamp) const
 {
+  if (!enabled_metrics_.enable_epdms_calculation) {
+    return;
+  }
+
   const auto write_array =
     [&](const bool enabled, const std::vector<double> & data, const std::string & topic_name) {
       if (!enabled) {
@@ -2306,14 +2330,17 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     };
   const auto add_epdms_topic_if =
     [&](const bool enabled, const std::string & name, const std::string & type) {
-      add_topic_if(enabled, epdms_metric_topic(name), type);
+      add_topic_if(
+        enabled_metrics_.enable_epdms_calculation && enabled, epdms_metric_topic(name), type);
     };
   const auto add_epdms_availability_reason_if = [&](const bool enabled, const std::string & name) {
     add_epdms_topic_if(enabled, name + "_available", "std_msgs/msg/Bool");
     add_epdms_topic_if(enabled, name + "_reason", "std_msgs/msg/String");
   };
   const auto add_trajectory_array_if = [&](const bool enabled, const std::string & name) {
-    add_topic_if(enabled, trajectory_metric_topic(name), "std_msgs/msg/Float64MultiArray");
+    add_topic_if(
+      enabled_metrics_.enable_epdms_calculation && enabled, trajectory_metric_topic(name),
+      "std_msgs/msg/Float64MultiArray");
   };
 
   add_topic(dlr_result_topic(), "std_msgs/msg/String");
@@ -2329,9 +2356,7 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
   if (enabled_metrics_.time_to_collision_within_bound) {
     add_topic(metric_topic("ttc"), "std_msgs/msg/Float64MultiArray");
   }
-  if (enabled_metrics_.history_comfort) {
-    add_topic(epdms_metric_topic("history_comfort"), "std_msgs/msg/Float64");
-  }
+  add_epdms_topic_if(enabled_metrics_.history_comfort, "history_comfort", "std_msgs/msg/Float64");
   add_epdms_availability_reason_if(enabled_metrics_.history_comfort, "history_comfort");
   add_trajectory_array_if(enabled_metrics_.history_comfort, "longitudinal_accelerations");
   add_trajectory_array_if(enabled_metrics_.history_comfort, "lateral_accelerations");
@@ -2390,7 +2415,7 @@ std::vector<std::pair<std::string, std::string>> OpenLoopEvaluator::get_result_t
     "/perception/object_recognition/objects", "autoware_perception_msgs/msg/PredictedObjects");
   add_topic("/tf", "tf2_msgs/msg/TFMessage");
   add_topic("/tf_static", "tf2_msgs/msg/TFMessage");
-  if (debug_topics_enabled_) {
+  if (enabled_metrics_.enable_epdms_calculation && debug_topics_enabled_) {
     metrics::add_epdms_debug_result_topics(
       topics, make_epdms_debug_enabled_metrics(enabled_metrics_));
   }

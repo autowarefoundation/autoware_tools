@@ -236,6 +236,35 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
   EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/synthetic_epdms_human_filtered_available"));
 }
 
+TEST_F(OpenLoopGTSourceModeTest, EpdmsGateDisablesEpdmsResultTopics)
+{
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  evaluator.set_debug_topics_enabled(true);
+  evaluator.set_epdms_calculation_enabled(false);
+
+  const auto topics = evaluator.get_result_topics();
+  const auto has_topic = [&topics](const std::string & topic_name) {
+    return std::any_of(topics.begin(), topics.end(), [&topic_name](const auto & topic) {
+      return topic.first == topic_name;
+    });
+  };
+  const auto has_topic_prefix = [&topics](const std::string & prefix) {
+    return std::any_of(topics.begin(), topics.end(), [&prefix](const auto & topic) {
+      return topic.first.rfind(prefix, 0) == 0;
+    });
+  };
+
+  EXPECT_TRUE(has_topic("/open_loop/metrics/ade"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/fde"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/ttc"));
+  EXPECT_FALSE(has_topic_prefix("/open_loop/metrics/epdms/"));
+  EXPECT_FALSE(has_topic_prefix("/open_loop/metrics/trajectory/"));
+  EXPECT_FALSE(has_topic_prefix("/debug/epdms/"));
+}
+
 TEST_F(OpenLoopGTSourceModeTest, EnabledMetricsNarrowsOpenLoopResultTopics)
 {
   OpenLoopEvaluator evaluator(

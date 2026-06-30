@@ -124,6 +124,8 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   enabled_metric_names_ =
     get_or_declare_parameter<std::vector<std::string>>(*this, "open_loop.enabled_metrics");
   debug_topics_enabled_ = get_or_declare_parameter<bool>(*this, "open_loop.debug_topics_enabled");
+  enable_epdms_calculation_ =
+    get_or_declare_parameter<bool>(*this, "open_loop.enable_epdms_calculation");
   trajectory_evaluation_horizon_s_ =
     get_or_declare_parameter<double>(*this, "open_loop.trajectory_evaluation_horizon");
   history_comfort_params_.past_horizon_s =
@@ -526,6 +528,7 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       evaluator.set_json_output_dir(output_dir_path.string());
       evaluator.set_metric_variant(open_loop_metric_variant);
       evaluator.set_enabled_metrics(enabled_metric_names_);
+      evaluator.set_epdms_calculation_enabled(enable_epdms_calculation_);
       evaluator.set_debug_topics_enabled(debug_topics_enabled_);
       evaluator.set_trajectory_evaluation_horizon(trajectory_evaluation_horizon_s_);
       evaluator.set_evaluation_horizons(evaluation_horizons);
