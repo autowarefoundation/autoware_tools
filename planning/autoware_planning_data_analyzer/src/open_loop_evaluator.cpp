@@ -649,12 +649,8 @@ void OpenLoopEvaluator::evaluate(
         const auto agent_snapshot = build_epdms_snapshot(metrics);
         human_filter_metrics_list_[i] =
           metrics::calculate_human_filter_metrics(agent_snapshot, human_snapshot);
-        if (enabled_metrics_.enable_epdms_calculation) {
-          synthetic_epdms_metrics_list_[i] =
-            metrics::calculate_synthetic_epdms(agent_snapshot, human_filter_metrics_list_[i]);
-        } else {
-          synthetic_epdms_metrics_list_[i] = metrics::SyntheticEpdmsMetrics{};
-        }
+        synthetic_epdms_metrics_list_[i] =
+          metrics::calculate_synthetic_epdms(agent_snapshot, human_filter_metrics_list_[i]);
 
         const auto processed = phase2_processed.fetch_add(1U) + 1U;
         if (processed % kProgressLogInterval == 0U || processed == total_samples) {
