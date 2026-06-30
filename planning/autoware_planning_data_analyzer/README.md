@@ -82,6 +82,7 @@ Key parameters in `config/planning_data_analyzer.param.yaml`:
 - `evaluation_interval_ms`: Sampling interval (default: 100ms)
 - `sync_tolerance_ms`: Time synchronization tolerance (default: 100ms)
 - `trajectory_topic`: Trajectory topic to evaluate
+- `open_loop.enable_epdms_calculation`: Enables EPDMS subscore, synthetic EPDMS, and EPDMS debug calculation
 - `open_loop.*`: Open-loop specific settings
 
 ---

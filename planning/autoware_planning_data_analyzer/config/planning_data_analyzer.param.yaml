@@ -47,6 +47,8 @@
       # Debug visualization topics are expensive and disabled by default.
       # This switch is reserved for the follow-up debug-topic PR.
       debug_topics_enabled: false
+      # Disable to skip EPDMS subscore, synthetic EPDMS, and EPDMS debug calculations.
+      enable_epdms_calculation: true
       # Maximum planned trajectory duration to evaluate [s].
       # 0.0 means use the full trajectory from the bag.
       trajectory_evaluation_horizon: 4.0
