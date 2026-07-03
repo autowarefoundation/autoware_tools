@@ -26,7 +26,7 @@ class TrajectorySourceDisplay(QtWidgets.QLabel):
         super().__init__("No Data")
         self.subscription = node.create_subscription(
             TrajectorySourceStatus,
-            "/planning/trajectory_gate/source/status",
+            "/control/trajectory_gate/source/status",
             self.on_msg,
             durable_qos(1),
         )

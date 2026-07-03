@@ -18,13 +18,13 @@
   </group>
 
   <!-- driving mode manager -->
-  <group>
+  <group unless="$(var sim)">
     <push-ros-namespace namespace="system"/>
     <include file="$(find-pkg-share autoware_driving_mode_manager)/launch/driving_mode_manager.launch.xml"/>
   </group>
 
   <!-- trajectory gate -->
-  <group>
+  <group unless="$(var sim)">
     <push-ros-namespace namespace="planning"/>
     <include file="$(find-pkg-share autoware_trajectory_gate)/launch/trajectory_gate.launch.xml"/>
   </group>
