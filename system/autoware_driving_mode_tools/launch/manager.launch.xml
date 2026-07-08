@@ -7,7 +7,8 @@
 
   <!-- debug_panel -->
   <group if="$(var gui)">
-    <let name="ns" value="/debug"/>
+    <let name="ns" value="/system" unless="$(var sim)"/>
+    <let name="ns" value="/debug" if="$(var sim)"/>
     <node pkg="autoware_driving_mode_tools" exec="debug_panel">
       <param name="vehicle_control" value="$(not $(var sim))"/>
       <remap from="/system/driving_mode/available" to="$(var ns)/driving_mode/available"/>
@@ -25,7 +26,7 @@
 
   <!-- trajectory gate -->
   <group unless="$(var sim)">
-    <push-ros-namespace namespace="planning"/>
+    <push-ros-namespace namespace="control"/>
     <include file="$(find-pkg-share autoware_trajectory_gate)/launch/trajectory_gate.launch.xml"/>
   </group>
 
