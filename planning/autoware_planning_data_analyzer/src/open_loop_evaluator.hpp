@@ -166,6 +166,7 @@ struct EnabledOpenLoopMetrics
   bool driving_direction_compliance{true};
   bool traffic_light_compliance{true};
   bool synthetic_epdms{true};
+  bool enable_epdms_calculation{true};
 };
 
 class OpenLoopEvaluator : public BaseEvaluator
@@ -210,6 +211,11 @@ public:
   void set_metric_variant(const std::string & metric_variant) { metric_variant_ = metric_variant; }
 
   void set_enabled_metrics(const std::vector<std::string> & enabled_metric_names);
+
+  void set_epdms_calculation_enabled(bool enabled)
+  {
+    enabled_metrics_.enable_epdms_calculation = enabled;
+  }
 
   void set_debug_topics_enabled(bool enabled) { debug_topics_enabled_ = enabled; }
 
