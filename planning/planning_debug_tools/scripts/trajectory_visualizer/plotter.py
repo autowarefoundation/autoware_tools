@@ -14,7 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # cspell:disable
+import time
+
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Plotter:
@@ -22,6 +25,9 @@ class Plotter:
         self.fig, self.ax = plt.subplots()
         self.plots = {}
         (self.ego_plot,) = self.ax.plot([], [], marker="x", label="ego", alpha=0.7, color="black")
+        # Track last warning time for each plot to avoid spam
+        self.last_warning_time = {}
+        self.warning_interval = 3.0  # seconds
 
     def init_plot(self, x_label: str, y_label: str, plot_names: list[str]):
         cmap = "tab10" if len(plot_names) <= 10 else "tab20"
@@ -53,10 +59,33 @@ class Plotter:
         if name not in self.plots:
             print(f"{name} plot not found")
             return
-        self.plots[name].set_data(x_data, y_data)
+
+        x_data = np.asarray(x_data) if x_data is not None else np.array([])
+        y_data = np.asarray(y_data) if y_data is not None else np.array([])
+
+        # Check if data is empty or sizes don't match
+        if len(x_data) == 0 or len(y_data) == 0 or len(x_data) != len(y_data):
+            self.plots[name].set_data([], [])
+
+            # Only print warning if enough time has passed since last warning for this plot
+            current_time = time.time()
+            if (
+                name not in self.last_warning_time
+                or (current_time - self.last_warning_time[name]) >= self.warning_interval
+            ):
+                print(
+                    f"Warning: Data size mismatch for {name} - x: {len(x_data)}, y: {len(y_data)}. Setting empty data."
+                )
+                self.last_warning_time[name] = current_time
+        else:
+            self.plots[name].set_data(x_data, y_data)
 
     def update_ego_data(self, x_data, y_data):
-        self.ego_plot.set_data([x_data], [y_data])
+        # Handle single value data for ego position
+        if x_data is not None and y_data is not None:
+            self.ego_plot.set_data([x_data], [y_data])
+        else:
+            self.ego_plot.set_data([], [])
 
     def update_labels(self, x_label: str, y_label: str):
         """Update axis labels without clearing the plot."""
