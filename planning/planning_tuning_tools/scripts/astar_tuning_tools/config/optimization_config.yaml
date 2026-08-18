@@ -1,0 +1,154 @@
+evaluation:
+  unsuccess_rate:
+    use_optimization: true
+    weight: 10.0
+  path_length_rate:
+    use_optimization: true
+    weight: 1.0
+  direction_change:
+    use_optimization: true
+    weight: 10.0
+  minus_distance_to_obstacle_average:
+    use_optimization: false
+    weight: 0.01
+  minus_distance_to_obstacle_minimum:
+    use_optimization: false
+    weight: 0.01
+  steering_average:
+    use_optimization: false
+    weight: 0.01
+  steering_minimum:
+    use_optimization: false
+    weight: 0.01
+  reverse_distance:
+    use_optimization: false
+    weight: 0.01
+  calculation_time:
+    use_optimization: true
+    weight: 0.001
+
+planner_param:
+  time_limit:
+    use_optimization: false
+    initial: 30000.0
+    min: 0
+    max: 1
+  max_turning_ratio:
+    use_optimization: false
+    initial: 0.5
+    min: 0
+    max: 1
+  turning_steps:
+    use_optimization: false
+    initial: 1
+    min: 0
+    max: 1
+  theta_size:
+    use_optimization: false
+    initial: 144
+    min: 0
+    max: 1
+  angle_goal_range:
+    use_optimization: false
+    initial: 6.0
+    min: 0
+    max: 1
+  lateral_goal_range:
+    use_optimization: false
+    initial: 0.5
+    min: 0
+    max: 1
+  longitudinal_goal_range:
+    use_optimization: false
+    initial: 2.0
+    min: 0
+    max: 1
+  curve_weight:
+    use_optimization: false
+    initial: 0.5
+    min: 0
+    max: 1
+  reverse_weight:
+    use_optimization: false
+    initial: 1.0
+    min: 0
+    max: 1
+  direction_change_weight:
+    use_optimization: true
+    initial: 1.5
+    min: 0
+    max: 5
+  obstacle_threshold:
+    use_optimization: false
+    initial: 100
+    min: 0
+    max: 1
+
+astar_param:
+  search_method:
+    use_optimization: false
+    initial: "forward"
+    min: 0
+    max: 1
+  only_behind_solutions:
+    use_optimization: false
+    initial: false
+    min: 0
+    max: 1
+  use_back:
+    use_optimization: false
+    initial: true
+    min: 0
+    max: 1
+  adapt_expansion_distance:
+    use_optimization: false
+    initial: true
+    min: 0
+    max: 1
+  expansion_distance:
+    use_optimization: false
+    initial: 0.5
+    min: 0
+    max: 1
+  distance_heuristic_weight:
+    use_optimization: true
+    initial: 1.5
+    min: 0
+    max: 5
+  smoothness_weight:
+    use_optimization: true
+    initial: 0.5
+    min: 0
+    max: 5
+  obstacle_distance_weight:
+    use_optimization: true
+    initial: 1.5
+    min: 0
+    max: 5
+
+vehicle_shape:
+  length:
+    use_optimization: false
+    initial: 4.89
+    min: 0
+    max: 1
+  width:
+    use_optimization: false
+    initial: 1.896
+    min: 0
+    max: 1
+  base_length:
+    use_optimization: false
+    initial: 2.79
+    min: 0
+    max: 1
+  max_steering:
+    use_optimization: false
+    initial: 0.7
+    min: 0
+    max: 1
+  base2back:
+    use_optimization: false
+    initial: 1.1
+    min: 0
+    max: 1
