@@ -74,10 +74,10 @@ std::vector<TrajectoryPoint> generate_centerline_with_bag(rclcpp::Node & node)
           centerline_traj_points.at(i - 1).pose.orientation;
       }
     } else {
-      const double yaw_angle = autoware::universe_utils::calcAzimuthAngle(
+      const double yaw_angle = autoware_utils_geometry::calc_azimuth_angle(
         centerline_traj_points.at(i).pose.position, centerline_traj_points.at(i + 1).pose.position);
       centerline_traj_points.at(i).pose.orientation =
-        autoware::universe_utils::createQuaternionFromYaw(yaw_angle);
+        autoware_utils_geometry::create_quaternion_from_yaw(yaw_angle);
     }
   }
 
