@@ -32,10 +32,9 @@
 #include "utils.hpp"
 
 #include <autoware/geography_utils/lanelet2_projector.hpp>
-#include <autoware/mission_planner_universe/mission_planner_plugin.hpp>
+#include <autoware/mission_planner_universe/default_planner.hpp>
 #include <autoware/qos_utils/qos_compatibility.hpp>
 #include <autoware/universe_utils/ros/marker_helper.hpp>
-#include <pluginlib/class_loader.hpp>
 
 #include "std_msgs/msg/empty.hpp"
 #include "std_msgs/msg/float32.hpp"
@@ -364,6 +363,17 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
   // vehicle info
   vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
 
+  // parameters of the route planner
+  default_planner_param_.goal_angle_threshold_deg =
+    declare_parameter<double>("goal_angle_threshold_deg");
+  default_planner_param_.enable_correct_goal_pose =
+    declare_parameter<bool>("enable_correct_goal_pose");
+  default_planner_param_.consider_no_drivable_lanes =
+    declare_parameter<bool>("consider_no_drivable_lanes");
+  default_planner_param_.check_footprint_inside_lanes =
+    declare_parameter<bool>("check_footprint_inside_lanes");
+  default_planner_param_.allow_area = declare_parameter<bool>("allow_area", false);
+
   centerline_source_ = [&]() {
     const auto centerline_source_param = declare_parameter<std::string>("centerline_source");
     if (centerline_source_param == "optimization_trajectory_base") {
@@ -683,18 +693,11 @@ LaneletRoute StaticCenterlineGeneratorNode::plan_route(
   const auto check_points =
     std::vector<geometry_msgs::msg::Pose>{start_center_pose, end_center_pose};
 
-  // create mission_planner plugin
-  auto plugin_loader = pluginlib::ClassLoader<autoware::mission_planner_universe::PlannerPlugin>(
-    "autoware_mission_planner_universe", "autoware::mission_planner_universe::PlannerPlugin");
-  auto mission_planner = plugin_loader.createSharedInstance(
-    "autoware::mission_planner_universe::lanelet2::DefaultPlanner");
-
-  // initialize mission_planner
-  auto node = rclcpp::Node("mission_planner");
-  mission_planner->initialize(&node, map_bin_ptr_);
-
   // plan route
-  return mission_planner->plan(check_points);
+  autoware::mission_planner_universe::lanelet2::DefaultPlanner mission_planner(
+    default_planner_param_, vehicle_info_);
+  mission_planner.set_map(*map_bin_ptr_);
+  return mission_planner.plan(check_points).route;
 }
 
 void StaticCenterlineGeneratorNode::on_plan_route(
