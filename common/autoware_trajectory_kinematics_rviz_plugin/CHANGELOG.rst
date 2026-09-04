@@ -2,6 +2,14 @@
 Changelog for package autoware_trajectory_kinematics_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-06-02)
+------------------
+* feat(trajectory_kinematics_panel): trajectory_kinematics_panel upgrade (`#412 <https://github.com/autowarefoundation/autoware_tools/issues/412>`_)
+  * feat(trajectory_kinematics_panel): trajectory_kinematics_panel upgrade
+  * precommit
+  ---------
+* Contributors: Yuxuan Liu
+
 0.7.0 (2026-05-01)
 ------------------
 * fix: to be consistent version in all package.xml(s)
