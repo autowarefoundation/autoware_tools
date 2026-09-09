@@ -30,6 +30,7 @@ class ROS2Interface(Node):
 
     TARGET_MSG_TYPE_STRS = [
         "autoware_planning_msgs/msg/Trajectory",
+        "autoware_internal_planning_msgs/msg/CandidateTrajectories",
         "autoware_internal_planning_msgs/msg/PathWithLaneId",
         "autoware_planning_msgs/msg/Path",
     ]

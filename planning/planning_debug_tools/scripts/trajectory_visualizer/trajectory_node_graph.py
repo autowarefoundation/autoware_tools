@@ -51,6 +51,7 @@ class TrajectoryNodeGraph:
 
         # Target message types to filter
         self.target_msg_types = [
+            "autoware_internal_planning_msgs/msg/CandidateTrajectories",
             "autoware_internal_planning_msgs/msg/PathWithLaneId",
             "autoware_planning_msgs/msg/Path",
             "autoware_planning_msgs/msg/Trajectory",

@@ -159,6 +159,7 @@ ros2 run planning_debug_tools closest_velocity_checker.py
 ## Trajectory visualizer
 
 The old version of the trajectory analyzer. It is written in Python and more flexible, but very slow.
+It now supports multiple subplots with independent x-axis and y-axis selections while sharing the same selected trajectory topics.
 
 ## For other use case (experimental)
 
