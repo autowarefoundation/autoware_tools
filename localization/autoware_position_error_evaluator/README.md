@@ -76,15 +76,16 @@ colcon build --packages-up-to autoware_position_error_evaluator
      <img src="./media/position_error_evaluator_add_tool_to_rviz.png" width="400">
      </p>
 4. **Load Map Data**: Ensure Lanelet2 map is loaded in RViz
-5. **Stop replay rosbag**: Pause the rosbag playback(space key on terminal of rosbag replay) to fix the vehicle pose during measurement
-6. **Start Measuring**:
+5. **Start replay rosbag**: Play the rosbag playback to search the place of measurement
+6. **Stop replay rosbag**: Pause the rosbag playback(space key on terminal of rosbag replay) to fix the vehicle pose during measurement
+7. **Start Measuring**:
    - Click to "Position Error Evaluator Tool"
    - Click to start point of line measurement
    - Click again to end point of line measurement
    - Check the measurement result displayed in the terminal
    - (if needed)Delete key to remove last measurement
    - Right-click to reset current measurement
-7. **Repeat** for additional measurements as needed
+8. **Repeat** for additional measurements as needed
 
 ### Important Notes
 

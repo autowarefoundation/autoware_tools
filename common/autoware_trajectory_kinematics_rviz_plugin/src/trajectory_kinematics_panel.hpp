@@ -75,11 +75,8 @@ public:
   void save(rviz_common::Config config) const override;
 
 protected:
-  /// @brief Starts periodic polling of the ROS graph for topic names (only while the panel is
-  /// visible).
+  // Note: Manual refresh only - no automatic polling
   void showEvent(QShowEvent * event) override;
-
-  /// @brief Stops topic polling when the panel is hidden to avoid idle work.
   void hideEvent(QHideEvent * event) override;
 
 private Q_SLOTS:
@@ -133,9 +130,6 @@ private:
   /// @brief Applies Material Design–style colors and the panel UI font to child widgets.
   void applyPanelStyle();
 
-  /// @brief Reads fixed-range checkboxes and spin values into PlotAxisRangeOptions.
-  PlotAxisRangeOptions readPlotRangeOptions() const;
-
   /// @brief Encodes topic configuration as `topic|kind` segments joined by `;` for RViz
   /// persistence.
   static std::string serializeTopics(
@@ -160,28 +154,21 @@ private:
   QComboBox * x_axis_combo_{nullptr};
   QComboBox * y_axis_combo_{nullptr};
 
-  QCheckBox * fix_x_range_{nullptr};
-  QDoubleSpinBox * plot_x_min_spin_{nullptr};
-  QDoubleSpinBox * plot_x_max_spin_{nullptr};
-  QCheckBox * fix_y_range_{nullptr};
-  QDoubleSpinBox * plot_y_min_spin_{nullptr};
-  QDoubleSpinBox * plot_y_max_spin_{nullptr};
-
   QLabel * metric_velocity_{nullptr};
   QLabel * metric_accel_{nullptr};
   QLabel * metric_duration_{nullptr};
 
   TrajectoryKinematicsPlotWidget * plot_widget_{nullptr};
 
-  QTimer * topic_poll_timer_{nullptr};
   /// Coalesces rapid `dataUpdated` signals before rebuilding list + plot (GUI thread).
   QTimer * plot_refresh_coalesce_timer_{nullptr};
 
   std::vector<std::pair<std::string, TopicMessageKind>> configured_topics_;
   std::unordered_map<std::string, bool> series_checked_;
   /// When unchanged, skip rebuilding the list so selection is stable during message updates.
-  /// Pairs are (series id, display label) so label-only updates (e.g. scores) refresh the list.
-  std::vector<std::pair<std::string, std::string>> last_series_list_signature_;
+  /// Tuples are (series id, display label, has_received_data) so data-state changes refresh the
+  /// list.
+  std::vector<std::tuple<std::string, std::string, bool>> last_series_list_signature_;
 };
 
 }  // namespace autoware::visualization::trajectory_kinematics_rviz_plugin

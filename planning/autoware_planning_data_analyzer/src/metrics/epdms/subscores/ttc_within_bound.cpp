@@ -14,11 +14,13 @@
 
 #include "ttc_within_bound.hpp"
 
+#include "metrics/geometry/ego_footprint.hpp"
+#include "metrics/geometry/lanelet_queries.hpp"
 #include "metrics/geometry/metric_utils.hpp"
+#include "metrics/geometry/object_tracks.hpp"
 
-#include <autoware_utils_geometry/boost_geometry.hpp>
+#include <autoware/object_recognition_utils/object_classification.hpp>
 #include <autoware_utils_geometry/boost_polygon_utils.hpp>
-#include <autoware_utils_geometry/geometry.hpp>
 #include <tf2/LinearMath/Vector3.hpp>
 
 #include <boost/geometry.hpp>
@@ -28,8 +30,9 @@
 #include <cmath>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <string>
+#include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -40,20 +43,13 @@ using autoware::route_handler::RouteHandler;
 namespace
 {
 
-using autoware_utils_geometry::LinearRing2d;
-using autoware_utils_geometry::Point2d;
 using autoware_utils_geometry::Polygon2d;
+namespace bg = boost::geometry;
 
 constexpr double kStoppedSpeedThreshold = 5.0e-3;
 constexpr std::array<double, 4> kFutureProjectionOffsetsSec{{0.0, 0.3, 0.6, 0.9}};
-
-struct PredictedObjectCache
-{
-  const autoware_perception_msgs::msg::PredictedObject * object{};
-  const autoware_perception_msgs::msg::PredictedPath * path{};
-  double dt{0.0};
-  double max_time{0.0};
-};
+constexpr double kAheadAngleThresholdRad = M_PI / 6.0;
+constexpr double kBehindAngleThresholdRad = 5.0 * M_PI / 6.0;
 
 tf2::Vector3 get_velocity_in_world_coordinate(
   const autoware_planning_msgs::msg::TrajectoryPoint & point)
@@ -75,66 +71,157 @@ geometry_msgs::msg::Pose project_pose(
   return projected;
 }
 
-bool is_agent_ahead(
+double relative_agent_angle(
   const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
 {
-  return forward_offset_in_ego_frame(ego_pose, object_pose) > 0.0;
+  const double yaw = get_yaw(ego_pose.orientation);
+  const double dx = object_pose.position.x - ego_pose.position.x;
+  const double dy = object_pose.position.y - ego_pose.position.y;
+  const double distance = std::hypot(dx, dy);
+  if (distance <= 1.0e-6) {
+    return std::numeric_limits<double>::infinity();
+  }
+
+  const double cos_angle =
+    std::clamp((std::cos(yaw) * dx + std::sin(yaw) * dy) / distance, -1.0, 1.0);
+  return std::acos(cos_angle);
 }
 
-std::vector<PredictedObjectCache> build_object_caches(const PredictedObjects & objects)
+bool is_agent_ahead_nuplan(
+  const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
 {
-  std::vector<PredictedObjectCache> caches;
-  caches.reserve(objects.objects.size());
+  return relative_agent_angle(ego_pose, object_pose) < kAheadAngleThresholdRad;
+}
 
-  for (const auto & object : objects.objects) {
-    PredictedObjectCache cache;
-    cache.object = &object;
-    cache.path = highest_confidence_path(object);
-    if (cache.path && cache.path->path.size() >= 2) {
-      cache.dt = rclcpp::Duration(cache.path->time_step).seconds();
-      if (cache.dt > 0.0) {
-        cache.max_time = cache.dt * static_cast<double>(cache.path->path.size() - 1);
-      } else {
-        cache.path = nullptr;
-        cache.dt = 0.0;
-      }
-    } else {
-      cache.path = nullptr;
+bool is_agent_behind_nuplan(
+  const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
+{
+  return relative_agent_angle(ego_pose, object_pose) > kBehindAngleThresholdRad;
+}
+
+TTCWithinBoundDebugEvent make_debug_event(
+  const double time_s, const double future_offset_s, const double query_time_s,
+  const bool bad_or_intersection, const bool multiple_lanes, const bool non_drivable_area,
+  const bool intersection, const bool ahead, const bool behind,
+  const geometry_msgs::msg::Pose & projected_pose, const Polygon2d & ego_polygon,
+  const InterpolatedLoggedObject & object_state)
+{
+  TTCWithinBoundDebugEvent event;
+  event.time_s = time_s;
+  event.future_offset_s = future_offset_s;
+  event.query_time_s = query_time_s;
+  event.object_id = object_id_to_string(object_state.object_id, object_state.has_valid_object_id);
+  event.object_label =
+    autoware::object_recognition_utils::convertLabelToString(object_state.classification);
+  event.ahead = ahead;
+  event.behind = behind;
+  event.multiple_lanes = multiple_lanes;
+  event.non_drivable_area = non_drivable_area;
+  event.intersection = intersection;
+  event.bad_or_intersection = bad_or_intersection;
+  event.ego_center = to_msg_point(projected_pose);
+  event.object_center = to_msg_point(object_state.pose);
+  event.ego_footprint = polygon_to_points(ego_polygon, projected_pose.position.z);
+  event.object_footprint = polygon_to_points(object_state.polygon, projected_pose.position.z);
+  return event;
+}
+
+void populate_ttc_debug_horizon(
+  TTCWithinBoundDebugInfo & debug_info, const autoware_planning_msgs::msg::Trajectory & trajectory,
+  const std::size_t failure_index, const autoware_planning_msgs::msg::TrajectoryPoint & point,
+  const tf2::Vector3 & velocity_world,
+  const autoware_utils_geometry::LinearRing2d & local_footprint,
+  const LoggedObjectTrack & object_track, const rclcpp::Time & trajectory_start_time,
+  const double failure_time_s, const double failure_future_offset_s, const std::string & object_id,
+  const std::string & object_label)
+{
+  for (std::size_t index = 0; index <= failure_index && index < trajectory.points.size(); ++index) {
+    const auto & prefix_point = trajectory.points.at(index);
+    const double prefix_time_s = rclcpp::Duration(prefix_point.time_from_start).seconds();
+    const auto prefix_query_time =
+      trajectory_start_time + rclcpp::Duration(prefix_point.time_from_start);
+    const auto prefix_ego_polygon = create_pose_footprint(prefix_point.pose, local_footprint);
+    TTCWithinBoundHorizonFootprint prefix_ego_footprint;
+    prefix_ego_footprint.time_s = prefix_time_s;
+    prefix_ego_footprint.object_id = "ego";
+    prefix_ego_footprint.object_label = "EGO";
+    prefix_ego_footprint.prefix = true;
+    prefix_ego_footprint.footprint =
+      polygon_to_points(prefix_ego_polygon, prefix_point.pose.position.z);
+    debug_info.ego_horizon_footprints.push_back(std::move(prefix_ego_footprint));
+
+    const auto prefix_object_state =
+      interpolate_logged_object_state(object_track, prefix_query_time);
+    if (prefix_object_state.has_value()) {
+      TTCWithinBoundHorizonFootprint prefix_object_footprint;
+      prefix_object_footprint.time_s = prefix_time_s;
+      prefix_object_footprint.object_id = object_id;
+      prefix_object_footprint.object_label = object_label;
+      prefix_object_footprint.prefix = true;
+      prefix_object_footprint.footprint =
+        polygon_to_points(prefix_object_state->polygon, prefix_point.pose.position.z);
+      debug_info.object_horizon_footprints.push_back(std::move(prefix_object_footprint));
     }
-    caches.push_back(cache);
   }
 
-  return caches;
-}
+  for (const double future_offset_s : kFutureProjectionOffsetsSec) {
+    const double query_time_s = failure_time_s + future_offset_s;
+    const auto query_time = trajectory_start_time + rclcpp::Duration::from_seconds(query_time_s);
+    const auto projected_pose = project_pose(point.pose, velocity_world, future_offset_s);
+    const auto ego_polygon = create_pose_footprint(projected_pose, local_footprint);
+    TTCWithinBoundHorizonFootprint ego_footprint;
+    ego_footprint.time_s = query_time_s;
+    ego_footprint.future_offset_s = future_offset_s;
+    ego_footprint.object_id = "ego";
+    ego_footprint.object_label = "EGO";
+    ego_footprint.failing = std::abs(future_offset_s - failure_future_offset_s) < 1.0e-6;
+    ego_footprint.footprint = polygon_to_points(ego_polygon, projected_pose.position.z);
 
-std::optional<geometry_msgs::msg::Pose> interpolate_object_pose(
-  const PredictedObjectCache & cache, const double query_time_s)
-{
-  if (!cache.object) {
-    return std::nullopt;
-  }
-  if (query_time_s <= 0.0) {
-    return cache.object->kinematics.initial_pose_with_covariance.pose;
-  }
-  if (!cache.path || query_time_s > cache.max_time) {
-    return std::nullopt;
-  }
+    const auto object_state = interpolate_logged_object_state(object_track, query_time);
+    if (!object_state.has_value()) {
+      debug_info.ego_horizon_footprints.push_back(std::move(ego_footprint));
+      continue;
+    }
+    const bool overlap = bg::intersects(ego_polygon, object_state->polygon);
+    ego_footprint.overlap = overlap;
+    debug_info.ego_horizon_footprints.push_back(ego_footprint);
 
-  const std::size_t index =
-    std::min(static_cast<std::size_t>(query_time_s / cache.dt), cache.path->path.size() - 2);
-  const double t_i = static_cast<double>(index) * cache.dt;
-  const double ratio = std::clamp((query_time_s - t_i) / cache.dt, 0.0, 1.0);
-  return autoware_utils_geometry::calc_interpolated_pose(
-    cache.path->path.at(index), cache.path->path.at(index + 1), ratio);
+    TTCWithinBoundHorizonFootprint object_footprint;
+    object_footprint.time_s = query_time_s;
+    object_footprint.future_offset_s = future_offset_s;
+    object_footprint.object_id = object_id;
+    object_footprint.object_label = object_label;
+    object_footprint.overlap = overlap;
+    object_footprint.failing = ego_footprint.failing;
+    object_footprint.footprint =
+      polygon_to_points(object_state->polygon, projected_pose.position.z);
+    debug_info.object_horizon_footprints.push_back(std::move(object_footprint));
+
+    if (overlap) {
+      for (const auto & overlap_polygon : overlap_polygons_to_points(
+             ego_polygon, object_state->polygon, projected_pose.position.z)) {
+        TTCWithinBoundOverlapArea overlap_area;
+        overlap_area.time_s = failure_time_s;
+        overlap_area.future_offset_s = future_offset_s;
+        overlap_area.object_id = object_id;
+        overlap_area.object_label = object_label;
+        overlap_area.failing = ego_footprint.failing;
+        overlap_area.polygon = overlap_polygon;
+        debug_info.overlap_areas.push_back(std::move(overlap_area));
+      }
+    }
+  }
 }
 
 }  // namespace
 
 TTCWithinBoundResult calculate_ttc_within_bound(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::shared_ptr<PredictedObjects> & objects,
+  const std::vector<TimedTrackedObjects> & future_objects,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
-  const std::shared_ptr<RouteHandler> & route_handler)
+  const std::shared_ptr<RouteHandler> & route_handler,
+  const std::vector<TrajectoryFootprintEvaluation> * footprint_evaluations,
+  const std::vector<LoggedObjectTrack> * object_tracks, const bool collect_debug)
 {
   TTCWithinBoundResult result;
 
@@ -142,8 +229,8 @@ TTCWithinBoundResult calculate_ttc_within_bound(
     result.reason = "unavailable_empty_trajectory";
     return result;
   }
-  if (!objects) {
-    result.reason = "unavailable_no_objects_message";
+  if (future_objects.empty()) {
+    result.reason = "unavailable_no_future_objects";
     return result;
   }
   if (!is_vehicle_info_valid(vehicle_info)) {
@@ -155,43 +242,101 @@ TTCWithinBoundResult calculate_ttc_within_bound(
   result.score = 1.0;
   result.reason = "available";
 
-  if (objects->objects.empty()) {
+  const auto local_object_tracks =
+    object_tracks ? std::vector<LoggedObjectTrack>{} : build_logged_object_tracks(future_objects);
+  const auto & tracks = object_tracks ? *object_tracks : local_object_tracks;
+  if (tracks.empty()) {
     return result;
   }
 
   const auto local_footprint = vehicle_info.createFootprint(0.0);
-  const auto object_caches = build_object_caches(*objects);
+  const auto local_evaluations =
+    footprint_evaluations
+      ? std::vector<TrajectoryFootprintEvaluation>{}
+      : evaluate_trajectory_footprints(trajectory, vehicle_info, route_handler, nullptr, true);
+  const auto & evaluations = footprint_evaluations ? *footprint_evaluations : local_evaluations;
+  if (!evaluations.empty() && evaluations.size() != trajectory.points.size()) {
+    result.available = false;
+    result.score = 0.0;
+    result.reason = "unavailable_invalid_footprint";
+    return result;
+  }
 
-  for (const auto & point : trajectory.points) {
+  const auto trajectory_start_time = rclcpp::Time(trajectory.header.stamp);
+  std::unordered_set<unique_identifier_msgs::msg::UUID, UuidHash> collided_object_ids;
+
+  for (std::size_t index = 0; index < trajectory.points.size(); ++index) {
+    const auto & point = trajectory.points.at(index);
     const auto velocity_world = get_velocity_in_world_coordinate(point);
     const double speed = std::hypot(velocity_world.x(), velocity_world.y());
     if (speed < kStoppedSpeedThreshold) {
       continue;
     }
 
-    const bool ego_in_intersection = is_pose_in_intersection(point.pose, route_handler);
+    bool multiple_lanes = false;
+    bool non_drivable_area = false;
+    if (
+      !evaluations.empty() && index < evaluations.size() &&
+      evaluations.at(index).ego_area_evaluation.has_value()) {
+      const auto & flags = evaluations.at(index).ego_area_evaluation->flags;
+      multiple_lanes = flags.multiple_lanes;
+      non_drivable_area = flags.non_drivable_area;
+    }
+    const bool ego_in_intersection =
+      !evaluations.empty() && index < evaluations.size() &&
+          evaluations.at(index).ego_area_evaluation.has_value() &&
+          evaluations.at(index).ego_area_evaluation->flags.intersection_context_available
+        ? evaluations.at(index).ego_area_evaluation->flags.in_intersection
+        : is_pose_in_intersection(point.pose, route_handler);
+    // NAVSIM bad-area branch: straddling lanes, outside drivable area, or inside intersection.
+    const bool bad_or_intersection = multiple_lanes || non_drivable_area || ego_in_intersection;
+    const double time_s = rclcpp::Duration(point.time_from_start).seconds();
 
     for (const double future_offset_s : kFutureProjectionOffsetsSec) {
-      const double query_time_s =
-        rclcpp::Duration(point.time_from_start).seconds() + future_offset_s;
+      const double query_time_s = time_s + future_offset_s;
+      const auto query_time = trajectory_start_time + rclcpp::Duration::from_seconds(query_time_s);
       const auto projected_pose = project_pose(point.pose, velocity_world, future_offset_s);
+      // Shared footprint evaluations are used only for current-point area flags above; TTC must
+      // rebuild the ego polygon at each projected future pose.
       const auto ego_polygon = create_pose_footprint(projected_pose, local_footprint);
 
-      for (const auto & object_cache : object_caches) {
-        const auto object_pose = interpolate_object_pose(object_cache, query_time_s);
-        if (!object_pose.has_value()) {
-          continue;
-        }
-
-        const auto object_polygon =
-          autoware_utils_geometry::to_polygon2d(*object_pose, object_cache.object->shape);
-        if (!boost::geometry::intersects(ego_polygon, object_polygon)) {
-          continue;
-        }
-
+      for (const auto & object_track : tracks) {
         if (
-          is_agent_ahead(point.pose, *object_pose) ||
-          (ego_in_intersection && !is_agent_behind(point.pose, *object_pose))) {
+          object_track.has_valid_object_id &&
+          collided_object_ids.count(object_track.object_id) > 0U) {
+          continue;
+        }
+
+        const auto object_state = interpolate_logged_object_state(object_track, query_time);
+        if (!object_state.has_value()) {
+          continue;
+        }
+        if (is_unknown_classification(object_state->classification)) {
+          continue;
+        }
+
+        if (!boost::geometry::intersects(ego_polygon, object_state->polygon)) {
+          continue;
+        }
+
+        if (object_state->has_valid_object_id) {
+          collided_object_ids.insert(object_state->object_id);
+        }
+
+        const bool ahead = is_agent_ahead_nuplan(projected_pose, object_state->pose);
+        const bool behind = is_agent_behind_nuplan(projected_pose, object_state->pose);
+        if (ahead || (bad_or_intersection && !behind)) {
+          if (collect_debug) {
+            auto debug_event = make_debug_event(
+              time_s, future_offset_s, query_time_s, bad_or_intersection, multiple_lanes,
+              non_drivable_area, ego_in_intersection, ahead, behind, projected_pose, ego_polygon,
+              *object_state);
+            result.debug_info.events.push_back(debug_event);
+            populate_ttc_debug_horizon(
+              result.debug_info, trajectory, index, point, velocity_world, local_footprint,
+              object_track, trajectory_start_time, time_s, future_offset_s, debug_event.object_id,
+              debug_event.object_label);
+          }
           result.score = 0.0;
           result.reason = "collision_within_bound";
           result.infraction_time_s = query_time_s;

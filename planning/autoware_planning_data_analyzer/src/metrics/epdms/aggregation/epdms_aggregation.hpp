@@ -61,7 +61,6 @@ struct HumanFilterMetrics
   };
 
   Metric history_comfort;
-  Metric extended_comfort;
   Metric ego_progress;
   Metric time_to_collision_within_bound;
   Metric lane_keeping;

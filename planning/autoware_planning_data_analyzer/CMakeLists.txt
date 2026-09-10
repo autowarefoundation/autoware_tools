@@ -2,14 +2,23 @@ cmake_minimum_required(VERSION 3.14)
 project(autoware_planning_data_analyzer)
 
 find_package(autoware_cmake REQUIRED)
+find_package(yaml-cpp REQUIRED)
 autoware_package()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
   src/buffer.cpp
   src/base_evaluator.cpp
   src/open_loop_evaluator.cpp
+  src/metrics/evaluator/evaluator.cpp
   src/metrics/deviation_metrics.cpp
+  src/metrics/geometry/comfort_signal.cpp
+  src/metrics/geometry/ego_footprint.cpp
+  src/metrics/geometry/lanelet_geometry.cpp
+  src/metrics/geometry/lanelet_queries.cpp
+  src/metrics/geometry/object_tracks.cpp
+  src/metrics/geometry/trajectory_utils.cpp
   src/metrics/epdms/aggregation/epdms_aggregation.cpp
+  src/metrics/epdms/debug/epdms_debug_writer.cpp
   src/metrics/epdms/subscores/ego_progress.cpp
   src/metrics/epdms/subscores/driving_direction_compliance.cpp
   src/metrics/epdms/subscores/history_comfort.cpp
@@ -23,6 +32,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/metrics/trajectory_metrics.cpp
   src/utils/bag_utils.cpp
   src/utils/json_utils.cpp
+  src/utils/override_windows.cpp
   src/utils/path_utils.cpp
   src/autoware_planning_data_analyzer_node.cpp
 )
@@ -31,6 +41,8 @@ target_include_directories(${PROJECT_NAME}
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
+target_link_libraries(${PROJECT_NAME} yaml-cpp)
 
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN "autoware::planning_data_analyzer::AutowarePlanningDataAnalyzerNode"
@@ -52,6 +64,8 @@ if(BUILD_TESTING)
     test/metrics/test_ttc_within_bound.cpp
     test/metrics/test_no_at_fault_collision.cpp
     test/metrics/test_traffic_light_compliance.cpp
+    test/metrics/test_evaluator_metrics.cpp
+    test/utils/test_override_windows.cpp
   )
 
   target_include_directories(test_metrics

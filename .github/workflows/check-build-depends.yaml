@@ -7,17 +7,16 @@ on:
 
 jobs:
   check-build-depends:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
         rosdistro:
-          - humble
+          - jazzy
         include:
-          - rosdistro: humble
-            container: ros:humble
-            build-depends-repos: build_depends.repos
+          - rosdistro: jazzy
+            container: ghcr.io/autowarefoundation/autoware:universe-dependencies-jazzy
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -29,9 +28,25 @@ jobs:
         id: get-self-packages
         uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
 
+      - name: Remove autoware_core packages from underlay
+        run: |
+          tmp_dir=$(mktemp -d)
+          git clone --depth 1 --branch main \
+            https://github.com/autowarefoundation/autoware_core.git "$tmp_dir"
+          for pkg_xml in $(find "$tmp_dir" -name package.xml); do
+            pkg_name=$(xmllint --xpath 'string(//package/name)' "$pkg_xml")
+            if [ -d "/opt/autoware/$pkg_name" ]; then
+              echo "Removing /opt/autoware/$pkg_name"
+              sudo rm -rf "/opt/autoware/$pkg_name"
+            fi
+          done
+          rm -rf "$tmp_dir"
+        shell: bash
+
       - name: Build
         uses: autowarefoundation/autoware-github-actions/colcon-build@v1
         with:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
-          build-depends-repos: ${{ matrix.build-depends-repos }}
+          build-depends-repos: build_depends.repos
+          underlay-workspace: /opt/autoware

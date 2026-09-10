@@ -14,35 +14,19 @@
 
 #include "metric_utils.hpp"
 
-#include <autoware/lanelet2_utils/intersection.hpp>
-#include <autoware_utils_geometry/geometry.hpp>
+#include <autoware_utils_uuid/uuid_helper.hpp>
 
 #include <boost/geometry.hpp>
 
-#include <lanelet2_core/utility/Utilities.h>
 #include <tf2/utils.h>
 
-#include <memory>
-#include <unordered_set>
+#include <algorithm>
+#include <cmath>
+#include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
 {
-
-using autoware::route_handler::RouteHandler;
-
-namespace
-{
-
-void append_unique_lanelet(
-  const lanelet::ConstLanelet & lanelet, lanelet::ConstLanelets & lanelets,
-  std::unordered_set<lanelet::Id> & seen_ids)
-{
-  if (seen_ids.insert(lanelet.id()).second) {
-    lanelets.push_back(lanelet);
-  }
-}
-
-}  // namespace
 
 bool is_vehicle_info_valid(const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
 {
@@ -52,84 +36,6 @@ bool is_vehicle_info_valid(const autoware::vehicle_info_utils::VehicleInfo & veh
 double get_yaw(const geometry_msgs::msg::Quaternion & orientation)
 {
   return tf2::getYaw(tf2::Quaternion(orientation.x, orientation.y, orientation.z, orientation.w));
-}
-
-autoware_utils_geometry::Polygon2d create_pose_footprint(
-  const geometry_msgs::msg::Pose & pose,
-  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
-{
-  return create_pose_footprint(pose, vehicle_info.createFootprint(0.0));
-}
-
-autoware_utils_geometry::Polygon2d create_pose_footprint(
-  const geometry_msgs::msg::Pose & pose,
-  const autoware_utils_geometry::LinearRing2d & local_footprint)
-{
-  autoware_utils_geometry::Polygon2d polygon;
-  polygon.outer() = autoware_utils_geometry::transform_vector(
-    local_footprint, autoware_utils_geometry::pose2transform(pose));
-  boost::geometry::correct(polygon);
-  return polygon;
-}
-
-std::optional<lanelet::ConstLanelet> find_reference_lanelet(
-  const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler)
-{
-  if (!route_handler || !route_handler->isHandlerReady()) {
-    return std::nullopt;
-  }
-
-  lanelet::ConstLanelet closest_lanelet;
-  if (route_handler->getClosestLaneletWithinRoute(pose, &closest_lanelet)) {
-    return closest_lanelet;
-  }
-
-  for (const auto & lanelet : route_handler->getRoadLaneletsAtPose(pose)) {
-    if (route_handler->isRouteLanelet(lanelet)) {
-      return lanelet;
-    }
-  }
-
-  return std::nullopt;
-}
-
-lanelet::ConstLanelets collect_route_relevant_lanelets(
-  const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::shared_ptr<RouteHandler> & route_handler)
-{
-  lanelet::ConstLanelets route_lanelets;
-  if (!route_handler || !route_handler->isHandlerReady()) {
-    return route_lanelets;
-  }
-
-  std::unordered_set<lanelet::Id> seen_ids;
-  for (const auto & point : trajectory.points) {
-    for (const auto & lanelet : route_handler->getRoadLaneletsAtPose(point.pose)) {
-      if (!route_handler->isRouteLanelet(lanelet)) {
-        continue;
-      }
-      append_unique_lanelet(lanelet, route_lanelets, seen_ids);
-    }
-  }
-
-  return route_lanelets;
-}
-
-autoware_utils_geometry::LineString2d to_linestring2d(const lanelet::ConstLineString3d & line)
-{
-  autoware_utils_geometry::LineString2d line_2d;
-  for (const auto & point : lanelet::utils::to2D(line)) {
-    line_2d.push_back({point.x(), point.y()});
-  }
-  return line_2d;
-}
-
-bool is_pose_in_intersection(
-  const geometry_msgs::msg::Pose & pose, const std::shared_ptr<RouteHandler> & route_handler)
-{
-  const auto lanelet = find_reference_lanelet(pose, route_handler);
-  return lanelet.has_value() &&
-         autoware::experimental::lanelet2_utils::is_intersection_lanelet(*lanelet);
 }
 
 double forward_offset_in_ego_frame(
@@ -144,7 +50,21 @@ double forward_offset_in_ego_frame(
 bool is_agent_behind(
   const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose)
 {
-  return forward_offset_in_ego_frame(ego_pose, object_pose) < 0.0;
+  // NAVSIM-style rear check: treat an object as behind only when it is more than
+  // 150 degrees away from the ego forward axis.
+  constexpr double kBehindAngleThresholdRad = 5.0 * M_PI / 6.0;
+
+  const double yaw = get_yaw(ego_pose.orientation);
+  const double dx = object_pose.position.x - ego_pose.position.x;
+  const double dy = object_pose.position.y - ego_pose.position.y;
+  const double distance = std::hypot(dx, dy);
+  if (distance <= 1.0e-6) {
+    return false;
+  }
+
+  const double cos_angle =
+    std::clamp((std::cos(yaw) * dx + std::sin(yaw) * dy) / distance, -1.0, 1.0);
+  return std::acos(cos_angle) > kBehindAngleThresholdRad;
 }
 
 const autoware_perception_msgs::msg::PredictedPath * highest_confidence_path(
@@ -154,6 +74,57 @@ const autoware_perception_msgs::msg::PredictedPath * highest_confidence_path(
     object.kinematics.predicted_paths.begin(), object.kinematics.predicted_paths.end(),
     [](const auto & lhs, const auto & rhs) { return lhs.confidence < rhs.confidence; });
   return it == object.kinematics.predicted_paths.end() ? nullptr : &(*it);
+}
+
+std::string object_id_to_string(
+  const unique_identifier_msgs::msg::UUID & object_id, const bool valid)
+{
+  if (!valid) {
+    return "invalid";
+  }
+  return autoware_utils_uuid::to_hex_string(object_id);
+}
+
+geometry_msgs::msg::Point to_msg_point(
+  const autoware_utils_geometry::Point2d & point, const double z)
+{
+  return autoware_utils_geometry::to_msg(point.to_3d(z));
+}
+
+geometry_msgs::msg::Point to_msg_point(const geometry_msgs::msg::Pose & pose)
+{
+  geometry_msgs::msg::Point msg;
+  msg.x = pose.position.x;
+  msg.y = pose.position.y;
+  msg.z = pose.position.z;
+  return msg;
+}
+
+std::vector<geometry_msgs::msg::Point> polygon_to_points(
+  const autoware_utils_geometry::Polygon2d & polygon, const double z)
+{
+  std::vector<geometry_msgs::msg::Point> points;
+  points.reserve(polygon.outer().size());
+  for (const auto & point : polygon.outer()) {
+    points.push_back(to_msg_point(point, z));
+  }
+  return points;
+}
+
+std::vector<std::vector<geometry_msgs::msg::Point>> overlap_polygons_to_points(
+  const autoware_utils_geometry::Polygon2d & ego_polygon,
+  const autoware_utils_geometry::Polygon2d & object_polygon, const double z)
+{
+  std::vector<autoware_utils_geometry::Polygon2d> intersections;
+  boost::geometry::intersection(ego_polygon, object_polygon, intersections);
+  std::vector<std::vector<geometry_msgs::msg::Point>> polygons;
+  polygons.reserve(intersections.size());
+  for (const auto & intersection : intersections) {
+    if (intersection.outer().size() >= 4U && boost::geometry::area(intersection) > 1.0e-6) {
+      polygons.push_back(polygon_to_points(intersection, z));
+    }
+  }
+  return polygons;
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics

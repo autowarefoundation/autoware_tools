@@ -23,6 +23,7 @@ namespace
 {
 
 constexpr double kHumanFilterZeroEpsilon = 1.0e-9;
+constexpr double kSyntheticWeightedDenominator = 16.0;
 
 double apply_human_filter(
   const double agent_value, const bool agent_available, const double human_value,
@@ -42,6 +43,23 @@ void populate_human_filter_metric(
     agent_value, agent_available, human_value, human_available, metric.filter_applied);
 }
 
+double calculate_multiplicative_metrics_prod(
+  const double no_at_fault_collision, const double drivable_area_compliance,
+  const double driving_direction_compliance, const double traffic_light_compliance)
+{
+  return no_at_fault_collision * drivable_area_compliance * driving_direction_compliance *
+         traffic_light_compliance;
+}
+
+double calculate_weighted_metrics(
+  const double ego_progress, const double time_to_collision_within_bound, const double lane_keeping,
+  const double history_comfort, const double extended_comfort)
+{
+  return (5.0 * ego_progress + 5.0 * time_to_collision_within_bound + 2.0 * lane_keeping +
+          2.0 * history_comfort + 2.0 * extended_comfort) /
+         kSyntheticWeightedDenominator;
+}
+
 }  // namespace
 
 HumanFilterMetrics calculate_human_filter_metrics(
@@ -52,11 +70,6 @@ HumanFilterMetrics calculate_human_filter_metrics(
   populate_human_filter_metric(
     result.history_comfort, agent_metrics.history_comfort, agent_metrics.history_comfort_available,
     human_metrics.history_comfort, human_metrics.history_comfort_available);
-
-  populate_human_filter_metric(
-    result.extended_comfort, agent_metrics.extended_comfort,
-    agent_metrics.extended_comfort_available, human_metrics.extended_comfort,
-    human_metrics.extended_comfort_available);
 
   populate_human_filter_metric(
     result.ego_progress, agent_metrics.ego_progress, agent_metrics.ego_progress_available,
@@ -100,7 +113,6 @@ SyntheticEpdmsMetrics calculate_synthetic_epdms(
   const EpdmsMetricSnapshot & agent_metrics, const HumanFilterMetrics & human_filter_metrics)
 {
   SyntheticEpdmsMetrics result;
-  constexpr double kSyntheticWeightedDenominator = 16.0;
 
   const bool raw_multiplicative_available = agent_metrics.no_at_fault_collision_available &&
                                             agent_metrics.drivable_area_compliance_available &&
@@ -113,14 +125,12 @@ SyntheticEpdmsMetrics calculate_synthetic_epdms(
                                       agent_metrics.extended_comfort_available;
   result.raw.available = raw_multiplicative_available && raw_weighted_available;
   if (result.raw.available) {
-    result.raw.multiplicative_metrics_prod =
-      agent_metrics.no_at_fault_collision * agent_metrics.drivable_area_compliance *
-      agent_metrics.driving_direction_compliance * agent_metrics.traffic_light_compliance;
-    result.raw.weighted_metrics =
-      (5.0 * agent_metrics.ego_progress + 5.0 * agent_metrics.time_to_collision_within_bound +
-       2.0 * agent_metrics.lane_keeping + 2.0 * agent_metrics.history_comfort +
-       2.0 * agent_metrics.extended_comfort) /
-      kSyntheticWeightedDenominator;
+    result.raw.multiplicative_metrics_prod = calculate_multiplicative_metrics_prod(
+      agent_metrics.no_at_fault_collision, agent_metrics.drivable_area_compliance,
+      agent_metrics.driving_direction_compliance, agent_metrics.traffic_light_compliance);
+    result.raw.weighted_metrics = calculate_weighted_metrics(
+      agent_metrics.ego_progress, agent_metrics.time_to_collision_within_bound,
+      agent_metrics.lane_keeping, agent_metrics.history_comfort, agent_metrics.extended_comfort);
     result.raw.epdms = result.raw.multiplicative_metrics_prod * result.raw.weighted_metrics;
   }
 
@@ -137,20 +147,17 @@ SyntheticEpdmsMetrics calculate_synthetic_epdms(
   result.human_filtered.available =
     human_filtered_multiplicative_available && human_filtered_weighted_available;
   if (result.human_filtered.available) {
-    result.human_filtered.multiplicative_metrics_prod =
-      human_filter_metrics.no_at_fault_collision.filtered *
-      human_filter_metrics.drivable_area_compliance.filtered *
-      human_filter_metrics.driving_direction_compliance.filtered *
-      human_filter_metrics.traffic_light_compliance.filtered;
-    const double filtered_ego_progress =
-      human_filter_metrics.ego_progress.filter_applied ? 1.0 : agent_metrics.ego_progress;
-    result.human_filtered.weighted_metrics =
-      (5.0 * filtered_ego_progress +
-       5.0 * human_filter_metrics.time_to_collision_within_bound.filtered +
-       2.0 * human_filter_metrics.lane_keeping.filtered +
-       2.0 * human_filter_metrics.history_comfort.filtered +
-       2.0 * human_filter_metrics.extended_comfort.filtered) /
-      kSyntheticWeightedDenominator;
+    result.human_filtered.multiplicative_metrics_prod = calculate_multiplicative_metrics_prod(
+      human_filter_metrics.no_at_fault_collision.filtered,
+      human_filter_metrics.drivable_area_compliance.filtered,
+      human_filter_metrics.driving_direction_compliance.filtered,
+      human_filter_metrics.traffic_light_compliance.filtered);
+    // EC bypasses the human filter by design in the NAVSIM-faithful synthetic score.
+    result.human_filtered.weighted_metrics = calculate_weighted_metrics(
+      human_filter_metrics.ego_progress.filtered,
+      human_filter_metrics.time_to_collision_within_bound.filtered,
+      human_filter_metrics.lane_keeping.filtered, human_filter_metrics.history_comfort.filtered,
+      agent_metrics.extended_comfort);
     result.human_filtered.epdms =
       result.human_filtered.multiplicative_metrics_prod * result.human_filtered.weighted_metrics;
   }

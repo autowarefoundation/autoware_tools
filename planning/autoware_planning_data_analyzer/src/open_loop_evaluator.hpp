@@ -22,7 +22,9 @@
 #include "metrics/epdms/subscores/ego_progress.hpp"
 #include "metrics/epdms/subscores/extended_comfort.hpp"
 #include "metrics/epdms/subscores/lane_keeping.hpp"
+#include "metrics/evaluator/evaluator.hpp"
 #include "metrics/trajectory_metrics.hpp"
+#include "utils/override_windows.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_vehicle_info_utils/vehicle_info.hpp>
@@ -36,6 +38,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -71,9 +74,17 @@ struct OpenLoopTrajectoryMetrics
   std::vector<double> heading_errors;       // Absolute heading error at each trajectory point [rad]
   std::vector<double> ttc;                  // Time To Collision at each trajectory point
   double history_comfort{0.0};              // Binary comfort subscore for the trajectory
-  double extended_comfort{0.0};             // Binary extended comfort subscore
+  bool history_comfort_available{false};
+  std::string history_comfort_reason{"unavailable"};
+  double extended_comfort{0.0};  // Binary extended comfort subscore
   bool extended_comfort_available{false};
   std::string extended_comfort_reason{"unavailable"};
+  std::string extended_comfort_debug_summary;
+  std::vector<double> extended_comfort_sample_times;
+  std::vector<double> extended_comfort_delta_acceleration;
+  std::vector<double> extended_comfort_delta_jerk;
+  std::vector<double> extended_comfort_delta_yaw_rate;
+  std::vector<double> extended_comfort_delta_yaw_accel;
   double time_to_collision_within_bound{0.0};
   bool time_to_collision_within_bound_available{false};
   std::string time_to_collision_within_bound_reason{"unavailable"};
@@ -86,6 +97,8 @@ struct OpenLoopTrajectoryMetrics
   std::string ego_progress_reason{"unavailable"};
   double ego_progress_raw_m{0.0};
   double ego_progress_best_raw_m{0.0};
+  double ego_progress_mask{0.0};
+  double ego_progress_denominator_m{0.0};
   double drivable_area_compliance{0.0};  // Binary drivable area compliance subscore
   bool drivable_area_compliance_available{false};
   std::string drivable_area_compliance_reason{"unavailable"};
@@ -140,6 +153,22 @@ struct OpenLoopEvaluationSummary
   double total_evaluation_duration;
 };
 
+struct EnabledOpenLoopMetrics
+{
+  bool trajectory_errors{true};
+  bool history_comfort{true};
+  bool extended_comfort{true};
+  bool time_to_collision_within_bound{true};
+  bool lane_keeping{true};
+  bool ego_progress{true};
+  bool drivable_area_compliance{true};
+  bool no_at_fault_collision{true};
+  bool driving_direction_compliance{true};
+  bool traffic_light_compliance{true};
+  bool synthetic_epdms{true};
+  bool enable_epdms_calculation{true};
+};
+
 class OpenLoopEvaluator : public BaseEvaluator
 {
 public:
@@ -181,6 +210,23 @@ public:
 
   void set_metric_variant(const std::string & metric_variant) { metric_variant_ = metric_variant; }
 
+  void set_enabled_metrics(const std::vector<std::string> & enabled_metric_names);
+
+  void set_epdms_calculation_enabled(bool enabled)
+  {
+    enabled_metrics_.enable_epdms_calculation = enabled;
+  }
+
+  void set_debug_topics_enabled(bool enabled) { debug_topics_enabled_ = enabled; }
+
+  void set_trajectory_evaluation_horizon(double horizon_s)
+  {
+    if (horizon_s < 0.0) {
+      throw std::invalid_argument("trajectory evaluation horizon must be non-negative");
+    }
+    trajectory_evaluation_horizon_s_ = horizon_s;
+  }
+
   void set_evaluation_horizons(const std::vector<double> & horizons)
   {
     evaluation_horizons_ = horizons;
@@ -189,6 +235,26 @@ public:
   void set_extended_comfort_parameters(const metrics::ExtendedComfortParameters & parameters)
   {
     extended_comfort_parameters_ = parameters;
+  }
+
+  /**
+   * @brief Set the override window duration [s] applied after AUTONOMOUS->MANUAL transitions.
+   *
+   * A non-positive value disables override-only aggregation.
+   */
+  void set_override_window_sec(double window_sec) { override_window_sec_ = window_sec; }
+
+  /**
+   * @brief Provide the timeline of ControlModeReport samples used to derive override windows.
+   */
+  void set_control_mode_events(std::vector<utils::ControlModeEvent> events)
+  {
+    control_mode_events_ = std::move(events);
+  }
+
+  void set_evaluator_configs(const std::vector<metrics::evaluator::EvaluatorConfig> & configs)
+  {
+    evaluator_configs_ = configs;
   }
 
   nlohmann::json get_summary_as_json() const override;
@@ -334,6 +400,7 @@ private:
     const rclcpp::Time & normalized_timestamp) const;
 
   std::string metric_topic(const std::string & metric_name) const;
+  std::string epdms_metric_topic(const std::string & metric_name) const;
   std::string trajectory_metric_topic(const std::string & metric_name) const;
   std::string compared_trajectory_topic() const;
   std::string dlr_result_topic() const;
@@ -346,6 +413,8 @@ private:
    */
   void calculate_summary();
 
+  bool should_write_synthetic_epdms() const;
+
   std::vector<OpenLoopTrajectoryMetrics> metrics_list_;
   std::vector<metrics::TrajectoryPointMetrics> trajectory_point_metrics_list_;
   std::vector<metrics::HumanFilterMetrics> human_filter_metrics_list_;
@@ -354,12 +423,20 @@ private:
   metrics::ExtendedComfortParameters extended_comfort_parameters_{};
   metrics::LaneKeepingParameters lane_keeping_params_;
   metrics::DrivingDirectionComplianceParameters driving_direction_params_;
+  EnabledOpenLoopMetrics enabled_metrics_;
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   OpenLoopEvaluationSummary summary_;
   std::string metric_variant_;
   GTSourceMode gt_source_mode_;
   double gt_sync_tolerance_ms_;
+  double trajectory_evaluation_horizon_s_{4.0};
   std::vector<double> evaluation_horizons_;
+  double override_window_sec_{0.0};
+  std::vector<utils::ControlModeEvent> control_mode_events_;
+  // Reserved for the follow-up debug-topic PR. PR 425 only stores the runtime switch.
+  std::vector<TimedTrackedObjects> object_timeline_;
+  bool debug_topics_enabled_{false};
+  std::vector<metrics::evaluator::EvaluatorConfig> evaluator_configs_;
 };
 
 }  // namespace autoware::planning_data_analyzer

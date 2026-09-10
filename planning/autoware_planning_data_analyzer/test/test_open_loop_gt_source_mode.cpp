@@ -34,7 +34,9 @@ using autoware::planning_data_analyzer::Trajectory;
 namespace
 {
 
-Trajectory make_trajectory(const rclcpp::Time & start_time, const std::vector<double> & xs)
+Trajectory make_timed_trajectory(
+  const rclcpp::Time & start_time, const std::vector<double> & xs,
+  const std::vector<double> & times_s)
 {
   Trajectory trajectory;
   trajectory.header.frame_id = "map";
@@ -42,13 +44,17 @@ Trajectory make_trajectory(const rclcpp::Time & start_time, const std::vector<do
   trajectory.header.stamp.nanosec =
     static_cast<uint32_t>(start_time.nanoseconds() - trajectory.header.stamp.sec * 1000000000LL);
 
+  if (xs.size() != times_s.size()) {
+    return trajectory;
+  }
+
   for (size_t i = 0; i < xs.size(); ++i) {
     autoware_planning_msgs::msg::TrajectoryPoint point;
     point.pose.position.x = xs[i];
     point.pose.position.y = 0.0;
     point.pose.position.z = 0.0;
     point.pose.orientation.w = 1.0;
-    const double time_from_start_s = 0.1 * static_cast<double>(i);
+    const double time_from_start_s = times_s.at(i);
     const int32_t sec = static_cast<int32_t>(time_from_start_s);
     const uint32_t nanosec = static_cast<uint32_t>((time_from_start_s - sec) * 1e9);
     point.time_from_start.sec = sec;
@@ -58,6 +64,16 @@ Trajectory make_trajectory(const rclcpp::Time & start_time, const std::vector<do
   }
 
   return trajectory;
+}
+
+Trajectory make_trajectory(const rclcpp::Time & start_time, const std::vector<double> & xs)
+{
+  std::vector<double> times_s;
+  times_s.reserve(xs.size());
+  for (size_t i = 0; i < xs.size(); ++i) {
+    times_s.push_back(0.1 * static_cast<double>(i));
+  }
+  return make_timed_trajectory(start_time, xs, times_s);
 }
 
 std::shared_ptr<SynchronizedData> make_sync_data(
@@ -132,6 +148,64 @@ TEST_F(OpenLoopGTSourceModeTest, GTTrajectoryModeUsesSyncToleranceForBoundaryInt
   EXPECT_EQ(tolerant_evaluator.get_metrics().size(), 1u);
 }
 
+TEST_F(OpenLoopGTSourceModeTest, TrajectoryHorizonTruncationKeepsFirstPointBeyondHorizon)
+{
+  const rclcpp::Time start_time(35, 0);
+  const auto prediction = make_timed_trajectory(start_time, {1.0, 2.0}, {1.0, 1.1});
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{make_sync_data(prediction)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+  evaluator.set_trajectory_evaluation_horizon(0.5);
+
+  const auto evaluation_data = evaluator.prepare_evaluation_data(sync_data_list);
+  ASSERT_EQ(evaluation_data.size(), 1u);
+  ASSERT_EQ(evaluation_data.front().synchronized_data->trajectory->points.size(), 1u);
+  EXPECT_DOUBLE_EQ(
+    rclcpp::Duration(
+      evaluation_data.front().synchronized_data->trajectory->points.front().time_from_start)
+      .seconds(),
+    1.0);
+}
+
+TEST_F(OpenLoopGTSourceModeTest, TrajectoryHorizonTruncationKeepsSinglePointTrajectory)
+{
+  const rclcpp::Time start_time(36, 0);
+  const auto prediction = make_timed_trajectory(start_time, {1.0}, {0.0});
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{make_sync_data(prediction)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+  evaluator.set_trajectory_evaluation_horizon(4.0);
+
+  const auto evaluation_data = evaluator.prepare_evaluation_data(sync_data_list);
+  ASSERT_EQ(evaluation_data.size(), 1u);
+  ASSERT_EQ(evaluation_data.front().synchronized_data->trajectory->points.size(), 1u);
+}
+
+TEST_F(OpenLoopGTSourceModeTest, TrajectoryHorizonTruncationKeepsPointExactlyAtHorizon)
+{
+  const rclcpp::Time start_time(37, 0);
+  const auto prediction =
+    make_timed_trajectory(start_time, {0.0, 1.0, 2.0, 3.0}, {0.0, 0.5, 1.0, 1.5});
+  const auto gt = std::make_shared<Trajectory>(
+    make_timed_trajectory(start_time, {0.0, 1.0, 2.0, 3.0}, {0.0, 0.5, 1.0, 1.5}));
+  std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{make_sync_data(prediction, gt)};
+
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+  evaluator.set_trajectory_evaluation_horizon(1.0);
+
+  const auto evaluation_data = evaluator.prepare_evaluation_data(sync_data_list);
+  ASSERT_EQ(evaluation_data.size(), 1u);
+  const auto & points = evaluation_data.front().synchronized_data->trajectory->points;
+  ASSERT_EQ(points.size(), 3u);
+  EXPECT_DOUBLE_EQ(rclcpp::Duration(points.back().time_from_start).seconds(), 1.0);
+}
+
 TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
 {
   OpenLoopEvaluator evaluator(
@@ -147,19 +221,82 @@ TEST_F(OpenLoopGTSourceModeTest, VariantsNamespaceOpenLoopResultTopics)
     });
   };
 
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/history_comfort"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/extended_comfort"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/time_to_collision_within_bound"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/lane_keeping"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/ego_progress"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/drivable_area_compliance"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/no_at_fault_collision"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/driving_direction_compliance"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/traffic_light_compliance"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_raw"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_raw_available"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_human_filtered"));
-  EXPECT_TRUE(has_topic("/open_loop/metrics/raw/synthetic_epdms_human_filtered_available"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/history_comfort"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/extended_comfort"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/time_to_collision_within_bound"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/lane_keeping"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/ego_progress"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/drivable_area_compliance"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/no_at_fault_collision"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/driving_direction_compliance"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/traffic_light_compliance"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/synthetic_epdms_raw"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/synthetic_epdms_raw_available"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/synthetic_epdms_human_filtered"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/synthetic_epdms_human_filtered_available"));
+}
+
+TEST_F(OpenLoopGTSourceModeTest, EpdmsGateDisablesEpdmsResultTopics)
+{
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  evaluator.set_debug_topics_enabled(true);
+  evaluator.set_epdms_calculation_enabled(false);
+
+  const auto topics = evaluator.get_result_topics();
+  const auto has_topic = [&topics](const std::string & topic_name) {
+    return std::any_of(topics.begin(), topics.end(), [&topic_name](const auto & topic) {
+      return topic.first == topic_name;
+    });
+  };
+  const auto has_topic_prefix = [&topics](const std::string & prefix) {
+    return std::any_of(topics.begin(), topics.end(), [&prefix](const auto & topic) {
+      return topic.first.rfind(prefix, 0) == 0;
+    });
+  };
+
+  EXPECT_TRUE(has_topic("/open_loop/metrics/ade"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/fde"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/ttc"));
+  EXPECT_FALSE(has_topic_prefix("/open_loop/metrics/epdms/"));
+  EXPECT_FALSE(has_topic_prefix("/open_loop/metrics/trajectory/"));
+  EXPECT_FALSE(has_topic_prefix("/debug/epdms/"));
+}
+
+TEST_F(OpenLoopGTSourceModeTest, EnabledMetricsNarrowsOpenLoopResultTopics)
+{
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  evaluator.set_enabled_metrics({"nc", "ttc"});
+
+  const auto topics = evaluator.get_result_topics();
+  const auto has_topic = [&topics](const std::string & topic_name) {
+    return std::any_of(topics.begin(), topics.end(), [&topic_name](const auto & topic) {
+      return topic.first == topic_name;
+    });
+  };
+
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/no_at_fault_collision"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/epdms/time_to_collision_within_bound"));
+  EXPECT_TRUE(has_topic("/open_loop/metrics/ttc"));
+  EXPECT_FALSE(has_topic("/open_loop/metrics/ade"));
+  EXPECT_FALSE(has_topic("/open_loop/metrics/epdms/lane_keeping"));
+  EXPECT_FALSE(has_topic("/open_loop/metrics/epdms/synthetic_epdms_raw"));
+}
+
+TEST_F(OpenLoopGTSourceModeTest, EnabledMetricsRejectsAllMixedWithSpecificMetrics)
+{
+  OpenLoopEvaluator evaluator(
+    rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
+    OpenLoopEvaluator::GTSourceMode::GT_TRAJECTORY, 200.0);
+
+  EXPECT_NO_THROW(evaluator.set_enabled_metrics({"all"}));
+  EXPECT_THROW(evaluator.set_enabled_metrics({"all", "nc"}), std::invalid_argument);
+  EXPECT_THROW(evaluator.set_enabled_metrics({"all", "bogus"}), std::invalid_argument);
 }
 
 TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomfortableTrajectories)
@@ -170,14 +307,11 @@ TEST_F(OpenLoopGTSourceModeTest, HistoryComfortIsReportedForComfortableAndUncomf
   const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5}));
 
   for (auto & point : comfortable_prediction.points) {
-    point.longitudinal_velocity_mps = 2.0;
+    point.acceleration_mps2 = 0.0;
   }
   for (auto & point : uncomfortable_prediction.points) {
-    point.longitudinal_velocity_mps = 2.0;
+    point.acceleration_mps2 = 10.0;
   }
-  uncomfortable_prediction.points[1].longitudinal_velocity_mps = 3.0;
-  uncomfortable_prediction.points[2].longitudinal_velocity_mps = 5.0;
-  uncomfortable_prediction.points[3].longitudinal_velocity_mps = 6.0;
 
   std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{
     make_sync_data(comfortable_prediction, gt), make_sync_data(uncomfortable_prediction, gt)};
@@ -222,17 +356,11 @@ TEST_F(OpenLoopGTSourceModeTest, HumanFilterPromotesAgentHistoryComfortWhenHuman
   auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 0.5, 1.0, 1.5}));
 
   for (auto & point : prediction.points) {
-    point.longitudinal_velocity_mps = 2.0;
+    point.acceleration_mps2 = 10.0;
   }
   for (auto & point : gt->points) {
-    point.longitudinal_velocity_mps = 2.0;
+    point.acceleration_mps2 = 10.0;
   }
-  prediction.points[1].longitudinal_velocity_mps = 3.0;
-  prediction.points[2].longitudinal_velocity_mps = 5.0;
-  prediction.points[3].longitudinal_velocity_mps = 6.0;
-  gt->points[1].longitudinal_velocity_mps = 3.0;
-  gt->points[2].longitudinal_velocity_mps = 5.0;
-  gt->points[3].longitudinal_velocity_mps = 6.0;
 
   OpenLoopEvaluator evaluator(
     rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
@@ -288,7 +416,7 @@ TEST_F(OpenLoopGTSourceModeTest, MissingInputsUnavailableReasonsAreReported)
     "unavailable_no_route_handler");
   EXPECT_EQ(
     full_json["trajectories"][0]["no_at_fault_collision_reason"].get<std::string>(),
-    "unavailable_no_objects_message");
+    "unavailable_no_future_objects");
 }
 
 TEST_F(OpenLoopGTSourceModeTest, ExtendedComfortAvailabilityIsReportedAcrossConsecutivePlans)
@@ -325,29 +453,19 @@ TEST_F(OpenLoopGTSourceModeTest, ExtendedComfortAvailabilityIsReportedAcrossCons
   EXPECT_TRUE(metrics[1].extended_comfort_available);
 }
 
-TEST_F(
-  OpenLoopGTSourceModeTest,
-  HistoryComfortUsesYawRateForLateralAccelerationWhenLateralVelocityIsZero)
+TEST_F(OpenLoopGTSourceModeTest, HistoryComfortUsesPlannedAccelerationSignals)
 {
   const rclcpp::Time start_time(55, 0);
 
-  auto turning_prediction = make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0});
+  auto uncomfortable_prediction = make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0});
   const auto gt = std::make_shared<Trajectory>(make_trajectory(start_time, {0.0, 1.0, 2.0, 3.0}));
 
-  for (auto & point : turning_prediction.points) {
-    point.longitudinal_velocity_mps = 10.0;
-    point.lateral_velocity_mps = 0.0;
-  }
-
-  double yaw = 0.0;
-  for (auto & point : turning_prediction.points) {
-    point.pose.orientation.z = std::sin(yaw * 0.5);
-    point.pose.orientation.w = std::cos(yaw * 0.5);
-    yaw += 0.05;
+  for (auto & point : uncomfortable_prediction.points) {
+    point.acceleration_mps2 = 10.0;
   }
 
   std::vector<std::shared_ptr<SynchronizedData>> sync_data_list{
-    make_sync_data(turning_prediction, gt)};
+    make_sync_data(uncomfortable_prediction, gt)};
 
   OpenLoopEvaluator evaluator(
     rclcpp::get_logger("open_loop_gt_source_test"), nullptr,
@@ -358,6 +476,8 @@ TEST_F(
   const auto metrics = evaluator.get_metrics();
   ASSERT_EQ(metrics.size(), 1u);
   EXPECT_DOUBLE_EQ(metrics[0].history_comfort, 0.0);
+  EXPECT_TRUE(metrics[0].history_comfort_available);
+  EXPECT_EQ(metrics[0].history_comfort_reason, "available");
 }
 
 TEST_F(OpenLoopGTSourceModeTest, HeadingMetricsUseWrappedYawErrorPerHorizon)

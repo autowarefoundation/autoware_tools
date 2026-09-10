@@ -35,7 +35,7 @@
 
     <!-- Occupancy Grid -->
     <push-ros-namespace namespace="occupancy_grid_map"/>
-    <include file="$(find-pkg-share tier4_perception_launch)/launch/occupancy_grid_map/probabilistic_occupancy_grid_map.launch.xml">
+    <include file="$(find-pkg-share autoware_perception_launch)/launch/occupancy_grid_map/probabilistic_occupancy_grid_map.launch.xml">
       <arg name="input_obstacle_pointcloud" value="true"/>
       <arg name="input_obstacle_and_raw_pointcloud" value="false"/>
       <arg name="input/obstacle_pointcloud" value="/perception/obstacle_segmentation/pointcloud"/>

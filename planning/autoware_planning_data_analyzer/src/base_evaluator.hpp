@@ -16,13 +16,16 @@
 #define BASE_EVALUATOR_HPP_
 
 #include "bag_handler.hpp"
+#include "metrics/evaluator/evaluator.hpp"
 #include "metrics/trajectory_metrics.hpp"
+#include "utils/override_windows.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
 #include <nlohmann/json.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rosbag2_cpp/reader.hpp>
 #include <rosbag2_cpp/writer.hpp>
+#include <rosbag2_storage/serialized_bag_message.hpp>
 #include <rosbag2_storage/topic_metadata.hpp>
 
 #include <tf2_msgs/msg/tf_message.hpp>
@@ -31,6 +34,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -145,16 +149,25 @@ protected:
   struct BagProcessingResult
   {
     std::vector<std::shared_ptr<SynchronizedData>> synchronized_data_list;
+    std::vector<TimedTrackedObjects> tracked_object_timeline;
     rclcpp::Time evaluation_start_time;
     rclcpp::Time evaluation_end_time;
     tf2_msgs::msg::TFMessage tf_static_msgs;
     bool gt_trajectory_topic_seen = false;
     size_t gt_trajectory_message_count = 0;
+    // Timeline of /vehicle/status/control_mode samples sorted by stamp,
+    // captured as (timestamp_ns, mode) tuples. Used to detect override
+    // windows (AUTONOMOUS -> MANUAL transitions).
+    std::vector<utils::ControlModeEvent> control_mode_events;
+    std::map<std::string, std::vector<metrics::evaluator::TimestampedDouble>>
+      evaluator_metric_values_by_topic;
+    std::vector<metrics::evaluator::EvaluatorMetricGroup> evaluator_metric_groups;
   };
 
   BagProcessingResult process_bag_common(
     const std::string & bag_path, rosbag2_cpp::Writer * evaluation_bag_writer,
-    const TopicNames & topic_names);
+    const TopicNames & topic_names,
+    const std::vector<metrics::evaluator::EvaluatorConfig> & evaluator_configs = {});
 
   /**
    * @brief Save evaluation results to JSON file

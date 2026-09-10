@@ -222,6 +222,8 @@ The following topics are published during replay:
 
 ### How it works
 
+The node subscribes to `/localization/kinematic_state` for the simulator ego pose and `/initialpose3d` to align the rosbag replay timeline when localization is reset (e.g. DLR DirectInitialPose).
+
 Whenever the ego's position changes, a chronological `reproduce_sequence` queue is generated based on its position with a search radius (default to 2 m).
 If the queue is empty, the nearest odom message in the rosbag is added to the queue.
 When publishing perception messages, the first element in the `reproduce_sequence` is popped and published.

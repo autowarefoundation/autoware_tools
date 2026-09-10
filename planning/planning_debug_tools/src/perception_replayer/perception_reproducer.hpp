@@ -47,7 +47,7 @@ public:
 
 private:
   void on_timer();
-  void on_initialpose(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
+  void on_pose_reset(const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg);
 
   // find nearest ego odom index by position
   size_t find_nearest_ego_odom_index(const geometry_msgs::msg::Pose & ego_pose) const;

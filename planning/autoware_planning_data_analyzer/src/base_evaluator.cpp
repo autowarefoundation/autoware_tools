@@ -14,6 +14,7 @@
 
 #include "base_evaluator.hpp"
 
+#include "metrics/evaluator/evaluator.hpp"
 #include "metrics/trajectory_metrics.hpp"
 #include "serialized_bag_message.hpp"
 
@@ -22,16 +23,20 @@
 
 #include <std_msgs/msg/float64_multi_array.hpp>
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace autoware::planning_data_analyzer
 {
 
 BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   const std::string & bag_path, rosbag2_cpp::Writer * /*evaluation_bag_writer*/,
-  const TopicNames & topic_names)
+  const TopicNames & topic_names,
+  const std::vector<metrics::evaluator::EvaluatorConfig> & evaluator_configs)
 {
   // Open bag reader
   rosbag2_cpp::Reader bag_reader;
@@ -45,6 +50,7 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
 
   // Result to return
   BagProcessingResult result;
+  const auto evaluator_topics = metrics::evaluator::collect_evaluator_topics(evaluator_configs);
 
   // Find the time range of the bag
   rclcpp::Time bag_start_time = rclcpp::Time(std::numeric_limits<int64_t>::max());
@@ -88,9 +94,24 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
       // SteeringReport doesn't have header, so we don't override timestamp
       process_and_append_message<SteeringReport>(
         serialized_message, bag_data, topic_names.steering_topic, false, logger_);
+    } else if (
+      topic_name == topic_names.hazard_lights_topic && !topic_names.hazard_lights_topic.empty()) {
+      process_and_append_message<HazardLightsReport>(
+        serialized_message, bag_data, topic_names.hazard_lights_topic, false, logger_);
+    } else if (
+      topic_name == topic_names.turn_indicators_topic &&
+      !topic_names.turn_indicators_topic.empty()) {
+      process_and_append_message<TurnIndicatorsReport>(
+        serialized_message, bag_data, topic_names.turn_indicators_topic, false, logger_);
     } else if (topic_name == topic_names.objects_topic) {
       process_and_append_message<PredictedObjects>(
         serialized_message, bag_data, topic_names.objects_topic, use_bag_timestamp, logger_);
+    } else if (
+      !topic_names.tracked_objects_topic.empty() &&
+      topic_name == topic_names.tracked_objects_topic) {
+      process_and_append_message<TrackedObjects>(
+        serialized_message, bag_data, topic_names.tracked_objects_topic, use_bag_timestamp,
+        logger_);
     } else if (
       topic_name == topic_names.traffic_signals_topic &&
       !topic_names.traffic_signals_topic.empty()) {
@@ -100,6 +121,45 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
     } else if (topic_name == topic_names.tf_topic) {
       process_and_append_message<TFMessage>(
         serialized_message, bag_data, topic_names.tf_topic, false, logger_);
+    } else if (
+      !topic_names.control_mode_topic.empty() && topic_name == topic_names.control_mode_topic) {
+      try {
+        ControlModeReport mode_msg;
+        rclcpp::Serialization<ControlModeReport> serializer;
+        rclcpp::SerializedMessage serialized_msg(*serialized_message->serialized_data);
+        serializer.deserialize_message(&serialized_msg, &mode_msg);
+        // Prefer the message stamp; fall back to bag timestamp when unset.
+        const rclcpp::Time stamp(mode_msg.stamp);
+        const auto stamp_ns =
+          stamp.nanoseconds() != 0 ? stamp.nanoseconds() : get_timestamp_ns(*serialized_message);
+        result.control_mode_events.emplace_back(stamp_ns, mode_msg.mode);
+      } catch (const std::exception & e) {
+        RCLCPP_WARN(logger_, "Failed to deserialize control_mode message: %s", e.what());
+      }
+    } else if (
+      // evaluator metric topics
+      !evaluator_topics.empty() && metrics::evaluator::try_append_evaluator_metric_message(
+                                     topic_name, serialized_message, evaluator_topics,
+                                     result.evaluator_metric_values_by_topic, logger_)) {
+      continue;
+    }
+  }
+
+  // Sort control_mode events by timestamp so override windows can be derived.
+  std::sort(
+    result.control_mode_events.begin(), result.control_mode_events.end(),
+    [](const auto & a, const auto & b) { return a.first < b.first; });
+
+  if (const auto object_itr = bag_data->buffers.find(topic_names.tracked_objects_topic);
+      object_itr != bag_data->buffers.end()) {
+    if (
+      const auto object_buffer =
+        std::dynamic_pointer_cast<Buffer<TrackedObjects>>(object_itr->second)) {
+      result.tracked_object_timeline.reserve(object_buffer->msgs.size());
+      for (const auto & objects : object_buffer->msgs) {
+        result.tracked_object_timeline.push_back(
+          TimedTrackedObjects{message_stamp(objects), std::make_shared<TrackedObjects>(objects)});
+      }
     }
   }
 
@@ -137,6 +197,13 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
   } else {
     result.evaluation_start_time = bag_start_time;
     result.evaluation_end_time = bag_end_time;
+  }
+
+  // Build evaluator metric groups
+  if (!evaluator_configs.empty()) {
+    result.evaluator_metric_groups = metrics::evaluator::build_evaluator_metric_groups(
+      evaluator_configs, result.evaluator_metric_values_by_topic, kinematic_states, route_handler_,
+      topic_names.sync_tolerance_ms, logger_);
   }
 
   return result;

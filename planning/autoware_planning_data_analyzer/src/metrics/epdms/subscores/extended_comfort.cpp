@@ -14,12 +14,14 @@
 
 #include "extended_comfort.hpp"
 
-#include "metrics/geometry/metric_utils.hpp"
+#include "metrics/geometry/comfort_signal.hpp"
 
-#include <autoware_utils_math/normalization.hpp>
+#include <rclcpp/duration.hpp>
+#include <rclcpp/time.hpp>
 
 #include <algorithm>
 #include <cmath>
+#include <sstream>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -28,90 +30,67 @@ namespace autoware::planning_data_analyzer::metrics
 namespace
 {
 
-struct DynamicSignals
-{
-  std::vector<double> accelerations;
-  std::vector<double> jerks;
-  std::vector<double> yaw_rates;
-  std::vector<double> yaw_accelerations;
-};
+constexpr double kDefaultTrajectoryDt = 0.1;
 
-double get_time_seconds(const builtin_interfaces::msg::Duration & time_from_start)
+double trajectory_dt_s(const autoware_planning_msgs::msg::Trajectory & trajectory)
 {
-  return static_cast<double>(time_from_start.sec) +
-         static_cast<double>(time_from_start.nanosec) * 1e-9;
+  if (trajectory.points.size() < 2U) {
+    return kDefaultTrajectoryDt;
+  }
+  const double dt = rclcpp::Duration(trajectory.points[1].time_from_start).seconds() -
+                    rclcpp::Duration(trajectory.points.front().time_from_start).seconds();
+  return dt > 0.0 ? dt : kDefaultTrajectoryDt;
 }
 
-double compute_rms_difference(const std::vector<double> & lhs, const std::vector<double> & rhs)
+/**
+ * @brief Prepare ComfortSignalInputs for a trajectory segment.
+ * @note Trajectory points do not carry lateral acceleration; EC therefore compares
+ * longitudinal-only acceleration magnitudes for planned horizons.
+ */
+std::vector<ComfortSignalInput> make_overlap_signal_inputs(
+  const autoware_planning_msgs::msg::Trajectory & trajectory, const std::size_t start_index,
+  const std::size_t count)
 {
-  const auto count = std::min(lhs.size(), rhs.size());
-  if (count == 0U) {
+  std::vector<ComfortSignalInput> inputs;
+  inputs.reserve(count);
+  const double start_time_s =
+    rclcpp::Duration(trajectory.points[start_index].time_from_start).seconds();
+  for (std::size_t index = 0; index < count; ++index) {
+    const auto & point = trajectory.points[start_index + index];
+    const double time_s = rclcpp::Duration(point.time_from_start).seconds() - start_time_s;
+    inputs.push_back(ComfortSignalInput{time_s, point.pose, point.acceleration_mps2, 0.0});
+  }
+  return inputs;
+}
+
+std::vector<double> subtract_signals(
+  const std::vector<double> & current, const std::vector<double> & previous)
+{
+  const auto count = std::min(current.size(), previous.size());
+  std::vector<double> delta;
+  delta.reserve(count);
+  for (std::size_t index = 0; index < count; ++index) {
+    delta.push_back(current.at(index) - previous.at(index));
+  }
+  return delta;
+}
+
+double rms(const std::vector<double> & values)
+{
+  if (values.empty()) {
     return 0.0;
   }
-
-  double sum_squared_error = 0.0;
-  for (std::size_t i = 0; i < count; ++i) {
-    const double error = lhs.at(i) - rhs.at(i);
-    sum_squared_error += error * error;
+  double sum_squared = 0.0;
+  for (const auto value : values) {
+    sum_squared += value * value;
   }
-
-  return std::sqrt(sum_squared_error / static_cast<double>(count));
-}
-
-DynamicSignals calculate_dynamic_signals(
-  const autoware_planning_msgs::msg::Trajectory & trajectory, const double epsilon)
-{
-  DynamicSignals signals;
-  const auto num_points = trajectory.points.size();
-  if (num_points < 2U) {
-    return signals;
-  }
-
-  signals.accelerations.resize(num_points - 1U, 0.0);
-  signals.yaw_rates.resize(num_points - 1U, 0.0);
-
-  for (std::size_t i = 0; i + 1U < num_points; ++i) {
-    const auto & point = trajectory.points.at(i);
-    const auto & next_point = trajectory.points.at(i + 1U);
-    const double dt = std::max(
-      get_time_seconds(next_point.time_from_start) - get_time_seconds(point.time_from_start),
-      epsilon);
-
-    const double speed = std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps);
-    const double next_speed =
-      std::hypot(next_point.longitudinal_velocity_mps, next_point.lateral_velocity_mps);
-    signals.accelerations.at(i) = (next_speed - speed) / dt;
-
-    const double yaw = get_yaw(point.pose.orientation);
-    const double next_yaw = get_yaw(next_point.pose.orientation);
-    const double delta_yaw = autoware_utils_math::normalize_radian(next_yaw - yaw);
-    signals.yaw_rates.at(i) = delta_yaw / dt;
-  }
-
-  if (signals.accelerations.size() >= 2U) {
-    signals.jerks.resize(signals.accelerations.size() - 1U, 0.0);
-    signals.yaw_accelerations.resize(signals.yaw_rates.size() - 1U, 0.0);
-
-    for (std::size_t i = 0; i + 1U < signals.accelerations.size(); ++i) {
-      const auto & point = trajectory.points.at(i);
-      const auto & next_point = trajectory.points.at(i + 1U);
-      const double dt = std::max(
-        get_time_seconds(next_point.time_from_start) - get_time_seconds(point.time_from_start),
-        epsilon);
-      signals.jerks.at(i) = (signals.accelerations.at(i + 1U) - signals.accelerations.at(i)) / dt;
-      signals.yaw_accelerations.at(i) =
-        (signals.yaw_rates.at(i + 1U) - signals.yaw_rates.at(i)) / dt;
-    }
-  }
-
-  return signals;
+  return std::sqrt(sum_squared / static_cast<double>(values.size()));
 }
 
 bool are_parameters_valid(const ExtendedComfortParameters & parameters)
 {
   return parameters.max_acceleration_rms >= 0.0 && parameters.max_jerk_rms >= 0.0 &&
-         parameters.max_yaw_rate_rms >= 0.0 && parameters.max_yaw_acceleration_rms >= 0.0 &&
-         parameters.finite_difference_epsilon > 0.0;
+         parameters.max_yaw_rate_rms >= 0.0 && parameters.max_yaw_acceleration_rms >= 0.0;
 }
 
 }  // namespace
@@ -121,43 +100,79 @@ ExtendedComfortResult calculate_extended_comfort(
   const autoware_planning_msgs::msg::Trajectory & current_trajectory,
   const ExtendedComfortParameters & parameters)
 {
+  ExtendedComfortResult result;
   if (!are_parameters_valid(parameters)) {
-    return {0.0, false, "unavailable_invalid_parameters"};
+    result.reason = "unavailable_invalid_parameters";
+    return result;
   }
 
-  if (previous_trajectory.points.size() < 3U || current_trajectory.points.size() < 3U) {
-    return {0.0, false, "unavailable_short_trajectory"};
+  const double dt = trajectory_dt_s(current_trajectory);
+  const double raw_observation_interval =
+    (rclcpp::Time(current_trajectory.header.stamp) - rclcpp::Time(previous_trajectory.header.stamp))
+      .seconds();
+  if (raw_observation_interval < 0.0) {
+    result.reason = "unavailable_invalid_time_alignment";
+    return result;
+  }
+  const double observation_interval =
+    raw_observation_interval > 0.0 ? raw_observation_interval : dt;
+  const auto overlap_shift = static_cast<std::size_t>(std::llround(observation_interval / dt));
+  if (overlap_shift == 0U) {
+    result.reason = "unavailable_invalid_time_alignment";
+    return result;
   }
 
-  auto previous_signals =
-    calculate_dynamic_signals(previous_trajectory, parameters.finite_difference_epsilon);
-  auto current_signals =
-    calculate_dynamic_signals(current_trajectory, parameters.finite_difference_epsilon);
-
-  if (
-    previous_signals.accelerations.empty() || current_signals.accelerations.empty() ||
-    previous_signals.jerks.empty() || current_signals.jerks.empty() ||
-    previous_signals.yaw_rates.empty() || current_signals.yaw_rates.empty() ||
-    previous_signals.yaw_accelerations.empty() || current_signals.yaw_accelerations.empty()) {
-    return {0.0, false, "unavailable_short_trajectory"};
+  const auto previous_size = previous_trajectory.points.size();
+  const auto current_size = current_trajectory.points.size();
+  if (previous_size < 3U || current_size < 3U || overlap_shift >= previous_size) {
+    result.reason = "unavailable_short_trajectory";
+    return result;
   }
 
-  const double acceleration_rms =
-    compute_rms_difference(previous_signals.accelerations, current_signals.accelerations);
-  const double jerk_rms = compute_rms_difference(previous_signals.jerks, current_signals.jerks);
-  const double yaw_rate_rms =
-    compute_rms_difference(previous_signals.yaw_rates, current_signals.yaw_rates);
-  const double yaw_acceleration_rms =
-    compute_rms_difference(previous_signals.yaw_accelerations, current_signals.yaw_accelerations);
-
-  if (
-    acceleration_rms > parameters.max_acceleration_rms || jerk_rms > parameters.max_jerk_rms ||
-    yaw_rate_rms > parameters.max_yaw_rate_rms ||
-    yaw_acceleration_rms > parameters.max_yaw_acceleration_rms) {
-    return {0.0, true, "available"};
+  const auto overlap_count = std::min(current_size, previous_size - overlap_shift);
+  if (overlap_count < 3U) {
+    result.reason = "unavailable_short_overlap";
+    return result;
+  }
+  result.sample_times.reserve(overlap_count);
+  for (std::size_t index = 0; index < overlap_count; ++index) {
+    result.sample_times.push_back(static_cast<double>(index) * dt);
   }
 
-  return {1.0, true, "available"};
+  const auto current_inputs = make_overlap_signal_inputs(current_trajectory, 0U, overlap_count);
+  const auto previous_inputs =
+    make_overlap_signal_inputs(previous_trajectory, overlap_shift, overlap_count);
+  const auto current_signals = compute_comfort_signals(current_inputs);
+  const auto previous_signals = compute_comfort_signals(previous_inputs);
+
+  result.delta_acceleration = subtract_signals(
+    current_signals.acceleration_magnitudes, previous_signals.acceleration_magnitudes);
+  result.delta_jerk =
+    subtract_signals(current_signals.jerk_magnitudes, previous_signals.jerk_magnitudes);
+  result.delta_yaw_rate = subtract_signals(current_signals.yaw_rates, previous_signals.yaw_rates);
+  result.delta_yaw_accel =
+    subtract_signals(current_signals.yaw_accelerations, previous_signals.yaw_accelerations);
+
+  const double acceleration_rms = rms(result.delta_acceleration);
+  const double jerk_rms = rms(result.delta_jerk);
+  const double yaw_rate_rms = rms(result.delta_yaw_rate);
+  const double yaw_acceleration_rms = rms(result.delta_yaw_accel);
+
+  const bool acceleration_ok = acceleration_rms <= parameters.max_acceleration_rms;
+  const bool jerk_ok = jerk_rms <= parameters.max_jerk_rms;
+  const bool yaw_rate_ok = yaw_rate_rms <= parameters.max_yaw_rate_rms;
+  const bool yaw_acceleration_ok = yaw_acceleration_rms <= parameters.max_yaw_acceleration_rms;
+
+  result.available = true;
+  result.reason = "available";
+  result.score = acceleration_ok && jerk_ok && yaw_rate_ok && yaw_acceleration_ok ? 1.0 : 0.0;
+  std::ostringstream summary;
+  summary << "{\"score\":" << result.score << ",\"reason\":\"" << result.reason
+          << "\",\"rms_acceleration\":" << acceleration_rms << ",\"rms_jerk\":" << jerk_rms
+          << ",\"rms_yaw_rate\":" << yaw_rate_rms << ",\"rms_yaw_accel\":" << yaw_acceleration_rms
+          << "}";
+  result.debug_summary = summary.str();
+  return result;
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics
