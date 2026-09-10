@@ -14,7 +14,9 @@
 
   <depend>autoware_internal_debug_msgs</depend>
   <depend>autoware_qos_utils</depend>
-  <depend>autoware_universe_utils</depend>
+  <depend>autoware_utils_geometry</depend>
+  <depend>autoware_utils_math</depend>
+  <depend>autoware_utils_tf</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>rclcpp</depend>

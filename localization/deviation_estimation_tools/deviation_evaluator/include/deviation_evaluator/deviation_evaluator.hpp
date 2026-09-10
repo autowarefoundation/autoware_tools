@@ -15,10 +15,11 @@
 #ifndef DEVIATION_EVALUATOR__DEVIATION_EVALUATOR_HPP_
 #define DEVIATION_EVALUATOR__DEVIATION_EVALUATOR_HPP_
 
-#include "autoware/universe_utils/ros/transform_listener.hpp"
 #include "deviation_evaluator/autoware_universe_utils.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "tf2/LinearMath/Quaternion.h"
+
+#include <autoware_utils_tf/transform_listener.hpp>
 
 #include "autoware_internal_debug_msgs/msg/float64_stamped.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
@@ -81,7 +82,7 @@ private:
   PoseStamped::SharedPtr current_ekf_gt_pose_ptr_;
   PoseStamped::SharedPtr current_ndt_pose_ptr_;
 
-  std::shared_ptr<autoware::universe_utils::TransformListener> transform_listener_;
+  std::shared_ptr<autoware_utils_tf::TransformListener> transform_listener_;
 
   bool has_published_initial_pose_;
 
