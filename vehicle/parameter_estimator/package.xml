@@ -24,6 +24,7 @@
   <exec_depend>calibration_adapter</exec_depend>
   <exec_depend>plotjuggler</exec_depend>
   <exec_depend>plotjuggler_ros</exec_depend>
+  <exec_depend>tier4_map_launch</exec_depend>
   <exec_depend>tier4_vehicle_launch</exec_depend>
   <exec_depend>time_delay_estimator</exec_depend>
 
