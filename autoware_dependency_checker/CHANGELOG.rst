@@ -2,6 +2,9 @@
 Changelog for package autoware_dependency_checker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-06-02)
+------------------
+
 0.7.0 (2026-05-01)
 ------------------
 * chore: removed outdated package (`#359 <https://github.com/autowarefoundation/autoware_tools/issues/359>`_)
