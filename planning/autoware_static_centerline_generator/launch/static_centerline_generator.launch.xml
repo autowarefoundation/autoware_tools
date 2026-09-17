@@ -26,22 +26,22 @@
   <arg name="lanelet2_map_marker_topic" default="/map/vector_map_marker"/>
 
   <!-- common param -->
-  <arg name="common_param" default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/common.param.yaml"/>
-  <arg name="nearest_search_param" default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/common/nearest_search.param.yaml"/>
+  <arg name="common_param" default="$(find-pkg-share autoware_planning_config)/config/scenario_planning/common/common.param.yaml"/>
+  <arg name="nearest_search_param" default="$(find-pkg-share autoware_planning_config)/config/scenario_planning/common/nearest_search.param.yaml"/>
   <!-- component param -->
-  <arg name="map_loader_param" default="$(find-pkg-share autoware_launch)/config/map/lanelet2_map_loader.param.yaml"/>
+  <arg name="map_loader_param" default="$(find-pkg-share autoware_map_config)/config/lanelet2_map_loader.param.yaml"/>
   <arg
     name="behavior_path_planner_param"
-    default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/lane_driving/behavior_planning/behavior_path_planner/behavior_path_planner.param.yaml"
+    default="$(find-pkg-share autoware_planning_config)/config/scenario_planning/lane_driving/behavior_planning/behavior_path_planner/behavior_path_planner.param.yaml"
   />
   <arg
     name="behavior_velocity_planner_param"
-    default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/behavior_velocity_planner.param.yaml"
+    default="$(find-pkg-share autoware_planning_config)/config/scenario_planning/lane_driving/behavior_planning/behavior_velocity_planner/behavior_velocity_planner.param.yaml"
   />
-  <arg name="path_generator_param" default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/lane_driving/behavior_planning/path_generator/path_generator.param.yaml"/>
-  <arg name="path_smoother_param" default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/lane_driving/motion_planning/path_smoother/elastic_band_smoother.param.yaml"/>
-  <arg name="path_optimizer_param" default="$(find-pkg-share autoware_launch)/config/planning/scenario_planning/lane_driving/motion_planning/autoware_path_optimizer/path_optimizer.param.yaml"/>
-  <arg name="mission_planner_param" default="$(find-pkg-share autoware_launch)/config/planning/mission_planning/mission_planner/mission_planner.param.yaml"/>
+  <arg name="path_generator_param" default="$(find-pkg-share autoware_planning_config)/config/scenario_planning/lane_driving/behavior_planning/path_generator/path_generator.param.yaml"/>
+  <arg name="path_smoother_param" default="$(find-pkg-share autoware_planning_config)/config/scenario_planning/lane_driving/motion_planning/path_smoother/elastic_band_smoother.param.yaml"/>
+  <arg name="path_optimizer_param" default="$(find-pkg-share autoware_planning_config)/config/scenario_planning/lane_driving/motion_planning/autoware_path_optimizer/path_optimizer.param.yaml"/>
+  <arg name="mission_planner_param" default="$(find-pkg-share autoware_planning_config)/config/mission_planning/mission_planner/mission_planner.param.yaml"/>
 
   <!-- Global parameters (for PathFootprint in tier4_planning_rviz_plugin) -->
   <!-- Do not add "group" in order to propagate global parameters -->
