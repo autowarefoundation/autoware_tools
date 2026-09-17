@@ -14,7 +14,7 @@ Mismatched parameters can lead to unexpected behavior of the ego vehicle.
 
 ## Usage
 
-1. **Source Workspace**: Make sure your Autoware workspace (containing `autoware_launch`, the relevant vehicle description package, etc.) is sourced in your terminal:
+1. **Source Workspace**: Make sure your Autoware workspace (containing `autoware_control_config`, the relevant vehicle description package, etc.) is sourced in your terminal:
 
    ```bash
    source /path/to/your/autoware_ws/install/setup.bash
@@ -60,9 +60,9 @@ The script will print the paths of the files being compared and then output any 
    - Specific paths to parameter files, overriding the defaults (`--mpc_param_file`, `--pid_param_file`, etc.).
    - A vehicle ID to load vehicle-specific control parameters (`--vehicle_id`).
 
-2. **Package Path Resolution**: It utilizes `ament_index_python.get_package_share_directory` to locate the installation paths (share directories) of the required ROS 2 packages (`autoware_launch` and the specified vehicle description package). This requires the Autoware workspace containing these packages to be sourced beforehand.
+2. **Package Path Resolution**: It utilizes `ament_index_python.get_package_share_directory` to locate the installation paths (share directories) of the required ROS 2 packages (`autoware_control_config` and the specified vehicle description package). This requires the Autoware workspace containing these packages to be sourced beforehand.
 
-3. **Parameter File Location**: Based on the arguments and resolved package paths, the script determines the exact paths to the four YAML parameter files (MPC, PID, Simulator, Vehicle Command Gate). It constructs default paths within the `autoware_launch` and vehicle description packages, allowing for vehicle-specific subdirectories if a `--vehicle_id` is provided.
+3. **Parameter File Location**: Based on the arguments and resolved package paths, the script determines the exact paths to the four YAML parameter files (MPC, PID, Simulator, Vehicle Command Gate). It constructs default paths within the `autoware_control_config` and vehicle description packages, allowing for vehicle-specific subdirectories if a `--vehicle_id` is provided.
 
 4. **YAML Parsing**: The `read_yaml` function reads each parameter file. It specifically extracts the dictionary under the `/**"]["ros__parameters"]` key, which is the standard location for ROS 2 node parameters in Autoware YAML files. Error handling is included for file reading issues.
 
