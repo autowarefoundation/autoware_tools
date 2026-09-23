@@ -1,0 +1,16 @@
+<library path="python">
+  <class name="AutowareManualController" type="rqt_autoware_manual_controller.ControllerPlugin" base_class_type="rqt_gui_py::Plugin">
+    <description>
+    </description>
+    <qtgui>
+      <group>
+        <label>Robot Tools</label>
+        <icon type="theme">folder</icon>
+        <statustip></statustip>
+      </group>
+      <label>Autoware Manual Controller</label>
+      <icon type="theme">utilities-system-monitor</icon>
+      <statustip></statustip>
+    </qtgui>
+  </class>
+</library>
