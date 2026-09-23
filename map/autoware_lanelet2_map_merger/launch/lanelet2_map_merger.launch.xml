@@ -1,0 +1,15 @@
+<launch>
+  <arg name="config_file_path" default="$(find-pkg-share autoware_lanelet2_map_merger)/config/lanelet2_map_merger.param.yaml" description="Path to the configuration YAML file"/>
+  <arg name="input_lanelet2_map_dir" description="Directory containing the input .osm files"/>
+  <arg name="output_lanelet2_map" description="Path of the output merged .osm file"/>
+  <arg name="map_projector_info_path" description="Path to the map_projector_info.yaml file"/>
+
+  <group>
+    <node pkg="autoware_lanelet2_map_merger" exec="autoware_lanelet2_map_merger_node" name="lanelet2_map_merger" output="screen">
+      <param from="$(var config_file_path)" allow_substs="true"/>
+      <param name="input_lanelet2_map_dir" value="$(var input_lanelet2_map_dir)"/>
+      <param name="output_lanelet2_map" value="$(var output_lanelet2_map)"/>
+      <param name="map_projector_info_path" value="$(var map_projector_info_path)"/>
+    </node>
+  </group>
+</launch>
