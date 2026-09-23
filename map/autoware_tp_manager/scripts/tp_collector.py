@@ -18,7 +18,9 @@ import argparse
 import csv
 import os
 import shutil
-from subprocess import call
+
+# Add the path to the compiled pybind11 module (.so)
+import sys
 
 import numpy as np
 import rclpy
@@ -28,6 +30,12 @@ import tp_utility as tpu
 import tqdm
 import yaml
 
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+sys.path.append(os.path.abspath(script_dir))
+
+print(f"Current path {os.path.abspath(script_dir)}")
+
 
 class TPCollector(Node):
     def __init__(self):
@@ -35,6 +43,7 @@ class TPCollector(Node):
         self.pcd_path = None
         self.yaml_path = None
         self.score_path = None
+        self.map_path_file = None
         self.segment_df = None
         self.segment_dict = {}  # Pairs of 2D coordinate and index
         self.resolution = None
@@ -51,6 +60,7 @@ class TPCollector(Node):
                 os.makedirs(output_path)
 
         self.output_path = output_path
+        self.map_path_file = os.path.join(output_path, "map_path.txt")
         self.resolution = resolution
 
         if not os.path.exists(pcd_map_dir):
@@ -74,28 +84,51 @@ class TPCollector(Node):
         # Downsample the input clouds if necessary
         self.yaml_path = os.path.join(self.output_path, "pointcloud_map_metadata.yaml")
 
+        # Call the PCD divider wrapper
+        import pcd_divider_wrapper
+
         if not os.path.exists(self.yaml_path):
-            ds_cmd = (
-                "ros2 launch autoware_pointcloud_divider pointcloud_divider.launch.xml "
-                + "input_pcd_or_dir:="
-                + self.pcd_path
-                + " output_pcd_dir:="
-                + self.output_path
-                + " prefix:=test leaf_size:=0.5"
-                + " grid_size_x:="
-                + str(self.resolution)
-                + " grid_size_y:="
-                + str(self.resolution)
+            pcd_divider_wrapper.init_ros()
+
+            pcd_divider = pcd_divider_wrapper.PCDDivider("tp_collector_log")
+            pcd_divider.setInput(self.pcd_path)
+            pcd_divider.setOutputDir(self.output_path)
+            pcd_divider.setLeafSize(0.5)
+            pcd_divider.setPrefix("test")
+
+            if self.resolution >= 5.0:
+                pcd_divider.setGridSize(self.resolution, self.resolution)
+            else:
+                pcd_divider.setGridSize(50.0, 50.0)
+
+            pcd_divider.divide_pcd()
+
+            # Generate a metadata file
+            tmp_path = os.path.join(self.output_path, "tmp_metadata")
+            pcd_divider.setInput(self.pcd_path)
+            pcd_divider.setOutputDir(tmp_path)
+            pcd_divider.setGridSize(self.resolution, self.resolution)
+            # The metadata file is at the tmp_path
+            pcd_divider.meta_generator()
+
+            pcd_divider_wrapper.shutdown_ros()
+
+            # Move the metadata file back to the output_dir, overwrite the current metadata file
+            shutil.move(
+                os.path.join(tmp_path, "pointcloud_map_metadata.yaml"),
+                os.path.join(self.output_path, "pointcloud_map_metadata.yaml"),
             )
-            call(ds_cmd, shell=True)
+            # Remove the tmp folder
+            shutil.rmtree(tmp_path)
+
             self.pcd_path = os.path.join(self.output_path, "pointcloud_map.pcd")
 
         # Now scan the downsample directory and get the segment list
         with open(self.yaml_path, "r") as f:
             for key, value in yaml.safe_load(f).items():
                 if key != "x_resolution" and key != "y_resolution":
-                    self.segment_df.append([key, 0, 0])
                     seg_key = str(value[0]) + "_" + str(value[1])
+                    self.segment_df.append([seg_key, 0, 0])
                     self.segment_dict[seg_key] = len(self.segment_df) - 1
 
         self.segment_df = np.array(self.segment_df, dtype=object)
@@ -205,6 +238,11 @@ class TPCollector(Node):
                 p = self.output_pose[i]
                 f.write("{0},{1},{2}\n".format(p[3, 0], p[3, 1], p[3, 2]))
         print("Done. Poses are saved at {0}".format(self.trajectory_path))
+
+        print("Saving a path to the map")
+        with open(self.map_path_file, "w") as f:
+            f.write(self.pcd_path)
+        print("Done. The map path is saved at {0}".format(self.map_path_file))
 
     def processing(
         self,
