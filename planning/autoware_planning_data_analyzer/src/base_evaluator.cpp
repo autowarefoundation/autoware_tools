@@ -150,8 +150,9 @@ BaseEvaluator::BagProcessingResult BaseEvaluator::process_bag_common(
     result.control_mode_events.begin(), result.control_mode_events.end(),
     [](const auto & a, const auto & b) { return a.first < b.first; });
 
-  if (const auto object_itr = bag_data->buffers.find(topic_names.tracked_objects_topic);
-      object_itr != bag_data->buffers.end()) {
+  if (
+    const auto object_itr = bag_data->buffers.find(topic_names.tracked_objects_topic);
+    object_itr != bag_data->buffers.end()) {
     if (
       const auto object_buffer =
         std::dynamic_pointer_cast<Buffer<TrackedObjects>>(object_itr->second)) {
