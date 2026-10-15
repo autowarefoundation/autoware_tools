@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../../../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../../../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../../../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -6586,8 +6586,8 @@ EP is effectively always <code>1.0</code> when available. Multi-candidate propos
 progress remains a future faithfulness improvement.</p>
 <h2 id="output-topics">Output Topics<a class="headerlink" href="#output-topics" title="Permanent link">#</a></h2>
 <p>EPDMS metric topics are written under the EPDMS metric namespace:</p>
-<p><code>text
-/open_loop/metrics/epdms/*</code></p>
+<div class="highlight"><pre><span></span><code>/open_loop/metrics/epdms/*
+</code></pre></div>
 <p>They are produced for enabled EPDMS metrics. By default, all EPDMS metrics are
 enabled unless <code>open_loop.enabled_metrics</code> selects a subset.</p>
 <h3 id="score-topics">Score topics<a class="headerlink" href="#score-topics" title="Permanent link">#</a></h3>
@@ -6660,15 +6660,15 @@ enabled unless <code>open_loop.enabled_metrics</code> selects a subset.</p>
 </table>
 <h3 id="availability-and-reason-topics">Availability and reason topics<a class="headerlink" href="#availability-and-reason-topics" title="Permanent link">#</a></h3>
 <p>Each main subscore publishes matching availability and reason topics:</p>
-<p><code>text
-/open_loop/metrics/epdms/&lt;subscore&gt;_available
-/open_loop/metrics/epdms/&lt;subscore&gt;_reason</code></p>
+<div class="highlight"><pre><span></span><code>/open_loop/metrics/epdms/&lt;subscore&gt;_available
+/open_loop/metrics/epdms/&lt;subscore&gt;_reason
+</code></pre></div>
 <p>The availability topic is <code>std_msgs/msg/Bool</code>. The reason topic is
 <code>std_msgs/msg/String</code>.</p>
 <p>For example:</p>
-<p><code>text
-/open_loop/metrics/epdms/time_to_collision_within_bound_available = true
-/open_loop/metrics/epdms/time_to_collision_within_bound_reason = "collision_within_bound"</code></p>
+<div class="highlight"><pre><span></span><code>/open_loop/metrics/epdms/time_to_collision_within_bound_available = true
+/open_loop/metrics/epdms/time_to_collision_within_bound_reason = "collision_within_bound"
+</code></pre></div>
 <p>The published reason strings are implementation diagnostics. Common examples
 include:</p>
 <ul>
@@ -6718,8 +6718,8 @@ derived from the component subscore availability and reason topics.</p>
 <h3 id="debug-topics">Debug topics<a class="headerlink" href="#debug-topics" title="Permanent link">#</a></h3>
 <p>EPDMS debug topics are written only when <code>open_loop.debug_topics_enabled</code> is
 <code>true</code>. They are intended for Lichtblick validation and use this namespace:</p>
-<p><code>text
-/debug/epdms/*</code></p>
+<div class="highlight"><pre><span></span><code>/debug/epdms/*
+</code></pre></div>
 <p>The shared trajectory debug topics are <code>visualization_msgs/msg/MarkerArray</code>:</p>
 <ul>
 <li><code>/debug/epdms/trajectory/planned_horizon_4s</code></li>
@@ -7138,7 +7138,7 @@ derived from the component subscore availability and reason topics.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../../../../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../../../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="../../../../../docs/assets/js/mathjax.js"></script>
       

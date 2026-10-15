@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -5142,18 +5142,18 @@
 <li>TP checker: compare a rosbag's TPs with a map's TPs and highlight the map areas where the rosbag's TPs differ significantly from the map's TPs.</li>
 </ul>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h2>
-<p><code>bash
-cd &lt;PATH_TO_pilot-auto.*&gt; # OR &lt;PATH_TO_autoware&gt;
-cd src/
-git clone git@github.com:autowarefoundation/autoware_tools.git
-cd ..
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --catkin-skip-building-tests --symlink-install --packages-up-to autoware_tp_manager</code></p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>&lt;PATH_TO_pilot-auto.*&gt;<span class="w"> </span><span class="c1"># OR &lt;PATH_TO_autoware&gt;</span>
+<span class="nb">cd</span><span class="w"> </span>src/
+git<span class="w"> </span>clone<span class="w"> </span>git@github.com:autowarefoundation/autoware_tools.git
+<span class="nb">cd</span><span class="w"> </span>..
+colcon<span class="w"> </span>build<span class="w"> </span>--cmake-args<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release<span class="w"> </span>--catkin-skip-building-tests<span class="w"> </span>--symlink-install<span class="w"> </span>--packages-up-to<span class="w"> </span>autoware_tp_manager
+</code></pre></div>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
 <ul>
 <li>
 <p>Collect the average TPs per segment from a map by TP_collector</p>
-<p><code>bash
-ros2 run autoware_tp_manager tp_collector.py &lt;path_to_pcd_dir&gt; &lt;path_to_rosbag&gt; &lt;path_to_output_dir&gt; [--resolution &lt;resolution&gt;] [--pose_topic &lt;topic_of_poses&gt;] [--tp_topic &lt;topic_of_TPs&gt;] [--scan_topic &lt;topic_of_scans&gt;]</code></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_tp_manager<span class="w"> </span>tp_collector.py<span class="w"> </span>&lt;path_to_pcd_dir&gt;<span class="w"> </span>&lt;path_to_rosbag&gt;<span class="w"> </span>&lt;path_to_output_dir&gt;<span class="w"> </span><span class="o">[</span>--resolution<span class="w"> </span>&lt;resolution&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--pose_topic<span class="w"> </span>&lt;topic_of_poses&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--tp_topic<span class="w"> </span>&lt;topic_of_TPs&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--scan_topic<span class="w"> </span>&lt;topic_of_scans&gt;<span class="o">]</span>
+</code></pre></div>
 <table>
 <thead>
 <tr>
@@ -5198,8 +5198,8 @@ ros2 run autoware_tp_manager tp_collector.py &lt;path_to_pcd_dir&gt; &lt;path_to
 - /localization/pose_estimator/transform_probability
 - /localization/util/downsample/pointcloud</p>
 <p>The average TPs can be visualized on Rviz2 by running the following command</p>
-<p><code>bash
-python3 install/autoware_tp_manager/lib/autoware_tp_manager/tp_visualizer.py &lt;path_to_output_dir&gt;</code></p>
+<div class="highlight"><pre><span></span><code>python3<span class="w"> </span>install/autoware_tp_manager/lib/autoware_tp_manager/tp_visualizer.py<span class="w"> </span>&lt;path_to_output_dir&gt;
+</code></pre></div>
 <table>
 <thead>
 <tr>
@@ -5220,8 +5220,8 @@ python3 install/autoware_tp_manager/lib/autoware_tp_manager/tp_visualizer.py &lt
 <ul>
 <li>
 <p>Compare a rosbags' TPs with a map's TPs by TP_checker</p>
-<p><code>bash
-ros2 run autoware_tp_manager tp_checker.py &lt;path_to_score_dir&gt; &lt;path_to_rosbag&gt; [--pose_topic &lt;topic_of_poses&gt;] [--tp_topic &lt;topic_of_TPs&gt;] [--scan_topic &lt;topic_of_scans&gt;] [--radius &lt;radius&gt;] [--drop_num &lt;drop_num&gt;]</code></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>run<span class="w"> </span>autoware_tp_manager<span class="w"> </span>tp_checker.py<span class="w"> </span>&lt;path_to_score_dir&gt;<span class="w"> </span>&lt;path_to_rosbag&gt;<span class="w"> </span><span class="o">[</span>--pose_topic<span class="w"> </span>&lt;topic_of_poses&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--tp_topic<span class="w"> </span>&lt;topic_of_TPs&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--scan_topic<span class="w"> </span>&lt;topic_of_scans&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--radius<span class="w"> </span>&lt;radius&gt;<span class="o">]</span><span class="w"> </span><span class="o">[</span>--drop_num<span class="w"> </span>&lt;drop_num&gt;<span class="o">]</span>
+</code></pre></div>
 <table>
 <thead>
 <tr>
@@ -5438,7 +5438,7 @@ ros2 run autoware_tp_manager tp_checker.py &lt;path_to_score_dir&gt; &lt;path_to
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       

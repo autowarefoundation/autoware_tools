@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../docs/assets/images/autoware-foundation.png">
-      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-ProperDocs 1.6.7, mkdocs-material-9.7.7">
     
     
       
@@ -29,7 +29,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -5262,8 +5262,8 @@ pre-defined topics you want to measure their reaction times.</p>
 <li>You need to define only Planning and Control nodes in the <code>reaction_chain</code> list. With the default parameters,
   you can start to test with the following command:</li>
 </ul>
-<p><code>bash
-ros2 launch reaction_analyzer reaction_analyzer.launch.xml running_mode:=planning_control vehicle_model:=sample_vehicle sensor_model:=sample_sensor_kit map_path:=[MAP_PATH]</code></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>reaction_analyzer<span class="w"> </span>reaction_analyzer.launch.xml<span class="w"> </span>running_mode:<span class="o">=</span>planning_control<span class="w"> </span>vehicle_model:<span class="o">=</span>sample_vehicle<span class="w"> </span>sensor_model:<span class="o">=</span>sample_sensor_kit<span class="w"> </span>map_path:<span class="o">=[</span>MAP_PATH<span class="o">]</span>
+</code></pre></div>
 <p>After the command, the <code>simple_planning_simulator</code> and the <code>reaction_analyzer</code> will be launched. It will automatically
 start to test. After the test is completed, the results will be stored in the <code>output_file_path</code> you defined.</p>
 <h4 id="perception-planning-mode_1">Perception Planning Mode<a class="headerlink" href="#perception-planning-mode_1" title="Permanent link">#</a></h4>
@@ -5274,8 +5274,8 @@ start to test. After the test is completed, the results will be stored in the <c
   and <code>path_bag_with_object</code>.</li>
 <li>You can start to test with the following command:</li>
 </ul>
-<p><code>bash
-ros2 launch reaction_analyzer reaction_analyzer.launch.xml running_mode:=perception_planning vehicle_model:=sample_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=[MAP_PATH]</code></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>reaction_analyzer<span class="w"> </span>reaction_analyzer.launch.xml<span class="w"> </span>running_mode:<span class="o">=</span>perception_planning<span class="w"> </span>vehicle_model:<span class="o">=</span>sample_vehicle<span class="w"> </span>sensor_model:<span class="o">=</span>awsim_labs_sensor_kit<span class="w"> </span>map_path:<span class="o">=[</span>MAP_PATH<span class="o">]</span>
+</code></pre></div>
 <ul>
 <li>On the first run of the tool in perception_planning mode, initialization might take longer than expected. Please allow some time for the process to complete.</li>
 </ul>
@@ -5299,8 +5299,8 @@ for <code>perception_planning</code> mode) parameters.</strong></p>
   <a href="https://tier4.github.io/AWSIM/GettingStarted/QuickStartDemo/">here</a>.</li>
 <li>Run the e2e_simulator with the following command:</li>
 </ul>
-<p><code>bash
-ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=sample_vehicle sensor_model:=awsim_labs_sensor_kit map_path:=[MAP_PATH]</code></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>launch<span class="w"> </span>autoware_launch<span class="w"> </span>e2e_simulator.launch.xml<span class="w"> </span>vehicle_model:<span class="o">=</span>sample_vehicle<span class="w"> </span>sensor_model:<span class="o">=</span>awsim_labs_sensor_kit<span class="w"> </span>map_path:<span class="o">=[</span>MAP_PATH<span class="o">]</span>
+</code></pre></div>
 <ul>
 <li>After the EGO is initialized, you can position the ego vehicle in the desired location using the <code>2D Pose Estimate</code> button in RViz.</li>
 <li>After the EGO located in desired position, please localize the dummy obstacle by using the traffic controller. You can access the traffic control section by pressing the 'ESC' key.</li>
@@ -5317,8 +5317,8 @@ in <code>reaction_analyzer.param.yaml</code>. To achieve this:</strong></p>
 <li>After the parameters were noted, we should record the rosbags for the test. To record the rosbags, you can use the
   following command:</li>
 </ul>
-<p><code>bash
-ros2 bag record --all</code></p>
+<div class="highlight"><pre><span></span><code>ros2<span class="w"> </span>bag<span class="w"> </span>record<span class="w"> </span>--all
+</code></pre></div>
 <ul>
 <li>You should record two rosbags: one without the object and one with the object. You can use the traffic controller to
   spawn the object in front of the EGO vehicle or remove it.</li>
@@ -5611,7 +5611,7 @@ for each of the nodes.</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.expand", "navigation.indexes", "navigation.instant", "navigation.sections", "navigation.tabs", "navigation.tabs.sticky", "navigation.top", "navigation.footer"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="../../docs/assets/js/mathjax.js"></script>
       
