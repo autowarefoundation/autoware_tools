@@ -121,6 +121,8 @@ int main(int argc, char ** argv)
       "topics", "");
     options << ref_image_topics_option;
 
+    options << make_object_filter_options();
+
     for (const auto & option : options) {
       parser.addOption(option);
     }
@@ -148,6 +150,10 @@ int main(int argc, char ** argv)
     param.verbose = parser.isSet(verbose_option);
     param.publish_route = parser.isSet(pub_route_option);
     param.replay_route = parser.isSet(replay_route_option);
+
+    if (!parse_object_filter_options(parser, param.object_filter)) {
+      return 1;
+    }
 
     // Parse comma-separated reference image topics
     const QString topics_str = parser.value(ref_image_topics_option);

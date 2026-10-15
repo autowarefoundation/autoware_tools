@@ -244,6 +244,10 @@ This design results in the following behavior:
 - `-n`, `--noise`: Apply perception noise to objects when publishing repeated messages (default: False)
 - `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
 - `--reference-image-topics`: Comma-separated list of CompressedImage topics to load and publish (e.g., `"/sensing/camera/camera0/image_raw/compressed,/sensing/camera/camera1/image_raw/compressed"`)
+- `--filter-radius`: Publish only objects within this 2D distance range in meters from the recorded ego pose (not the simulator ego pose). Accepts `<max>` or `<min>,<max>` (e.g., `30` or `10,30`)
+- `--filter-angle`: Publish only objects within this angle range in degrees in the recorded ego frame. Accepts `<min>,<max>` in [-180, 180], where 0 is front and counterclockwise is positive. If `min > max`, the range wraps through the rear (e.g., `135,-135` is the rear 90 degrees)
+- `--filter-class`: Publish only objects of these comma-separated classes (`unknown`, `car`, `truck`, `bus`, `trailer`, `motorcycle`, `bicycle`, `pedestrian`, case-insensitive). The class with the highest probability is used
+- `--filter-invert`: Remove the objects matching the filter options instead of keeping them
 - `-v`, `--verbose`: Output debug data
 - `-h`, `--help`: Show help message
 
@@ -284,6 +288,14 @@ Example usage with route replaying:
 
 ```bash
 ros2 run planning_debug_tools perception_reproducer -b <bag-file> --replay-route
+```
+
+The `--filter-radius`, `--filter-angle`, and `--filter-class` options limit the published objects around the recorded ego pose. This is useful when you want to find the objects that affect the planning behavior.
+
+Example usage with object filtering (publish only cars within 30 m in front of the ego):
+
+```bash
+ros2 run planning_debug_tools perception_reproducer -b <bag-file> --filter-radius 30 --filter-angle -90,90 --filter-class car
 ```
 
 ## Perception replayer
@@ -327,6 +339,7 @@ The following topics are published during replay:
 - `-t`, `--tracked-object`: Publish tracked objects
 - `--replay-route`: Replay route and route state topics from rosbag data with transient_local QoS (only publishes when the message changes)
 - `-f`, `--rosbag-format`: Specify rosbag data format (default: "db3")
+- `--filter-radius`, `--filter-angle`, `--filter-class`, `--filter-invert`: Filter the published objects (same as [Perception reproducer](#available-options))
 - `-v`, `--verbose`: Output debug data
 - `-h`, `--help`: Show help message
 

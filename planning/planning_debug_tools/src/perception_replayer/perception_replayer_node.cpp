@@ -83,6 +83,8 @@ int main(int argc, char * argv[])
       "Only publishes when the message changes (i.e., not redundantly).");
     options << replay_route_option;
 
+    options << make_object_filter_options();
+
     for (const auto & option : options) {
       parser.addOption(option);
     }
@@ -116,6 +118,9 @@ int main(int argc, char * argv[])
 
     perception_replayer_param.tracked_object = parser.isSet(tracked_object_option);
     perception_replayer_param.replay_route = parser.isSet(replay_route_option);
+    if (!parse_object_filter_options(parser, perception_replayer_param.object_filter)) {
+      return 1;
+    }
 
     rclcpp::NodeOptions node_options;
     auto node = std::make_shared<PerceptionReplayer>(perception_replayer_param, node_options);
