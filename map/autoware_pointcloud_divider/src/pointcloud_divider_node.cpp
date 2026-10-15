@@ -87,7 +87,7 @@ PointCloudDivider::PointCloudDivider(const rclcpp::NodeOptions & node_options)
     pcd_divider_exe.run();
   }
 
-  rclcpp::shutdown();
+  // rclcpp::shutdown();
 }
 
 }  // namespace autoware::pointcloud_divider
