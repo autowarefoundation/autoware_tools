@@ -322,13 +322,17 @@ void PerceptionReplayerCommon::publish_topics_at_timestamp(
   const bool apply_noise)
 {
   // for debugging
-  recorded_ego_pub_->publish(find_ego_odom_by_timestamp(bag_timestamp));
+  const auto recorded_ego_odom = find_ego_odom_by_timestamp(bag_timestamp);
+  recorded_ego_pub_->publish(recorded_ego_odom);
 
   // publish objects
   const auto publish_objects = [&](auto & data) {
     const auto objects_msg = utils::find_message_by_timestamp(data, bag_timestamp);
     if (objects_msg.has_value()) {
       auto msg = objects_msg.value();
+      if (param_.object_filter.enabled) {
+        utils::filter_objects(recorded_ego_odom.pose.pose, param_.object_filter, msg);
+      }
       if (apply_noise) {
         apply_perception_noise(msg);
       }

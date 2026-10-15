@@ -44,6 +44,7 @@ struct PerceptionReplayerCommonParam
   bool tracked_object;
   bool replay_route;
   std::vector<std::string> reference_image_topics;  // Topics for reference images
+  utils::ObjectFilterParam object_filter;
 };
 
 class PerceptionReplayerCommon : public rclcpp::Node

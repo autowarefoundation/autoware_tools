@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <autoware_perception_msgs/msg/object_classification.hpp>
 #include <autoware_perception_msgs/msg/predicted_objects.hpp>
 #include <autoware_perception_msgs/msg/tracked_objects.hpp>
 #include <autoware_perception_msgs/msg/traffic_light_group.hpp>
@@ -30,6 +31,7 @@
 namespace autoware::planning_debug_tools
 {
 
+using autoware_perception_msgs::msg::ObjectClassification;
 using autoware_perception_msgs::msg::PredictedObjects;
 using autoware_perception_msgs::msg::TrackedObjects;
 using autoware_perception_msgs::msg::TrafficLightGroup;
