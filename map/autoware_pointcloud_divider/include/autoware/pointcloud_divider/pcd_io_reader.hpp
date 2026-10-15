@@ -105,15 +105,6 @@ public:
     return 0;
   }
 
-  ~CustomPCDReader() { clear(); }
-
-private:
-  void readHeader(std::ifstream & input);
-  size_t readABlock(std::ifstream & input, PclCloudType & output);
-
-  size_t readABlockBinary(std::ifstream & input, PclCloudType & output);
-  size_t readABlockASCII(std::ifstream & input, PclCloudType & output);
-
   void clear()
   {
     version_.clear();
@@ -141,7 +132,20 @@ private:
 
     buffer_ = nullptr;
     block_size_ = 30000000;
+
+    pcd_path_.clear();
+    read_loc_.clear();
+    read_sizes_.clear();
   }
+
+  ~CustomPCDReader() { clear(); }
+
+private:
+  void readHeader(std::ifstream & input);
+  size_t readABlock(std::ifstream & input, PclCloudType & output);
+
+  size_t readABlockBinary(std::ifstream & input, PclCloudType & output);
+  size_t readABlockASCII(std::ifstream & input, PclCloudType & output);
 
   // Metadata
   std::string version_;
