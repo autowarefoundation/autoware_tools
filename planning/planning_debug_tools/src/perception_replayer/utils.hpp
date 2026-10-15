@@ -17,6 +17,7 @@
 
 #include "type_alias.hpp"
 
+#include <autoware_utils_math/normalization.hpp>
 #include <builtin_interfaces/msg/time.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rosbag2_cpp/reader.hpp>
@@ -208,7 +209,7 @@ inline bool is_object_matched(
     return false;
   }
 
-  const double angle = normalize_radian(
+  const double angle = autoware_utils_math::normalize_radian(
     std::atan2(position.y - ego_pose.position.y, position.x - ego_pose.position.x) -
     get_yaw_from_quaternion(ego_pose.orientation));
   const bool is_in_angle = filter.min_angle <= filter.max_angle
