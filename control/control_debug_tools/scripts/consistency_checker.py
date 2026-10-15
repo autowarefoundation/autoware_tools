@@ -109,7 +109,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        autoware_launch_path = get_package_share_directory("autoware_launch")
+        autoware_control_config_path = get_package_share_directory("autoware_control_config")
         vehicle_description_path = get_package_share_directory(args.vehicle_description)
     except Exception as e:
         print(e)
@@ -119,12 +119,12 @@ if __name__ == "__main__":
     mpc_param_file_path = (
         args.mpc_param_file
         if args.mpc_param_file
-        else f"{autoware_launch_path}/config/control/trajectory_follower/{'' if args.vehicle_id is None else '/'+args.vehicle_id+'/'}lateral/mpc.param.yaml"
+        else f"{autoware_control_config_path}/config/trajectory_follower/{'' if args.vehicle_id is None else '/'+args.vehicle_id+'/'}lateral/mpc.param.yaml"
     )
     pid_param_file_path = (
         args.pid_param_file
         if args.pid_param_file
-        else f"{autoware_launch_path}/config/control/trajectory_follower/{'' if args.vehicle_id is None else '/'+args.vehicle_id+'/'}longitudinal/pid.param.yaml"
+        else f"{autoware_control_config_path}/config/trajectory_follower/{'' if args.vehicle_id is None else '/'+args.vehicle_id+'/'}longitudinal/pid.param.yaml"
     )
     simulator_model_param_file_path = (
         args.simulator_model_param_file
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     vehicle_command_gate_param_file_path = (
         args.vehicle_cmd_gate_param_file
         if args.vehicle_cmd_gate_param_file
-        else f"{autoware_launch_path}/config/control/vehicle_cmd_gate/vehicle_cmd_gate.param.yaml"
+        else f"{autoware_control_config_path}/config/vehicle_cmd_gate/vehicle_cmd_gate.param.yaml"
     )
 
     print("Comparing the following parameter files:")
