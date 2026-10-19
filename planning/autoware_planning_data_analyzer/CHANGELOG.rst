@@ -2,8 +2,8 @@
 Changelog for package autoware_planning_data_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2026-10-19)
+------------------
 * feat(planning_data_analyzer): expose EPDMS debug launch gate (`#459 <https://github.com/autowarefoundation/autoware_tools/issues/459>`_)
 * feat(planning_data_analyzer): add EPDMS calculation gate (`#458 <https://github.com/autowarefoundation/autoware_tools/issues/458>`_)
   * feat(planning_data_analyzer): add EPDMS calculation gate

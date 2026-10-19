@@ -2,8 +2,8 @@
 Changelog for package deviation_evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2026-10-19)
+------------------
 * fix(deviation_evaluator, parameter_estimator): migrate map launch to component_map.launch.xml (`#466 <https://github.com/autowarefoundation/autoware_tools/issues/466>`_)
   `autowarefoundation/autoware_launch#1980 <https://github.com/autowarefoundation/autoware_launch/issues/1980>`_ renamed tier4_map_launch to
   autoware_map_launch and decomposed its map.launch.xml aggregator into per-node

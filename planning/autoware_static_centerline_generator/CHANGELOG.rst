@@ -2,8 +2,8 @@
 Changelog for package autoware_static_centerline_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2026-10-19)
+------------------
 * refactor(autoware_static_centerline_generator): construct DefaultPlanner directly instead of loading it through pluginlib (`#462 <https://github.com/autowarefoundation/autoware_tools/issues/462>`_)
 * fix(autoware_static_centerline_generator): refresh centerline lane ids before saving (`#444 <https://github.com/autowarefoundation/autoware_tools/issues/444>`_)
   `save_map()` compared `get_selected_centerline()` (sliced dynamically by the

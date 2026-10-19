@@ -2,8 +2,8 @@
 Changelog for package reaction_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2026-10-19)
+------------------
 * fix(`tier4_perception_launch`): a wrong package name (`tier4_perception_launch` => `autoware_perception_launch`) (`#461 <https://github.com/autowarefoundation/autoware_tools/issues/461>`_)
   bug(`tier4_perception_launch`): fix a wrong package name as follows
   * Fixed from `tier4_perception_launch` to `autoware_perception_launch`

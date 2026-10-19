@@ -2,8 +2,8 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.0 (2026-10-19)
+------------------
 * feat(perception_replayer, perception_reproducer): add object filter options around the recorded ego pose (`#468 <https://github.com/autowarefoundation/autoware_tools/issues/468>`_)
   * feat(perception_replayer, perception_reproducer): add object filter options around the recorded ego pose
   Add CLI options to limit the published objects by their position relative to the
