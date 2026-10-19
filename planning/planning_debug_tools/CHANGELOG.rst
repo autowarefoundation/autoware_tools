@@ -2,6 +2,9 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-06-02)
+------------------
+
 0.7.0 (2026-05-01)
 ------------------
 * feat(planning_debug_tools): replace autoware_universe_utils with specific autoware_utils sub-packages (`#413 <https://github.com/autowarefoundation/autoware_tools/issues/413>`_)

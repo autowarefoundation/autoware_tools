@@ -2,6 +2,9 @@
 Changelog for package control_data_collecting_tool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-06-02)
+------------------
+
 0.7.0 (2026-05-01)
 ------------------
 * docs: migrate map_path examples to ~/autoware_data/maps (`#417 <https://github.com/autowarefoundation/autoware_tools/issues/417>`_)
