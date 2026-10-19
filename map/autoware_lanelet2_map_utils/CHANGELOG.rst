@@ -2,6 +2,9 @@
 Changelog for package autoware_lanelet2_map_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.7.0 (2026-05-01)
 ------------------
 

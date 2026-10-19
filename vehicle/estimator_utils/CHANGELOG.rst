@@ -2,6 +2,9 @@
 Changelog for package estimator_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.7.0 (2026-05-01)
 ------------------
 

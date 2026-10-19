@@ -2,6 +2,11 @@
 Changelog for package driving_environment_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* feat(driving_environment_analyzer): replace autoware_universe_utils with autoware_utils_geometry (`#405 <https://github.com/autowarefoundation/autoware_tools/issues/405>`_)
+* Contributors: Vishal Chauhan
+
 0.7.0 (2026-05-01)
 ------------------
 

@@ -2,6 +2,9 @@
 Changelog for package autoware_pointcloud_projection_converter
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.7.0 (2026-05-01)
 ------------------
 

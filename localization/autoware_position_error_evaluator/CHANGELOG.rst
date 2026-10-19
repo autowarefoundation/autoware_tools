@@ -2,6 +2,16 @@
 Changelog for package autoware_position_error_evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* chore(position_error_evaluator): minor change on position error evaluator (`#324 <https://github.com/autowarefoundation/autoware_tools/issues/324>`_)
+  * chore: remove unnecessary comments
+  * docs: add "Start replay rosbag" procedure
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* Contributors: Motz
+
 0.7.0 (2026-05-01)
 ------------------
 

@@ -2,6 +2,9 @@
 Changelog for package autoware_pointcloud_merger
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 0.7.0 (2026-05-01)
 ------------------
 
