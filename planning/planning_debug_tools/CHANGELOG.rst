@@ -2,6 +2,27 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-10-19)
+------------------
+* feat(perception_replayer, perception_reproducer): add object filter options around the recorded ego pose (`#468 <https://github.com/autowarefoundation/autoware_tools/issues/468>`_)
+  * feat(perception_replayer, perception_reproducer): add object filter options around the recorded ego pose
+  Add CLI options to limit the published objects by their position relative to the
+  recorded ego pose, which helps to find the objects that affect the planning behavior.
+  - --filter-radius <max> | <min>,<max>: 2D distance range [m]
+  - --filter-angle <min>,<max>: angle range [deg] in the ego frame
+  (0 is front, counterclockwise is positive, wraps through the rear if min > max)
+  - --filter-class <class,...>: classes judged by the highest probability
+  - --filter-invert: remove the matching objects instead of keeping them
+  The filter logic is in utils.hpp and the option parsing is shared via help_utils.hpp.
+  * fix(planning_debug_tools): use autoware_utils_math::normalize_radian
+  utils::normalize_radian does not exist on main, so use the one in
+  autoware_utils_math and add it to package.xml.
+  ---------
+  Co-authored-by: kyo0221 <kyo.yamashita@tier4.jp>
+* fix: replay-route does not work in DLR test (`#446 <https://github.com/autowarefoundation/autoware_tools/issues/446>`_)
+  fix replay-route bug in dlr test
+* Contributors: Kem (TiankuiXian), KyoYamashita
+
 0.7.0 (2026-05-01)
 ------------------
 * feat(planning_debug_tools): replace autoware_universe_utils with specific autoware_utils sub-packages (`#413 <https://github.com/autowarefoundation/autoware_tools/issues/413>`_)
