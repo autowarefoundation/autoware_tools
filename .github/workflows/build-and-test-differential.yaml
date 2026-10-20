@@ -5,7 +5,12 @@ on:
     types:
       - opened
       - synchronize
+      - reopened
       - labeled
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   require-label:
