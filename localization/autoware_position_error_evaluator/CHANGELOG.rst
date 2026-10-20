@@ -2,6 +2,24 @@
 Changelog for package autoware_position_error_evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-10-19)
+------------------
+* chore(position_error_evaluator): minor change on position error evaluator (`#324 <https://github.com/autowarefoundation/autoware_tools/issues/324>`_)
+  * chore: remove unnecessary comments
+  * docs: add "Start replay rosbag" procedure
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* Contributors: Motz
+
+0.7.0 (2026-05-01)
+------------------
+
+0.6.0 (2026-02-14)
+------------------
+* fix(autoware_position_error_evaluator): add compile option to avoid depracated declarations (`#334 <https://github.com/autowarefoundation/autoware_tools/issues/334>`_)
+* Contributors: Fumiya Watanabe
+
 0.5.0 (2025-12-30)
 ------------------
 * fix: to be consistent version in all package.xml(s)

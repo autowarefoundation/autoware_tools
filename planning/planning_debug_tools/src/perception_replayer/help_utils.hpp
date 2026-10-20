@@ -15,12 +15,16 @@
 #ifndef PERCEPTION_REPLAYER__HELP_UTILS_HPP_
 #define PERCEPTION_REPLAYER__HELP_UTILS_HPP_
 
+#include "utils.hpp"
+
 #include <QCommandLineParser>
 #include <QCoreApplication>
 
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 void show_help(
@@ -75,6 +79,116 @@ void show_help(
     }
     std::cout << option.second << std::endl;
   }
+}
+
+QList<QCommandLineOption> make_object_filter_options()
+{
+  return {
+    QCommandLineOption(
+      QStringList() << "filter-radius",
+      "publish only objects within this 2D distance range [m] from the recorded ego pose "
+      "(<max> or <min>,<max>)",
+      "radius"),
+    QCommandLineOption(
+      QStringList() << "filter-angle",
+      "publish only objects within this angle range [deg] in the recorded ego frame "
+      "(<min>,<max>, 0 is front and counterclockwise is positive, wraps through the rear if "
+      "min > max)",
+      "angle"),
+    QCommandLineOption(
+      QStringList() << "filter-class",
+      "publish only objects of these comma-separated classes (e.g., 'car,pedestrian')", "classes"),
+    QCommandLineOption(
+      QStringList() << "filter-invert",
+      "remove the objects matching the filter options instead of keeping them")};
+}
+
+QStringList split_numbers(const QString & value)
+{
+  const QStringList values = value.split(',', Qt::SkipEmptyParts);
+  const auto is_number = [](const QString & str) {
+    bool ok = false;
+    str.toDouble(&ok);
+    return ok;
+  };
+  return std::all_of(values.begin(), values.end(), is_number) ? values : QStringList{};
+}
+
+bool parse_filter_radius(
+  const QString & value, autoware::planning_debug_tools::utils::ObjectFilterParam & filter)
+{
+  const QStringList values = split_numbers(value);
+  if (values.size() == 1) {
+    filter.max_radius = values[0].toDouble();
+  } else if (values.size() == 2) {
+    filter.min_radius = values[0].toDouble();
+    filter.max_radius = values[1].toDouble();
+  }
+  if (
+    values.isEmpty() || values.size() > 2 || filter.min_radius < 0.0 ||
+    filter.max_radius <= filter.min_radius) {
+    std::cerr << "Error: --filter-radius must be <max> or <min>,<max> with 0 <= min < max"
+              << std::endl;
+    return false;
+  }
+  return true;
+}
+
+bool parse_filter_angle(
+  const QString & value, autoware::planning_debug_tools::utils::ObjectFilterParam & filter)
+{
+  const QStringList values = split_numbers(value);
+  const auto is_valid = [](const double deg) { return -180.0 <= deg && deg <= 180.0; };
+  if (values.size() != 2 || !is_valid(values[0].toDouble()) || !is_valid(values[1].toDouble())) {
+    std::cerr << "Error: --filter-angle must be <min>,<max> within [-180, 180]" << std::endl;
+    return false;
+  }
+  filter.min_angle = values[0].toDouble() * M_PI / 180.0;
+  filter.max_angle = values[1].toDouble() * M_PI / 180.0;
+  return true;
+}
+
+bool parse_filter_class(
+  const QString & value, autoware::planning_debug_tools::utils::ObjectFilterParam & filter)
+{
+  using autoware::planning_debug_tools::ObjectClassification;
+  const std::unordered_map<std::string, uint8_t> class_map = {
+    {"UNKNOWN", ObjectClassification::UNKNOWN}, {"CAR", ObjectClassification::CAR},
+    {"TRUCK", ObjectClassification::TRUCK},     {"BUS", ObjectClassification::BUS},
+    {"TRAILER", ObjectClassification::TRAILER}, {"MOTORCYCLE", ObjectClassification::MOTORCYCLE},
+    {"BICYCLE", ObjectClassification::BICYCLE}, {"PEDESTRIAN", ObjectClassification::PEDESTRIAN}};
+  for (const auto & name : value.split(',', Qt::SkipEmptyParts)) {
+    const auto it = class_map.find(name.trimmed().toUpper().toStdString());
+    if (it == class_map.end()) {
+      std::cerr << "Error: unknown class for --filter-class: " << name.toStdString() << std::endl;
+      return false;
+    }
+    filter.classes.push_back(it->second);
+  }
+  if (filter.classes.empty()) {
+    std::cerr << "Error: --filter-class must be <class,...> with at least one class" << std::endl;
+    return false;
+  }
+  return true;
+}
+
+bool parse_object_filter_options(
+  const QCommandLineParser & parser,
+  autoware::planning_debug_tools::utils::ObjectFilterParam & filter)
+{
+  filter.enabled =
+    parser.isSet("filter-radius") || parser.isSet("filter-angle") || parser.isSet("filter-class");
+  filter.invert = parser.isSet("filter-invert");
+  if (filter.invert && !filter.enabled) {
+    std::cerr << "Error: --filter-invert requires at least one filter option" << std::endl;
+    return false;
+  }
+  return (!parser.isSet("filter-radius") ||
+          parse_filter_radius(parser.value("filter-radius"), filter)) &&
+         (!parser.isSet("filter-angle") ||
+          parse_filter_angle(parser.value("filter-angle"), filter)) &&
+         (!parser.isSet("filter-class") ||
+          parse_filter_class(parser.value("filter-class"), filter));
 }
 
 #endif  // PERCEPTION_REPLAYER__HELP_UTILS_HPP_

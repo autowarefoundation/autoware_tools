@@ -2,6 +2,61 @@
 Changelog for package autoware_static_centerline_generator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-10-19)
+------------------
+* refactor(autoware_static_centerline_generator): construct DefaultPlanner directly instead of loading it through pluginlib (`#462 <https://github.com/autowarefoundation/autoware_tools/issues/462>`_)
+* fix(autoware_static_centerline_generator): refresh centerline lane ids before saving (`#444 <https://github.com/autowarefoundation/autoware_tools/issues/444>`_)
+  `save_map()` compared `get_selected_centerline()` (sliced dynamically by the
+  current start/end index) against the cached `centerline_lane_ids`, which are
+  produced by `connect_centerline_to_lanelet()` for whatever selection existed
+  when `validate` ran. When the selection changes after `validate` (e.g. the GUI
+  start/end index updates are applied after the validate request), the cache goes
+  stale and the size check aborts the save with
+  "Cannot save map: size mismatch. centerline: N, lane_ids: M".
+  Recompute the lane ids for the current selection at the start of `save_map()`
+  so the centerline and its lane ids are always consistent for the selection
+  being saved.
+* fix(autoware_static_centerline_generator): suppress GUI window in launch tests (`#443 <https://github.com/autowarefoundation/autoware_tools/issues/443>`_)
+  Set QT_QPA_PLATFORM=offscreen in the launch-test description so the PyQt5
+  GUI helper (centerline_updater_helper.py) runs without a visible window.
+  This lets the GUI launch test pass on headless CI (no display / no Qt
+  platform plugin could be initialized) and avoids popping up a window during
+  local `colcon test`. Scoped to the test launch only; runtime usage is
+  unaffected.
+  Refs: `autowarefoundation/autoware_tools#391 <https://github.com/autowarefoundation/autoware_tools/issues/391>`_
+* Contributors: Yutaka Kondo, Yutaro Kobayashi
+
+0.7.0 (2026-05-01)
+------------------
+* fix(staric_centerline_generator): the lanelet_id couldn't be assign the centerline point (`#360 <https://github.com/autowarefoundation/autoware_tools/issues/360>`_)
+  * fix(staric_centerline_generator): the lanelet_id couldn't be assign the centerline point
+  * pre-commit
+  * spell-check
+  ---------
+  Co-authored-by: t4-adc <grp-rd-1-adc-admin@tier4.jp>
+* fix(autoware_static_centerline_generator): Commenting out flaky test (`#365 <https://github.com/autowarefoundation/autoware_tools/issues/365>`_)
+  commenting out flaky test
+* fix(static_centerline_generator): update initialization of path_generator (`#345 <https://github.com/autowarefoundation/autoware_tools/issues/345>`_)
+  fix path generator initialization
+  Co-authored-by: Mamoru Sobue <hilo.soblin@gmail.com>
+* chore(static_centerline_generator): remove unnecessary include (`#355 <https://github.com/autowarefoundation/autoware_tools/issues/355>`_)
+* Contributors: Arjun Jagdish Ram, Kazunori-Nakajima, Mamoru Sobue, Mitsuhiro Sakamoto
+
+0.6.0 (2026-02-14)
+------------------
+* fix: unable to asign lanelet_id to centerpoint near the boundary line (`#350 <https://github.com/autowarefoundation/autoware_tools/issues/350>`_)
+  Co-authored-by: t4-adc <grp-rd-1-adc-admin@tier4.jp>
+* feat(static_centerline_generator): use autoware_qos_utils and add missing headers (`#348 <https://github.com/autowarefoundation/autoware_tools/issues/348>`_)
+* refert: pr `#341 <https://github.com/autowarefoundation/autoware_tools/issues/341>`_ fix(autoware_static_centerline_generator): update initialization of path_generator (`#342 <https://github.com/autowarefoundation/autoware_tools/issues/342>`_)
+  Revert "fix(autoware_static_centerline_generator): update initialization of p…"
+  This reverts commit 69ac94a925cb498e8148eb1ed043b39dfd448b60.
+* fix(autoware_static_centerline_generator): update initialization of path_generator (`#341 <https://github.com/autowarefoundation/autoware_tools/issues/341>`_)
+  * fix(autoware_static_centerline_generator): update initialization of path_generator_node
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* Contributors: Kazunori-Nakajima, Ryohsuke Mitsudome
+
 0.5.0 (2025-12-30)
 ------------------
 

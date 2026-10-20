@@ -20,6 +20,8 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/rtc_manager_panel.cpp
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DRTC_MIN_START_DISTANCE=-2.0)
+
 target_link_libraries(${PROJECT_NAME}
   ${QT_LIBRARIES}
   fmt::fmt

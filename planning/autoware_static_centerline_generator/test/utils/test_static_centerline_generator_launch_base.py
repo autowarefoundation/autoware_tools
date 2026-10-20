@@ -20,6 +20,7 @@ from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
+from launch.actions import SetEnvironmentVariable
 from launch.actions import TimerAction
 from launch.launch_description_sources import AnyLaunchDescriptionSource
 import launch_testing
@@ -75,7 +76,13 @@ def generate_test_description_impl(
         launch_description.append(DeclareLaunchArgument("goal_method", default_value=goal_method))
 
     return LaunchDescription(
-        launch_description
+        [
+            # Run the PyQt5 GUI helper (centerline_updater_helper.py) without a visible window so
+            # the launch tests pass on headless CI (no display / no Qt platform plugin) and do not
+            # pop up a window during local `colcon test`. Scoped to the test launch only.
+            SetEnvironmentVariable("QT_QPA_PLATFORM", "offscreen"),
+        ]
+        + launch_description
         + [
             DeclareLaunchArgument("rviz", default_value="false"),
             DeclareLaunchArgument(

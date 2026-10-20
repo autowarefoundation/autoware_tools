@@ -44,7 +44,7 @@ def bag2pose(input_path, interval=[0.1, 10000.0]):
     prev_trans = None
     # read topic and fix timestamp if lidar, and write
     while reader.has_next():
-        (topic, data, stamp) = reader.read_next()
+        topic, data, stamp = reader.read_next()
         if topic == "/tf":
             msg_type = get_message(type_map[topic])
             msg = deserialize_message(data, msg_type)
@@ -76,7 +76,7 @@ def bag2point_stamped(input_path, too_close, too_far):
     prev_trans = None
     # read topic and fix timestamp if lidar, and write
     while reader.has_next():
-        (topic, data, stamp) = reader.read_next()
+        topic, data, stamp = reader.read_next()
         if topic == "/tf":
             msg_type = get_message(type_map[topic])
             msg = deserialize_message(data, msg_type)

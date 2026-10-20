@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "../src/autoware_planning_data_analyzer_node.hpp"
+#include "autoware_planning_data_analyzer_node.hpp"
 
 #include <autoware_test_utils/autoware_test_utils.hpp>
 #include <rclcpp/rclcpp.hpp>
@@ -58,18 +58,28 @@ TEST_F(ReplayEvaluationTest, TopicDefinitions)
   topic_names.odometry_topic = "/localization/kinematic_state";
   topic_names.acceleration_topic = "/localization/acceleration";
   topic_names.objects_topic = "/perception/object_recognition/objects";
-  topic_names.trajectory_topic = "/planning/scenario_planning/trajectory";
+  topic_names.trajectory_topic = "/planning/trajectory";
+  topic_names.gt_trajectory_topic = "/planning/ground_truth_trajectory";
   topic_names.steering_topic = "/vehicle/status/steering_status";
+  topic_names.hazard_lights_topic = "/vehicle/status/hazard_lights_status";
+  topic_names.turn_indicators_topic = "/vehicle/status/turn_indicators_status";
   topic_names.route_topic = "/planning/mission_planning/route";
+  topic_names.evaluation_interval_ms = 100.0;
+  topic_names.sync_tolerance_ms = 100.0;
 
   // Verify TopicNames structure is created correctly
   EXPECT_EQ(topic_names.tf_topic, "/tf");
   EXPECT_EQ(topic_names.odometry_topic, "/localization/kinematic_state");
   EXPECT_EQ(topic_names.acceleration_topic, "/localization/acceleration");
   EXPECT_EQ(topic_names.objects_topic, "/perception/object_recognition/objects");
-  EXPECT_EQ(topic_names.trajectory_topic, "/planning/scenario_planning/trajectory");
+  EXPECT_EQ(topic_names.trajectory_topic, "/planning/trajectory");
+  EXPECT_EQ(topic_names.gt_trajectory_topic, "/planning/ground_truth_trajectory");
   EXPECT_EQ(topic_names.steering_topic, "/vehicle/status/steering_status");
+  EXPECT_EQ(topic_names.hazard_lights_topic, "/vehicle/status/hazard_lights_status");
+  EXPECT_EQ(topic_names.turn_indicators_topic, "/vehicle/status/turn_indicators_status");
   EXPECT_EQ(topic_names.route_topic, "/planning/mission_planning/route");
+  EXPECT_EQ(topic_names.evaluation_interval_ms, 100.0);
+  EXPECT_EQ(topic_names.sync_tolerance_ms, 100.0);
 }
 
 TEST_F(ReplayEvaluationTest, TrajectoryMessageCreation)

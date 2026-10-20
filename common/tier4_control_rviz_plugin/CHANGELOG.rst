@@ -2,6 +2,17 @@
 Changelog for package tier4_control_rviz_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-10-19)
+------------------
+* feat(tier4_control_rviz_plugin): replace autoware_universe_utils with autoware_utils_rclcpp (`#408 <https://github.com/autowarefoundation/autoware_tools/issues/408>`_)
+* Contributors: Vishal Chauhan
+
+0.7.0 (2026-05-01)
+------------------
+
+0.6.0 (2026-02-14)
+------------------
+
 0.5.0 (2025-12-30)
 ------------------
 

@@ -2,6 +2,22 @@
 Changelog for package driving_environment_analyzer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-10-19)
+------------------
+* feat(driving_environment_analyzer): replace autoware_universe_utils with autoware_utils_geometry (`#405 <https://github.com/autowarefoundation/autoware_tools/issues/405>`_)
+* Contributors: Vishal Chauhan
+
+0.7.0 (2026-05-01)
+------------------
+
+0.6.0 (2026-02-14)
+------------------
+* refactor(planning): deprecate lanelet_extension geometry conversion function (`#351 <https://github.com/autowarefoundation/autoware_tools/issues/351>`_)
+  * refactor(planning): deprecate lanelet_extension geometry conversion function
+  * fix
+  ---------
+* Contributors: Mamoru Sobue
+
 0.5.0 (2025-12-30)
 ------------------
 * feat(autoware_lanelet2_extension): replace ported autoware_lanelet2_extension in autoware_tools (`#318 <https://github.com/autowarefoundation/autoware_tools/issues/318>`_)
