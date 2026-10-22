@@ -47,7 +47,7 @@
   <depend>tier4_rtc_msgs</depend>
   <depend>visualization_msgs</depend>
 
-  <exec_depend>autoware_launch</exec_depend>
+  <exec_depend>autoware_map_config</exec_depend>
   <exec_depend>autoware_map_projection_loader</exec_depend>
 
   <export>
