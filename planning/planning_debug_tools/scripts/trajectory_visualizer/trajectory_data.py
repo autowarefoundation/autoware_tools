@@ -23,6 +23,21 @@ from shapely.geometry import LineString
 from shapely.geometry import Point
 from tf_transformations import euler_from_quaternion
 
+NOMINAL_WHEEL_BASE = 4.76012
+
+
+def get_nominal_wheel_base():
+    return NOMINAL_WHEEL_BASE
+
+
+def set_nominal_wheel_base(wheel_base: float):
+    global NOMINAL_WHEEL_BASE
+
+    validated_wheel_base = float(wheel_base)
+    if validated_wheel_base <= 0.0:
+        raise ValueError("wheel_base must be positive")
+    NOMINAL_WHEEL_BASE = validated_wheel_base
+
 
 def _dist(p1: TrajectoryPoint, p2: TrajectoryPoint):
     dx = p1.pose.position.x - p2.pose.position.x
@@ -97,6 +112,19 @@ def get_arc_lengths(msg, zero_pose=None):
     return arc_lengths
 
 
+def get_delta_arc_lengths(msg):
+    points = _get_points(msg)
+    if len(points) == 0:
+        return []
+    if len(points) == 1:
+        return [np.nan]
+
+    delta_arc_lengths = [np.nan]
+    for index in range(1, len(points)):
+        delta_arc_lengths.append(_dist(points[index - 1], points[index]))
+    return delta_arc_lengths
+
+
 def get_times(msg):
     points = _get_points(msg)
     if len(points) > 0 and not hasattr(points[0], "time_from_start"):
@@ -106,6 +134,42 @@ def get_times(msg):
         d = time.Duration.from_msg(p.time_from_start)
         times.append(d.nanoseconds * 1e-9)
     return times
+
+
+def get_delta_times(msg):
+    times = get_times(msg)
+    if len(times) <= 1:
+        return [np.nan for _ in times]
+
+    delta_times = [np.nan]
+    for index in range(1, len(times)):
+        delta_times.append(times[index] - times[index - 1])
+    return delta_times
+
+
+def get_reference_arc_from_curvature(arc_lengths, curvatures, epsilon=1e-9):
+    if len(arc_lengths) == 0 or len(curvatures) == 0:
+        return [], []
+
+    sample_count = min(len(arc_lengths), len(curvatures))
+    arc_x = []
+    arc_y = []
+
+    for arc_length, curvature in zip(arc_lengths[:sample_count], curvatures[:sample_count]):
+        if not np.isfinite(arc_length) or not np.isfinite(curvature):
+            continue
+
+        if np.abs(curvature) < epsilon:
+            arc_x.append(arc_length)
+            arc_y.append(0.0)
+            continue
+
+        radius = 1.0 / curvature
+        theta = arc_length * curvature
+        arc_x.append(radius * np.sin(theta))
+        arc_y.append(radius * (1.0 - np.cos(theta)))
+
+    return arc_x, arc_y
 
 
 def calculate_curvature_2d(msg):
@@ -228,6 +292,51 @@ def calculate_menger_curvature(msg):
     return curvatures
 
 
+def _curvature_to_steering_angles(curvatures, wheel_base=None):
+    if wheel_base is None:
+        wheel_base = get_nominal_wheel_base()
+    return np.arctan(wheel_base * np.asarray(curvatures, dtype=float)).tolist()
+
+
+def _differentiate_by_time(values, times_sec, epsilon=1e-9):
+    if len(values) <= 1 or len(values) != len(times_sec):
+        return [0.0 for _ in values]
+
+    rates = [0.0 for _ in values]
+
+    for index in range(len(values)):
+        if index == 0:
+            delta_time = times_sec[1] - times_sec[0]
+            delta_value = values[1] - values[0]
+        elif index == len(values) - 1:
+            delta_time = times_sec[-1] - times_sec[-2]
+            delta_value = values[-1] - values[-2]
+        else:
+            delta_time = times_sec[index + 1] - times_sec[index - 1]
+            delta_value = values[index + 1] - values[index - 1]
+
+        if abs(delta_time) > epsilon:
+            rates[index] = delta_value / delta_time
+
+    return rates
+
+
+def get_steering_angles(msg):
+    return _curvature_to_steering_angles(calculate_curvature_2d(msg))
+
+
+def get_steering_angles_menger(msg):
+    return _curvature_to_steering_angles(calculate_menger_curvature(msg))
+
+
+def get_steering_angle_rates(msg):
+    return _differentiate_by_time(get_steering_angles(msg), get_times(msg))
+
+
+def get_steering_angle_rates_menger(msg):
+    return _differentiate_by_time(get_steering_angles_menger(msg), get_times(msg))
+
+
 def get_accelerations(msg):
     points = _get_points(msg)
     if len(points) == 0:
@@ -253,6 +362,50 @@ def relative_angles(msg):
         yaw1 = _get_yaw_from_quaternion(points[i + 1].pose.orientation)
         angles.append(shortest_angular_distance(yaw0, yaw1))
     return angles
+
+
+def lateral_errors(msg, epsilon=1e-9):
+    points = _get_points(msg)
+    if len(points) <= 2:
+        return [0.0 for _ in points]
+
+    errors = [0.0 for _ in points]
+    for index in range(1, len(points) - 1):
+        prev_point = points[index - 1].pose.position
+        current_point = points[index].pose.position
+        next_point = points[index + 1].pose.position
+
+        direction_x = next_point.x - prev_point.x
+        direction_y = next_point.y - prev_point.y
+        direction_norm = np.hypot(direction_x, direction_y)
+        if direction_norm <= epsilon:
+            continue
+
+        offset_x = current_point.x - prev_point.x
+        offset_y = current_point.y - prev_point.y
+        cross_product = direction_x * offset_y - direction_y * offset_x
+        errors[index] = cross_product / direction_norm
+
+    return errors
+
+
+def lateral_errors_from_previous_heading(msg):
+    points = _get_points(msg)
+    if len(points) <= 1:
+        return [0.0 for _ in points]
+
+    errors = [0.0]
+    for index in range(1, len(points)):
+        previous_point = points[index - 1].pose.position
+        current_point = points[index].pose.position
+        previous_yaw = _get_yaw_from_quaternion(points[index - 1].pose.orientation)
+
+        delta_x = current_point.x - previous_point.x
+        delta_y = current_point.y - previous_point.y
+        lateral_error = -np.sin(previous_yaw) * delta_x + np.cos(previous_yaw) * delta_y
+        errors.append(lateral_error)
+
+    return errors
 
 
 def x_values(msg):
@@ -332,11 +485,25 @@ def get_data_functions() -> dict:
     return {
         "Index": DataFunction(index_values, zero_fn),
         "Arc Length [m]": DataFunction(get_arc_lengths, zero_fn),
+        "Delta Arc Length ds [m]": DataFunction(get_delta_arc_lengths, zero_fn),
         "Velocity [m/s]": DataFunction(get_velocites, get_velocity),
         "Times [s]": DataFunction(get_times, zero_fn),
+        "Delta Times dt [s]": DataFunction(get_delta_times, zero_fn),
         "Curvature (derivatives) [m⁻¹]": DataFunction(calculate_curvature_2d, zero_fn),
         "Curvature (Menger) [m⁻¹]": DataFunction(calculate_menger_curvature, zero_fn),
+        "Steering Angle (derivatives) [rad]": DataFunction(get_steering_angles, zero_fn),
+        "Steering Angle (Menger) [rad]": DataFunction(get_steering_angles_menger, zero_fn),
+        "Steering Angle Rate (derivatives) [rad/s]": DataFunction(
+            get_steering_angle_rates, zero_fn
+        ),
+        "Steering Angle Rate (Menger) [rad/s]": DataFunction(
+            get_steering_angle_rates_menger, zero_fn
+        ),
         "Acceleration [m/s²]": DataFunction(get_accelerations, zero_fn),  # TODO: get accel
+        "Lateral Error [m]": DataFunction(lateral_errors, zero_fn),
+        "Lateral Error (previous heading) [m]": DataFunction(
+            lateral_errors_from_previous_heading, zero_fn
+        ),
         "Relative angles [rad]": DataFunction(relative_angles, zero_fn),
         "X values": DataFunction(x_values, x_value),
         "Y values": DataFunction(y_values, y_value),
