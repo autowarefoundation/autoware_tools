@@ -81,7 +81,18 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
 
     target_list = [
         "ndt_scan_matcher: scan_matching_status",
-        "localization: ekf_localizer",
+        "localization: ekf_localizer: is_activated",
+        "localization: ekf_localizer: is_set_initialpose",
+        "localization: ekf_localizer: pose_no_update_count",
+        "localization: ekf_localizer: pose_queue_size",
+        "localization: ekf_localizer: pose_delay_time",
+        "localization: ekf_localizer: pose_mahalanobis_distance",
+        "localization: ekf_localizer: twist_no_update_count",
+        "localization: ekf_localizer: twist_queue_size",
+        "localization: ekf_localizer: twist_delay_time",
+        "localization: ekf_localizer: twist_mahalanobis_distance",
+        "localization: ekf_localizer: cov_ellipse_long_axis_size",
+        "localization: ekf_localizer: cov_ellipse_lateral_direction_size",
         "localization_error_monitor: ellipse_error_status",
         "localization: pose_instability_detector",
         "gyro_bias_scale_validator: gyro_bias_scale_validator",
@@ -110,6 +121,81 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
             sep="\t",
             float_format="%.9f",
         )
+
+    # Create combined TSV files for backward compatibility
+    # Group diagnostic items by their common prefix (major category)
+    category_groups = {}
+    for key in data_dict.keys():
+        parts = key.split(": ")
+        if len(parts) >= 3:  # Format: "category: subcategory: item"
+            major_category = f"{parts[0]}: {parts[1]}"
+            if major_category not in category_groups:
+                category_groups[major_category] = []
+            category_groups[major_category].append(key)
+
+    # Create combined TSV for each major category
+    for major_category, diag_items in category_groups.items():
+        if len(diag_items) <= 1:
+            continue  # Skip if only one item (no need to combine)
+
+        # Find the first available item to use as base for timestamps
+        base_data = None
+        for item in diag_items:
+            if item in data_dict and data_dict[item]:
+                base_data = data_dict[item]
+                break
+
+        if not base_data:
+            continue
+
+        combined_data = []
+
+        for base_entry in base_data:
+            timestamp = base_entry["timestamp_header"]
+
+            # Start with base entry
+            combined_entry = {
+                "timestamp_header": timestamp,
+                "timestamp_rosbag": base_entry["timestamp_rosbag"],
+            }
+
+            # Add data from each diagnostic item in this category
+            for diag_item in diag_items:
+                if diag_item in data_dict:
+                    target_data = data_dict[diag_item]
+                    # Find closest timestamp match
+                    closest_entry = min(
+                        target_data,
+                        key=lambda x: abs(float(x["timestamp_header"]) - float(timestamp)),
+                        default=None,
+                    )
+                    if closest_entry:
+                        # Add all columns except timestamps
+                        for col_name, col_value in closest_entry.items():
+                            if col_name not in ["timestamp_header", "timestamp_rosbag"]:
+                                combined_entry[col_name] = col_value
+
+            combined_data.append(combined_entry)
+
+        # Save combined data as TSV
+        if combined_data:
+            df_combined = pd.DataFrame(combined_data)
+            for col in df_combined.columns:
+                if pd.api.types.is_numeric_dtype(df_combined[col]):
+                    df_combined[col] = df_combined[col].astype(float)
+                    df_combined[col] = df_combined[col].apply(
+                        lambda x: int(x) if x.is_integer() else x
+                    )
+
+            # Create filename from major category
+            filename = diag_name_to_filename(major_category)
+            df_combined.to_csv(
+                save_dir / f"{filename}.tsv",
+                index=False,
+                sep="\t",
+                float_format="%.9f",
+            )
+            print(f"Created combined TSV for backward compatibility: {major_category}")
 
     # Fix timestamp to relative time from the first message and convert to seconds
     # (for better visualization)
@@ -172,36 +258,91 @@ def main(rosbag_path: Path, save_dir: Path = None) -> None:
     #################
     # ekf_localizer #
     #################
-    diag_name = "localization: ekf_localizer"
-    df = pd.DataFrame(data_dict[diag_name])
-    df = df[df["is_activated"] == "True"]
-    key_list = [
-        "pose_mahalanobis_distance",
-        "twist_mahalanobis_distance",
-        "cov_ellipse_long_axis_size",
-        "cov_ellipse_lateral_direction_size",
-    ]
-    plt.figure(figsize=(6.4 * 2, 4.8 * 2))
-    for i, key in enumerate(key_list):
-        if key not in df.columns:
-            print(f"Skip {key}")
-            continue
-        df[key] = df[key].astype(float)
-        key_threshold = (
-            key + "_threshold" if "mahalanobis" in key else key.replace("_size", "_warn_threshold")
-        )
-        df[key_threshold] = df[key_threshold].astype(float)
-        plt.subplot(4, 1, (i + 1))
-        plt.plot(df["timestamp_header"], df[key], label=key)
-        plt.plot(df["timestamp_header"], df[key_threshold], label=key_threshold)
-        plt.xlabel("time [s]")
-        plt.title(f"{key}")
-        plt.grid()
+    # Collect data from the new fragmented diagnostic messages
+    key_mapping = {
+        "pose_mahalanobis_distance": "localization: ekf_localizer: pose_mahalanobis_distance",
+        "twist_mahalanobis_distance": "localization: ekf_localizer: twist_mahalanobis_distance",
+        "cov_ellipse_long_axis_size": "localization: ekf_localizer: cov_ellipse_long_axis_size",
+        "cov_ellipse_lateral_direction_size": "localization: ekf_localizer: cov_ellipse_lateral_direction_size",
+    }
 
-    plt.tight_layout()
-    save_path = save_dir / f"{diag_name_to_filename(diag_name)}.png"
-    plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
-    plt.close()
+    # Get is_activated status from the activation diagnostic
+    is_activated_data = data_dict.get("localization: ekf_localizer: is_activated", [])
+
+    # Create combined dataframe from individual diagnostic messages
+    combined_data = []
+
+    if is_activated_data:
+        # Use is_activated timestamps as the base
+        for activated_entry in is_activated_data:
+            if activated_entry.get("is_activated") == "True":
+                timestamp = activated_entry["timestamp_header"]
+
+                # Create entry with timestamp
+                entry = {
+                    "timestamp_header": timestamp,
+                    "timestamp_rosbag": activated_entry["timestamp_rosbag"],
+                    "is_activated": "True",
+                }
+
+                # Find corresponding data from each diagnostic message
+                for key, diag_name in key_mapping.items():
+                    if diag_name in data_dict:
+                        # Find the closest timestamp match
+                        target_data = data_dict[diag_name]
+                        closest_entry = min(
+                            target_data,
+                            key=lambda x: abs(float(x["timestamp_header"]) - float(timestamp)),
+                            default=None,
+                        )
+                        if closest_entry:
+                            # Add the main value and threshold if available
+                            for col_name, col_value in closest_entry.items():
+                                if col_name not in [
+                                    "timestamp_header",
+                                    "timestamp_rosbag",
+                                ]:
+                                    entry[col_name] = col_value
+
+                combined_data.append(entry)
+
+    if combined_data:
+        df = pd.DataFrame(combined_data)
+        key_list = [
+            "pose_mahalanobis_distance",
+            "twist_mahalanobis_distance",
+            "cov_ellipse_long_axis_size",
+            "cov_ellipse_lateral_direction_size",
+        ]
+        plt.figure(figsize=(6.4 * 2, 4.8 * 2))
+        for i, key in enumerate(key_list):
+            if key not in df.columns:
+                print(f"Skip {key}")
+                continue
+            df[key] = df[key].astype(float)
+            key_threshold = (
+                key + "_threshold"
+                if "mahalanobis" in key
+                else key.replace("_size", "_warn_threshold")
+            )
+            if key_threshold in df.columns:
+                df[key_threshold] = df[key_threshold].astype(float)
+                plt.subplot(4, 1, (i + 1))
+                plt.plot(df["timestamp_header"], df[key], label=key)
+                plt.plot(df["timestamp_header"], df[key_threshold], label=key_threshold)
+            else:
+                plt.subplot(4, 1, (i + 1))
+                plt.plot(df["timestamp_header"], df[key], label=key)
+            plt.xlabel("time [s]")
+            plt.title(f"{key}")
+            plt.grid()
+
+        plt.tight_layout()
+        save_path = save_dir / "localization__ekf_localizer.png"
+        plt.savefig(save_path, bbox_inches="tight", pad_inches=0.05)
+        plt.close()
+    else:
+        print("No activated EKF localizer data found for plotting")
 
     #############################
     # pose_instability_detector #
