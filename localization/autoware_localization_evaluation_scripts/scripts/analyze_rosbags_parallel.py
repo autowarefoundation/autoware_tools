@@ -2,15 +2,29 @@
 """A script to analyze rosbags in parallel."""
 
 import argparse
+from dataclasses import dataclass
+from dataclasses import fields
 import json
 from multiprocessing import Pool
 from pathlib import Path
 
 import compare_trajectories
+import diagnostics_flag_check
 import extract_values_from_rosbag
 import pandas as pd
 import plot_diagnostics
 from utils.calc_acceleration_diff import calc_acceleration_diff
+import yaml
+
+
+@dataclass
+class OverallCriteriaMask:
+    mean_relative_position: bool = True
+    mean_relative_angle: bool = True
+    mean_relative_linear_velocity: bool = True
+    mean_relative_angular_velocity: bool = True
+    mean_relative_acceleration: bool = True
+    diagnostics_not_ok_rate: bool = True
 
 
 def parse_args() -> argparse.Namespace:
@@ -24,17 +38,45 @@ def parse_args() -> argparse.Namespace:
         default="/localization/pose_estimator/pose_with_covariance",
     )
     parser.add_argument("--save_dir_relative", type=str, default="")
+    parser.add_argument("--scenario_file", type=Path, default=None)
     return parser.parse_args()
 
 
+def load_overall_criteria_mask(yaml_path: Path) -> OverallCriteriaMask:
+    try:
+        with open(yaml_path, "r") as f:
+            data = yaml.safe_load(f)
+        conditions = data["Evaluation"]["Conditions"]
+    except Exception as e:
+        print(type(e).__name__, e)
+        return OverallCriteriaMask()
+
+    # If mask exists -> merge with defaults, else return defaults
+    mask = conditions.get("OverallCriteriaMask", {})
+    valid_fields = {f.name for f in fields(OverallCriteriaMask)}
+    invalid_fields = [k for k in mask if k not in valid_fields]
+
+    if invalid_fields:
+        print(f"[WARN] Ignoring invalid OverallCriteriaMask fields: {invalid_fields}")
+
+    filtered_mask = {k: v for k, v in mask.items() if k in valid_fields}
+    return OverallCriteriaMask(**{**OverallCriteriaMask().__dict__, **filtered_mask})
+
+
 def process_directory(
-    directory: Path, topic_subject: str, topic_reference: str, save_dir_relative: str
+    directory: Path,
+    topic_subject: str,
+    topic_reference: str,
+    save_dir_relative: str,
+    scenario_file: Path,
 ) -> None:
     target_rosbag = directory / "result_bag"
     save_dir = directory if save_dir_relative == "" else directory / save_dir_relative
     compare_result_dir = save_dir / "compare_trajectories"
     compare_result_dir.mkdir(parents=True, exist_ok=True)
     diagnostics_result_dir = save_dir / "diagnostics_result"
+
+    criteria_mask = load_overall_criteria_mask(scenario_file)
 
     # (1) Plot diagnostics
     plot_diagnostics.main(rosbag_path=target_rosbag, save_dir=diagnostics_result_dir)
@@ -86,25 +128,27 @@ def process_directory(
     df = pd.read_csv(relative_pose_tsv, sep="\t")
 
     # position
-    mean_position_norm = df["position.norm"].mean()
-    THRESHOLD_MEAN_POSITION_NORM = 0.5
-    if mean_position_norm > THRESHOLD_MEAN_POSITION_NORM:
-        final_success = False
-        final_summary += f"{mean_position_norm=:.3f} [m] is too large."
-    else:
-        final_summary += f"{mean_position_norm=:.3f} [m]"
+    if criteria_mask.mean_relative_position:
+        mean_position_norm = df["position.norm"].mean()
+        THRESHOLD_MEAN_POSITION_NORM = 0.5
+        if mean_position_norm > THRESHOLD_MEAN_POSITION_NORM:
+            final_success = False
+            final_summary += f"{mean_position_norm=:.3f} [m] is too large."
+        else:
+            final_summary += f"{mean_position_norm=:.3f} [m]"
 
     # angle
-    mean_angle_norm = df["angle.norm"].mean()
-    THRESHOLD_MEAN_ANGLE_NORM = 0.5
-    if mean_angle_norm > THRESHOLD_MEAN_ANGLE_NORM:
-        final_success = False
-        final_summary += f"|{mean_angle_norm=:.3f} [deg] is too large."
-    else:
-        final_summary += f"|{mean_angle_norm=:.3f} [deg]"
+    if criteria_mask.mean_relative_angle:
+        mean_angle_norm = df["angle.norm"].mean()
+        THRESHOLD_MEAN_ANGLE_NORM = 0.5
+        if mean_angle_norm > THRESHOLD_MEAN_ANGLE_NORM:
+            final_success = False
+            final_summary += f"|{mean_angle_norm=:.3f} [deg] is too large."
+        else:
+            final_summary += f"|{mean_angle_norm=:.3f} [deg]"
 
     # linear velocity
-    if "linear_velocity.norm" in df.columns:
+    if "linear_velocity.norm" in df.columns and criteria_mask.mean_relative_linear_velocity:
         mean_linear_velocity_norm = df["linear_velocity.norm"].mean()
         THRESHOLD_MEAN_LINEAR_VELOCITY_NORM = 0.05
         if mean_linear_velocity_norm > THRESHOLD_MEAN_LINEAR_VELOCITY_NORM:
@@ -114,7 +158,7 @@ def process_directory(
             final_summary += f"|{mean_linear_velocity_norm=:.3f} [m/s]"
 
     # angular velocity
-    if "angular_velocity.norm" in df.columns:
+    if "angular_velocity.norm" in df.columns and criteria_mask.mean_relative_angular_velocity:
         mean_angular_velocity_norm = df["angular_velocity.norm"].mean()
         THRESHOLD_MEAN_ANGULAR_VELOCITY_NORM = 0.05
         if mean_angular_velocity_norm > THRESHOLD_MEAN_ANGULAR_VELOCITY_NORM:
@@ -125,7 +169,7 @@ def process_directory(
 
     # acceleration
     df_ref = pd.read_csv(compare_result_dir / f"{save_name_reference}.tsv", sep="\t")
-    if "linear_velocity.x" in df_ref.columns:
+    if "linear_velocity.x" in df_ref.columns and criteria_mask.mean_relative_acceleration:
         THRESHOLD_MEAN_ACCELERATION_NORM = 0.5
         acceleration_tsv = save_dir / "result_acceleration/localization__acceleration.tsv"
         df_acceleration = pd.read_csv(acceleration_tsv, sep="\t")
@@ -151,22 +195,35 @@ def process_directory(
         "localization_error_monitor__ellipse_error_status",
         "ndt_scan_matcher__scan_matching_status",
     ]
-    for target_tsv in target_tsv_list:
-        diagnostics_tsv = diagnostics_result_dir / f"{target_tsv}.tsv"
-        df = pd.read_csv(diagnostics_tsv, sep="\t")
-        # filter out WARNs before activation
-        df = df[df["message"] != "[WARN]process is not activated; [WARN]initial pose is not set"]
-        df = df[df["message"] != "Node is not activated."]
-        not_ok_num = len(df[df["level"] != 0])
-        if len(df) == 0:
-            not_ok_percentage = 0
-        else:
-            not_ok_percentage = not_ok_num / len(df) * 100
-        if not_ok_percentage > 5:
-            final_success = False
-            final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%] is too large."
-        else:
-            final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%]"
+    if criteria_mask.diagnostics_not_ok_rate:
+        for target_tsv in target_tsv_list:
+            diagnostics_tsv = diagnostics_result_dir / f"{target_tsv}.tsv"
+            df = pd.read_csv(diagnostics_tsv, sep="\t")
+            # filter out WARNs before activation
+            df = df[
+                df["message"] != "[WARN]process is not activated; [WARN]initial pose is not set"
+            ]
+            df = df[df["message"] != "Node is not activated."]
+            not_ok_num = len(df[df["level"] != 0])
+            if len(df) == 0:
+                not_ok_percentage = 0
+            else:
+                not_ok_percentage = not_ok_num / len(df) * 100
+            if not_ok_percentage > 5:
+                final_success = False
+                final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%] is too large."
+            else:
+                final_summary += f"|{target_tsv} {not_ok_percentage:.3f} [%]"
+
+    # (7) extract diag rise/fall
+    if scenario_file is not None:
+        diag_flag_check = diagnostics_flag_check.main(scenario_file, diagnostics_result_dir)
+        for key, check in diag_flag_check.items():
+            if check is False:
+                final_success = False
+                final_summary += f"|Diagnostics flag '{key}' NOT detected as expected."
+            else:
+                final_summary += f"|Diagnostics flag '{key}' OK."
 
     with open(save_dir / "summary.json", "w") as f:
         json.dump(
@@ -188,6 +245,7 @@ if __name__ == "__main__":
     topic_subject = args.topic_subject
     topic_reference = args.topic_reference
     save_dir_relative = args.save_dir_relative
+    scenario_file = args.scenario_file
 
     target_rosbags = list(result_dir.glob("**/*.db3")) + list(result_dir.glob("**/*.mcap"))
     directories = [path.parent.parent for path in target_rosbags]
@@ -198,5 +256,8 @@ if __name__ == "__main__":
     with Pool(args.parallel_num) as pool:
         pool.starmap(
             process_directory,
-            [(d, topic_subject, topic_reference, save_dir_relative) for d in directories],
+            [
+                (d, topic_subject, topic_reference, save_dir_relative, scenario_file)
+                for d in directories
+            ],
         )

@@ -2,6 +2,104 @@
 Changelog for package planning_debug_tools
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-10-19)
+------------------
+* feat(perception_replayer, perception_reproducer): add object filter options around the recorded ego pose (`#468 <https://github.com/autowarefoundation/autoware_tools/issues/468>`_)
+  * feat(perception_replayer, perception_reproducer): add object filter options around the recorded ego pose
+  Add CLI options to limit the published objects by their position relative to the
+  recorded ego pose, which helps to find the objects that affect the planning behavior.
+  - --filter-radius <max> | <min>,<max>: 2D distance range [m]
+  - --filter-angle <min>,<max>: angle range [deg] in the ego frame
+  (0 is front, counterclockwise is positive, wraps through the rear if min > max)
+  - --filter-class <class,...>: classes judged by the highest probability
+  - --filter-invert: remove the matching objects instead of keeping them
+  The filter logic is in utils.hpp and the option parsing is shared via help_utils.hpp.
+  * fix(planning_debug_tools): use autoware_utils_math::normalize_radian
+  utils::normalize_radian does not exist on main, so use the one in
+  autoware_utils_math and add it to package.xml.
+  ---------
+  Co-authored-by: kyo0221 <kyo.yamashita@tier4.jp>
+* fix: replay-route does not work in DLR test (`#446 <https://github.com/autowarefoundation/autoware_tools/issues/446>`_)
+  fix replay-route bug in dlr test
+* Contributors: Kem (TiankuiXian), KyoYamashita
+
+0.7.0 (2026-05-01)
+------------------
+* feat(planning_debug_tools): replace autoware_universe_utils with specific autoware_utils sub-packages (`#413 <https://github.com/autowarefoundation/autoware_tools/issues/413>`_)
+* fix(planning_debug_tools): migrate to rclcpp typesupport helpers (`#403 <https://github.com/autowarefoundation/autoware_tools/issues/403>`_)
+* fix: reprodocuer route bug (`#374 <https://github.com/autowarefoundation/autoware_tools/issues/374>`_)
+  * fix: reprodocuer route bug
+  * pre-commit
+  ---------
+* feat(perception_reproducer): publish route from rosbag (`#369 <https://github.com/autowarefoundation/autoware_tools/issues/369>`_)
+  * change pub-route to set-goal and make the new pub-route really publishing route
+  * pre-commit
+  * refactor argment names
+  ---------
+* Contributors: Kem (TiankuiXian), Mete Fatih Cırıt, Vishal Chauhan
+
+0.6.0 (2026-02-14)
+------------------
+* feat: add Jazzy support for rosbag APIs (`#347 <https://github.com/autowarefoundation/autoware_tools/issues/347>`_)
+* feat(perception_reproducer): enable compressed image visualization (`#339 <https://github.com/autowarefoundation/autoware_tools/issues/339>`_)
+  * feat(perception_reproducer): support also searching and outputting images
+  * feat: update the default topic names in helping
+  * doc: update README for reference image setting
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* feat(perception_replayer, perception_reproducer): refactor code and publish occupancy_grid_map (`#328 <https://github.com/autowarefoundation/autoware_tools/issues/328>`_)
+  * fist commit
+  * remove unused code
+  * refactor code
+  * pre-commit
+  * fix noise bug
+  * fix killer timer
+  * refactor func
+  ---------
+* Contributors: Kem (TiankuiXian), Ryohsuke Mitsudome, Yuxuan Liu
+
+0.5.0 (2025-12-30)
+------------------
+* feat(perception_replayer): cpp implementation of perception replayer (`#321 <https://github.com/autowarefoundation/autoware_tools/issues/321>`_)
+  * feat cpp version perception_replayer/reproducer
+  * delete comment
+  * fix pre-commit error
+  * fix spell
+  * fix package.xml depends
+  * update readme and fix options
+  * add error ouptut
+  * add noise and pub_route option
+  * fix option behavior
+  * delete unnecessary depend
+  * fix typo
+  * throttling warn message
+  * throttling warn message
+  ---------
+* Contributors: Kotakku
+
+0.4.0 (2025-11-16)
+------------------
+* feat(trajectory_visualizer): sort topic list (`#307 <https://github.com/autowarefoundation/autoware_tools/issues/307>`_)
+  * sort topic list
+  * fix pre-commit error
+  * add README topic display ordering section
+  * fix inital topics selection
+  * config path
+  * fix pre-commit error
+  * add copylight
+  ---------
+* feat(planning_debug_tools): improve trajectory visualizer usability (`#300 <https://github.com/autowarefoundation/autoware_tools/issues/300>`_)
+  * feat equal aspect ratio when XY-plot
+  * add unwrapped yaw plot
+  * fix pre-commit
+  ---------
+* fix: change to detailed library reference (`#295 <https://github.com/autowarefoundation/autoware_tools/issues/295>`_)
+* feat(planning_debug_tools): support V2I (`#292 <https://github.com/autowarefoundation/autoware_tools/issues/292>`_)
+* fix(planning_debug_tools): fix InitializeLocalization msg import (`#291 <https://github.com/autowarefoundation/autoware_tools/issues/291>`_)
+* fix: show motion velocity planner output by default (`#290 <https://github.com/autowarefoundation/autoware_tools/issues/290>`_)
+* Contributors: Kotakku, Satoshi OTA, Xiaoyu WANG, Yukinari Hisaki
+
 0.3.0 (2025-08-11)
 ------------------
 * feat(trajectory_visualizer): add initial config and better layout (`#273 <https://github.com/autowarefoundation/autoware_tools/issues/273>`_)

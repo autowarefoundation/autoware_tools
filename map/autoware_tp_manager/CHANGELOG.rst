@@ -2,6 +2,39 @@
 Changelog for package autoware_tp_manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-10-19)
+------------------
+
+0.7.0 (2026-05-01)
+------------------
+* chore: sync files (`#311 <https://github.com/autowarefoundation/autoware_tools/issues/311>`_)
+  * chore: sync files
+  * style(pre-commit): autofix
+  ---------
+  Co-authored-by: github-actions <github-actions@github.com>
+  Co-authored-by: pre-commit-ci[bot] <66853113+pre-commit-ci[bot]@users.noreply.github.com>
+* Contributors: awf-autoware-bot[bot]
+
+0.6.0 (2026-02-14)
+------------------
+
+0.5.0 (2025-12-30)
+------------------
+
+0.4.0 (2025-11-16)
+------------------
+* chore: update maintainer (`#304 <https://github.com/autowarefoundation/autoware_tools/issues/304>`_)
+  * chore: update maintainer
+  remove Ryu Yamamoto
+  * chore: update maintainer
+  remove Kento Yabuuchi
+  * chore: update maintainer
+  remove Koji Minoda
+  * chore: update maintainer
+  remove Shintaro Sakoda
+  ---------
+* Contributors: Motz
+
 0.3.0 (2025-08-11)
 ------------------
 * style(pre-commit): autofix (`#275 <https://github.com/autowarefoundation/autoware_tools/issues/275>`_)

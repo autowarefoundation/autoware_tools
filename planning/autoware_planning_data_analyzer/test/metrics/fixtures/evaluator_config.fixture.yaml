@@ -1,0 +1,9 @@
+# Fixture for unit tests only — not used at runtime.
+evaluator_config:
+  - name: test_metric_group
+    topics:
+      - /control/control_evaluator/metrics/foo_metric
+      - /control/control_evaluator/metrics/bar_metric_abs
+    exclusion:
+      rules:
+        - intersection_area

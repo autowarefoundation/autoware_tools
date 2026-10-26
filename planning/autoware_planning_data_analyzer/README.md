@@ -1,20 +1,93 @@
 # Planning Data Analyzer
 
-<div align="center">
-  <img src="./docs/planning_data_analyzer.png" width=100%>
-</div>
+## Overview
 
-## Usage
+This package provides offline evaluation tools for trajectory planning performance analysis from recorded rosbag data.
+
+## Open-Loop Evaluation
+
+Open-loop evaluation computes both trajectory error metrics and planning-quality subscores.
+
+### Trajectory Error Metrics
+
+For each evaluated trajectory, the following are computed:
+
+- ADE
+- FDE
+- AHE
+- FHE
+- lateral deviation
+- longitudinal deviation
+- TTC trace
+- per-horizon metrics (full, and configured horizons such as 1.0s, 2.0s, 4.0s, 8.0s)
+
+### Planning Quality Score (EPDMS)
+
+To show multi-facet (comfort, progress, safety) quality of generated trajectory, EPDMS (Extended Predictive Driver Model Score) is computed based on the multiple subscores.
+
+Detailed definitions and equations for each subscore can be found in the [EPDMS Metrics Document](docs/metrics/epdms_metrics.md).
+
+Two variant topics are exported:
+
+- synthetic_epdms_raw
+- synthetic_epdms_human_filtered
+
+### EPDMS's Subscores
+
+EPDMS is obtained from combining the following subscores:
+
+- history_comfort
+- extended_comfort
+- time_to_collision_within_bound
+- lane_keeping
+- ego_progress
+- drivable_area_compliance
+- no_at_fault_collision
+- driving_direction_compliance
+- traffic_light_compliance
+
+These subscores are exported both as per-trajectory outputs and as aggregate statistics.
+
+### Evaluator Metrics (bag-recorded scalars)
+
+It aggregates the results of filtering the topics specified in `config/evaluator_config.yaml` according to the exception rules.
+
+- lateral_deviation_centerline
+  - for excluded `intersection_area`
+
+## Quick Start
+
+### Open Loop Evaluation
 
 ```sh
-ros2 launch autoware_planning_data_analyzer behavior_analyzer.launch.xml bag_path:=<ROSBAG>
+ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --ros-args \
+  -p bag_path:=~/my_bag \
+  -p evaluation.mode:=open_loop \
+  -p trajectory_topic:=/planning/trajectory \
+  -p json_output_path:=~/results.json
 ```
 
-## Output
+## Output Files
 
-| Name                      | Type                                                          | Description                                                     |
-| ------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------- |
-| `~/output/manual_metrics` | `autoware_internal_debug_msgs::msg::Float32MultiArrayStamped` | Metrics calculated from the driver's driving trajectory.        |
-| `~/output/system_metrics` | `autoware_internal_debug_msgs::msg::Float32MultiArrayStamped` | Metrics calculated from the autoware output.                    |
-| `~/output/manual_score`   | `autoware_internal_debug_msgs::msg::Float32MultiArrayStamped` | Driving scores calculated from the driver's driving trajectory. |
-| `~/output/system_score`   | `autoware_internal_debug_msgs::msg::Float32MultiArrayStamped` | Driving scores calculated from the autoware output.             |
+- **`evaluation_result.json`** - Detailed metrics (ADE, FDE, TTC, etc.) and summary statistics
+- **`evaluation_output.bag/`** - Evaluation metrics as rosbag for visualization
+- **`debug_images/*.png`** - Trajectory visualization (with `--viz` flag)
+- **evaluator_metric.json** — evaluator metric aggregates per `evaluator_config` (if bag contains configured topics)
+
+## Parameters
+
+Key parameters in `config/planning_data_analyzer.param.yaml`:
+
+- `evaluation.mode`: Evaluation mode (`open_loop`)
+- `evaluation_interval_ms`: Sampling interval (default: 100ms)
+- `sync_tolerance_ms`: Time synchronization tolerance (default: 100ms)
+- `trajectory_topic`: Trajectory topic to evaluate
+- `open_loop.enable_epdms_calculation`: Enables EPDMS subscore, synthetic EPDMS, and EPDMS debug calculation
+- `open_loop.*`: Open-loop specific settings
+
+---
+
+## For More Information
+
+- Configuration: [config/planning_data_analyzer.param.yaml](config/planning_data_analyzer.param.yaml), [config/evaluator_config.yaml](config/evaluator_config.yaml)
+- Launch files: [launch/](launch/)

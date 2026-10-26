@@ -9,25 +9,29 @@ on:
 jobs:
   build-and-test:
     if: ${{ github.event_name != 'push' || github.ref_name == github.event.repository.default_branch }}
-    runs-on: [self-hosted, linux, X64]
-    container: ${{ matrix.container }}${{ matrix.container-suffix }}
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.container }}
+      options: --cap-add=NET_ADMIN
     strategy:
       fail-fast: false
       matrix:
         rosdistro:
           - humble
-        container-suffix:
-          - ""
-          - -cuda
+          - jazzy
         include:
           - rosdistro: humble
-            container: ghcr.io/autowarefoundation/autoware:universe-devel
+            container: ghcr.io/autowarefoundation/autoware:universe-dependencies-humble
+            build-depends-repos: build_depends.repos
+          - rosdistro: jazzy
+            container: ghcr.io/autowarefoundation/autoware:universe-dependencies-jazzy
             build-depends-repos: build_depends.repos
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+        uses: actions/checkout@v6
+
+      - name: Tune DDS network settings
+        uses: ./.github/actions/tune-dds-network
 
       - name: Remove exec_depend
         uses: autowarefoundation/autoware-github-actions/remove-exec-depend@v1
@@ -36,6 +40,21 @@ jobs:
         id: get-self-packages
         uses: autowarefoundation/autoware-github-actions/get-self-packages@v1
 
+      - name: Remove autoware_core packages from underlay
+        run: |
+          tmp_dir=$(mktemp -d)
+          git clone --depth 1 --branch main \
+            https://github.com/autowarefoundation/autoware_core.git "$tmp_dir"
+          for pkg_xml in $(find "$tmp_dir" -name package.xml); do
+            pkg_name=$(xmllint --xpath 'string(//package/name)' "$pkg_xml")
+            if [ -d "/opt/autoware/$pkg_name" ]; then
+              echo "Removing /opt/autoware/$pkg_name"
+              sudo rm -rf "/opt/autoware/$pkg_name"
+            fi
+          done
+          rm -rf "$tmp_dir"
+        shell: bash
+
       - name: Build
         if: ${{ steps.get-self-packages.outputs.self-packages != '' }}
         uses: autowarefoundation/autoware-github-actions/colcon-build@v1
@@ -43,7 +62,7 @@ jobs:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
           build-depends-repos: ${{ matrix.build-depends-repos }}
-
+          underlay-workspace: /opt/autoware
       - name: Test
         if: ${{ steps.get-self-packages.outputs.self-packages != '' }}
         id: test
@@ -52,7 +71,7 @@ jobs:
           rosdistro: ${{ matrix.rosdistro }}
           target-packages: ${{ steps.get-self-packages.outputs.self-packages }}
           build-depends-repos: ${{ matrix.build-depends-repos }}
-
+          underlay-workspace: /opt/autoware
       - name: Upload coverage to CodeCov
         if: ${{ steps.test.outputs.coverage-report-files != '' }}
         uses: codecov/codecov-action@v3
@@ -60,4 +79,4 @@ jobs:
           files: ${{ steps.test.outputs.coverage-report-files }}
           fail_ci_if_error: false
           verbose: true
-          flags: total
+          flags: total-${{ matrix.rosdistro }}

@@ -14,10 +14,11 @@
 
 #include "deviation_estimator/deviation_estimator.hpp"
 
-#include "autoware/universe_utils/geometry/geometry.hpp"
 #include "deviation_estimator/logger.hpp"
 #include "deviation_estimator/utils.hpp"
 #include "rclcpp/logging.hpp"
+
+#include <autoware_utils_geometry/geometry.hpp>
 
 #include <algorithm>
 #include <functional>
@@ -178,7 +179,7 @@ DeviationEstimator::DeviationEstimator(
     declare_parameter<double>("thres_coef_vx"), declare_parameter<double>("thres_stddev_vx"),
     declare_parameter<double>("thres_bias_gyro"), declare_parameter<double>("thres_stddev_gyro"),
     5);
-  transform_listener_ = std::make_shared<autoware::universe_utils::TransformListener>(this);
+  transform_listener_ = std::make_shared<autoware_utils_tf::TransformListener>(this);
 
   RCLCPP_INFO(this->get_logger(), "[Deviation Estimator] launch success");
 }
@@ -216,7 +217,7 @@ void DeviationEstimator::callback_imu(const sensor_msgs::msg::Imu::ConstSharedPt
 {
   imu_frame_ = imu_msg_ptr->header.frame_id;
   geometry_msgs::msg::TransformStamped::ConstSharedPtr tf_imu2base_ptr =
-    transform_listener_->getLatestTransform(imu_frame_, output_frame_);
+    transform_listener_->get_latest_transform(imu_frame_, output_frame_);
   if (!tf_imu2base_ptr) {
     RCLCPP_ERROR(
       this->get_logger(), "Please publish TF %s to %s", output_frame_.c_str(),
@@ -293,7 +294,7 @@ void DeviationEstimator::timer_callback()
   pub_coef_vx_->publish(coef_vx_msg);
 
   geometry_msgs::msg::TransformStamped::ConstSharedPtr tf_base2imu_ptr =
-    transform_listener_->getLatestTransform(output_frame_, imu_frame_);
+    transform_listener_->get_latest_transform(output_frame_, imu_frame_);
   if (!tf_base2imu_ptr) {
     RCLCPP_ERROR(
       this->get_logger(), "Please publish TF %s to %s", imu_frame_.c_str(), output_frame_.c_str());

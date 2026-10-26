@@ -23,7 +23,8 @@ class MonitorPlugin(Plugin):
         super().__init__(context)
         self.widget = MonitorWidget()
         self.module = MonitorModule(context.node)
-        self.module.append_struct_callback(self.widget.on_graph)
+        self.module.append_struct_callback(self.widget.on_graph_created)
+        self.module.append_status_callback(self.widget.on_graph_updated)
         context.add_widget(self.widget)
 
     def shutdown_plugin(self):

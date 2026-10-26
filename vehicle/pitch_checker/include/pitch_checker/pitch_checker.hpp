@@ -35,7 +35,7 @@
 #else
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #endif
-#include "autoware/universe_utils/ros/transform_listener.hpp"
+#include <autoware_utils_tf/transform_listener.hpp>
 
 struct TfInfo
 {
@@ -52,7 +52,7 @@ public:
   explicit PitchChecker(const rclcpp::NodeOptions & node_options);
 
 private:
-  std::shared_ptr<autoware::universe_utils::TransformListener> transform_listener_;
+  std::shared_ptr<autoware_utils_tf::TransformListener> transform_listener_;
 
   // Timer
   rclcpp::TimerBase::SharedPtr timer_;

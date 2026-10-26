@@ -15,13 +15,14 @@
 #include "driving_environment_analyzer/utils.hpp"
 
 #include "autoware/motion_utils/trajectory/trajectory.hpp"
-#include "autoware/universe_utils/geometry/geometry.hpp"
 
+#include <autoware/lanelet2_utils/conversion.hpp>
 #include <autoware_lanelet2_extension/regulatory_elements/Forward.hpp>
-#include <autoware_lanelet2_extension/utility/message_conversion.hpp>
-#include <autoware_lanelet2_extension/utility/utilities.hpp>
+#include <autoware_utils_geometry/geometry.hpp>
 #include <magic_enum.hpp>
 
+#include <lanelet2_core/geometry/Lanelet.h>
+#include <lanelet2_core/primitives/LaneletSequence.h>
 #include <lanelet2_routing/RoutingGraphContainer.h>
 
 #include <algorithm>
@@ -58,9 +59,9 @@ std::vector<double> calcElevationAngle(const T & points)
   }
 
   for (size_t i = 0; i < points.size() - 1; ++i) {
-    const auto p1 = autoware::universe_utils::getPoint(points.at(i));
-    const auto p2 = autoware::universe_utils::getPoint(points.at(i + 1));
-    elevation_vec.at(i) = autoware::universe_utils::calcElevationAngle(p1, p2);
+    const auto p1 = autoware_utils_geometry::get_point(points.at(i));
+    const auto p2 = autoware_utils_geometry::get_point(points.at(i + 1));
+    elevation_vec.at(i) = autoware_utils_geometry::calc_elevation_angle(p1, p2);
   }
   elevation_vec.at(elevation_vec.size() - 1) = elevation_vec.at(elevation_vec.size() - 2);
 
@@ -72,7 +73,7 @@ double calcElevationAngle(const lanelet::ConstLanelet & lane, const Pose & pose)
   const auto to_ros_msg = [](const auto & line) {
     std::vector<geometry_msgs::msg::Point> points;
     std::for_each(line.begin(), line.end(), [&points](const auto & p) {
-      points.push_back(lanelet::utils::conversion::toGeomMsgPt(p));
+      points.push_back(autoware::experimental::lanelet2_utils::to_ros(p));
     });
     return points;
   };
@@ -85,9 +86,9 @@ double calcElevationAngle(const lanelet::ConstLanelet & lane, const Pose & pose)
 
   const size_t idx = autoware::motion_utils::findNearestSegmentIndex(points, pose.position);
 
-  const auto p1 = autoware::universe_utils::getPoint(points.at(idx));
-  const auto p2 = autoware::universe_utils::getPoint(points.at(idx + 1));
-  return autoware::universe_utils::calcElevationAngle(p1, p2);
+  const auto p1 = autoware_utils_geometry::get_point(points.at(idx));
+  const auto p2 = autoware_utils_geometry::get_point(points.at(idx + 1));
+  return autoware_utils_geometry::calc_elevation_angle(p1, p2);
 }
 
 double getLaneWidth(const lanelet::ConstLanelet & lane)
@@ -95,7 +96,7 @@ double getLaneWidth(const lanelet::ConstLanelet & lane)
   const auto to_ros_msg = [](const auto & line) {
     std::vector<geometry_msgs::msg::Point> points;
     std::for_each(line.begin(), line.end(), [&points](const auto & p) {
-      points.push_back(lanelet::utils::conversion::toGeomMsgPt(p));
+      points.push_back(autoware::experimental::lanelet2_utils::to_ros(p));
     });
     return points;
   };
@@ -106,7 +107,7 @@ double getLaneWidth(const lanelet::ConstLanelet & lane)
 
 double getRouteLength(const lanelet::ConstLanelets & lanes)
 {
-  return lanelet::utils::getLaneletLength3d(lanes);
+  return lanelet::geometry::length3d(lanelet::LaneletSequence(lanes));
 }
 
 double getMaxCurvature(const lanelet::ConstLanelets & lanes)
@@ -114,7 +115,7 @@ double getMaxCurvature(const lanelet::ConstLanelets & lanes)
   const auto to_ros_msg = [](const auto & line) {
     std::vector<geometry_msgs::msg::Point> points;
     std::for_each(line.begin(), line.end(), [&points](const auto & p) {
-      points.push_back(lanelet::utils::conversion::toGeomMsgPt(p));
+      points.push_back(autoware::experimental::lanelet2_utils::to_ros(p));
     });
     return points;
   };
@@ -141,7 +142,7 @@ std::pair<double, double> getLaneWidth(const lanelet::ConstLanelets & lanes)
   const auto to_ros_msg = [](const auto & line) {
     std::vector<geometry_msgs::msg::Point> points;
     std::for_each(line.begin(), line.end(), [&points](const auto & p) {
-      points.push_back(lanelet::utils::conversion::toGeomMsgPt(p));
+      points.push_back(autoware::experimental::lanelet2_utils::to_ros(p));
     });
     return points;
   };
@@ -170,7 +171,7 @@ std::pair<double, double> getElevation(const lanelet::ConstLanelets & lanes)
   const auto to_ros_msg = [](const auto & line) {
     std::vector<geometry_msgs::msg::Point> points;
     std::for_each(line.begin(), line.end(), [&points](const auto & p) {
-      points.push_back(lanelet::utils::conversion::toGeomMsgPt(p));
+      points.push_back(autoware::experimental::lanelet2_utils::to_ros(p));
     });
     return points;
   };
@@ -227,7 +228,7 @@ double getRouteLengthWithSameDirectionLane(
 
   for (const auto & lane : lanes) {
     if (existSameDirectionLane(lane, route_handler)) {
-      value += lanelet::utils::getLaneletLength3d(lane);
+      value += lanelet::geometry::length3d(lane);
     }
   }
 
@@ -241,7 +242,7 @@ double getRouteLengthWithOppositeDirectionLane(
 
   for (const auto & lane : lanes) {
     if (existOppositeDirectionLane(lane, route_handler)) {
-      value += lanelet::utils::getLaneletLength3d(lane);
+      value += lanelet::geometry::length3d(lane);
     }
   }
 
@@ -262,7 +263,7 @@ double getRouteLengthWithNoAdjacentLane(
       continue;
     }
 
-    value += lanelet::utils::getLaneletLength3d(lane);
+    value += lanelet::geometry::length3d(lane);
   }
 
   return value;

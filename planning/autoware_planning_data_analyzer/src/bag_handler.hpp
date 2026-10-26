@@ -1,0 +1,465 @@
+// Copyright 2024 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef BAG_HANDLER_HPP_
+#define BAG_HANDLER_HPP_
+
+#include "buffer.hpp"
+#include "data_types.hpp"
+#include "serialized_bag_message.hpp"
+
+#include <rclcpp/serialization.hpp>
+#include <rosbag2_storage/serialized_bag_message.hpp>
+
+#include <map>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <vector>
+
+namespace autoware::planning_data_analyzer
+{
+
+constexpr rcutils_time_point_value_t kSignalHistoryPaddingNs = 2'000'000'000;
+constexpr rcutils_time_point_value_t kMotionHistoryPaddingNs = 2'000'000'000;
+
+struct BagData
+{
+  std::string trajectory_topic_key{};
+  std::string candidate_trajectories_topic_key{};
+  std::string gt_trajectory_topic_key{};
+  double trajectory_evaluation_horizon_s{0.0};
+  // Template helper to create and configure buffer
+  template <typename MessageType>
+  void create_buffer(
+    const std::string & topic_name, const double buffer_duration_sec, const size_t max_buffer_msgs)
+  {
+    auto buffer = std::make_shared<Buffer<MessageType>>();
+    buffer->buffer_time_ns = buffer_duration_sec * 1e9;
+    buffer->max_buffer_size = max_buffer_msgs;
+    buffers.emplace(topic_name, buffer);
+  }
+
+  // Constructor for backward compatibility (without topic names)
+  explicit BagData(
+    const rcutils_time_point_value_t timestamp, const double buffer_duration_sec = 20.0,
+    const size_t max_buffer_msgs = 10000)
+  : timestamp{timestamp}
+  {
+    // Default topic names for backward compatibility
+    create_buffer<TFMessage>("/tf", buffer_duration_sec, max_buffer_msgs);
+    create_buffer<Odometry>("/localization/kinematic_state", buffer_duration_sec, max_buffer_msgs);
+    create_buffer<AccelWithCovarianceStamped>(
+      "/localization/acceleration", buffer_duration_sec, max_buffer_msgs);
+    trajectory_topic_key = "/planning/trajectory";
+    create_buffer<Trajectory>(trajectory_topic_key, buffer_duration_sec, max_buffer_msgs);
+    candidate_trajectories_topic_key = "/diffusion_planner/output/trajectories";
+    create_buffer<CandidateTrajectories>(
+      candidate_trajectories_topic_key, buffer_duration_sec, max_buffer_msgs);
+    create_buffer<PredictedObjects>(
+      "/perception/object_recognition/objects", buffer_duration_sec, max_buffer_msgs);
+    create_buffer<TrackedObjects>(
+      "/perception/object_recognition/tracking/objects", buffer_duration_sec, max_buffer_msgs);
+    create_buffer<TrafficLightGroupArray>(
+      "/perception/traffic_light_recognition/traffic_signals", buffer_duration_sec,
+      max_buffer_msgs);
+    create_buffer<SteeringReport>(
+      "/vehicle/status/steering_status", buffer_duration_sec, max_buffer_msgs);
+    create_buffer<HazardLightsReport>(
+      "/vehicle/status/hazard_lights_status", buffer_duration_sec, max_buffer_msgs);
+    create_buffer<TurnIndicatorsReport>(
+      "/vehicle/status/turn_indicators_status", buffer_duration_sec, max_buffer_msgs);
+  }
+
+  // Constructor with topic names
+  explicit BagData(
+    const rcutils_time_point_value_t timestamp, const TopicNames & topic_names,
+    const double buffer_duration_sec = 20.0, const size_t max_buffer_msgs = 10000)
+  : trajectory_evaluation_horizon_s{topic_names.trajectory_evaluation_horizon_s},
+    timestamp{timestamp}
+  {
+    // Create buffers using provided topic names
+    create_buffer<TFMessage>(topic_names.tf_topic, buffer_duration_sec, max_buffer_msgs);
+    create_buffer<Odometry>(topic_names.odometry_topic, buffer_duration_sec, max_buffer_msgs);
+    create_buffer<AccelWithCovarianceStamped>(
+      topic_names.acceleration_topic, buffer_duration_sec, max_buffer_msgs);
+    trajectory_topic_key = topic_names.trajectory_topic;
+    create_buffer<Trajectory>(trajectory_topic_key, buffer_duration_sec, max_buffer_msgs);
+    candidate_trajectories_topic_key = topic_names.candidate_trajectories_topic;
+    if (!candidate_trajectories_topic_key.empty()) {
+      create_buffer<CandidateTrajectories>(
+        candidate_trajectories_topic_key, buffer_duration_sec, max_buffer_msgs);
+    }
+    if (!topic_names.gt_trajectory_topic.empty()) {
+      gt_trajectory_topic_key = topic_names.gt_trajectory_topic;
+      create_buffer<Trajectory>(
+        topic_names.gt_trajectory_topic, buffer_duration_sec, max_buffer_msgs);
+    }
+    create_buffer<PredictedObjects>(
+      topic_names.objects_topic, buffer_duration_sec, max_buffer_msgs);
+    if (!topic_names.tracked_objects_topic.empty()) {
+      create_buffer<TrackedObjects>(
+        topic_names.tracked_objects_topic, buffer_duration_sec, max_buffer_msgs);
+    }
+    if (!topic_names.traffic_signals_topic.empty()) {
+      create_buffer<TrafficLightGroupArray>(
+        topic_names.traffic_signals_topic, buffer_duration_sec, max_buffer_msgs);
+    }
+    create_buffer<SteeringReport>(topic_names.steering_topic, buffer_duration_sec, max_buffer_msgs);
+    if (!topic_names.hazard_lights_topic.empty()) {
+      create_buffer<HazardLightsReport>(
+        topic_names.hazard_lights_topic, buffer_duration_sec, max_buffer_msgs);
+    }
+    if (!topic_names.turn_indicators_topic.empty()) {
+      create_buffer<TurnIndicatorsReport>(
+        topic_names.turn_indicators_topic, buffer_duration_sec, max_buffer_msgs);
+    }
+  }
+
+  rcutils_time_point_value_t timestamp;
+
+  std::map<std::string, std::shared_ptr<BufferBase>> buffers{};
+
+  auto get_synchronized_data_at_time(
+    const rcutils_time_point_value_t target_time, const double tolerance_ms = 50.0) const
+    -> std::shared_ptr<SynchronizedData>
+  {
+    auto synchronized_data = std::make_shared<SynchronizedData>();
+    synchronized_data->timestamp = rclcpp::Time(target_time);
+    synchronized_data->bag_timestamp =
+      rclcpp::Time(target_time);  // Set bag_timestamp to the requested time
+
+    // Get odometry buffer
+    // Find odometry buffer by checking all buffers
+    std::shared_ptr<Buffer<Odometry>> odom_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto ob = std::dynamic_pointer_cast<Buffer<Odometry>>(buffer)) {
+        odom_buffer = ob;
+        break;
+      }
+    }
+    if (!odom_buffer) return nullptr;
+
+    synchronized_data->kinematic_state = odom_buffer->get_closest(target_time, tolerance_ms);
+    if (!synchronized_data->kinematic_state) return nullptr;
+
+    // Get trajectory
+    std::shared_ptr<Buffer<Trajectory>> traj_buffer;
+    if (!trajectory_topic_key.empty()) {
+      auto traj_itr = buffers.find(trajectory_topic_key);
+      if (traj_itr != buffers.end()) {
+        traj_buffer = std::dynamic_pointer_cast<Buffer<Trajectory>>(traj_itr->second);
+      }
+    }
+    // Fallback for backward compatibility with legacy construction/configuration.
+    if (!traj_buffer) {
+      for (const auto & [topic, buffer] : buffers) {
+        if (auto tb = std::dynamic_pointer_cast<Buffer<Trajectory>>(buffer)) {
+          traj_buffer = tb;
+          break;
+        }
+      }
+    }
+    if (traj_buffer) {
+      synchronized_data->trajectory = traj_buffer->get_closest(target_time, tolerance_ms);
+
+      // CRITICAL: Resync all data to trajectory's actual timestamp for accurate GT
+      if (synchronized_data->trajectory) {
+        const auto traj_stamp_ns =
+          rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+        synchronized_data->timestamp = rclcpp::Time(synchronized_data->trajectory->header.stamp);
+
+        // Resync kinematic_state to trajectory timestamp (not sampling time!)
+        if (odom_buffer) {
+          synchronized_data->kinematic_state =
+            odom_buffer->get_closest(traj_stamp_ns, tolerance_ms);
+          const auto history_start_ns = traj_stamp_ns - kMotionHistoryPaddingNs;
+          synchronized_data->kinematic_state_history =
+            odom_buffer->get_range(history_start_ns, traj_stamp_ns);
+        }
+      }
+    }
+
+    if (traj_buffer && synchronized_data->trajectory && !gt_trajectory_topic_key.empty()) {
+      auto gt_itr = buffers.find(gt_trajectory_topic_key);
+      std::shared_ptr<Buffer<Trajectory>> gt_traj_buffer;
+      if (gt_itr != buffers.end()) {
+        gt_traj_buffer = std::dynamic_pointer_cast<Buffer<Trajectory>>(gt_itr->second);
+      }
+      if (gt_traj_buffer) {
+        const auto traj_stamp_ns =
+          rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+        synchronized_data->ground_truth_trajectory_msg =
+          gt_traj_buffer->get_latest_before_or_equal(traj_stamp_ns);
+      }
+    }
+
+    if (traj_buffer && synchronized_data->trajectory && !candidate_trajectories_topic_key.empty()) {
+      auto candidate_itr = buffers.find(candidate_trajectories_topic_key);
+      std::shared_ptr<Buffer<CandidateTrajectories>> candidate_buffer;
+      if (candidate_itr != buffers.end()) {
+        candidate_buffer =
+          std::dynamic_pointer_cast<Buffer<CandidateTrajectories>>(candidate_itr->second);
+      }
+      if (candidate_buffer) {
+        const auto traj_stamp_ns =
+          rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+        synchronized_data->candidate_trajectories =
+          candidate_buffer->get_closest(traj_stamp_ns, tolerance_ms);
+      }
+    }
+
+    // Get acceleration
+    // Find acceleration buffer
+    std::shared_ptr<Buffer<AccelWithCovarianceStamped>> accel_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto ab = std::dynamic_pointer_cast<Buffer<AccelWithCovarianceStamped>>(buffer)) {
+        accel_buffer = ab;
+        break;
+      }
+    }
+    if (accel_buffer && synchronized_data->trajectory) {
+      const auto traj_stamp_ns =
+        rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+      synchronized_data->acceleration = accel_buffer->get_closest(traj_stamp_ns, tolerance_ms);
+      const auto history_start_ns = traj_stamp_ns - kMotionHistoryPaddingNs;
+      synchronized_data->acceleration_history =
+        accel_buffer->get_range(history_start_ns, traj_stamp_ns);
+    } else if (accel_buffer) {
+      synchronized_data->acceleration = accel_buffer->get_closest(target_time, tolerance_ms);
+    }
+
+    // Get steering status
+    // Find steering buffer
+    std::shared_ptr<Buffer<SteeringReport>> steer_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto sb = std::dynamic_pointer_cast<Buffer<SteeringReport>>(buffer)) {
+        steer_buffer = sb;
+        break;
+      }
+    }
+    if (steer_buffer && synchronized_data->trajectory) {
+      const auto traj_stamp_ns =
+        rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+      synchronized_data->steering_status = steer_buffer->get_closest(traj_stamp_ns, tolerance_ms);
+    } else if (steer_buffer) {
+      synchronized_data->steering_status = steer_buffer->get_closest(target_time, tolerance_ms);
+    }
+
+    const auto synchronize_signal_status =
+      [&](const auto & signal_buffer, auto & status, auto & history) {
+        if (signal_buffer && synchronized_data->trajectory) {
+          const auto traj_stamp_ns =
+            rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+          status = signal_buffer->get_closest(traj_stamp_ns, tolerance_ms);
+          const auto history_start_ns = traj_stamp_ns - kSignalHistoryPaddingNs;
+          const auto history_end_ns =
+            traj_stamp_ns +
+            static_cast<rcutils_time_point_value_t>(trajectory_evaluation_horizon_s * 1.0e9) +
+            kSignalHistoryPaddingNs;
+          history = signal_buffer->get_range(history_start_ns, history_end_ns);
+        } else if (signal_buffer) {
+          status = signal_buffer->get_closest(target_time, tolerance_ms);
+        }
+      };
+
+    std::shared_ptr<Buffer<HazardLightsReport>> hazard_lights_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto hb = std::dynamic_pointer_cast<Buffer<HazardLightsReport>>(buffer)) {
+        hazard_lights_buffer = hb;
+        break;
+      }
+    }
+    synchronize_signal_status(
+      hazard_lights_buffer, synchronized_data->hazard_lights_status,
+      synchronized_data->hazard_lights_history);
+
+    std::shared_ptr<Buffer<TurnIndicatorsReport>> turn_indicators_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto tb = std::dynamic_pointer_cast<Buffer<TurnIndicatorsReport>>(buffer)) {
+        turn_indicators_buffer = tb;
+        break;
+      }
+    }
+    synchronize_signal_status(
+      turn_indicators_buffer, synchronized_data->turn_indicators_status,
+      synchronized_data->turn_indicators_history);
+
+    // Get objects
+    // Find objects buffer
+    std::shared_ptr<Buffer<PredictedObjects>> obj_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto ob = std::dynamic_pointer_cast<Buffer<PredictedObjects>>(buffer)) {
+        obj_buffer = ob;
+        break;
+      }
+    }
+    if (obj_buffer && synchronized_data->trajectory) {
+      const auto traj_stamp_ns =
+        rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+      synchronized_data->objects = obj_buffer->get_closest(traj_stamp_ns, tolerance_ms);
+    } else if (obj_buffer) {
+      synchronized_data->objects = obj_buffer->get_closest(target_time, tolerance_ms);
+    }
+
+    std::shared_ptr<Buffer<TrackedObjects>> tracked_obj_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto ob = std::dynamic_pointer_cast<Buffer<TrackedObjects>>(buffer)) {
+        tracked_obj_buffer = ob;
+        break;
+      }
+    }
+    if (tracked_obj_buffer && synchronized_data->trajectory) {
+      const auto traj_stamp_ns =
+        rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+      synchronized_data->tracked_objects =
+        tracked_obj_buffer->get_closest(traj_stamp_ns, tolerance_ms);
+    } else if (tracked_obj_buffer) {
+      synchronized_data->tracked_objects =
+        tracked_obj_buffer->get_closest(target_time, tolerance_ms);
+    }
+
+    // Get traffic signals
+    std::shared_ptr<Buffer<TrafficLightGroupArray>> traffic_signals_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto tb = std::dynamic_pointer_cast<Buffer<TrafficLightGroupArray>>(buffer)) {
+        traffic_signals_buffer = tb;
+        break;
+      }
+    }
+    if (traffic_signals_buffer && synchronized_data->trajectory) {
+      const auto traj_stamp_ns =
+        rclcpp::Time(synchronized_data->trajectory->header.stamp).nanoseconds();
+      synchronized_data->traffic_signals =
+        traffic_signals_buffer->get_closest(traj_stamp_ns, tolerance_ms);
+    } else if (traffic_signals_buffer) {
+      synchronized_data->traffic_signals =
+        traffic_signals_buffer->get_closest(target_time, tolerance_ms);
+    }
+
+    return synchronized_data;
+  }
+
+  // Template helper to append message to appropriate buffer
+  template <typename MessageType>
+  bool append_message(const std::string & topic_name, const MessageType & msg)
+  {
+    auto buffer = std::dynamic_pointer_cast<Buffer<MessageType>>(buffers[topic_name]);
+    if (buffer) {
+      buffer->append(msg);
+      return true;
+    }
+    return false;
+  }
+
+  // Template helper to get buffer for a specific message type
+  template <typename MessageType>
+  std::shared_ptr<Buffer<MessageType>> get_buffer(const std::string & topic_name)
+  {
+    return std::dynamic_pointer_cast<Buffer<MessageType>>(buffers[topic_name]);
+  }
+
+  auto get_kinematic_states_at_interval(const double interval_ms = 100.0) const
+    -> std::vector<std::shared_ptr<Odometry>>
+  {
+    std::vector<std::shared_ptr<Odometry>> result;
+
+    // Find odometry buffer by checking all buffers
+    std::shared_ptr<Buffer<Odometry>> odom_buffer;
+    for (const auto & [topic, buffer] : buffers) {
+      if (auto ob = std::dynamic_pointer_cast<Buffer<Odometry>>(buffer)) {
+        odom_buffer = ob;
+        break;
+      }
+    }
+    if (!odom_buffer || odom_buffer->msgs.empty()) {
+      return result;
+    }
+
+    // Get first and last timestamp from odometry messages
+    const auto first_time = rclcpp::Time(odom_buffer->msgs.front().header.stamp).nanoseconds();
+    const auto last_time = rclcpp::Time(odom_buffer->msgs.back().header.stamp).nanoseconds();
+    const auto interval_ns = static_cast<rcutils_time_point_value_t>(interval_ms * 1e6);
+
+    // Sample at regular intervals
+    for (auto current_time = first_time; current_time <= last_time; current_time += interval_ns) {
+      auto odom = odom_buffer->get_closest(current_time, interval_ms / 2.0);
+      if (odom) {
+        result.push_back(odom);
+      }
+    }
+
+    return result;
+  }
+};
+
+// Template helper to set timestamp for messages with header
+template <typename MessageType>
+typename std::enable_if<has_header_stamp<MessageType>::value, void>::type
+set_header_timestamp_if_needed(
+  MessageType & msg, bool use_bag_timestamp, const rclcpp::Time & bag_time)
+{
+  if (use_bag_timestamp && msg.header.stamp == rclcpp::Time(0)) {
+    msg.header.stamp = bag_time;
+  }
+}
+
+template <typename MessageType>
+typename std::enable_if<
+  !has_header_stamp<MessageType>::value && has_stamp<MessageType>::value, void>::type
+set_header_timestamp_if_needed(
+  MessageType & msg, bool use_bag_timestamp, const rclcpp::Time & bag_time)
+{
+  if (use_bag_timestamp && msg.stamp == rclcpp::Time(0)) {
+    msg.stamp = bag_time;
+  }
+}
+
+// Template helper for messages without header - does nothing
+template <typename MessageType>
+typename std::enable_if<
+  !has_header_stamp<MessageType>::value && !has_stamp<MessageType>::value, void>::type
+set_header_timestamp_if_needed(MessageType &, bool, const rclcpp::Time &)
+{
+  // No-op for messages without header.stamp
+}
+
+// Template helper to process and append message to bag data
+template <typename MessageType>
+void process_and_append_message(
+  const std::shared_ptr<rosbag2_storage::SerializedBagMessage> & serialized_message,
+  std::shared_ptr<BagData> bag_data, const std::string & topic_key, bool use_bag_timestamp,
+  rclcpp::Logger logger)
+{
+  try {
+    MessageType msg;
+    rclcpp::Serialization<MessageType> serializer;
+    rclcpp::SerializedMessage serialized_msg(*serialized_message->serialized_data);
+    serializer.deserialize_message(&serialized_msg, &msg);
+
+    // Override header timestamp with bag timestamp if option is enabled
+    set_header_timestamp_if_needed(
+      msg, use_bag_timestamp, rclcpp::Time(get_timestamp_ns(*serialized_message)));
+
+    bag_data->append_message<MessageType>(topic_key, msg);
+  } catch (const std::exception & e) {
+    RCLCPP_WARN(
+      logger, "Failed to deserialize message on topic %s: %s",
+      serialized_message->topic_name.c_str(), e.what());
+  }
+}
+
+}  // namespace autoware::planning_data_analyzer
+
+#endif  // BAG_HANDLER_HPP_

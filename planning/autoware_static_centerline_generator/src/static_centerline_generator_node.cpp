@@ -32,14 +32,15 @@
 #include "utils.hpp"
 
 #include <autoware/geography_utils/lanelet2_projector.hpp>
-#include <autoware/mission_planner_universe/mission_planner_plugin.hpp>
+#include <autoware/mission_planner_universe/default_planner.hpp>
+#include <autoware/qos_utils/qos_compatibility.hpp>
 #include <autoware/universe_utils/ros/marker_helper.hpp>
-#include <pluginlib/class_loader.hpp>
 
 #include "std_msgs/msg/empty.hpp"
 #include "std_msgs/msg/float32.hpp"
 #include "std_msgs/msg/int32.hpp"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/geometry/algorithms/correct.hpp>
 #include <boost/geometry/algorithms/distance.hpp>
 
@@ -51,6 +52,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cinttypes>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -58,6 +60,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #define RESET_TEXT "\x1B[0m"
@@ -151,6 +154,68 @@ std::vector<lanelet::Id> check_lanelet_connection(
   }
 
   return unconnected_lane_ids;
+}
+
+void assign_centerline_points_to_lanelets(
+  const std::vector<TrajectoryPoint> & optimized_traj_points,
+  const lanelet::ConstLanelets & route_lanelets, PlanPath::Response::SharedPtr response,
+  const rclcpp::Logger & logger)
+{
+  std::vector<std::vector<geometry_msgs::msg::Point>> points_per_lanelet(route_lanelets.size());
+  size_t current_lanelet_idx = 0;
+  size_t points_outside_any = 0;
+
+  for (const auto & traj_point : optimized_traj_points) {
+    const auto pt = convert_to_lanelet_point(traj_point.pose.position);
+
+    if (
+      current_lanelet_idx < route_lanelets.size() &&
+      lanelet::geometry::inside(route_lanelets.at(current_lanelet_idx), pt)) {
+      points_per_lanelet.at(current_lanelet_idx).push_back(traj_point.pose.position);
+      continue;
+    }
+
+    bool assigned = false;
+    for (size_t k = 0; k < route_lanelets.size(); ++k) {
+      const size_t idx = (current_lanelet_idx + k) % route_lanelets.size();
+      if (lanelet::geometry::inside(route_lanelets.at(idx), pt)) {
+        points_per_lanelet.at(idx).push_back(traj_point.pose.position);
+        current_lanelet_idx = idx;
+        assigned = true;
+        break;
+      }
+    }
+
+    if (!assigned) {
+      if (current_lanelet_idx < route_lanelets.size()) {
+        points_per_lanelet.at(current_lanelet_idx).push_back(traj_point.pose.position);
+      }
+      points_outside_any++;
+    }
+  }
+
+  if (points_outside_any > 0) {
+    RCLCPP_WARN(
+      logger,
+      "PlanPath: %zu trajectory point(s) were outside all lanelet polygons and assigned to "
+      "nearest segment (e.g. sharp curves or optimization). Consider checking map or route.",
+      points_outside_any);
+  }
+
+  for (size_t i = 0; i < route_lanelets.size(); ++i) {
+    if (!points_per_lanelet.at(i).empty()) {
+      autoware_static_centerline_generator::msg::PointsWithLaneId points_with_lane_id;
+      points_with_lane_id.lane_id = route_lanelets.at(i).id();
+      points_with_lane_id.points = points_per_lanelet.at(i);
+      response->points_with_lane_ids.push_back(points_with_lane_id);
+    } else {
+      RCLCPP_WARN(
+        logger,
+        "PlanPath: lanelet id %" PRId64
+        " has no assigned points (trajectory may skip this segment).",
+        static_cast<int64_t>(route_lanelets.at(i).id()));
+    }
+  }
 }
 
 std_msgs::msg::Header create_header(const rclcpp::Time & now)
@@ -281,22 +346,33 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
     std::bind(
       &StaticCenterlineGeneratorNode::on_load_map, this, std::placeholders::_1,
       std::placeholders::_2),
-    rmw_qos_profile_services_default, callback_group_);
+    AUTOWARE_DEFAULT_SERVICES_QOS_PROFILE(), callback_group_);
   srv_plan_route_ = create_service<PlanRoute>(
     "/planning/static_centerline_generator/plan_route",
     std::bind(
       &StaticCenterlineGeneratorNode::on_plan_route, this, std::placeholders::_1,
       std::placeholders::_2),
-    rmw_qos_profile_services_default, callback_group_);
+    AUTOWARE_DEFAULT_SERVICES_QOS_PROFILE(), callback_group_);
   srv_plan_path_ = create_service<PlanPath>(
     "/planning/static_centerline_generator/plan_path",
     std::bind(
       &StaticCenterlineGeneratorNode::on_plan_path, this, std::placeholders::_1,
       std::placeholders::_2),
-    rmw_qos_profile_services_default, callback_group_);
+    AUTOWARE_DEFAULT_SERVICES_QOS_PROFILE(), callback_group_);
 
   // vehicle info
   vehicle_info_ = autoware::vehicle_info_utils::VehicleInfoUtils(*this).getVehicleInfo();
+
+  // parameters of the route planner
+  default_planner_param_.goal_angle_threshold_deg =
+    declare_parameter<double>("goal_angle_threshold_deg");
+  default_planner_param_.enable_correct_goal_pose =
+    declare_parameter<bool>("enable_correct_goal_pose");
+  default_planner_param_.consider_no_drivable_lanes =
+    declare_parameter<bool>("consider_no_drivable_lanes");
+  default_planner_param_.check_footprint_inside_lanes =
+    declare_parameter<bool>("check_footprint_inside_lanes");
+  default_planner_param_.allow_area = declare_parameter<bool>("allow_area", false);
 
   centerline_source_ = [&]() {
     const auto centerline_source_param = declare_parameter<std::string>("centerline_source");
@@ -322,7 +398,8 @@ void StaticCenterlineGeneratorNode::visualize_selected_centerline()
   pub_validation_results_->publish(utils::create_delete_all_marker_array({}, now()));
   pub_debug_markers_->publish(
     utils::create_delete_all_marker_array(
-      {"unsafe_footprints", "unsafe_footprints_distance"}, now()));
+      {"unsafe_footprints", "unsafe_footprints_distance", "jitter_sections", "jitter_values"},
+      now()));
   pub_debug_ego_footprint_bounds_->publish(
     utils::create_delete_all_marker_array({"road_bounds"}, now()));
 }
@@ -341,6 +418,94 @@ void StaticCenterlineGeneratorNode::generate_centerline()
   centerline_handler_ = CenterlineHandler(whole_centerline_with_route);
 
   visualize_selected_centerline();
+}
+
+void StaticCenterlineGeneratorNode::load_centerline()
+{
+  // declare planning setting parameters
+  const auto lanelet2_input_file_path = declare_parameter<std::string>("lanelet2_input_file_path");
+  if (lanelet2_input_file_path == "") {
+    throw std::invalid_argument("The `lanelet2_input_file_path` is empty.");
+  }
+
+  // process
+  load_map(lanelet2_input_file_path);
+  const auto start_lanelet_id = declare_parameter<int64_t>("start_lanelet_id");
+  const auto end_lanelet_id = declare_parameter<int64_t>("end_lanelet_id");
+  const auto route = plan_route_by_lane_ids(start_lanelet_id, end_lanelet_id);
+  const auto lanelet_sequence = get_lanelet_sequence_from_param();
+  const auto [centerline, lane_ids] = get_centerline_from_lane_ids(lanelet_sequence);
+  centerline_handler_ = CenterlineHandler(CenterlineWithRoute{centerline, route});
+  centerline_handler_.add_centerline_lane_ids(lane_ids);
+
+  visualize_selected_centerline();
+}
+
+std::vector<lanelet::Id> StaticCenterlineGeneratorNode::get_lanelet_sequence_from_param()
+{
+  const auto lanelet_sequence_str =
+    autoware::universe_utils::getOrDeclareParameter<std::string>(*this, "lanelet_sequence");
+  std::vector<lanelet::Id> lanelet_sequence;
+  if (!lanelet_sequence_str.empty()) {
+    std::vector<std::string> tokens;
+    boost::split(tokens, lanelet_sequence_str, boost::is_any_of(","), boost::token_compress_on);
+    for (const auto & token : tokens) {
+      lanelet_sequence.push_back(std::stoll(token));
+    }
+  }
+  return lanelet_sequence;
+}
+
+std::pair<std::vector<TrajectoryPoint>, std::vector<lanelet::Id>>
+StaticCenterlineGeneratorNode::get_centerline_from_lane_ids(
+  const std::vector<lanelet::Id> & lane_ids) const
+{
+  std::vector<TrajectoryPoint> centerline_points;
+  std::vector<lanelet::Id> lane_ids_for_points;
+
+  for (size_t i = 0; i < lane_ids.size(); ++i) {
+    const auto id = lane_ids[i];
+    const auto lanelet = route_handler_ptr_->getLaneletsFromId(id);
+
+    const auto & centerline = lanelet.centerline();
+    for (size_t j = 0; j + 1 < centerline.size(); ++j) {
+      // skip duplicated points
+      if (!centerline_points.empty() && j == 0 && i > 0) {
+        const auto & prev = centerline_points.back().pose.position;
+        const auto & curr = centerline[j];
+        if (prev.x == curr.x() && prev.y == curr.y() && prev.z == curr.z()) {
+          continue;
+        }
+      }
+
+      TrajectoryPoint pt;
+      // position
+      pt.pose.position.x = centerline[j].x();
+      pt.pose.position.y = centerline[j].y();
+      pt.pose.position.z = centerline[j].z();
+
+      // orientation
+      geometry_msgs::msg::Point curr_pt;
+      curr_pt.x = centerline[j].x();
+      curr_pt.y = centerline[j].y();
+      curr_pt.z = centerline[j].z();
+
+      geometry_msgs::msg::Point next_pt;
+      next_pt.x = centerline[j + 1].x();
+      next_pt.y = centerline[j + 1].y();
+      next_pt.z = centerline[j + 1].z();
+
+      const double yaw = autoware_utils::calc_azimuth_angle(curr_pt, next_pt);
+      pt.pose.orientation = autoware_utils_geometry::create_quaternion_from_yaw(yaw);
+
+      centerline_points.push_back(pt);
+      lane_ids_for_points.push_back(id);
+    }
+  }
+  if (centerline_points.empty()) {
+    throw std::runtime_error("The centerline is empty.");
+  }
+  return {centerline_points, lane_ids_for_points};
 }
 
 CenterlineWithRoute StaticCenterlineGeneratorNode::generate_whole_centerline_with_route()
@@ -491,7 +656,27 @@ LaneletRoute StaticCenterlineGeneratorNode::plan_route_by_lane_ids(
   }();
 
   // plan route
-  return plan_route(start_pose, end_pose);
+  const auto lanelet_sequence = get_lanelet_sequence_from_param();
+  if (!lanelet_sequence.empty()) {
+    return plan_route_from_lanelet_sequence(lanelet_sequence);
+  } else {
+    return plan_route(start_pose, end_pose);
+  }
+}
+
+LaneletRoute StaticCenterlineGeneratorNode::plan_route_from_lanelet_sequence(
+  const std::vector<lanelet::Id> & lanelet_sequence) const
+{
+  LaneletRoute route;
+  route.start_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.front());
+  route.goal_pose = utils::get_center_pose(*route_handler_ptr_, lanelet_sequence.back());
+  for (const auto & id : lanelet_sequence) {
+    LaneletSegment segment;
+    segment.preferred_primitive.id = id;
+    segment.primitives.push_back(segment.preferred_primitive);
+    route.segments.push_back(segment);
+  }
+  return route;
 }
 
 LaneletRoute StaticCenterlineGeneratorNode::plan_route(
@@ -508,18 +693,11 @@ LaneletRoute StaticCenterlineGeneratorNode::plan_route(
   const auto check_points =
     std::vector<geometry_msgs::msg::Pose>{start_center_pose, end_center_pose};
 
-  // create mission_planner plugin
-  auto plugin_loader = pluginlib::ClassLoader<autoware::mission_planner_universe::PlannerPlugin>(
-    "autoware_mission_planner_universe", "autoware::mission_planner_universe::PlannerPlugin");
-  auto mission_planner = plugin_loader.createSharedInstance(
-    "autoware::mission_planner_universe::lanelet2::DefaultPlanner");
-
-  // initialize mission_planner
-  auto node = rclcpp::Node("mission_planner");
-  mission_planner->initialize(&node, map_bin_ptr_);
-
   // plan route
-  return mission_planner->plan(check_points);
+  autoware::mission_planner_universe::lanelet2::DefaultPlanner mission_planner(
+    default_planner_param_, vehicle_info_);
+  mission_planner.set_map(*map_bin_ptr_);
+  return mission_planner.plan(check_points).route;
 }
 
 void StaticCenterlineGeneratorNode::on_plan_route(
@@ -566,12 +744,24 @@ void StaticCenterlineGeneratorNode::on_plan_path(
 
   // get lanelets from route lane ids
   const auto route_lane_ids = request->route;
+  if (route_lane_ids.empty()) {
+    response->message = "InvalidRoute";
+    RCLCPP_ERROR(get_logger(), "PlanPath: route is empty.");
+    return;
+  }
+
   const auto route_lanelets = utils::get_lanelets_from_ids(*route_handler_ptr_, route_lane_ids);
 
   // create route
   LaneletRoute route;
-  route.start_pose = utils::get_center_pose(*route_handler_ptr_, route_lane_ids.front());
-  route.goal_pose = utils::get_center_pose(*route_handler_ptr_, route_lane_ids.back());
+  try {
+    route.start_pose = utils::get_center_pose(*route_handler_ptr_, route_lane_ids.front());
+    route.goal_pose = utils::get_center_pose(*route_handler_ptr_, route_lane_ids.back());
+  } catch (const std::exception & e) {
+    response->message = "InvalidLanelet";
+    RCLCPP_ERROR(get_logger(), "PlanPath: get_center_pose failed: %s", e.what());
+    return;
+  }
   std::vector<lanelet::Id> lane_ids;
   for (const auto route_lane_id : route_lane_ids) {
     LaneletSegment segment;
@@ -596,49 +786,21 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   // check calculation result
   if (optimized_traj_points.empty()) {
     response->message = "PathNotFound";
-    RCLCPP_ERROR(get_logger(), "Path planning failed.");
+    RCLCPP_ERROR(
+      get_logger(),
+      "Path planning failed (optimization returned no points). Check goal_method, route shape, and "
+      "lanelet connectivity.");
     return;
   }
 
   centerline_handler_ = CenterlineHandler(CenterlineWithRoute{optimized_traj_points, route});
+  assign_centerline_points_to_lanelets(
+    optimized_traj_points, route_lanelets, response, get_logger());
 
-  // publish unsafe_footprints
+  // publish unsafe_footprints and run validation (for rviz / logging only)
   connect_centerline_to_lanelet();
   validate_centerline();
 
-  // create output data
-  auto target_traj_point = optimized_traj_points.cbegin();
-  bool is_end_lanelet = false;
-  for (const auto & lanelet : route_lanelets) {
-    std::vector<geometry_msgs::msg::Point> current_lanelet_points;
-
-    // check if target point is inside the lanelet
-    while (lanelet::geometry::inside(
-      lanelet, convert_to_lanelet_point(target_traj_point->pose.position))) {
-      // memorize points inside the lanelet
-      current_lanelet_points.push_back(target_traj_point->pose.position);
-      target_traj_point++;
-
-      if (target_traj_point == optimized_traj_points.cend()) {
-        is_end_lanelet = true;
-        break;
-      }
-    }
-
-    if (!current_lanelet_points.empty()) {
-      // register points with lane_id
-      autoware_static_centerline_generator::msg::PointsWithLaneId points_with_lane_id;
-      points_with_lane_id.lane_id = lanelet.id();
-      points_with_lane_id.points = current_lanelet_points;
-      response->points_with_lane_ids.push_back(points_with_lane_id);
-    }
-
-    if (is_end_lanelet) {
-      break;
-    }
-  }
-
-  // empty string if error did not occur
   response->message = "";
 }
 
@@ -669,6 +831,7 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
   size_t centerline_idx = 0;
   bool is_end_lanelet = false;
   bool was_once_inside_lanelet = false;
+  lanelet::Id last_assigned_lane_id = route_lanelets.empty() ? 0 : route_lanelets.front().id();
   for (size_t lanelet_idx = centerline_front_lanelet_idx ? centerline_front_lanelet_idx.value() : 0;
        lanelet_idx < route_lanelets.size(); ++lanelet_idx) {
     const auto & lanelet = route_lanelets.at(lanelet_idx);
@@ -694,7 +857,8 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
       }
 
       // register the lane of the centerline point.
-      centerline_handler_.add_centerline_lane_id(lanelet.id());
+      last_assigned_lane_id = lanelet.id();
+      centerline_handler_.add_centerline_lane_id(last_assigned_lane_id);
       centerline_idx++;
 
       if (centerline_idx == centerline.size()) {
@@ -708,6 +872,13 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
     }
   }
 
+  // 3. Assign lane_id to remaining centerline points that were not assigned
+  // This can happen if the centerline extends beyond the last lanelet
+  while (centerline_idx < centerline.size()) {
+    centerline_handler_.add_centerline_lane_id(last_assigned_lane_id);
+    centerline_idx++;
+  }
+
   if (centerline.size() != centerline_handler_.get_centerline_lane_ids().size()) {
     RCLCPP_ERROR_STREAM(
       get_logger(), "The size of the centerline and its lanelets is not the same. "
@@ -716,10 +887,96 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
   }
 }
 
+JitterDetectionResult StaticCenterlineGeneratorNode::detect_jitter_sections(
+  const std::vector<TrajectoryPoint> & centerline)
+{
+  JitterDetectionResult result;
+
+  if (centerline.size() < 4) {
+    return result;  // Need at least 4 points for jitter analysis
+  }
+
+  std::vector<double> angle_diffs;
+  const int64_t jitter_deg_threshold =
+    autoware::universe_utils::getOrDeclareParameter<int64_t>(*this, "jitter_deg_threshold");
+  const double jitter_rad_threshold = jitter_deg_threshold * M_PI / 180.0;
+
+  // Detect centerline jitter from angle differences
+  for (size_t i = 0; i < centerline.size() - 3; ++i) {
+    const auto & p1 = centerline[i].pose.position;
+    const auto & p2 = centerline[i + 1].pose.position;
+    const auto & p3 = centerline[i + 2].pose.position;
+    const auto & p4 = centerline[i + 3].pose.position;
+
+    double angle1 = std::atan2(p2.y - p1.y, p2.x - p1.x);
+    double angle2 = std::atan2(p3.y - p2.y, p3.x - p2.x);
+    double angle3 = std::atan2(p4.y - p3.y, p4.x - p3.x);
+
+    double angle_diff1 = autoware_utils_math::normalize_radian(angle1 - angle2);
+    double angle_diff2 = autoware_utils_math::normalize_radian(angle2 - angle3);
+    double angle_diff_delta = autoware_utils_math::normalize_radian(angle_diff1 - angle_diff2);
+
+    if (std::abs(angle_diff_delta) > jitter_rad_threshold) {
+      result.jitter_indices.push_back(i + 1);
+    }
+
+    angle_diffs.push_back(angle_diff_delta);
+  }
+
+  // Always collect all angle differences for analysis
+  for (size_t i = 0; i < angle_diffs.size(); ++i) {
+    result.angle_differences.push_back(std::abs(angle_diffs[i]));
+  }
+
+  result.total_error_points = result.jitter_indices.size();
+
+  return result;
+}
+
+void StaticCenterlineGeneratorNode::visualize_jitter_sections(
+  const std::vector<TrajectoryPoint> & centerline, const JitterDetectionResult & jitter_result,
+  MarkerArray & marker_array)
+{
+  // Add markers for detected jitter sections only
+  for (size_t i = 0; i < jitter_result.jitter_indices.size(); ++i) {
+    const auto & jitter_idx = jitter_result.jitter_indices[i];
+    if (jitter_idx < centerline.size()) {
+      const auto & jitter_pose = centerline[jitter_idx].pose;
+      const auto jitter_footprint = create_vehicle_footprint(jitter_pose, vehicle_info_);
+
+      // White footprint marker for detected jitter section
+      const auto jitter_marker = utils::create_footprint_marker(
+        "jitter_sections", jitter_footprint, 0.08, 0.0, 0.4, 1.0, 0.95, now(), jitter_idx);
+      marker_array.markers.push_back(jitter_marker);
+
+      // Text marker showing the angle change at jitter location
+      const auto jitter_text_pose = get_text_pose(jitter_pose, vehicle_info_, 0.5);
+      // Use the actual jitter index to get the corresponding angle difference
+      const double angle_diff_rad =
+        (jitter_idx > 0 && (jitter_idx - 1) < jitter_result.angle_differences.size())
+          ? jitter_result.angle_differences[jitter_idx - 1]
+          : 0.0;
+      const double angle_diff_deg = autoware::universe_utils::rad2deg(angle_diff_rad);
+      const auto jitter_text_marker = utils::create_text_marker(
+        "jitter_values", jitter_text_pose, std::round(angle_diff_deg * 10.0) / 10.0, 0.0, 0.4, 1.0,
+        0.95, now(), jitter_idx);
+      marker_array.markers.push_back(jitter_text_marker);
+    }
+  }
+}
+
 void StaticCenterlineGeneratorNode::validate_centerline()
 {
   const auto centerline = centerline_handler_.get_selected_centerline();
   const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
+
+  // Check if sizes match
+  if (centerline.size() != centerline_lane_ids.size()) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "Cannot validate centerline: size mismatch. centerline: "
+                      << centerline.size() << ", lane_ids: " << centerline_lane_ids.size());
+    return;
+  }
 
   const double dist_thresh_to_road_border =
     getRosParameter<double>("validation.dist_threshold_to_road_border");
@@ -819,6 +1076,10 @@ void StaticCenterlineGeneratorNode::validate_centerline()
   }
   const double max_steer_angle = vehicle_info_.calcSteerAngleFromCurvature(max_curvature);
 
+  // visualize jitter
+  const auto jitter_result = detect_jitter_sections(centerline);
+  visualize_jitter_sections(centerline, jitter_result, marker_array);
+
   // add centerline and road boundaries to debug markers
   const auto centerline_vec = convert_to_geometry_points_vector(centerline, centerline_lane_ids);
   const auto left_bound_vec =
@@ -886,7 +1147,50 @@ void StaticCenterlineGeneratorNode::validate_centerline()
               << std::endl
               << "  Conditionally Passed." << RESET_TEXT << std::endl;
   }
-  // 3. result
+
+  // 3. jitter / rough sections detection
+  const int64_t jitter_deg_threshold =
+    autoware::universe_utils::getOrDeclareParameter<int64_t>(*this, "jitter_deg_threshold");
+  const double max_angle_diff =
+    jitter_result.angle_differences.empty()
+      ? 0.0
+      : *std::max_element(
+          jitter_result.angle_differences.begin(), jitter_result.angle_differences.end());
+  const double max_angle_diff_deg =
+    std::round(autoware::universe_utils::rad2deg(max_angle_diff) * 10.0) / 10.0;
+
+  std::string jitter_indices_str;
+  for (size_t i = 0; i < jitter_result.jitter_indices.size(); ++i) {
+    jitter_indices_str += std::to_string(jitter_result.jitter_indices[i]);
+    if (i < jitter_result.jitter_indices.size() - 1) jitter_indices_str += ", ";
+  }
+
+  std::string jitter_section;
+  std::cerr << "3. Jitter:" << std::endl;
+  if (jitter_result.total_error_points == 0) {
+    std::cerr << "  The generated centerline has no jitter. (estimated:"
+              << std::to_string(max_angle_diff_deg)
+              << " [deg] < threshold:" << std::to_string(jitter_deg_threshold) << " [deg])"
+              << std::endl;
+  } else {
+    const auto threshold_message =
+      (max_angle_diff_deg > jitter_deg_threshold)
+        ? "( > " + std::to_string(jitter_deg_threshold) + " [deg] threshold)"
+        : "( <= " + std::to_string(jitter_deg_threshold) + " [deg] threshold)";
+    std::cerr
+      << YELLOW_TEXT << "  The generated centerline has "
+      << std::to_string(jitter_result.total_error_points) << " sections with jitter detected."
+      << std::endl
+      << "  All detected indices: " << jitter_indices_str << std::endl
+      << "  Maximum jitter: " << std::to_string(max_angle_diff_deg) << " [deg]" << threshold_message
+      << std::endl
+      << "  (Warning: May affect ride comfort)" << RESET_TEXT << std::endl
+      << "  However, the estimated jitter is not enough precise, so the result is conditional pass."
+      << std::endl
+      << "  Conditionally Passed." << std::endl;
+  }
+
+  // 4. result
   std::cerr << std::endl << BOLD_TEXT << "Result:" << RESET_TEXT << std::endl;
   if (are_footprints_inside_lanelets && is_curvature_low) {
     std::cerr << BOLD_TEXT << "  Passed!" << RESET_TEXT << std::endl;
@@ -907,8 +1211,24 @@ void StaticCenterlineGeneratorNode::save_map()
     return;
   }
 
+  // Recompute the centerline lane ids for the current selection. The cached lane ids are produced
+  // by connect_centerline_to_lanelet() against whatever selection existed when `validate` ran, but
+  // get_selected_centerline() is sliced dynamically by start/end index. If the selection changed
+  // after validate (e.g. the GUI index updates were applied after the validate request), the cache
+  // goes stale and the size check below aborts the save. Refreshing here keeps the centerline and
+  // its lane ids consistent for the selection actually being saved.
+  connect_centerline_to_lanelet();
+
   const auto centerline = centerline_handler_.get_selected_centerline();
   const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
+
+  // Check if sizes match
+  if (centerline.size() != centerline_lane_ids.size()) {
+    RCLCPP_ERROR_STREAM(
+      get_logger(), "Cannot save map: size mismatch. centerline: "
+                      << centerline.size() << ", lane_ids: " << centerline_lane_ids.size());
+    return;
+  }
 
   const auto lanelet2_output_file_path = getRosParameter<std::string>("lanelet2_output_file_path");
 

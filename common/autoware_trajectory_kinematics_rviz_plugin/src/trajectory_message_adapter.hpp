@@ -1,0 +1,48 @@
+// Copyright 2026 TIER IV, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#ifndef TRAJECTORY_MESSAGE_ADAPTER_HPP_
+#define TRAJECTORY_MESSAGE_ADAPTER_HPP_
+
+#include "kinematics_types.hpp"
+
+#include <autoware_internal_planning_msgs/msg/scored_candidate_trajectories.hpp>
+#include <autoware_planning_msgs/msg/trajectory.hpp>
+
+#include <string>
+#include <vector>
+
+namespace autoware::visualization::trajectory_kinematics_rviz_plugin
+{
+
+/// @brief Builds per-point kinematics samples from planning trajectory points (arc length, Menger
+/// curvature, lateral accel).
+/// @param points Message trajectory points in path order.
+/// @return One `SeriesPoint` per input point; empty if `points` is empty.
+std::vector<SeriesPoint> buildSeriesFromTrajectoryPoints(
+  const std::vector<autoware_planning_msgs::msg::TrajectoryPoint> & points);
+
+/// @brief Wraps a single `Trajectory` message as one labeled series under `topic_name`.
+std::vector<TrajectorySeriesData> trajectoryMsgToSeries(
+  const autoware_planning_msgs::msg::Trajectory & msg, const std::string & topic_name);
+
+/// @brief Expands scored candidates into one series per entry (labels include generator name and
+/// score when available).
+std::vector<TrajectorySeriesData> scoredCandidateTrajectoriesToSeries(
+  const autoware_internal_planning_msgs::msg::ScoredCandidateTrajectories & msg,
+  const std::string & topic_name);
+
+}  // namespace autoware::visualization::trajectory_kinematics_rviz_plugin
+
+#endif  // TRAJECTORY_MESSAGE_ADAPTER_HPP_

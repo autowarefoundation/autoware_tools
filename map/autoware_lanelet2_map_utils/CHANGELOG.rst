@@ -2,6 +2,32 @@
 Changelog for package autoware_lanelet2_map_utils
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.0 (2026-10-19)
+------------------
+
+0.7.0 (2026-05-01)
+------------------
+
+0.6.0 (2026-02-14)
+------------------
+
+0.5.0 (2025-12-30)
+------------------
+
+0.4.0 (2025-11-16)
+------------------
+* chore: update maintainer (`#304 <https://github.com/autowarefoundation/autoware_tools/issues/304>`_)
+  * chore: update maintainer
+  remove Ryu Yamamoto
+  * chore: update maintainer
+  remove Kento Yabuuchi
+  * chore: update maintainer
+  remove Koji Minoda
+  * chore: update maintainer
+  remove Shintaro Sakoda
+  ---------
+* Contributors: Motz
+
 0.3.0 (2025-08-11)
 ------------------
 

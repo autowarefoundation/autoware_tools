@@ -12,8 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from enum import Enum
+
 from diagnostic_msgs.msg import DiagnosticStatus
 from rclpy.time import Time
+
+
+class UnitLevel(Enum):
+    OK = DiagnosticStatus.OK
+    WARN = DiagnosticStatus.WARN
+    ERROR = DiagnosticStatus.ERROR
+    STALE = DiagnosticStatus.STALE
 
 
 class DummyStatus:
@@ -22,11 +31,13 @@ class DummyStatus:
 
 
 class BaseUnit:
-    def __init__(self, status=DummyStatus()):
+    def __init__(self, struct, status=DummyStatus()):
         self._parents = []
         self._children = []
-        self._path = None
-        self._type = None
+        self._struct = struct
+        self._status = status
+
+    def update(self, status):
         self._status = status
 
     @property
@@ -38,40 +49,52 @@ class BaseUnit:
         return self._children
 
     @property
-    def path(self):
-        return self._path
-
-    @property
-    def kind(self):
-        return self._type
+    def level(self):
+        return UnitLevel(self._status.level)
 
 
 class NodeUnit(BaseUnit):
     def __init__(self, struct):
-        super().__init__()
-        self._path = struct.path
-        self._type = struct.type
-
-    def update(self, status):
-        self._status = status
+        super().__init__(struct)
+        self._diag = None
 
     @property
-    def level(self):
-        return self._status.level
+    def path(self):
+        return self._struct.path
+
+    @property
+    def kind(self):
+        return self._struct.type
+
+    @property
+    def diag(self):
+        return self._diag
 
 
 class DiagUnit(BaseUnit):
     def __init__(self, struct):
-        super().__init__()
-        self._name = struct.name
-        self._type = "diag"
-
-    def update(self, status):
-        self._status = status
+        super().__init__(struct)
+        self._node = None
 
     @property
-    def level(self):
-        return self._status.level
+    def parent(self):
+        return self._struct.parent
+
+    @property
+    def name(self):
+        return self._struct.name
+
+    @property
+    def hardware(self):
+        return self._status.hardware_id
+
+    @property
+    def message(self):
+        return self._status.message
+
+    @property
+    def values(self):
+        return self._status.values
 
 
 class UnitLink:
@@ -100,10 +123,13 @@ class Graph:
         self._id = msg.id
         self._nodes = [NodeUnit(struct) for struct in msg.nodes]
         self._diags = [DiagUnit(struct) for struct in msg.diags]
-        self._units = self._nodes + self._diags
         self._links = []
         for struct in msg.links:
             self._links.append(UnitLink(self._nodes[struct.parent], self._nodes[struct.child]))
+        for diag in self._diags:
+            node = self._nodes[diag.parent]
+            node._diag = diag
+            diag._node = node
 
     def update(self, msg):
         if msg.id == self._id:
