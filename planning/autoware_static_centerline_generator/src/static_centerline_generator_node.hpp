@@ -109,7 +109,8 @@ class StaticCenterlineGeneratorNode : public rclcpp::Node
 public:
   explicit StaticCenterlineGeneratorNode(const rclcpp::NodeOptions & node_options);
   void generate_centerline();
-  void connect_centerline_to_lanelet();
+  void load_centerline();
+  void connect_centerline_to_lanelet(bool assign_first_point_to_first_lanelet = false);
   void validate_centerline();
   void save_map();
 

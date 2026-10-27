@@ -601,7 +601,7 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   centerline_handler_ = CenterlineHandler(CenterlineWithRoute{optimized_traj_points, route});
 
   // publish unsafe_footprints
-  connect_centerline_to_lanelet();
+  connect_centerline_to_lanelet(true);
   validate_centerline();
 
   // create output data
@@ -610,9 +610,11 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   for (const auto & lanelet : route_lanelets) {
     std::vector<geometry_msgs::msg::Point> current_lanelet_points;
 
-    // check if target point is inside the lanelet
-    while (lanelet::geometry::inside(
-      lanelet, convert_to_lanelet_point(target_traj_point->pose.position))) {
+    // Assign the first point to the first route lanelet, even just outside its entrance.
+    while (
+      target_traj_point == optimized_traj_points.cbegin() ||
+      lanelet::geometry::inside(
+        lanelet, convert_to_lanelet_point(target_traj_point->pose.position))) {
       // memorize points inside the lanelet
       current_lanelet_points.push_back(target_traj_point->pose.position);
       target_traj_point++;
@@ -640,7 +642,8 @@ void StaticCenterlineGeneratorNode::on_plan_path(
   response->message = "";
 }
 
-void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
+void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet(
+  const bool assign_first_point_to_first_lanelet)
 {
   centerline_handler_.clear_centerline_lane_ids();
 
@@ -653,7 +656,10 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
 
   // 1. calculate the lanelet of the centerline's front.
   std::optional<size_t> centerline_front_lanelet_idx{std::nullopt};
-  for (size_t i = 0; i < route_lanelets.size(); ++i) {
+  if (assign_first_point_to_first_lanelet) {
+    centerline_front_lanelet_idx = 0;
+  }
+  for (size_t i = 0; !centerline_front_lanelet_idx && i < route_lanelets.size(); ++i) {
     const auto & lanelet = route_lanelets.at(i);
     const bool is_inside =
       lanelet::geometry::inside(lanelet, convert_to_lanelet_point(centerline.at(0).pose.position));
@@ -680,6 +686,9 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
       }
 
       const bool is_target_lanelet = [&]() {
+        if (assign_first_point_to_first_lanelet && centerline_idx == 0 && lanelet_idx == 0) {
+          return true;
+        }
         if (!centerline_front_lanelet_idx && !was_once_inside_lanelet) {
           // If the centerline's front is before the route_lanelets, use the first
           // lane in the route_lanelets as a target.
