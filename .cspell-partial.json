@@ -15,6 +15,9 @@
     "quantizer",
     "imageio",
     "mimsave",
+    "minmax",
+    "mppi",
+    "noopener",
     "accb",
     "Backpropagation",
     "cmdb",
@@ -24,12 +27,13 @@
     "prec",
     "primotest",
     "scikit",
+    "Segoe",
     "setpoint",
     "timegap",
     "usecols",
     "velb",
     "viridis",
-    "zdata",
+    "webauto",
     "Segoe"
   ]
 }
