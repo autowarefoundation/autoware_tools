@@ -5,9 +5,9 @@
   <arg name="launch_simulator_perception_modules" default="false"/>
 
   <!-- Arguments for occupancy_grid_map -->
-  <arg name="laserscan_based_occupancy_grid_map_param_path" default="$(find-pkg-share autoware_launch)/config/perception/occupancy_grid_map/laserscan_based_occupancy_grid_map.param.yaml"/>
+  <arg name="laserscan_based_occupancy_grid_map_param_path" default="$(find-pkg-share autoware_perception_config)/config/occupancy_grid_map/laserscan_based_occupancy_grid_map.param.yaml"/>
   <arg name="occupancy_grid_map_updater" default="binary_bayes_filter" description="options: binary_bayes_filter"/>
-  <arg name="occupancy_grid_map_updater_param_path" default="$(find-pkg-share autoware_launch)/config/perception/occupancy_grid_map/$(var occupancy_grid_map_updater)_updater.param.yaml"/>
+  <arg name="occupancy_grid_map_updater_param_path" default="$(find-pkg-share autoware_perception_config)/config/occupancy_grid_map/$(var occupancy_grid_map_updater)_updater.param.yaml"/>
 
   <!-- running_mode: planning_control or perception_planning -->
   <arg name="running_mode" default="planning_control"/>
