@@ -35,7 +35,7 @@ int main(int argc, char * argv[])
     // process
     if (mode == "AUTO") {
       node->generate_centerline();
-      node->connect_centerline_to_lanelet();
+      node->connect_centerline_to_lanelet(true);
       node->validate_centerline();
       node->save_map();
     } else if (mode == "GUI") {

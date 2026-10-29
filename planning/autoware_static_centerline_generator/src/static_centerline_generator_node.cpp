@@ -166,6 +166,12 @@ void assign_centerline_points_to_lanelets(
   size_t points_outside_any = 0;
 
   for (const auto & traj_point : optimized_traj_points) {
+    // The first point may lie just outside the entrance due to numerical error.
+    if (&traj_point == &optimized_traj_points.front() && !route_lanelets.empty()) {
+      points_per_lanelet.front().push_back(traj_point.pose.position);
+      continue;
+    }
+
     const auto pt = convert_to_lanelet_point(traj_point.pose.position);
 
     if (
@@ -335,7 +341,9 @@ StaticCenterlineGeneratorNode::StaticCenterlineGeneratorNode(
   sub_validate_ = create_subscription<std_msgs::msg::Empty>(
     "/static_centerline_generator/validate", rclcpp::QoS{1},
     [this]([[maybe_unused]] const std_msgs::msg::Empty & msg) {
-      connect_centerline_to_lanelet();
+      const auto mode = get_parameter("mode").as_string();
+      connect_centerline_to_lanelet(
+        (mode == "AUTO" || mode == "VMB") && centerline_handler_.start_index == 0);
       validate_centerline();
     });
 
@@ -798,13 +806,14 @@ void StaticCenterlineGeneratorNode::on_plan_path(
     optimized_traj_points, route_lanelets, response, get_logger());
 
   // publish unsafe_footprints and run validation (for rviz / logging only)
-  connect_centerline_to_lanelet();
+  connect_centerline_to_lanelet(true);
   validate_centerline();
 
   response->message = "";
 }
 
-void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
+void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet(
+  const bool assign_first_point_to_first_lanelet)
 {
   centerline_handler_.clear_centerline_lane_ids();
 
@@ -817,7 +826,10 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
 
   // 1. calculate the lanelet of the centerline's front.
   std::optional<size_t> centerline_front_lanelet_idx{std::nullopt};
-  for (size_t i = 0; i < route_lanelets.size(); ++i) {
+  if (assign_first_point_to_first_lanelet) {
+    centerline_front_lanelet_idx = 0;
+  }
+  for (size_t i = 0; !centerline_front_lanelet_idx && i < route_lanelets.size(); ++i) {
     const auto & lanelet = route_lanelets.at(i);
     const bool is_inside =
       lanelet::geometry::inside(lanelet, convert_to_lanelet_point(centerline.at(0).pose.position));
@@ -845,6 +857,9 @@ void StaticCenterlineGeneratorNode::connect_centerline_to_lanelet()
       }
 
       const bool is_target_lanelet = [&]() {
+        if (assign_first_point_to_first_lanelet && centerline_idx == 0 && lanelet_idx == 0) {
+          return true;
+        }
         if (!centerline_front_lanelet_idx && !was_once_inside_lanelet) {
           // If the centerline's front is before the route_lanelets, use the first
           // lane in the route_lanelets as a target.
@@ -1217,7 +1232,9 @@ void StaticCenterlineGeneratorNode::save_map()
   // after validate (e.g. the GUI index updates were applied after the validate request), the cache
   // goes stale and the size check below aborts the save. Refreshing here keeps the centerline and
   // its lane ids consistent for the selection actually being saved.
-  connect_centerline_to_lanelet();
+  const auto mode = get_parameter("mode").as_string();
+  connect_centerline_to_lanelet(
+    (mode == "AUTO" || mode == "VMB") && centerline_handler_.start_index == 0);
 
   const auto centerline = centerline_handler_.get_selected_centerline();
   const auto centerline_lane_ids = centerline_handler_.get_centerline_lane_ids();
