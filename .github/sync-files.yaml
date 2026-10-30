@@ -28,6 +28,7 @@
     - source: .yamllint.yaml
     - source: CPPLINT.cfg
     - source: setup.cfg
+    - source: .github/workflows/comment-docs-artifact.yaml
     - source: .github/workflows/deploy-docs.yaml
     - source: .github/workflows/delete-closed-pr-docs.yaml
     - source: mkdocs-base.yaml
