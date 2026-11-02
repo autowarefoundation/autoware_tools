@@ -33,7 +33,7 @@ Mismatched parameters can lead to unexpected behavior of the ego vehicle.
    - `--pid_param_file <path/to/file.yaml>`: Override the default path for the PID parameter file.
    - `--simulator_model_param_file <path/to/file.yaml>`: Override the default path for the simulator model parameter file.
    - `--vehicle_cmd_gate_param_file <path/to/file.yaml>`: Override the default path for the vehicle command gate parameter file.
-   - `--vehicle_id <id_string>`: Specify a vehicle ID. If provided, the script looks for MPC/PID parameters in subdirectories named after this ID (e.g., `.../control/trajectory_follower/<vehicle_id>/lateral/mpc.param.yaml`).
+   - `--vehicle_id <id_string>`: Specify a vehicle ID. If provided, the script looks for MPC/PID parameters in subdirectories named after this ID (e.g., `.../autoware_control_config/config/trajectory_follower/<vehicle_id>/lateral/mpc.param.yaml`).
      - _Default_: `None`
 
 **Example:**
