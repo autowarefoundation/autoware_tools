@@ -5128,7 +5128,7 @@ Mismatched parameters can lead to unexpected behavior of the ego vehicle.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">#</a></h2>
 <ol>
 <li>
-<p><strong>Source Workspace</strong>: Make sure your Autoware workspace (containing <code>autoware_launch</code>, the relevant vehicle description package, etc.) is sourced in your terminal:</p>
+<p><strong>Source Workspace</strong>: Make sure your Autoware workspace (containing <code>autoware_control_config</code>, the relevant vehicle description package, etc.) is sourced in your terminal:</p>
 <div class="highlight"><pre><span></span><code><span class="nb">source</span><span class="w"> </span>/path/to/your/autoware_ws/install/setup.bash
 </code></pre></div>
 </li>
@@ -5148,7 +5148,7 @@ Mismatched parameters can lead to unexpected behavior of the ego vehicle.</p>
 <li><code>--pid_param_file &lt;path/to/file.yaml&gt;</code>: Override the default path for the PID parameter file.</li>
 <li><code>--simulator_model_param_file &lt;path/to/file.yaml&gt;</code>: Override the default path for the simulator model parameter file.</li>
 <li><code>--vehicle_cmd_gate_param_file &lt;path/to/file.yaml&gt;</code>: Override the default path for the vehicle command gate parameter file.</li>
-<li><code>--vehicle_id &lt;id_string&gt;</code>: Specify a vehicle ID. If provided, the script looks for MPC/PID parameters in subdirectories named after this ID (e.g., <code>.../control/trajectory_follower/&lt;vehicle_id&gt;/lateral/mpc.param.yaml</code>).<ul>
+<li><code>--vehicle_id &lt;id_string&gt;</code>: Specify a vehicle ID. If provided, the script looks for MPC/PID parameters in subdirectories named after this ID (e.g., <code>.../autoware_control_config/config/trajectory_follower/&lt;vehicle_id&gt;/lateral/mpc.param.yaml</code>).<ul>
 <li><em>Default</em>: <code>None</code></li>
 </ul>
 </li>
@@ -5179,10 +5179,10 @@ python3<span class="w"> </span>parameter_checker_script.py<span class="w"> </spa
 </ul>
 </li>
 <li>
-<p><strong>Package Path Resolution</strong>: It utilizes <code>ament_index_python.get_package_share_directory</code> to locate the installation paths (share directories) of the required ROS 2 packages (<code>autoware_launch</code> and the specified vehicle description package). This requires the Autoware workspace containing these packages to be sourced beforehand.</p>
+<p><strong>Package Path Resolution</strong>: It utilizes <code>ament_index_python.get_package_share_directory</code> to locate the installation paths (share directories) of the required ROS 2 packages (<code>autoware_control_config</code> and the specified vehicle description package). This requires the Autoware workspace containing these packages to be sourced beforehand.</p>
 </li>
 <li>
-<p><strong>Parameter File Location</strong>: Based on the arguments and resolved package paths, the script determines the exact paths to the four YAML parameter files (MPC, PID, Simulator, Vehicle Command Gate). It constructs default paths within the <code>autoware_launch</code> and vehicle description packages, allowing for vehicle-specific subdirectories if a <code>--vehicle_id</code> is provided.</p>
+<p><strong>Parameter File Location</strong>: Based on the arguments and resolved package paths, the script determines the exact paths to the four YAML parameter files (MPC, PID, Simulator, Vehicle Command Gate). It constructs default paths within the <code>autoware_control_config</code> and vehicle description packages, allowing for vehicle-specific subdirectories if a <code>--vehicle_id</code> is provided.</p>
 </li>
 <li>
 <p><strong>YAML Parsing</strong>: The <code>read_yaml</code> function reads each parameter file. It specifically extracts the dictionary under the <code>/**"]["ros__parameters"]</code> key, which is the standard location for ROS 2 node parameters in Autoware YAML files. Error handling is included for file reading issues.</p>
