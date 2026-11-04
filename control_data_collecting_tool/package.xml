@@ -4,9 +4,6 @@
   <name>control_data_collecting_tool</name>
   <version>0.8.0</version>
   <description>The pure pursuit control data collection tool package</description>
-  <maintainer email="masayuki.aino@proxima-ai-tech.com">Masayuki Aino</maintainer>
-  <maintainer email="asei.inoue@proxima-ai-tech.com">Asei Inoue</maintainer>
-  <maintainer email="toru.hishinuma@proxima-ai-tech.com">Toru Hishinuma</maintainer>
   <maintainer email="kosuke.takeuchi@tier4.jp">Kosuke Takeuchi</maintainer>
   <maintainer email="takamasa.horibe@tier4.jp">Takamasa Horibe</maintainer>
   <maintainer email="takayuki.murooka@tier4.jp">Takayuki Murooka</maintainer>
