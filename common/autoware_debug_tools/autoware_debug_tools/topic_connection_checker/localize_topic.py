@@ -5,13 +5,13 @@ import os
 from typing import Dict
 from typing import List
 
-from autoware_debug_tools.topic_connection_checker.launch_file_analyse import (
-    launch_file_analyse_main,
-)
 from autoware_debug_tools.topic_connection_checker.launch_file_analyse import LaunchTree
 from autoware_debug_tools.topic_connection_checker.launch_file_analyse import LaunchTreeNode
 from autoware_debug_tools.topic_connection_checker.launch_file_analyse import find_cmake_projects
 from autoware_debug_tools.topic_connection_checker.launch_file_analyse import find_package
+from autoware_debug_tools.topic_connection_checker.launch_file_analyse import (
+    launch_file_analyse_main,
+)
 
 
 def find_topics_in_file(file_path: str, topics: List[str]) -> Dict[str, List[int]]:
