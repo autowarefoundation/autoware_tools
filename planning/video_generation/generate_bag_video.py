@@ -58,6 +58,7 @@ class Config:
     metrics: list[dict]
     events: list[Event]
     default_speed: float
+    plot_window_s: float | None
 
 
 @dataclass(frozen=True)
@@ -174,7 +175,69 @@ def speed(value: object, name: str) -> float:
     return result
 
 
-def config_from_yaml(path: Path, timeline: Timeline, types: dict[str, str]) -> Config:
+def margin_ns(value: object, name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{name} must be a nonnegative number of seconds")
+    number = float(value)
+    if not math.isfinite(number) or number < 0:
+        raise ValueError(f"{name} must be finite and nonnegative")
+    return round(number * NSEC)
+
+
+def events_from_bool_topic(
+    bags: list[Bag], topic: str, timeline: Timeline, pre_ns: int, post_ns: int, event_speed: float
+) -> list[Event]:
+    cls = get_message("std_msgs/msg/Bool")
+    intervals: list[Event] = []
+    active_start = None
+    for bag in bags:
+        if topic not in bag.topics:
+            LOG.warning("Event topic absent from %s; retaining its previous state", bag.path)
+            continue
+        reader = reader_for(bag, [topic])
+        while reader.has_next():
+            _, payload, stamp = reader.read_next()
+            enabled = bool(deserialize_message(payload, cls).data)
+            if enabled and active_start is None:
+                active_start = stamp
+            elif not enabled and active_start is not None:
+                start = max(timeline.start, active_start - pre_ns)
+                end = min(timeline.end, stamp + post_ns)
+                if start < end:
+                    intervals.append(Event(start, end, event_speed))
+                active_start = None
+    if active_start is not None:
+        start = max(timeline.start, active_start - pre_ns)
+        if start < timeline.end:
+            intervals.append(Event(start, timeline.end, event_speed))
+
+    merged: list[Event] = []
+    for event in intervals:
+        if merged and event.start <= merged[-1].end:
+            previous = merged[-1]
+            merged[-1] = Event(previous.start, max(previous.end, event.end), event_speed)
+        else:
+            merged.append(event)
+    LOG.info(
+        "Detected %d enabled intervals on %s; %d event(s) after margins/merging",
+        len(intervals),
+        topic,
+        len(merged),
+    )
+    for event in merged:
+        LOG.info(
+            "Event: %d..%d ns (%.3f..%.3f s from bag start)",
+            event.start,
+            event.end,
+            (event.start - timeline.start) / NSEC,
+            (event.end - timeline.start) / NSEC,
+        )
+    return merged
+
+
+def config_from_yaml(
+    path: Path, timeline: Timeline, types: dict[str, str], bags: list[Bag] | None = None
+) -> Config:
     with path.open(encoding="utf-8") as stream:
         raw = yaml.safe_load(stream)
     if not isinstance(raw, dict) or not isinstance(raw.get("metrics"), list) or not raw["metrics"]:
@@ -192,13 +255,13 @@ def config_from_yaml(path: Path, timeline: Timeline, types: dict[str, str]) -> C
         if kind is None:
             LOG.warning("Plot topic missing from all bags: %s", topic)
             continue
-        if kind != "std_msgs/msg/Float32":
-            raise ValueError(f"{topic} is {kind}; only std_msgs/msg/Float32 is supported")
+        if kind not in ("std_msgs/msg/Float32", "autoware_internal_debug_msgs/msg/Float64Stamped"):
+            raise ValueError(f"{topic} is {kind}; supported metrics are Float32 and Float64Stamped")
         metrics.append(
             {"topic": topic, "label": str(item.get("label", topic)), "color": item.get("color")}
         )
     if not metrics:
-        raise ValueError("No configured Float32 topics exist in the bags")
+        raise ValueError("No configured metric topics exist in the bags")
     events = []
     if not isinstance(raw.get("events", []), list):
         raise ValueError("'events' must be a list")
@@ -215,7 +278,33 @@ def config_from_yaml(path: Path, timeline: Timeline, types: dict[str, str]) -> C
     for left, right in zip(events, events[1:]):
         if right.start < left.end:
             raise ValueError("Event intervals must not overlap")
-    return Config(metrics, events, speed(raw.get("default_speed", 2.0), "default_speed"))
+    detection = raw.get("event_detection")
+    if detection is not None:
+        if events:
+            raise ValueError("Use either 'events' or 'event_detection', not both")
+        if not isinstance(detection, dict) or not isinstance(detection.get("topic"), str):
+            raise ValueError("event_detection needs a Bool topic string")
+        topic = detection["topic"]
+        if types.get(topic) != "std_msgs/msg/Bool":
+            raise ValueError(
+                f"Event topic {topic} must be std_msgs/msg/Bool; got {types.get(topic)}"
+            )
+        if bags is None:
+            raise ValueError("Bag inputs are required for event_detection")
+        events = events_from_bool_topic(
+            bags,
+            topic,
+            timeline,
+            margin_ns(detection.get("pre_margin_s", 0), "pre_margin_s"),
+            margin_ns(detection.get("post_margin_s", 0), "post_margin_s"),
+            speed(detection.get("speed", 0.5), "event speed"),
+        )
+    plot_window_s = raw.get("plot_window_s")
+    if plot_window_s is not None:
+        plot_window_s = speed(plot_window_s, "plot_window_s")
+    return Config(
+        metrics, events, speed(raw.get("default_speed", 2.0), "default_speed"), plot_window_s
+    )
 
 
 def reader_for(bag: Bag, topics: list[str]):
@@ -290,7 +379,11 @@ def metric_samples(
 ) -> dict[str, tuple[np.ndarray, np.ndarray]]:
     topics = {item["topic"] for item in metrics}
     rows = {topic: [] for topic in topics}
-    cls = get_message("std_msgs/msg/Float32")
+    classes = {}
+    for item in metrics:
+        topic = item["topic"]
+        kind = next(bag.topics[topic] for bag in bags if topic in bag.topics)
+        classes[topic] = get_message(kind)
     for bag in bags:
         active = sorted(topics & bag.topics.keys())
         if not active:
@@ -298,7 +391,7 @@ def metric_samples(
         reader = reader_for(bag, active)
         while reader.has_next():
             topic, payload, stamp = reader.read_next()
-            value = float(deserialize_message(payload, cls).data)
+            value = float(deserialize_message(payload, classes[topic]).data)
             if math.isfinite(value):
                 rows[topic].append((stamp, value))
     output = {}
@@ -306,7 +399,7 @@ def metric_samples(
         series.sort()
         output[topic] = (
             np.array([x[0] for x in series], dtype=np.int64),
-            np.array([x[1] for x in series], dtype=np.float32),
+            np.array([x[1] for x in series], dtype=np.float64),
         )
         if not series:
             LOG.warning("No finite metric values for %s", topic)
@@ -329,7 +422,9 @@ def plot_video(bags: list[Bag], config: Config, path: Path, timeline: Timeline) 
         axis.set_facecolor("#152431")
         axis.tick_params(colors="white", labelsize=7)
         axis.set_ylabel(metric["label"], color="white", fontsize=8)
-        axis.set_xlim(0, max((timeline.end - timeline.start) / NSEC, 1 / FPS))
+        axis.set_xlim(
+            0, config.plot_window_s or max((timeline.end - timeline.start) / NSEC, 1 / FPS)
+        )
         stamps, values = data[metric["topic"]]
         if len(values):
             low, high = float(values.min()), float(values.max())
@@ -339,7 +434,7 @@ def plot_video(bags: list[Bag], config: Config, path: Path, timeline: Timeline) 
             axis.set_ylim(-1, 1)
         (line,) = axis.plot([], [], color=metric["color"] or f"C{index % 10}", linewidth=1.5)
         cursor = axis.axvline(0, color="white", alpha=0.5, linewidth=0.8)
-        curves.append((line, cursor, stamps, (stamps - timeline.start) / NSEC, values))
+        curves.append((axis, line, cursor, stamps, (stamps - timeline.start) / NSEC, values))
     axis.set_xlabel("Seconds from bag start", color="white", fontsize=8)
     figure.subplots_adjust(left=0.16, right=0.98, top=0.97, bottom=0.13, hspace=0.32)
     writer = writer_for(path, PLOT)
@@ -347,10 +442,13 @@ def plot_video(bags: list[Bag], config: Config, path: Path, timeline: Timeline) 
         for index in range(timeline.count):
             now = timeline.stamp(index)
             elapsed = (now - timeline.start) / NSEC
-            for line, cursor, stamps, seconds, values in curves:
+            for axis, line, cursor, stamps, seconds, values in curves:
                 count = int(np.searchsorted(stamps, now, side="right"))
                 line.set_data(seconds[:count], values[:count])
                 cursor.set_xdata([elapsed, elapsed])
+                if config.plot_window_s is not None:
+                    right = max(elapsed, config.plot_window_s)
+                    axis.set_xlim(right - config.plot_window_s, right)
             canvas.draw()
             writer.write(cv2.cvtColor(np.asarray(canvas.buffer_rgba()), cv2.COLOR_RGBA2BGR))
     finally:
@@ -410,6 +508,83 @@ def alive(process, name):
         raise RuntimeError(f"{name} exited early (status {process.returncode})")
 
 
+def fit_rviz_window(pid: int, env: dict[str, str], config_path: Path) -> None:
+    """Apply the saved window geometry and verify it fits the captured screen."""
+    with config_path.open(encoding="utf-8") as stream:
+        geometry = yaml.safe_load(stream).get("Window Geometry", {})
+    try:
+        x, y = int(geometry["X"]), int(geometry["Y"])
+        width, height = int(geometry["Width"]), int(geometry["Height"])
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError(f"RViz config has no valid Window Geometry: {config_path}") from error
+    if (
+        x < 0
+        or y < 0
+        or width <= 0
+        or height <= 0
+        or x + width > SCREEN[0]
+        or y + height > SCREEN[1]
+    ):
+        raise ValueError(
+            f"RViz window ({x}, {y}, {width}, {height}) does not fit "
+            f"the {SCREEN[0]}x{SCREEN[1]} capture screen"
+        )
+
+    window_ids = []
+    for _ in range(100):
+        result = subprocess.run(
+            ["xdotool", "search", "--onlyvisible", "--pid", str(pid)],
+            env=env,
+            text=True,
+            capture_output=True,
+        )
+        window_ids = result.stdout.split()
+        if window_ids:
+            break
+        time.sleep(0.1)
+    if not window_ids:
+        raise RuntimeError(f"Could not find the RViz window for PID {pid}")
+
+    def window_geometry(window_id: str) -> dict[str, int]:
+        result = subprocess.run(
+            ["xdotool", "getwindowgeometry", "--shell", window_id],
+            env=env,
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+        return {
+            key: int(value)
+            for line in result.stdout.splitlines()
+            if "=" in line
+            for key, value in [line.split("=", 1)]
+            if key in {"X", "Y", "WIDTH", "HEIGHT"}
+        }
+
+    def window_area(window_id: str) -> int:
+        current = window_geometry(window_id)
+        return current["WIDTH"] * current["HEIGHT"]
+
+    window_id = max(window_ids, key=window_area)
+    subprocess.run(
+        ["xdotool", "windowsize", window_id, str(width), str(height)],
+        env=env,
+        check=True,
+    )
+    subprocess.run(
+        ["xdotool", "windowmove", window_id, str(x), str(y)],
+        env=env,
+        check=True,
+    )
+    for _ in range(50):
+        actual = window_geometry(window_id)
+        if actual == {"X": x, "Y": y, "WIDTH": width, "HEIGHT": height}:
+            LOG.info("RViz window fits capture screen: %s", actual)
+            return
+        time.sleep(0.1)
+    raise RuntimeError(f"RViz window geometry is {actual}, expected {(x, y, width, height)}")
+
+
 def capture_rviz(bags: list[Bag], rviz_config: Path, topics: list[str], path: Path):
     display = next(
         (
@@ -455,6 +630,7 @@ def capture_rviz(bags: list[Bag], rviz_config: Path, topics: list[str], path: Pa
         if rviz.poll() is not None:
             detail = rviz_log.read_text(encoding="utf-8", errors="replace")[-2000:]
             raise RuntimeError(f"rviz2 exited early (status {rviz.returncode}): {detail}")
+        fit_rviz_window(rviz.pid, env, rviz_config)
         clock = ClockTrace()
         capture_start = time.time_ns()
         ffmpeg_log = path.with_suffix(".ffmpeg.log")
@@ -729,7 +905,7 @@ def main() -> None:
         LOG.warning("RViz topic missing from bags: %s", topic)
     play_topics = sorted((requested | {args.camera_topic, "/tf", "/tf_static"}) & kinds.keys())
     LOG.info("RViz playback topics (%d): %s", len(play_topics), ", ".join(play_topics))
-    config = config_from_yaml(args.plot_config, timeline, kinds)
+    config = config_from_yaml(args.plot_config, timeline, kinds, bags)
     args.intermediate_dir.mkdir(parents=True, exist_ok=True)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     camera_path = args.intermediate_dir / "camera_1x.mp4"

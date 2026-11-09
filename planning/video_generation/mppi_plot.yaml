@@ -1,0 +1,13 @@
+default_speed: 2.0
+plot_window_s: 10.0
+
+metrics:
+  - topic: /planning/trajectory_generator/trajectory_modifier/debug/processing_time_ms/mppi
+    label: MPPI processing time (ms)
+    color: "#2eb7e5"
+
+event_detection:
+  topic: /planning/trajectory_generator/trajectory_modifier/debug/mppi/enabled
+  pre_margin_s: 0.5
+  post_margin_s: 0.5
+  speed: 0.5
