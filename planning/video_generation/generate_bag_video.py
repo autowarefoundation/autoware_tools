@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate a synchronized RViz, camera, and Float32 plot video from ROS 2 MCAPs.
+"""Generate a synchronized RViz, camera, and metric plot video from ROS 2 MCAPs.
 
 See plot_config.example.yaml for the plot and event format. Run from a sourced
 ROS 2 Humble environment with MoviePy 2 installed.
@@ -70,6 +70,7 @@ class Config:
     events: list[Event]
     default_speed: float
     plot_window_s: float | None
+    clearance: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -272,11 +273,46 @@ def config_from_yaml(
 ) -> Config:
     with path.open(encoding="utf-8") as stream:
         raw = yaml.safe_load(stream)
-    if not isinstance(raw, dict) or not isinstance(raw.get("metrics"), list) or not raw["metrics"]:
-        raise ValueError("Plot YAML needs a nonempty 'metrics' list")
+    if not isinstance(raw, dict):
+        raise ValueError("Plot YAML must be a mapping")
+    clearance = raw.get("clearance")
+    if clearance is not None:
+        if not isinstance(clearance, dict):
+            raise ValueError("'clearance' must be a mapping")
+        clearance = {
+            "optimized_topic": clearance.get("optimized_topic"),
+            "reference_topic": clearance.get("reference_topic"),
+            "objects_topic": clearance.get(
+                "objects_topic", "/perception/object_recognition/tracking/objects"
+            ),
+            "diagnostics_topic": clearance.get("diagnostics_topic", "/diagnostics"),
+            "road_border_markers_topic": clearance.get(
+                "road_border_markers_topic", "/map/vector_map_marker"
+            ),
+        }
+        expected = {
+            "optimized_topic": "autoware_planning_msgs/msg/Trajectory",
+            "reference_topic": "autoware_planning_msgs/msg/Trajectory",
+            "objects_topic": "autoware_perception_msgs/msg/TrackedObjects",
+            "diagnostics_topic": "diagnostic_msgs/msg/DiagnosticArray",
+            "road_border_markers_topic": "visualization_msgs/msg/MarkerArray",
+        }
+        for key, kind in expected.items():
+            topic = clearance[key]
+            if not isinstance(topic, str) or types.get(topic) != kind:
+                raise ValueError(
+                    f"clearance.{key} requires a {kind} topic; got {topic}: {types.get(topic)}"
+                )
+        if len(set(clearance.values())) != len(clearance):
+            raise ValueError("Clearance topics must be distinct")
+    raw_metrics = raw.get("metrics", [])
+    if not isinstance(raw_metrics, list) or (not raw_metrics and clearance is None):
+        raise ValueError("Plot YAML needs 'clearance' or a nonempty 'metrics' list")
+    if raw_metrics and clearance is not None:
+        raise ValueError("Use either scalar 'metrics' or 'clearance' in one plot YAML")
     metrics = []
     seen = set()
-    for item in raw["metrics"]:
+    for item in raw_metrics:
         if not isinstance(item, dict) or not isinstance(item.get("topic"), str):
             raise ValueError("Each metric needs a topic string")
         topic = item["topic"]
@@ -292,7 +328,7 @@ def config_from_yaml(
         metrics.append(
             {"topic": topic, "label": str(item.get("label", topic)), "color": item.get("color")}
         )
-    if not metrics:
+    if raw_metrics and not metrics:
         raise ValueError("No configured metric topics exist in the bags")
     events = []
     if not isinstance(raw.get("events", []), list):
@@ -335,7 +371,11 @@ def config_from_yaml(
     if plot_window_s is not None:
         plot_window_s = speed(plot_window_s, "plot_window_s")
     return Config(
-        metrics, events, speed(raw.get("default_speed", 2.0), "default_speed"), plot_window_s
+        metrics,
+        events,
+        speed(raw.get("default_speed", 2.0), "default_speed"),
+        plot_window_s,
+        clearance,
     )
 
 
@@ -657,7 +697,21 @@ def metric_samples(
     return output
 
 
-def plot_video(bags: list[Bag], config: Config, path: Path, timeline: Timeline) -> None:
+def plot_video(
+    bags: list[Bag],
+    config: Config,
+    path: Path,
+    timeline: Timeline,
+    kinds: dict[str, str] | None = None,
+    vehicle_model: str | None = None,
+) -> None:
+    if config.clearance is not None:
+        if kinds is None or not vehicle_model:
+            raise ValueError("Clearance plots require bag topic types and --vehicle-model")
+        from clearance_metrics import render_clearance_plot
+
+        render_clearance_plot(bags, kinds, config, vehicle_model, path, timeline, FPS, PLOT)
+        return
     import matplotlib
 
     matplotlib.use("Agg")
@@ -1265,6 +1319,8 @@ def main() -> None:
     )
     LOG.info("RViz playback topics (%d): %s", len(play_topics), ", ".join(play_topics))
     config = config_from_yaml(args.plot_config, timeline, kinds, bags)
+    if config.clearance is not None and not args.vehicle_model:
+        parser.error("Clearance plots require --vehicle-model for the ego footprint")
     overlay = (
         load_camera_overlay(
             bags,
@@ -1288,7 +1344,7 @@ def main() -> None:
     rviz_path = args.intermediate_dir / "rviz_1x.mp4"
     final_path = args.output_dir / "final_video.mp4"
     camera_video(bags, args.camera_topic, kind, camera_path, timeline, overlay)
-    plot_video(bags, config, plot_path, timeline)
+    plot_video(bags, config, plot_path, timeline, kinds, args.vehicle_model)
     with tempfile.TemporaryDirectory(prefix="bag_video_rviz_") as directory:
         capture = Path(directory) / "rviz_capture.mkv"
         trace, capture_start = capture_rviz(

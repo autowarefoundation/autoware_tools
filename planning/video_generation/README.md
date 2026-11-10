@@ -2,7 +2,7 @@
 
 `generate_bag_video.py` turns successive ROS 2 MCAP bags into three synchronized
 30 FPS assets and one composite video. Run it in a ROS 2 Humble environment
-with MoviePy 2 installed. Run `generate.sh` from your configured zsh session;
+with MoviePy 2 and Shapely installed. Run `generate.sh` from your configured zsh session;
 it sources the local Autoware workspace, uses `.venv/bin/python` when available,
 and supplies the checked-in MPPI example inputs. Run `zsh generate.sh` for that
 example. Additional CLI arguments override its defaults.
@@ -22,7 +22,7 @@ zsh generate.sh \
 ```
 
 Use `plot_config.example.yaml` as the explicit-event template or `mppi_plot.yaml`
-as the Bool-topic event template. Each `metrics` entry names a
+as the Bool-topic clearance example. A scalar `metrics` entry names a
 `std_msgs/msg/Float32` or `autoware_internal_debug_msgs/msg/Float64Stamped`
 topic. Optional `label` and `color` fields set its plot appearance. Explicit
 `events` contain absolute bag timestamps as integer nanoseconds; each includes
@@ -38,6 +38,19 @@ plot is hidden and playback uses `default_speed` (default 2.0). Use either
 `events` or `event_detection` in one YAML file.
 Set `plot_window_s` to show only the most recent number of seconds in the plot;
 omit it to show the complete bag timeline.
+
+The `clearance` plot mode in `mppi_plot.yaml` produces two panels: road-border
+clearance and parked-vehicle clearance. Each compares MPPI's optimized
+trajectory with its reference trajectory (labelled ML planner). The minimum is
+taken over every published trajectory pose using the 2D j6_gen2 footprint from
+the installed vehicle description. Road-border centerlines are recovered from
+the bag's `/map/vector_map_marker` `road_borders` triangles. Parked avoidance
+targets come from the planner's per-object selector decisions in `/diagnostics`;
+their shapes come from the matching tracked-object snapshot. An overlap is
+plotted as zero metres. Missing or stale inputs, and cycles with no selected
+parked target, leave a gap in that series. Clearance mode requires
+`--vehicle-model` and supports the bag's `autoware_planning_msgs/msg/Trajectory`
+messages.
 
 The first camera image sets the output resolution. Frames before it are black;
 subsequent gaps hold the last image. Bags must be in time order and must not

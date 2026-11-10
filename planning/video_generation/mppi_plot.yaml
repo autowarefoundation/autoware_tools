@@ -1,10 +1,12 @@
 default_speed: 2.0
 plot_window_s: 10.0
 
-metrics:
-  - topic: /planning/trajectory_generator/trajectory_modifier/debug/processing_time_ms/mppi
-    label: MPPI processing time (ms)
-    color: "#2eb7e5"
+clearance:
+  optimized_topic: /planning/trajectory_generator/trajectory_modifier/debug/mppi/optimized_trajectory
+  reference_topic: /planning/trajectory_generator/trajectory_modifier/debug/mppi/reference_trajectory
+  objects_topic: /perception/object_recognition/tracking/objects
+  diagnostics_topic: /diagnostics
+  road_border_markers_topic: /map/vector_map_marker
 
 event_detection:
   topic: /planning/trajectory_generator/trajectory_modifier/debug/mppi/enabled
