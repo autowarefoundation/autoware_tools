@@ -10,11 +10,13 @@ from __future__ import annotations
 import argparse
 from bisect import bisect_right
 from dataclasses import dataclass
+from dataclasses import field
 from decimal import Decimal
 import logging
 import math
 import os
 from pathlib import Path
+import shutil
 import signal
 import subprocess
 import tempfile
@@ -24,11 +26,17 @@ from urllib.parse import unquote
 from urllib.parse import urlparse
 from xml.etree import ElementTree
 
+from ament_index_python.packages import get_package_prefix
+from ament_index_python.packages import get_package_share_directory
 import cv2
 import numpy as np
+from rclpy.duration import Duration
 from rclpy.serialization import deserialize_message
+from rclpy.time import Time
 import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
+from tf2_ros import Buffer
+from tf2_ros import TransformException
 import yaml
 
 LOG = logging.getLogger("bag_video")
@@ -36,6 +44,9 @@ FPS = 30
 NSEC = 1_000_000_000
 SCREEN = (1920, 1080)
 PLOT = (640, 360)
+MAIN_RIBBON_COLOR = (235, 210, 40)  # BGR: cyan
+MPPI_RIBBON_COLOR = (200, 45, 240)  # BGR: magenta
+MPPI_MAX_AGE_NS = NSEC
 
 
 @dataclass(frozen=True)
@@ -77,6 +88,27 @@ class Timeline:
 
     def first_frame(self, stamp: int) -> int:
         return min(self.count, max(0, ((stamp - self.start) * FPS + NSEC - 1) // NSEC))
+
+
+@dataclass(frozen=True)
+class TrajectoryRibbon:
+    record_stamp: int
+    frame_id: str
+    vertices: np.ndarray  # (point count, left/right, xyz)
+
+
+@dataclass
+class CameraOverlay:
+    tf: Buffer
+    infos: list[tuple[int, object]]
+    info_stamps: list[int]
+    trajectories: dict[str, list[TrajectoryRibbon]]
+    trajectory_stamps: dict[str, list[int]]
+    main_topic: str
+    mppi_topic: str | None
+    events: list[Event]
+    alpha: float
+    warnings: set[str] = field(default_factory=set)
 
 
 def validate_ros_environment() -> None:
@@ -338,7 +370,223 @@ def decode_camera(message, kind: str) -> np.ndarray:
     return np.ascontiguousarray(image)
 
 
-def camera_video(bags: list[Bag], topic: str, kind: str, path: Path, timeline: Timeline) -> None:
+def quaternion_matrix(x: float, y: float, z: float, w: float) -> np.ndarray:
+    norm = x * x + y * y + z * z + w * w
+    if norm < 1e-12:
+        raise ValueError("Zero-length orientation quaternion")
+    scale = 2.0 / norm
+    return np.array(
+        [
+            [1 - scale * (y * y + z * z), scale * (x * y - z * w), scale * (x * z + y * w)],
+            [scale * (x * y + z * w), 1 - scale * (x * x + z * z), scale * (y * z - x * w)],
+            [scale * (x * z - y * w), scale * (y * z + x * w), 1 - scale * (x * x + y * y)],
+        ],
+        dtype=np.float64,
+    )
+
+
+def ribbon_vertices(message, kind: str, width_m: float) -> np.ndarray:
+    items = message.poses if kind == "nav_msgs/msg/Path" else message.points
+    poses = [item.pose for item in items]
+    vertices = np.empty((len(poses), 2, 3), dtype=np.float64)
+    for index, pose in enumerate(poses):
+        q = pose.orientation
+        yaw = math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z))
+        offset = width_m / 2 * np.array([-math.sin(yaw), math.cos(yaw), 0.0])
+        center = np.array([pose.position.x, pose.position.y, pose.position.z])
+        vertices[index, 0] = center + offset
+        vertices[index, 1] = center - offset
+    return vertices
+
+
+def load_camera_overlay(
+    bags: list[Bag],
+    timeline: Timeline,
+    kinds: dict[str, str],
+    camera_info_topic: str,
+    main_topic: str,
+    mppi_topic: str | None,
+    events: list[Event],
+    width_m: float,
+    mppi_width_m: float,
+    alpha: float,
+) -> CameraOverlay:
+    for topic, expected in (
+        (camera_info_topic, "sensor_msgs/msg/CameraInfo"),
+        ("/tf", "tf2_msgs/msg/TFMessage"),
+        ("/tf_static", "tf2_msgs/msg/TFMessage"),
+    ):
+        if kinds.get(topic) != expected:
+            raise ValueError(
+                f"Overlay requires {topic} with type {expected}; found {kinds.get(topic)}"
+            )
+    trajectory_topics = [main_topic] + ([mppi_topic] if mppi_topic else [])
+    supported = {"nav_msgs/msg/Path", "autoware_planning_msgs/msg/Trajectory"}
+    for topic in trajectory_topics:
+        if kinds.get(topic) not in supported:
+            raise ValueError(f"Unsupported or missing trajectory topic {topic}: {kinds.get(topic)}")
+    classes = {topic: get_message(kinds[topic]) for topic in trajectory_topics}
+    classes[camera_info_topic] = get_message("sensor_msgs/msg/CameraInfo")
+    classes["/tf"] = classes["/tf_static"] = get_message("tf2_msgs/msg/TFMessage")
+    buffer = Buffer(cache_time=Duration(nanoseconds=timeline.end - timeline.start + 60 * NSEC))
+    infos: list[tuple[int, object]] = []
+    invalid_infos = 0
+    trajectories = {topic: [] for topic in trajectory_topics}
+    for bag in bags:
+        active = sorted(set(classes) & bag.topics.keys())
+        if not active:
+            continue
+        reader = reader_for(bag, active)
+        while reader.has_next():
+            topic, payload, stamp = reader.read_next()
+            message = deserialize_message(payload, classes[topic])
+            if topic == "/tf":
+                for transform in message.transforms:
+                    buffer.set_transform(transform, "bag_video")
+            elif topic == "/tf_static":
+                for transform in message.transforms:
+                    buffer.set_transform_static(transform, "bag_video")
+            elif topic == camera_info_topic:
+                if (
+                    message.distortion_model not in {"plumb_bob", "rational_polynomial"}
+                    or not message.k[0]
+                ):
+                    invalid_infos += 1
+                else:
+                    infos.append((stamp, message))
+            else:
+                ribbon_width = mppi_width_m if topic == mppi_topic else width_m
+                vertices = ribbon_vertices(message, kinds[topic], ribbon_width)
+                if len(vertices) >= 2 and message.header.frame_id:
+                    trajectories[topic].append(
+                        TrajectoryRibbon(stamp, message.header.frame_id, vertices)
+                    )
+    if not infos:
+        raise ValueError(f"No calibrated supported CameraInfo messages on {camera_info_topic}")
+    if invalid_infos:
+        LOG.warning("Skipped %d uncalibrated or unsupported CameraInfo messages", invalid_infos)
+    infos.sort(key=lambda item: item[0])
+    for topic, series in trajectories.items():
+        series.sort(key=lambda item: item.record_stamp)
+        LOG.info("Trajectory overlay %s: %d usable messages", topic, len(series))
+    if not trajectories[main_topic]:
+        raise ValueError(f"No usable trajectory messages on {main_topic}")
+    if mppi_topic and not trajectories[mppi_topic]:
+        LOG.warning("No usable MPPI trajectory messages on %s", mppi_topic)
+    return CameraOverlay(
+        buffer,
+        infos,
+        [stamp for stamp, _ in infos],
+        trajectories,
+        {topic: [item.record_stamp for item in series] for topic, series in trajectories.items()},
+        main_topic,
+        mppi_topic,
+        events,
+        alpha,
+    )
+
+
+def latest_ribbon(overlay: CameraOverlay, topic: str, stamp: int) -> TrajectoryRibbon | None:
+    index = bisect_right(overlay.trajectory_stamps[topic], stamp) - 1
+    return overlay.trajectories[topic][index] if index >= 0 else None
+
+
+def draw_ribbon(
+    image: np.ndarray,
+    ribbon: TrajectoryRibbon,
+    overlay: CameraOverlay,
+    optical_frame: str,
+    image_stamp: int,
+    camera_matrix: np.ndarray,
+    distortion: np.ndarray,
+    color: tuple[int, int, int],
+) -> np.ndarray:
+    try:
+        transform = overlay.tf.lookup_transform(
+            optical_frame, ribbon.frame_id, Time(nanoseconds=image_stamp)
+        )
+    except TransformException as error:
+        warning = f"{ribbon.frame_id} -> {optical_frame}"
+        if warning not in overlay.warnings:
+            LOG.warning("No camera overlay TF for %s: %s", warning, error)
+            overlay.warnings.add(warning)
+        return image
+    rotation = transform.transform.rotation
+    translation = transform.transform.translation
+    matrix = quaternion_matrix(rotation.x, rotation.y, rotation.z, rotation.w)
+    vertices = ribbon.vertices.reshape(-1, 3) @ matrix.T
+    vertices += np.array([translation.x, translation.y, translation.z])
+    vertices = vertices.reshape(-1, 2, 3)
+    quads = np.stack((vertices[:-1, 0], vertices[1:, 0], vertices[1:, 1], vertices[:-1, 1]), axis=1)
+    # A small near plane also avoids enormous pixel coordinates just above Z=0.
+    quads = quads[np.isfinite(quads).all(axis=(1, 2)) & (quads[:, :, 2] > 0.05).all(axis=1)]
+    if not len(quads):
+        return image
+    pixels, _ = cv2.projectPoints(
+        quads.reshape(-1, 3), np.zeros(3), np.zeros(3), camera_matrix, distortion
+    )
+    pixels = pixels.reshape(-1, 4, 2)
+    pixels = pixels[np.isfinite(pixels).all(axis=(1, 2))]
+    if not len(pixels):
+        return image
+    limit = 10 * max(image.shape[:2])
+    polygons = np.rint(np.clip(pixels, -limit, limit)).astype(np.int32)
+    layer = image.copy()
+    cv2.fillPoly(layer, list(polygons), color)
+    return cv2.addWeighted(layer, overlay.alpha, image, 1 - overlay.alpha, 0)
+
+
+def draw_camera_overlay(
+    image: np.ndarray, image_message, record_stamp: int, overlay: CameraOverlay
+) -> np.ndarray:
+    info_index = max(0, bisect_right(overlay.info_stamps, record_stamp) - 1)
+    info = overlay.infos[info_index][1]
+    if (info.width, info.height) != (image.shape[1], image.shape[0]):
+        raise ValueError("CameraInfo dimensions do not match the decoded image")
+    if image_message.header.frame_id != info.header.frame_id:
+        raise ValueError("Camera image and CameraInfo optical frames differ")
+    image_stamp = image_message.header.stamp.sec * NSEC + image_message.header.stamp.nanosec
+    if not image_stamp:
+        image_stamp = record_stamp
+    camera_matrix = np.asarray(info.k, dtype=np.float64).reshape(3, 3)
+    distortion = np.asarray(info.d, dtype=np.float64)
+    main = latest_ribbon(overlay, overlay.main_topic, record_stamp)
+    if main:
+        image = draw_ribbon(
+            image,
+            main,
+            overlay,
+            info.header.frame_id,
+            image_stamp,
+            camera_matrix,
+            distortion,
+            MAIN_RIBBON_COLOR,
+        )
+    in_event = any(event.start <= record_stamp < event.end for event in overlay.events)
+    if overlay.mppi_topic and in_event:
+        mppi = latest_ribbon(overlay, overlay.mppi_topic, record_stamp)
+        if mppi and record_stamp - mppi.record_stamp <= MPPI_MAX_AGE_NS:
+            image = draw_ribbon(
+                image,
+                mppi,
+                overlay,
+                info.header.frame_id,
+                image_stamp,
+                camera_matrix,
+                distortion,
+                MPPI_RIBBON_COLOR,
+            )
+    return image
+
+
+def camera_video(
+    bags: list[Bag],
+    topic: str,
+    kind: str,
+    path: Path,
+    timeline: Timeline,
+    overlay: CameraOverlay | None = None,
+) -> None:
     writer = None
     last = None
     blank = None
@@ -352,7 +600,10 @@ def camera_video(bags: list[Bag], topic: str, kind: str, path: Path, timeline: T
             reader = reader_for(bag, [topic])
             while reader.has_next():
                 _, payload, stamp = reader.read_next()
-                image = decode_camera(deserialize_message(payload, cls), kind)
+                message = deserialize_message(payload, cls)
+                image = decode_camera(message, kind)
+                if overlay:
+                    image = draw_camera_overlay(image, message, stamp, overlay)
                 if writer is None:
                     height, width = image.shape[:2]
                     writer = writer_for(path, (width, height))
@@ -585,7 +836,34 @@ def fit_rviz_window(pid: int, env: dict[str, str], config_path: Path) -> None:
     raise RuntimeError(f"RViz window geometry is {actual}, expected {(x, y, width, height)}")
 
 
-def capture_rviz(bags: list[Bag], rviz_config: Path, topics: list[str], path: Path):
+def vehicle_description(model: str, env: dict[str, str]) -> str:
+    package = f"{model}_description"
+    xacro_path = Path(get_package_share_directory(package)) / "urdf/vehicle.xacro"
+    if not xacro_path.is_file():
+        raise FileNotFoundError(f"Vehicle Xacro not found: {xacro_path}")
+    result = subprocess.run(
+        ["xacro", str(xacro_path)], env=env, check=True, text=True, capture_output=True
+    )
+    root = ElementTree.fromstring(result.stdout)
+    if root.tag != "robot" or not any(
+        link.get("name") == "base_link" for link in root.findall("link")
+    ):
+        raise ValueError(f"Vehicle Xacro must produce a robot with a base_link: {xacro_path}")
+    # The standalone j6_gen2 Xacro omits the robot name. Its normal workspace
+    # wrapper supplies one, and robot_state_publisher requires it.
+    if not root.get("name"):
+        root.set("name", model)
+    LOG.info("Loaded vehicle description from %s", xacro_path)
+    return ElementTree.tostring(root, encoding="unicode")
+
+
+def capture_rviz(
+    bags: list[Bag],
+    rviz_config: Path,
+    topics: list[str],
+    path: Path,
+    vehicle_model: str | None = None,
+):
     display = next(
         (
             f":{n}"
@@ -602,7 +880,8 @@ def capture_rviz(bags: list[Bag], rviz_config: Path, topics: list[str], path: Pa
     # cannot load. Let RViz use the system Qt plugin search path instead.
     env.pop("QT_QPA_PLATFORM_PLUGIN_PATH", None)
     env.pop("QT_QPA_FONTDIR", None)
-    xvfb = rviz = ffmpeg = clock = None
+    xvfb = rviz = ffmpeg = clock = vehicle_publisher = None
+    vehicle_params = None
     try:
         xvfb = subprocess.Popen(
             ["Xvfb", display, "-screen", "0", f"{SCREEN[0]}x{SCREEN[1]}x24", "-nolisten", "tcp"],
@@ -617,10 +896,56 @@ def capture_rviz(bags: list[Bag], rviz_config: Path, topics: list[str], path: Pa
             time.sleep(0.1)
         else:
             raise RuntimeError("Xvfb did not create its display socket")
+        if vehicle_model:
+            description = vehicle_description(vehicle_model, env)
+            params_stream = tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                suffix=".yaml",
+                prefix="vehicle_description_",
+                dir=path.parent,
+                delete=False,
+            )
+            vehicle_params = Path(params_stream.name)
+            with params_stream:
+                yaml.safe_dump(
+                    {
+                        "robot_state_publisher": {
+                            "ros__parameters": {
+                                "robot_description": description,
+                                "use_sim_time": True,
+                            }
+                        }
+                    },
+                    params_stream,
+                )
+            executable = (
+                Path(get_package_prefix("robot_state_publisher"))
+                / "lib/robot_state_publisher/robot_state_publisher"
+            )
+            vehicle_log = path.with_suffix(".vehicle.log")
+            with vehicle_log.open("w", encoding="utf-8") as stream:
+                vehicle_publisher = subprocess.Popen(
+                    [str(executable), "--ros-args", "--params-file", str(vehicle_params)],
+                    env=env,
+                    stdout=stream,
+                    stderr=subprocess.STDOUT,
+                )
+            time.sleep(1)
+            if vehicle_publisher.poll() is not None:
+                detail = vehicle_log.read_text(encoding="utf-8", errors="replace")[-2000:]
+                raise RuntimeError(
+                    f"robot_state_publisher exited early "
+                    f"(status {vehicle_publisher.returncode}): {detail}"
+                )
+        # RViz writes display state back to its config on exit. Record with a
+        # copy so bag-specific marker state cannot alter the user's config.
+        runtime_config = path.with_suffix(".rviz")
+        shutil.copyfile(rviz_config, runtime_config)
         rviz_log = path.with_suffix(".rviz.log")
         rviz_log_stream = rviz_log.open("w", encoding="utf-8")
         rviz = subprocess.Popen(
-            ["rviz2", "-d", str(rviz_config), "--ros-args", "-p", "use_sim_time:=true"],
+            ["rviz2", "-d", str(runtime_config), "--ros-args", "-p", "use_sim_time:=true"],
             env=env,
             stdout=rviz_log_stream,
             stderr=subprocess.STDOUT,
@@ -648,6 +973,8 @@ def capture_rviz(bags: list[Bag], rviz_config: Path, topics: list[str], path: Pa
                 str(FPS),
                 "-video_size",
                 f"{SCREEN[0]}x{SCREEN[1]}",
+                "-draw_mouse",
+                "0",
                 "-use_wallclock_as_timestamps",
                 "1",
                 "-i",
@@ -692,6 +1019,8 @@ def capture_rviz(bags: list[Bag], rviz_config: Path, topics: list[str], path: Pa
             subprocess.run(command, env=env, check=True)
             alive(rviz, "rviz2")
             alive(ffmpeg, "ffmpeg capture")
+            if vehicle_publisher:
+                alive(vehicle_publisher, "robot_state_publisher")
             if index + 1 < len(bags):
                 gap = bags[index + 1].start - bag.end
                 if gap > 0:
@@ -701,7 +1030,10 @@ def capture_rviz(bags: list[Bag], rviz_config: Path, topics: list[str], path: Pa
         stop(ffmpeg, interrupt=True)
         samples = clock.close() if clock else []
         stop(rviz)
+        stop(vehicle_publisher)
         stop(xvfb)
+        if vehicle_params:
+            vehicle_params.unlink(missing_ok=True)
     if not samples or not path.is_file() or path.stat().st_size == 0:
         raise RuntimeError("RViz capture or /clock trace is empty")
     return samples, capture_start
@@ -877,12 +1209,36 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bag-files", nargs="+", required=True)
     parser.add_argument("--rviz-config", type=Path, required=True)
+    parser.add_argument(
+        "--vehicle-model",
+        help="Publish the installed <name>_description vehicle Xacro during RViz capture",
+    )
     parser.add_argument("--camera-topic", required=True)
+    parser.add_argument("--camera-info-topic", help="CameraInfo for the camera image overlay")
+    parser.add_argument("--trajectory-topic", help="Trajectory ribbon shown throughout the video")
+    parser.add_argument(
+        "--mppi-trajectory-topic", help="Second trajectory ribbon shown during events"
+    )
+    parser.add_argument("--ribbon-width-m", type=float, default=2.0)
+    parser.add_argument("--mppi-ribbon-width-m", type=float, default=1.0)
+    parser.add_argument("--ribbon-alpha", type=float, default=0.4)
     parser.add_argument("--plot-config", type=Path, required=True)
     parser.add_argument("--intermediate-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+    if args.trajectory_topic and not args.camera_info_topic:
+        parser.error("--trajectory-topic requires --camera-info-topic")
+    if args.mppi_trajectory_topic and not args.trajectory_topic:
+        parser.error("--mppi-trajectory-topic requires --trajectory-topic")
+    if args.camera_info_topic and not args.trajectory_topic:
+        parser.error("--camera-info-topic requires --trajectory-topic")
+    if not math.isfinite(args.ribbon_width_m) or args.ribbon_width_m <= 0:
+        parser.error("--ribbon-width-m must be positive and finite")
+    if not math.isfinite(args.mppi_ribbon_width_m) or args.mppi_ribbon_width_m <= 0:
+        parser.error("--mppi-ribbon-width-m must be positive and finite")
+    if not math.isfinite(args.ribbon_alpha) or not 0 < args.ribbon_alpha <= 1:
+        parser.error("--ribbon-alpha must be within (0, 1]")
     validate_ros_environment()
     for path in (args.rviz_config, args.plot_config):
         if not path.is_file():
@@ -901,22 +1257,43 @@ def main() -> None:
             f"Camera topic {args.camera_topic} has unsupported or missing type: {kind}"
         )
     requested = rviz_topics(args.rviz_config)
-    for topic in sorted(requested - kinds.keys()):
+    generated_topics = {"/robot_description"} if args.vehicle_model else set()
+    for topic in sorted(requested - kinds.keys() - generated_topics):
         LOG.warning("RViz topic missing from bags: %s", topic)
-    play_topics = sorted((requested | {args.camera_topic, "/tf", "/tf_static"}) & kinds.keys())
+    play_topics = sorted(
+        ((requested | {args.camera_topic, "/tf", "/tf_static"}) & kinds.keys()) - generated_topics
+    )
     LOG.info("RViz playback topics (%d): %s", len(play_topics), ", ".join(play_topics))
     config = config_from_yaml(args.plot_config, timeline, kinds, bags)
+    overlay = (
+        load_camera_overlay(
+            bags,
+            timeline,
+            kinds,
+            args.camera_info_topic,
+            args.trajectory_topic,
+            args.mppi_trajectory_topic,
+            config.events,
+            args.ribbon_width_m,
+            args.mppi_ribbon_width_m,
+            args.ribbon_alpha,
+        )
+        if args.trajectory_topic
+        else None
+    )
     args.intermediate_dir.mkdir(parents=True, exist_ok=True)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     camera_path = args.intermediate_dir / "camera_1x.mp4"
     plot_path = args.intermediate_dir / "plot_1x.mp4"
     rviz_path = args.intermediate_dir / "rviz_1x.mp4"
     final_path = args.output_dir / "final_video.mp4"
-    camera_video(bags, args.camera_topic, kind, camera_path, timeline)
+    camera_video(bags, args.camera_topic, kind, camera_path, timeline, overlay)
     plot_video(bags, config, plot_path, timeline)
     with tempfile.TemporaryDirectory(prefix="bag_video_rviz_") as directory:
         capture = Path(directory) / "rviz_capture.mkv"
-        trace, capture_start = capture_rviz(bags, args.rviz_config.resolve(), play_topics, capture)
+        trace, capture_start = capture_rviz(
+            bags, args.rviz_config.resolve(), play_topics, capture, args.vehicle_model
+        )
         align_rviz(capture, rviz_path, trace, timeline, capture_start)
     for path in (camera_path, plot_path, rviz_path):
         count = video_frames(path)

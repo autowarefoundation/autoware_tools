@@ -11,7 +11,11 @@ example. Additional CLI arguments override its defaults.
 zsh generate.sh \
   --bag-files /path/to/first.mcap /path/to/second.mcap \
   --rviz-config /path/to/view.rviz \
+  --vehicle-model j6_gen2 \
   --camera-topic /camera/image/compressed \
+  --camera-info-topic /camera/camera_info \
+  --trajectory-topic /planning/trajectory \
+  --mppi-trajectory-topic /planning/trajectory_generator/trajectory_modifier/debug/mppi/optimized_trajectory \
   --plot-config /path/to/plot.yaml \
   --intermediate-dir /path/to/intermediate \
   --output-dir /path/to/output
@@ -39,12 +43,30 @@ The first camera image sets the output resolution. Frames before it are black;
 subsequent gaps hold the last image. Bags must be in time order and must not
 overlap. The script writes `camera_1x.mp4`, `plot_1x.mp4`, and `rviz_1x.mp4`
 to the intermediate directory and `final_video.mp4` to the output directory.
+With trajectory options, the camera asset includes a transparent cyan ribbon
+for `--trajectory-topic` throughout the recording. During configured events,
+it also includes a narrower magenta ribbon for `--mppi-trajectory-topic` when
+that trajectory has updated within one second. Widths default to 2.0 and 1.0
+meters (`--ribbon-width-m`, `--mppi-ribbon-width-m`), and alpha defaults to 0.4
+(`--ribbon-alpha`). Both `nav_msgs/msg/Path` and
+`autoware_planning_msgs/msg/Trajectory` are supported. The overlay uses the
+bag's `/tf`, `/tf_static`, and CameraInfo directly. It supports calibrated
+`plumb_bob` and `rational_polynomial` cameras with raw or compressed images.
+Each rendered camera frame is held through frame gaps, preserving the 30 FPS timeline.
 RViz is captured under Xvfb and aligned to the bag timeline using `/clock`;
 rendering and screen capture may differ by about one 30 FPS frame.
+The RViz capture hides the X11 mouse pointer.
 The capture uses a 1920 × 1080 virtual screen. Install `xdotool` alongside
 `Xvfb` and `ffmpeg`; the script applies the RViz config's `Window Geometry`
 before recording and stops if the window does not fit the screen. The included
 `mppi.rviz` is sized to 1880 × 1000 at position (20, 20).
+With `--vehicle-model j6_gen2`, the script expands the installed
+`j6_gen2_description/urdf/vehicle.xacro` and runs `robot_state_publisher`
+during RViz capture. This supplies `/robot_description` even when the bag does
+not contain it. The example RViz config requests transient-local durability
+for that topic, and the bag's `/tf` supplies the vehicle pose.
+RViz runs with a temporary copy of the config so recording does not save
+bag-specific display state over the source file.
 
 Before any ROS node starts, the script checks that the inherited environment
 selects `rmw_cyclonedds_cpp` and a local `CYCLONEDDS_URI` XML file whose only
