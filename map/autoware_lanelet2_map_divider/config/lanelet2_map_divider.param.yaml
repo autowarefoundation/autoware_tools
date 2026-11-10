@@ -1,0 +1,8 @@
+/**:
+  ros__parameters:
+    grid_size_x: 100.0
+    grid_size_y: 100.0
+    input_lanelet2_map: "$(var input_lanelet2_map)"
+    output_lanelet2_map_dir: "$(var output_lanelet2_map_dir)"
+    map_projector_info_path: "$(var map_projector_info_path)"
+    prefix: "$(var prefix)"
