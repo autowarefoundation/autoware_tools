@@ -42,8 +42,9 @@ import yaml
 LOG = logging.getLogger("bag_video")
 FPS = 30
 NSEC = 1_000_000_000
-SCREEN = (1920, 1080)
-PLOT = (640, 360)
+SCREEN = (1440, 1080)
+SIDEBAR_WIDTH = 960
+PLOT = (960, 450)
 MAIN_RIBBON_COLOR = (235, 210, 40)  # BGR: cyan
 MPPI_RIBBON_COLOR = (200, 45, 240)  # BGR: magenta
 MPPI_MAX_AGE_NS = NSEC
@@ -955,28 +956,8 @@ def alive(process, name):
         raise RuntimeError(f"{name} exited early (status {process.returncode})")
 
 
-def fit_rviz_window(pid: int, env: dict[str, str], config_path: Path) -> None:
-    """Apply the saved window geometry and verify it fits the captured screen."""
-    with config_path.open(encoding="utf-8") as stream:
-        geometry = yaml.safe_load(stream).get("Window Geometry", {})
-    try:
-        x, y = int(geometry["X"]), int(geometry["Y"])
-        width, height = int(geometry["Width"]), int(geometry["Height"])
-    except (KeyError, TypeError, ValueError) as error:
-        raise ValueError(f"RViz config has no valid Window Geometry: {config_path}") from error
-    if (
-        x < 0
-        or y < 0
-        or width <= 0
-        or height <= 0
-        or x + width > SCREEN[0]
-        or y + height > SCREEN[1]
-    ):
-        raise ValueError(
-            f"RViz window ({x}, {y}, {width}, {height}) does not fit "
-            f"the {SCREEN[0]}x{SCREEN[1]} capture screen"
-        )
-
+def fullscreen_rviz_window(pid: int, env: dict[str, str]) -> None:
+    """Send RViz's F11 shortcut and verify its window fills the virtual screen."""
     window_ids = []
     for _ in range(100):
         result = subprocess.run(
@@ -1014,22 +995,22 @@ def fit_rviz_window(pid: int, env: dict[str, str], config_path: Path) -> None:
 
     window_id = max(window_ids, key=window_area)
     subprocess.run(
-        ["xdotool", "windowsize", window_id, str(width), str(height)],
+        ["xdotool", "windowactivate", "--sync", window_id],
         env=env,
         check=True,
     )
     subprocess.run(
-        ["xdotool", "windowmove", window_id, str(x), str(y)],
+        ["xdotool", "key", "F11"],
         env=env,
         check=True,
     )
     for _ in range(50):
         actual = window_geometry(window_id)
-        if actual == {"X": x, "Y": y, "WIDTH": width, "HEIGHT": height}:
-            LOG.info("RViz window fits capture screen: %s", actual)
+        if actual == {"X": 0, "Y": 0, "WIDTH": SCREEN[0], "HEIGHT": SCREEN[1]}:
+            LOG.info("RViz is full screen: %s", actual)
             return
         time.sleep(0.1)
-    raise RuntimeError(f"RViz window geometry is {actual}, expected {(x, y, width, height)}")
+    raise RuntimeError(f"RViz did not enter full screen mode; window geometry is {actual}")
 
 
 def vehicle_description(model: str, env: dict[str, str]) -> str:
@@ -1076,7 +1057,7 @@ def capture_rviz(
     # cannot load. Let RViz use the system Qt plugin search path instead.
     env.pop("QT_QPA_PLATFORM_PLUGIN_PATH", None)
     env.pop("QT_QPA_FONTDIR", None)
-    xvfb = rviz = ffmpeg = clock = vehicle_publisher = None
+    xvfb = window_manager = rviz = ffmpeg = clock = vehicle_publisher = None
     vehicle_params = None
     try:
         xvfb = subprocess.Popen(
@@ -1092,6 +1073,18 @@ def capture_rviz(
             time.sleep(0.1)
         else:
             raise RuntimeError("Xvfb did not create its display socket")
+        window_manager_log = path.with_suffix(".window_manager.log")
+        with window_manager_log.open("w", encoding="utf-8") as stream:
+            window_manager = subprocess.Popen(
+                ["dbus-run-session", "--", "xfwm4", "--compositor=off"],
+                env=env,
+                stdout=stream,
+                stderr=subprocess.STDOUT,
+            )
+        time.sleep(1)
+        if window_manager.poll() is not None:
+            detail = window_manager_log.read_text(encoding="utf-8", errors="replace")[-2000:]
+            raise RuntimeError(f"xfwm4 exited early: {detail}")
         if vehicle_model:
             description = vehicle_description(vehicle_model, env)
             params_stream = tempfile.NamedTemporaryFile(
@@ -1151,7 +1144,7 @@ def capture_rviz(
         if rviz.poll() is not None:
             detail = rviz_log.read_text(encoding="utf-8", errors="replace")[-2000:]
             raise RuntimeError(f"rviz2 exited early (status {rviz.returncode}): {detail}")
-        fit_rviz_window(rviz.pid, env, rviz_config)
+        fullscreen_rviz_window(rviz.pid, env)
         clock = ClockTrace()
         capture_start = time.time_ns()
         ffmpeg_log = path.with_suffix(".ffmpeg.log")
@@ -1227,6 +1220,7 @@ def capture_rviz(
         samples = clock.close() if clock else []
         stop(rviz)
         stop(vehicle_publisher)
+        stop(window_manager)
         stop(xvfb)
         if vehicle_params:
             vehicle_params.unlink(missing_ok=True)
@@ -1332,6 +1326,7 @@ def compose(
 ) -> None:
     try:
         from moviepy import CompositeVideoClip
+        from moviepy import ImageClip
         from moviepy import VideoFileClip
         from moviepy import concatenate_videoclips
         from moviepy import vfx
@@ -1346,41 +1341,40 @@ def compose(
     plot = VideoFileClip(str(plot_path)).with_duration(asset_duration)
     segments = []
     try:
-        width, height = rviz.size
-        margin = 24
+        if tuple(rviz.size) != SCREEN:
+            raise ValueError(f"RViz asset must be {SCREEN[0]}x{SCREEN[1]}; got {rviz.size}")
+        rviz_width, height = rviz.size
+        width = rviz_width + SIDEBAR_WIDTH
+        sidebar_x = rviz_width
         if len(cameras) == 4:
-            gap = 12
-            tile_width = min(400, (width - 2 * margin - gap) // 2)
+            gap = 8
+            tile_width = (SIDEBAR_WIDTH - gap) // 2
             cameras = [camera.resized(width=tile_width) for camera in cameras]
             if len({camera.h for camera in cameras}) != 1:
                 raise ValueError("All grid cameras must have the same aspect ratio")
             tile_height = cameras[0].h
             grid_height = 2 * tile_height + gap
-            grid_y = height - margin - grid_height
-            plot_space_height = grid_y - margin - gap
-            if plot_space_height <= 0:
-                raise ValueError("RViz canvas too short for camera grid and plot")
-            plot_width = min(round(width * 0.4), plot_space_height * plot.w // plot.h)
-            if plot_width <= 0:
-                raise ValueError("RViz canvas too narrow for the plot")
-            plot = plot.resized(width=plot_width)
-            if plot.h > plot_space_height:
-                raise ValueError("RViz canvas too short for the enlarged plot")
-            grid_x = width - margin - (2 * tile_width + gap)
+            if tuple(plot.size) != PLOT:
+                raise ValueError(f"Plot asset must be {PLOT[0]}x{PLOT[1]}; got {plot.size}")
+            grid_y = height - grid_height
+            if grid_y < plot.h + gap:
+                raise ValueError("Sidebar is too short for the full-width plot and camera grid")
             camera_positions = [
-                (grid_x + col * (tile_width + gap), grid_y + row * (tile_height + gap))
+                (sidebar_x + col * (tile_width + gap), grid_y + row * (tile_height + gap))
                 for row in range(2)
                 for col in range(2)
             ]
-            plot_position = (width - plot.w - margin, margin)
+            plot_position = (sidebar_x, 0)
         elif len(cameras) == 1:
-            overlay_width = min(480, width // 3)
+            margin = 24
+            overlay_width = min(480, SIDEBAR_WIDTH - 2 * margin)
             cameras = [cameras[0].resized(width=overlay_width)]
             plot = plot.resized(width=overlay_width)
             if cameras[0].h + plot.h + 3 * margin > height:
                 raise ValueError("RViz canvas too short for overlays")
-            camera_positions = [(width - overlay_width - margin, margin)]
-            plot_position = (width - plot.w - margin, height - plot.h - margin)
+            sidebar_center = sidebar_x + (SIDEBAR_WIDTH - overlay_width) // 2
+            camera_positions = [(sidebar_center, margin)]
+            plot_position = (sidebar_center, height - plot.h - margin)
         else:
             raise ValueError("Compositor expects one or four camera videos")
         boundaries = []
@@ -1390,23 +1384,38 @@ def compose(
             if first < cursor:
                 raise ValueError("Event intervals overlap on the 30 FPS grid")
             if first > cursor:
-                boundaries.append((cursor, first, config.default_speed, False))
+                boundaries.append((cursor, first, config.default_speed))
             if last > first:
-                boundaries.append((first, last, event.speed, True))
+                boundaries.append((first, last, event.speed))
             else:
                 LOG.warning("Event shorter than one frame omitted: %d..%d", event.start, event.end)
             cursor = last
         if cursor < timeline.count:
-            boundaries.append((cursor, timeline.count, config.default_speed, False))
-        for first, last, multiplier, show_plot in boundaries:
+            boundaries.append((cursor, timeline.count, config.default_speed))
+        for first, last, multiplier in boundaries:
             begin, end = first / FPS, last / FPS
             layers = [rviz.subclipped(begin, end)]
             layers.extend(
                 camera.subclipped(begin, end).with_position(position)
                 for camera, position in zip(cameras, camera_positions)
             )
-            if show_plot:
-                layers.append(plot.subclipped(begin, end).with_position(plot_position))
+            layers.append(plot.subclipped(begin, end).with_position(plot_position))
+            label = f"Replay: {multiplier:g}x"
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            (text_width, text_height), _ = cv2.getTextSize(label, font, 0.9, 2)
+            badge = np.zeros((text_height + 28, text_width + 32, 4), dtype=np.uint8)
+            badge[:] = (12, 20, 30, 205)
+            cv2.putText(
+                badge,
+                label,
+                (16, text_height + 14),
+                font,
+                0.9,
+                (255, 255, 255, 255),
+                2,
+                cv2.LINE_AA,
+            )
+            layers.append(ImageClip(badge).with_duration(end - begin).with_position((48, 64)))
             segment = CompositeVideoClip(layers, size=(width, height))
             segments.append(segment.with_effects([vfx.MultiplySpeed(multiplier)]))
         if not segments:

@@ -34,15 +34,17 @@ as the Bool-topic clearance example. A scalar `metrics` entry names a
 `std_msgs/msg/Float32` or `autoware_internal_debug_msgs/msg/Float64Stamped`
 topic. Optional `label` and `color` fields set its plot appearance. Explicit
 `events` contain absolute bag timestamps as integer nanoseconds; each includes
-`start_ns`, excludes `end_ns`, shows the plot, and plays at its `speed` (default
+`start_ns`, excludes `end_ns`, and plays at its `speed` (default
 0.5). Events must not overlap and must lie within the global bag timeline.
 
 Alternatively, `event_detection` names a `std_msgs/msg/Bool` topic. A true
 value starts an event and the next false value ends it. `pre_margin_s` and
 `post_margin_s` expand each interval, clamp it to the bag timeline, and merge
 overlapping or touching intervals. An event still active at the end of the bag
-ends at the bag end. The event `speed` defaults to 0.5. Outside events, the
-plot is hidden and playback uses `default_speed` (default 2.0). Use either
+ends at the bag end. The event `speed` defaults to 0.5. Outside events,
+playback uses `default_speed` (default 2.0). The plot stays visible throughout;
+its lines are empty when no metric samples are available. The current replay
+speed is shown in the upper-left of the video. Use either
 `events` or `event_detection` in one YAML file.
 Set `plot_window_s` to show only the most recent number of seconds in the plot;
 omit it to show the complete bag timeline.
@@ -65,8 +67,8 @@ ordered row by row; each entry requires a unique `name`, a visible `label`, an
 `image_topic`, and an `info_topic`. See `mppi_cameras.yaml` for Camera 1, 6, 8,
 and 2 in left, front low, front high, right order. Each feed is rendered at
 800 pixels wide after trajectory projection and written to
-`camera_<name>_1x.mp4`. The grid occupies the lower-right of RViz; the enlarged
-plot appears above it during events, at about 80% of the upper-right half's width.
+`camera_<name>_1x.mp4`. The grid fills the lower part of the dedicated right
+column; a 960 × 450 plot fills the upper part. An eight-pixel gap separates them.
 The original single-camera CLI remains available
 with `--camera-topic` and `--camera-info-topic`, producing `camera_1x.mp4`.
 
@@ -86,11 +88,14 @@ bag's `/tf`, `/tf_static`, and CameraInfo directly. It supports calibrated
 Each rendered camera frame is held through frame gaps, preserving the 30 FPS timeline.
 RViz is captured under Xvfb and aligned to the bag timeline using `/clock`;
 rendering and screen capture may differ by about one 30 FPS frame.
-The RViz capture hides the X11 mouse pointer.
-The capture uses a 1920 × 1080 virtual screen. Install `xdotool` alongside
-`Xvfb` and `ffmpeg`; the script applies the RViz config's `Window Geometry`
-before recording and stops if the window does not fit the screen. The included
-`mppi.rviz` is sized to 1880 × 1000 at position (20, 20).
+The RViz capture hides the X11 mouse pointer. It starts `xfwm4` in a temporary
+D-Bus session, sends F11 to RViz, and verifies that the window fills the
+1440 × 1080 virtual screen before recording.
+The capture uses a 1440 × 1080 virtual screen. The final video is 2400 × 1080,
+with RViz on the left and a separate 960-pixel column for cameras and plot.
+Install `xdotool`, `xfwm4`, and `dbus-run-session` alongside `Xvfb` and
+`ffmpeg`. The included `mppi.rviz` has a 1400 × 1000 normal window geometry;
+F11 expands it for capture.
 With `--vehicle-model j6_gen2`, the script expands the installed
 `j6_gen2_description/urdf/vehicle.xacro` and runs `robot_state_publisher`
 during RViz capture. This supplies `/robot_description` even when the bag does
