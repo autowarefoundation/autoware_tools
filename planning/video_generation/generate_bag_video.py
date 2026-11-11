@@ -1356,15 +1356,23 @@ def compose(
                 raise ValueError("All grid cameras must have the same aspect ratio")
             tile_height = cameras[0].h
             grid_height = 2 * tile_height + gap
-            plot = plot.resized(width=min(480, width // 3))
-            if margin + grid_height + margin + plot.h + margin > height:
+            grid_y = height - margin - grid_height
+            plot_space_height = grid_y - margin - gap
+            if plot_space_height <= 0:
                 raise ValueError("RViz canvas too short for camera grid and plot")
+            plot_width = min(round(width * 0.4), plot_space_height * plot.w // plot.h)
+            if plot_width <= 0:
+                raise ValueError("RViz canvas too narrow for the plot")
+            plot = plot.resized(width=plot_width)
+            if plot.h > plot_space_height:
+                raise ValueError("RViz canvas too short for the enlarged plot")
             grid_x = width - margin - (2 * tile_width + gap)
             camera_positions = [
-                (grid_x + col * (tile_width + gap), margin + row * (tile_height + gap))
+                (grid_x + col * (tile_width + gap), grid_y + row * (tile_height + gap))
                 for row in range(2)
                 for col in range(2)
             ]
+            plot_position = (width - plot.w - margin, margin)
         elif len(cameras) == 1:
             overlay_width = min(480, width // 3)
             cameras = [cameras[0].resized(width=overlay_width)]
@@ -1372,6 +1380,7 @@ def compose(
             if cameras[0].h + plot.h + 3 * margin > height:
                 raise ValueError("RViz canvas too short for overlays")
             camera_positions = [(width - overlay_width - margin, margin)]
+            plot_position = (width - plot.w - margin, height - plot.h - margin)
         else:
             raise ValueError("Compositor expects one or four camera videos")
         boundaries = []
@@ -1397,11 +1406,7 @@ def compose(
                 for camera, position in zip(cameras, camera_positions)
             )
             if show_plot:
-                layers.append(
-                    plot.subclipped(begin, end).with_position(
-                        (width - plot.w - margin, height - plot.h - margin)
-                    )
-                )
+                layers.append(plot.subclipped(begin, end).with_position(plot_position))
             segment = CompositeVideoClip(layers, size=(width, height))
             segments.append(segment.with_effects([vfx.MultiplySpeed(multiplier)]))
         if not segments:

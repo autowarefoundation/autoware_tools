@@ -65,8 +65,9 @@ ordered row by row; each entry requires a unique `name`, a visible `label`, an
 `image_topic`, and an `info_topic`. See `mppi_cameras.yaml` for Camera 1, 6, 8,
 and 2 in left, front low, front high, right order. Each feed is rendered at
 800 pixels wide after trajectory projection and written to
-`camera_<name>_1x.mp4`. The grid occupies the upper-right of RViz; the plot
-appears below it during events. The original single-camera CLI remains available
+`camera_<name>_1x.mp4`. The grid occupies the lower-right of RViz; the enlarged
+plot appears above it during events, at about 80% of the upper-right half's width.
+The original single-camera CLI remains available
 with `--camera-topic` and `--camera-info-topic`, producing `camera_1x.mp4`.
 
 The first image on each camera topic sets its asset resolution. Frames before it
