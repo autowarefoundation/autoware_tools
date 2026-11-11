@@ -1,5 +1,5 @@
-default_speed: 2.0
-plot_window_s: 10.0
+default_speed: 3.0
+plot_window_s: 5.0
 
 clearance:
   optimized_topic: /planning/trajectory_generator/trajectory_modifier/debug/mppi/optimized_trajectory

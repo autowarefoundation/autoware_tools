@@ -310,7 +310,7 @@ def render_clearance_plot(bags, kinds, config, vehicle_model, path, timeline, fp
         axis.legend(loc="upper left", fontsize=7, framealpha=0.2, labelcolor="white", ncol=2)
         cursor = axis.axvline(0, color="white", alpha=0.4, linewidth=0.8)
         axes.append((axis, traces, cursor))
-    axes[-1][0].set_xlabel("Seconds from bag start", color="white", fontsize=8)
+    axes[-1][0].set_xlabel("Seconds from video start", color="white", fontsize=8)
     figure.subplots_adjust(left=0.11, right=0.98, top=0.94, bottom=0.13, hspace=0.48)
     writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
     if not writer.isOpened():

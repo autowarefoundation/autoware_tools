@@ -112,6 +112,40 @@ class CameraOverlay:
     warnings: set[str] = field(default_factory=set)
 
 
+@dataclass(frozen=True)
+class CameraSource:
+    name: str
+    label: str
+    image_topic: str
+    info_topic: str | None
+
+
+def camera_sources(path: Path) -> list[CameraSource]:
+    data = yaml.safe_load(path.read_text())
+    if not isinstance(data, dict) or not isinstance(data.get("cameras"), list):
+        raise ValueError("Camera config must contain a cameras list")
+    entries = data["cameras"]
+    if len(entries) != 4:
+        raise ValueError("The 2x2 camera layout requires exactly four cameras")
+    sources = []
+    for entry in entries:
+        if not isinstance(entry, dict) or any(
+            not isinstance(entry.get(key), str) or not entry[key].strip()
+            for key in ("name", "label", "image_topic", "info_topic")
+        ):
+            raise ValueError("Each camera needs nonempty name, label, image_topic, info_topic")
+        if not entry["name"].replace("_", "").isalnum():
+            raise ValueError("Camera names may contain only letters, digits, and underscores")
+        sources.append(
+            CameraSource(entry["name"], entry["label"], entry["image_topic"], entry["info_topic"])
+        )
+    for key in ("name", "image_topic", "info_topic"):
+        values = [getattr(source, key) for source in sources]
+        if len(values) != len(set(values)):
+            raise ValueError(f"Camera {key} values must be unique")
+    return sources
+
+
 def validate_ros_environment() -> None:
     """Require the caller's CycloneDDS settings before creating any ROS node."""
     implementation = os.environ.get("RMW_IMPLEMENTATION")
@@ -217,6 +251,52 @@ def margin_ns(value: object, name: str) -> int:
     return round(number * NSEC)
 
 
+MOTION_TOPIC = "/vehicle/status/velocity_status"
+MOTION_MESSAGE_TYPES = {
+    "autoware_vehicle_msgs/msg/VelocityReport",
+    "nav_msgs/msg/Odometry",
+    "geometry_msgs/msg/TwistStamped",
+    "geometry_msgs/msg/TwistWithCovarianceStamped",
+}
+
+
+def motion_speed(message, kind: str) -> float:
+    if kind == "autoware_vehicle_msgs/msg/VelocityReport":
+        return math.hypot(message.longitudinal_velocity, message.lateral_velocity)
+    if kind == "nav_msgs/msg/Odometry":
+        linear = message.twist.twist.linear
+    elif kind == "geometry_msgs/msg/TwistWithCovarianceStamped":
+        linear = message.twist.twist.linear
+    else:
+        linear = message.twist.linear
+    return math.sqrt(linear.x**2 + linear.y**2 + linear.z**2)
+
+
+def first_motion_stamp(
+    bags: list[Bag], topic: str = MOTION_TOPIC, threshold_mps: float = 0.1
+) -> int:
+    kinds = {bag.topics[topic] for bag in bags if topic in bag.topics}
+    if len(kinds) != 1 or next(iter(kinds), None) not in MOTION_MESSAGE_TYPES:
+        raise ValueError(
+            f"Motion topic {topic} must have one of {sorted(MOTION_MESSAGE_TYPES)} "
+            f"across bags; found {sorted(kinds)}"
+        )
+    kind = next(iter(kinds))
+    cls = get_message(kind)
+    for bag in bags:
+        if topic not in bag.topics:
+            LOG.warning("Motion topic absent from %s", bag.path)
+            continue
+        reader = reader_for(bag, [topic])
+        while reader.has_next():
+            _, payload, stamp = reader.read_next()
+            value = motion_speed(deserialize_message(payload, cls), kind)
+            if math.isfinite(value) and value >= threshold_mps:
+                LOG.info("First ego motion: %d ns (%.3f m/s) on %s", stamp, value, topic)
+                return stamp
+    raise ValueError(f"No ego motion at or above {threshold_mps:g} m/s on {topic}")
+
+
 def events_from_bool_topic(
     bags: list[Bag], topic: str, timeline: Timeline, pre_ns: int, post_ns: int, event_speed: float
 ) -> list[Event]:
@@ -259,7 +339,7 @@ def events_from_bool_topic(
     )
     for event in merged:
         LOG.info(
-            "Event: %d..%d ns (%.3f..%.3f s from bag start)",
+            "Event: %d..%d ns (%.3f..%.3f s from video start)",
             event.start,
             event.end,
             (event.start - timeline.start) / NSEC,
@@ -331,25 +411,29 @@ def config_from_yaml(
     if raw_metrics and not metrics:
         raise ValueError("No configured metric topics exist in the bags")
     events = []
-    if not isinstance(raw.get("events", []), list):
+    raw_events = raw.get("events", [])
+    if not isinstance(raw_events, list):
         raise ValueError("'events' must be a list")
-    for item in raw.get("events", []):
+    if raw_events and raw.get("event_detection") is not None:
+        raise ValueError("Use either 'events' or 'event_detection', not both")
+    bag_start = bags[0].start if bags else timeline.start
+    for item in raw_events:
         if not isinstance(item, dict):
             raise ValueError("Each event must be a mapping")
         start, end = item.get("start_ns"), item.get("end_ns")
         if any(isinstance(value, bool) or not isinstance(value, int) for value in (start, end)):
             raise ValueError("Event start_ns and end_ns must be integer nanoseconds")
-        if not timeline.start <= start < end <= timeline.end:
+        if not bag_start <= start < end <= timeline.end:
             raise ValueError(f"Event [{start}, {end}) is outside the bag timeline")
-        events.append(Event(start, end, speed(item.get("speed", 0.5), "event speed")))
+        event_speed = speed(item.get("speed", 0.5), "event speed")
+        if end > timeline.start:
+            events.append(Event(max(start, timeline.start), end, event_speed))
     events.sort(key=lambda event: event.start)
     for left, right in zip(events, events[1:]):
         if right.start < left.end:
             raise ValueError("Event intervals must not overlap")
     detection = raw.get("event_detection")
     if detection is not None:
-        if events:
-            raise ValueError("Use either 'events' or 'event_detection', not both")
         if not isinstance(detection, dict) or not isinstance(detection.get("topic"), str):
             raise ValueError("event_detection needs a Bool topic string")
         topic = detection["topic"]
@@ -439,20 +523,20 @@ def ribbon_vertices(message, kind: str, width_m: float) -> np.ndarray:
     return vertices
 
 
-def load_camera_overlay(
+def load_camera_overlays(
     bags: list[Bag],
     timeline: Timeline,
     kinds: dict[str, str],
-    camera_info_topic: str,
+    camera_info_topics: list[str],
     main_topic: str,
     mppi_topic: str | None,
     events: list[Event],
     width_m: float,
     mppi_width_m: float,
     alpha: float,
-) -> CameraOverlay:
+) -> dict[str, CameraOverlay]:
     for topic, expected in (
-        (camera_info_topic, "sensor_msgs/msg/CameraInfo"),
+        *((topic, "sensor_msgs/msg/CameraInfo") for topic in camera_info_topics),
         ("/tf", "tf2_msgs/msg/TFMessage"),
         ("/tf_static", "tf2_msgs/msg/TFMessage"),
     ):
@@ -466,11 +550,12 @@ def load_camera_overlay(
         if kinds.get(topic) not in supported:
             raise ValueError(f"Unsupported or missing trajectory topic {topic}: {kinds.get(topic)}")
     classes = {topic: get_message(kinds[topic]) for topic in trajectory_topics}
-    classes[camera_info_topic] = get_message("sensor_msgs/msg/CameraInfo")
+    for topic in camera_info_topics:
+        classes[topic] = get_message("sensor_msgs/msg/CameraInfo")
     classes["/tf"] = classes["/tf_static"] = get_message("tf2_msgs/msg/TFMessage")
     buffer = Buffer(cache_time=Duration(nanoseconds=timeline.end - timeline.start + 60 * NSEC))
-    infos: list[tuple[int, object]] = []
-    invalid_infos = 0
+    infos: dict[str, list[tuple[int, object]]] = {topic: [] for topic in camera_info_topics}
+    invalid_infos: dict[str, int] = {topic: 0 for topic in camera_info_topics}
     trajectories = {topic: [] for topic in trajectory_topics}
     for bag in bags:
         active = sorted(set(classes) & bag.topics.keys())
@@ -486,14 +571,14 @@ def load_camera_overlay(
             elif topic == "/tf_static":
                 for transform in message.transforms:
                     buffer.set_transform_static(transform, "bag_video")
-            elif topic == camera_info_topic:
+            elif topic in infos:
                 if (
                     message.distortion_model not in {"plumb_bob", "rational_polynomial"}
                     or not message.k[0]
                 ):
-                    invalid_infos += 1
+                    invalid_infos[topic] += 1
                 else:
-                    infos.append((stamp, message))
+                    infos[topic].append((stamp, message))
             else:
                 ribbon_width = mppi_width_m if topic == mppi_topic else width_m
                 vertices = ribbon_vertices(message, kinds[topic], ribbon_width)
@@ -501,11 +586,12 @@ def load_camera_overlay(
                     trajectories[topic].append(
                         TrajectoryRibbon(stamp, message.header.frame_id, vertices)
                     )
-    if not infos:
-        raise ValueError(f"No calibrated supported CameraInfo messages on {camera_info_topic}")
-    if invalid_infos:
-        LOG.warning("Skipped %d uncalibrated or unsupported CameraInfo messages", invalid_infos)
-    infos.sort(key=lambda item: item[0])
+    for topic, series in infos.items():
+        if not series:
+            raise ValueError(f"No calibrated supported CameraInfo messages on {topic}")
+        if invalid_infos[topic]:
+            LOG.warning("Skipped %d invalid CameraInfo messages on %s", invalid_infos[topic], topic)
+        series.sort(key=lambda item: item[0])
     for topic, series in trajectories.items():
         series.sort(key=lambda item: item.record_stamp)
         LOG.info("Trajectory overlay %s: %d usable messages", topic, len(series))
@@ -513,17 +599,49 @@ def load_camera_overlay(
         raise ValueError(f"No usable trajectory messages on {main_topic}")
     if mppi_topic and not trajectories[mppi_topic]:
         LOG.warning("No usable MPPI trajectory messages on %s", mppi_topic)
-    return CameraOverlay(
-        buffer,
-        infos,
-        [stamp for stamp, _ in infos],
-        trajectories,
-        {topic: [item.record_stamp for item in series] for topic, series in trajectories.items()},
+    stamps = {
+        topic: [item.record_stamp for item in series] for topic, series in trajectories.items()
+    }
+    return {
+        topic: CameraOverlay(
+            buffer,
+            series,
+            [stamp for stamp, _ in series],
+            trajectories,
+            stamps,
+            main_topic,
+            mppi_topic,
+            events,
+            alpha,
+        )
+        for topic, series in infos.items()
+    }
+
+
+def load_camera_overlay(
+    bags: list[Bag],
+    timeline: Timeline,
+    kinds: dict[str, str],
+    camera_info_topic: str,
+    main_topic: str,
+    mppi_topic: str | None,
+    events: list[Event],
+    width_m: float,
+    mppi_width_m: float,
+    alpha: float,
+) -> CameraOverlay:
+    return load_camera_overlays(
+        bags,
+        timeline,
+        kinds,
+        [camera_info_topic],
         main_topic,
         mppi_topic,
         events,
+        width_m,
+        mppi_width_m,
         alpha,
-    )
+    )[camera_info_topic]
 
 
 def latest_ribbon(overlay: CameraOverlay, topic: str, stamp: int) -> TrajectoryRibbon | None:
@@ -626,6 +744,8 @@ def camera_video(
     path: Path,
     timeline: Timeline,
     overlay: CameraOverlay | None = None,
+    output_width: int | None = None,
+    label: str | None = None,
 ) -> None:
     writer = None
     last = None
@@ -644,6 +764,28 @@ def camera_video(
                 image = decode_camera(message, kind)
                 if overlay:
                     image = draw_camera_overlay(image, message, stamp, overlay)
+                if output_width is not None:
+                    image = cv2.resize(
+                        image,
+                        (output_width, round(image.shape[0] * output_width / image.shape[1])),
+                        interpolation=cv2.INTER_AREA,
+                    )
+                if label:
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    scale = max(0.5, image.shape[1] / 900)
+                    thickness = max(1, round(scale * 2))
+                    (text_width, text_height), _ = cv2.getTextSize(label, font, scale, thickness)
+                    cv2.rectangle(image, (8, 8), (text_width + 22, text_height + 24), (0, 0, 0), -1)
+                    cv2.putText(
+                        image,
+                        label,
+                        (15, text_height + 15),
+                        font,
+                        scale,
+                        (255, 255, 255),
+                        thickness,
+                        cv2.LINE_AA,
+                    )
                 if writer is None:
                     height, width = image.shape[:2]
                     writer = writer_for(path, (width, height))
@@ -740,7 +882,7 @@ def plot_video(
         (line,) = axis.plot([], [], color=metric["color"] or f"C{index % 10}", linewidth=1.5)
         cursor = axis.axvline(0, color="white", alpha=0.5, linewidth=0.8)
         curves.append((axis, line, cursor, stamps, (stamps - timeline.start) / NSEC, values))
-    axis.set_xlabel("Seconds from bag start", color="white", fontsize=8)
+    axis.set_xlabel("Seconds from video start", color="white", fontsize=8)
     figure.subplots_adjust(left=0.16, right=0.98, top=0.97, bottom=0.13, hspace=0.32)
     writer = writer_for(path, PLOT)
     try:
@@ -1182,7 +1324,7 @@ def video_frames(path: Path) -> int:
 
 def compose(
     rviz_path: Path,
-    camera_path: Path,
+    camera_paths: Path | list[Path],
     plot_path: Path,
     final_path: Path,
     config: Config,
@@ -1198,19 +1340,40 @@ def compose(
     # ffmpeg may report MP4 duration rounded to centiseconds (e.g. 0.63 for
     # 19 frames at 30 FPS). The verified frame count is our duration authority.
     asset_duration = timeline.count / FPS
-    rviz, camera, plot = (
-        VideoFileClip(str(path)).with_duration(asset_duration)
-        for path in (rviz_path, camera_path, plot_path)
-    )
+    paths = [camera_paths] if isinstance(camera_paths, Path) else camera_paths
+    rviz = VideoFileClip(str(rviz_path)).with_duration(asset_duration)
+    cameras = [VideoFileClip(str(path)).with_duration(asset_duration) for path in paths]
+    plot = VideoFileClip(str(plot_path)).with_duration(asset_duration)
     segments = []
     try:
         width, height = rviz.size
         margin = 24
-        overlay_width = min(480, width // 3)
-        camera = camera.resized(width=overlay_width)
-        plot = plot.resized(width=overlay_width)
-        if camera.h + plot.h + 3 * margin > height:
-            raise ValueError("RViz canvas too short for overlays")
+        if len(cameras) == 4:
+            gap = 12
+            tile_width = min(400, (width - 2 * margin - gap) // 2)
+            cameras = [camera.resized(width=tile_width) for camera in cameras]
+            if len({camera.h for camera in cameras}) != 1:
+                raise ValueError("All grid cameras must have the same aspect ratio")
+            tile_height = cameras[0].h
+            grid_height = 2 * tile_height + gap
+            plot = plot.resized(width=min(480, width // 3))
+            if margin + grid_height + margin + plot.h + margin > height:
+                raise ValueError("RViz canvas too short for camera grid and plot")
+            grid_x = width - margin - (2 * tile_width + gap)
+            camera_positions = [
+                (grid_x + col * (tile_width + gap), margin + row * (tile_height + gap))
+                for row in range(2)
+                for col in range(2)
+            ]
+        elif len(cameras) == 1:
+            overlay_width = min(480, width // 3)
+            cameras = [cameras[0].resized(width=overlay_width)]
+            plot = plot.resized(width=overlay_width)
+            if cameras[0].h + plot.h + 3 * margin > height:
+                raise ValueError("RViz canvas too short for overlays")
+            camera_positions = [(width - overlay_width - margin, margin)]
+        else:
+            raise ValueError("Compositor expects one or four camera videos")
         boundaries = []
         cursor = 0
         for event in config.events:
@@ -1228,16 +1391,15 @@ def compose(
             boundaries.append((cursor, timeline.count, config.default_speed, False))
         for first, last, multiplier, show_plot in boundaries:
             begin, end = first / FPS, last / FPS
-            layers = [
-                rviz.subclipped(begin, end),
-                camera.subclipped(begin, end).with_position(
-                    (width - overlay_width - margin, margin)
-                ),
-            ]
+            layers = [rviz.subclipped(begin, end)]
+            layers.extend(
+                camera.subclipped(begin, end).with_position(position)
+                for camera, position in zip(cameras, camera_positions)
+            )
             if show_plot:
                 layers.append(
                     plot.subclipped(begin, end).with_position(
-                        (width - overlay_width - margin, height - plot.h - margin)
+                        (width - plot.w - margin, height - plot.h - margin)
                     )
                 )
             segment = CompositeVideoClip(layers, size=(width, height))
@@ -1255,7 +1417,8 @@ def compose(
         for segment in segments:
             segment.close()
         rviz.close()
-        camera.close()
+        for camera in cameras:
+            camera.close()
         plot.close()
 
 
@@ -1267,7 +1430,9 @@ def main() -> None:
         "--vehicle-model",
         help="Publish the installed <name>_description vehicle Xacro during RViz capture",
     )
-    parser.add_argument("--camera-topic", required=True)
+    camera_group = parser.add_mutually_exclusive_group(required=True)
+    camera_group.add_argument("--camera-topic", help="Single camera image topic")
+    camera_group.add_argument("--camera-config", type=Path, help="Four-camera grid YAML")
     parser.add_argument("--camera-info-topic", help="CameraInfo for the camera image overlay")
     parser.add_argument("--trajectory-topic", help="Trajectory ribbon shown throughout the video")
     parser.add_argument(
@@ -1276,13 +1441,31 @@ def main() -> None:
     parser.add_argument("--ribbon-width-m", type=float, default=2.0)
     parser.add_argument("--mppi-ribbon-width-m", type=float, default=1.0)
     parser.add_argument("--ribbon-alpha", type=float, default=0.4)
+    parser.add_argument(
+        "--start-before-motion-s",
+        type=float,
+        help="Begin this many seconds before the first ego speed reaching the threshold",
+    )
+    parser.add_argument(
+        "--motion-topic",
+        default=MOTION_TOPIC,
+        help=f"Ego speed topic for start detection (default: {MOTION_TOPIC})",
+    )
+    parser.add_argument(
+        "--motion-threshold-mps",
+        type=float,
+        default=0.1,
+        help="Speed that counts as moving (default: 0.1 m/s)",
+    )
     parser.add_argument("--plot-config", type=Path, required=True)
     parser.add_argument("--intermediate-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
-    if args.trajectory_topic and not args.camera_info_topic:
-        parser.error("--trajectory-topic requires --camera-info-topic")
+    if args.camera_config and args.camera_info_topic:
+        parser.error("--camera-info-topic is supplied by --camera-config")
+    if args.trajectory_topic and not (args.camera_info_topic or args.camera_config):
+        parser.error("--trajectory-topic requires camera info")
     if args.mppi_trajectory_topic and not args.trajectory_topic:
         parser.error("--mppi-trajectory-topic requires --trajectory-topic")
     if args.camera_info_topic and not args.trajectory_topic:
@@ -1293,40 +1476,67 @@ def main() -> None:
         parser.error("--mppi-ribbon-width-m must be positive and finite")
     if not math.isfinite(args.ribbon_alpha) or not 0 < args.ribbon_alpha <= 1:
         parser.error("--ribbon-alpha must be within (0, 1]")
+    if args.start_before_motion_s is not None:
+        if not math.isfinite(args.start_before_motion_s) or args.start_before_motion_s < 0:
+            parser.error("--start-before-motion-s must be finite and nonnegative")
+        if not math.isfinite(args.motion_threshold_mps) or args.motion_threshold_mps <= 0:
+            parser.error("--motion-threshold-mps must be finite and positive")
     validate_ros_environment()
-    for path in (args.rviz_config, args.plot_config):
+    for path in (args.rviz_config, args.plot_config, args.camera_config):
+        if path is None:
+            continue
         if not path.is_file():
             parser.error(f"File does not exist: {path}")
+    sources = (
+        camera_sources(args.camera_config)
+        if args.camera_config
+        else [CameraSource("camera", "Camera", args.camera_topic, args.camera_info_topic)]
+    )
     bags = read_bags(args.bag_files)
-    timeline = Timeline(bags[0].start, bags[-1].end)
+    start = bags[0].start
+    if args.start_before_motion_s is not None:
+        first = first_motion_stamp(bags, args.motion_topic, args.motion_threshold_mps)
+        start = max(start, first - round(args.start_before_motion_s * NSEC))
+        LOG.info(
+            "Video starts at %d ns, %.3f s before first ego motion (%.3f s into bag)",
+            start,
+            (first - start) / NSEC,
+            (start - bags[0].start) / NSEC,
+        )
+    timeline = Timeline(start, bags[-1].end)
     kinds = {}
     for bag in bags:
         for topic, kind in bag.topics.items():
             if topic in kinds and kinds[topic] != kind:
                 raise ValueError(f"Topic type changes across bags: {topic}")
             kinds[topic] = kind
-    kind = kinds.get(args.camera_topic)
-    if kind not in {"sensor_msgs/msg/Image", "sensor_msgs/msg/CompressedImage"}:
-        raise ValueError(
-            f"Camera topic {args.camera_topic} has unsupported or missing type: {kind}"
-        )
+    for source in sources:
+        kind = kinds.get(source.image_topic)
+        if kind not in {"sensor_msgs/msg/Image", "sensor_msgs/msg/CompressedImage"}:
+            raise ValueError(
+                f"Camera topic {source.image_topic} has unsupported or missing type: {kind}"
+            )
     requested = rviz_topics(args.rviz_config)
     generated_topics = {"/robot_description"} if args.vehicle_model else set()
     for topic in sorted(requested - kinds.keys() - generated_topics):
         LOG.warning("RViz topic missing from bags: %s", topic)
     play_topics = sorted(
-        ((requested | {args.camera_topic, "/tf", "/tf_static"}) & kinds.keys()) - generated_topics
+        (
+            (requested | {source.image_topic for source in sources} | {"/tf", "/tf_static"})
+            & kinds.keys()
+        )
+        - generated_topics
     )
     LOG.info("RViz playback topics (%d): %s", len(play_topics), ", ".join(play_topics))
     config = config_from_yaml(args.plot_config, timeline, kinds, bags)
     if config.clearance is not None and not args.vehicle_model:
         parser.error("Clearance plots require --vehicle-model for the ego footprint")
-    overlay = (
-        load_camera_overlay(
+    overlays = (
+        load_camera_overlays(
             bags,
             timeline,
             kinds,
-            args.camera_info_topic,
+            [source.info_topic for source in sources],
             args.trajectory_topic,
             args.mppi_trajectory_topic,
             config.events,
@@ -1335,15 +1545,29 @@ def main() -> None:
             args.ribbon_alpha,
         )
         if args.trajectory_topic
-        else None
+        else {}
     )
     args.intermediate_dir.mkdir(parents=True, exist_ok=True)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    camera_path = args.intermediate_dir / "camera_1x.mp4"
+    camera_paths = [
+        args.intermediate_dir
+        / ("camera_1x.mp4" if not args.camera_config else f"camera_{source.name}_1x.mp4")
+        for source in sources
+    ]
     plot_path = args.intermediate_dir / "plot_1x.mp4"
     rviz_path = args.intermediate_dir / "rviz_1x.mp4"
     final_path = args.output_dir / "final_video.mp4"
-    camera_video(bags, args.camera_topic, kind, camera_path, timeline, overlay)
+    for source, camera_path in zip(sources, camera_paths):
+        camera_video(
+            bags,
+            source.image_topic,
+            kinds[source.image_topic],
+            camera_path,
+            timeline,
+            overlays.get(source.info_topic),
+            output_width=800 if args.camera_config else None,
+            label=source.label if args.camera_config else None,
+        )
     plot_video(bags, config, plot_path, timeline, kinds, args.vehicle_model)
     with tempfile.TemporaryDirectory(prefix="bag_video_rviz_") as directory:
         capture = Path(directory) / "rviz_capture.mkv"
@@ -1351,11 +1575,11 @@ def main() -> None:
             bags, args.rviz_config.resolve(), play_topics, capture, args.vehicle_model
         )
         align_rviz(capture, rviz_path, trace, timeline, capture_start)
-    for path in (camera_path, plot_path, rviz_path):
+    for path in (*camera_paths, plot_path, rviz_path):
         count = video_frames(path)
         if count != timeline.count:
             raise RuntimeError(f"{path} has {count} frames, expected {timeline.count}")
-    compose(rviz_path, camera_path, plot_path, final_path, config, timeline)
+    compose(rviz_path, camera_paths, plot_path, final_path, config, timeline)
     LOG.info("Final video: %s", final_path)
 
 

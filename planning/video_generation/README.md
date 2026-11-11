@@ -1,19 +1,27 @@
 # ROS 2 bag video generator
 
-`generate_bag_video.py` turns successive ROS 2 MCAP bags into three synchronized
+`generate_bag_video.py` turns successive ROS 2 MCAP bags into synchronized
 30 FPS assets and one composite video. Run it in a ROS 2 Humble environment
 with MoviePy 2 and Shapely installed. Run `generate.sh` from your configured zsh session;
 it sources the local Autoware workspace, uses `.venv/bin/python` when available,
 and supplies the checked-in MPPI example inputs. Run `zsh generate.sh` for that
 example. Additional CLI arguments override its defaults.
 
+Pass `--start-before-motion-s 5` to start the video five seconds before the
+first ego speed of at least 0.1 m/s. The default motion source is
+`/vehicle/status/velocity_status`; use `--motion-topic` and
+`--motion-threshold-mps` to select another supported speed source or threshold.
+The start is limited to the first bag timestamp, and an error is reported if no
+motion is found. Without this option, video generation starts at the beginning
+of the first bag. Explicit events that overlap the chosen start are clipped;
+events entirely before it are omitted. The plot time axis uses the video start.
+
 ```bash
 zsh generate.sh \
   --bag-files /path/to/first.mcap /path/to/second.mcap \
   --rviz-config /path/to/view.rviz \
   --vehicle-model j6_gen2 \
-  --camera-topic /camera/image/compressed \
-  --camera-info-topic /camera/camera_info \
+  --camera-config /path/to/cameras.yaml \
   --trajectory-topic /planning/trajectory \
   --mppi-trajectory-topic /planning/trajectory_generator/trajectory_modifier/debug/mppi/optimized_trajectory \
   --plot-config /path/to/plot.yaml \
@@ -52,10 +60,19 @@ parked target, leave a gap in that series. Clearance mode requires
 `--vehicle-model` and supports the bag's `autoware_planning_msgs/msg/Trajectory`
 messages.
 
-The first camera image sets the output resolution. Frames before it are black;
-subsequent gaps hold the last image. Bags must be in time order and must not
-overlap. The script writes `camera_1x.mp4`, `plot_1x.mp4`, and `rviz_1x.mp4`
-to the intermediate directory and `final_video.mp4` to the output directory.
+`--camera-config` selects four cameras for a 2×2 grid. Its `cameras` list is
+ordered row by row; each entry requires a unique `name`, a visible `label`, an
+`image_topic`, and an `info_topic`. See `mppi_cameras.yaml` for Camera 1, 6, 8,
+and 2 in left, front low, front high, right order. Each feed is rendered at
+800 pixels wide after trajectory projection and written to
+`camera_<name>_1x.mp4`. The grid occupies the upper-right of RViz; the plot
+appears below it during events. The original single-camera CLI remains available
+with `--camera-topic` and `--camera-info-topic`, producing `camera_1x.mp4`.
+
+The first image on each camera topic sets its asset resolution. Frames before it
+are black; subsequent gaps hold the last image. Bags must be in time order and
+must not overlap. The script also writes `plot_1x.mp4` and `rviz_1x.mp4` to the
+intermediate directory and `final_video.mp4` to the output directory.
 With trajectory options, the camera asset includes a transparent cyan ribbon
 for `--trajectory-topic` throughout the recording. During configured events,
 it also includes a narrower magenta ribbon for `--mppi-trajectory-topic` when
