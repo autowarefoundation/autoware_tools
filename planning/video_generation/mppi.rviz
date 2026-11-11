@@ -5,9 +5,10 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Planning1
-        - /TrajectoryValidatorFilterReport1
+        - /MPPI1
+        - /MPPI1/Namespaces1
       Splitter Ratio: 0.557669460773468
-    Tree Height: 413
+    Tree Height: 573
   - Class: rviz_common/Selection
     Name: Selection
   - Class: rviz_common/Tool Properties
@@ -5055,15 +5056,15 @@ Visualization Manager:
       Value height offset: 0
     - Class: rviz_default_plugins/MarkerArray
       Enabled: true
-      Name: TrajectoryValidatorFilterReport
+      Name: MPPI
       Namespaces:
-        mppi_avoidance_targets: true
-        mppi_drivable_area: true
-        mppi_driving_along_targets: true
-        mppi_nominal: true
+        mppi_avoidance_targets: false
+        mppi_drivable_area: false
+        mppi_driving_along_targets: false
+        mppi_nominal: false
         mppi_optimal: true
-        mppi_reference: true
-        mppi_road_borders: true
+        mppi_reference: false
+        mppi_road_borders: false
       Topic:
         Depth: 5
         Durability Policy: Volatile
