@@ -21,7 +21,8 @@ zsh generate.sh \
   --bag-files /path/to/first.mcap /path/to/second.mcap \
   --rviz-config /path/to/view.rviz \
   --vehicle-model j6_gen2 \
-  --camera-config /path/to/cameras.yaml \
+  --camera-config /path/to/three_cameras.yaml \
+  --birdseye \
   --trajectory-topic /planning/trajectory \
   --mppi-trajectory-topic /planning/trajectory_generator/trajectory_modifier/debug/mppi/optimized_trajectory \
   --plot-config /path/to/plot.yaml \
@@ -62,13 +63,34 @@ parked target, leave a gap in that series. Clearance mode requires
 `--vehicle-model` and supports the bag's `autoware_planning_msgs/msg/Trajectory`
 messages.
 
-`--camera-config` selects four cameras for a 2×2 grid. Its `cameras` list is
+`--camera-config` selects the cameras for the sidebar grid. Its `cameras` list is
 ordered row by row; each entry requires a unique `name`, a visible `label`, an
-`image_topic`, and an `info_topic`. See `mppi_cameras.yaml` for Camera 1, 6, 8,
-and 2 in left, front low, front high, right order. Each feed is rendered at
+`image_topic`, and an `info_topic`. The default `mppi_bev_cameras.yaml` selects
+Cameras 1, 2, and 3 for the first three cells of a 2×2 grid; `--birdseye` puts
+the bird's-eye view in the fourth cell. `mppi_cameras.yaml` keeps the earlier
+four-camera selection and `mppi_all_cameras.yaml` keeps the 11-camera selection
+for comparison. Each feed is rendered at
 800 pixels wide after trajectory projection and written to
 `camera_<name>_1x.mp4`. The grid fills the lower part of the dedicated right
-column; a 960 × 450 plot fills the upper part. An eight-pixel gap separates them.
+column, preserving each camera's aspect ratio; a 960 × 450 plot fills the upper
+part. Eight-pixel gaps separate grid cells. The current example writes to
+`output/mppi_bev_example/final_video.mp4`; prior results stay in their separate
+output directories.
+
+The bird's-eye view uses `/localization/kinematic_state` odometry by default
+(`--birdseye-ego-topic` can select another odometry topic). It shows map road
+borders, the current j6_gen2 ego footprint, and MPPI and ML planner trajectories
+with footprint outlines at every pose. The ML planner line uses the live
+`ml_planner_node/output/trajectory` topic (`--birdseye-ml-topic` can override it),
+so it remains visible outside MPPI events. MPPI disappears one second after its
+last update. Tracked cars, trucks, buses, and trailers with reported speed below
+0.5 m/s appear as parked polygons while their object snapshot is fresh. The
+view stays centered on the ego footprint's geometric center, with forward
+pointing up and a rectangular view extending 4 m ahead and behind
+(`--birdseye-range-m` can change it). Trajectory footprint outlines use 0.40
+alpha and 2-pixel lines. The grid spacing is 1 m at this scale. The full tile
+width is used, so the lateral range follows its aspect ratio. Its synchronized asset is
+`birdseye_1x.mp4`.
 The original single-camera CLI remains available
 with `--camera-topic` and `--camera-info-topic`, producing `camera_1x.mp4`.
 

@@ -126,8 +126,8 @@ def camera_sources(path: Path) -> list[CameraSource]:
     if not isinstance(data, dict) or not isinstance(data.get("cameras"), list):
         raise ValueError("Camera config must contain a cameras list")
     entries = data["cameras"]
-    if len(entries) != 4:
-        raise ValueError("The 2x2 camera layout requires exactly four cameras")
+    if not entries:
+        raise ValueError("Camera config must contain at least one camera")
     sources = []
     for entry in entries:
         if not isinstance(entry, dict) or any(
@@ -1346,24 +1346,36 @@ def compose(
         rviz_width, height = rviz.size
         width = rviz_width + SIDEBAR_WIDTH
         sidebar_x = rviz_width
-        if len(cameras) == 4:
+        if len(cameras) > 1:
             gap = 8
-            tile_width = (SIDEBAR_WIDTH - gap) // 2
-            cameras = [camera.resized(width=tile_width) for camera in cameras]
-            if len({camera.h for camera in cameras}) != 1:
-                raise ValueError("All grid cameras must have the same aspect ratio")
-            tile_height = cameras[0].h
-            grid_height = 2 * tile_height + gap
             if tuple(plot.size) != PLOT:
                 raise ValueError(f"Plot asset must be {PLOT[0]}x{PLOT[1]}; got {plot.size}")
-            grid_y = height - grid_height
-            if grid_y < plot.h + gap:
-                raise ValueError("Sidebar is too short for the full-width plot and camera grid")
-            camera_positions = [
-                (sidebar_x + col * (tile_width + gap), grid_y + row * (tile_height + gap))
-                for row in range(2)
-                for col in range(2)
-            ]
+            columns = 2 if len(cameras) <= 4 else 3
+            rows = math.ceil(len(cameras) / columns)
+            tile_width = (SIDEBAR_WIDTH - (columns - 1) * gap) // columns
+            grid_top = plot.h + gap
+            tile_height = (height - grid_top - (rows - 1) * gap) // rows
+            if tile_width <= 0 or tile_height <= 0:
+                raise ValueError("Too many cameras for the available sidebar space")
+            camera_positions = []
+            resized_cameras = []
+            for index, camera in enumerate(cameras):
+                scale = min(tile_width / camera.w, tile_height / camera.h)
+                fitted = camera.resized(scale)
+                row, col = divmod(index, columns)
+                row_count = min(columns, len(cameras) - row * columns)
+                row_left = (
+                    sidebar_x
+                    + (SIDEBAR_WIDTH - row_count * tile_width - (row_count - 1) * gap) // 2
+                )
+                camera_positions.append(
+                    (
+                        row_left + col * (tile_width + gap) + (tile_width - fitted.w) // 2,
+                        grid_top + row * (tile_height + gap) + (tile_height - fitted.h) // 2,
+                    )
+                )
+                resized_cameras.append(fitted)
+            cameras = resized_cameras
             plot_position = (sidebar_x, 0)
         elif len(cameras) == 1:
             margin = 24
@@ -1376,7 +1388,7 @@ def compose(
             camera_positions = [(sidebar_center, margin)]
             plot_position = (sidebar_center, height - plot.h - margin)
         else:
-            raise ValueError("Compositor expects one or four camera videos")
+            raise ValueError("Compositor expects at least one camera video")
         boundaries = []
         cursor = 0
         for event in config.events:
@@ -1446,7 +1458,26 @@ def main() -> None:
     )
     camera_group = parser.add_mutually_exclusive_group(required=True)
     camera_group.add_argument("--camera-topic", help="Single camera image topic")
-    camera_group.add_argument("--camera-config", type=Path, help="Four-camera grid YAML")
+    camera_group.add_argument("--camera-config", type=Path, help="Multi-camera grid YAML")
+    parser.add_argument(
+        "--birdseye", action="store_true", help="Put a bird's-eye view in the fourth grid cell"
+    )
+    parser.add_argument(
+        "--birdseye-ego-topic",
+        default="/localization/kinematic_state",
+        help="Odometry topic for the bird's-eye ego footprint",
+    )
+    parser.add_argument(
+        "--birdseye-ml-topic",
+        default="/planning/trajectory_generator/neural_network_based_planner/ml_planner_node/output/trajectory",
+        help="Continuous ML planner trajectory topic for the bird's-eye view",
+    )
+    parser.add_argument(
+        "--birdseye-range-m",
+        type=float,
+        default=4.0,
+        help="Fore/aft half-range around ego in the bird's-eye view (default: 4 m)",
+    )
     parser.add_argument("--camera-info-topic", help="CameraInfo for the camera image overlay")
     parser.add_argument("--trajectory-topic", help="Trajectory ribbon shown throughout the video")
     parser.add_argument(
@@ -1495,6 +1526,8 @@ def main() -> None:
             parser.error("--start-before-motion-s must be finite and nonnegative")
         if not math.isfinite(args.motion_threshold_mps) or args.motion_threshold_mps <= 0:
             parser.error("--motion-threshold-mps must be finite and positive")
+    if not math.isfinite(args.birdseye_range_m) or args.birdseye_range_m <= 0:
+        parser.error("--birdseye-range-m must be finite and positive")
     validate_ros_environment()
     for path in (args.rviz_config, args.plot_config, args.camera_config):
         if path is None:
@@ -1506,6 +1539,8 @@ def main() -> None:
         if args.camera_config
         else [CameraSource("camera", "Camera", args.camera_topic, args.camera_info_topic)]
     )
+    if args.birdseye and (not args.camera_config or len(sources) != 3):
+        parser.error("--birdseye requires a camera config with exactly three cameras")
     bags = read_bags(args.bag_files)
     start = bags[0].start
     if args.start_before_motion_s is not None:
@@ -1545,6 +1580,8 @@ def main() -> None:
     config = config_from_yaml(args.plot_config, timeline, kinds, bags)
     if config.clearance is not None and not args.vehicle_model:
         parser.error("Clearance plots require --vehicle-model for the ego footprint")
+    if args.birdseye and (config.clearance is None or not args.vehicle_model):
+        parser.error("--birdseye requires clearance plot config and --vehicle-model")
     overlays = (
         load_camera_overlays(
             bags,
@@ -1582,6 +1619,23 @@ def main() -> None:
             output_width=800 if args.camera_config else None,
             label=source.label if args.camera_config else None,
         )
+    if args.birdseye:
+        from birdseye_view import render_video
+
+        birdseye_path = args.intermediate_dir / "birdseye_1x.mp4"
+        render_video(
+            bags,
+            timeline,
+            kinds,
+            config.clearance,
+            args.birdseye_ego_topic,
+            args.vehicle_model,
+            birdseye_path,
+            FPS,
+            args.birdseye_ml_topic,
+            args.birdseye_range_m,
+        )
+        camera_paths.append(birdseye_path)
     plot_video(bags, config, plot_path, timeline, kinds, args.vehicle_model)
     with tempfile.TemporaryDirectory(prefix="bag_video_rviz_") as directory:
         capture = Path(directory) / "rviz_capture.mkv"

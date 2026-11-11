@@ -65,9 +65,9 @@ def vehicle_footprint(model: str):
     return [(front, left), (front, right), (rear, right), (rear, left)]
 
 
-def road_border_lines(message):
-    """Recover centerlines from the map visualizer's 0.2 m triangle strips."""
-    lines = []
+def road_border_segments(message):
+    """Recover centerline endpoints from the map visualizer's triangle strips."""
+    segments = []
     frame = None
     for marker in message.markers:
         if marker.ns != "road_borders" or marker.action != 0:
@@ -86,13 +86,18 @@ def road_border_lines(message):
             raise ValueError("road_borders triangle vertices do not form paired line segments")
         starts = (groups[:, 0] + groups[:, 1]) / 2
         ends = (groups[:, 2] + groups[:, 3]) / 2
-        lines.extend(
-            LineString((start, end))
-            for start, end in zip(starts, ends)
-            if np.linalg.norm(start - end) > 1e-6
+        segments.extend(
+            (start, end) for start, end in zip(starts, ends) if np.linalg.norm(start - end) > 1e-6
         )
-    if not lines or not frame:
+    if not segments or not frame:
         raise ValueError("No usable road_borders marker in map visualization")
+    return frame, np.asarray(segments, dtype=np.float64)
+
+
+def road_border_lines(message):
+    """Return indexed road-border centerlines for clearance queries."""
+    frame, segments = road_border_segments(message)
+    lines = [LineString(segment) for segment in segments]
     return frame, STRtree(lines), len(lines)
 
 

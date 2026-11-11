@@ -1,0 +1,46 @@
+# Row-major order. The final row is centered when it has fewer than three cameras.
+cameras:
+  - name: camera0
+    label: Camera 0
+    image_topic: /sensing/camera/camera0/image_raw/compressed
+    info_topic: /sensing/camera/camera0/camera_info
+  - name: camera1
+    label: Camera 1
+    image_topic: /sensing/camera/camera1/image_raw/compressed
+    info_topic: /sensing/camera/camera1/camera_info
+  - name: camera2
+    label: Camera 2
+    image_topic: /sensing/camera/camera2/image_raw/compressed
+    info_topic: /sensing/camera/camera2/camera_info
+  - name: camera3
+    label: Camera 3
+    image_topic: /sensing/camera/camera3/image_raw/compressed
+    info_topic: /sensing/camera/camera3/camera_info
+  - name: camera4
+    label: Camera 4
+    image_topic: /sensing/camera/camera4/image_raw/compressed
+    info_topic: /sensing/camera/camera4/camera_info
+  - name: camera5
+    label: Camera 5
+    image_topic: /sensing/camera/camera5/image_raw/compressed
+    info_topic: /sensing/camera/camera5/camera_info
+  - name: camera6
+    label: Camera 6
+    image_topic: /sensing/camera/camera6/image_raw/compressed
+    info_topic: /sensing/camera/camera6/camera_info
+  - name: camera7
+    label: Camera 7
+    image_topic: /sensing/camera/camera7/image_raw/compressed
+    info_topic: /sensing/camera/camera7/camera_info
+  - name: camera8
+    label: Camera 8
+    image_topic: /sensing/camera/camera8/image_raw/compressed
+    info_topic: /sensing/camera/camera8/camera_info
+  - name: camera9
+    label: Camera 9
+    image_topic: /sensing/camera/camera9/image_raw/compressed
+    info_topic: /sensing/camera/camera9/camera_info
+  - name: camera10
+    label: Camera 10
+    image_topic: /sensing/camera/camera10/image_raw/compressed
+    info_topic: /sensing/camera/camera10/camera_info

@@ -16,11 +16,12 @@ exec "$python" "$script_dir/generate_bag_video.py" \
     --bag-files "${BAGS[@]}" \
     --rviz-config "$script_dir/mppi.rviz" \
     --vehicle-model j6_gen2 \
-    --camera-config "$script_dir/mppi_cameras.yaml" \
+    --camera-config "$script_dir/mppi_bev_cameras.yaml" \
+    --birdseye \
     --trajectory-topic /planning/trajectory \
     --mppi-trajectory-topic /planning/trajectory_generator/trajectory_modifier/debug/mppi/optimized_trajectory \
     --plot-config "$script_dir/mppi_plot.yaml" \
-    --intermediate-dir "$script_dir/intermediate/mppi_example" \
-    --output-dir "$script_dir/output/mppi_example" \
+    --intermediate-dir "$script_dir/intermediate/mppi_bev_example" \
+    --output-dir "$script_dir/output/mppi_bev_example" \
     --start-before-motion-s 1 \
     "$@"
