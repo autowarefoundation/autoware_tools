@@ -8,10 +8,31 @@ from clearance_metrics import _at_pose
 from clearance_metrics import _object_polygon
 from clearance_metrics import _selector_ids
 from clearance_metrics import road_border_lines
+from clearance_metrics import visible_ml_road_border
+import numpy as np
 from shapely.geometry import Polygon
 
 
 class ClearanceMetricsTest(unittest.TestCase):
+    def test_live_ml_clearance_fills_event_margins_until_reference_is_available(self):
+        reference = (np.array([10, 20, 30, 40]), np.array([2.0, 2.0, 2.0, 2.0]))
+        live = (
+            np.array([10, 17, 20, 30, 35, 40, 50]),
+            np.array([1.4, 1.4, 0.1, 1.0, 1.3, 1.5, 1.49]),
+        )
+        shown_reference, shown_live = visible_ml_road_border(
+            reference, live, [S(start=15, end=40)], 1.5
+        )
+        np.testing.assert_allclose(shown_reference[1], [np.nan, 2.0, 2.0, np.nan])
+        np.testing.assert_allclose(shown_live[1], [1.4, 1.4, np.nan, np.nan, 1.3, np.nan, 1.49])
+
+    def test_live_ml_clearance_without_events(self):
+        reference = (np.array([10]), np.array([2.0]))
+        live = (np.array([10, 20]), np.array([1.4, 1.5]))
+        shown_reference, shown_live = visible_ml_road_border(reference, live, [], 1.5)
+        np.testing.assert_allclose(shown_reference[1], [np.nan])
+        np.testing.assert_allclose(shown_live[1], [1.4, np.nan])
+
     def test_road_border_strip_recovers_uninflated_centerline(self):
         def point(x, y):
             return S(x=x, y=y)

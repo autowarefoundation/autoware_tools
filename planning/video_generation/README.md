@@ -51,8 +51,13 @@ Set `plot_window_s` to show only the most recent number of seconds in the plot;
 omit it to show the complete bag timeline.
 
 The `clearance` plot mode in `mppi_plot.yaml` produces two panels: road-border
-clearance and parked-vehicle clearance. Each compares MPPI's optimized
-trajectory with its reference trajectory (labelled ML planner). The minimum is
+clearance and parked-vehicle clearance. During MPPI events, each compares MPPI's
+optimized trajectory with its reference trajectory (labelled ML planner). The
+road-border panel shows the live ML planner trajectory whenever its clearance
+is below `ml_road_border_threshold_m` (default 1.5 m), including event margins
+before or after reference data is available. During reference coverage, its full
+curve is shown instead. Configure the continuous source with `live_ml_topic`;
+live values at or above the threshold are left blank. The minimum is
 taken over every published trajectory pose using the 2D j6_gen2 footprint from
 the installed vehicle description. Road-border centerlines are recovered from
 the bag's `/map/vector_map_marker` `road_borders` triangles. Parked avoidance

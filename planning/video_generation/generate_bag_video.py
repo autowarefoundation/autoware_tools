@@ -363,6 +363,8 @@ def config_from_yaml(
         clearance = {
             "optimized_topic": clearance.get("optimized_topic"),
             "reference_topic": clearance.get("reference_topic"),
+            "live_ml_topic": clearance.get("live_ml_topic"),
+            "ml_road_border_threshold_m": clearance.get("ml_road_border_threshold_m", 1.5),
             "objects_topic": clearance.get(
                 "objects_topic", "/perception/object_recognition/tracking/objects"
             ),
@@ -378,14 +380,19 @@ def config_from_yaml(
             "diagnostics_topic": "diagnostic_msgs/msg/DiagnosticArray",
             "road_border_markers_topic": "visualization_msgs/msg/MarkerArray",
         }
+        if clearance["live_ml_topic"] is not None:
+            expected["live_ml_topic"] = "autoware_planning_msgs/msg/Trajectory"
         for key, kind in expected.items():
             topic = clearance[key]
             if not isinstance(topic, str) or types.get(topic) != kind:
                 raise ValueError(
                     f"clearance.{key} requires a {kind} topic; got {topic}: {types.get(topic)}"
                 )
-        if len(set(clearance.values())) != len(clearance):
+        if len({clearance[key] for key in expected}) != len(expected):
             raise ValueError("Clearance topics must be distinct")
+        clearance["ml_road_border_threshold_m"] = speed(
+            clearance["ml_road_border_threshold_m"], "clearance.ml_road_border_threshold_m"
+        )
     raw_metrics = raw.get("metrics", [])
     if not isinstance(raw_metrics, list) or (not raw_metrics and clearance is None):
         raise ValueError("Plot YAML needs 'clearance' or a nonempty 'metrics' list")

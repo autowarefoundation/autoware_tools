@@ -163,6 +163,9 @@ def compute_clearances(bags, kinds, config: dict, vehicle_model: str):
         "MPPI": config["optimized_topic"],
         "ML planner": config["reference_topic"],
     }
+    if config.get("live_ml_topic"):
+        topics["ML planner live"] = config["live_ml_topic"]
+    name_by_topic = {topic: name for name, topic in topics.items()}
     objects_topic = config["objects_topic"]
     diagnostics_topic = config["diagnostics_topic"]
     borders_topic = config["road_border_markers_topic"]
@@ -179,7 +182,7 @@ def compute_clearances(bags, kinds, config: dict, vehicle_model: str):
             topic, payload, stamp = reader.read_next()
             message = deserialize_message(payload, classes[topic])
             if topic in topics.values():
-                name = next(name for name, value in topics.items() if value == topic)
+                name = name_by_topic[topic]
                 if message.points:
                     trajectories[name].append((stamp, message))
             elif topic == objects_topic:
@@ -232,6 +235,10 @@ def compute_clearances(bags, kinds, config: dict, vehicle_model: str):
                     for polygon in footprints
                 )
             )
+            if name == "ML planner live":
+                times.append(stamp)
+                vehicle_values.append(math.nan)
+                continue
             selector_index = _closest(selector_stamps, stamp, SELECTOR_MATCH_NS)
             object_index = bisect_right(object_stamps, stamp) - 1
             distance = math.nan
@@ -265,6 +272,34 @@ def compute_clearances(bags, kinds, config: dict, vehicle_model: str):
     return output
 
 
+def visible_ml_road_border(reference, live, events, threshold_m):
+    """Use event reference values and thresholded live values around their coverage."""
+    reference_stamps, reference_values = reference
+    live_stamps, live_values = live
+
+    def event_mask(stamps):
+        return np.asarray(
+            [any(event.start <= stamp < event.end for event in events) for stamp in stamps],
+            dtype=bool,
+        )
+
+    reference_visible = np.where(event_mask(reference_stamps), reference_values, np.nan)
+    reference_coverage = []
+    for event in events:
+        in_event = (reference_stamps >= event.start) & (reference_stamps < event.end)
+        if np.any(in_event):
+            stamps = reference_stamps[in_event]
+            reference_coverage.append((stamps[0], stamps[-1]))
+    covered_by_reference = np.asarray(
+        [any(start <= stamp <= end for start, end in reference_coverage) for stamp in live_stamps],
+        dtype=bool,
+    )
+    live_visible = np.where(
+        ~covered_by_reference & (live_values < threshold_m), live_values, np.nan
+    )
+    return (reference_stamps, reference_visible), (live_stamps, live_visible)
+
+
 def render_clearance_plot(bags, kinds, config, vehicle_model, path, timeline, fps, size):
     import matplotlib
 
@@ -273,6 +308,25 @@ def render_clearance_plot(bags, kinds, config, vehicle_model, path, timeline, fp
     from matplotlib.figure import Figure
 
     data = compute_clearances(bags, kinds, config.clearance, vehicle_model)
+    road_data = {}
+    for name, (stamps, values) in data["road_border"].items():
+        in_video = (stamps >= timeline.start) & (stamps <= timeline.end)
+        road_data[name] = (stamps[in_video], values[in_video])
+    if "ML planner live" in road_data:
+        reference, live = visible_ml_road_border(
+            road_data["ML planner"],
+            road_data["ML planner live"],
+            config.events,
+            config.clearance["ml_road_border_threshold_m"],
+        )
+        road_data["ML planner"] = reference
+        road_data["ML planner live"] = live
+        LOG.info(
+            "ML planner road-border plot: %d live samples below %.2f m outside reference coverage",
+            np.isfinite(live[1]).sum(),
+            config.clearance["ml_road_border_threshold_m"],
+        )
+    displayed = {"road_border": road_data, "static_vehicle": data["static_vehicle"]}
     figure = Figure(figsize=(size[0] / 100, size[1] / 100), dpi=100, facecolor="#101820")
     canvas = FigureCanvasAgg(figure)
     axes = []
@@ -292,7 +346,7 @@ def render_clearance_plot(bags, kinds, config, vehicle_model, path, timeline, fp
             0, config.plot_window_s or max((timeline.end - timeline.start) / NSEC, 1 / fps)
         )
         finite = np.concatenate(
-            [values[np.isfinite(values)] for _, values in data[category].values()]
+            [values[np.isfinite(values)] for _, values in displayed[category].values()]
         )
         high = max(0.1, float(finite.max()) * 1.15) if len(finite) else 1.0
         axis.set_ylim(-0.03 * high, high)
@@ -309,8 +363,19 @@ def render_clearance_plot(bags, kinds, config, vehicle_model, path, timeline, fp
             )
         traces = []
         for name in ("MPPI", "ML planner"):
-            stamps, values = data[category][name]
+            stamps, values = displayed[category][name]
             (line,) = axis.plot([], [], label=name, color=colors[name], linewidth=1.7)
+            traces.append((line, stamps, (stamps - timeline.start) / NSEC, values))
+        if category == "road_border" and "ML planner live" in road_data:
+            stamps, values = road_data["ML planner live"]
+            (line,) = axis.plot(
+                [],
+                [],
+                color=colors["ML planner"],
+                linewidth=1.7,
+                marker=".",
+                markersize=3,
+            )
             traces.append((line, stamps, (stamps - timeline.start) / NSEC, values))
         axis.legend(loc="upper left", fontsize=7, framealpha=0.2, labelcolor="white", ncol=2)
         cursor = axis.axvline(0, color="white", alpha=0.4, linewidth=0.8)
