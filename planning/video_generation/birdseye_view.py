@@ -28,7 +28,7 @@ OBJECT_MAX_AGE_NS = 500_000_000
 TRAJECTORY_MAX_AGE_NS = NSEC
 STATIONARY_SPEED_MPS = 0.5
 VEHICLE_LABELS = {1, 2, 3, 4}  # CAR, TRUCK, BUS, TRAILER
-COLORS = {"MPPI": (203, 90, 230), "ML planner": (230, 215, 75)}  # BGR
+COLORS = {"MPPI": (166, 213, 139), "ML planner": (230, 215, 75)}  # BGR
 
 
 def project_points(
@@ -220,17 +220,6 @@ def render_frame(
             cv2.polylines(
                 frame, [path_pixels], False, color, 7 if name == "ML planner" else 4, cv2.LINE_AA
             )
-    cv2.rectangle(frame, (0, 0), (SIZE[0], 38), (16, 24, 30), -1)
-    cv2.putText(
-        frame,
-        f"BEV  |  +/-{range_m:g} m fore/aft  |  ego up  |  grid {grid_step_m} m",
-        (15, 27),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        0.62,
-        (235, 240, 245),
-        2,
-        cv2.LINE_AA,
-    )
     cv2.rectangle(frame, (0, SIZE[1] - 37), (SIZE[0], SIZE[1]), (16, 24, 30), -1)
     for x, label, color in (
         (15, "Border", (145, 158, 170)),

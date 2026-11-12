@@ -105,7 +105,7 @@ must not overlap. The script also writes `plot_1x.mp4` and `rviz_1x.mp4` to the
 intermediate directory and `final_video.mp4` to the output directory.
 With trajectory options, the camera asset includes a transparent cyan ribbon
 for `--trajectory-topic` throughout the recording. During configured events,
-it also includes a narrower magenta ribbon for `--mppi-trajectory-topic` when
+it also includes a narrower gentle-green ribbon for `--mppi-trajectory-topic` when
 that trajectory has updated within one second. Widths default to 2.0 and 1.0
 meters (`--ribbon-width-m`, `--mppi-ribbon-width-m`), and alpha defaults to 0.4
 (`--ribbon-alpha`). Both `nav_msgs/msg/Path` and

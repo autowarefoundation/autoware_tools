@@ -18,7 +18,7 @@ exec "$python" "$script_dir/generate_bag_video.py" \
     --vehicle-model j6_gen2 \
     --camera-config "$script_dir/mppi_bev_cameras.yaml" \
     --birdseye \
-    --trajectory-topic /planning/trajectory \
+    --trajectory-topic /planning/trajectory_generator/neural_network_based_planner/ml_planner_node/output/trajectory \
     --mppi-trajectory-topic /planning/trajectory_generator/trajectory_modifier/debug/mppi/optimized_trajectory \
     --plot-config "$script_dir/mppi_plot.yaml" \
     --intermediate-dir "$script_dir/intermediate/mppi_bev_example" \

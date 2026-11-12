@@ -330,7 +330,7 @@ def render_clearance_plot(bags, kinds, config, vehicle_model, path, timeline, fp
     figure = Figure(figsize=(size[0] / 100, size[1] / 100), dpi=100, facecolor="#101820")
     canvas = FigureCanvasAgg(figure)
     axes = []
-    colors = {"MPPI": "#e65acb", "ML planner": "#40d9e6"}
+    colors = {"MPPI": "#8bd5a6", "ML planner": "#40d9e6"}
     for index, (category, title) in enumerate(
         (
             ("road_border", "Road border clearance (m)"),
