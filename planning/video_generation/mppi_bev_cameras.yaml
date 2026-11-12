@@ -1,0 +1,14 @@
+# Row-major order; the bird's-eye view occupies the fourth cell.
+cameras:
+  - name: camera1
+    label: Camera 1
+    image_topic: /sensing/camera/camera1/image_raw/compressed
+    info_topic: /sensing/camera/camera1/camera_info
+  - name: camera2
+    label: Camera 2
+    image_topic: /sensing/camera/camera2/image_raw/compressed
+    info_topic: /sensing/camera/camera2/camera_info
+  - name: camera3
+    label: Camera 3
+    image_topic: /sensing/camera/camera3/image_raw/compressed
+    info_topic: /sensing/camera/camera3/camera_info

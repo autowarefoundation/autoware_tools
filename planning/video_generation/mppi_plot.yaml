@@ -1,0 +1,17 @@
+default_speed: 3.0
+plot_window_s: 5.0
+
+clearance:
+  optimized_topic: /planning/trajectory_generator/trajectory_modifier/debug/mppi/optimized_trajectory
+  reference_topic: /planning/trajectory_generator/trajectory_modifier/debug/mppi/reference_trajectory
+  live_ml_topic: /planning/trajectory_generator/neural_network_based_planner/ml_planner_node/output/trajectory
+  ml_road_border_threshold_m: 1.5
+  objects_topic: /perception/object_recognition/tracking/objects
+  diagnostics_topic: /diagnostics
+  road_border_markers_topic: /map/vector_map_marker
+
+event_detection:
+  topic: /planning/trajectory_generator/trajectory_modifier/debug/mppi/enabled
+  pre_margin_s: 0.5
+  post_margin_s: 0.5
+  speed: 0.5
