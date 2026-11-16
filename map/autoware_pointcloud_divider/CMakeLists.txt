@@ -12,14 +12,9 @@ else ()
   set(CMAKE_CXX_STANDARD 17)
 endif ()
 
-# Find packages
-find_package(yaml-cpp REQUIRED)
-find_package(PCL REQUIRED COMPONENTS common io filters)
-
-include_directories(include)
-
 # Add divider library
 ament_auto_add_library(${PROJECT_NAME} SHARED src/pointcloud_divider_node.cpp src/voxel_grid_filter.cpp src/pcd_divider.cpp)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_link_libraries(${PROJECT_NAME} yaml-cpp ${PCL_LIBRARIES})
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN "autoware::pointcloud_divider::PointCloudDivider"
