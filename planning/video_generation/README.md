@@ -4,8 +4,45 @@
 30 FPS assets and one composite video. Run it in a ROS 2 Humble environment
 with MoviePy 2 and Shapely installed. Run `generate.sh` from your configured zsh session;
 it sources the local Autoware workspace, uses `.venv/bin/python` when available,
-and supplies the checked-in MPPI example inputs. Run `zsh generate.sh` for that
-example. Additional CLI arguments override its defaults.
+and targets the WebAuto run range `2026-11-10T01:48:00Z` through
+`2026-11-10T01:59:00Z` for project `x2_dev` and vehicle
+`f4dbd93f-37d7-4948-b92e-a47d65e0bb7b`. Run `zsh generate.sh` for that
+range. The wrapper stores intermediate files and temporary RViz captures on
+`/media/maximeclement/PortableSSD1/MPPI/video_generation`; final videos remain
+under the local `output/mppi_bev_example` directory. Additional CLI arguments
+override its defaults. Passing `--bag-files` selects local mode instead.
+
+To discover and download complete runs from WebAuto, supply a project, vehicle,
+and timezone-aware ISO 8601 range instead of `--bag-files`:
+
+```bash
+zsh generate.sh \
+  --project-id x2_dev \
+  --vehicle-id YOUR_VEHICLE_ID \
+  --datetime-from '2026-11-05T10:00:00+09:00' \
+  --datetime-to '2026-11-05T12:00:00+09:00'
+```
+
+The range includes runs whose `_0.mcap` starts at or after `--datetime-from`
+and whose final source bag ends at or before `--datetime-to`. WebAuto's
+paginated log-file search uses both datetime flags and extends its search end
+to the current time when necessary to find the next `_0.mcap` for the same
+recording stream. That next start confirms the previous
+run's last numbered bag. A trailing run without a later `_0` is deferred;
+runs with missing or duplicate numbered parts are skipped. The script downloads
+each selected source bag separately through `webauto data log-file
+pull-filtered-rosbag`, requesting the topics used by RViz, cameras, plots,
+events, motion detection, TF, and trajectory overlays. The pulls keep each
+source bag's full time span. WebAuto source timestamps set the video timeline
+even if the last requested topic stops publishing early.
+
+Remote mode writes `intermediate/<run-name>/downloads/` and the 1× assets,
+then `output/<run-name>/final_video.mp4` and `run_manifest.json`, relative to
+the supplied directory roots. Successful filtered downloads are reused when
+their topic set is unchanged. A failed run is reported and the remaining runs
+are still attempted. The local `--bag-files` mode retains its original output
+paths. Both modes need the configured ROS environment for rendering, and remote
+mode also needs the `webauto` CLI in `PATH` with access to the project.
 
 Pass `--start-before-motion-s 5` to start the video five seconds before the
 first ego speed of at least 0.1 m/s. The default motion source is
@@ -47,6 +84,29 @@ playback uses `default_speed` (default 2.0). The plot stays visible throughout;
 its lines are empty when no metric samples are available. The current replay
 speed is shown in the upper-left of the video. Use either
 `events` or `event_detection` in one YAML file.
+
+For MPPI recordings, `event_detection.slowdown_filter` can require ego motion
+under Autoware control before slowing a full activation (including its time
+margins). It reads `/api/operation_mode/state` and
+`/vehicle/status/velocity_status` by default. At least one velocity sample in
+the original true interval must meet `min_speed_mps` (default 0.1) while the
+latest operation mode state has `mode == AUTONOMOUS` and
+`is_autoware_control_enabled == true`. Missing state or motion samples do not
+qualify an activation. A nonqualifying activation still appears in MPPI camera
+and clearance visuals, while the video continues at `default_speed`.
+
+```yaml
+event_detection:
+  topic: /planning/trajectory_generator/trajectory_modifier/debug/mppi/enabled
+  pre_margin_s: 0.5
+  post_margin_s: 0.5
+  speed: 0.5
+  slowdown_filter:
+    operation_mode_topic: /api/operation_mode/state
+    motion_topic: /vehicle/status/velocity_status
+    min_speed_mps: 0.1
+```
+
 Set `plot_window_s` to show only the most recent number of seconds in the plot;
 omit it to show the complete bag timeline.
 
@@ -69,7 +129,8 @@ parked target, leave a gap in that series. Clearance mode requires
 messages.
 
 `--camera-config` selects the cameras for the sidebar. Each entry requires a
-unique `name`, a visible `label`, an `image_topic`, and an `info_topic`. The
+unique `name`, a `label`, an `image_topic`, and an `info_topic`. Labels are drawn
+only when multiple cameras are shown; a single camera has no text overlay. The
 default `mppi_bev_cameras.yaml` selects Camera 8, the front high FOV camera.
 With `--birdseye`, the upper right area has a 476 × 450 plot and a 476 × 450
 bird's-eye view side by side; the camera fills the lower right area while

@@ -9,11 +9,24 @@ python="$script_dir/.venv/bin/python"
 if [[ ! -x $python ]]; then
     python=python3
 fi
-BAGS=(
-    /media/maximeclement/PortableSSD1/MPPI/Odaiba_11-05/f4dbd93f-37d7-4948-b92e-a47d65e0bb7b_2026-11-05-10-33-11_p0900_0.mcap
+video_root=/media/maximeclement/PortableSSD1/MPPI/video_generation
+export TMPDIR="$video_root/tmp"
+mkdir -p "$TMPDIR"
+
+INPUT_ARGS=(
+    --project-id x2_dev
+    --vehicle-id f4dbd93f-37d7-4948-b92e-a47d65e0bb7b
+    --datetime-from 2026-11-10T01:59:00Z
+    --datetime-to 2026-11-10T02:30:00Z
 )
+for arg in "$@"; do
+    if [[ $arg == --bag-files ]]; then
+        INPUT_ARGS=()
+        break
+    fi
+done
 exec "$python" "$script_dir/generate_bag_video.py" \
-    --bag-files "${BAGS[@]}" \
+    "${INPUT_ARGS[@]}" \
     --rviz-config "$script_dir/mppi.rviz" \
     --vehicle-model j6_gen2 \
     --camera-config "$script_dir/mppi_bev_cameras.yaml" \
@@ -21,7 +34,7 @@ exec "$python" "$script_dir/generate_bag_video.py" \
     --trajectory-topic /planning/trajectory_generator/neural_network_based_planner/ml_planner_node/output/trajectory \
     --mppi-trajectory-topic /planning/trajectory_generator/trajectory_modifier/debug/mppi/optimized_trajectory \
     --plot-config "$script_dir/mppi_plot.yaml" \
-    --intermediate-dir "$script_dir/intermediate/mppi_bev_example" \
+    --intermediate-dir "$video_root/intermediate" \
     --output-dir "$script_dir/output/mppi_bev_example" \
     --start-before-motion-s 1 \
     "$@"

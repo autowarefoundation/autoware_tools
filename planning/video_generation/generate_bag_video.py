@@ -8,10 +8,14 @@ ROS 2 Humble environment with MoviePy 2 installed.
 from __future__ import annotations
 
 import argparse
+from bisect import bisect_left
 from bisect import bisect_right
 from dataclasses import dataclass
 from dataclasses import field
+from datetime import datetime
+from datetime import timezone
 from decimal import Decimal
+import json
 import logging
 import math
 import os
@@ -37,6 +41,11 @@ import rosbag2_py
 from rosidl_runtime_py.utilities import get_message
 from tf2_ros import Buffer
 from tf2_ros import TransformException
+from webauto_runs import datetime_ns
+from webauto_runs import parse_datetime
+from webauto_runs import pull_part
+from webauto_runs import search_parts
+from webauto_runs import select_runs
 import yaml
 
 LOG = logging.getLogger("bag_video")
@@ -74,6 +83,11 @@ class Config:
     default_speed: float
     plot_window_s: float | None
     clearance: dict | None = None
+    activation_events: list[Event] | None = None
+
+    @property
+    def visual_events(self) -> list[Event]:
+        return self.events if self.activation_events is None else self.activation_events
 
 
 @dataclass(frozen=True)
@@ -236,6 +250,55 @@ def rviz_topics(path: Path) -> set[str]:
     return result
 
 
+def filtered_download_topics(args: argparse.Namespace, sources: list[CameraSource]) -> set[str]:
+    """Collect every topic used by capture or offline rendering before pulling."""
+    topics = rviz_topics(args.rviz_config) | {"/tf", "/tf_static"}
+    if args.vehicle_model:
+        topics.discard("/robot_description")
+    for source in sources:
+        topics.add(source.image_topic)
+        if source.info_topic:
+            topics.add(source.info_topic)
+    for topic in (args.trajectory_topic, args.mppi_trajectory_topic):
+        if topic:
+            topics.add(topic)
+    if args.start_before_motion_s is not None:
+        topics.add(args.motion_topic)
+    if args.birdseye:
+        topics.update((args.birdseye_ego_topic, args.birdseye_ml_topic))
+    config = yaml.safe_load(args.plot_config.read_text())
+    if not isinstance(config, dict):
+        raise ValueError("Plot YAML must be a mapping")
+    for metric in config.get("metrics") or []:
+        topics.add(metric["topic"])
+    clearance = config.get("clearance") or {}
+    if clearance:
+        topics.update(
+            (
+                clearance.get("objects_topic", "/perception/object_recognition/tracking/objects"),
+                clearance.get("diagnostics_topic", "/diagnostics"),
+                clearance.get("road_border_markers_topic", "/map/vector_map_marker"),
+            )
+        )
+    for key, value in clearance.items():
+        if key.endswith("_topic") and value:
+            topics.add(value)
+    detection = config.get("event_detection")
+    if detection:
+        topics.add(detection["topic"])
+        slowdown_filter = detection.get("slowdown_filter")
+        if slowdown_filter is not None:
+            if not isinstance(slowdown_filter, dict):
+                raise ValueError("event_detection.slowdown_filter must be a mapping")
+            topics.add(slowdown_filter.get("operation_mode_topic", API_MODE_TOPIC))
+            topics.add(slowdown_filter.get("motion_topic", MOTION_TOPIC))
+    if any(
+        not isinstance(topic, str) or not topic.startswith("/") or "," in topic for topic in topics
+    ):
+        raise ValueError("Downloaded ROS topics must be absolute names without commas")
+    return topics
+
+
 def speed(value: object, name: str) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{name} must be a positive number")
@@ -255,6 +318,8 @@ def margin_ns(value: object, name: str) -> int:
 
 
 MOTION_TOPIC = "/vehicle/status/velocity_status"
+API_MODE_TOPIC = "/api/operation_mode/state"
+API_MODE_TYPE = "autoware_adapi_v1_msgs/msg/OperationModeState"
 MOTION_MESSAGE_TYPES = {
     "autoware_vehicle_msgs/msg/VelocityReport",
     "nav_msgs/msg/Odometry",
@@ -300,11 +365,9 @@ def first_motion_stamp(
     raise ValueError(f"No ego motion at or above {threshold_mps:g} m/s on {topic}")
 
 
-def events_from_bool_topic(
-    bags: list[Bag], topic: str, timeline: Timeline, pre_ns: int, post_ns: int, event_speed: float
-) -> list[Event]:
+def bool_intervals(bags: list[Bag], topic: str, timeline: Timeline) -> list[tuple[int, int]]:
     cls = get_message("std_msgs/msg/Bool")
-    intervals: list[Event] = []
+    intervals: list[tuple[int, int]] = []
     active_start = None
     for bag in bags:
         if topic not in bag.topics:
@@ -317,38 +380,108 @@ def events_from_bool_topic(
             if enabled and active_start is None:
                 active_start = stamp
             elif not enabled and active_start is not None:
-                start = max(timeline.start, active_start - pre_ns)
-                end = min(timeline.end, stamp + post_ns)
-                if start < end:
-                    intervals.append(Event(start, end, event_speed))
+                intervals.append((active_start, stamp))
                 active_start = None
     if active_start is not None:
-        start = max(timeline.start, active_start - pre_ns)
-        if start < timeline.end:
-            intervals.append(Event(start, timeline.end, event_speed))
+        intervals.append((active_start, timeline.end))
+    return intervals
+
+
+def expanded_events(
+    intervals: list[tuple[int, int]],
+    timeline: Timeline,
+    pre_ns: int,
+    post_ns: int,
+    event_speed: float,
+) -> list[Event]:
+    expanded = []
+    for raw_start, raw_end in intervals:
+        start = max(timeline.start, raw_start - pre_ns)
+        end = min(timeline.end, raw_end + post_ns)
+        if start < end:
+            expanded.append(Event(start, end, event_speed))
 
     merged: list[Event] = []
-    for event in intervals:
+    for event in expanded:
         if merged and event.start <= merged[-1].end:
             previous = merged[-1]
             merged[-1] = Event(previous.start, max(previous.end, event.end), event_speed)
         else:
             merged.append(event)
+    return merged
+
+
+def events_from_bool_topic(
+    bags: list[Bag], topic: str, timeline: Timeline, pre_ns: int, post_ns: int, event_speed: float
+) -> list[Event]:
+    intervals = bool_intervals(bags, topic, timeline)
+    events = expanded_events(intervals, timeline, pre_ns, post_ns, event_speed)
     LOG.info(
         "Detected %d enabled intervals on %s; %d event(s) after margins/merging",
         len(intervals),
         topic,
-        len(merged),
+        len(events),
     )
-    for event in merged:
-        LOG.info(
-            "Event: %d..%d ns (%.3f..%.3f s from video start)",
-            event.start,
-            event.end,
-            (event.start - timeline.start) / NSEC,
-            (event.end - timeline.start) / NSEC,
-        )
-    return merged
+    return events
+
+
+def qualifying_intervals(
+    intervals: list[tuple[int, int]],
+    control_states: list[tuple[int, bool]],
+    motion_samples: list[tuple[int, float]],
+    min_speed_mps: float,
+) -> list[tuple[int, int]]:
+    """Keep whole activations with at least one moving, Autoware-controlled sample."""
+    control_states = sorted(control_states, key=lambda state: state[0])
+    control_stamps = [stamp for stamp, _ in control_states]
+    qualifying_stamps = []
+    for stamp, velocity in sorted(motion_samples):
+        state_index = bisect_right(control_stamps, stamp) - 1
+        if (
+            state_index >= 0
+            and control_states[state_index][1]
+            and math.isfinite(velocity)
+            and velocity >= min_speed_mps
+        ):
+            qualifying_stamps.append(stamp)
+    return [
+        (start, end)
+        for start, end in intervals
+        if (index := bisect_left(qualifying_stamps, start)) < len(qualifying_stamps)
+        and qualifying_stamps[index] < end
+    ]
+
+
+def slowdown_samples(
+    bags: list[Bag],
+    operation_mode_topic: str,
+    motion_topic: str,
+    motion_kind: str,
+) -> tuple[list[tuple[int, bool]], list[tuple[int, float]]]:
+    mode_cls = get_message(API_MODE_TYPE)
+    motion_cls = get_message(motion_kind)
+    controls: list[tuple[int, bool]] = []
+    motion: list[tuple[int, float]] = []
+    for bag in bags:
+        available = [topic for topic in (operation_mode_topic, motion_topic) if topic in bag.topics]
+        if not available:
+            continue
+        reader = reader_for(bag, available)
+        while reader.has_next():
+            topic, payload, stamp = reader.read_next()
+            if topic == operation_mode_topic:
+                message = deserialize_message(payload, mode_cls)
+                controls.append(
+                    (
+                        stamp,
+                        message.mode == mode_cls.AUTONOMOUS
+                        and bool(message.is_autoware_control_enabled),
+                    )
+                )
+            else:
+                message = deserialize_message(payload, motion_cls)
+                motion.append((stamp, motion_speed(message, motion_kind)))
+    return controls, motion
 
 
 def config_from_yaml(
@@ -442,6 +575,7 @@ def config_from_yaml(
     for left, right in zip(events, events[1:]):
         if right.start < left.end:
             raise ValueError("Event intervals must not overlap")
+    activation_events = None
     detection = raw.get("event_detection")
     if detection is not None:
         if not isinstance(detection, dict) or not isinstance(detection.get("topic"), str):
@@ -453,13 +587,64 @@ def config_from_yaml(
             )
         if bags is None:
             raise ValueError("Bag inputs are required for event_detection")
-        events = events_from_bool_topic(
-            bags,
-            topic,
-            timeline,
-            margin_ns(detection.get("pre_margin_s", 0), "pre_margin_s"),
-            margin_ns(detection.get("post_margin_s", 0), "post_margin_s"),
-            speed(detection.get("speed", 0.5), "event speed"),
+        pre_ns = margin_ns(detection.get("pre_margin_s", 0), "pre_margin_s")
+        post_ns = margin_ns(detection.get("post_margin_s", 0), "post_margin_s")
+        event_speed = speed(detection.get("speed", 0.5), "event speed")
+        intervals = bool_intervals(bags, topic, timeline)
+        activation_events = expanded_events(intervals, timeline, pre_ns, post_ns, event_speed)
+        slowdown_filter = detection.get("slowdown_filter")
+        if slowdown_filter is None:
+            events = activation_events
+        else:
+            if not isinstance(slowdown_filter, dict):
+                raise ValueError("event_detection.slowdown_filter must be a mapping")
+            mode_topic = slowdown_filter.get("operation_mode_topic", API_MODE_TOPIC)
+            motion_topic = slowdown_filter.get("motion_topic", MOTION_TOPIC)
+            mode_kind = types.get(mode_topic)
+            if mode_kind is not None and mode_kind != API_MODE_TYPE:
+                raise ValueError(
+                    f"Slowdown operation mode topic {mode_topic} requires "
+                    f"{API_MODE_TYPE}; got {mode_kind}"
+                )
+            motion_kind = types.get(motion_topic)
+            if motion_kind is not None and motion_kind not in MOTION_MESSAGE_TYPES:
+                raise ValueError(
+                    f"Slowdown motion topic {motion_topic} requires one of "
+                    f"{sorted(MOTION_MESSAGE_TYPES)}; got {motion_kind}"
+                )
+            if mode_topic == motion_topic:
+                raise ValueError("Slowdown operation mode and motion topics must differ")
+            min_speed_mps = speed(
+                slowdown_filter.get("min_speed_mps", 0.1), "slowdown_filter.min_speed_mps"
+            )
+            if mode_kind is None or motion_kind is None:
+                missing = [
+                    topic
+                    for topic, kind in ((mode_topic, mode_kind), (motion_topic, motion_kind))
+                    if kind is None
+                ]
+                LOG.warning(
+                    "Slowdown filter topics missing: %s; using normal speed for all activations",
+                    ", ".join(missing),
+                )
+                controls, motion = [], []
+            else:
+                controls, motion = slowdown_samples(bags, mode_topic, motion_topic, motion_kind)
+            accepted = qualifying_intervals(intervals, controls, motion, min_speed_mps)
+            events = expanded_events(accepted, timeline, pre_ns, post_ns, event_speed)
+            LOG.info(
+                "MPPI slowdown: %d of %d activations qualify; %d intervals after "
+                "margins/merging (%d control, %d motion samples)",
+                len(accepted),
+                len(intervals),
+                len(events),
+                len(controls),
+                len(motion),
+            )
+        LOG.info(
+            "MPPI visualization: %d activations, %d intervals after margins/merging",
+            len(intervals),
+            len(activation_events),
         )
     plot_window_s = raw.get("plot_window_s")
     if plot_window_s is not None:
@@ -470,6 +655,7 @@ def config_from_yaml(
         speed(raw.get("default_speed", 2.0), "default_speed"),
         plot_window_s,
         clearance,
+        activation_events,
     )
 
 
@@ -1487,7 +1673,11 @@ def compose(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--bag-files", nargs="+", required=True)
+    parser.add_argument("--bag-files", nargs="+", help="Ordered local ROS 2 MCAP bags")
+    parser.add_argument("--project-id", help="WebAuto project ID for automatic run discovery")
+    parser.add_argument("--vehicle-id", help="WebAuto vehicle ID for automatic run discovery")
+    parser.add_argument("--datetime-from", help="Inclusive ISO 8601 start with timezone")
+    parser.add_argument("--datetime-to", help="Inclusive ISO 8601 end with timezone")
     parser.add_argument("--rviz-config", type=Path, required=True)
     parser.add_argument(
         "--vehicle-model",
@@ -1546,6 +1736,21 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+    remote_values = (args.project_id, args.vehicle_id, args.datetime_from, args.datetime_to)
+    if args.bag_files and any(remote_values):
+        parser.error("--bag-files cannot be combined with WebAuto range arguments")
+    if not args.bag_files and not all(remote_values):
+        parser.error(
+            "Provide --bag-files or all of --project-id, --vehicle-id, --datetime-from, --datetime-to"
+        )
+    if all(remote_values):
+        try:
+            range_start = parse_datetime(args.datetime_from, "--datetime-from")
+            range_end = parse_datetime(args.datetime_to, "--datetime-to")
+        except ValueError as error:
+            parser.error(str(error))
+        if range_end <= range_start:
+            parser.error("--datetime-to must be after --datetime-from")
     if args.camera_config and args.camera_info_topic:
         parser.error("--camera-info-topic is supplied by --camera-config")
     if args.trajectory_topic and not (args.camera_info_topic or args.camera_config):
@@ -1580,7 +1785,69 @@ def main() -> None:
     )
     if args.birdseye and (not args.camera_config or len(sources) != 1):
         parser.error("--birdseye requires a camera config with exactly one camera")
-    bags = read_bags(args.bag_files)
+    if args.bag_files:
+        render_bags(
+            args, sources, read_bags(args.bag_files), args.intermediate_dir, args.output_dir
+        )
+        return
+    topics = filtered_download_topics(args, sources)
+    search_end = max(range_end, datetime.now(timezone.utc))
+    runs = select_runs(
+        search_parts(args.project_id, args.vehicle_id, range_start, search_end),
+        range_start,
+        range_end,
+    )
+    LOG.info("Found %d complete run(s) within the requested range", len(runs))
+    failures = []
+    for run in runs:
+        intermediate = args.intermediate_dir / run.stem
+        output = args.output_dir / run.stem
+        try:
+            paths = [
+                pull_part(args.project_id, part, topics, intermediate / "downloads")
+                for part in run.parts
+            ]
+            bags = read_bags([str(path) for path in paths])
+            # Filtered topics may not reach the source recording's endpoints.
+            # Use WebAuto source metadata to retain the complete run timeline.
+            bags = [
+                Bag(
+                    bag.path,
+                    datetime_ns(part.start),
+                    datetime_ns(part.end),
+                    bag.topics,
+                )
+                for bag, part in zip(bags, run.parts)
+            ]
+            render_bags(args, sources, bags, intermediate, output)
+            (output / "run_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "run": run.stem,
+                        "source_log_file_ids": [part.id for part in run.parts],
+                        "source_files": [part.name for part in run.parts],
+                        "recording_start": run.parts[0].start.isoformat(),
+                        "recording_end": run.parts[-1].end.isoformat(),
+                        "video": "final_video.mp4",
+                    },
+                    indent=2,
+                )
+                + "\n"
+            )
+        except Exception as error:
+            LOG.exception("Failed to generate run %s: %s", run.stem, error)
+            failures.append(run.stem)
+    if failures:
+        raise RuntimeError(f"Failed runs: {', '.join(failures)}")
+
+
+def render_bags(
+    args: argparse.Namespace,
+    sources: list[CameraSource],
+    bags: list[Bag],
+    intermediate_dir: Path,
+    output_dir: Path,
+) -> None:
     start = bags[0].start
     if args.start_before_motion_s is not None:
         first = first_motion_stamp(bags, args.motion_topic, args.motion_threshold_mps)
@@ -1629,7 +1896,7 @@ def main() -> None:
             [source.info_topic for source in sources],
             args.trajectory_topic,
             args.mppi_trajectory_topic,
-            config.events,
+            config.visual_events,
             args.ribbon_width_m,
             args.mppi_ribbon_width_m,
             args.ribbon_alpha,
@@ -1637,17 +1904,17 @@ def main() -> None:
         if args.trajectory_topic
         else {}
     )
-    args.intermediate_dir.mkdir(parents=True, exist_ok=True)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    intermediate_dir.mkdir(parents=True, exist_ok=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
     camera_paths = [
-        args.intermediate_dir
+        intermediate_dir
         / ("camera_1x.mp4" if not args.camera_config else f"camera_{source.name}_1x.mp4")
         for source in sources
     ]
-    plot_path = args.intermediate_dir / "plot_1x.mp4"
-    birdseye_path = args.intermediate_dir / "birdseye_1x.mp4" if args.birdseye else None
-    rviz_path = args.intermediate_dir / "rviz_1x.mp4"
-    final_path = args.output_dir / "final_video.mp4"
+    plot_path = intermediate_dir / "plot_1x.mp4"
+    birdseye_path = intermediate_dir / "birdseye_1x.mp4" if args.birdseye else None
+    rviz_path = intermediate_dir / "rviz_1x.mp4"
+    final_path = output_dir / "final_video.mp4"
     for source, camera_path in zip(sources, camera_paths):
         camera_video(
             bags,
@@ -1657,7 +1924,7 @@ def main() -> None:
             timeline,
             overlays.get(source.info_topic),
             output_width=800 if args.camera_config else None,
-            label=source.label if args.camera_config else None,
+            label=source.label if len(sources) > 1 else None,
         )
     if args.birdseye:
         from birdseye_view import render_video

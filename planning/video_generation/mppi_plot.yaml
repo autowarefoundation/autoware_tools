@@ -15,3 +15,7 @@ event_detection:
   pre_margin_s: 0.5
   post_margin_s: 0.5
   speed: 0.5
+  slowdown_filter:
+    operation_mode_topic: /api/operation_mode/state
+    motion_topic: /vehicle/status/velocity_status
+    min_speed_mps: 0.1

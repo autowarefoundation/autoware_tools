@@ -316,7 +316,7 @@ def render_clearance_plot(bags, kinds, config, vehicle_model, path, timeline, fp
         reference, live = visible_ml_road_border(
             road_data["ML planner"],
             road_data["ML planner live"],
-            config.events,
+            config.visual_events,
             config.clearance["ml_road_border_threshold_m"],
         )
         road_data["ML planner"] = reference
