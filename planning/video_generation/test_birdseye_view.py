@@ -30,6 +30,16 @@ class BirdseyeViewTest(unittest.TestCase):
         self.assertAlmostEqual(pixels[0, 0], pixels[1, 0])
         self.assertAlmostEqual(pixels[0, 1] - pixels[1, 1], 64.5)
 
+    def test_square_sidebar_view_keeps_metric_scale(self):
+        center = np.array([0.0, 0.0])
+        pixels = project_points(
+            np.array([[0.0, 0.0], [1.0, 0.0]]),
+            center,
+            0.0,
+            size=(476, 450),
+        )
+        np.testing.assert_allclose(pixels, [[238.0, 225.0], [238.0, 168.75]])
+
     def test_stale_samples_disappear(self):
         series = [(100, "scene")]
         self.assertEqual(latest(series, [100], 150, 50), "scene")

@@ -45,6 +45,8 @@ NSEC = 1_000_000_000
 SCREEN = (1440, 1080)
 SIDEBAR_WIDTH = 960
 PLOT = (960, 450)
+SIDEBAR_GAP = 8
+TOP_PANEL = ((SIDEBAR_WIDTH - SIDEBAR_GAP) // 2, PLOT[1])
 MAIN_RIBBON_COLOR = (235, 210, 40)  # BGR: cyan
 MPPI_RIBBON_COLOR = (166, 213, 139)  # BGR: gentle green (#8bd5a6)
 MPPI_MAX_AGE_NS = NSEC
@@ -854,13 +856,14 @@ def plot_video(
     timeline: Timeline,
     kinds: dict[str, str] | None = None,
     vehicle_model: str | None = None,
+    size: tuple[int, int] = PLOT,
 ) -> None:
     if config.clearance is not None:
         if kinds is None or not vehicle_model:
             raise ValueError("Clearance plots require bag topic types and --vehicle-model")
         from clearance_metrics import render_clearance_plot
 
-        render_clearance_plot(bags, kinds, config, vehicle_model, path, timeline, FPS, PLOT)
+        render_clearance_plot(bags, kinds, config, vehicle_model, path, timeline, FPS, size)
         return
     import matplotlib
 
@@ -869,7 +872,7 @@ def plot_video(
     from matplotlib.figure import Figure
 
     data = metric_samples(bags, config.metrics)
-    figure = Figure(figsize=(PLOT[0] / 100, PLOT[1] / 100), dpi=100, facecolor="#101820")
+    figure = Figure(figsize=(size[0] / 100, size[1] / 100), dpi=100, facecolor="#101820")
     canvas = FigureCanvasAgg(figure)
     curves = []
     for index, metric in enumerate(config.metrics):
@@ -892,7 +895,7 @@ def plot_video(
         curves.append((axis, line, cursor, stamps, (stamps - timeline.start) / NSEC, values))
     axis.set_xlabel("Seconds from video start", color="white", fontsize=8)
     figure.subplots_adjust(left=0.16, right=0.98, top=0.97, bottom=0.13, hspace=0.32)
-    writer = writer_for(path, PLOT)
+    writer = writer_for(path, size)
     try:
         for index in range(timeline.count):
             now = timeline.stamp(index)
@@ -1330,6 +1333,7 @@ def compose(
     final_path: Path,
     config: Config,
     timeline: Timeline,
+    birdseye_path: Path | None = None,
 ) -> None:
     try:
         from moviepy import CompositeVideoClip
@@ -1346,6 +1350,11 @@ def compose(
     rviz = VideoFileClip(str(rviz_path)).with_duration(asset_duration)
     cameras = [VideoFileClip(str(path)).with_duration(asset_duration) for path in paths]
     plot = VideoFileClip(str(plot_path)).with_duration(asset_duration)
+    birdseye = (
+        VideoFileClip(str(birdseye_path)).with_duration(asset_duration)
+        if birdseye_path is not None
+        else None
+    )
     segments = []
     try:
         if tuple(rviz.size) != SCREEN:
@@ -1353,8 +1362,25 @@ def compose(
         rviz_width, height = rviz.size
         width = rviz_width + SIDEBAR_WIDTH
         sidebar_x = rviz_width
-        if len(cameras) > 1:
-            gap = 8
+        if birdseye is not None:
+            if len(cameras) != 1:
+                raise ValueError("Bird's-eye sidebar requires exactly one camera")
+            if tuple(plot.size) != TOP_PANEL or tuple(birdseye.size) != TOP_PANEL:
+                raise ValueError(f"Plot and bird's-eye assets must each be {TOP_PANEL}")
+            camera = cameras[0]
+            lower_height = height - TOP_PANEL[1] - SIDEBAR_GAP
+            scale = min(SIDEBAR_WIDTH / camera.w, lower_height / camera.h)
+            cameras = [camera.resized(scale)]
+            camera_positions = [
+                (
+                    sidebar_x + (SIDEBAR_WIDTH - cameras[0].w) // 2,
+                    TOP_PANEL[1] + SIDEBAR_GAP + (lower_height - cameras[0].h) // 2,
+                )
+            ]
+            plot_position = (sidebar_x, 0)
+            birdseye_position = (sidebar_x + TOP_PANEL[0] + SIDEBAR_GAP, 0)
+        elif len(cameras) > 1:
+            gap = SIDEBAR_GAP
             if tuple(plot.size) != PLOT:
                 raise ValueError(f"Plot asset must be {PLOT[0]}x{PLOT[1]}; got {plot.size}")
             columns = 2 if len(cameras) <= 4 else 3
@@ -1419,6 +1445,8 @@ def compose(
                 for camera, position in zip(cameras, camera_positions)
             )
             layers.append(plot.subclipped(begin, end).with_position(plot_position))
+            if birdseye is not None:
+                layers.append(birdseye.subclipped(begin, end).with_position(birdseye_position))
             label = f"Replay: {multiplier:g}x"
             font = cv2.FONT_HERSHEY_SIMPLEX
             (text_width, text_height), _ = cv2.getTextSize(label, font, 0.9, 2)
@@ -1453,6 +1481,8 @@ def compose(
         for camera in cameras:
             camera.close()
         plot.close()
+        if birdseye is not None:
+            birdseye.close()
 
 
 def main() -> None:
@@ -1467,7 +1497,9 @@ def main() -> None:
     camera_group.add_argument("--camera-topic", help="Single camera image topic")
     camera_group.add_argument("--camera-config", type=Path, help="Multi-camera grid YAML")
     parser.add_argument(
-        "--birdseye", action="store_true", help="Put a bird's-eye view in the fourth grid cell"
+        "--birdseye",
+        action="store_true",
+        help="Show bird's-eye view beside the plot above one camera",
     )
     parser.add_argument(
         "--birdseye-ego-topic",
@@ -1546,8 +1578,8 @@ def main() -> None:
         if args.camera_config
         else [CameraSource("camera", "Camera", args.camera_topic, args.camera_info_topic)]
     )
-    if args.birdseye and (not args.camera_config or len(sources) != 3):
-        parser.error("--birdseye requires a camera config with exactly three cameras")
+    if args.birdseye and (not args.camera_config or len(sources) != 1):
+        parser.error("--birdseye requires a camera config with exactly one camera")
     bags = read_bags(args.bag_files)
     start = bags[0].start
     if args.start_before_motion_s is not None:
@@ -1613,6 +1645,7 @@ def main() -> None:
         for source in sources
     ]
     plot_path = args.intermediate_dir / "plot_1x.mp4"
+    birdseye_path = args.intermediate_dir / "birdseye_1x.mp4" if args.birdseye else None
     rviz_path = args.intermediate_dir / "rviz_1x.mp4"
     final_path = args.output_dir / "final_video.mp4"
     for source, camera_path in zip(sources, camera_paths):
@@ -1629,7 +1662,6 @@ def main() -> None:
     if args.birdseye:
         from birdseye_view import render_video
 
-        birdseye_path = args.intermediate_dir / "birdseye_1x.mp4"
         render_video(
             bags,
             timeline,
@@ -1641,20 +1673,28 @@ def main() -> None:
             FPS,
             args.birdseye_ml_topic,
             args.birdseye_range_m,
+            size=TOP_PANEL,
         )
-        camera_paths.append(birdseye_path)
-    plot_video(bags, config, plot_path, timeline, kinds, args.vehicle_model)
+    plot_video(
+        bags,
+        config,
+        plot_path,
+        timeline,
+        kinds,
+        args.vehicle_model,
+        size=TOP_PANEL if args.birdseye else PLOT,
+    )
     with tempfile.TemporaryDirectory(prefix="bag_video_rviz_") as directory:
         capture = Path(directory) / "rviz_capture.mkv"
         trace, capture_start = capture_rviz(
             bags, args.rviz_config.resolve(), play_topics, capture, args.vehicle_model
         )
         align_rviz(capture, rviz_path, trace, timeline, capture_start)
-    for path in (*camera_paths, plot_path, rviz_path):
+    for path in (*camera_paths, plot_path, rviz_path, *([birdseye_path] if birdseye_path else [])):
         count = video_frames(path)
         if count != timeline.count:
             raise RuntimeError(f"{path} has {count} frames, expected {timeline.count}")
-    compose(rviz_path, camera_paths, plot_path, final_path, config, timeline)
+    compose(rviz_path, camera_paths, plot_path, final_path, config, timeline, birdseye_path)
     LOG.info("Final video: %s", final_path)
 
 

@@ -68,17 +68,16 @@ parked target, leave a gap in that series. Clearance mode requires
 `--vehicle-model` and supports the bag's `autoware_planning_msgs/msg/Trajectory`
 messages.
 
-`--camera-config` selects the cameras for the sidebar grid. Its `cameras` list is
-ordered row by row; each entry requires a unique `name`, a visible `label`, an
-`image_topic`, and an `info_topic`. The default `mppi_bev_cameras.yaml` selects
-Cameras 1, 2, and 3 for the first three cells of a 2×2 grid; `--birdseye` puts
-the bird's-eye view in the fourth cell. `mppi_cameras.yaml` keeps the earlier
-four-camera selection and `mppi_all_cameras.yaml` keeps the 11-camera selection
-for comparison. Each feed is rendered at
-800 pixels wide after trajectory projection and written to
-`camera_<name>_1x.mp4`. The grid fills the lower part of the dedicated right
-column, preserving each camera's aspect ratio; a 960 × 450 plot fills the upper
-part. Eight-pixel gaps separate grid cells. The current example writes to
+`--camera-config` selects the cameras for the sidebar. Each entry requires a
+unique `name`, a visible `label`, an `image_topic`, and an `info_topic`. The
+default `mppi_bev_cameras.yaml` selects Camera 8, the front high FOV camera.
+With `--birdseye`, the upper right area has a 476 × 450 plot and a 476 × 450
+bird's-eye view side by side; the camera fills the lower right area while
+preserving its aspect ratio. Other multi-camera configurations retain the grid
+layout: `mppi_cameras.yaml` selects four cameras and `mppi_all_cameras.yaml`
+selects 11. Each feed is rendered at 800 pixels wide after trajectory
+projection and written to `camera_<name>_1x.mp4`. Eight-pixel gaps separate
+sidebar panels. The current example writes to
 `output/mppi_bev_example/final_video.mp4`; prior results stay in their separate
 output directories.
 

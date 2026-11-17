@@ -1,14 +1,6 @@
-# Row-major order; the bird's-eye view occupies the fourth cell.
+# Default camera beneath the plot and bird's-eye view.
 cameras:
-  - name: camera1
-    label: Camera 1
-    image_topic: /sensing/camera/camera1/image_raw/compressed
-    info_topic: /sensing/camera/camera1/camera_info
-  - name: camera2
-    label: Camera 2
-    image_topic: /sensing/camera/camera2/image_raw/compressed
-    info_topic: /sensing/camera/camera2/camera_info
-  - name: camera3
-    label: Camera 3
-    image_topic: /sensing/camera/camera3/image_raw/compressed
-    info_topic: /sensing/camera/camera3/camera_info
+  - name: front_high
+    label: Front high FOV
+    image_topic: /sensing/camera/camera8/image_raw/compressed
+    info_topic: /sensing/camera/camera8/camera_info

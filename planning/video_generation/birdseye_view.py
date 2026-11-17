@@ -32,14 +32,18 @@ COLORS = {"MPPI": (166, 213, 139), "ML planner": (230, 215, 75)}  # BGR
 
 
 def project_points(
-    points: np.ndarray, center: np.ndarray, yaw: float, range_m: float = DEFAULT_RANGE_M
+    points: np.ndarray,
+    center: np.ndarray,
+    yaw: float,
+    range_m: float = DEFAULT_RANGE_M,
+    size: tuple[int, int] = SIZE,
 ) -> np.ndarray:
     """Map world XY into an ego-up view with a metric fore/aft half-range."""
     delta = np.asarray(points, dtype=np.float64) - center
     forward = math.cos(yaw) * delta[..., 0] + math.sin(yaw) * delta[..., 1]
     left = -math.sin(yaw) * delta[..., 0] + math.cos(yaw) * delta[..., 1]
-    scale = (SIZE[1] / 2) / range_m
-    return np.stack((SIZE[0] / 2 - scale * left, SIZE[1] / 2 - scale * forward), axis=-1)
+    scale = (size[1] / 2) / range_m
+    return np.stack((size[0] / 2 - scale * left, size[1] / 2 - scale * forward), axis=-1)
 
 
 def ego_geometry(local_footprint, pose):
@@ -138,15 +142,16 @@ def render_frame(
     range_m: float = DEFAULT_RANGE_M,
     footprint_alpha: float = DEFAULT_FOOTPRINT_ALPHA,
     footprint_line_width: int = DEFAULT_FOOTPRINT_LINE_WIDTH,
+    size: tuple[int, int] = SIZE,
 ) -> np.ndarray:
     ego, objects, maps, trajectories = scene
-    frame = np.full((SIZE[1], SIZE[0], 3), (28, 35, 42), dtype=np.uint8)
+    frame = np.full((size[1], size[0], 3), (28, 35, 42), dtype=np.uint8)
     ego_state = latest(ego, [stamp for stamp, _ in ego], now, EGO_MAX_AGE_NS)
     if ego_state is None:
         cv2.putText(
             frame,
             "Waiting for ego pose",
-            (245, 265),
+            (max(10, size[0] // 2 - 130), size[1] // 2),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.8,
             (220, 220, 220),
@@ -155,31 +160,31 @@ def render_frame(
         )
         return frame
     frame_id, center, yaw, ego_outline = ego_state
-    scale = (SIZE[1] / 2) / range_m
+    scale = (size[1] / 2) / range_m
     grid_step_m = 1 if range_m <= 4 else 5
-    half_width_m = SIZE[0] / (2 * scale)
+    half_width_m = size[0] / (2 * scale)
     for offset in range(
         -math.ceil(half_width_m / grid_step_m) * grid_step_m,
         math.ceil(half_width_m / grid_step_m) * grid_step_m + 1,
         grid_step_m,
     ):
-        x = round(SIZE[0] / 2 + offset * scale)
-        cv2.line(frame, (x, 0), (x, SIZE[1]), (47, 55, 63), 1)
+        x = round(size[0] / 2 + offset * scale)
+        cv2.line(frame, (x, 0), (x, size[1]), (47, 55, 63), 1)
     for offset in range(
         -math.ceil(range_m / grid_step_m) * grid_step_m,
         math.ceil(range_m / grid_step_m) * grid_step_m + 1,
         grid_step_m,
     ):
-        y = round(SIZE[1] / 2 - offset * scale)
-        cv2.line(frame, (0, y), (SIZE[0], y), (47, 55, 63), 1)
+        y = round(size[1] / 2 - offset * scale)
+        cv2.line(frame, (0, y), (size[0], y), (47, 55, 63), 1)
     border = latest(maps, [stamp for stamp, _ in maps], now)
     if border is not None and border[0] == frame_id:
-        pixels = project_points(border[1], center, yaw, range_m)
+        pixels = project_points(border[1], center, yaw, range_m, size)
         visible = np.any(
             (pixels[..., 0] >= -4)
-            & (pixels[..., 0] < SIZE[0] + 4)
+            & (pixels[..., 0] < size[0] + 4)
             & (pixels[..., 1] >= -4)
-            & (pixels[..., 1] < SIZE[1] + 4),
+            & (pixels[..., 1] < size[1] + 4),
             axis=1,
         )
         contours = [np.rint(line).astype(np.int32) for line in pixels[visible]]
@@ -188,7 +193,7 @@ def render_frame(
     current_objects = latest(objects, [stamp for stamp, _ in objects], now, OBJECT_MAX_AGE_NS)
     if current_objects is not None and current_objects[0] == frame_id:
         polygons = [
-            np.rint(project_points(shape, center, yaw, range_m)).astype(np.int32)
+            np.rint(project_points(shape, center, yaw, range_m, size)).astype(np.int32)
             for shape in current_objects[1]
         ]
         if polygons:
@@ -196,7 +201,7 @@ def render_frame(
             cv2.fillPoly(overlay, polygons, (40, 145, 242))
             cv2.addWeighted(overlay, 0.45, frame, 0.55, 0, frame)
             cv2.polylines(frame, polygons, True, (60, 185, 255), 2, cv2.LINE_AA)
-    ego_pixels = np.rint(project_points(ego_outline, center, yaw, range_m)).astype(np.int32)
+    ego_pixels = np.rint(project_points(ego_outline, center, yaw, range_m, size)).astype(np.int32)
     overlay = frame.copy()
     cv2.fillPoly(overlay, [ego_pixels], (90, 210, 105))
     cv2.addWeighted(overlay, 0.2, frame, 0.8, 0, frame)
@@ -208,9 +213,9 @@ def render_frame(
             continue
         color = COLORS[name]
         _, path, outlines = current
-        path_pixels = np.rint(project_points(path, center, yaw, range_m)).astype(np.int32)
+        path_pixels = np.rint(project_points(path, center, yaw, range_m, size)).astype(np.int32)
         footprint_pixels = [
-            np.rint(project_points(shape, center, yaw, range_m)).astype(np.int32)
+            np.rint(project_points(shape, center, yaw, range_m, size)).astype(np.int32)
             for shape in outlines
         ]
         overlay = frame.copy()
@@ -220,19 +225,31 @@ def render_frame(
             cv2.polylines(
                 frame, [path_pixels], False, color, 7 if name == "ML planner" else 4, cv2.LINE_AA
             )
-    cv2.rectangle(frame, (0, SIZE[1] - 37), (SIZE[0], SIZE[1]), (16, 24, 30), -1)
-    for x, label, color in (
-        (15, "Border", (145, 158, 170)),
-        (155, "Parked", (60, 185, 255)),
-        (305, "Ego", (135, 255, 145)),
-        (420, "MPPI", COLORS["MPPI"]),
-        (555, "ML planner", COLORS["ML planner"]),
-    ):
-        cv2.line(frame, (x, SIZE[1] - 19), (x + 23, SIZE[1] - 19), color, 3)
+    if size[0] < 700:
+        legend_height = 58
+        labels = (
+            (12, size[1] - 39, "Border", (145, 158, 170)),
+            (155, size[1] - 39, "Parked", (60, 185, 255)),
+            (310, size[1] - 39, "Ego", (135, 255, 145)),
+            (88, size[1] - 16, "MPPI", COLORS["MPPI"]),
+            (240, size[1] - 16, "ML planner", COLORS["ML planner"]),
+        )
+    else:
+        legend_height = 37
+        labels = (
+            (15, size[1] - 19, "Border", (145, 158, 170)),
+            (155, size[1] - 19, "Parked", (60, 185, 255)),
+            (305, size[1] - 19, "Ego", (135, 255, 145)),
+            (420, size[1] - 19, "MPPI", COLORS["MPPI"]),
+            (555, size[1] - 19, "ML planner", COLORS["ML planner"]),
+        )
+    cv2.rectangle(frame, (0, size[1] - legend_height), (size[0], size[1]), (16, 24, 30), -1)
+    for x, y, label, color in labels:
+        cv2.line(frame, (x, y), (x + 23, y), color, 3)
         cv2.putText(
             frame,
             label,
-            (x + 30, SIZE[1] - 12),
+            (x + 30, y + 7),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.48,
             (230, 230, 230),
@@ -253,16 +270,17 @@ def render_video(
     fps,
     ml_topic=None,
     range_m: float = DEFAULT_RANGE_M,
+    size: tuple[int, int] = SIZE,
 ):
     if not math.isfinite(range_m) or range_m <= 0:
         raise ValueError("Bird's-eye range must be positive and finite")
     scene = extract_scene(bags, timeline, kinds, clearance, ego_topic, vehicle_model, ml_topic)
-    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, SIZE)
+    writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
     if not writer.isOpened():
         raise RuntimeError(f"Cannot create bird's-eye MP4: {path}")
     try:
         for index in range(timeline.count):
-            writer.write(render_frame(timeline.stamp(index), scene, range_m))
+            writer.write(render_frame(timeline.stamp(index), scene, range_m, size=size))
     finally:
         writer.release()
     LOG.info("Bird's-eye view: %d frames", timeline.count)
