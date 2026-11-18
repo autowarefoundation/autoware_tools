@@ -110,6 +110,11 @@ class EventFilterTest(unittest.TestCase):
             [(e.start, e.end) for e in config.visual_events],
             [(sec(8), sec(22)), (sec(28), sec(42)), (sec(48), sec(62))],
         )
+        self.assertEqual(
+            config.raw_activation_intervals,
+            [(sec(10), sec(20)), (sec(30), sec(40)), (sec(50), sec(60))],
+        )
+        self.assertEqual(config.mode_topic, "/mode")
 
     def test_missing_control_stream_keeps_visuals_without_slowdown(self):
         topics = {"/metric": "std_msgs/msg/Float32", "/enabled": "std_msgs/msg/Bool"}

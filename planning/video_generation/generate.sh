@@ -16,8 +16,8 @@ mkdir -p "$TMPDIR"
 INPUT_ARGS=(
     --project-id x2_dev
     --vehicle-id f4dbd93f-37d7-4948-b92e-a47d65e0bb7b
-    --datetime-from 2026-11-10T01:59:00Z
-    --datetime-to 2026-11-10T02:30:00Z
+    --datetime-from 2026-11-12T00:59:00Z
+    --datetime-to 2026-11-12T02:30:00Z
 )
 for arg in "$@"; do
     if [[ $arg == --bag-files ]]; then

@@ -59,6 +59,10 @@ TOP_PANEL = ((SIDEBAR_WIDTH - SIDEBAR_GAP) // 2, PLOT[1])
 MAIN_RIBBON_COLOR = (235, 210, 40)  # BGR: cyan
 MPPI_RIBBON_COLOR = (166, 213, 139)  # BGR: gentle green (#8bd5a6)
 MPPI_MAX_AGE_NS = NSEC
+TIMELINE_HEIGHT = 120
+MOTION_TOPIC = "/vehicle/status/velocity_status"
+API_MODE_TOPIC = "/api/operation_mode/state"
+API_MODE_TYPE = "autoware_adapi_v1_msgs/msg/OperationModeState"
 
 
 @dataclass(frozen=True)
@@ -84,6 +88,8 @@ class Config:
     plot_window_s: float | None
     clearance: dict | None = None
     activation_events: list[Event] | None = None
+    raw_activation_intervals: list[tuple[int, int]] | None = None
+    mode_topic: str = API_MODE_TOPIC
 
     @property
     def visual_events(self) -> list[Event]:
@@ -284,14 +290,16 @@ def filtered_download_topics(args: argparse.Namespace, sources: list[CameraSourc
         if key.endswith("_topic") and value:
             topics.add(value)
     detection = config.get("event_detection")
+    mode_topic = API_MODE_TOPIC
     if detection:
         topics.add(detection["topic"])
         slowdown_filter = detection.get("slowdown_filter")
         if slowdown_filter is not None:
             if not isinstance(slowdown_filter, dict):
                 raise ValueError("event_detection.slowdown_filter must be a mapping")
-            topics.add(slowdown_filter.get("operation_mode_topic", API_MODE_TOPIC))
+            mode_topic = slowdown_filter.get("operation_mode_topic", API_MODE_TOPIC)
             topics.add(slowdown_filter.get("motion_topic", MOTION_TOPIC))
+    topics.add(mode_topic)
     if any(
         not isinstance(topic, str) or not topic.startswith("/") or "," in topic for topic in topics
     ):
@@ -317,9 +325,6 @@ def margin_ns(value: object, name: str) -> int:
     return round(number * NSEC)
 
 
-MOTION_TOPIC = "/vehicle/status/velocity_status"
-API_MODE_TOPIC = "/api/operation_mode/state"
-API_MODE_TYPE = "autoware_adapi_v1_msgs/msg/OperationModeState"
 MOTION_MESSAGE_TYPES = {
     "autoware_vehicle_msgs/msg/VelocityReport",
     "nav_msgs/msg/Odometry",
@@ -484,6 +489,33 @@ def slowdown_samples(
     return controls, motion
 
 
+def operation_mode_samples(
+    bags: list[Bag], topic: str, kinds: dict[str, str]
+) -> list[tuple[int, bool]]:
+    kind = kinds.get(topic)
+    if kind is None:
+        LOG.warning("Timeline mode topic missing: %s; mode will show as unknown", topic)
+        return []
+    if kind != API_MODE_TYPE:
+        raise ValueError(f"Timeline mode topic {topic} requires {API_MODE_TYPE}; got {kind}")
+    cls = get_message(kind)
+    samples = []
+    for bag in bags:
+        if topic not in bag.topics:
+            LOG.warning("Timeline mode topic absent from %s", bag.path)
+            continue
+        reader = reader_for(bag, [topic])
+        while reader.has_next():
+            _, payload, stamp = reader.read_next()
+            message = deserialize_message(payload, cls)
+            controlled = message.mode == cls.AUTONOMOUS and bool(
+                message.is_autoware_control_enabled
+            )
+            samples.append((stamp, controlled))
+    samples.sort(key=lambda item: item[0])
+    return samples
+
+
 def config_from_yaml(
     path: Path, timeline: Timeline, types: dict[str, str], bags: list[Bag] | None = None
 ) -> Config:
@@ -576,6 +608,8 @@ def config_from_yaml(
         if right.start < left.end:
             raise ValueError("Event intervals must not overlap")
     activation_events = None
+    raw_activation_intervals = None
+    mode_topic = API_MODE_TOPIC
     detection = raw.get("event_detection")
     if detection is not None:
         if not isinstance(detection, dict) or not isinstance(detection.get("topic"), str):
@@ -591,6 +625,7 @@ def config_from_yaml(
         post_ns = margin_ns(detection.get("post_margin_s", 0), "post_margin_s")
         event_speed = speed(detection.get("speed", 0.5), "event speed")
         intervals = bool_intervals(bags, topic, timeline)
+        raw_activation_intervals = intervals
         activation_events = expanded_events(intervals, timeline, pre_ns, post_ns, event_speed)
         slowdown_filter = detection.get("slowdown_filter")
         if slowdown_filter is None:
@@ -656,6 +691,8 @@ def config_from_yaml(
         plot_window_s,
         clearance,
         activation_events,
+        raw_activation_intervals,
+        mode_topic,
     )
 
 
@@ -1520,6 +1557,7 @@ def compose(
     config: Config,
     timeline: Timeline,
     birdseye_path: Path | None = None,
+    timeline_bar_path: Path | None = None,
 ) -> None:
     try:
         from moviepy import CompositeVideoClip
@@ -1541,12 +1579,21 @@ def compose(
         if birdseye_path is not None
         else None
     )
+    timeline_bar = (
+        VideoFileClip(str(timeline_bar_path)).with_duration(asset_duration)
+        if timeline_bar_path is not None
+        else None
+    )
     segments = []
     try:
         if tuple(rviz.size) != SCREEN:
             raise ValueError(f"RViz asset must be {SCREEN[0]}x{SCREEN[1]}; got {rviz.size}")
         rviz_width, height = rviz.size
         width = rviz_width + SIDEBAR_WIDTH
+        if timeline_bar is not None and tuple(timeline_bar.size) != (width, TIMELINE_HEIGHT):
+            raise ValueError(
+                f"Timeline asset must be {width}x{TIMELINE_HEIGHT}; got {timeline_bar.size}"
+            )
         sidebar_x = rviz_width
         if birdseye is not None:
             if len(cameras) != 1:
@@ -1633,6 +1680,8 @@ def compose(
             layers.append(plot.subclipped(begin, end).with_position(plot_position))
             if birdseye is not None:
                 layers.append(birdseye.subclipped(begin, end).with_position(birdseye_position))
+            if timeline_bar is not None:
+                layers.append(timeline_bar.subclipped(begin, end).with_position((0, height)))
             label = f"Replay: {multiplier:g}x"
             font = cv2.FONT_HERSHEY_SIMPLEX
             (text_width, text_height), _ = cv2.getTextSize(label, font, 0.9, 2)
@@ -1649,7 +1698,9 @@ def compose(
                 cv2.LINE_AA,
             )
             layers.append(ImageClip(badge).with_duration(end - begin).with_position((48, 64)))
-            segment = CompositeVideoClip(layers, size=(width, height))
+            segment = CompositeVideoClip(
+                layers, size=(width, height + (TIMELINE_HEIGHT if timeline_bar is not None else 0))
+            )
             segments.append(segment.with_effects([vfx.MultiplySpeed(multiplier)]))
         if not segments:
             raise RuntimeError("No video segments were produced")
@@ -1669,6 +1720,8 @@ def compose(
         plot.close()
         if birdseye is not None:
             birdseye.close()
+        if timeline_bar is not None:
+            timeline_bar.close()
 
 
 def main() -> None:
@@ -1914,6 +1967,7 @@ def render_bags(
     plot_path = intermediate_dir / "plot_1x.mp4"
     birdseye_path = intermediate_dir / "birdseye_1x.mp4" if args.birdseye else None
     rviz_path = intermediate_dir / "rviz_1x.mp4"
+    timeline_bar_path = intermediate_dir / "timeline_1x.mp4"
     final_path = output_dir / "final_video.mp4"
     for source, camera_path in zip(sources, camera_paths):
         camera_video(
@@ -1951,17 +2005,43 @@ def render_bags(
         args.vehicle_model,
         size=TOP_PANEL if args.birdseye else PLOT,
     )
+    from timeline_bar import render_timeline_bar
+
+    render_timeline_bar(
+        bags,
+        timeline,
+        operation_mode_samples(bags, config.mode_topic, kinds),
+        config.raw_activation_intervals or [],
+        timeline_bar_path,
+        writer_for,
+        SCREEN[0] + SIDEBAR_WIDTH,
+    )
     with tempfile.TemporaryDirectory(prefix="bag_video_rviz_") as directory:
         capture = Path(directory) / "rviz_capture.mkv"
         trace, capture_start = capture_rviz(
             bags, args.rviz_config.resolve(), play_topics, capture, args.vehicle_model
         )
         align_rviz(capture, rviz_path, trace, timeline, capture_start)
-    for path in (*camera_paths, plot_path, rviz_path, *([birdseye_path] if birdseye_path else [])):
+    for path in (
+        *camera_paths,
+        plot_path,
+        rviz_path,
+        timeline_bar_path,
+        *([birdseye_path] if birdseye_path else []),
+    ):
         count = video_frames(path)
         if count != timeline.count:
             raise RuntimeError(f"{path} has {count} frames, expected {timeline.count}")
-    compose(rviz_path, camera_paths, plot_path, final_path, config, timeline, birdseye_path)
+    compose(
+        rviz_path,
+        camera_paths,
+        plot_path,
+        final_path,
+        config,
+        timeline,
+        birdseye_path,
+        timeline_bar_path,
+    )
     LOG.info("Final video: %s", final_path)
 
 

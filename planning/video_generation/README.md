@@ -85,6 +85,17 @@ its lines are empty when no metric samples are available. The current replay
 speed is shown in the upper-left of the video. Use either
 `events` or `event_detection` in one YAML file.
 
+The final video adds a 120-pixel timeline strip below the 2400×1080 scene,
+making the output 2400×1200. It shows the recording time in JST, elapsed time,
+Autoware control state, every raw MPPI activation, and a moving playhead. The
+strip uses the visible video interval, including any `--start-before-motion-s`
+trim. MPPI markers exclude event margins and include activations that did not
+qualify for a slowdown. State is unknown before its first message and across
+recording gaps longer than one second; adjacent bag parts carry the last state.
+When `event_detection` is absent, the MPPI row has no
+activation markers. The corresponding 1× asset is `timeline_1x.mp4` in the
+intermediate directory.
+
 For MPPI recordings, `event_detection.slowdown_filter` can require ego motion
 under Autoware control before slowing a full activation (including its time
 margins). It reads `/api/operation_mode/state` and

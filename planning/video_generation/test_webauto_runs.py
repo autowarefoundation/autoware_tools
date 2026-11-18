@@ -203,6 +203,23 @@ class WebAutoRunsTest(unittest.TestCase):
                 <= topics
             )
 
+    def test_topic_filter_always_includes_timeline_mode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "view.rviz").write_text("Visualization Manager: {}\n")
+            (root / "plot.yaml").write_text("metrics:\n  - topic: /metric\n")
+            args = SimpleNamespace(
+                rviz_config=root / "view.rviz",
+                plot_config=root / "plot.yaml",
+                vehicle_model=None,
+                trajectory_topic=None,
+                mppi_trajectory_topic=None,
+                start_before_motion_s=None,
+                birdseye=False,
+            )
+            topics = filtered_download_topics(args, [CameraSource("one", "Camera", "/image", None)])
+            self.assertIn("/api/operation_mode/state", topics)
+
 
 if __name__ == "__main__":
     unittest.main()
