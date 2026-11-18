@@ -1939,7 +1939,13 @@ def main() -> None:
         "--birdseye-range-m",
         type=float,
         default=4.0,
-        help="Fore/aft half-range around ego in the bird's-eye view (default: 4 m)",
+        help="Minimum fore/aft half-range around ego's front edge (default: 4 m)",
+    )
+    parser.add_argument(
+        "--birdseye-max-range-m",
+        type=float,
+        default=10.0,
+        help="Maximum fore/aft half-range when fitting trajectories (default: 10 m)",
     )
     parser.add_argument("--camera-info-topic", help="CameraInfo for the camera image overlay")
     parser.add_argument("--trajectory-topic", help="Trajectory ribbon shown throughout the video")
@@ -2011,6 +2017,11 @@ def main() -> None:
             parser.error("--motion-threshold-mps must be finite and positive")
     if not math.isfinite(args.birdseye_range_m) or args.birdseye_range_m <= 0:
         parser.error("--birdseye-range-m must be finite and positive")
+    if (
+        not math.isfinite(args.birdseye_max_range_m)
+        or args.birdseye_max_range_m < args.birdseye_range_m
+    ):
+        parser.error("--birdseye-max-range-m must be finite and at least --birdseye-range-m")
     validate_ros_environment()
     for path in (args.rviz_config, args.plot_config, args.camera_config):
         if path is None:
@@ -2202,6 +2213,7 @@ def render_bags(
             args.birdseye_ml_topic,
             args.birdseye_range_m,
             size=TOP_PANEL,
+            max_range_m=args.birdseye_max_range_m,
         )
     plot_video(
         bags,

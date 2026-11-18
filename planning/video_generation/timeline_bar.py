@@ -110,7 +110,7 @@ def _static_bar(timeline, spans, activations, width: int) -> tuple[np.ndarray, i
         cv2.rectangle(image, (left, y1), (right, y2), (105, 117, 122), 1)
     for x, color, label in (
         (1690, AUTOWARE, "AUTO"),
-        (1850, MANUAL, "OTHER"),
+        (1850, MANUAL, "MANUAL"),
         (2025, HATCH, "UNKNOWN"),
         (2230, MPPI, "MPPI"),
     ):

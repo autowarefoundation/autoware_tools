@@ -169,12 +169,14 @@ with footprint outlines at every pose. The ML planner line uses the live
 so it remains visible outside MPPI events. MPPI disappears one second after its
 last update. Tracked cars, trucks, buses, and trailers with reported speed below
 0.5 m/s appear as parked polygons while their object snapshot is fresh. The
-view stays centered on the ego footprint's geometric center, with forward
-pointing up and a rectangular view extending 4 m ahead and behind
-(`--birdseye-range-m` can change it). Trajectory footprint outlines use 0.40
-alpha and 2-pixel lines. The grid spacing is 1 m at this scale. The full tile
-width is used, so the lateral range follows its aspect ratio. Its synchronized asset is
-`birdseye_1x.mp4`.
+view stays centered on the midpoint of the ego footprint's front edge, with
+forward pointing up. It zooms from a minimum 4 m fore/aft half-range to fit the
+ego footprint and current trajectory paths and outlines, up to 10 m from the
+front edge. Set the minimum with `--birdseye-range-m` and the cap with
+`--birdseye-max-range-m`; geometry beyond the cap is clipped by the view.
+Trajectory footprint outlines use 0.40 alpha and 2-pixel lines. The grid spacing
+is 1 m at the closest scale. The full tile width is used, so the lateral range
+follows its aspect ratio. Its synchronized asset is `birdseye_1x.mp4`.
 The original single-camera CLI remains available
 with `--camera-topic` and `--camera-info-topic`, producing `camera_1x.mp4`.
 

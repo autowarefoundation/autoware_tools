@@ -1,4 +1,4 @@
-"""Render an ego-centered, synchronized bird's-eye view from ROS bag data."""
+"""Render a synchronized bird's-eye view centered on the ego's front edge."""
 
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ LOG = logging.getLogger("bag_video")
 NSEC = 1_000_000_000
 SIZE = (800, 516)
 DEFAULT_RANGE_M = 4.0
+DEFAULT_MAX_RANGE_M = 10.0
 DEFAULT_FOOTPRINT_ALPHA = 0.40
 DEFAULT_FOOTPRINT_LINE_WIDTH = 2
 EGO_MAX_AGE_NS = 500_000_000
@@ -46,10 +47,44 @@ def project_points(
     return np.stack((size[0] / 2 - scale * left, size[1] / 2 - scale * forward), axis=-1)
 
 
+def trajectory_view_range(
+    trajectories: dict,
+    center: np.ndarray,
+    yaw: float,
+    minimum_m: float,
+    maximum_m: float,
+    size: tuple[int, int],
+    ego_outline: np.ndarray | None = None,
+) -> float:
+    """Fit ego and current trajectory geometry, without zooming beyond the cap."""
+    needed_m = 0.0
+    lateral_to_vertical = size[1] / size[0]
+    legend_height = 58 if size[0] < 700 else 37
+    visible_rear_fraction = max(0.1, 1 - 2 * legend_height / size[1])
+    points = [] if ego_outline is None else [ego_outline]
+    for _, path, outlines in trajectories.values():
+        points.extend((path, *outlines))
+    points = [shape for shape in points if len(shape)]
+    if points:
+        delta = np.concatenate(points, axis=0) - center
+        forward = math.cos(yaw) * delta[:, 0] + math.sin(yaw) * delta[:, 1]
+        left = -math.sin(yaw) * delta[:, 0] + math.cos(yaw) * delta[:, 1]
+        needed_m = max(
+            needed_m,
+            float(np.max(forward)),
+            float(-np.min(forward)) / visible_rear_fraction,
+            float(np.max(np.abs(left))) * lateral_to_vertical,
+        )
+    # A small margin keeps the last pose and its footprint clear of the tile edge.
+    return min(maximum_m, max(minimum_m, math.ceil(needed_m * 1.05)))
+
+
 def ego_geometry(local_footprint, pose):
-    """Return the rectangular footprint's world center, yaw, and corners."""
+    """Return the front-edge midpoint, yaw, and world footprint corners."""
     outline = np.asarray(_at_pose(local_footprint, pose), dtype=np.float64)
-    return outline.mean(axis=0), _yaw(pose.orientation), outline
+    local = np.asarray(local_footprint, dtype=np.float64)
+    front_corners = np.isclose(local[:, 0], local[:, 0].max())
+    return outline[front_corners].mean(axis=0), _yaw(pose.orientation), outline
 
 
 def latest(series, stamps, now: int, maximum_age: int | None = None):
@@ -144,6 +179,7 @@ def render_frame(
     footprint_alpha: float = DEFAULT_FOOTPRINT_ALPHA,
     footprint_line_width: int = DEFAULT_FOOTPRINT_LINE_WIDTH,
     size: tuple[int, int] = SIZE,
+    max_range_m: float = DEFAULT_MAX_RANGE_M,
 ) -> np.ndarray:
     ego, objects, maps, trajectories = scene
     frame = np.full((size[1], size[0], 3), (28, 35, 42), dtype=np.uint8)
@@ -161,6 +197,15 @@ def render_frame(
         )
         return frame
     frame_id, center, yaw, ego_outline = ego_state
+    current_trajectories = {}
+    for name in ("ML planner", "MPPI"):
+        series = trajectories[name]
+        current = latest(series, [stamp for stamp, _ in series], now, TRAJECTORY_MAX_AGE_NS)
+        if current is not None and current[0] == frame_id:
+            current_trajectories[name] = current
+    range_m = trajectory_view_range(
+        current_trajectories, center, yaw, range_m, max_range_m, size, ego_outline
+    )
     scale = (size[1] / 2) / range_m
     grid_step_m = 1 if range_m <= 4 else 5
     half_width_m = size[0] / (2 * scale)
@@ -208,9 +253,8 @@ def render_frame(
     cv2.addWeighted(overlay, 0.2, frame, 0.8, 0, frame)
     cv2.polylines(frame, [ego_pixels], True, (135, 255, 145), 3, cv2.LINE_AA)
     for name in ("ML planner", "MPPI"):
-        series = trajectories[name]
-        current = latest(series, [stamp for stamp, _ in series], now, TRAJECTORY_MAX_AGE_NS)
-        if current is None or current[0] != frame_id:
+        current = current_trajectories.get(name)
+        if current is None:
             continue
         color = COLORS[name]
         _, path, outlines = current
@@ -227,7 +271,6 @@ def render_frame(
                 frame, [path_pixels], False, color, 7 if name == "ML planner" else 4, cv2.LINE_AA
             )
     if size[0] < 700:
-        legend_height = 58
         labels = (
             (12, size[1] - 39, "Border", (145, 158, 170)),
             (155, size[1] - 39, "Parked", (60, 185, 255)),
@@ -236,7 +279,6 @@ def render_frame(
             (240, size[1] - 16, "ML planner", COLORS["ML planner"]),
         )
     else:
-        legend_height = 37
         labels = (
             (15, size[1] - 19, "Border", (145, 158, 170)),
             (155, size[1] - 19, "Parked", (60, 185, 255)),
@@ -244,6 +286,7 @@ def render_frame(
             (420, size[1] - 19, "MPPI", COLORS["MPPI"]),
             (555, size[1] - 19, "ML planner", COLORS["ML planner"]),
         )
+    legend_height = 58 if size[0] < 700 else 37
     cv2.rectangle(frame, (0, size[1] - legend_height), (size[0], size[1]), (16, 24, 30), -1)
     for x, y, label, color in labels:
         cv2.line(frame, (x, y), (x + 23, y), color, 3)
@@ -272,16 +315,23 @@ def render_video(
     ml_topic=None,
     range_m: float = DEFAULT_RANGE_M,
     size: tuple[int, int] = SIZE,
+    max_range_m: float = DEFAULT_MAX_RANGE_M,
 ):
     if not math.isfinite(range_m) or range_m <= 0:
         raise ValueError("Bird's-eye range must be positive and finite")
+    if not math.isfinite(max_range_m) or max_range_m < range_m:
+        raise ValueError("Bird's-eye maximum range must be finite and at least the minimum range")
     scene = extract_scene(bags, timeline, kinds, clearance, ego_topic, vehicle_model, ml_topic)
     writer = cv2.VideoWriter(str(path), cv2.VideoWriter_fourcc(*"mp4v"), fps, size)
     if not writer.isOpened():
         raise RuntimeError(f"Cannot create bird's-eye MP4: {path}")
     try:
         for index in range(timeline.count):
-            writer.write(render_frame(timeline.stamp(index), scene, range_m, size=size))
+            writer.write(
+                render_frame(
+                    timeline.stamp(index), scene, range_m, size=size, max_range_m=max_range_m
+                )
+            )
     finally:
         writer.release()
     LOG.info("Bird's-eye view: %d frames", timeline.count)
