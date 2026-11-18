@@ -165,11 +165,15 @@ def compute_clearances(bags, kinds, config: dict, vehicle_model: str):
     }
     if config.get("live_ml_topic"):
         topics["ML planner live"] = config["live_ml_topic"]
-    name_by_topic = {topic: name for name, topic in topics.items()}
+    available = {name: topic for name, topic in topics.items() if topic in kinds}
+    name_by_topic = {topic: name for name, topic in available.items()}
     objects_topic = config["objects_topic"]
     diagnostics_topic = config["diagnostics_topic"]
     borders_topic = config["road_border_markers_topic"]
-    active_topics = list(topics.values()) + [objects_topic, diagnostics_topic, borders_topic]
+    parked_metrics = any(name in available for name in ("MPPI", "ML planner"))
+    active_topics = list(available.values()) + [borders_topic]
+    if parked_metrics:
+        active_topics.extend((objects_topic, diagnostics_topic))
     classes = {topic: get_message(kinds[topic]) for topic in active_topics}
     trajectories = {name: [] for name in topics}
     objects = []
@@ -181,7 +185,7 @@ def compute_clearances(bags, kinds, config: dict, vehicle_model: str):
         while reader.has_next():
             topic, payload, stamp = reader.read_next()
             message = deserialize_message(payload, classes[topic])
-            if topic in topics.values():
+            if topic in name_by_topic:
                 name = name_by_topic[topic]
                 if message.points:
                     trajectories[name].append((stamp, message))
@@ -196,13 +200,23 @@ def compute_clearances(bags, kinds, config: dict, vehicle_model: str):
                     maps.append((stamp, *road_border_lines(message)))
     if not maps:
         raise ValueError(f"No road_borders markers found on {borders_topic}")
-    if not objects:
-        raise ValueError(f"No tracked-object messages found on {objects_topic}")
-    if not selectors:
-        raise ValueError(f"No MPPI selector decisions found on {diagnostics_topic}")
+    if parked_metrics and not objects:
+        LOG.warning(
+            "No tracked-object messages found on %s; parked-vehicle values will be empty",
+            objects_topic,
+        )
+    if parked_metrics and not selectors:
+        LOG.warning(
+            "No MPPI selector decisions found on %s; parked-vehicle values will be empty",
+            diagnostics_topic,
+        )
     for name, series in trajectories.items():
         if not series:
-            raise ValueError(f"No trajectory messages found for {name}: {topics[name]}")
+            LOG.warning(
+                "No trajectory messages found for %s: %s; curve will be empty",
+                name,
+                topics[name],
+            )
     maps.sort(key=lambda item: item[0])
     objects.sort(key=lambda item: item[0])
     selectors.sort(key=lambda item: item[0])

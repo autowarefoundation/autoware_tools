@@ -9,8 +9,10 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from generate_bag_video import Bag
 from generate_bag_video import CameraSource
 from generate_bag_video import filtered_download_topics
+from generate_bag_video import has_true_bool_sample
 from webauto_runs import LogPart
 from webauto_runs import MCAP_MAGIC
 from webauto_runs import datetime_ns
@@ -33,6 +35,56 @@ def part(stem: str, number: int, start: int, end: int) -> LogPart:
 
 
 class WebAutoRunsTest(unittest.TestCase):
+    def test_run_activation_scan_stops_at_first_true_sample(self):
+        topic = "/mppi/enabled"
+        bags = [
+            Bag(Path("first.mcap"), 0, 10, {topic: "std_msgs/msg/Bool"}),
+            Bag(Path("second.mcap"), 10, 20, {topic: "std_msgs/msg/Bool"}),
+        ]
+
+        class Reader:
+            def __init__(self, values):
+                self.values = iter(values)
+                self.next_value = next(self.values, None)
+
+            def has_next(self):
+                return self.next_value is not None
+
+            def read_next(self):
+                value = self.next_value
+                self.next_value = next(self.values, None)
+                return topic, value, 0
+
+        seen = []
+
+        def deserialize(value, _):
+            seen.append(value)
+            return SimpleNamespace(data=value)
+
+        with (
+            patch(
+                "generate_bag_video.reader_for",
+                side_effect=[Reader([False]), Reader([False, True, False])],
+            ),
+            patch("generate_bag_video.deserialize_message", side_effect=deserialize),
+        ):
+            self.assertTrue(has_true_bool_sample(bags, topic))
+        self.assertEqual(seen, [False, False, True])
+
+        with (
+            patch("generate_bag_video.reader_for", return_value=Reader([False])),
+            patch(
+                "generate_bag_video.deserialize_message",
+                return_value=SimpleNamespace(data=False),
+            ),
+        ):
+            self.assertFalse(has_true_bool_sample(bags[:1], topic))
+        self.assertFalse(has_true_bool_sample([Bag(Path("empty.mcap"), 0, 10, {})], topic))
+        with self.assertRaisesRegex(ValueError, "must be std_msgs/msg/Bool"):
+            has_true_bool_sample(
+                [Bag(Path("wrong.mcap"), 0, 10, {topic: "std_msgs/msg/String"})], topic
+            )
+
     def test_range_selects_only_closed_fully_contained_runs(self):
         parts = [
             part("car_earlier_p0900", 0, 90, 95),

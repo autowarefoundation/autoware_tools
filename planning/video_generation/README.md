@@ -2,10 +2,11 @@
 
 `generate_bag_video.py` turns successive ROS 2 MCAP bags into synchronized
 30 FPS assets and one composite video. Run it in a ROS 2 Humble environment
-with MoviePy 2 and Shapely installed. Run `generate.sh` from your configured zsh session;
+with MoviePy 2, Shapely, and PyAV installed (`.venv/bin/python -m pip install av`
+for the existing virtual environment). Run `generate.sh` from your configured zsh session;
 it sources the local Autoware workspace, uses `.venv/bin/python` when available,
-and targets the WebAuto run range `2026-11-10T01:48:00Z` through
-`2026-11-10T01:59:00Z` for project `x2_dev` and vehicle
+and targets the WebAuto run range `2026-11-12T04:00:00Z` through
+`2026-11-12T06:00:00Z` for project `x2_dev` and vehicle
 `f4dbd93f-37d7-4948-b92e-a47d65e0bb7b`. Run `zsh generate.sh` for that
 range. The wrapper stores intermediate files and temporary RViz captures on
 `/media/maximeclement/PortableSSD1/MPPI/video_generation`; final videos remain
@@ -43,6 +44,10 @@ their topic set is unchanged. A failed run is reported and the remaining runs
 are still attempted. The local `--bag-files` mode retains its original output
 paths. Both modes need the configured ROS environment for rendering, and remote
 mode also needs the `webauto` CLI in `PATH` with access to the project.
+When `event_detection` is configured, remote mode checks each complete run's
+downloaded Bool topic before rendering. Runs with no `true` sample are logged
+as skipped, create no video or manifest, and do not count as failures. Local
+`--bag-files` mode continues to render the bags supplied explicitly.
 
 Pass `--start-before-motion-s 5` to start the video five seconds before the
 first ego speed of at least 0.1 m/s. The default motion source is
@@ -124,6 +129,9 @@ omit it to show the complete bag timeline.
 The `clearance` plot mode in `mppi_plot.yaml` produces two panels: road-border
 clearance and parked-vehicle clearance. During MPPI events, each compares MPPI's
 optimized trajectory with its reference trajectory (labelled ML planner). The
+MPPI and reference curves remain empty when those topics are absent from a run;
+the camera and bird's-eye views still show the live ML trajectory in local mode.
+Remote mode skips runs without MPPI activation. The
 road-border panel shows the live ML planner trajectory whenever its clearance
 is below `ml_road_border_threshold_m` (default 1.5 m), including event margins
 before or after reference data is available. During reference coverage, its full
@@ -182,8 +190,18 @@ meters (`--ribbon-width-m`, `--mppi-ribbon-width-m`), and alpha defaults to 0.4
 (`--ribbon-alpha`). Both `nav_msgs/msg/Path` and
 `autoware_planning_msgs/msg/Trajectory` are supported. The overlay uses the
 bag's `/tf`, `/tf_static`, and CameraInfo directly. It supports calibrated
-`plumb_bob` and `rational_polynomial` cameras with raw or compressed images.
+`plumb_bob` and `rational_polynomial` cameras with raw images, JPEG compressed
+images, and `ffmpeg_image_transport_msgs/msg/FFMPEGPacket` video packets.
+The packet decoder supports AV1, H.264, and HEVC, preserves packet timestamps
+despite decoder delay, and holds the previous frame through missing packets.
 Each rendered camera frame is held through frame gaps, preserving the 30 FPS timeline.
+When filtered bags omit camera static TF, `--sensor-calibration-dir` supplies
+the vehicle's `sensors_calibration.yaml` and `sensor_kit_calibration.yaml`.
+The script reconstructs the fixed `base_link` to sensor kit to camera optical
+frame chain, filling only transforms absent from the bag. The default
+`generate.sh` points to this vehicle's `j6_gen2_34` calibration; choose the
+matching vehicle directory for other recordings. An overlay cannot appear
+when a short trajectory remains entirely behind the camera.
 RViz is captured under Xvfb and aligned to the bag timeline using `/clock`;
 rendering and screen capture may differ by about one 30 FPS frame.
 The RViz capture hides the X11 mouse pointer. It starts `xfwm4` in a temporary
@@ -199,6 +217,9 @@ With `--vehicle-model j6_gen2`, the script expands the installed
 during RViz capture. This supplies `/robot_description` even when the bag does
 not contain it. The example RViz config requests transient-local durability
 for that topic, and the bag's `/tf` supplies the vehicle pose.
+Replay uses `rviz_playback_qos.yaml` to offer transient-local durability on
+`/tf_static` and `/map/vector_map_marker`, whose filtered MCAP metadata does
+not retain the original offered QoS profiles.
 RViz runs with a temporary copy of the config so recording does not save
 bag-specific display state over the source file.
 

@@ -1,6 +1,8 @@
 """Geometry and selector checks for the offline clearance plot."""
 
 import math
+from pathlib import Path
+import tempfile
 from types import SimpleNamespace as S
 import unittest
 
@@ -9,11 +11,45 @@ from clearance_metrics import _object_polygon
 from clearance_metrics import _selector_ids
 from clearance_metrics import road_border_lines
 from clearance_metrics import visible_ml_road_border
+from generate_bag_video import Timeline
+from generate_bag_video import config_from_yaml
 import numpy as np
 from shapely.geometry import Polygon
 
 
 class ClearanceMetricsTest(unittest.TestCase):
+    def test_missing_mppi_trajectories_keep_live_clearance_config(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "plot.yaml"
+            path.write_text(
+                "clearance:\n"
+                "  optimized_topic: /optimized\n"
+                "  reference_topic: /reference\n"
+                "  live_ml_topic: /live\n"
+                "  objects_topic: /objects\n"
+                "  diagnostics_topic: /diagnostics\n"
+                "  road_border_markers_topic: /borders\n"
+            )
+            kinds = {
+                "/live": "autoware_planning_msgs/msg/Trajectory",
+                "/objects": "autoware_perception_msgs/msg/TrackedObjects",
+                "/diagnostics": "diagnostic_msgs/msg/DiagnosticArray",
+                "/borders": "visualization_msgs/msg/MarkerArray",
+            }
+            config = config_from_yaml(path, Timeline(0, 100), kinds)
+            self.assertEqual(config.clearance["optimized_topic"], "/optimized")
+            self.assertEqual(config.clearance["reference_topic"], "/reference")
+            kinds["/optimized"] = "std_msgs/msg/Float32"
+            with self.assertRaisesRegex(ValueError, "clearance.optimized_topic"):
+                config_from_yaml(path, Timeline(0, 100), kinds)
+
+    def test_live_clearance_with_no_reference_samples(self):
+        empty = (np.array([], dtype=np.int64), np.array([], dtype=np.float64))
+        live = (np.array([10, 20]), np.array([1.4, 1.6]))
+        reference, shown_live = visible_ml_road_border(empty, live, [], 1.5)
+        self.assertEqual(len(reference[0]), 0)
+        np.testing.assert_allclose(shown_live[1], [1.4, np.nan])
+
     def test_live_ml_clearance_fills_event_margins_until_reference_is_available(self):
         reference = (np.array([10, 20, 30, 40]), np.array([2.0, 2.0, 2.0, 2.0]))
         live = (

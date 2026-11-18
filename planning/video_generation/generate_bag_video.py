@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 from bisect import bisect_left
 from bisect import bisect_right
+from collections import OrderedDict
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import datetime
@@ -26,6 +27,7 @@ import subprocess
 import tempfile
 import threading
 import time
+from types import SimpleNamespace
 from urllib.parse import unquote
 from urllib.parse import urlparse
 from xml.etree import ElementTree
@@ -33,6 +35,7 @@ from xml.etree import ElementTree
 from ament_index_python.packages import get_package_prefix
 from ament_index_python.packages import get_package_share_directory
 import cv2
+from geometry_msgs.msg import TransformStamped
 import numpy as np
 from rclpy.duration import Duration
 from rclpy.serialization import deserialize_message
@@ -392,6 +395,23 @@ def bool_intervals(bags: list[Bag], topic: str, timeline: Timeline) -> list[tupl
     return intervals
 
 
+def has_true_bool_sample(bags: list[Bag], topic: str) -> bool:
+    """Stop at the first activation in a complete run before rendering assets."""
+    cls = get_message("std_msgs/msg/Bool")
+    for bag in bags:
+        kind = bag.topics.get(topic)
+        if kind is None:
+            continue
+        if kind != "std_msgs/msg/Bool":
+            raise ValueError(f"Event topic {topic} must be std_msgs/msg/Bool; got {kind}")
+        reader = reader_for(bag, [topic])
+        while reader.has_next():
+            _, payload, _ = reader.read_next()
+            if deserialize_message(payload, cls).data:
+                return True
+    return False
+
+
 def expanded_events(
     intervals: list[tuple[int, int]],
     timeline: Timeline,
@@ -551,10 +571,16 @@ def config_from_yaml(
             expected["live_ml_topic"] = "autoware_planning_msgs/msg/Trajectory"
         for key, kind in expected.items():
             topic = clearance[key]
-            if not isinstance(topic, str) or types.get(topic) != kind:
-                raise ValueError(
-                    f"clearance.{key} requires a {kind} topic; got {topic}: {types.get(topic)}"
+            if not isinstance(topic, str) or not topic:
+                raise ValueError(f"clearance.{key} requires a topic name")
+            actual = types.get(topic)
+            if actual is None and key in {"optimized_topic", "reference_topic"}:
+                LOG.warning(
+                    "Clearance trajectory absent from bags: %s; %s will be empty", topic, key
                 )
+                continue
+            if actual != kind:
+                raise ValueError(f"clearance.{key} requires a {kind} topic; got {topic}: {actual}")
         if len({clearance[key] for key in expected}) != len(expected):
             raise ValueError("Clearance topics must be distinct")
         clearance["ml_road_border_threshold_m"] = speed(
@@ -727,6 +753,87 @@ def decode_camera(message, kind: str) -> np.ndarray:
     return np.ascontiguousarray(image)
 
 
+def camera_frames(bags: list[Bag], topic: str, kind: str):
+    """Yield decoded BGR images with their original bag times and ROS headers."""
+    encoded = kind == "ffmpeg_image_transport_msgs/msg/FFMPEGPacket"
+    if encoded:
+        try:
+            import av
+        except ImportError as error:
+            raise RuntimeError("FFMPEGPacket camera topics require PyAV: pip install av") from error
+    cls = get_message(kind)
+    codec = None
+    codec_name = None
+    pending: OrderedDict[int, tuple[int, object]] = OrderedDict()
+    decode_errors = 0
+    unmatched_frames = 0
+
+    def decoded_frames(frames):
+        nonlocal unmatched_frames
+        for frame in frames:
+            metadata = pending.pop(frame.pts, None)
+            if metadata is None:
+                unmatched_frames += 1
+                continue
+            stamp, header = metadata
+            yield frame.to_ndarray(format="bgr24"), SimpleNamespace(header=header), stamp
+
+    for bag in bags:
+        if topic not in bag.topics:
+            LOG.warning("Camera topic absent from %s; holding the previous frame", bag.path)
+            continue
+        reader = reader_for(bag, [topic])
+        while reader.has_next():
+            _, payload, stamp = reader.read_next()
+            message = deserialize_message(payload, cls)
+            if not encoded:
+                yield decode_camera(message, kind), message, stamp
+                continue
+            candidates = [
+                token.strip().lower() for token in message.encoding.replace(",", ";").split(";")
+            ]
+            names = {"av1": "libdav1d", "h264": "h264", "hevc": "hevc"}
+            selected = next((names[token] for token in candidates if token in names), None)
+            if selected is None:
+                raise ValueError(
+                    f"Unsupported FFMPEGPacket encoding on {topic}: {message.encoding}"
+                )
+            if codec is None:
+                codec = av.CodecContext.create(selected, "r")
+                codec_name = selected
+                LOG.info("Camera %s: decoding %s with PyAV %s", topic, message.encoding, selected)
+            elif selected != codec_name:
+                raise ValueError(f"Camera codec changes on {topic}: {codec_name} -> {selected}")
+            packet = av.Packet(bytes(message.data))
+            packet.pts = message.pts
+            packet.dts = message.pts
+            pending[message.pts] = (stamp, message.header)
+            try:
+                frames = codec.decode(packet)
+            except av.error.FFmpegError:
+                decode_errors += 1
+                # Some decoders report an error while still retaining a packet;
+                # a later call can emit its frame with this PTS.
+            else:
+                yield from decoded_frames(frames)
+            # Bad or missing packets may never produce frames. Keep only recent
+            # metadata so long recordings do not retain those entries forever.
+            while len(pending) > 256:
+                pending.popitem(last=False)
+    if codec is not None:
+        try:
+            yield from decoded_frames(codec.decode(None))
+        except av.error.FFmpegError:
+            decode_errors += 1
+    if decode_errors or unmatched_frames:
+        LOG.warning(
+            "Camera %s: %d packet decode errors and %d unmatched frames; held the previous image through gaps",
+            topic,
+            decode_errors,
+            unmatched_frames,
+        )
+
+
 def quaternion_matrix(x: float, y: float, z: float, w: float) -> np.ndarray:
     norm = x * x + y * y + z * z + w * w
     if norm < 1e-12:
@@ -756,6 +863,70 @@ def ribbon_vertices(message, kind: str, width_m: float) -> np.ndarray:
     return vertices
 
 
+def calibrated_camera_transforms(
+    directory: Path, optical_frames: set[str]
+) -> list[TransformStamped]:
+    """Reconstruct fixed camera joints from the installed vehicle calibration."""
+    with (directory / "sensors_calibration.yaml").open(encoding="utf-8") as stream:
+        sensors = yaml.safe_load(stream)
+    with (directory / "sensor_kit_calibration.yaml").open(encoding="utf-8") as stream:
+        sensor_kit = yaml.safe_load(stream)
+    base = sensors["base_link"]["sensor_kit_base_link"]
+    camera_calibrations = sensor_kit["sensor_kit_base_link"]
+
+    def joint(parent: str, child: str, values: dict) -> TransformStamped:
+        transform = TransformStamped()
+        transform.header.frame_id = parent
+        transform.child_frame_id = child
+        translation = transform.transform.translation
+        translation.x, translation.y, translation.z = (
+            float(values[key]) for key in ("x", "y", "z")
+        )
+        roll, pitch, yaw = (float(values[key]) for key in ("roll", "pitch", "yaw"))
+        if not all(
+            math.isfinite(value)
+            for value in (translation.x, translation.y, translation.z, roll, pitch, yaw)
+        ):
+            raise ValueError(f"Nonfinite calibration for {parent} -> {child}")
+        cr, sr = math.cos(roll / 2), math.sin(roll / 2)
+        cp, sp = math.cos(pitch / 2), math.sin(pitch / 2)
+        cy, sy = math.cos(yaw / 2), math.sin(yaw / 2)
+        rotation = transform.transform.rotation
+        rotation.x = sr * cp * cy - cr * sp * sy
+        rotation.y = cr * sp * cy + sr * cp * sy
+        rotation.z = cr * cp * sy - sr * sp * cy
+        rotation.w = cr * cp * cy + sr * sp * sy
+        return transform
+
+    transforms = [joint("base_link", "sensor_kit_base_link", base)]
+    for optical_frame in sorted(optical_frames):
+        suffix = "/camera_optical_link"
+        if not optical_frame.endswith(suffix):
+            raise ValueError(f"Unsupported calibrated camera frame: {optical_frame}")
+        camera_link = optical_frame[: -len(suffix)] + "/camera_link"
+        if camera_link not in camera_calibrations:
+            raise ValueError(f"No camera calibration for {camera_link} in {directory}")
+        transforms.append(
+            joint("sensor_kit_base_link", camera_link, camera_calibrations[camera_link])
+        )
+        # camera_description/urdf/monocular_camera.xacro uses this fixed joint.
+        transforms.append(
+            joint(
+                camera_link,
+                optical_frame,
+                {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "roll": -math.pi / 2,
+                    "pitch": 0,
+                    "yaw": -math.pi / 2,
+                },
+            )
+        )
+    return transforms
+
+
 def load_camera_overlays(
     bags: list[Bag],
     timeline: Timeline,
@@ -767,6 +938,7 @@ def load_camera_overlays(
     width_m: float,
     mppi_width_m: float,
     alpha: float,
+    sensor_calibration_dir: Path | None = None,
 ) -> dict[str, CameraOverlay]:
     for topic, expected in (
         *((topic, "sensor_msgs/msg/CameraInfo") for topic in camera_info_topics),
@@ -790,6 +962,7 @@ def load_camera_overlays(
     infos: dict[str, list[tuple[int, object]]] = {topic: [] for topic in camera_info_topics}
     invalid_infos: dict[str, int] = {topic: 0 for topic in camera_info_topics}
     trajectories = {topic: [] for topic in trajectory_topics}
+    recorded_static_children: set[str] = set()
     for bag in bags:
         active = sorted(set(classes) & bag.topics.keys())
         if not active:
@@ -804,6 +977,7 @@ def load_camera_overlays(
             elif topic == "/tf_static":
                 for transform in message.transforms:
                     buffer.set_transform_static(transform, "bag_video")
+                    recorded_static_children.add(transform.child_frame_id)
             elif topic in infos:
                 if (
                     message.distortion_model not in {"plumb_bob", "rational_polynomial"}
@@ -819,6 +993,20 @@ def load_camera_overlays(
                     trajectories[topic].append(
                         TrajectoryRibbon(stamp, message.header.frame_id, vertices)
                     )
+    if sensor_calibration_dir is not None:
+        frames = {message.header.frame_id for series in infos.values() for _, message in series}
+        calibrated = calibrated_camera_transforms(sensor_calibration_dir, frames)
+        added_children: set[str] = set()
+        for transform in calibrated:
+            child = transform.child_frame_id
+            if child not in recorded_static_children:
+                buffer.set_transform_static(transform, "camera_sensor_calibration")
+                added_children.add(child)
+        LOG.info(
+            "Camera calibration %s supplied %d missing static frames",
+            sensor_calibration_dir,
+            len(added_children),
+        )
     for topic, series in infos.items():
         if not series:
             raise ValueError(f"No calibrated supported CameraInfo messages on {topic}")
@@ -984,51 +1172,42 @@ def camera_video(
     last = None
     blank = None
     next_frame = 0
-    cls = get_message(kind)
     try:
-        for bag in bags:
-            if topic not in bag.topics:
-                LOG.warning("Camera topic absent from %s; holding the previous frame", bag.path)
-                continue
-            reader = reader_for(bag, [topic])
-            while reader.has_next():
-                _, payload, stamp = reader.read_next()
-                message = deserialize_message(payload, cls)
-                image = decode_camera(message, kind)
-                if overlay:
-                    image = draw_camera_overlay(image, message, stamp, overlay)
-                if output_width is not None:
-                    image = cv2.resize(
-                        image,
-                        (output_width, round(image.shape[0] * output_width / image.shape[1])),
-                        interpolation=cv2.INTER_AREA,
-                    )
-                if label:
-                    font = cv2.FONT_HERSHEY_SIMPLEX
-                    scale = max(0.5, image.shape[1] / 900)
-                    thickness = max(1, round(scale * 2))
-                    (text_width, text_height), _ = cv2.getTextSize(label, font, scale, thickness)
-                    cv2.rectangle(image, (8, 8), (text_width + 22, text_height + 24), (0, 0, 0), -1)
-                    cv2.putText(
-                        image,
-                        label,
-                        (15, text_height + 15),
-                        font,
-                        scale,
-                        (255, 255, 255),
-                        thickness,
-                        cv2.LINE_AA,
-                    )
-                if writer is None:
-                    height, width = image.shape[:2]
-                    writer = writer_for(path, (width, height))
-                    blank = np.zeros_like(image)
-                elif image.shape != blank.shape:
-                    image = cv2.resize(image, (blank.shape[1], blank.shape[0]))
-                while next_frame < timeline.count and timeline.stamp(next_frame) < stamp:
-                    writer.write(last if last is not None else blank)
-                    next_frame += 1
-                last = image
+        for image, message, stamp in camera_frames(bags, topic, kind):
+            if overlay:
+                image = draw_camera_overlay(image, message, stamp, overlay)
+            if output_width is not None:
+                image = cv2.resize(
+                    image,
+                    (output_width, round(image.shape[0] * output_width / image.shape[1])),
+                    interpolation=cv2.INTER_AREA,
+                )
+            if label:
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                scale = max(0.5, image.shape[1] / 900)
+                thickness = max(1, round(scale * 2))
+                (text_width, text_height), _ = cv2.getTextSize(label, font, scale, thickness)
+                cv2.rectangle(image, (8, 8), (text_width + 22, text_height + 24), (0, 0, 0), -1)
+                cv2.putText(
+                    image,
+                    label,
+                    (15, text_height + 15),
+                    font,
+                    scale,
+                    (255, 255, 255),
+                    thickness,
+                    cv2.LINE_AA,
+                )
+            if writer is None:
+                height, width = image.shape[:2]
+                writer = writer_for(path, (width, height))
+                blank = np.zeros_like(image)
+            elif image.shape != blank.shape:
+                image = cv2.resize(image, (blank.shape[1], blank.shape[0]))
+            while next_frame < timeline.count and timeline.stamp(next_frame) < stamp:
+                writer.write(last if last is not None else blank)
+                next_frame += 1
+            last = image
         if writer is None:
             raise ValueError(f"No decodable frames on {topic}")
         while next_frame < timeline.count:
@@ -1434,6 +1613,8 @@ def capture_rviz(
                 "--clock",
                 "100",
                 "--disable-keyboard-controls",
+                "--qos-profile-overrides-path",
+                str(Path(__file__).with_name("rviz_playback_qos.yaml")),
                 "--topics",
                 *topics,
             ]
@@ -1763,6 +1944,11 @@ def main() -> None:
     parser.add_argument("--camera-info-topic", help="CameraInfo for the camera image overlay")
     parser.add_argument("--trajectory-topic", help="Trajectory ribbon shown throughout the video")
     parser.add_argument(
+        "--sensor-calibration-dir",
+        type=Path,
+        help="Vehicle directory containing sensors_calibration.yaml and sensor_kit_calibration.yaml",
+    )
+    parser.add_argument(
         "--mppi-trajectory-topic", help="Second trajectory ribbon shown during events"
     )
     parser.add_argument("--ribbon-width-m", type=float, default=2.0)
@@ -1831,6 +2017,12 @@ def main() -> None:
             continue
         if not path.is_file():
             parser.error(f"File does not exist: {path}")
+    if args.sensor_calibration_dir:
+        for name in ("sensors_calibration.yaml", "sensor_kit_calibration.yaml"):
+            if not (args.sensor_calibration_dir / name).is_file():
+                parser.error(
+                    f"Calibration file does not exist: {args.sensor_calibration_dir / name}"
+                )
     sources = (
         camera_sources(args.camera_config)
         if args.camera_config
@@ -1844,6 +2036,9 @@ def main() -> None:
         )
         return
     topics = filtered_download_topics(args, sources)
+    plot_spec = yaml.safe_load(args.plot_config.read_text())
+    detection = plot_spec.get("event_detection") if isinstance(plot_spec, dict) else None
+    activation_topic = detection.get("topic") if isinstance(detection, dict) else None
     search_end = max(range_end, datetime.now(timezone.utc))
     runs = select_runs(
         search_parts(args.project_id, args.vehicle_id, range_start, search_end),
@@ -1872,6 +2067,9 @@ def main() -> None:
                 )
                 for bag, part in zip(bags, run.parts)
             ]
+            if activation_topic and not has_true_bool_sample(bags, activation_topic):
+                LOG.info("Skipping run %s: no MPPI activation on %s", run.stem, activation_topic)
+                continue
             render_bags(args, sources, bags, intermediate, output)
             (output / "run_manifest.json").write_text(
                 json.dumps(
@@ -1920,7 +2118,11 @@ def render_bags(
             kinds[topic] = kind
     for source in sources:
         kind = kinds.get(source.image_topic)
-        if kind not in {"sensor_msgs/msg/Image", "sensor_msgs/msg/CompressedImage"}:
+        if kind not in {
+            "sensor_msgs/msg/Image",
+            "sensor_msgs/msg/CompressedImage",
+            "ffmpeg_image_transport_msgs/msg/FFMPEGPacket",
+        }:
             raise ValueError(
                 f"Camera topic {source.image_topic} has unsupported or missing type: {kind}"
             )
@@ -1941,6 +2143,10 @@ def render_bags(
         parser.error("Clearance plots require --vehicle-model for the ego footprint")
     if args.birdseye and (config.clearance is None or not args.vehicle_model):
         parser.error("--birdseye requires clearance plot config and --vehicle-model")
+    mppi_overlay_topic = args.mppi_trajectory_topic
+    if mppi_overlay_topic and mppi_overlay_topic not in kinds:
+        LOG.warning("MPPI camera trajectory absent from bags: %s", mppi_overlay_topic)
+        mppi_overlay_topic = None
     overlays = (
         load_camera_overlays(
             bags,
@@ -1948,11 +2154,12 @@ def render_bags(
             kinds,
             [source.info_topic for source in sources],
             args.trajectory_topic,
-            args.mppi_trajectory_topic,
+            mppi_overlay_topic,
             config.visual_events,
             args.ribbon_width_m,
             args.mppi_ribbon_width_m,
             args.ribbon_alpha,
+            args.sensor_calibration_dir,
         )
         if args.trajectory_topic
         else {}

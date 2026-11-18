@@ -78,10 +78,11 @@ def parked_polygons(message):
 
 
 def extract_scene(bags, timeline, kinds, clearance, ego_topic, vehicle_model, ml_topic=None):
-    topics = {
-        "MPPI": clearance["optimized_topic"],
-        "ML planner": ml_topic or clearance["reference_topic"],
-    }
+    topics = {"ML planner": ml_topic or clearance["reference_topic"]}
+    if clearance["optimized_topic"] in kinds:
+        topics["MPPI"] = clearance["optimized_topic"]
+    else:
+        LOG.warning("Bird's-eye MPPI trajectory absent: %s", clearance["optimized_topic"])
     objects_topic = clearance["objects_topic"]
     borders_topic = clearance["road_border_markers_topic"]
     required = set(topics.values()) | {ego_topic, objects_topic, borders_topic}
@@ -93,7 +94,7 @@ def extract_scene(bags, timeline, kinds, clearance, ego_topic, vehicle_model, ml
     classes = {topic: get_message(kinds[topic]) for topic in required}
     footprint = vehicle_footprint(vehicle_model)
     ego, objects, maps = [], [], []
-    trajectories = {name: [] for name in topics}
+    trajectories = {name: [] for name in ("ML planner", "MPPI")}
     name_by_topic = {topic: name for name, topic in topics.items()}
     for bag in bags:
         active = sorted(required & bag.topics.keys())
