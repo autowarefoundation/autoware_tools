@@ -1,0 +1,10 @@
+/tf_static:
+  history: keep_last
+  depth: 1
+  durability: transient_local
+  reliability: reliable
+/map/vector_map_marker:
+  history: keep_last
+  depth: 5
+  durability: transient_local
+  reliability: reliable

@@ -1,0 +1,6 @@
+# Default camera beneath the plot and bird's-eye view.
+cameras:
+  - name: front_high
+    label: Front high FOV
+    image_topic: /sensing/camera/camera8/image_raw/compressed
+    info_topic: /sensing/camera/camera8/camera_info
