@@ -23,4 +23,4 @@ ignore:
   - "**/test/*"
   - "**/test/**/*"
   - "**/setup.py"
-  - "simulator/simulator_compatibility_test/test_*/**"
+  - simulator/simulator_compatibility_test/test_*/**
