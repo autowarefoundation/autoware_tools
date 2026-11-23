@@ -94,13 +94,16 @@ jobs:
           build-depends-repos: build_depends.repos
           underlay-workspace: /opt/autoware
       - name: Upload coverage to CodeCov
-        if: ${{ steps.test.outputs.coverage-report-files != '' }}
-        uses: codecov/codecov-action@v3
+        if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.rosdistro == 'jazzy' }}
+        # Intentionally flagless: flagging this partial upload would suppress the full-suite carryforward.
+        uses: codecov/codecov-action@v6
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
           fail_ci_if_error: false
           verbose: true
-          flags: differential-${{ matrix.rosdistro }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
+          plugins: noop
 
       - name: Show disk space after the tasks
         run: df -h
