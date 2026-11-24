@@ -73,10 +73,13 @@ jobs:
           build-depends-repos: ${{ matrix.build-depends-repos }}
           underlay-workspace: /opt/autoware
       - name: Upload coverage to CodeCov
-        if: ${{ steps.test.outputs.coverage-report-files != '' }}
-        uses: codecov/codecov-action@v3
+        if: ${{ steps.test.outputs.coverage-report-files != '' && matrix.rosdistro == 'jazzy' }}
+        uses: codecov/codecov-action@v6
         with:
           files: ${{ steps.test.outputs.coverage-report-files }}
           fail_ci_if_error: false
           verbose: true
-          flags: total-${{ matrix.rosdistro }}
+          flags: ${{ github.event_name == 'schedule' && 'daily' || 'full-suite' }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
+          plugins: noop
