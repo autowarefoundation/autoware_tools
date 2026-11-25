@@ -1,0 +1,13 @@
+# All event boundaries use absolute ROS bag timestamps in integer nanoseconds.
+# Each interval includes start_ns and excludes end_ns.
+default_speed: 2.0
+
+metrics:
+  - topic: /example/metric
+    label: Example metric
+    color: "#2eb7e5"
+
+events:
+  - start_ns: 1790384930000000000
+    end_ns: 1790384940000000000
+    speed: 0.5

@@ -1,0 +1,18 @@
+# Row-major grid: left and front low on top, front high and right below.
+cameras:
+  - name: left
+    label: Left
+    image_topic: /sensing/camera/camera1/image_raw/compressed
+    info_topic: /sensing/camera/camera1/camera_info
+  - name: front_low
+    label: Front low
+    image_topic: /sensing/camera/camera6/image_raw/compressed
+    info_topic: /sensing/camera/camera6/camera_info
+  - name: front_high
+    label: Front high
+    image_topic: /sensing/camera/camera8/image_raw/compressed
+    info_topic: /sensing/camera/camera8/camera_info
+  - name: right
+    label: Right
+    image_topic: /sensing/camera/camera2/image_raw/compressed
+    info_topic: /sensing/camera/camera2/camera_info
