@@ -8,7 +8,7 @@
   <arg name="centerline_source" default="optimization_trajectory_base" description="select from optimization_trajectory_base and bag_ego_trajectory_base"/>
 
   <!-- mandatory arguments when mode is AUTO -->
-  <arg name="lanelet2_input_file_path" default=""/>
+  <arg name="lanelet2_input_dir_path" default="/opt/autoware/maps"/>
   <arg name="lanelet2_output_file_path" default="/tmp/autoware_static_centerline_generator/lanelet2_map.osm"/>
   <arg name="start_lanelet_id" default="0"/>
   <arg name="start_pose" default="[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]"/>
@@ -69,7 +69,7 @@
     <remap from="input_centerline" to="~/input_centerline"/>
 
     <param name="mode" value="$(var mode)"/>
-    <param name="lanelet2_input_file_path" value="$(var lanelet2_input_file_path)"/>
+    <param name="lanelet2_input_dir_path" value="$(var lanelet2_input_dir_path)"/>
     <param name="lanelet2_output_file_path" value="$(var lanelet2_output_file_path)"/>
     <param name="start_lanelet_id" value="$(var start_lanelet_id)"/>
     <param name="start_pose" value="$(var start_pose)"/>
