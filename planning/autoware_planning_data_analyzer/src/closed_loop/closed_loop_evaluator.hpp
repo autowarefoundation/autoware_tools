@@ -20,6 +20,7 @@
 #include "closed_loop/lane_goal.hpp"
 #include "closed_loop/lane_layout.hpp"
 #include "closed_loop/margin.hpp"
+#include "closed_loop/yield_crossing.hpp"
 #include "metrics/epdms/subscores/no_at_fault_collision.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
@@ -41,7 +42,11 @@ struct ClosedLoopEvaluatorParameters
   double from_behind_heading_deg{45.0};
   MarginParameters margin;
   LaneGoalParameters lane_goal;
+  YieldParameters yield;
 };
+
+// A yielding scene: pedestrian_yield or vehicle_yield.
+bool is_yield_scene(const ClosedLoopScene & scene);
 
 // The margin a scene is judged on, from its scene file or its label; none for other labels.
 std::optional<MarginReference> margin_reference(const ClosedLoopScene & scene);
@@ -60,6 +65,10 @@ struct ClosedLoopEvaluationResult
   bool lane_goal_judged{false};
   std::optional<LaneGoalResult> lane_goal;
   std::string lane_goal_error;
+  // The yielding metric, for pedestrian_yield and vehicle_yield scenes.
+  bool yield_judged{false};
+  std::optional<YieldResult> yield;
+  std::string yield_error;
   // True when the run passes, false when it fails, empty when it cannot be judged.
   std::optional<bool> passed;
   std::vector<std::string> fail_reasons;

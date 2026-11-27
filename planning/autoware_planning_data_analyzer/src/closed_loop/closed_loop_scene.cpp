@@ -145,6 +145,22 @@ ClosedLoopScene parse_closed_loop_scene(const nlohmann::json & scene)
       parsed.margin_every_road_user = margin.at("every_road_user").get<bool>();
     }
   }
+  if (scene.contains("yield") && !scene.at("yield").is_null()) {
+    const auto & yield = scene.at("yield");
+    if (
+      !yield.is_object() || !yield.contains("target_track_ids") ||
+      !yield.at("target_track_ids").is_array()) {
+      throw std::invalid_argument("scene file: yield.target_track_ids must be a list of strings");
+    }
+    std::vector<std::string> targets;
+    for (const auto & id : yield.at("target_track_ids")) {
+      if (!id.is_string()) {
+        throw std::invalid_argument("scene file: yield.target_track_ids must be a list of strings");
+      }
+      targets.push_back(id.get<std::string>());
+    }
+    parsed.yield_target_track_ids = targets;
+  }
   if (scene.contains("ignored_track_ids")) {
     const auto & ignored = scene.at("ignored_track_ids");
     if (!ignored.is_array()) {
@@ -207,6 +223,9 @@ nlohmann::json to_json(const ClosedLoopScene & scene)
   }
   if (!scene.ignored_track_ids.empty()) {
     json["ignored_track_ids"] = scene.ignored_track_ids;
+  }
+  if (scene.yield_target_track_ids.has_value()) {
+    json["yield"] = {{"target_track_ids", *scene.yield_target_track_ids}};
   }
   return json;
 }

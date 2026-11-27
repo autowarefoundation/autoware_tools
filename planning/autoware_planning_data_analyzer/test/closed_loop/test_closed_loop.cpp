@@ -433,4 +433,23 @@ TEST(ClosedLoopEvaluator, TakesTheMarginKindFromTheLabelAndCountsEveryRoadUserIn
   EXPECT_FALSE(margin_reference(parse_closed_loop_scene(scene_json_without_label())).has_value());
 }
 
+TEST(ClosedLoopScene, ReadsTheYieldTargets)
+{
+  auto json = scene_json();
+  json["eval_label"] = "pedestrian_yield";
+  json["yield"] = {{"target_track_ids", {"p1", "p2"}}};
+
+  const auto scene = parse_closed_loop_scene(json);
+
+  EXPECT_TRUE(is_yield_scene(scene));
+  ASSERT_TRUE(scene.yield_target_track_ids.has_value());
+  EXPECT_EQ(*scene.yield_target_track_ids, (std::vector<std::string>{"p1", "p2"}));
+  EXPECT_EQ(
+    parse_closed_loop_scene(to_json(scene)).yield_target_track_ids, scene.yield_target_track_ids);
+  EXPECT_FALSE(parse_closed_loop_scene(scene_json()).yield_target_track_ids.has_value());
+  auto wrong = scene_json();
+  wrong["yield"] = {{"target_track_ids", {1, 2}}};
+  EXPECT_THROW(parse_closed_loop_scene(wrong), std::invalid_argument);
+}
+
 }  // namespace autoware::planning_data_analyzer::closed_loop

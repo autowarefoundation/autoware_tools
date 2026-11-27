@@ -70,6 +70,11 @@ std::optional<MarginReference> margin_reference(const ClosedLoopScene & scene)
   return reference;
 }
 
+bool is_yield_scene(const ClosedLoopScene & scene)
+{
+  return scene.eval_label == "pedestrian_yield" || scene.eval_label == "vehicle_yield";
+}
+
 ClosedLoopEvaluator::ClosedLoopEvaluator(
   std::shared_ptr<autoware::route_handler::RouteHandler> route_handler,
   autoware::vehicle_info_utils::VehicleInfo vehicle_info, ClosedLoopEvaluatorParameters parameters)
@@ -99,6 +104,28 @@ ClosedLoopEvaluationResult ClosedLoopEvaluator::evaluate(
   result.no_at_fault_collision = metrics::calculate_no_at_fault_collision(
     episode.ego, episode.road_users, vehicle_info_, route_handler_, footprints, false,
     no_at_fault_collision_options());
+
+  result.yield_judged = is_yield_scene(scene);
+  if (result.yield_judged) {
+    if (!lane_layout_) {
+      result.yield_error = "no map";
+    } else if (!scene.yield_target_track_ids.has_value()) {
+      result.yield_error = "no yield targets";
+    } else {
+      try {
+        result.yield = evaluate_yield(
+          episode, *scene.yield_target_track_ids, scene.ignored_track_ids, *lane_layout_,
+          vehicle_info_, parameters_.yield);
+      } catch (const std::invalid_argument & error) {
+        result.yield_error = error.what();
+      }
+    }
+    if (result.yield.has_value()) {
+      result.passed = result.yield->passed;
+      result.fail_reasons = result.yield->fail_reasons;
+    }
+    return result;
+  }
 
   result.margin_reference = margin_reference(scene);
   if (result.margin_reference.has_value()) {
@@ -186,6 +213,12 @@ nlohmann::json to_json(
   } else if (result.margin_reference.has_value()) {
     margin = {{"error", result.margin_error}};
   }
+  nlohmann::json yield = nullptr;
+  if (result.yield.has_value()) {
+    yield = to_json(*result.yield);
+  } else if (result.yield_judged) {
+    yield = {{"error", result.yield_error}};
+  }
   nlohmann::json lane_goal = nullptr;
   if (result.lane_goal.has_value()) {
     lane_goal = to_json(*result.lane_goal);
@@ -211,6 +244,7 @@ nlohmann::json to_json(
       {"contacts", contacts}}},
     {"margin", margin},
     {"lane_goal", lane_goal},
+    {"yield", yield},
     {"verdict",
      {{"passed",
        result.passed.has_value() ? nlohmann::json(*result.passed) : nlohmann::json(nullptr)},
