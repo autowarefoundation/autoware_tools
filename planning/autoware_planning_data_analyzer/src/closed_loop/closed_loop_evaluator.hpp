@@ -17,6 +17,7 @@
 
 #include "closed_loop/closed_loop_episode.hpp"
 #include "closed_loop/closed_loop_scene.hpp"
+#include "closed_loop/lane_goal.hpp"
 #include "closed_loop/lane_layout.hpp"
 #include "closed_loop/margin.hpp"
 #include "metrics/epdms/subscores/no_at_fault_collision.hpp"
@@ -39,6 +40,7 @@ struct ClosedLoopEvaluatorParameters
   // ego drove into it.
   double from_behind_heading_deg{45.0};
   MarginParameters margin;
+  LaneGoalParameters lane_goal;
 };
 
 // The margin a scene is judged on, from its scene file or its label; none for other labels.
@@ -54,6 +56,10 @@ struct ClosedLoopEvaluationResult
   std::optional<MarginReference> margin_reference;
   std::optional<MarginResult> margin;
   std::string margin_error;
+  // The lane goal of an easy lane change or avoidance (with margin counting every road user).
+  bool lane_goal_judged{false};
+  std::optional<LaneGoalResult> lane_goal;
+  std::string lane_goal_error;
   // True when the run passes, false when it fails, empty when it cannot be judged.
   std::optional<bool> passed;
   std::vector<std::string> fail_reasons;

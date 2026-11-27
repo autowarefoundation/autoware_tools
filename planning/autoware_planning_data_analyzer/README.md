@@ -81,8 +81,15 @@ The metrics and their thresholds:
   Every line is 0 m for now, so only a collision fails. A road user that drives more than 0.5 m
   into the ego within 3 s after a contact that is not the ego's fault stops the judging (a
   replayed road user cannot react).
-- The scene's verdict is margin's for lane changes, avoidances and pull-outs, and NC's for other
-  labels; a metric without a verdict leaves the scene without one.
+- `lane_goal` (easy lane changes and avoidances): the ego's four wheels are wholly in its goal
+  lane inside the window. A lane change's target lane holds the recorded wheels on most of the
+  window's last second; an avoidance's preferred lane is the lane it starts in, reached after the
+  avoided vehicle (the last standing vehicle within 3 m of the recorded drive that it gets past).
+  A run on its way in when the window ends (60 % of its box in the lane, up 5 % over the last
+  second) also reaches it. A recorded drive that does not show its own goal gives no verdict.
+- The scene's verdict is its metrics': margin's (ANDed with the lane goal's for an easy scene), or
+  NC's for other labels. Any metric that fails fails the scene; else one without a verdict leaves
+  the scene without one.
 
 ### Scene File
 

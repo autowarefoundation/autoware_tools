@@ -16,6 +16,7 @@
 
 #include "metrics/geometry/ego_footprint.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 #include <string>
@@ -111,10 +112,50 @@ ClosedLoopEvaluationResult ClosedLoopEvaluator::evaluate(
         result.margin_error = error.what();
       }
     }
-    // The scene's verdict is margin's (which judges collisions with its own contact rule).
+    // An easy lane change or avoidance must also reach its lane (the lane goal).
+    const auto & kind = result.margin_reference->kind;
+    result.lane_goal_judged =
+      result.margin_reference->every_road_user && (kind == "lane_change" || kind == "avoidance");
+    if (result.lane_goal_judged) {
+      if (!lane_layout_) {
+        result.lane_goal_error = "no map";
+      } else {
+        try {
+          result.lane_goal = evaluate_lane_goal(
+            episode, kind, result.margin_reference->ignored_track_ids, *lane_layout_, vehicle_info_,
+            parameters_.lane_goal);
+        } catch (const std::invalid_argument & error) {
+          result.lane_goal_error = error.what();
+        }
+      }
+    }
+    // The scene's verdict is its metrics': margin's (which judges collisions with its own contact
+    // rule), ANDed with the lane goal's for an easy scene. Any false fails; else any metric
+    // without a verdict leaves the scene without one.
+    std::vector<std::optional<bool>> verdicts;
+    verdicts.push_back(
+      result.margin.has_value() ? std::optional<bool>(result.margin->passed) : std::nullopt);
     if (result.margin.has_value()) {
-      result.passed = result.margin->passed;
       result.fail_reasons = result.margin->fail_reasons;
+    }
+    if (result.lane_goal_judged) {
+      verdicts.push_back(
+        result.lane_goal.has_value() ? result.lane_goal->verdict.passed() : std::nullopt);
+      if (result.lane_goal.has_value()) {
+        for (const auto & reason : result.lane_goal->fail_reasons) {
+          result.fail_reasons.push_back("lane goal: " + reason);
+        }
+      }
+    }
+    const bool any_failed = std::any_of(verdicts.begin(), verdicts.end(), [](const auto & verdict) {
+      return verdict.has_value() && !*verdict;
+    });
+    const bool all_judged = std::all_of(
+      verdicts.begin(), verdicts.end(), [](const auto & verdict) { return verdict.has_value(); });
+    if (any_failed) {
+      result.passed = false;
+    } else if (all_judged) {
+      result.passed = true;
     }
     return result;
   }
@@ -145,6 +186,12 @@ nlohmann::json to_json(
   } else if (result.margin_reference.has_value()) {
     margin = {{"error", result.margin_error}};
   }
+  nlohmann::json lane_goal = nullptr;
+  if (result.lane_goal.has_value()) {
+    lane_goal = to_json(*result.lane_goal);
+  } else if (result.lane_goal_judged) {
+    lane_goal = {{"error", result.lane_goal_error}};
+  }
   return {
     {"schema_version", kResultSchemaVersion},
     {"mode", "closed_loop"},
@@ -163,6 +210,7 @@ nlohmann::json to_json(
       {"infraction_time_s", finite_or_null(no_at_fault_collision.infraction_time_s)},
       {"contacts", contacts}}},
     {"margin", margin},
+    {"lane_goal", lane_goal},
     {"verdict",
      {{"passed",
        result.passed.has_value() ? nlohmann::json(*result.passed) : nlohmann::json(nullptr)},
