@@ -20,6 +20,8 @@
 #include <autoware/object_recognition_utils/object_classification.hpp>
 #include <autoware_utils_geometry/boost_polygon_utils.hpp>
 #include <autoware_utils_geometry/geometry.hpp>
+#include <autoware_utils_math/normalization.hpp>
+#include <autoware_utils_math/unit_conversion.hpp>
 
 #include <boost/geometry.hpp>
 
@@ -121,6 +123,22 @@ bool is_track_stopped(const InterpolatedLoggedObject & object_state)
 {
   return !is_agent_classification(object_state.classification) ||
          object_state.speed_mps <= kStoppedVelocityThresholdMps;
+}
+
+// The closed-loop review rule: an object centred behind the ego's rear bumper and heading within
+// heading_deg of the ego drove into the ego.
+bool is_from_behind(
+  const geometry_msgs::msg::Pose & ego_pose, const geometry_msgs::msg::Pose & object_pose,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info, const double heading_deg)
+{
+  const double ego_yaw = get_yaw(ego_pose.orientation);
+  const double dx = object_pose.position.x - ego_pose.position.x;
+  const double dy = object_pose.position.y - ego_pose.position.y;
+  const double ahead_m = std::cos(ego_yaw) * dx + std::sin(ego_yaw) * dy;
+  const double turn_rad =
+    std::abs(autoware_utils_math::normalize_radian(get_yaw(object_pose.orientation) - ego_yaw));
+  return ahead_m < vehicle_info.min_longitudinal_offset_m &&
+         turn_rad < autoware_utils_math::deg2rad(heading_deg);
 }
 
 CollisionClassification classify_collision(
@@ -266,7 +284,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<RouteHandler> & route_handler,
   const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations,
-  const bool collect_debug)
+  const bool collect_debug, const NoAtFaultCollisionOptions & options)
 {
   NoAtFaultCollisionResult result;
 
@@ -276,6 +294,12 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   }
   if (!is_vehicle_info_valid(vehicle_info)) {
     result.reason = "unavailable_invalid_vehicle_info";
+    return result;
+  }
+  if (
+    !options.straddling_excused.empty() &&
+    options.straddling_excused.size() != ego_path.points.size()) {
+    result.reason = "unavailable_invalid_straddling_excused";
     return result;
   }
 
@@ -294,6 +318,8 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
     return result;
   }
 
+  // Objects that are no longer judged: after an at-fault contact, and with first_contact_decides
+  // after any contact.
   std::unordered_set<unique_identifier_msgs::msg::UUID, UuidHash> collided_object_ids;
 
   auto record_at_fault_collision = [&](
@@ -315,6 +341,8 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
     const auto query_time = ego_path.start_time + point.time_from_start;
     const auto query_time_s = point.time_from_start.seconds();
     const auto & ego_polygon = footprint_evaluations.at(index).ego_polygon;
+    const bool straddling_excused =
+      !options.straddling_excused.empty() && options.straddling_excused.at(index);
 
     for (const auto & object_track : object_tracks) {
       if (
@@ -339,62 +367,76 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
                                           collision.type == CollisionType::StoppedTrack;
       const bool lateral_collision = collision.type == CollisionType::ActiveLateral;
 
-      if (front_or_stopped_track) {
-        const auto at_fault_collision = make_at_fault_collision(*object_state, false);
-        if (collect_debug) {
-          auto debug_event = make_optional_debug_event();
-          debug_event.at_fault = true;
-          debug_event.event_score = at_fault_collision.score;
-          debug_event.reason = at_fault_collision.reason;
-          result.debug_info.events.push_back(std::move(debug_event));
-        }
-        record_at_fault_collision(*object_state, at_fault_collision, query_time_s);
-        continue;
-      }
+      NoAtFaultCollisionContact contact;
+      contact.object_id =
+        object_id_to_string(object_state->object_id, object_state->has_valid_object_id);
+      contact.object_label =
+        autoware::object_recognition_utils::convertLabelToString(object_state->classification);
+      contact.point_index = index;
+      contact.time_s = query_time_s;
+      contact.collision_type = collision_type_to_string(collision.type);
+      contact.straddling_excused = straddling_excused;
 
-      if (lateral_collision) {
+      std::optional<NoAtFaultCollisionDebugEvent> debug_event;
+      if (collect_debug) {
+        debug_event = make_optional_debug_event();
+      }
+      std::optional<AtFaultCollision> at_fault_collision;
+      if (front_or_stopped_track) {
+        at_fault_collision = make_at_fault_collision(*object_state, false);
+      } else if (lateral_collision) {
         const auto & ego_area_evaluation = footprint_evaluations.at(index).ego_area_evaluation;
         if (!ego_area_evaluation.has_value()) {
-          if (collect_debug) {
-            auto debug_event = make_optional_debug_event();
-            debug_event.reason = !route_handler
-                                   ? "unavailable_no_route_handler_for_lateral_assessment"
-                                   : "unavailable_route_handler_not_ready_for_lateral_assessment";
-            result.debug_info.events.push_back(std::move(debug_event));
+          const std::string reason =
+            !route_handler ? "unavailable_no_route_handler_for_lateral_assessment"
+                           : "unavailable_route_handler_not_ready_for_lateral_assessment";
+          if (debug_event.has_value()) {
+            debug_event->reason = reason;
+            result.debug_info.events.push_back(std::move(*debug_event));
           }
           result.available = false;
           result.score = 0.0;
-          result.reason = !route_handler
-                            ? "unavailable_no_route_handler_for_lateral_assessment"
-                            : "unavailable_route_handler_not_ready_for_lateral_assessment";
+          result.reason = reason;
           return result;
         }
-
-        std::optional<NoAtFaultCollisionDebugEvent> debug_event;
-        if (collect_debug) {
-          debug_event = make_optional_debug_event();
-          debug_event->multiple_lanes = ego_area_evaluation->flags.multiple_lanes;
-          debug_event->non_drivable_area = ego_area_evaluation->flags.non_drivable_area;
-        }
-        if (
-          ego_area_evaluation->flags.multiple_lanes ||
-          ego_area_evaluation->flags.non_drivable_area) {
-          const auto at_fault_collision = make_at_fault_collision(*object_state, true);
-          if (debug_event.has_value()) {
-            debug_event->at_fault = true;
-            debug_event->event_score = at_fault_collision.score;
-            debug_event->reason = at_fault_collision.reason;
-          }
-          record_at_fault_collision(*object_state, at_fault_collision, query_time_s);
-        }
+        contact.multiple_lanes = ego_area_evaluation->flags.multiple_lanes;
+        contact.non_drivable_area = ego_area_evaluation->flags.non_drivable_area;
         if (debug_event.has_value()) {
-          result.debug_info.events.push_back(std::move(*debug_event));
+          debug_event->multiple_lanes = contact.multiple_lanes;
+          debug_event->non_drivable_area = contact.non_drivable_area;
         }
-        continue;
+        if ((contact.multiple_lanes && !straddling_excused) || contact.non_drivable_area) {
+          at_fault_collision = make_at_fault_collision(*object_state, true);
+        }
+      }
+      if (
+        at_fault_collision.has_value() && options.from_behind_heading_deg.has_value() &&
+        is_from_behind(
+          point.pose, object_state->pose, vehicle_info, *options.from_behind_heading_deg)) {
+        at_fault_collision.reset();
+        contact.exempt = true;
+        if (debug_event.has_value()) {
+          debug_event->reason = "exempt_from_behind";
+        }
       }
 
-      if (collect_debug) {
-        result.debug_info.events.push_back(make_optional_debug_event());
+      contact.at_fault = at_fault_collision.has_value();
+      if (debug_event.has_value()) {
+        if (at_fault_collision.has_value()) {
+          debug_event->at_fault = true;
+          debug_event->event_score = at_fault_collision->score;
+          debug_event->reason = at_fault_collision->reason;
+        }
+        result.debug_info.events.push_back(std::move(*debug_event));
+      }
+      if (at_fault_collision.has_value()) {
+        record_at_fault_collision(*object_state, *at_fault_collision, query_time_s);
+      }
+      if (options.first_contact_decides) {
+        if (object_state->has_valid_object_id) {
+          collided_object_ids.insert(object_state->object_id);
+        }
+        result.contacts.push_back(std::move(contact));
       }
     }
   }

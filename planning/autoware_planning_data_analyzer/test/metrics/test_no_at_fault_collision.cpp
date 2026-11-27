@@ -26,6 +26,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <memory>
 #include <utility>
@@ -325,6 +326,193 @@ TEST(NoAtFaultCollision, DrivenPathIntoAStandingCarIsAtFault)
   EXPECT_EQ(result.reason, "at_fault_collision_with_agent");
   // The front bumper (3.74 m ahead of the pose) is at 8.74 m at 1.0 s and past 9 m at 1.5 s.
   EXPECT_DOUBLE_EQ(result.infraction_time_s, 1.5);
+}
+
+namespace
+{
+
+// A path driving +x at speed_mps, one point every interval_s from 10 s on.
+EgoPath make_straight_path(const double speed_mps, const int points, const double interval_s = 0.5)
+{
+  EgoPath path;
+  path.start_time = rclcpp::Time(10, 0, RCL_ROS_TIME);
+  for (int step = 0; step < points; ++step) {
+    EgoPathPoint point;
+    point.time_from_start = rclcpp::Duration::from_seconds(interval_s * step);
+    point.pose = make_pose(speed_mps * interval_s * step, 0.0);
+    point.speed_mps = speed_mps;
+    path.points.push_back(point);
+  }
+  return path;
+}
+
+// Footprints of the path with the given area flags on every point (no map needed).
+std::vector<TrajectoryFootprintEvaluation> make_flagged_footprints(
+  const EgoPath & path, const bool multiple_lanes, const bool non_drivable_area)
+{
+  auto evaluations = evaluate_ego_path_footprints(path, make_vehicle_info());
+  for (auto & evaluation : evaluations) {
+    EgoAreaEvaluation area;
+    area.flags.multiple_lanes = multiple_lanes;
+    area.flags.non_drivable_area = non_drivable_area;
+    evaluation.ego_area_evaluation = area;
+  }
+  return evaluations;
+}
+
+std::vector<TimedTrackedObjects> make_still_objects(
+  const std::vector<autoware_perception_msgs::msg::TrackedObject> & objects)
+{
+  return {
+    make_timed_objects(rclcpp::Time(10, 0, RCL_ROS_TIME), objects),
+    make_timed_objects(rclcpp::Time(13, 0, RCL_ROS_TIME), objects)};
+}
+
+}  // namespace
+
+TEST(NoAtFaultCollisionOptions, FirstContactDecidesSettlesAnObjectAfterANotAtFaultContact)
+{
+  // The ego touches the car while stopped (not its fault), then drives into it.
+  const auto trajectory = make_stopped_then_moving_trajectory();
+  constexpr std::array<uint8_t, 16> uuid{6};
+  using Classification = autoware_perception_msgs::msg::ObjectClassification;
+  const std::vector<TimedTrackedObjects> future_objects{
+    make_timed_objects(
+      rclcpp::Time(10, 0, RCL_ROS_TIME), {make_object(4.0, 0.0, Classification::CAR, uuid)}),
+    make_timed_objects(
+      rclcpp::Time(11, 0, RCL_ROS_TIME), {make_object(8.8, 0.0, Classification::CAR, uuid)})};
+  const auto path = to_ego_path(trajectory);
+  NoAtFaultCollisionOptions options;
+  options.first_contact_decides = true;
+
+  const auto result = calculate_no_at_fault_collision(
+    path, build_logged_object_tracks(future_objects), make_vehicle_info(), nullptr,
+    evaluate_ego_path_footprints(path, make_vehicle_info()), false, options);
+
+  EXPECT_TRUE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 1.0);
+  EXPECT_EQ(result.reason, "available");
+  ASSERT_EQ(result.contacts.size(), 1U);
+  EXPECT_EQ(result.contacts[0].point_index, 0U);
+  EXPECT_EQ(result.contacts[0].collision_type, "STOPPED_EGO");
+  EXPECT_FALSE(result.contacts[0].at_fault);
+}
+
+TEST(NoAtFaultCollisionOptions, FirstContactDecidesKeepsAnAtFaultFirstContact)
+{
+  const auto path = make_straight_path(5.0, 3);
+  using Classification = autoware_perception_msgs::msg::ObjectClassification;
+  NoAtFaultCollisionOptions options;
+  options.first_contact_decides = true;
+
+  const auto result = calculate_no_at_fault_collision(
+    path,
+    build_logged_object_tracks(make_still_objects(
+      {make_object(6.0, 0.0, Classification::CAR, std::array<uint8_t, 16>{8}, 0.0)})),
+    make_vehicle_info(), nullptr, evaluate_ego_path_footprints(path, make_vehicle_info()), false,
+    options);
+
+  EXPECT_DOUBLE_EQ(result.score, 0.0);
+  EXPECT_EQ(result.reason, "at_fault_collision_with_agent");
+  // The front bumper reaches the car's rear (5 m) at the second point (2.5 + 3.74 m).
+  EXPECT_DOUBLE_EQ(result.infraction_time_s, 0.5);
+  ASSERT_EQ(result.contacts.size(), 1U);
+  EXPECT_EQ(result.contacts[0].point_index, 1U);
+  EXPECT_EQ(result.contacts[0].collision_type, "STOPPED_TRACK");
+  EXPECT_TRUE(result.contacts[0].at_fault);
+  EXPECT_FALSE(result.contacts[0].exempt);
+}
+
+TEST(NoAtFaultCollisionOptions, FromBehindExemptionExcusesACarOnTheRearCorner)
+{
+  // A standing car on the ego's rear-left corner, heading the ego's way: centre 1.5 m behind
+  // the pose (the rear bumper is 1.03 m behind it) and 141 deg off the ego's heading, so the
+  // NAVSIM rule calls it a stopped track, which is the ego's fault.
+  const auto path = make_straight_path(5.0, 1);
+  using Classification = autoware_perception_msgs::msg::ObjectClassification;
+  const auto tracks = build_logged_object_tracks(make_still_objects(
+    {make_object(-1.5, 1.2, Classification::CAR, std::array<uint8_t, 16>{9}, 0.0)}));
+  const auto footprints = evaluate_ego_path_footprints(path, make_vehicle_info());
+
+  const auto without = calculate_no_at_fault_collision(
+    path, tracks, make_vehicle_info(), nullptr, footprints, false, {});
+  NoAtFaultCollisionOptions options;
+  options.first_contact_decides = true;
+  options.from_behind_heading_deg = 45.0;
+  const auto with = calculate_no_at_fault_collision(
+    path, tracks, make_vehicle_info(), nullptr, footprints, false, options);
+
+  EXPECT_DOUBLE_EQ(without.score, 0.0);
+  EXPECT_DOUBLE_EQ(with.score, 1.0);
+  ASSERT_EQ(with.contacts.size(), 1U);
+  EXPECT_FALSE(with.contacts[0].at_fault);
+  EXPECT_TRUE(with.contacts[0].exempt);
+}
+
+TEST(NoAtFaultCollisionOptions, FromBehindExemptionNeedsTheEgosHeading)
+{
+  // The same corner contact with a car crossing at 90 deg is not excused.
+  const auto path = make_straight_path(5.0, 1);
+  using Classification = autoware_perception_msgs::msg::ObjectClassification;
+  auto object = make_object(-1.5, 1.2, Classification::CAR, std::array<uint8_t, 16>{9}, 0.0);
+  object.kinematics.pose_with_covariance.pose = make_pose(-1.5, 1.2, M_PI_2);
+  NoAtFaultCollisionOptions options;
+  options.first_contact_decides = true;
+  options.from_behind_heading_deg = 45.0;
+
+  const auto result = calculate_no_at_fault_collision(
+    path, build_logged_object_tracks(make_still_objects({object})), make_vehicle_info(), nullptr,
+    evaluate_ego_path_footprints(path, make_vehicle_info()), false, options);
+
+  EXPECT_DOUBLE_EQ(result.score, 0.0);
+  ASSERT_EQ(result.contacts.size(), 1U);
+  EXPECT_TRUE(result.contacts[0].at_fault);
+  EXPECT_FALSE(result.contacts[0].exempt);
+}
+
+TEST(NoAtFaultCollisionOptions, ExcusedStraddlingIsNotTheEgosFault)
+{
+  // A moving car alongside the ego's left side: a lateral contact.
+  const auto path = make_straight_path(5.0, 1);
+  using Classification = autoware_perception_msgs::msg::ObjectClassification;
+  const auto tracks = build_logged_object_tracks(make_still_objects(
+    {make_object(1.5, 1.4, Classification::CAR, std::array<uint8_t, 16>{10}, 5.0)}));
+  NoAtFaultCollisionOptions options;
+  options.first_contact_decides = true;
+  options.straddling_excused = {true};
+
+  const auto straddling = make_flagged_footprints(path, true, false);
+  const auto plain = calculate_no_at_fault_collision(
+    path, tracks, make_vehicle_info(), nullptr, straddling, false, {});
+  const auto excused = calculate_no_at_fault_collision(
+    path, tracks, make_vehicle_info(), nullptr, straddling, false, options);
+  const auto off_road = calculate_no_at_fault_collision(
+    path, tracks, make_vehicle_info(), nullptr, make_flagged_footprints(path, true, true), false,
+    options);
+
+  EXPECT_DOUBLE_EQ(plain.score, 0.0);
+  EXPECT_EQ(plain.reason, "at_fault_lateral_collision_with_agent");
+  EXPECT_DOUBLE_EQ(excused.score, 1.0);
+  ASSERT_EQ(excused.contacts.size(), 1U);
+  EXPECT_EQ(excused.contacts[0].collision_type, "ACTIVE_LATERAL");
+  EXPECT_TRUE(excused.contacts[0].multiple_lanes);
+  EXPECT_TRUE(excused.contacts[0].straddling_excused);
+  EXPECT_FALSE(excused.contacts[0].at_fault);
+  EXPECT_DOUBLE_EQ(off_road.score, 0.0);
+}
+
+TEST(NoAtFaultCollisionOptions, ExcusedFlagsMustMatchThePath)
+{
+  const auto path = make_straight_path(5.0, 2);
+  NoAtFaultCollisionOptions options;
+  options.straddling_excused = {true};
+
+  const auto result = calculate_no_at_fault_collision(
+    path, {}, make_vehicle_info(), nullptr, evaluate_ego_path_footprints(path, make_vehicle_info()),
+    false, options);
+
+  EXPECT_FALSE(result.available);
+  EXPECT_EQ(result.reason, "unavailable_invalid_straddling_excused");
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics

@@ -25,8 +25,10 @@
 
 #include <geometry_msgs/msg/point.hpp>
 
+#include <cstddef>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -85,12 +87,49 @@ struct NoAtFaultCollisionDebugInfo
   std::vector<NoAtFaultCollisionOverlapArea> overlap_areas;
 };
 
+// How NC judges contacts. The defaults are the open-loop rule; closed-loop evaluation of a driven
+// path sets the rules its reviewed metrics use.
+struct NoAtFaultCollisionOptions
+{
+  // Judge each object at its first contact only, as NAVSIM does: a contact that is not the ego's
+  // fault settles that object, and later contacts with it are not judged. Off: a later contact
+  // with the same object is judged again. Objects without a valid ID are judged at every contact.
+  bool first_contact_decides{false};
+  // A contact with an object whose centre is behind the ego's rear bumper and that heads within
+  // this many degrees of the ego is never the ego's fault: the object drove into the ego. Unset:
+  // no such exemption.
+  std::optional<double> from_behind_heading_deg;
+  // One flag per ego path point (empty: none): straddling lanes on that point is not the ego's
+  // fault, e.g. while the ego follows the recorded drive's path. Being off the drivable area
+  // still is.
+  std::vector<bool> straddling_excused;
+};
+
+// One object's first contact with the ego (NoAtFaultCollisionOptions::first_contact_decides).
+struct NoAtFaultCollisionContact
+{
+  std::string object_id{"invalid"};
+  std::string object_label{"UNKNOWN"};
+  std::size_t point_index{0};
+  double time_s{0.0};
+  std::string collision_type{"NONE"};
+  bool at_fault{false};
+  // At fault by the rule, but excused by from_behind_heading_deg.
+  bool exempt{false};
+  bool multiple_lanes{false};
+  bool non_drivable_area{false};
+  bool straddling_excused{false};
+};
+
 struct NoAtFaultCollisionResult
 {
   double score{0.0};
   bool available{false};
   std::string reason{"unavailable"};
   double infraction_time_s{std::numeric_limits<double>::infinity()};
+  // Each object's first contact, in the order they happen; filled when
+  // NoAtFaultCollisionOptions::first_contact_decides is set.
+  std::vector<NoAtFaultCollisionContact> contacts;
   NoAtFaultCollisionDebugInfo debug_info;
 };
 
@@ -102,7 +141,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<RouteHandler> & route_handler,
   const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations,
-  bool collect_debug = false);
+  bool collect_debug = false, const NoAtFaultCollisionOptions & options = {});
 
 NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
