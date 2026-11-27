@@ -56,7 +56,7 @@ public:
   ~AutowarePlanningDataAnalyzerNode() override;
 
 private:
-  enum class EvaluationMode { OPEN_LOOP };
+  enum class EvaluationMode { OPEN_LOOP, CLOSED_LOOP };
 
   void setup_evaluation_bag_writer();
   void close_evaluation_bag_writer();
@@ -65,6 +65,9 @@ private:
     const std::filesystem::path & output_bag) const;
   void replace_input_bag_with_merged_evaluation();
   void run_evaluation();
+  // Judges one closed-loop run (a simulation's bag) of the scene in closed_loop.scene_path; writes
+  // closed_loop_result.json to output_dir and leaves the input bag as it is.
+  void run_closed_loop_evaluation();
   void write_map_and_route_markers_to_bag(const rclcpp::Time & reference_time);
   void create_route_markers(visualization_msgs::msg::MarkerArray & marker_array) const;
 

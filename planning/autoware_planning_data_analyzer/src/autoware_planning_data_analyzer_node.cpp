@@ -14,11 +14,15 @@
 
 #include "autoware_planning_data_analyzer_node.hpp"
 
-// #include "closed_loop_evaluator.hpp"  // TODO(gosakayori): Closed loop evaluator not yet
-// implemented
+#include "closed_loop/closed_loop_bag_reader.hpp"
+#include "closed_loop/closed_loop_episode.hpp"
+#include "closed_loop/closed_loop_evaluator.hpp"
+#include "closed_loop/closed_loop_scene.hpp"
 #include "open_loop_evaluator.hpp"
 #include "utils/path_utils.hpp"
 
+#include <autoware/map_loader/lanelet2_map_loader_node.hpp>
+#include <autoware/map_projection_loader/map_projection_loader.hpp>
 #include <autoware_lanelet2_extension/visualization/visualization.hpp>
 #include <autoware_utils/ros/marker_helper.hpp>
 #include <autoware_utils_rclcpp/parameter.hpp>
@@ -39,6 +43,7 @@
 #include <lanelet2_core/utility/Utilities.h>
 #include <rmw/rmw.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -65,6 +70,19 @@ using autoware_utils_rclcpp::get_or_declare_parameter;
 
 namespace
 {
+
+autoware_map_msgs::msg::LaneletMapBin load_lanelet_map_bin(
+  const std::string & map_path, const rclcpp::Time & stamp)
+{
+  const std::filesystem::path osm_path(map_path);
+  const auto projector_info = autoware::map_projection_loader::load_info_from_yaml(
+    (osm_path.parent_path() / "map_projector_info.yaml").string());
+  const auto map = autoware::map_loader::Lanelet2MapLoaderNode::load_map(map_path, projector_info);
+  if (!map) {
+    throw std::runtime_error("cannot load the lanelet2 map " + map_path);
+  }
+  return autoware::map_loader::Lanelet2MapLoaderNode::create_map_bin_msg(map, map_path, stamp);
+}
 
 std::filesystem::path resolve_bag_uri(const std::string & input_bag_path)
 {
@@ -204,11 +222,18 @@ AutowarePlanningDataAnalyzerNode::AutowarePlanningDataAnalyzerNode(
   const auto mode_str = get_or_declare_parameter<std::string>(*this, "evaluation.mode");
   if (mode_str == "open_loop") {
     evaluation_mode_ = EvaluationMode::OPEN_LOOP;
+  } else if (mode_str == "closed_loop") {
+    evaluation_mode_ = EvaluationMode::CLOSED_LOOP;
   } else {
-    throw std::runtime_error("Invalid evaluation mode: " + mode_str + ". Expected 'open_loop'.");
+    throw std::runtime_error(
+      "Invalid evaluation mode: " + mode_str + ". Expected 'open_loop' or 'closed_loop'.");
   }
 
-  run_evaluation();
+  if (evaluation_mode_ == EvaluationMode::CLOSED_LOOP) {
+    run_closed_loop_evaluation();
+  } else {
+    run_evaluation();
+  }
 }
 
 AutowarePlanningDataAnalyzerNode::~AutowarePlanningDataAnalyzerNode()
@@ -544,6 +569,8 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
       end_time = times.second;
       break;
     }
+    case EvaluationMode::CLOSED_LOOP:
+      throw std::logic_error("closed-loop evaluation runs in run_closed_loop_evaluation()");
   }
 
   if (!bag_time_initialized) {
@@ -572,6 +599,112 @@ void AutowarePlanningDataAnalyzerNode::run_evaluation()
   replace_input_bag_with_merged_evaluation();
 
   RCLCPP_INFO(get_logger(), "Evaluation complete");
+  rclcpp::shutdown();
+}
+
+void AutowarePlanningDataAnalyzerNode::run_closed_loop_evaluation()
+{
+  using closed_loop::ClosedLoopBagTopics;
+
+  const auto scene_path = get_or_declare_parameter<std::string>(*this, "closed_loop.scene_path");
+  const auto map_path = get_or_declare_parameter<std::string>(*this, "closed_loop.map_path");
+  const std::filesystem::path output_dir(
+    get_or_declare_parameter<std::string>(*this, "output_dir"));
+  if (output_dir.empty() || !output_dir.is_absolute()) {
+    throw std::runtime_error("Parameter 'output_dir' must be an absolute path.");
+  }
+  auto scene = closed_loop::load_closed_loop_scene(scene_path);
+  RCLCPP_INFO(
+    get_logger(), "Closed-loop evaluation of scene %s (%s)", scene.scene_id.c_str(),
+    scene.eval_label.c_str());
+
+  // Odometry a little beyond the rows, so that the first and the last row are interpolated.
+  const auto margin = rclcpp::Duration::from_seconds(1.0);
+  bag_reader_.close();
+  const auto reference_bag =
+    scene.reference_bag_path.empty() ? bag_path_ : scene.reference_bag_path;
+  if (scene.reference_time_offset_auto) {
+    // Where the simulation replays the recorded drive (before the window), the two drives are one:
+    // their time difference there is the offset.
+    if (!scene.window_in_recorded_clock) {
+      throw std::runtime_error("closed loop: time_offset_ns auto needs window_clock recorded");
+    }
+    const auto match_start =
+      scene.window_start - rclcpp::Duration::from_seconds(scene.reference_match_s);
+    const ClosedLoopBagTopics odometry_only{odometry_topic_name_, "", "", ""};
+    const auto offset = closed_loop::estimate_time_offset(
+      closed_loop::read_closed_loop_bag(
+        bag_path_, odometry_only, rclcpp::Time(0, 0, RCL_ROS_TIME),
+        rclcpp::Time(std::numeric_limits<int64_t>::max(), RCL_ROS_TIME))
+        .odometry,
+      closed_loop::read_closed_loop_bag(
+        reference_bag, odometry_only, match_start - margin, scene.window_start + margin)
+        .odometry,
+      match_start, scene.window_start);
+    if (!offset.has_value()) {
+      throw std::runtime_error(
+        "closed loop: cannot line the recorded drive up with the run (no moving recorded ego in "
+        "the replayed stretch before the window)");
+    }
+    scene.reference_time_offset_ns = *offset;
+    RCLCPP_INFO(
+      get_logger(), "Closed loop: recorded drive offset %s ns", std::to_string(*offset).c_str());
+  }
+  if (scene.window_in_recorded_clock) {
+    const auto offset = rclcpp::Duration::from_nanoseconds(scene.reference_time_offset_ns);
+    scene.window_start = scene.window_start + offset;
+    scene.window_end = scene.window_end + offset;
+    scene.run_end = scene.run_end + offset;
+    scene.window_in_recorded_clock = false;
+  }
+  const auto from = scene.window_start - margin;
+  const auto to = std::max(scene.window_end, scene.run_end) + margin;
+  const auto executed = closed_loop::read_closed_loop_bag(
+    bag_path_,
+    ClosedLoopBagTopics{
+      odometry_topic_name_, tracked_objects_topic_name_, route_topic_name_,
+      map_path.empty() ? map_topic_name_ : std::string{}},
+    from, to);
+
+  if (!map_path.empty()) {
+    route_handler_->setMap(load_lanelet_map_bin(map_path, now()));
+  } else if (executed.map.has_value()) {
+    route_handler_->setMap(*executed.map);
+  } else {
+    throw std::runtime_error(
+      "closed loop: the bag has no " + map_topic_name_ + "; set closed_loop.map_path");
+  }
+  if (const auto route = closed_loop::select_route(executed.routes, scene.window_start)) {
+    route_handler_->setRoute(*route);
+  } else {
+    RCLCPP_WARN(get_logger(), "Closed loop: the bag has no route; lanes are read without it.");
+  }
+
+  auto recorded_odometry = executed.odometry;
+  if (!scene.reference_bag_path.empty() || scene.reference_time_offset_ns != 0) {
+    recorded_odometry = closed_loop::read_closed_loop_bag(
+                          reference_bag, ClosedLoopBagTopics{odometry_topic_name_, "", "", ""},
+                          from, to, scene.reference_time_offset_ns)
+                          .odometry;
+  }
+
+  const auto episode = closed_loop::build_closed_loop_episode(
+    executed.odometry, executed.tracked_objects, recorded_odometry, scene.window_start,
+    scene.window_end, scene.run_end);
+  const closed_loop::ClosedLoopEvaluator evaluator(route_handler_, vehicle_info_);
+  const auto result = evaluator.evaluate(scene, episode);
+
+  utils::ensure_directory_writable(output_dir, get_logger());
+  const auto result_path = output_dir / "closed_loop_result.json";
+  std::ofstream result_file(result_path);
+  result_file << closed_loop::to_json(scene, episode, result).dump(2) << std::endl;
+  RCLCPP_INFO(
+    get_logger(), "Closed-loop result: %s (%zu of %zu window rows executed) -> %s",
+    !result.passed.has_value() ? "no verdict" : (*result.passed ? "passed" : "failed"),
+    std::min(episode.executed_rows(), episode.window_rows), episode.window_rows,
+    result_path.string().c_str());
+
+  close_evaluation_bag_writer();
   rclcpp::shutdown();
 }
 

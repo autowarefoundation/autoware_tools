@@ -275,7 +275,9 @@ std::optional<InterpolatedLoggedObject> interpolate_logged_object_state(
     [](const auto & state, const auto & time) {
       return state.stamp.nanoseconds() < time.nanoseconds();
     });
-  if (after == track.states.begin()) {
+  if (
+    after == track.states.begin() ||
+    (after != track.states.end() && after->stamp.nanoseconds() == query_time.nanoseconds())) {
     return make_object(*after, std::hypot(after->twist.linear.x, after->twist.linear.y));
   }
   if (after == track.states.end()) {

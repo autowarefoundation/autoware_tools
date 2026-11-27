@@ -1,7 +1,7 @@
 /**:
   ros__parameters:
     # Evaluation Mode
-    # Options: "open_loop"
+    # Options: "open_loop", "closed_loop"
     evaluation:
       mode: "open_loop"
 
@@ -84,3 +84,9 @@
         # Time window [s] after every AUTONOMOUS->MANUAL transition used to compute
         # the override_only/* aggregate statistics in the summary JSON.
         window_sec: 0.5
+
+    closed_loop:
+      # Scene file (JSON) of the run in input_bag_path: label, difficulty, window, recorded drive.
+      scene_path: ""
+      # lanelet2_map.osm (with map_projector_info.yaml beside it); empty: map_topic in the bag.
+      map_path: ""

@@ -8,6 +8,10 @@ autoware_package()
 ament_auto_add_library(${PROJECT_NAME} SHARED
   src/buffer.cpp
   src/base_evaluator.cpp
+  src/closed_loop/closed_loop_bag_reader.cpp
+  src/closed_loop/closed_loop_episode.cpp
+  src/closed_loop/closed_loop_evaluator.cpp
+  src/closed_loop/closed_loop_scene.cpp
   src/open_loop_evaluator.cpp
   src/metrics/evaluator/evaluator.cpp
   src/metrics/deviation_metrics.cpp
@@ -75,6 +79,17 @@ if(BUILD_TESTING)
   )
 
   target_link_libraries(test_metrics ${PROJECT_NAME})
+
+  ament_add_gtest(test_closed_loop
+    test/closed_loop/test_closed_loop.cpp
+  )
+
+  target_include_directories(test_closed_loop
+    PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/src
+  )
+
+  target_link_libraries(test_closed_loop ${PROJECT_NAME})
 
   ament_add_gtest(test_offline_evaluation
     test/test_bag_handler.cpp
