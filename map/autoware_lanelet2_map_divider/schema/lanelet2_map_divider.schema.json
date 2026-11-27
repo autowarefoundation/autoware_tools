@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Parameters for autoware lanelet2 map divider node",
+  "type": "object",
+  "definitions": {
+    "autoware_lanelet2_map_divider": {
+      "type": "object",
+      "properties": {
+        "grid_size_x": {
+          "type": "number",
+          "description": "The X size in meters of the output segments",
+          "default": "100.0"
+        },
+        "grid_size_y": {
+          "type": "number",
+          "description": "The Y size in meters of the output segments",
+          "default": "100.0"
+        },
+        "input_lanelet2_map": {
+          "type": "string",
+          "description": "Path to a single .osm file",
+          "default": ""
+        },
+        "output_lanelet2_map_dir": {
+          "type": "string",
+          "description": "Path to the output directory. Will contain lanelet2_map.osm/ and lanelet2_map_metadata.yaml",
+          "default": ""
+        },
+        "map_projector_info_path": {
+          "type": "string",
+          "description": "Path to the map_projector_info.yaml file that describes the projection of the input map",
+          "default": ""
+        },
+        "prefix": {
+          "type": "string",
+          "description": "Prefix for the name of the output .osm files",
+          "default": ""
+        }
+      },
+      "required": [
+        "grid_size_x",
+        "grid_size_y",
+        "input_lanelet2_map",
+        "output_lanelet2_map_dir",
+        "map_projector_info_path",
+        "prefix"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "/**": {
+      "type": "object",
+      "properties": {
+        "ros__parameters": {
+          "$ref": "#/definitions/autoware_lanelet2_map_divider"
+        }
+      },
+      "required": ["ros__parameters"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["/**"],
+  "additionalProperties": false
+}
