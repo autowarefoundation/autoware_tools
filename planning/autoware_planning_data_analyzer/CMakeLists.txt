@@ -19,6 +19,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/closed_loop/margin.cpp
   src/closed_loop/road_users.cpp
   src/closed_loop/yield_crossing.cpp
+  src/closed_loop/yield_targets.cpp
   src/open_loop_evaluator.cpp
   src/metrics/evaluator/evaluator.cpp
   src/metrics/deviation_metrics.cpp
@@ -93,6 +94,7 @@ if(BUILD_TESTING)
     test/closed_loop/test_lane_layout.cpp
     test/closed_loop/test_margin.cpp
     test/closed_loop/test_yield.cpp
+    test/closed_loop/test_yield_targets.cpp
   )
 
   target_include_directories(test_closed_loop

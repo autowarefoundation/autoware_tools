@@ -90,8 +90,10 @@ The metrics and their thresholds:
 - `yield` (pedestrian and vehicle yields): every target that crossed the ego's path is judged on
   its post-encroachment time (it went first; lines 1.3 s pedestrians, 1.2 s bicycles, 1.0 s
   vehicles) or on the entry gap (the ego went first; 2.4 s), on 0.1 m ground cells; no contact may
-  be the ego's fault; and the ego stays within 5 m of the recorded path. The targets come from the
-  scene file.
+  be the ego's fault; and the ego stays within 5 m of the recorded path. Targets come from the
+  scene file, or are picked from the recorded drive (eight rules: the road user the human waited
+  for, oncoming traffic and pedestrians that crossed before it, and those near or right after it).
+  Broken tracks are not joined before picking.
 - The scene's verdict is its metrics': margin's (ANDed with the lane goal's for an easy scene),
   the yield's, or NC's for other labels. Any metric that fails fails the scene; else one without a
   verdict leaves the scene without one.
@@ -121,8 +123,8 @@ The metrics and their thresholds:
 - `margin` (optional): `kind` (`lane_change`, `avoidance`, `pull_out`; default from `eval_label`),
   `trailing_vehicle` (an avoidance with a trailing vehicle: every other road user counts as in a
   lane change) and `every_road_user` (default: an easy scene).
-- `yield`: `target_track_ids`, the road users judged (a yielding scene without them has no
-  verdict).
+- `yield` (optional): `target_track_ids`, the road users judged; default: picked from the
+  recorded drive.
 - `ignored_track_ids` (optional): road users never judged, e.g. known tracking errors.
 
 ## Quick Start

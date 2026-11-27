@@ -61,7 +61,8 @@ struct ClosedLoopScene
   std::optional<bool> margin_every_road_user;
   std::vector<std::string> ignored_track_ids;
   // The yielding metric's targets (the scene file's optional "yield": {"target_track_ids": [...]}):
-  // the road users judged on PET or entry gap. Without them a yielding scene has no verdict.
+  // the road users judged on PET or entry gap. Without them, they are picked from the recorded
+  // drive.
   std::optional<std::vector<std::string>> yield_target_track_ids;
 };
 

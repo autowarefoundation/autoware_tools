@@ -109,13 +109,18 @@ ClosedLoopEvaluationResult ClosedLoopEvaluator::evaluate(
   if (result.yield_judged) {
     if (!lane_layout_) {
       result.yield_error = "no map";
-    } else if (!scene.yield_target_track_ids.has_value()) {
-      result.yield_error = "no yield targets";
     } else {
       try {
+        auto targets = scene.yield_target_track_ids;
+        if (!targets.has_value()) {
+          result.yield_pick = pick_targets(
+            episode, scene.eval_label, route_handler_->getLaneletMapPtr(), vehicle_info_,
+            scene.ignored_track_ids, parameters_.yield_targets);
+          targets = result.yield_pick->target_track_ids;
+        }
         result.yield = evaluate_yield(
-          episode, *scene.yield_target_track_ids, scene.ignored_track_ids, *lane_layout_,
-          vehicle_info_, parameters_.yield);
+          episode, *targets, scene.ignored_track_ids, *lane_layout_, vehicle_info_,
+          parameters_.yield);
       } catch (const std::invalid_argument & error) {
         result.yield_error = error.what();
       }
@@ -216,6 +221,10 @@ nlohmann::json to_json(
   nlohmann::json yield = nullptr;
   if (result.yield.has_value()) {
     yield = to_json(*result.yield);
+    yield["targets_from"] = result.yield_pick.has_value() ? "picker" : "scene_file";
+    if (result.yield_pick.has_value()) {
+      yield["pick"] = to_json(*result.yield_pick);
+    }
   } else if (result.yield_judged) {
     yield = {{"error", result.yield_error}};
   }

@@ -21,6 +21,7 @@
 #include "closed_loop/lane_layout.hpp"
 #include "closed_loop/margin.hpp"
 #include "closed_loop/yield_crossing.hpp"
+#include "closed_loop/yield_targets.hpp"
 #include "metrics/epdms/subscores/no_at_fault_collision.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
@@ -43,6 +44,7 @@ struct ClosedLoopEvaluatorParameters
   MarginParameters margin;
   LaneGoalParameters lane_goal;
   YieldParameters yield;
+  TargetRules yield_targets;
 };
 
 // A yielding scene: pedestrian_yield or vehicle_yield.
@@ -67,6 +69,8 @@ struct ClosedLoopEvaluationResult
   std::string lane_goal_error;
   // The yielding metric, for pedestrian_yield and vehicle_yield scenes.
   bool yield_judged{false};
+  // The targets, from the scene file or picked from the recorded drive (yield_pick).
+  std::optional<TargetPick> yield_pick;
   std::optional<YieldResult> yield;
   std::string yield_error;
   // True when the run passes, false when it fails, empty when it cannot be judged.
