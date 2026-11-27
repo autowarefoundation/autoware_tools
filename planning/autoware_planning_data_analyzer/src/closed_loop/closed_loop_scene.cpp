@@ -124,6 +124,39 @@ ClosedLoopScene parse_closed_loop_scene(const nlohmann::json & scene)
       parsed.reference_match_s = match.get<double>();
     }
   }
+  if (scene.contains("margin") && !scene.at("margin").is_null()) {
+    const auto & margin = scene.at("margin");
+    if (!margin.is_object()) {
+      throw std::invalid_argument("scene file: margin must be an object");
+    }
+    if (margin.contains("kind")) {
+      parsed.margin_kind = require_string(margin, "kind", "margin.");
+    }
+    if (margin.contains("trailing_vehicle")) {
+      if (!margin.at("trailing_vehicle").is_boolean()) {
+        throw std::invalid_argument("scene file: margin.trailing_vehicle must be a boolean");
+      }
+      parsed.margin_trailing_vehicle = margin.at("trailing_vehicle").get<bool>();
+    }
+    if (margin.contains("every_road_user")) {
+      if (!margin.at("every_road_user").is_boolean()) {
+        throw std::invalid_argument("scene file: margin.every_road_user must be a boolean");
+      }
+      parsed.margin_every_road_user = margin.at("every_road_user").get<bool>();
+    }
+  }
+  if (scene.contains("ignored_track_ids")) {
+    const auto & ignored = scene.at("ignored_track_ids");
+    if (!ignored.is_array()) {
+      throw std::invalid_argument("scene file: ignored_track_ids must be a list of strings");
+    }
+    for (const auto & id : ignored) {
+      if (!id.is_string()) {
+        throw std::invalid_argument("scene file: ignored_track_ids must be a list of strings");
+      }
+      parsed.ignored_track_ids.push_back(id.get<std::string>());
+    }
+  }
   return parsed;
 }
 
@@ -160,6 +193,20 @@ nlohmann::json to_json(const ClosedLoopScene & scene)
     {"match_s", scene.reference_match_s}};
   if (!scene.reference_bag_path.empty()) {
     json["reference"]["bag_path"] = scene.reference_bag_path;
+  }
+  if (
+    scene.margin_kind.has_value() || scene.margin_every_road_user.has_value() ||
+    scene.margin_trailing_vehicle) {
+    json["margin"] = {{"trailing_vehicle", scene.margin_trailing_vehicle}};
+    if (scene.margin_kind.has_value()) {
+      json["margin"]["kind"] = *scene.margin_kind;
+    }
+    if (scene.margin_every_road_user.has_value()) {
+      json["margin"]["every_road_user"] = *scene.margin_every_road_user;
+    }
+  }
+  if (!scene.ignored_track_ids.empty()) {
+    json["ignored_track_ids"] = scene.ignored_track_ids;
   }
   return json;
 }

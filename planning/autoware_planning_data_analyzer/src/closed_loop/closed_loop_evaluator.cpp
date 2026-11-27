@@ -51,6 +51,24 @@ nlohmann::json contact_to_json(const metrics::NoAtFaultCollisionContact & contac
 
 }  // namespace
 
+std::optional<MarginReference> margin_reference(const ClosedLoopScene & scene)
+{
+  MarginReference reference;
+  if (scene.margin_kind.has_value()) {
+    reference.kind = *scene.margin_kind;
+  } else if (scene.eval_label == "lane_change" || scene.eval_label == "pull_out") {
+    reference.kind = scene.eval_label;
+  } else if (scene.eval_label == "object_avoidance") {
+    reference.kind = "avoidance";
+  } else {
+    return std::nullopt;
+  }
+  reference.trailing_vehicle = scene.margin_trailing_vehicle;
+  reference.every_road_user = scene.margin_every_road_user.value_or(scene.difficulty == "easy");
+  reference.ignored_track_ids = scene.ignored_track_ids;
+  return reference;
+}
+
 ClosedLoopEvaluator::ClosedLoopEvaluator(
   std::shared_ptr<autoware::route_handler::RouteHandler> route_handler,
   autoware::vehicle_info_utils::VehicleInfo vehicle_info, ClosedLoopEvaluatorParameters parameters)
@@ -58,6 +76,9 @@ ClosedLoopEvaluator::ClosedLoopEvaluator(
   vehicle_info_(std::move(vehicle_info)),
   parameters_(std::move(parameters))
 {
+  if (route_handler_ && route_handler_->isMapMsgReady()) {
+    lane_layout_ = std::make_unique<LaneLayout>(route_handler_->getLaneletMapPtr());
+  }
 }
 
 metrics::NoAtFaultCollisionOptions ClosedLoopEvaluator::no_at_fault_collision_options() const
@@ -69,7 +90,7 @@ metrics::NoAtFaultCollisionOptions ClosedLoopEvaluator::no_at_fault_collision_op
 }
 
 ClosedLoopEvaluationResult ClosedLoopEvaluator::evaluate(
-  const ClosedLoopScene & /*scene*/, const ClosedLoopEpisode & episode) const
+  const ClosedLoopScene & scene, const ClosedLoopEpisode & episode) const
 {
   ClosedLoopEvaluationResult result;
   const auto footprints =
@@ -77,6 +98,26 @@ ClosedLoopEvaluationResult ClosedLoopEvaluator::evaluate(
   result.no_at_fault_collision = metrics::calculate_no_at_fault_collision(
     episode.ego, episode.road_users, vehicle_info_, route_handler_, footprints, false,
     no_at_fault_collision_options());
+
+  result.margin_reference = margin_reference(scene);
+  if (result.margin_reference.has_value()) {
+    if (!lane_layout_) {
+      result.margin_error = "no map";
+    } else {
+      try {
+        result.margin = evaluate_margin(
+          episode, *result.margin_reference, *lane_layout_, vehicle_info_, parameters_.margin);
+      } catch (const std::invalid_argument & error) {
+        result.margin_error = error.what();
+      }
+    }
+    // The scene's verdict is margin's (which judges collisions with its own contact rule).
+    if (result.margin.has_value()) {
+      result.passed = result.margin->passed;
+      result.fail_reasons = result.margin->fail_reasons;
+    }
+    return result;
+  }
 
   const auto & no_at_fault_collision = result.no_at_fault_collision;
   if (!no_at_fault_collision.available) {
@@ -98,6 +139,12 @@ nlohmann::json to_json(
     contacts.push_back(contact_to_json(contact));
   }
   const auto & no_at_fault_collision = result.no_at_fault_collision;
+  nlohmann::json margin = nullptr;
+  if (result.margin.has_value()) {
+    margin = to_json(*result.margin, *result.margin_reference);
+  } else if (result.margin_reference.has_value()) {
+    margin = {{"error", result.margin_error}};
+  }
   return {
     {"schema_version", kResultSchemaVersion},
     {"mode", "closed_loop"},
@@ -115,6 +162,7 @@ nlohmann::json to_json(
       {"reason", no_at_fault_collision.reason},
       {"infraction_time_s", finite_or_null(no_at_fault_collision.infraction_time_s)},
       {"contacts", contacts}}},
+    {"margin", margin},
     {"verdict",
      {{"passed",
        result.passed.has_value() ? nlohmann::json(*result.passed) : nlohmann::json(nullptr)},

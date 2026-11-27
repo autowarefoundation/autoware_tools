@@ -71,8 +71,18 @@ The metrics and their thresholds:
 - `no_at_fault_collision` (NC) of the driven path, from the window's start until the run's end,
   with each road user judged at its first contact, as NAVSIM does. A road user centred behind the
   ego's rear bumper and heading within 45 deg of the ego drove into it: not the ego's fault.
-- The scene's verdict is NC's: a collision that is the ego's fault fails it; a run NC cannot
-  judge has no verdict.
+- `margin` (lane changes, avoidances, pull-outs): no contact the ego causes, judged by the rule
+  above with straddling read on lanes (a lanelet with up to two lanelets before and after it, so
+  the seam between consecutive lanelets is not straddling) and excused while the ego is within
+  0.5 m of the recorded path, and the closest box-to-box distance to every road user that counts,
+  in its role. A lane change or a pull-out counts every candidate road user (within 15 m, or 5 m
+  for pedestrians and bicycles) while the ego is out of its start lane; an avoidance counts
+  standing vehicles (avoided objects) and oncoming traffic; an easy scene counts every road user.
+  Every line is 0 m for now, so only a collision fails. A road user that drives more than 0.5 m
+  into the ego within 3 s after a contact that is not the ego's fault stops the judging (a
+  replayed road user cannot react).
+- The scene's verdict is margin's for lane changes, avoidances and pull-outs, and NC's for other
+  labels; a metric without a verdict leaves the scene without one.
 
 ### Scene File
 
@@ -96,6 +106,10 @@ The metrics and their thresholds:
   is the recorded drive, e.g. when a recorded bag itself is evaluated. `"time_offset_ns": "auto"`
   (with `"window_clock": "recorded"`) finds the offset by lining the two drives up over `match_s`
   (default 5 s) before the window's start, where the simulation replays the recorded drive.
+- `margin` (optional): `kind` (`lane_change`, `avoidance`, `pull_out`; default from `eval_label`),
+  `trailing_vehicle` (an avoidance with a trailing vehicle: every other road user counts as in a
+  lane change) and `every_road_user` (default: an easy scene).
+- `ignored_track_ids` (optional): road users never judged, e.g. known tracking errors.
 
 ## Quick Start
 
@@ -128,7 +142,7 @@ ros2 run autoware_planning_data_analyzer autoware_planning_data_analyzer_node --
 - **`evaluation_output.bag/`** - Evaluation metrics as rosbag for visualization
 - **`debug_images/*.png`** - Trajectory visualization (with `--viz` flag)
 - **evaluator_metric.json** — evaluator metric aggregates per `evaluator_config` (if bag contains configured topics)
-- **`closed_loop_result.json`** - Closed loop: the scene, the episode's rows, NC with every first contact, and the verdict (`passed`: true, false, or null when it cannot be judged)
+- **`closed_loop_result.json`** - Closed loop: the scene, the episode's rows, NC with every first contact, each metric's result, and the verdict (`passed`: true, false, or null when it cannot be judged)
 
 ## Parameters
 

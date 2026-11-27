@@ -12,6 +12,10 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/closed_loop/closed_loop_episode.cpp
   src/closed_loop/closed_loop_evaluator.cpp
   src/closed_loop/closed_loop_scene.cpp
+  src/closed_loop/contacts.cpp
+  src/closed_loop/lane_layout.cpp
+  src/closed_loop/margin.cpp
+  src/closed_loop/road_users.cpp
   src/open_loop_evaluator.cpp
   src/metrics/evaluator/evaluator.cpp
   src/metrics/deviation_metrics.cpp
@@ -82,6 +86,8 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_closed_loop
     test/closed_loop/test_closed_loop.cpp
+    test/closed_loop/test_lane_layout.cpp
+    test/closed_loop/test_margin.cpp
   )
 
   target_include_directories(test_closed_loop

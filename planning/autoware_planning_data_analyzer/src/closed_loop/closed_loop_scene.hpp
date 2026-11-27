@@ -19,7 +19,9 @@
 #include <rclcpp/time.hpp>
 
 #include <cstdint>
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace autoware::planning_data_analyzer::closed_loop
 {
@@ -50,6 +52,14 @@ struct ClosedLoopScene
   // The window and the run's end are in the recorded drive's clock (the scene file's
   // "window_clock": "recorded"); they move to the evaluated bag's with the offset.
   bool window_in_recorded_clock{false};
+
+  // The margin metric's scene facts (the scene file's optional "margin" object). Without it, the
+  // kind follows eval_label (lane_change, object_avoidance, pull_out) and an easy scene counts
+  // every road user.
+  std::optional<std::string> margin_kind;
+  bool margin_trailing_vehicle{false};
+  std::optional<bool> margin_every_road_user;
+  std::vector<std::string> ignored_track_ids;
 };
 
 // Throws std::invalid_argument naming the first missing or wrong field.

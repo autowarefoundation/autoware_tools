@@ -17,6 +17,8 @@
 
 #include "closed_loop/closed_loop_episode.hpp"
 #include "closed_loop/closed_loop_scene.hpp"
+#include "closed_loop/lane_layout.hpp"
+#include "closed_loop/margin.hpp"
 #include "metrics/epdms/subscores/no_at_fault_collision.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
@@ -36,13 +38,22 @@ struct ClosedLoopEvaluatorParameters
   // NC's from-behind exemption: the heading difference (deg) within which a road user behind the
   // ego drove into it.
   double from_behind_heading_deg{45.0};
+  MarginParameters margin;
 };
+
+// The margin a scene is judged on, from its scene file or its label; none for other labels.
+std::optional<MarginReference> margin_reference(const ClosedLoopScene & scene);
 
 struct ClosedLoopEvaluationResult
 {
   // NC of the driven path, each road user judged at its first contact, from the window's start
   // until the run's end.
   metrics::NoAtFaultCollisionResult no_at_fault_collision;
+  // The margin metric, for lane changes, avoidances and pull-outs; margin_error says why a scene of
+  // those kinds has none.
+  std::optional<MarginReference> margin_reference;
+  std::optional<MarginResult> margin;
+  std::string margin_error;
   // True when the run passes, false when it fails, empty when it cannot be judged.
   std::optional<bool> passed;
   std::vector<std::string> fail_reasons;
@@ -67,6 +78,7 @@ private:
   std::shared_ptr<autoware::route_handler::RouteHandler> route_handler_;
   autoware::vehicle_info_utils::VehicleInfo vehicle_info_;
   ClosedLoopEvaluatorParameters parameters_;
+  std::unique_ptr<LaneLayout> lane_layout_;
 };
 
 // The result file: the scene, the episode's rows, NC with every first contact, and the verdict.

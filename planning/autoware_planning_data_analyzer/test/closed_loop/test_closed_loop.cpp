@@ -393,4 +393,44 @@ TEST(ClosedLoopBagReader, SelectsTheRouteInForceAtTheWindowStart)
   EXPECT_FALSE(select_route({}, at(5.0)).has_value());
 }
 
+TEST(ClosedLoopScene, ReadsTheMarginFactsAndTheIgnoredTracks)
+{
+  auto json = scene_json();
+  json["margin"] = {{"kind", "avoidance"}, {"trailing_vehicle", true}, {"every_road_user", false}};
+  json["ignored_track_ids"] = {"a", "b"};
+
+  const auto scene = parse_closed_loop_scene(json);
+
+  ASSERT_TRUE(scene.margin_kind.has_value());
+  EXPECT_EQ(*scene.margin_kind, "avoidance");
+  EXPECT_TRUE(scene.margin_trailing_vehicle);
+  ASSERT_TRUE(scene.margin_every_road_user.has_value());
+  EXPECT_FALSE(*scene.margin_every_road_user);
+  EXPECT_EQ(scene.ignored_track_ids, (std::vector<std::string>{"a", "b"}));
+  const auto again = parse_closed_loop_scene(to_json(scene));
+  EXPECT_EQ(again.margin_kind, scene.margin_kind);
+  EXPECT_EQ(again.margin_every_road_user, scene.margin_every_road_user);
+  EXPECT_EQ(again.ignored_track_ids, scene.ignored_track_ids);
+  auto wrong = scene_json();
+  wrong["margin"] = {{"trailing_vehicle", "yes"}};
+  EXPECT_THROW(parse_closed_loop_scene(wrong), std::invalid_argument);
+}
+
+TEST(ClosedLoopEvaluator, TakesTheMarginKindFromTheLabelAndCountsEveryRoadUserInAnEasyScene)
+{
+  const auto easy_lane_change = margin_reference(parse_closed_loop_scene(scene_json()));
+  auto avoidance = scene_json();
+  avoidance["eval_label"] = "object_avoidance";
+  avoidance["difficulty"] = "normal";
+  const auto normal_avoidance = margin_reference(parse_closed_loop_scene(avoidance));
+
+  ASSERT_TRUE(easy_lane_change.has_value());
+  EXPECT_EQ(easy_lane_change->kind, "lane_change");
+  EXPECT_TRUE(easy_lane_change->every_road_user);
+  ASSERT_TRUE(normal_avoidance.has_value());
+  EXPECT_EQ(normal_avoidance->kind, "avoidance");
+  EXPECT_FALSE(normal_avoidance->every_road_user);
+  EXPECT_FALSE(margin_reference(parse_closed_loop_scene(scene_json_without_label())).has_value());
+}
+
 }  // namespace autoware::planning_data_analyzer::closed_loop
