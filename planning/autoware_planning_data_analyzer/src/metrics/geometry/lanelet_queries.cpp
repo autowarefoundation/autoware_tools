@@ -205,13 +205,19 @@ lanelet::ConstLanelets collect_route_relevant_lanelets(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const std::shared_ptr<RouteHandler> & route_handler)
 {
+  return collect_route_relevant_lanelets(to_ego_path(trajectory), route_handler);
+}
+
+lanelet::ConstLanelets collect_route_relevant_lanelets(
+  const EgoPath & ego_path, const std::shared_ptr<RouteHandler> & route_handler)
+{
   lanelet::ConstLanelets route_lanelets;
   if (!route_handler || !route_handler->isHandlerReady()) {
     return route_lanelets;
   }
 
   std::unordered_set<lanelet::Id> seen_ids;
-  for (const auto & point : trajectory.points) {
+  for (const auto & point : ego_path.points) {
     for (const auto & lanelet : route_handler->getRoadLaneletsAtPose(point.pose)) {
       if (!route_handler->isRouteLanelet(lanelet)) {
         continue;

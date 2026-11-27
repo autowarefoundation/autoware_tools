@@ -13,6 +13,7 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/metrics/deviation_metrics.cpp
   src/metrics/geometry/comfort_signal.cpp
   src/metrics/geometry/ego_footprint.cpp
+  src/metrics/geometry/ego_path.cpp
   src/metrics/geometry/lanelet_geometry.cpp
   src/metrics/geometry/lanelet_queries.cpp
   src/metrics/geometry/object_tracks.cpp

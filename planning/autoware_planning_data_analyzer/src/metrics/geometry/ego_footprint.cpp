@@ -679,6 +679,16 @@ std::vector<TrajectoryFootprintEvaluation> evaluate_trajectory_footprints(
   const std::shared_ptr<RouteHandler> & route_handler,
   const lanelet::ConstLanelets * route_relevant_lanelets, const bool evaluate_intersection_context)
 {
+  return evaluate_ego_path_footprints(
+    to_ego_path(trajectory), vehicle_info, route_handler, route_relevant_lanelets,
+    evaluate_intersection_context);
+}
+
+std::vector<TrajectoryFootprintEvaluation> evaluate_ego_path_footprints(
+  const EgoPath & ego_path, const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<RouteHandler> & route_handler,
+  const lanelet::ConstLanelets * route_relevant_lanelets, const bool evaluate_intersection_context)
+{
   std::vector<TrajectoryFootprintEvaluation> evaluations;
   if (!is_vehicle_info_valid(vehicle_info)) {
     return evaluations;
@@ -691,13 +701,13 @@ std::vector<TrajectoryFootprintEvaluation> evaluate_trajectory_footprints(
 
   const auto local_designated_lanelets =
     route_relevant_lanelets == nullptr && route_handler && route_handler->isHandlerReady()
-      ? collect_route_relevant_lanelets(trajectory, route_handler)
+      ? collect_route_relevant_lanelets(ego_path, route_handler)
       : lanelet::ConstLanelets{};
   const auto & designated_lanelets =
     route_relevant_lanelets != nullptr ? *route_relevant_lanelets : local_designated_lanelets;
 
-  evaluations.reserve(trajectory.points.size());
-  for (const auto & point : trajectory.points) {
+  evaluations.reserve(ego_path.points.size());
+  for (const auto & point : ego_path.points) {
     TrajectoryFootprintEvaluation evaluation;
     evaluation.ego_polygon = create_pose_footprint(point.pose, local_footprint);
     if (route_handler) {

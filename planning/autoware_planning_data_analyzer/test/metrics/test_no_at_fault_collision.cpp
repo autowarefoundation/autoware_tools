@@ -28,6 +28,7 @@
 #include <array>
 #include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace autoware::planning_data_analyzer::metrics
@@ -238,6 +239,92 @@ TEST(NoAtFaultCollision, UnknownObjectsAreIgnored)
   EXPECT_TRUE(result.available);
   EXPECT_DOUBLE_EQ(result.score, 1.0);
   EXPECT_EQ(result.reason, "available");
+}
+
+TEST(EgoPath, FromTrajectoryKeepsStampTimesPosesAndPlanarSpeed)
+{
+  auto trajectory = make_straight_trajectory(5.0);
+  trajectory.points[1].longitudinal_velocity_mps = 5.0;
+  trajectory.points[1].lateral_velocity_mps = 12.0;
+
+  const auto path = to_ego_path(trajectory);
+
+  EXPECT_EQ(path.start_time, rclcpp::Time(10, 0, RCL_ROS_TIME));
+  ASSERT_EQ(path.points.size(), 2U);
+  EXPECT_EQ(path.points[1].time_from_start, rclcpp::Duration::from_seconds(1.0));
+  EXPECT_DOUBLE_EQ(path.points[1].pose.position.x, 5.0);
+  EXPECT_DOUBLE_EQ(path.points[0].speed_mps, 5.0);
+  EXPECT_DOUBLE_EQ(path.points[1].speed_mps, 13.0);
+}
+
+TEST(NoAtFaultCollision, EgoPathGivesTheTrajectoryResult)
+{
+  using Classification = autoware_perception_msgs::msg::ObjectClassification;
+  using Case = std::pair<autoware_planning_msgs::msg::Trajectory, std::vector<TimedTrackedObjects>>;
+  constexpr std::array<uint8_t, 16> uuid{6};
+  const std::vector<Case> cases{
+    {make_straight_trajectory(5.0),
+     make_future_objects({make_object(4.0, 0.0, Classification::CAR, uuid)})},
+    {make_straight_trajectory(5.0),
+     make_future_objects({make_object(4.0, 0.0, Classification::HAZARD, uuid)})},
+    {make_straight_trajectory(5.0),
+     make_future_objects({make_object(-3.0, 0.0, Classification::CAR, uuid)})},
+    {make_stopped_then_moving_trajectory(),
+     {make_timed_objects(
+        rclcpp::Time(10, 0, RCL_ROS_TIME), {make_object(4.0, 0.0, Classification::CAR, uuid)}),
+      make_timed_objects(
+        rclcpp::Time(11, 0, RCL_ROS_TIME), {make_object(8.8, 0.0, Classification::CAR, uuid)})}},
+  };
+
+  for (const auto & [trajectory, future_objects] : cases) {
+    const auto expected = calculate_no_at_fault_collision(
+      trajectory, future_objects, make_vehicle_info(), nullptr, true);
+    const auto path = to_ego_path(trajectory);
+    const auto actual = calculate_no_at_fault_collision(
+      path, build_logged_object_tracks(future_objects), make_vehicle_info(), nullptr,
+      evaluate_ego_path_footprints(path, make_vehicle_info()), true);
+
+    EXPECT_EQ(actual.available, expected.available);
+    EXPECT_DOUBLE_EQ(actual.score, expected.score);
+    EXPECT_EQ(actual.reason, expected.reason);
+    EXPECT_DOUBLE_EQ(actual.infraction_time_s, expected.infraction_time_s);
+    EXPECT_EQ(actual.debug_info.events.size(), expected.debug_info.events.size());
+    EXPECT_EQ(
+      actual.debug_info.ego_horizon_footprints.size(),
+      expected.debug_info.ego_horizon_footprints.size());
+  }
+}
+
+TEST(NoAtFaultCollision, DrivenPathIntoAStandingCarIsAtFault)
+{
+  // A closed-loop ego that drove 5 m/s for 2 s, sampled every 0.5 s, toward a car standing 10 m
+  // ahead (its rear at 9 m).
+  EgoPath path;
+  path.start_time = rclcpp::Time(20, 0, RCL_ROS_TIME);
+  for (int step = 0; step <= 4; ++step) {
+    EgoPathPoint point;
+    point.time_from_start = rclcpp::Duration::from_seconds(0.5 * step);
+    point.pose = make_pose(2.5 * step, 0.0);
+    point.speed_mps = 5.0;
+    path.points.push_back(point);
+  }
+  using Classification = autoware_perception_msgs::msg::ObjectClassification;
+  constexpr std::array<uint8_t, 16> uuid{7};
+  const std::vector<TimedTrackedObjects> objects{
+    make_timed_objects(
+      rclcpp::Time(20, 0, RCL_ROS_TIME), {make_object(10.0, 0.0, Classification::CAR, uuid, 0.0)}),
+    make_timed_objects(
+      rclcpp::Time(22, 0, RCL_ROS_TIME), {make_object(10.0, 0.0, Classification::CAR, uuid, 0.0)})};
+
+  const auto result = calculate_no_at_fault_collision(
+    path, build_logged_object_tracks(objects), make_vehicle_info(), nullptr,
+    evaluate_ego_path_footprints(path, make_vehicle_info()));
+
+  EXPECT_TRUE(result.available);
+  EXPECT_DOUBLE_EQ(result.score, 0.0);
+  EXPECT_EQ(result.reason, "at_fault_collision_with_agent");
+  // The front bumper (3.74 m ahead of the pose) is at 8.74 m at 1.0 s and past 9 m at 1.5 s.
+  EXPECT_DOUBLE_EQ(result.infraction_time_s, 1.5);
 }
 
 }  // namespace autoware::planning_data_analyzer::metrics

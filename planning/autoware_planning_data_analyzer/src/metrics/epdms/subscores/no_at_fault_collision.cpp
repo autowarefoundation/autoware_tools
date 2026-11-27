@@ -91,11 +91,6 @@ std::string collision_type_to_string(const CollisionType type)
   return "NONE";
 }
 
-double ego_speed(const autoware_planning_msgs::msg::TrajectoryPoint & point)
-{
-  return std::hypot(point.longitudinal_velocity_mps, point.lateral_velocity_mps);
-}
-
 std::vector<geometry_msgs::msg::Point> front_bumper_points(
   const geometry_msgs::msg::Pose & ego_pose,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
@@ -129,12 +124,11 @@ bool is_track_stopped(const InterpolatedLoggedObject & object_state)
 }
 
 CollisionClassification classify_collision(
-  const autoware_planning_msgs::msg::TrajectoryPoint & ego_point,
-  const InterpolatedLoggedObject & object_state,
+  const EgoPathPoint & ego_point, const InterpolatedLoggedObject & object_state,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info)
 {
   CollisionClassification collision;
-  collision.ego_stopped = ego_speed(ego_point) <= kStoppedVelocityThresholdMps;
+  collision.ego_stopped = ego_point.speed_mps <= kStoppedVelocityThresholdMps;
   collision.track_stopped = is_track_stopped(object_state);
   collision.behind = is_agent_behind(ego_point.pose, object_state.pose);
   collision.front_bumper = front_bumper_points(ego_point.pose, vehicle_info);
@@ -170,9 +164,8 @@ AtFaultCollision make_at_fault_collision(
 }
 
 NoAtFaultCollisionDebugEvent make_debug_event(
-  const double query_time_s, const autoware_planning_msgs::msg::TrajectoryPoint & ego_point,
-  const Polygon2d & ego_polygon, const InterpolatedLoggedObject & object_state,
-  const CollisionClassification & collision)
+  const double query_time_s, const EgoPathPoint & ego_point, const Polygon2d & ego_polygon,
+  const InterpolatedLoggedObject & object_state, const CollisionClassification & collision)
 {
   const double debug_surface_z = ego_point.pose.position.z;
   NoAtFaultCollisionDebugEvent event;
@@ -195,8 +188,7 @@ NoAtFaultCollisionDebugEvent make_debug_event(
 }
 
 void fill_horizon_debug_footprints(
-  NoAtFaultCollisionDebugInfo & debug_info,
-  const autoware_planning_msgs::msg::Trajectory & trajectory,
+  NoAtFaultCollisionDebugInfo & debug_info, const EgoPath & ego_path,
   const std::vector<LoggedObjectTrack> & object_tracks,
   const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations)
 {
@@ -208,11 +200,10 @@ void fill_horizon_debug_footprints(
   for (const auto & event : debug_info.events) {
     engaged_objects.insert(event.object_id);
   }
-  const auto trajectory_start_time = rclcpp::Time(trajectory.header.stamp);
-  for (size_t index = 0; index < trajectory.points.size(); ++index) {
-    const auto & point = trajectory.points.at(index);
-    const auto query_time = trajectory_start_time + rclcpp::Duration(point.time_from_start);
-    const double query_time_s = rclcpp::Duration(point.time_from_start).seconds();
+  for (size_t index = 0; index < ego_path.points.size(); ++index) {
+    const auto & point = ego_path.points.at(index);
+    const auto query_time = ego_path.start_time + point.time_from_start;
+    const double query_time_s = point.time_from_start.seconds();
     const auto & ego_polygon = footprint_evaluations.at(index).ego_polygon;
     bool ego_collision = false;
     bool ego_at_fault = false;
@@ -271,8 +262,7 @@ void fill_horizon_debug_footprints(
 }  // namespace
 
 NoAtFaultCollisionResult calculate_no_at_fault_collision(
-  const autoware_planning_msgs::msg::Trajectory & trajectory,
-  const std::vector<LoggedObjectTrack> & object_tracks,
+  const EgoPath & ego_path, const std::vector<LoggedObjectTrack> & object_tracks,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<RouteHandler> & route_handler,
   const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations,
@@ -280,7 +270,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
 {
   NoAtFaultCollisionResult result;
 
-  if (trajectory.points.empty()) {
+  if (ego_path.points.empty()) {
     result.reason = "unavailable_empty_trajectory";
     return result;
   }
@@ -297,7 +287,7 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
     return result;
   }
 
-  if (footprint_evaluations.size() != trajectory.points.size()) {
+  if (footprint_evaluations.size() != ego_path.points.size()) {
     result.available = false;
     result.reason = "unavailable_invalid_footprint";
     result.score = 0.0;
@@ -305,7 +295,6 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
   }
 
   std::unordered_set<unique_identifier_msgs::msg::UUID, UuidHash> collided_object_ids;
-  const auto trajectory_start_time = rclcpp::Time(trajectory.header.stamp);
 
   auto record_at_fault_collision = [&](
                                      const InterpolatedLoggedObject & object_state,
@@ -321,10 +310,10 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
     }
   };
 
-  for (size_t index = 0; index < trajectory.points.size(); ++index) {
-    const auto & point = trajectory.points.at(index);
-    const auto query_time = trajectory_start_time + rclcpp::Duration(point.time_from_start);
-    const auto query_time_s = rclcpp::Duration(point.time_from_start).seconds();
+  for (size_t index = 0; index < ego_path.points.size(); ++index) {
+    const auto & point = ego_path.points.at(index);
+    const auto query_time = ego_path.start_time + point.time_from_start;
+    const auto query_time_s = point.time_from_start.seconds();
     const auto & ego_polygon = footprint_evaluations.at(index).ego_polygon;
 
     for (const auto & object_track : object_tracks) {
@@ -412,9 +401,22 @@ NoAtFaultCollisionResult calculate_no_at_fault_collision(
 
   if (collect_debug) {
     fill_horizon_debug_footprints(
-      result.debug_info, trajectory, object_tracks, footprint_evaluations);
+      result.debug_info, ego_path, object_tracks, footprint_evaluations);
   }
   return result;
+}
+
+NoAtFaultCollisionResult calculate_no_at_fault_collision(
+  const autoware_planning_msgs::msg::Trajectory & trajectory,
+  const std::vector<LoggedObjectTrack> & object_tracks,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<RouteHandler> & route_handler,
+  const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations,
+  const bool collect_debug)
+{
+  return calculate_no_at_fault_collision(
+    to_ego_path(trajectory), object_tracks, vehicle_info, route_handler, footprint_evaluations,
+    collect_debug);
 }
 
 NoAtFaultCollisionResult calculate_no_at_fault_collision(

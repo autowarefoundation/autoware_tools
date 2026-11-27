@@ -17,6 +17,7 @@
 
 #include "data_types.hpp"
 #include "metrics/geometry/ego_footprint.hpp"
+#include "metrics/geometry/ego_path.hpp"
 #include "metrics/geometry/object_tracks.hpp"
 
 #include <autoware/route_handler/route_handler.hpp>
@@ -92,6 +93,16 @@ struct NoAtFaultCollisionResult
   double infraction_time_s{std::numeric_limits<double>::infinity()};
   NoAtFaultCollisionDebugInfo debug_info;
 };
+
+// NC of any timed ego path: a planned trajectory (to_ego_path) or the path a closed-loop ego drove.
+// footprint_evaluations holds one evaluation per path point (evaluate_ego_path_footprints); logged
+// objects are looked up at ego_path.start_time + each point's time_from_start.
+NoAtFaultCollisionResult calculate_no_at_fault_collision(
+  const EgoPath & ego_path, const std::vector<LoggedObjectTrack> & object_tracks,
+  const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<RouteHandler> & route_handler,
+  const std::vector<TrajectoryFootprintEvaluation> & footprint_evaluations,
+  bool collect_debug = false);
 
 NoAtFaultCollisionResult calculate_no_at_fault_collision(
   const autoware_planning_msgs::msg::Trajectory & trajectory,

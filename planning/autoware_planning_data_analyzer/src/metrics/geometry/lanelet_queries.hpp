@@ -15,6 +15,8 @@
 #ifndef METRICS__GEOMETRY__LANELET_QUERIES_HPP_
 #define METRICS__GEOMETRY__LANELET_QUERIES_HPP_
 
+#include "metrics/geometry/ego_path.hpp"
+
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware_utils_geometry/boost_geometry.hpp>
 
@@ -45,6 +47,11 @@ std::optional<lanelet::ConstLanelet> find_reference_lanelet(
 
 lanelet::ConstLanelets collect_route_relevant_lanelets(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler);
+
+// The route lanelets under the path's poses, each once, in the order the path first reaches them.
+lanelet::ConstLanelets collect_route_relevant_lanelets(
+  const EgoPath & ego_path,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler);
 
 autoware_utils_geometry::LineString2d to_linestring2d(const lanelet::ConstLineString3d & line);

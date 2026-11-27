@@ -15,6 +15,8 @@
 #ifndef METRICS__GEOMETRY__EGO_FOOTPRINT_HPP_
 #define METRICS__GEOMETRY__EGO_FOOTPRINT_HPP_
 
+#include "metrics/geometry/ego_path.hpp"
+
 #include <autoware/route_handler/route_handler.hpp>
 #include <autoware/vehicle_info_utils/vehicle_info.hpp>
 #include <autoware_utils_geometry/boost_geometry.hpp>
@@ -108,6 +110,14 @@ std::optional<EgoAreaEvaluation> compute_ego_area_evaluation(
 std::vector<TrajectoryFootprintEvaluation> evaluate_trajectory_footprints(
   const autoware_planning_msgs::msg::Trajectory & trajectory,
   const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
+  const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler = nullptr,
+  const lanelet::ConstLanelets * route_relevant_lanelets = nullptr,
+  bool evaluate_intersection_context = false);
+
+// The same evaluation for any timed ego path, one per path point: a planned trajectory
+// (to_ego_path) or the path a closed-loop ego drove.
+std::vector<TrajectoryFootprintEvaluation> evaluate_ego_path_footprints(
+  const EgoPath & ego_path, const autoware::vehicle_info_utils::VehicleInfo & vehicle_info,
   const std::shared_ptr<autoware::route_handler::RouteHandler> & route_handler = nullptr,
   const lanelet::ConstLanelets * route_relevant_lanelets = nullptr,
   bool evaluate_intersection_context = false);
